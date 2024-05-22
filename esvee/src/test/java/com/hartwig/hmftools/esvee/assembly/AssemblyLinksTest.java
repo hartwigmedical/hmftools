@@ -32,7 +32,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -40,7 +42,6 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import org.junit.Test;
 
@@ -81,7 +82,8 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(BND, link.svType());
 
-        // DEL with inserted bases
+
+        // test 2: DEL with inserted bases
         posJunction = new Junction(CHR_1, 500, FORWARD);
         negJunction = new Junction(CHR_1, 1000, REVERSE);
 
@@ -134,7 +136,6 @@ public class AssemblyLinksTest
         firstAssembly = new JunctionAssembly(posJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
         secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
 
-        // order passed in doesn't matter
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(secondAssembly, firstAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -181,7 +182,6 @@ public class AssemblyLinksTest
 
         secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 60);
 
-        // order passed in doesn't matter
         link = assemblyLinker.tryAssemblyOverlap(secondAssembly, firstAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -242,13 +242,58 @@ public class AssemblyLinksTest
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
+
+
+        // test 3: 1 base of homology
+        //                          10        20        30        40        50        60        70        80        90        100
+        //                01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+        firstRefBases =  "CAAACAAAAATTAAAACAAAAAGGCTAAATACTGCGTGATTTTGTTTACACGGAATTCTAAAAAGAAAAAAAAAAAAAAGACAACACAGAGAAAAAAACA";
+        secondRefBases = "AATTCAAAGGACTGGCTTTAGCCTCCAGCTACTGAACAGCTTTGGTTAATAAGAAGCACCTGCAGAAGACTAGAAGACAACAGGAAAGGGGTTGTCTAGT";
+
+        firstExtensionBases = reverseComplementBases(secondRefBases.substring(19, 99));
+        firstAssemblyBases = firstRefBases + firstExtensionBases;
+        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
+
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
+
+        secondExtensionBases = reverseComplementBases(firstRefBases.substring(19, 99));
+        secondAssemblyBases = secondRefBases + secondExtensionBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+
+        assertNotNull(link);
+        assertTrue(link.insertedBases().isEmpty());
+        assertEquals("A", link.overlapBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
+
+        // test 4: again but with a base from the second's extension bases, so the mismatch must be factored into the offset
+
+        secondExtensionBases = reverseComplementBases(firstRefBases.substring(19, 62) + firstRefBases.substring(63, 99));
+        secondAssemblyBases = secondRefBases + secondExtensionBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+
+        assertNotNull(link);
+        assertTrue(link.insertedBases().isEmpty());
+        assertEquals("A", link.overlapBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
     }
 
     @Test
     public void testAssemblyNegativeInvertedSplits()
     {
-        String firstRefBases = REF_BASES_200.substring(0, 100);
-        String secondRefBases = REF_BASES_200.substring(100, 200);
+        String firstRefBases = REF_BASES_400.substring(0, 100);
+        String secondRefBases = REF_BASES_400.substring(100, 200);
 
         // a negative inversion
         Junction firstJunction = new Junction(CHR_1, 100, REVERSE);
@@ -268,7 +313,6 @@ public class AssemblyLinksTest
 
         AssemblyLinker assemblyLinker = new AssemblyLinker();
 
-        // order passed in doesn't matter
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -277,7 +321,7 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
 
-        // same again but with an insert sequence - is it arbitrary who the bases appear reversed for?
+        // test 2: same again but with an insert sequence - always taken from the first assembly without reverse-complimenting
         int insertedBaseLength = INSERTED_BASES.length();
         firstAssemblyBases = firstExtensionBases + INSERTED_BASES + firstRefBases;
         baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
@@ -291,6 +335,28 @@ public class AssemblyLinksTest
         link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
         assertNotNull(link);
         assertEquals(INSERTED_BASES, link.insertedBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
+
+        // test 3: with a 5-base overlap
+        int overlapLength = 5;
+        int newExtensionLength = extensionLength - overlapLength;
+        firstAssemblyBases = firstExtensionBases.substring(0, extensionLength - overlapLength) + firstRefBases;
+        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
+
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, newExtensionLength);
+
+        secondAssemblyBases = secondExtensionBases.substring(0, extensionLength - overlapLength) + secondRefBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, newExtensionLength);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+        assertNotNull(link);
+
+        String overlapBases = firstRefBases.substring(0, overlapLength);
+        assertEquals(overlapBases, link.overlapBases());
 
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());

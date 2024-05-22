@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.select.TierSelector;
@@ -92,7 +93,7 @@ public class Candidates
         }
     }
 
-    public List<Candidate> candidates(final Set<Integer> restrictedPositions)
+    public List<Candidate> candidates(final List<BasePosition> restrictedPositions)
     {
         if(mCandidateMap != null)
         {
@@ -103,8 +104,15 @@ public class Candidates
 
         if(!restrictedPositions.isEmpty())
         {
-            List<Candidate> restrictedList = mCandidateList.stream()
-                    .filter(x -> restrictedPositions.contains(x.position())).collect(Collectors.toList());
+            List<Candidate> restrictedList = Lists.newArrayList();
+
+            for(Candidate candidate : mCandidateList)
+            {
+                if(restrictedPositions.stream().anyMatch(x -> x.matches(candidate.chromosome(), candidate.position())))
+                {
+                    restrictedList.add(candidate);
+                }
+            }
 
             mCandidateList.clear();
             mCandidateList.addAll(restrictedList);

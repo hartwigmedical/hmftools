@@ -33,6 +33,7 @@ public class BasePosition implements Comparable<BasePosition>
     {
         return Position == other.Position && Chromosome.equals(other.Chromosome);
     }
+    public boolean matches(final String chromosome, final int position) { return Chromosome.equals(chromosome) && Position == position; }
 
     @Override
     public boolean equals(Object obj)

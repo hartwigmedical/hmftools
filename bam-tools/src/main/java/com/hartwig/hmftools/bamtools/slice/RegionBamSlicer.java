@@ -4,7 +4,8 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.io.File;
-import java.util.concurrent.Callable;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -15,10 +16,10 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class RegionBamSlicer implements Callable
+public class RegionBamSlicer extends Thread
 {
     private final SliceConfig mConfig;
-    private final ChrBaseRegion mRegion;
+    private final Queue<ChrBaseRegion> mRegionsQueue;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -26,14 +27,17 @@ public class RegionBamSlicer implements Callable
     private final ReadCache mReadCache;
     private final SliceWriter mSliceWriter;
 
+    private ChrBaseRegion mCurrentRegion;
+    private final int mTotalRegions;
     private int mReadsProcessed;
     private int mRemotePositionCount;
 
     public RegionBamSlicer(
-            final ChrBaseRegion region, final SliceConfig config, final ReadCache readCache, final SliceWriter sliceWriter)
+            final Queue<ChrBaseRegion> regionsQueue, final SliceConfig config, final ReadCache readCache, final SliceWriter sliceWriter)
     {
         mConfig = config;
-        mRegion = region;
+        mRegionsQueue = regionsQueue;
+        mTotalRegions = regionsQueue.size();
         mReadCache = readCache;
         mSliceWriter = sliceWriter;
 
@@ -44,42 +48,68 @@ public class RegionBamSlicer implements Callable
         mBamSlicer.setKeepHardClippedSecondaries();
         mBamSlicer.setKeepUnmapped();
 
+        mCurrentRegion = null;
+
         mReadsProcessed = 0;
         mRemotePositionCount = 0;
     }
 
+    private static final int LOG_COUNT = 1000;
+
     @Override
-    public Long call()
+    public void run()
     {
-        BT_LOGGER.info("processing region({})", mRegion);
+        while(true)
+        {
+            try
+            {
+                int remainingCount = mRegionsQueue.size();
+                int processedCount = mTotalRegions - remainingCount;
 
-        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
+                mCurrentRegion = mRegionsQueue.remove();
 
-        BT_LOGGER.info("region({}) complete, processed {} reads, remote positions({})",
-                mRegion, mReadsProcessed, mRemotePositionCount);
+                mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
 
-        return (long)0;
+                BT_LOGGER.info("region({}) complete, processed {} reads, remote positions({})",
+                        mCurrentRegion, mReadsProcessed, mRemotePositionCount);
+
+                if(processedCount > 0 && (processedCount % LOG_COUNT) == 0)
+                {
+                    BT_LOGGER.debug("processed {} slice regions, remaining({})", processedCount, remainingCount);
+                }
+            }
+            catch(NoSuchElementException e)
+            {
+                BT_LOGGER.trace("all phase tasks complete");
+                break;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
     }
 
-    private static final int LOG_COUNT = 100_000;
+    private static final int READ_LOG_COUNT = 100_000;
 
     @VisibleForTesting
     public void processSamRecord(final SAMRecord read)
     {
-        if(!mRegion.containsPosition(read.getAlignmentStart())) // note ignores alignment end intentionally to get unmapped mates
+        if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // note ignores alignment end intentionally to get unmapped mates
             return;
 
         ++mReadsProcessed;
 
-        if((mReadsProcessed % LOG_COUNT) == 0)
+        if((mReadsProcessed % READ_LOG_COUNT) == 0)
         {
             BT_LOGGER.debug("region({}) processed {} reads, current pos({})",
-                    mRegion, mReadsProcessed, read.getAlignmentStart());
+                    mCurrentRegion, mReadsProcessed, read.getAlignmentStart());
         }
 
         if(mConfig.MaxPartitionReads > 0 && mReadsProcessed >= mConfig.MaxPartitionReads)
         {
-            BT_LOGGER.debug("region({}) halting slice after {} reads", mRegion, mReadsProcessed);
+            BT_LOGGER.debug("region({}) halting slice after {} reads", mCurrentRegion, mReadsProcessed);
             mBamSlicer.haltProcessing();
             return;
         }
@@ -104,7 +134,7 @@ public class RegionBamSlicer implements Callable
 
     private void checkAddRemotePosition(final String readId, final String chromosome, final int startPosition)
     {
-        if(mRegion.containsPosition(chromosome, startPosition))
+        if(mCurrentRegion.containsPosition(chromosome, startPosition))
             return;
 
         // skip over positions already part of the initial slice
@@ -114,4 +144,7 @@ public class RegionBamSlicer implements Callable
         mReadCache.addRemotePosition(new RemotePosition(readId, chromosome, startPosition));
         ++mRemotePositionCount;
     }
+
+    @VisibleForTesting
+    public void setCurrentRegion(final ChrBaseRegion region) { mCurrentRegion = region; }
 }

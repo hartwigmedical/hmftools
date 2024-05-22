@@ -2,7 +2,6 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -14,45 +13,34 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public final class SomaticPurityCalcs
 {
-    public static double estimatedPurity(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double noiseRate)
+    public static double estimatedPurityOld(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double noiseRate)
     {
         return max(sampleVaf - noiseRate, 0) / tumorVaf * tumorPurity;
     }
 
-    public static double estimatedProbability(final FragmentTotals fragmentTotals, double noiseRate)
+    public static double estimatedPurity(final double sampleVaf, final double noiseRate, final FragmentTotals fragmentTotals)
     {
-        double weightedSampleDepth = fragmentTotals.weightedSampleDepth();
-        double weightedSampleFrags = fragmentTotals.weightedSampleFrags();
-
-        double effectiveDepth = weightedSampleDepth * fragmentTotals.variantCount();
-        double effectiveAlleleFrags = weightedSampleFrags * fragmentTotals.variantCount();
-        double expectedNoiseFragments = noiseRate * effectiveDepth;
-
-        PoissonDistribution poisson = new PoissonDistribution(expectedNoiseFragments);
-
-        if(effectiveAlleleFrags < 1)
-        {
-            return 1 - poisson.cumulativeProbability(0);
-        }
-
-        int lowerFrags = (int)floor(effectiveAlleleFrags - 1);
-        int upperFrags = (int)ceil(effectiveAlleleFrags - 1);
-        double probabilityLower = 1 - poisson.cumulativeProbability(lowerFrags);
-        double probabilityUpper = 1 - poisson.cumulativeProbability(upperFrags);
-        double upperWeight = effectiveAlleleFrags - floor(effectiveAlleleFrags);
-        double lowerWeight = 1 - upperWeight;
-
-        return lowerWeight * probabilityLower + upperWeight * probabilityUpper;
+        double noiseAdjSampleVaf = max(sampleVaf - noiseRate, 0);
+        double weightedVcn = fragmentTotals.weightedVariantCopyNumber();
+        double weightedCn = fragmentTotals.weightedCopyNumber();
+        return 2 * noiseAdjSampleVaf * (weightedVcn + 2 * noiseAdjSampleVaf - weightedCn * noiseAdjSampleVaf);
     }
 
-    // OLD METHODS: likely deprecated
-    public static double estimatedProbabilityOld(int alleleCount, double noise)
+    public static double estimatedProbability(final FragmentTotals fragmentTotals, double noiseRate)
     {
-        if(alleleCount <= noise || noise == 0)
+        int sampleFragments = fragmentTotals.sampleAdTotal();
+        double expectedNoiseFragments = noiseRate * fragmentTotals.sampleDepthTotal();
+
+        return estimatedProbability(sampleFragments, expectedNoiseFragments);
+    }
+
+    public static double estimatedProbability(int alleleFragments, double noiseFragments)
+    {
+        if(alleleFragments <= noiseFragments || noiseFragments == 0)
             return 1;
 
-        PoissonDistribution poisson = new PoissonDistribution(noise);
-        double probability = 1 - poisson.cumulativeProbability(alleleCount - 1);
+        PoissonDistribution poisson = new PoissonDistribution(noiseFragments);
+        double probability = 1 - poisson.cumulativeProbability(alleleFragments - 1);
         return probability;
     }
 
@@ -61,8 +49,9 @@ public final class SomaticPurityCalcs
 
     public static double calcLimitOfDetection(final FragmentTotals fragmentTotals, final double noiseRate)
     {
-        double effectiveFrags = fragmentTotals.weightedSampleDepth() * fragmentTotals.variantCount();
-        double expectedNoiseFrags = noiseRate * effectiveFrags;
+        // first find the AF matches a specified limit of detection probability
+        double sampleDepth = fragmentTotals.sampleDepthTotal();
+        double expectedNoiseFrags = noiseRate * sampleDepth;
 
         int iterations = 0;
         double requiredProb = LOW_PROBABILITY;
@@ -76,8 +65,8 @@ public final class SomaticPurityCalcs
         double currentProb = 1 - poisson.cumulativeProbability(currentValue - 1);
         double probDiff = 0;
 
-        double lastProbUpper = 1.0;
-        double lastProbLower = 0;
+        double lastProbUpperValue = 1.0;
+        double lastProbLowerValue = 0;
 
         while(iterations < MAX_ITERATIONS)
         {
@@ -95,26 +84,24 @@ public final class SomaticPurityCalcs
             int newTestValue;
             if(currentProb < requiredProb)
             {
-                lastProbLower = currentProb;
+                lastProbUpperValue = currentProb;
                 testValueUpper = currentValue;
                 newTestValue = (int)round((currentValue + testValueLower) * 0.5);
             }
             else
             {
-                lastProbUpper = currentProb;
+                lastProbLowerValue = currentProb;
                 testValueLower = currentValue;
                 newTestValue = (int)round((currentValue + testValueUpper) * 0.5);
             }
 
-            currentValue = newTestValue;
-
-            if(currentValue == testValueLower || currentValue == testValueUpper)
+            if(testValueLower >= testValueUpper - 1)
             {
-                if(currentValue == testValueLower)
-                    currentValue = newTestValue + 1;
-
+                currentValue = abs(requiredProb - lastProbLowerValue) < abs(requiredProb - lastProbUpperValue) ? testValueLower : testValueUpper;
                 break;
             }
+
+            currentValue = newTestValue;
 
             currentProb = 1 - poisson.cumulativeProbability(currentValue - 1);
             ++iterations;
@@ -126,14 +113,10 @@ public final class SomaticPurityCalcs
                     expectedNoiseFrags, currentValue, currentProb, probDiff));
         }
 
-        int lodFragmentsLower = currentValue;
-        int lodFragmentsUpper = currentValue - 1;
-        double lodTumorFractionLower = lodFragmentsLower / effectiveFrags - noiseRate;
-        double lodTumorFractionUpper = lodFragmentsUpper / effectiveFrags - noiseRate;
+        double af = currentValue / sampleDepth - noiseRate;
 
-        double weightedLod = ((requiredProb - lastProbUpper) * lodTumorFractionLower + (lastProbLower - requiredProb) * lodTumorFractionUpper)
-                / (lastProbLower - lastProbUpper);
+        double lod = 2 * af * (fragmentTotals.weightedVariantCopyNumber() + 2 * af - fragmentTotals.weightedCopyNumber() * af);
 
-        return weightedLod;
+        return lod;
     }
 }

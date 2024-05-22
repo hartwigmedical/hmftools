@@ -63,11 +63,6 @@ public class AssemblyAlignment
 
     public String overlapBases() { return mAssemblyLink != null ? mAssemblyLink.overlapBases() : ""; }
 
-    public void setOutcome(final AlignmentOutcome outcome)
-    {
-        mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));
-    }
-
     public String assemblyIds()
     {
         if(mAssemblies.size() == 1)
@@ -153,7 +148,12 @@ public class AssemblyAlignment
         fullSequence.append(firstReversed ? Nucleotides.reverseComplementBases(first.formRefBaseSequence()) : first.formRefBaseSequence());
 
         if(!insertedBases.isEmpty())
-            fullSequence.append(insertedBases);
+        {
+            if(firstReversed)
+                fullSequence.append(Nucleotides.reverseComplementBases(insertedBases)); // keep inserted bases in the same direction as a full sequence
+            else
+                fullSequence.append(insertedBases);
+        }
 
         String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formRefBaseSequence()) : second.formRefBaseSequence();
 

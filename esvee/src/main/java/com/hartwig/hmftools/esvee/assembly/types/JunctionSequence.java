@@ -24,7 +24,7 @@ public class JunctionSequence
     private byte[] mOriginalBaseQuals;
 
     // the following are in non-reversed terms
-    private final int mJunctionIndex; // as per the original assembly,
+    private final int mJunctionIndex; // as per the original assembly
 
     // indices for the junction sequence around the junction (eg +/- 50 bases)
     private final int mJunctionSeqIndexStart;

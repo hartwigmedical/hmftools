@@ -23,7 +23,7 @@ public class ReadContextMatcher
     private final int mMaxCoreLowQualMatches;
     private final boolean mAllowWildcardMatchInCore;
 
-    private final int[] mLowQualExclusionRange; // for SNV & MNVs, the indices covering the variant & excluding low-qual mismatches
+    private final int[] mLowQualExclusionRangeRead; // for SNV & MNVs, the indices covering the variant & excluding low-qual mismatches
     private final int[] mLowQualExclusionRangeRef;
 
     public static final byte WILDCARD_BASE = (byte) '.';
@@ -42,13 +42,14 @@ public class ReadContextMatcher
 
         if(mContext.variant().isIndel())
         {
-            mLowQualExclusionRange = new int[] { mContext.AltIndexUpper, mContext.AltIndexUpper };
-            mLowQualExclusionRangeRef = mLowQualExclusionRange;
+            mLowQualExclusionRangeRead = new int[] { mContext.AltIndexUpper, mContext.AltIndexUpper };
+            mLowQualExclusionRangeRef = mLowQualExclusionRangeRead;
         }
         else
         {
-            int altLength = mContext.variant().alt().length();
-            mLowQualExclusionRange = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + altLength - 1 };
+            // just the alt bases themselves - for both ref and read
+            int altLength = mContext.variant().altLength();
+            mLowQualExclusionRangeRead = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + altLength - 1 };
             int refIndex = mContext.leftCoreLength();
             mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };
         }
@@ -161,7 +162,7 @@ public class ReadContextMatcher
         {
             if(matches(
                     mContext.ReadBases, readBases, readQuals, mContext.CoreIndexStart, readIndexStart, mContext.coreLength(),
-                    mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRange))
+                    mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRead))
             {
                 return CORE;
             }
@@ -183,7 +184,7 @@ public class ReadContextMatcher
 
             if(matches(
                     mContext.ReadBases, readBases, readQuals, coreIndexStart, readIndexStart, compareLength,
-                    maxLowQualMismatches, mAllowWildcardMatchInCore, mLowQualExclusionRange))
+                    maxLowQualMismatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRead))
             {
                 return ReadContextMatch.PARTIAL_CORE;
             }
@@ -240,7 +241,7 @@ public class ReadContextMatcher
 
         boolean flankMatch = matches(
                 mContext.ReadBases, readBases, readQuals, flankStartIndex, readIndexStart, flankLength,
-                FLANK_LOW_QUAL_MISMATCHES, false, mLowQualExclusionRange);
+                FLANK_LOW_QUAL_MISMATCHES, false, mLowQualExclusionRangeRead);
 
         if(!flankMatch)
             return BaseMatchType.MISMATCH;

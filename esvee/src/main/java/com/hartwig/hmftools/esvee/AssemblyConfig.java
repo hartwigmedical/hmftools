@@ -31,18 +31,17 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
-import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
-import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
-import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.VCF;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 
 import java.nio.file.Files;
@@ -91,7 +90,6 @@ public class AssemblyConfig
 
     public final ValidationStringency BamStringency;
 
-    public final String VcfFile;
     public final List<WriteType> WriteTypes;
 
     public final boolean ProcessDiscordant;
@@ -119,7 +117,6 @@ public class AssemblyConfig
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
-    public static final String OUTPUT_VCF = "output_vcf";
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
     public static final String BWA_LIB_PATH = "bwa_lib";
@@ -164,6 +161,9 @@ public class AssemblyConfig
             System.exit(1);
         }
 
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+
         JunctionFiles = Lists.newArrayList();
 
         if(configBuilder.hasValue(JUNCTION_FILES))
@@ -178,7 +178,7 @@ public class AssemblyConfig
 
             for(String sampleId : combinedSampleIds)
             {
-                String junctionFile = formPrepInputFilename(sampleId, PREP_JUNCTIONS_FILE_ID);
+                String junctionFile = formPrepInputFilename(OutputDir, sampleId, PREP_JUNCTIONS_FILE_ID, OutputId);
 
                 if(Files.exists(Paths.get(junctionFile)))
                     JunctionFiles.add(junctionFile);
@@ -212,18 +212,6 @@ public class AssemblyConfig
         BamStringency = ValidationStringency.STRICT;
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
-        if(!configBuilder.hasValue(OUTPUT_VCF) && !configBuilder.hasValue(OUTPUT_DIR))
-        {
-            SV_LOGGER.error("VCF output file or output directory required config");
-            System.exit(1);
-        }
-
-        String vcfFile = configBuilder.getValue(OUTPUT_VCF);
-        OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : pathFromFile(vcfFile);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
-
-        VcfFile = vcfFile != null ? vcfFile : outputFilename(VCF);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -285,7 +273,7 @@ public class AssemblyConfig
 
     public String outputFilename(final WriteType writeType)
     {
-        return formOutputFile(OutputDir, sampleId(), ESVEE_FILE_ID, writeType.fileId(), OutputId);
+        return formEsveeInputFilename(OutputDir, sampleId(), writeType.fileId(), OutputId);
     }
 
     public void logReadId(final SAMRecord record, final String caller)
@@ -308,8 +296,6 @@ public class AssemblyConfig
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
-
-        configBuilder.addConfigItem(OUTPUT_VCF, false, "Output VCF filename");
 
         configBuilder.addPaths(
                 JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");
@@ -377,7 +363,6 @@ public class AssemblyConfig
 
         BamStringency = ValidationStringency.SILENT;
 
-        VcfFile = null;
         WriteTypes = Collections.emptyList();
 
         OutputDir = null;

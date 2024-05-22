@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -19,20 +14,10 @@ import static junit.framework.TestCase.assertNotNull;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
-import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.coverage.GeneCoverage;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
-import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
-import org.junit.Assert;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -127,66 +112,4 @@ public class CandidateCreationTest
         AltContext snvInsert = altContexts.stream().filter(x -> x.Ref.equals(variant.ref()) && x.Alt.equals("GT")).findFirst().orElse(null);
         assertNotNull(snvInsert);
     }
-
-    /* TODO: test again once realignment is complete
-    @Test
-    public void testSoftClipInsertProdExample()
-    {
-        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
-
-        RegionTaskTester tester = new RegionTaskTester();
-
-        tester.PanelRegions.add(new BaseRegion(1, 1000));
-
-        RegionTask task = tester.createRegionTask(region);
-
-        // bases from 21,974,750 -> 950
-        String refBases = "TCTACCCGACCCCGGGCCGCGGCCGTGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCC"
-                + "CTCTCCGCAGCCGCCGAGCGCACGCGGTCCGCCCCACCCTCTGGTGACCAGCCAGCCCCTCCTCTTTCTTCCTCCGGTGCTGGCGGAAGAG";
-
-        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1100)); // need to cover the ref sequence buffer
-
-        List<SAMRecord> reads = Lists.newArrayList(
-                createSamRecord(
-                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
-                        "TGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGAAA",
-                        "44S57M"),
-                createSamRecord(
-                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
-                        "GCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCACCCTGCTAAA",
-                        "42S59M"),
-                createSamRecord(
-                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
-                        "CGCCAGGCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCAAA",
-                        "39S62M"),
-                createSamRecord(
-                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
-                        "AGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCCCTCTCAAA",
-                        "31S70M"));
-
-        reads.get(1).setFirstOfPairFlag(false);
-        reads.get(3).setFirstOfPairFlag(false);
-
-        tester.TumorSamSlicer.ReadRecords.addAll(reads);
-        tester.TumorSamSlicer.ReadRecords.addAll(reads); // repeat to get over qual thresholds
-        tester.TumorSamSlicer.ReadRecords.addAll(reads);
-
-        task.run();
-
-        SageVariant var = task.getVariants().stream().filter(x -> x.position() == 44 && x.isIndel()).findFirst().orElse(null);
-
-        Assert.assertNotNull(var);
-
-        assertEquals(44, var.position());
-        assertEquals("A", var.ref());
-        assertEquals("AGGCTCCATGCTGCTCCCCGCCGCC", var.alt());
-
-        VariantReadContext readContext = var.readContext();
-        assertEquals(10, readContext.CoreIndexStart);
-        assertEquals(11, readContext.VarReadIndex);
-        assertEquals(11, readContext.VarReadIndex);
-        assertEquals("36S57M", readContext.readCigar());
-        assertEquals(48, readContext.Homology.Length);
-    }
-    */
 }

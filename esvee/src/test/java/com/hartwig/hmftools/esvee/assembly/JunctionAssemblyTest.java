@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
@@ -26,11 +27,20 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import org.junit.Test;
 
 public class JunctionAssemblyTest
 {
+    @Test
+    public void testMiscAssemblyFunctions()
+    {
+        assertEquals(0, mismatchesPerComparisonLength(1));
+        assertEquals(1, mismatchesPerComparisonLength(10));
+        assertEquals(2, mismatchesPerComparisonLength(100));
+    }
+
     @Test
     public void testPosJunctionExtensionSequence()
     {
@@ -62,7 +72,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -88,7 +98,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -124,7 +134,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -150,7 +160,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, extBases.length(), 0));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -164,34 +174,50 @@ public class JunctionAssemblyTest
 
         Junction junction = new Junction(CHR_1, 29, FORWARD);
 
-        String consensusExtBases = "AAAAAAAACCGTGTGTCCAGTAGTAGTCCTTTT";
+        String consensusExtBases = "AAAAAAAACCGTGTGTCCCAGTAGTAGTCCTTTT";
         String readBases = refBases + consensusExtBases;
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, consensusExtBases.length()));
 
         // start with 2 reads agreeing to establish a base-line for repeats
         Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        Read read1c = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        Read read1d = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
-        String extBases = "AAAAAAAAACCGTGTGTCCAGTAGTCCTTTT"; // extra A, less AGT
+        String extBases = "AAAAAAAAACCGTGTGTCCCAGTAGTAGTCCTTTT"; // extra A
         readBases = refBases + extBases;
         Read read2 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        extBases = "AAAAAACCGTGTGTGTGTCCAGTAGTAGTCCTTTT"; // less As, extra GTs
+        extBases = "AAAAAACCGTGTGTCCCAGTAGTAGTCCTTTT"; // less As
         readBases = refBases + extBases;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        List<Read> reads = List.of(read1, read1b, read2, read3);
+        extBases = "AAAAAAAACCGTGTGTCCCAGTAGTCCTTTT"; // less AGT
+        readBases = refBases + extBases;
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        extBases = "AAAAAAAACCGTGTGTGTGTCCCAGTAGTAGTCCTTTT"; // extra GTs
+        readBases = refBases + extBases;
+        Read read5 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
+
+        extBases = "AAAAAAAAACCGTGTGTGTCCCAGTAGTCCTTTT"; // 2+ mismatches
+        readBases = refBases + extBases;
+        Read read6 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
+
+        List<Read> reads = List.of(read1, read1b, read1c, read1d, read2, read3, read4, read5, read6);
+
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
         assertEquals(consensusExtBases.length() + 1, extSeqBuilder.minSupportLength());
 
-        String sequence = refBases.substring(19) + consensusExtBases + "TT";
-        assertEquals(sequence, extSeqBuilder.junctionSequence());
+        String consensusSequence = extSeqBuilder.junctionSequence();
+        String sequence = refBases.substring(19) + consensusExtBases;
+        assertEquals(sequence, consensusSequence);
 
-        assertEquals(4, extSeqBuilder.formAssemblySupport().size());
-        assertEquals(2, extSeqBuilder.formAssemblySupport().stream().filter(x -> x.mismatchCount() == 2).count());
+        List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.mismatchCount() == 0).count());
     }
 
     @Test

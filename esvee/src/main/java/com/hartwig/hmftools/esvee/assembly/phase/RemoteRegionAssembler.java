@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
@@ -9,8 +9,9 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.formLink;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -21,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -208,6 +210,16 @@ public class RemoteRegionAssembler
         String firstJunctionSequence = assemblySeq.junctionSequence();
         int firstJunctionSeqLength = firstJunctionSequence.length();
 
+        // first a simple local match
+        int remoteSeqIndexInRef = remoteRefSeq.FullSequence.indexOf(firstJunctionSequence);
+
+        if(remoteSeqIndexInRef >= 0)
+        {
+            return formLinkWithRemote(
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
+                    assemblySeq.junctionSeqStartIndex(), remoteSeqIndexInRef);
+        }
+
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
@@ -242,52 +254,14 @@ public class RemoteRegionAssembler
         }
 
         // now perform a full junction sequence search in the second using the sequence matching logic
-        Set<Integer> testedOffsets = Sets.newHashSet();
-
         int minOverlapLength = min(assembly.extensionLength(), ASSEMBLY_LINK_OVERLAP_BASES);
 
-        for(int[] indexStarts : alternativeIndexStarts)
+        int[] topMatchIndices = findBestSequenceMatch(assemblySeq, remoteRefSeq, minOverlapLength, alternativeIndexStarts);
+
+        if(topMatchIndices != null)
         {
-            // find a comparison range that falls within both sequence's index range around the junction
-            int firstJuncSeqMatchIndex = indexStarts[0];
-            int secondMatchIndex = indexStarts[1];
-
-            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
-
-            if(testedOffsets.contains(matchOffset))
-                continue;
-
-            testedOffsets.add(matchOffset);
-
-            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
-            int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
-
-            int firstJuncIndexStart = 0;
-            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
-
-            if(secondIndexStart < 0)
-            {
-                firstJuncIndexStart += -(secondIndexStart);
-                secondIndexStart = 0;
-            }
-
-            // discount this match if the implied end of the match in the second sequence is past its ref base end
-            if(secondIndexEnd >= remoteRefSeq.BaseLength)
-                continue;
-
-            int firstIndexStart = firstJuncIndexStart + assemblySeq.junctionSeqStartIndex();
-            int firstIndexEnd = min(firstJuncIndexEnd + assemblySeq.junctionSeqStartIndex(), assemblySeq.BaseLength - 1);
-
-            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
-                continue;
-
-            int mismatchCount = SequenceCompare.compareSequences(
-                    assemblySeq.bases(), assemblySeq.baseQuals(), firstIndexStart, firstIndexEnd, assemblySeq.repeatInfo(),
-                    remoteRefSeq.bases(), remoteRefSeq.baseQuals(), secondIndexStart, secondIndexEnd, remoteRefSeq.repeatInfo(),
-                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
-
-            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
-                continue;
+            int firstIndexStart = topMatchIndices[0];
+            int secondIndexStart = topMatchIndices[1];
 
             // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
             // the implied junction position in the remote can be determined
@@ -381,7 +355,6 @@ public class RemoteRegionAssembler
             // suggests that the break is further into the initially selected ref bases, ie they need to be truncated
             // but those bases are still valid extension bases
             // remoteJunctionIndex needs adjusting?
-
         }
 
         List<SupportRead> remoteSupport = Lists.newArrayList();
@@ -410,7 +383,7 @@ public class RemoteRegionAssembler
 
         remoteAssembly.buildRepeatInfo();
 
-        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, false);
+        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, 0);
     }
 
     @VisibleForTesting

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.filter;
 
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
@@ -18,7 +17,6 @@ public class SoftFilterConfig
     public final int MinGermlineCoverageAllosome;
     public final int MinGermlineCoverageAllosomeLongInsert;
     public final double MaxGermlineVaf;
-    public final double MaxGermlineRelativeQual;
 
     public SoftFilterConfig(final ConfigBuilder configBuilder, final String prefix, final SoftFilterConfig defaultValue)
     {
@@ -31,13 +29,12 @@ public class SoftFilterConfig
         MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
         MinGermlineCoverageAllosomeLongInsert = defaultValue.MinGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_VAF.configName());
-        MaxGermlineRelativeQual = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName());
     }
 
     public SoftFilterConfig(
             final String name, final int minTumorQual, final double minTumorVaf, final int minGermlineCoverage,
             final int minGermlineCoverageLongInsert, final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
-            final double maxGermlineVaf, final double maxGermlineRelativeQual)
+            final double maxGermlineVaf)
     {
         Name = name;
         MinTumorQual = minTumorQual;
@@ -47,7 +44,6 @@ public class SoftFilterConfig
         MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
         MinGermlineCoverageAllosomeLongInsert = minGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = maxGermlineVaf;
-        MaxGermlineRelativeQual = maxGermlineRelativeQual;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder, final SoftFilterConfig defaultConfig)
@@ -67,9 +63,5 @@ public class SoftFilterConfig
 
         configBuilder.addDecimal(
                 prefix + "_" + MAX_GERMLINE_VAF.configName(), "Maximum " + prefix + " germline VAF", defaultConfig.MaxGermlineVaf);
-
-        configBuilder.addDecimal(
-                prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName(),
-                "Maximum " + prefix + " germline relative qualit", defaultConfig.MaxGermlineRelativeQual);
     }
 }

@@ -172,7 +172,7 @@ public class StructuralVariantFactory
             throw new IllegalArgumentException(String.format("ALT %s is not in breakend notation", alt));
         }
 
-        // Local orientation determined by the positioning of the anchoring bases
+        // Local orientation determined by the positionin of the anchoring bases
         final byte startOrientation = (match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT);
 
         // Other orientation determined by the direction of the brackets

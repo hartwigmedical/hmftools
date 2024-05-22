@@ -50,6 +50,7 @@ public class PurityConfig
     public final String SampleDataDir;
     public final String SomaticVcf;
     public final String SomaticDir; // if different from sample data dir and not specifying a VCF path
+    public final String BqrDir;
     public final boolean SkipBqr;
     public final String PurpleDir;
     public final String AmberDir;
@@ -74,6 +75,7 @@ public class PurityConfig
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_DIR = "somatic_dir";
+    private static final String BQR_DIR = "bqr_dir";
     private static final String SKIP_BQR = "skip_bqr";
     private static final String PLOT_DIR = "plot_dir";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
@@ -109,6 +111,7 @@ public class PurityConfig
         PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
         AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
+        BqrDir = checkAddDirSeparator(configBuilder.getValue(BQR_DIR, SomaticDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
@@ -244,6 +247,7 @@ public class PurityConfig
         configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
+        configBuilder.addConfigItem(BQR_DIR, false, "Directory for Sage BQR files");
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");
 
         configBuilder.addConfigItem(

@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTI
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
@@ -218,10 +219,6 @@ public class JunctionTracker
         }
     }
 
-    public void addExistingJunctions(final List<JunctionData> existingJunctions)
-    {
-        mJunctions.addAll(existingJunctions);
-    }
     public void setExpectedReads(final Set<String> expectedReads) { mExpectedReadIds.addAll(expectedReads); }
 
     public void assignFragments()
@@ -1129,7 +1126,18 @@ public class JunctionTracker
                 return true;
         }
 
-        boolean hasPassingMapQualRead = junctionData.ReadTypeReads.get(ReadType.JUNCTION).stream().anyMatch(x -> x.mapQuality() > MIN_MAP_QUALITY);
+        boolean hasPassingMapQualRead = false;
+        boolean hasPassingAlignedRead = false;
+
+        for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+        {
+            hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
+
+            hasPassingMapQualRead |= read.mapQuality() >= MIN_MAP_QUALITY;
+        }
+
+        if(!hasPassingAlignedRead)
+            return false;
 
         if(hasPassingMapQualRead && junctionFrags >= mFilterConfig.MinJunctionSupport)
             return true;

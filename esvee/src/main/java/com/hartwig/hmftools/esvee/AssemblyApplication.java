@@ -11,7 +11,8 @@ import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.formBreakendF
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
@@ -128,7 +129,7 @@ public class AssemblyApplication
         if(mConfig.JunctionFiles.isEmpty())
             return;
 
-        String fragLengthFilename = formPrepInputFilename(mConfig.sampleId(), PREP_FRAG_LENGTH_FILE_ID);
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.sampleId());
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         if(fragmentLengthBounds.isValid())
@@ -270,8 +271,10 @@ public class AssemblyApplication
 
         List<Thread> threadTasks = new ArrayList<>();
 
+        int taskCount = mBamReaders.size();
+
         List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(
-                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, mConfig.Threads, threadTasks);
+                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);

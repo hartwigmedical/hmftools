@@ -7,7 +7,6 @@ public class FragmentTotals
     private int mVariantCount;
     private int mTumorFragsTotal;
     private int mSampleFragsTotal;
-    private double mSampleAllelelQualTotal;
     private double mTumorCopyNumberTotal;
 
     private int mTumorDepthTotal;
@@ -17,14 +16,17 @@ public class FragmentTotals
     private int mSampleTwoPlusCount;
 
     private double mSampleAdjustedFragsTotal;
-    private double mSampleAdjustedDepthTotal;
+
+    private double mSampleDepthPerCopyNumberTotal;
 
     private double mSampleWeightedDepthTotal;
     private double mSampleTumorAdjustedDepthTotal;
-    private double mSampleWeightedFragsTotal;
 
     private double mTumorAdjustedFragsTotal;
     private double mTumorAdjustedDepthTotal;
+
+    private double mVcnSampleDepthTotal;
+    private double mCnSampleDepthTotal;
 
     private Double mTumorVafOverride; // for ref variant analysis without a tumor sample
 
@@ -33,24 +35,26 @@ public class FragmentTotals
         mVariantCount = 0;
         mTumorFragsTotal = 0;
         mSampleFragsTotal = 0;
-        mSampleAllelelQualTotal = 0;
         mTumorCopyNumberTotal = 0;
         mTumorDepthTotal = 0;
         mSampleDepthTotal = 0;
         mSampleOneFragmentCount = 0;
         mSampleTwoPlusCount = 0;
         mSampleAdjustedFragsTotal = 0;
-        mSampleAdjustedDepthTotal = 0;
+        mSampleDepthPerCopyNumberTotal = 0;
         mSampleWeightedDepthTotal = 0;
         mSampleTumorAdjustedDepthTotal = 0;
-        mSampleWeightedFragsTotal = 0;
         mTumorAdjustedFragsTotal = 0;
         mTumorAdjustedDepthTotal = 0;
+        mVcnSampleDepthTotal = 0;
+        mCnSampleDepthTotal = 0;
+
         mTumorVafOverride = null;
     }
 
     public void addVariantData(
-            double copyNumber, int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth, double sampleQualTotal)
+            double copyNumber, double variantCopyNumber,
+            int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth, double sampleQualTotal)
     {
         ++mVariantCount;
         mTumorFragsTotal += tumorAlleleFrags;
@@ -58,7 +62,6 @@ public class FragmentTotals
 
         mSampleFragsTotal += sampleAlleleFrags;
         mSampleDepthTotal += sampleDepth;
-        mSampleAllelelQualTotal += sampleQualTotal;
 
         if(sampleAlleleFrags >= 2)
             ++mSampleTwoPlusCount;
@@ -75,22 +78,20 @@ public class FragmentTotals
         double tumorDpPerCn = tumorDepth / copyNumber;
         mTumorAdjustedDepthTotal += tumorDpPerCn;
 
-        mSampleAdjustedDepthTotal += sampleDepth / copyNumber;
-        mSampleTumorAdjustedDepthTotal += sampleDepth * tumorDpPerCn;
+        mSampleDepthPerCopyNumberTotal += sampleDepth / copyNumber;
 
-        mSampleWeightedFragsTotal += tumorDpPerCn * sampleAlleleFrags * sampleDepth;
+        mSampleTumorAdjustedDepthTotal += sampleDepth * tumorDpPerCn; // denominator for weighted average depth (WAD)
+        mSampleWeightedDepthTotal += tumorDpPerCn * pow(sampleDepth, 2); // numerator for WAD
 
-        mSampleWeightedDepthTotal += tumorDpPerCn * pow(sampleDepth, 2);
+        // for WA_VCN and WA_CN
+        mVcnSampleDepthTotal += variantCopyNumber * sampleDepth;
+        mCnSampleDepthTotal += copyNumber * sampleDepth;
     }
 
     public int variantCount() { return mVariantCount; }
-    public int tumorAdTotal() { return mTumorFragsTotal; }
     public int sampleAdTotal() { return mSampleFragsTotal; }
     public int tumorDepthTotal() { return mTumorDepthTotal; }
     public int sampleDepthTotal() { return mSampleDepthTotal; }
-    public double sampleAdjustedDepthTotal() { return mSampleAdjustedDepthTotal; }
-    public double sampleTumorAdjustedDepthTotal() { return mSampleTumorAdjustedDepthTotal; }
-    public double sampleTumorAdjustedFragsTotal() { return mSampleWeightedFragsTotal; }
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
 
@@ -104,41 +105,28 @@ public class FragmentTotals
         return mTumorDepthTotal > 0 ? mTumorFragsTotal / (double)mTumorDepthTotal : 0;
     }
 
-    public double adjTumorVaf()
-    {
-        if(mTumorVafOverride != null)
-            return mTumorVafOverride;
+    public double rawSampleVaf() { return mSampleDepthTotal > 0 ? mSampleFragsTotal / (double)mSampleDepthTotal : 0; }
 
-        return mTumorAdjustedDepthTotal > 0 ? mTumorAdjustedFragsTotal / mTumorAdjustedDepthTotal : 0;
-    }
-
-    public double adjSampleVaf() { return mSampleAdjustedDepthTotal > 0 ? mSampleAdjustedFragsTotal / mSampleAdjustedDepthTotal : 0; }
+    public double adjSampleVaf() { return mSampleDepthPerCopyNumberTotal > 0 ? mSampleAdjustedFragsTotal / mSampleDepthPerCopyNumberTotal : 0; }
 
     public double adjSampleVaf(double sampleAdAdjustment)
     {
-        if(mSampleAdjustedDepthTotal == 0)
+        if(mSampleDepthPerCopyNumberTotal == 0)
             return 0;
 
         double avgCopyNumber = mTumorCopyNumberTotal / mVariantCount;
         double adjSampleAdTotal = mSampleAdjustedFragsTotal + sampleAdAdjustment / avgCopyNumber;
 
-        return adjSampleAdTotal / mSampleAdjustedDepthTotal;
+        return adjSampleAdTotal / mSampleDepthPerCopyNumberTotal;
     }
+
+    // for WA_VCN and WA_CN
+    public double weightedVariantCopyNumber() { return mSampleDepthTotal > 0 ? mVcnSampleDepthTotal / mSampleDepthTotal : 0; }
+    public double weightedCopyNumber() { return mSampleDepthTotal > 0 ? mCnSampleDepthTotal / mSampleDepthTotal : 0; }
 
     public double weightedSampleDepth()
     {
         // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
         return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
-    }
-
-    public double weightedSampleFrags()
-    {
-        // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
-        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedFragsTotal / mSampleTumorAdjustedDepthTotal : 0;
-    }
-
-    public double qualPerAlleleFragment()
-    {
-        return mSampleFragsTotal > 0 ? mSampleAllelelQualTotal / mSampleFragsTotal : 0;
     }
 }

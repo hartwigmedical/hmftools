@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BQ;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
@@ -52,9 +52,9 @@ public class HardFilters
         if(isSgl)
         {
             String ref = variant.getAlleles().get(0).getDisplayString();
-            final VariantAltInsertCoords altInsertCoords = parseRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
+            final VariantAltInsertCoords altInsertCoords = fromRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
 
-            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orient, altInsertCoords.InsertSequence);
+            boolean isLineInsertion = isMobileLineElement(altInsertCoords.OtherOrient, altInsertCoords.InsertSequence);
 
             final String qualTag = isLineInsertion ? GRIDSS_BQ : GRIDSS_BAQ;
             qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);

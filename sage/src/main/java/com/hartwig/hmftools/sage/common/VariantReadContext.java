@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPos
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
@@ -22,7 +21,7 @@ public class VariantReadContext
     public final int AlignmentStart; // alignments of the flanks using read bases
     public final int AlignmentEnd;
 
-    public final byte[] RefBases; // capture for the core only
+    public final byte[] RefBases; // captured for the core only
 
     // read bases and info
     public final byte[] ReadBases;
@@ -46,13 +45,14 @@ public class VariantReadContext
 
     private ArtefactContext mArtefactContext;
     private UltimaQualModel mUltimaQualModel;
-    private RepeatInfo mMaxRefRepeat; // maximun repeat in the reference
+
+    private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
 
     public VariantReadContext(
-            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
-            final byte[] readBases, final List<CigarElement> readCigar,
-            final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
-            final Microhomology homology, final RepeatInfo maxRepeat)
+            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
+            final List<CigarElement> readCigar, final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
+            final Microhomology homology, final RepeatInfo maxRepeat, final int altIndexLower, final int altIndexUpper,
+            final int corePositionStart, final int corePositionEnd)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -68,12 +68,10 @@ public class VariantReadContext
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
-        AltIndexLower = VarReadIndex;
-
-        AltIndexUpper = determineUpperAltIndex(variant, ReadBases, RefBases, VarReadIndex, refIndex(), CoreIndexEnd);
-
-        CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
-        CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
+        AltIndexLower = altIndexLower;
+        AltIndexUpper = altIndexUpper;
+        CorePositionStart = corePositionStart;
+        CorePositionEnd = corePositionEnd;
 
         mArtefactContext = null;
         mUltimaQualModel = null;

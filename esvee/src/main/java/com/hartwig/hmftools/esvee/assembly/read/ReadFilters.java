@@ -29,7 +29,7 @@ public final class ReadFilters
             junctionOverlap = junction.Position - read.alignmentStart();
         }
 
-        return read.numberOfEvents() > 0 && junctionOverlap > 0 && junctionOverlap <= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
     }
 
     public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)

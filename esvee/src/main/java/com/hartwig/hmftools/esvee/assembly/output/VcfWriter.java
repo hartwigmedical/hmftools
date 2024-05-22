@@ -52,6 +52,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.toVcfTag;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,14 +121,15 @@ public class VcfWriter implements AutoCloseable
 
         mVariants = new ArrayList<>();
 
-        if(config.WriteTypes.contains(WriteType.VCF) && config.VcfFile != null)
+        if(config.WriteTypes.contains(WriteType.VCF))
         {
+            String vcfFilename = mConfig.outputFilename(WriteType.VCF);
             final RefGenomeSource refGenomeSource = (RefGenomeSource) config.RefGenome;
 
             final SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
 
             mWriter = new VariantContextWriterBuilder()
-                    .setOutputFile(config.VcfFile)
+                    .setOutputFile(vcfFilename)
                     .modifyOption(Options.INDEX_ON_THE_FLY, true)
                     .modifyOption(Options.USE_ASYNC_IO, false)
                     .setReferenceDictionary(sequenceDictionary)

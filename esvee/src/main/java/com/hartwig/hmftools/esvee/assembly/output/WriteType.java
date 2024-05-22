@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.output;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
+import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +15,7 @@ public enum WriteType
     JUNC_ASSEMBLY("assemblies.tsv"),
     ASSEMBLY_READ("assembly_read.tsv"),
     BREAKEND("breakend.tsv"),
-    VCF("raw" + VCF_ZIP_EXTENSION),
+    VCF(RAW_VCF_SUFFIX),
     ALIGNMENT("alignment.tsv"),
     ALIGNMENT_DATA("align_detailed.tsv"),
     DECOY_MATCHES("decoy_matches.tsv"),

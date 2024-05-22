@@ -107,10 +107,21 @@ public class AlignData
         {
             SV_LOGGER.error("alignment({}) invalid subsequence request({}-{}) vs fullSequenceLength({})",
                     toString(), mSequenceStart, mSequenceEnd, fullSequenceLength);
+        }
+    }
+
+    public void setRepeatTrimmedLength(final String fullSequence, int inexactHomologyLength, boolean homologyAtStart)
+    {
+        int seqStart = homologyAtStart ? mSequenceStart + inexactHomologyLength : mSequenceStart;
+        int seqEnd = !homologyAtStart ? mSequenceEnd - inexactHomologyLength : mSequenceEnd;
+
+        if(seqStart > seqEnd)
+        {
+            mRepeatTrimmedLength = 0;
             return;
         }
 
-        String alignedBases = fullSequence.substring(mSequenceStart, mSequenceEnd);
+        String alignedBases = fullSequence.substring(seqStart, seqEnd);
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases.getBytes());
 
         if(repeats != null)

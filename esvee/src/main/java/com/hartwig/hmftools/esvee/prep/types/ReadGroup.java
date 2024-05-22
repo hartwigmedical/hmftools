@@ -78,7 +78,7 @@ public class ReadGroup
             return "";
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orient)));
+        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orient.asByte())));
         return sj.toString();
     }
 

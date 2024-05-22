@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
@@ -9,8 +9,9 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_REF_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
 
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -40,6 +42,11 @@ public class LocalSequenceMatcher
     {
         int localRegionStart = assembly.junction().Position - mLocalMatchDistance;
         int localRegionEnd = assembly.junction().Position + mLocalMatchDistance;
+
+        int chromosomeEnd = mRefGenome.getChromosomeLength(assembly.junction().Chromosome);
+
+        if(localRegionEnd >= chromosomeEnd)
+            return null;
 
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRegionStart, localRegionEnd);
 
@@ -95,56 +102,16 @@ public class LocalSequenceMatcher
             }
         }
 
-        Set<Integer> testedOffsets = Sets.newHashSet();
-
         int minOverlapLength = min(assembly.extensionLength(), ASSEMBLY_LINK_OVERLAP_BASES);
 
-        for(int[] indexStarts : alternativeIndexStarts)
+        int[] topMatchIndices = findBestSequenceMatch(assemblySeq, localRefSeq, minOverlapLength, alternativeIndexStarts);
+
+        if(topMatchIndices != null)
         {
-            // find a comparison range that falls within both sequence's index range around the junction
-            int assemblyJuncSeqMatchIndex = indexStarts[0];
-            int refMatchIndex = indexStarts[1];
+            int secondIndexStart = topMatchIndices[1];
 
-            int matchOffset = refMatchIndex - assemblyJuncSeqMatchIndex;
-
-            if(testedOffsets.contains(matchOffset))
-                continue;
-
-            testedOffsets.add(matchOffset);
-
-            int refIndexStart = refMatchIndex - assemblyJuncSeqMatchIndex;
-            int refIndexEnd = refIndexStart + assemblyJunctionSeqLength - 1;
-
-            int assemblyJuncIndexStart = 0;
-            int assemblyJuncIndexEnd = assemblyJunctionSeqLength - 1;
-
-            if(refIndexStart < 0)
-            {
-                assemblyJuncIndexStart += -(refIndexStart);
-                refIndexStart = 0;
-            }
-
-            // discount this match if the implied end of the match in the second sequence is past its ref base end
-            if(refIndexEnd >= localRefSeq.BaseLength)
-                continue;
-
-            int assemblyIndexStart = assemblyJuncIndexStart + assemblySeq.junctionSeqStartIndex();
-            int assemblyIndexEnd = min(assemblyJuncIndexEnd + assemblySeq.junctionSeqStartIndex(), assemblySeq.BaseLength - 1);
-
-            if(refIndexEnd - refIndexStart + 1 < minOverlapLength || assemblyIndexEnd - assemblyIndexStart + 1 < minOverlapLength)
-                continue;
-
-            int mismatchCount = SequenceCompare.compareSequences(
-                    assemblySeq.bases(), assemblySeq.baseQuals(), assemblyIndexStart, assemblyIndexEnd, assemblySeq.repeatInfo(),
-                    localRefSeq.bases(), localRefSeq.baseQuals(), refIndexStart, refIndexEnd, localRefSeq.repeatInfo(),
-                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
-
-            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
-                continue;
-
-            // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
-            // the implied junction position in the remote can be determined
-            return formLocalLink(assembly, assemblySeq, localRegionStart, refIndexStart);
+            // return formLocalLink(assembly, assemblySeq, firstIndexStart, secondIndexStart);
+            return formLocalLink(assembly, assemblySeq, localRegionStart, secondIndexStart);
         }
 
         return null;

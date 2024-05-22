@@ -11,8 +11,10 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
-import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 
 import java.util.List;
 import java.util.Set;
@@ -83,8 +85,8 @@ public class VcfWriter
 
     private String formVcfFilename(final String sampleId, final String fileId)
     {
-        String suffix = mConfig.OutputId != null ? "." + mConfig.OutputId + VCF_ZIP_EXTENSION : VCF_ZIP_EXTENSION;
-        return mConfig.OutputDir + sampleId + "." + ESVEE_FILE_ID + "." + fileId + suffix;
+        String vcfFileId = ESVEE_FILE_ID + FILE_NAME_DELIM + fileId;
+        return formOutputFile(mConfig.OutputDir, sampleId, vcfFileId, VCF_ZIP_EXTENSION.substring(1), mConfig.OutputId);
     }
 
     private VariantContextWriter initialiseWriter(final VCFHeader vcfHeader, final String esveeVersion, final String vcfFilename)

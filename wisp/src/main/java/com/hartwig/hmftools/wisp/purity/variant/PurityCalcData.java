@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class PurityCalcData
 {
     public double RawPurityEstimate;
@@ -12,6 +16,10 @@ public class PurityCalcData
 
     public ClonalityData Clonality;
 
+    public int BqrQualThreshold;
+    public double ErrorRate;
+    public final List<String> BqrExtraInfo;
+
     public static final double CALC_NO_SET = -1;
 
     public PurityCalcData()
@@ -23,7 +31,10 @@ public class PurityCalcData
         LodPurityEstimate = CALC_NO_SET;
         Probability = CALC_NO_SET;
         DualProbability = CALC_NO_SET;
+        BqrQualThreshold = 0;
+        ErrorRate = 0;
 
         Clonality = ClonalityData.NO_RESULT;
+        BqrExtraInfo = Lists.newArrayList();
     }
 }

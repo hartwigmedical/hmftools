@@ -14,6 +14,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
+import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
+import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,6 +26,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 
 public class CallerConfig
@@ -37,8 +42,6 @@ public class CallerConfig
     public final String OutputId;
     public final List<String> RestrictedChromosomes;
 
-    private static final String VCF_FILE = "vcf";
-
     public CallerConfig(final ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);
@@ -49,7 +52,11 @@ public class CallerConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        VcfFile = configBuilder.getValue(VCF_FILE);
+        if(configBuilder.hasValue(INPUT_VCF))
+            VcfFile = configBuilder.getValue(INPUT_VCF);
+        else
+            VcfFile = formEsveeInputFilename(OutputDir, SampleId, DEPTH_VCF_SUFFIX, OutputId);
+
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         RestrictedChromosomes = loadSpecificChromsomes(configBuilder);
@@ -91,7 +98,7 @@ public class CallerConfig
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
-        configBuilder.addPath(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

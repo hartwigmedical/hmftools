@@ -121,23 +121,3 @@ class TestTrainingRunner:
     def test_train_final_model_successful(self):
         self.runner.train_final_model()
         assert isinstance(self.runner.cuppa_classifier, CuppaClassifier)
-
-    def _run_individual_steps_on_real_data(self):
-
-        input_dir = "/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/features/Hartwig_PCAWG/017/06-NET_as_prefix/tables/"
-
-        runner = TrainingRunner(
-            features_path=input_dir,
-            output_dir="/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/07-pip_env_2",
-            metadata_path=os.path.join(input_dir, "cup_ref_sample_data.csv"),
-            log_to_file=True,
-            using_old_features_format=True,
-            n_jobs=5
-        )
-
-        runner.load_data()
-        runner.cv_fit()
-        runner.make_cv_report()
-
-        runner.train_final_model()
-        runner.export_final_model()

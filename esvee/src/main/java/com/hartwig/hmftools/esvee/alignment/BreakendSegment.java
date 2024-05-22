@@ -31,7 +31,7 @@ public class BreakendSegment
     public String toString()
     {
         return format("asm(%d len=%d index=%d:%d) segment(%d M=%d mq=%d score=%d trimLen=%d)",
-                AssemblyAlignmentId, SequenceLength, SequenceIndex, Orient,
+                AssemblyAlignmentId, SequenceLength, SequenceIndex, Orient.asByte(),
                 Index, Alignment.alignedBases(), Alignment.MapQual, Alignment.Score, Alignment.repeatTrimmedLength());
     }
 }

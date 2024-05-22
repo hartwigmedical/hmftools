@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
-import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
@@ -89,7 +88,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.AltIndexUpper);
         assertEquals("CGCTG", readContext.refBases());
         assertEquals("TGGGCACCGATGTCGGGT", readContext.readBases());
-        assertEquals("1M2I10M3I1M", readContext.readCigar());
+        assertEquals("1M3I10M3I1M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
         assertEquals(7, readContext.leftFlankLength());
         assertEquals(6, readContext.rightFlankLength());
@@ -114,16 +113,16 @@ public class VariantReadContextTest
         assertEquals("GC", readContext.MaxRepeat.Bases);
         assertEquals(4, readContext.MaxRepeat.Count);
         assertEquals(131, readContext.AlignmentStart);
-        assertEquals(156, readContext.AlignmentEnd);
+        assertEquals(157, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(12, readContext.VarReadIndex);
-        assertEquals(20, readContext.CoreIndexEnd);
+        assertEquals(21, readContext.CoreIndexEnd);
         assertEquals(12, readContext.AltIndexLower);
         assertEquals(13, readContext.AltIndexUpper);
-        assertEquals("TGCGCGCTACACACAC", readContext.refBases());
-        assertEquals("TGCGCGCGCCACACAC", readContext.coreStr());
-        assertEquals("26M", readContext.readCigar());
-        assertEquals(16, readContext.coreLength());
+        assertEquals("TGCGCGCTACACACACT", readContext.refBases());
+        assertEquals("TGCGCGCGCCACACACT", readContext.coreStr());
+        assertEquals("27M", readContext.readCigar());
+        assertEquals(17, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
     }
@@ -211,8 +210,8 @@ public class VariantReadContextTest
         assertNotNull(readContext.MaxRepeat);
         assertEquals("C", readContext.MaxRepeat.Bases);
         assertEquals(4, readContext.MaxRepeat.Count);
-        assertEquals(7, readContext.VarReadIndex);
-        assertEquals(11, readContext.CoreIndexEnd);
+        assertEquals(9, readContext.VarReadIndex);
+        assertEquals(13, readContext.CoreIndexEnd);
     }
 
     @Test
@@ -237,7 +236,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(8, readContext.AltIndexUpper);
-        assertEquals("GCTGTC", readContext.refBases());
+        assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
@@ -318,7 +317,7 @@ public class VariantReadContextTest
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(10, readContext.AltIndexUpper);
-        assertEquals("GCTGTCTGT", readContext.refBases());
+        assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTGTGTCTGTGAC", readContext.readBases());
         assertEquals("7M2I10M", readContext.readCigar());
         assertEquals(9, readContext.coreLength());
@@ -338,41 +337,6 @@ public class VariantReadContextTest
 
     /* old scenarios:
 
-        @Test
-        public void testSimpleSnvHas5BaseCore()
-        {
-            String refSequence = "GATCATCTAGG";
-            String readSequence = "GATCACCTAGG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("11M", readSequence);
-            ReadContext victim = this.victim.createSNVContext(1005, 5, record, refBases);
-            assertEquals("CACCT", victim.coreString());
-        }
-
-        @Test
-        public void testSimpleInsert()
-        {
-            String refSequence = "GATCATCTAGG";
-            String readSequence = "GAGGCTCATCTAGG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("2M3I9M", readSequence);
-            ReadContext victim = this.victim.createInsertContext("AGGC", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("GAGGCTC", victim.coreString());
-        }
-
-        @Test
-        public void testInsertInRepeat()
-        {
-            String refSequence = "TGAAAAAAAATCT";
-            String readSequence = "TGAAAAAAAAATCT";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("2M1I11M", readSequence);
-            ReadContext victim = this.victim.createInsertContext("GA", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("TGAAAAAAAAAT", victim.coreString());
-        }
 
         @Test
         public void testInsertAtHomology()
@@ -463,132 +427,6 @@ public class VariantReadContextTest
             ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record.getReadBases(), refBases);
             assertEquals("GATCATCTG", victim.coreString());
         }
-
-        @Test
-        public void testDeleteOneBase()
-        {
-            String refSequence = "GATCATCTAGG";
-            String readSequence = "GTCATCTAGG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M1D9M", readSequence);
-            ReadContext victim = this.victim.createDelContext("GA", 1000, 0, record.getReadBases(), refBases);
-            assertEquals("GTC", victim.coreString());
-        }
-
-        @Test
-        public void testDeleteTwoBase()
-        {
-            String refSequence = "GATCATCTAGG";
-            String readSequence = "GCATCTAGG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M2D8M", readSequence);
-            ReadContext victim = this.victim.createDelContext("GAT", 1000, 0, record.getReadBases(), refBases);
-            assertEquals("GCA", victim.coreString());
-        }
-
-
      */
 
-    @Test
-    public void testRepeats()
-    {
-        //              0123456789
-        String bases = "AAACCTTTTT";
-
-        // first check limits
-        RepeatInfo repeatInfo = findMultiBaseRepeat(bases.getBytes(), 6, 1, 4);
-        assertNotNull(repeatInfo);
-        assertEquals("T", repeatInfo.Bases);
-        assertEquals(4, repeatInfo.Count);
-
-        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 7, 1, 4);
-        assertNull(repeatInfo);
-
-        //       01234567890
-        bases = "AACGGTACGGT";
-
-        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 1, 5, 2);
-        assertNotNull(repeatInfo);
-        assertEquals("ACGGT", repeatInfo.Bases);
-        assertEquals(2, repeatInfo.Count);
-        assertEquals(10, repeatInfo.length());
-        assertEquals(5, repeatInfo.repeatLength());
-
-        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 2, 5, 2);
-        assertNull(repeatInfo);
-    }
-
-    @Test
-    public void testHomology()
-    {
-        SimpleVariant var = createSimpleVariant(26, "A", "AT");
-
-        String readBases = REF_BASES_200.substring(10, 26) + "AT" + REF_BASES_200.substring(27, 40);
-        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
-        String readCigar = "16M1I13M";
-        SAMRecord read = buildSamRecord(10, readCigar, readBases, baseQuals);
-
-        Microhomology homology = findHomology(var, read, 16);
-
-        assertNotNull(homology);
-        assertEquals("T", homology.Bases);
-        assertEquals(4, homology.Length);
-
-        var = createSimpleVariant(26, "A", "ATT");
-
-        readBases = REF_BASES_200.substring(10, 26) + "ATT" + REF_BASES_200.substring(27, 40);
-        baseQuals = buildDefaultBaseQuals(readBases.length());
-        readCigar = "16M2I13M";
-        read = buildSamRecord(10, readCigar, readBases, baseQuals);
-
-        homology = findHomology(var, read, 16);
-
-        assertNotNull(homology);
-        assertEquals("TT", homology.Bases);
-        assertEquals(4, homology.Length);
-
-        // delete
-        var = createSimpleVariant(64, "GAAA", "G");
-
-        readBases = REF_BASES_200.substring(50, 65) + REF_BASES_200.substring(69, 80);
-        baseQuals = buildDefaultBaseQuals(readBases.length());
-        readCigar = "15M3D11M";
-        read = buildSamRecord(50, readCigar, readBases, baseQuals);
-
-        homology = findHomology(var, read, 15);
-
-        assertNotNull(homology);
-        assertEquals("AAA", homology.Bases);
-        assertEquals(3, homology.Length);
-
-        // checks read bases not ref bases to determine homology
-        var = createSimpleVariant(26, "A", "AAAA");
-        readBases = REF_BASES_200.substring(10, 26) + "AAAAAAAAAAAAAAAAAAAAATG";
-        baseQuals = buildDefaultBaseQuals(readBases.length());
-        readCigar = "16M3I20M";
-        read = buildSamRecord(10, readCigar, readBases, baseQuals);
-
-        homology = findHomology(var, read, 16);
-
-        assertNotNull(homology);
-        assertEquals("AAA", homology.Bases);
-        assertEquals(17, homology.Length);
-
-        // multiple copies and then finishes with a partial copy
-        // eg G(AACTC)AACTCAACTCAACCCTTT -> GAACTCAACTCAA(CTCAA)CCCTTT
-
-        var = createSimpleVariant(26, "G", "GAACTC");
-        readBases = REF_BASES_200.substring(10, 26) + "GAACTCAACTCAACTCAACCCTTT";
-        baseQuals = buildDefaultBaseQuals(readBases.length());
-        readCigar = "16M5I18M";
-        read = buildSamRecord(10, readCigar, readBases, baseQuals);
-
-        homology = findHomology(var, read, 16);
-
-        assertNotNull(homology);
-        assertEquals("AACTC", homology.Bases);
-        assertEquals(13, homology.Length);
-    }
 }

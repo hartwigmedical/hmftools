@@ -8,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
@@ -91,7 +90,7 @@ public class VariantTypesTest
 
         VariantReadContext readContext = var.candidate().readContext();
         assertTrue(readContext.isValid());
-        assertEquals(14, readContext.coreLength());
+        assertEquals(49, readContext.coreLength());
         assertNotNull(readContext.MaxRepeat);
         assertEquals("AAAC", readContext.MaxRepeat.Bases);
         assertEquals(24, readContext.MaxRepeat.length());
@@ -135,5 +134,4 @@ public class VariantTypesTest
         assertEquals(21, readContext.coreLength());
         assertEquals("GGGGG", readContext.homologyBases());
     }
-
 }

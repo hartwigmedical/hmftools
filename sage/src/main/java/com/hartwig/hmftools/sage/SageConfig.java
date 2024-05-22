@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -86,7 +88,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final Set<Integer> SpecificPositions;
+    public final List<BasePosition> SpecificPositions;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -182,14 +184,22 @@ public class SageConfig
             }
         }
 
-        SpecificPositions = Sets.newHashSet();
+        SpecificPositions = Lists.newArrayList();
 
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
         {
-            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
-            if(!positionList.isEmpty())
+            String[] specPositionsStr = configBuilder.getValue(SPECIFIC_POSITIONS).split(ITEM_DELIM);
+
+            for(String specPosStr : specPositionsStr)
             {
-                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
+                String[] items = specPosStr.split(":", 2);
+                SpecificPositions.add(new BasePosition(items[0], Integer.parseInt(items[1])));
+            }
+
+            if(SpecificChrRegions.Regions.isEmpty())
+            {
+                SpecificPositions.forEach(x -> SpecificChrRegions.addRegion(
+                        new ChrBaseRegion(x.Chromosome, x.Position - 300, x.Position + 300)));
             }
         }
 
@@ -331,7 +341,9 @@ public class SageConfig
         configBuilder.addDecimal(PERF_WARN_TIME, "Log details of partitions taking longer than X seconds", 0.0);
 
         // debug
-        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
+        configBuilder.addConfigItem(
+                SPECIFIC_POSITIONS,
+                "Restrict to specific positions(s) of form chromosome:position, separated by ';'");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -367,7 +379,7 @@ public class SageConfig
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
-        SpecificPositions = Sets.newHashSet();
+        SpecificPositions = Collections.emptyList();
         LogEvidenceReads = false;
     }
 }

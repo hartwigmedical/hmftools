@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
@@ -11,10 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.qual.BqrFile;
 import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.qual.BqrReadType;
@@ -37,7 +38,7 @@ public class BqrAdjustment
 
     private static final byte NO_KEY_VALUE = 1;
 
-    public List<BqrContextData> getThresholdBqrData(final double qualThreshold)
+    public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
     {
         return qualThreshold <= 0 ?
                 mBqrContextData : mBqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
@@ -48,17 +49,23 @@ public class BqrAdjustment
         int depthTotal = 0;
         int fragmentTotal = 0;
 
+        Set<String> processedTriNucContext = Sets.newHashSet();
+
         for(BqrContextData bqrData : bqrContextData)
         {
             if(bqrData.TotalCount == 0)
                 continue;
 
-            depthTotal += bqrData.TotalCount;
             fragmentTotal += bqrData.AltCount;
+
+            if(!processedTriNucContext.contains(bqrData.TrinucleotideContext))
+            {
+                processedTriNucContext.add(bqrData.TrinucleotideContext);
+                depthTotal += bqrData.TotalCount;
+            }
         }
 
         return depthTotal > 0 ? fragmentTotal / (double)depthTotal : 0;
-        // return sampleErrorPerMillion(depthTotal, fragmentTotal);
     }
 
     public static boolean hasVariantContext(
@@ -76,11 +83,22 @@ public class BqrAdjustment
     {
         mBqrContextData.clear();
 
-        String vcfDir = !mConfig.SomaticVcf.isEmpty() ? pathFromFile(mConfig.getSomaticVcf(sampleId)) : mConfig.SomaticDir;
-        String bqrFilename = generateBqrFilename(vcfDir, sampleId);
+        String bqrFileDir;
+
+        if(!mConfig.BqrDir.isEmpty())
+            bqrFileDir = mConfig.BqrDir;
+        else if(!mConfig.SomaticVcf.isEmpty())
+            bqrFileDir = pathFromFile(mConfig.getSomaticVcf(sampleId));
+        else
+            bqrFileDir = mConfig.SomaticDir;
+
+        String bqrFilename = generateBqrFilename(bqrFileDir, sampleId);
 
         if(!Files.exists(Paths.get(bqrFilename)))
+        {
+            CT_LOGGER.warn("sample({}) missing BQR file: {}", sampleId, bqrFilename);
             return;
+        }
 
         List<BqrRecord> allCounts = BqrFile.read(bqrFilename);
 
@@ -145,37 +163,4 @@ public class BqrAdjustment
         mBqrContextData.add(bqrErrorRate);
         return bqrErrorRate;
     }
-
-    /*
-    public void processSample(final String sampleId, final List<SomaticVariant> variants)
-    {
-        // calculate BQR error rates for each TNC and alt
-        loadBqrData(sampleId);
-
-        if(mBqrContextData.isEmpty())
-            return;
-
-        for(SomaticVariant variant : variants)
-        {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-
-            if(sampleFragData == null)
-                continue;
-
-            BqrContextData bqrContextData = getOrCreate(variant.decorator().trinucleotideContext(), variant.Alt);
-
-            if(bqrContextData == null)
-                continue;
-
-            bqrContextData.SampleDepthTotal += sampleFragData.Depth;
-            bqrContextData.SampleFragmentTotal += sampleFragData.AlleleCount;
-        }
-
-        // now test out each BQR qual threshold
-        for(Integer qualThreshold : QUAL_THRESHOLDS)
-        {
-            checkQualThreshold(sampleId, qualThreshold);
-        }
-    }
-    */
 }

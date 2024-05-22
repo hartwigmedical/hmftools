@@ -43,7 +43,8 @@ public class Read
     private int mAlignmentEnd;
     private int mUnclippedStart;
     private int mUnclippedEnd;
-    private Integer mNumberOfEvents;
+    private Integer mSnvCount;
+    private Integer mTotalIndelBases;
     private Integer mMateAlignmentEnd;
     private byte[] mBases;
     private byte[] mBaseQuals;
@@ -73,7 +74,8 @@ public class Read
         mCigarElements = cigarElementsFromStr(mOrigCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
-        mNumberOfEvents = null;
+        mSnvCount = null;
+        mTotalIndelBases = null;
         mBases = null;
         mBaseQuals = null;
         mMateAlignmentEnd = null;
@@ -238,15 +240,35 @@ public class Read
         return ReadUtils.getReadIndexAtReferencePosition(this, refPosition, allowExtrapolation);
     }
 
-    public int numberOfEvents()
+    public int totalIndelBases()
     {
-        if(mNumberOfEvents != null)
-            return mNumberOfEvents;
+        if(mTotalIndelBases == null)
+            calcNumberOfEvents();
 
+        return mTotalIndelBases;
+    }
+
+    public int snvCount()
+    {
+        if(mSnvCount == null)
+            calcNumberOfEvents();
+
+        return mSnvCount;
+    }
+
+    private void calcNumberOfEvents()
+    {
         Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
 
-        mNumberOfEvents = numOfEvents != null ? (int)numOfEvents : 0;
-        return mNumberOfEvents;
+        if(numOfEvents == null)
+        {
+            mTotalIndelBases = 0;
+            mSnvCount = 0;
+            return;
+        }
+
+        mTotalIndelBases = mCigarElements.stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+        mSnvCount = max((int)numOfEvents - mTotalIndelBases, 0);
     }
 
     public IndelCoords indelCoords()
@@ -383,6 +405,8 @@ public class Read
 
     public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart != null ? mIndelImpliedAlignmentStart : 0; }
     public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd != null ? mIndelImpliedAlignmentEnd : 0; }
+    public int indelImpliedUnclippedStart() { return mIndelImpliedUnclippedStart != null ? mIndelImpliedUnclippedStart : 0; }
+    public int indelImpliedUnclippedEnd() { return mIndelImpliedUnclippedEnd != null ? mIndelImpliedUnclippedEnd : 0; }
 
     // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
     // note: converted INDELs from deletes may have their unclipped position inside the alignment

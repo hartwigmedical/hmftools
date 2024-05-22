@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.getRefBaseCoordinates;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
@@ -143,16 +141,19 @@ public final class CandidateSerialisation
         int leftCoreLength = varReadIndex - coreIndexStart;
         int rightCoreLength = coreIndexEnd - varReadIndex;
 
-        int[] refPosCoords = getRefBaseCoordinates(variant, core.length(), leftCoreLength, rightCoreLength);
+        // now should just use core positions
+        int[] refPosCoords = new int[] {0, 0}; // getRefBaseCoordinates(variant, core.length(), leftCoreLength, rightCoreLength);
 
         final byte[] refBases = refGenome.getBases(variant.Chromosome, refPosCoords[SE_START], refPosCoords[SE_END]);
 
         Microhomology homology = !homologyStr.isEmpty() ? new Microhomology(homologyStr, homologyStr.length()) : null;
         RepeatInfo maxRepeat = !repeatSequence.isEmpty() ? new RepeatInfo(0, repeatSequence, repeatCount) : null;
 
+        // TODO:
+
         VariantReadContext readContext = new VariantReadContext(
                 variant, readAlignmentStart, readAlignmentEnd, refBases, readBases.getBytes(), readCigar,
-                coreIndexStart, varReadIndex, coreIndexEnd, homology, maxRepeat);
+                coreIndexStart, varReadIndex, coreIndexEnd, homology, maxRepeat, 0, 0, 0, 0);
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }

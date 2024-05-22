@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
@@ -40,8 +39,6 @@ public class JunctionAssembler
     {
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
-
-        int consensusMismatch = PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> extensionReads = Lists.newArrayList();
@@ -87,7 +84,7 @@ public class JunctionAssembler
         if(extensionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return Collections.emptyList();
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, consensusMismatch);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())
             return Collections.emptyList();
@@ -102,16 +99,14 @@ public class JunctionAssembler
                 extensionSeqBuilder.repeatInfo());
 
         // test other reads against this new assembly
-        int supportMismatch = PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
-
         int mismatchCount = extensionSeqBuilder.mismatches();
 
         for(Read read : junctionReads)
         {
-            if(assemblySupport.stream().anyMatch(x -> x.cachedRead() == read))
+            if(assemblySupport.stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
                 continue;
 
-            if(!assembly.checkAddJunctionRead(read, supportMismatch))
+            if(!assembly.checkAddJunctionRead(read))
                 ++mismatchCount;
         }
 

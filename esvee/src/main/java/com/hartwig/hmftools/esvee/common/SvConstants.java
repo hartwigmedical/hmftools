@@ -2,11 +2,6 @@ package com.hartwig.hmftools.esvee.common;
 
 public final class SvConstants
 {
-    public static final String ESVEE_FILE_ID = "esvee";
-    public static final String PREP_FILE_ID = "esvee.prep";
-
-    public static final String FILE_NAME_DELIM = ".";
-
     public static final String BAM_HEADER_SAMPLE_INDEX_TAG = "sampleId";
 
     // commonly used thresholds
@@ -26,4 +21,8 @@ public final class SvConstants
 
     // qual calcs and filters
     public static final double QUAL_CALC_FRAG_SUPPORT_FACTOR = 5;
+
+
+
+
 }

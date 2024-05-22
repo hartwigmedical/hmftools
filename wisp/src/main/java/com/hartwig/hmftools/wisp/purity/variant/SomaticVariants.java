@@ -171,7 +171,7 @@ public class SomaticVariants
 
             if(variantCount > 0 && (variantCount % 100000) == 0)
             {
-                CT_LOGGER.info("processed {} variants", variantCount);
+                CT_LOGGER.info("loaded {} variants", variantCount);
             }
         }
 
@@ -413,9 +413,6 @@ public class SomaticVariants
 
         try
         {
-            VariantContextDecorator decorator = variant.decorator();
-            VariantImpact variantImpact = decorator.variantImpact();
-
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             addCommonFields(sj, config, sampleData, sampleId);
@@ -428,12 +425,12 @@ public class SomaticVariants
             if(filtersStr.isEmpty())
                 filtersStr = PASS;
 
-            sj.add(filtersStr).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
-                    .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));
+            sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(String.valueOf(variant.Reported))
+                    .add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc));
 
-            sj.add(variantImpact.CanonicalGeneName).add(variantImpact.CanonicalCodingEffect.toString())
-                    .add(Hotspot.fromVariant(decorator.context()).toString()).add(String.valueOf(decorator.reported()))
-                    .add(format("%.2f", decorator.variantCopyNumber())).add(format("%.2f", decorator.adjustedCopyNumber()));
+            sj.add(variant.CanonicalGeneName).add(variant.CanonicalCodingEffect)
+                    .add(String.valueOf(variant.Hotspot)).add(String.valueOf(variant.Reported))
+                    .add(format("%.2f", variant.VariantCopyNumber)).add(format("%.2f", variant.CopyNumber));
 
             sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
             sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));

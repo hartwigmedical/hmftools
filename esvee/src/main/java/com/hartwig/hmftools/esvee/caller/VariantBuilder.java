@@ -165,5 +165,4 @@ public class VariantBuilder
 
         return sv;
     }
-
 }

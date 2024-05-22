@@ -64,6 +64,8 @@ public class SimpleVariant extends BasePosition
     public boolean isInsert() { return alt().length() > ref().length(); }
 
     public int indelLength() { return mIndelLength; }
+    public int altLength() { return Alt.length(); }
+    public int refLength() { return Ref.length(); }
 
     public boolean matches(final SimpleVariant variant) { return matches(variant.Chromosome, variant.Position, variant.Ref, variant.Alt); }
 

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.wisp.purity;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
@@ -53,6 +55,8 @@ public class PurityEstimator
 
     public void run()
     {
+        long startTimeMs = System.currentTimeMillis();
+
         List<PurityTask> purityCalcTasks = Lists.newArrayList();
         List<PlotTask> plotTasks = Lists.newArrayList();
 
@@ -84,7 +88,7 @@ public class PurityEstimator
 
             CT_LOGGER.debug("splitting {} patients across {} threads", mConfig.Samples.size(), purityCalcTasks.size());
 
-            final List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
+            List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             {
                 System.exit(1);
@@ -122,7 +126,8 @@ public class PurityEstimator
             }
         }
 
-        CT_LOGGER.info("Wisp purity estimator complete");
+        CT_LOGGER.info("Wisp purity estimator complete{}",
+                mConfig.Samples.size() > 1 ? format(", mins(%s)", runTimeMinsStr(startTimeMs)) : "");
     }
 
     private class PurityTask implements Callable

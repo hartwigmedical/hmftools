@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -26,6 +27,8 @@ public class HomologyData
         InexactStart = inexactStart;
         InexactEnd = inexactEnd;
     }
+
+    public int inexactLength() { return InexactEnd - InexactStart; }
 
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
@@ -164,6 +167,13 @@ public class HomologyData
         int inexactEnd = overlap - inexactStart;
 
         return new HomologyData(sb.toString(), -exactStart, exactEnd, -inexactStart, inexactEnd);
+    }
+
+    public static HomologyData inverse(final HomologyData homologyData)
+    {
+        return new HomologyData(
+                Nucleotides.reverseComplementBases(homologyData.Homology),
+                -homologyData.ExactEnd, abs(homologyData.ExactStart), -homologyData.InexactEnd, abs(homologyData.InexactStart));
     }
 
     private static String getOverlapBases(
