@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
@@ -122,6 +123,76 @@ public class JunctionAssembler
         assembly.buildRepeatInfo();
 
         return Lists.newArrayList(assembly);
+    }
+
+    private void expandReferenceBases(final JunctionAssembly assembly)
+    {
+        // find the longest length of aligned reference bases extending back from the junction
+        int minAlignedPosition = assembly.minAlignedPosition();
+        int maxAlignedPosition = assembly.maxAlignedPosition();
+
+        int junctionPosition = assembly.junction().Position;
+        boolean junctionIsForward = assembly.junction().isForward();
+
+        int maxDistanceFromJunction = 0;
+
+        SupportRead topSupportRead = null;
+
+        for(SupportRead support : assembly.support())
+        {
+            Read read = support.cachedRead();
+            int readJunctionIndex = read.getReadIndexAtReferencePosition(junctionPosition, true);
+
+            // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
+            // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
+            int readExtensionDistance;
+
+            if(junctionIsForward)
+            {
+                minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
+                readExtensionDistance = max(readJunctionIndex - read.leftClipLength(), 0);
+            }
+            else
+            {
+                maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
+                readExtensionDistance = max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
+            }
+
+            assembly.checkAddRefSideSoftClip(read);
+
+            maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
+
+            if(topSupportRead == null)
+            {
+                topSupportRead = support; // will be the initial
+            }
+            else
+            {
+                // select the read with the fewest SNVs in the aligned bases that also has the equal least number of junction mismatches
+                if(support.junctionMismatches() <= topSupportRead.junctionMismatches()
+                && support.junctionMatches() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH
+                && read.snvCount() < topSupportRead.cachedRead().snvCount())
+                {
+                    topSupportRead = support;
+                }
+            }
+        }
+
+        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
+
+        // order by NM to favour the ref where possible
+        if(topSupportRead != null)
+        {
+            assembly.extendRefBasesWithJunctionRead(topSupportRead.cachedRead(), topSupportRead);
+        }
+
+        for(SupportRead support : assembly.support())
+        {
+            if(support == topSupportRead)
+                continue;
+
+            assembly.extendRefBasesWithJunctionRead(support.cachedRead(), support);
+        }
     }
 
     private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)

@@ -233,9 +233,6 @@ public class SequenceTest
 
         JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b, read2)).get(0);
 
-        // expandReferenceBases(assembly);
-        // assembly.buildRepeatInfo();
-
         assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
         assertEquals(18, assembly.refBaseTrimLength());
 

@@ -137,7 +137,7 @@ public class Alignment
                         SV_LOGGER.debug("processed {} assembly alignments", processedCount);
                     }
 
-                    mPerfCounter.stop();
+                    stopCheckLog(assemblyAlignment.info(), mConfig.PerfLogTime);
                 }
                 catch(NoSuchElementException e)
                 {
