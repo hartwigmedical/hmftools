@@ -48,7 +48,7 @@ public class Breakend
     public final String InsertSequence;
     public final String OtherChromosome;
     public final int OtherPosition;
-    public final byte OtherOrientation;
+//    public final byte OtherOrientation;
 
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
@@ -103,7 +103,7 @@ public class Breakend
         InsertSequence = altInsertCoords.InsertSequence;
         OtherChromosome = altInsertCoords.OtherChromsome;
         OtherPosition = altInsertCoords.OtherPosition;
-        OtherOrientation = altInsertCoords.OtherOrient.asByte();
+//        OtherOrientation = altInsertCoords.OtherOrient.asByte();
 
         IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
 

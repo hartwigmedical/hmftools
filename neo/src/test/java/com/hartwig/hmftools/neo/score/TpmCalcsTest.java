@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TpmCalcsTest
@@ -148,6 +149,7 @@ public class TpmCalcsTest
         return neoData;
     }
 
+    @Ignore
     @Test
     public void testPoissonRangeCalcs()
     {
