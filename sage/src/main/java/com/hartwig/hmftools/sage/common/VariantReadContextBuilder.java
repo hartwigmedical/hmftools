@@ -133,9 +133,16 @@ public class VariantReadContextBuilder
 
         byte[] refBases = refSequence.baseRange(refPosCoords[SE_START], refPosCoords[SE_END]);
 
+        int altIndexLower = readVarIndex;
+        int refIndex = leftCoreLength;
+        int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex,  refIndex, coreIndexEnd);
+
+        int corePositionStart = findPositionStart(variant.Position, leftCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexStart);
+        int corePositionEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
+
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,
-                coreIndexStart, readVarIndex, coreIndexEnd, homology, maxRepeat);
+                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
+                coreIndexEnd, homology, maxRepeat, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
     }
 
     public static int[] getRefBaseCoordinates(final SimpleVariant variant, int coreLength, int leftCoreLength, int rightCoreLength)

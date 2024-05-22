@@ -49,10 +49,10 @@ public class VariantReadContext
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
 
     public VariantReadContext(
-            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
-            final byte[] readBases, final List<CigarElement> readCigar,
-            final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
-            final Microhomology homology, final RepeatInfo maxRepeat)
+            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
+            final List<CigarElement> readCigar, final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
+            final Microhomology homology, final RepeatInfo maxRepeat, final int altIndexLower, final int altIndexUpper,
+            final int corePositionStart, final int corePositionEnd)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -68,12 +68,10 @@ public class VariantReadContext
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
-        AltIndexLower = VarReadIndex;
-
-        AltIndexUpper = determineUpperAltIndex(variant, ReadBases, RefBases, VarReadIndex, refIndex(), CoreIndexEnd);
-
-        CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
-        CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
+        AltIndexLower = altIndexLower;
+        AltIndexUpper = altIndexUpper;
+        CorePositionStart = corePositionStart;
+        CorePositionEnd = corePositionEnd;
 
         mArtefactContext = null;
         mUltimaQualModel = null;
