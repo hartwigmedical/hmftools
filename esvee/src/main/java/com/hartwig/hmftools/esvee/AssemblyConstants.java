@@ -55,6 +55,7 @@ public final class AssemblyConstants
 
     // alignment
     public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
+    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 5;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 }

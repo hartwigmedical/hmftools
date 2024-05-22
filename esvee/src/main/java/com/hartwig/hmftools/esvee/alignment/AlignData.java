@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
@@ -49,7 +52,8 @@ public class AlignData
     private final int mRawSequenceEnd;
     private int mSequenceStart;
     private int mSequenceEnd;
-    private int mRepeatTrimmedLength;
+
+    private int mAdjustedAlignment;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
@@ -78,7 +82,7 @@ public class AlignData
 
         mSequenceStart = sequenceStart;
         mSequenceEnd = max(sequenceEnd - 1, 0);
-        mRepeatTrimmedLength = mAlignedBases;
+        mAdjustedAlignment = mAlignedBases;
     }
 
     public Orientation orientation() { return mOrientation; }
@@ -89,7 +93,6 @@ public class AlignData
     public int leftSoftClipLength() { return mSoftClipLeft; }
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
-    public int repeatTrimmedLength() { return mRepeatTrimmedLength; }
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
@@ -110,26 +113,6 @@ public class AlignData
         }
     }
 
-    public void setRepeatTrimmedLength(final String fullSequence, int inexactHomologyLength, boolean homologyAtStart)
-    {
-        int seqStart = homologyAtStart ? mSequenceStart + inexactHomologyLength : mSequenceStart;
-        int seqEnd = !homologyAtStart ? mSequenceEnd - inexactHomologyLength : mSequenceEnd;
-
-        if(seqStart > seqEnd)
-        {
-            mRepeatTrimmedLength = 0;
-            return;
-        }
-
-        String alignedBases = fullSequence.substring(seqStart, seqEnd);
-        List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases.getBytes());
-
-        if(repeats != null)
-            mRepeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
-        else
-            mRepeatTrimmedLength = alignedBases.length();
-    }
-
     public int sequenceStart() { return mSequenceStart; }
     public int sequenceEnd() { return mSequenceEnd; }
 
@@ -138,11 +121,35 @@ public class AlignData
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
 
-    public int maxIndelLength()
+    public int adjustedAlignment() { return mAdjustedAlignment; }
+
+    public void setAdjustedAlignment(final String fullSequence, int inexactHomologyStart, int inexactHomologyEnd)
     {
-        return mCigarElements.stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).max().orElse(0);
+        int sequenceLength = mSequenceEnd - mSequenceStart + 1;
+        int scoreAdjustment = sequenceLength - Score;
+
+        int seqStart = inexactHomologyStart > 0 ? mSequenceStart + inexactHomologyStart : mSequenceStart;
+        int seqEnd = inexactHomologyEnd > 0 ? mSequenceEnd - inexactHomologyEnd : mSequenceEnd;
+
+        if(seqStart < 0 || seqStart > seqEnd || seqEnd >= fullSequence.length())
+        {
+            mAdjustedAlignment = 0;
+            return;
+        }
+
+        String alignedBases = fullSequence.substring(seqStart, seqEnd + 1);
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases.getBytes());
+
+        int trimmedAlignmentLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
+        mAdjustedAlignment = max(trimmedAlignmentLength - scoreAdjustment, 0);
     }
 
+    public double calcModifiedMapQual()
+    {
+        double lengthFactor = pow(mAdjustedAlignment/ 100.0, 2);
+        return (int)round(MapQual * min(1, lengthFactor));
+
+    }
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
         int chrIndex = alignment.getRefId();
@@ -174,8 +181,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) mq(%d) flags(%d) aligned(%d trim=%d)",
+        return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d align=%d adj=%d)",
                 RefLocation, Cigar, mOrientation.isForward() ? "fwd" : "rev",  mRawSequenceStart, mRawSequenceEnd,
-                mSequenceStart, mSequenceEnd, Score, MapQual, Flags, mAlignedBases, mRepeatTrimmedLength);
+                mSequenceStart, mSequenceEnd, Score, Flags, MapQual, mAlignedBases, mAdjustedAlignment);
     }
 }

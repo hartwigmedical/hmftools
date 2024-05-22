@@ -76,7 +76,6 @@ public class AlignmentTest
         AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
         AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
 
-
         String assemblyOverlap = "";
 
         assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, mRefGenome));
@@ -463,6 +462,68 @@ public class AlignmentTest
         second = assemblyAlignment.breakends().get(1);
         assertEquals(190, second.Position);
         assertEquals(REVERSE, second.Orient);
+
+    }
+
+    @Test
+    public void testAlignmentQualCalcs()
+    {
+        AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "");
+
+        BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
+
+        AlignData alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
+                60, 100, 0, "100M", DEFAULT_NM, "", "");
+
+        AlignData alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 1, 100), 100, 200,
+                60, 100, 0, "100M", DEFAULT_NM, "", "");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2);
+
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
+
+        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+        assertEquals(78, validAlignments.get(0).adjustedAlignment());
+        assertEquals(80, validAlignments.get(1).adjustedAlignment());
+        assertEquals(37, validAlignments.get(0).calcModifiedMapQual(), 0.1);
+
+        // now with lower alignment score and overlap
+        AlignData zeroAlign = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 1,
+                0, 1, 0, "1M", DEFAULT_NM, "", "");
+
+        alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 80,
+                60, 75, 0, "110M", DEFAULT_NM, "", "");
+
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 1, 100), 60, 140,
+                60, 75, 0, "100M", DEFAULT_NM, "", "");
+
+        AlignData alignment3 = new AlignData(
+                new ChrBaseRegion(CHR_2, 1, 100), 130, 200,
+                60, 65, 0, "100M", DEFAULT_NM, "", "");
+
+        alignments = Lists.newArrayList(zeroAlign, alignment1, zeroAlign, alignment2, zeroAlign, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(3, lowQualAlignments.size());
+        assertEquals(3, validAlignments.size());
+
+        assertEquals(43, validAlignments.get(0).adjustedAlignment());
+        assertEquals(29, validAlignments.get(1).adjustedAlignment());
+        assertEquals(47, validAlignments.get(2).adjustedAlignment());
 
     }
 

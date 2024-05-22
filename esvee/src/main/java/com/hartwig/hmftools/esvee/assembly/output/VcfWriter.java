@@ -292,7 +292,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEGALEN, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(SEGMAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
         builder.attribute(SEGSCO, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
-        builder.attribute(SEGRL, segments.stream().mapToInt(x -> x.Alignment.repeatTrimmedLength()).max().orElse(0));
+        builder.attribute(SEGRL, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
         VariantContext variantContext = builder.make();
 

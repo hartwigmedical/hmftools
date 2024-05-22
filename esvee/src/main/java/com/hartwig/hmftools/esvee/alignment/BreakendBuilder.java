@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
@@ -26,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -73,20 +75,12 @@ public class BreakendBuilder
             return;
 
         List<AlignData> validAlignments = Lists.newArrayList();
-        List<AlignData> zeroQualAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
 
-        for(AlignData alignment : alignments)
-        {
-            if(alignment.MapQual > 0)
-                validAlignments.add(alignment);
-            else
-                zeroQualAlignments.add(alignment);
-        }
+        filterAlignments(alignments, validAlignments, lowQualAlignments);
 
         if(validAlignments.isEmpty())
             return;
-
-        validAlignments.forEach(x -> x.setFullSequenceData(mAssemblyAlignment.fullSequence(), mAssemblyAlignment.fullSequenceLength()));
 
         if(validAlignments.size() == 1)
         {
@@ -97,13 +91,77 @@ public class BreakendBuilder
 
             if(!formsIndel && singleAlignment.maxSoftClipLength() >= ALIGNMENT_MIN_SOFT_CLIP)
             {
-                formSingleBreakend(validAlignments.get(0), zeroQualAlignments);
+                formSingleBreakend(validAlignments.get(0), lowQualAlignments);
             }
         }
         else
         {
             // otherwise handle multiple alignments
-            formMultipleBreakends(validAlignments, zeroQualAlignments);
+            formMultipleBreakends(validAlignments, lowQualAlignments);
+        }
+    }
+
+    @VisibleForTesting
+    public void filterAlignments(
+            final List<AlignData> alignments, final List<AlignData> validAlignments, final List<AlignData> lowQualAlignments)
+    {
+        // exclude alignments with zero qual
+        final List<AlignData> nonZeroAlignments = Lists.newArrayList();
+
+        for(AlignData alignment : alignments)
+        {
+            if(alignment.MapQual > 0)
+                nonZeroAlignments.add(alignment);
+            else
+                lowQualAlignments.add(alignment);
+        }
+
+        if(nonZeroAlignments.isEmpty())
+            return;
+
+        // for all the rest calculated an adjusted alignment score by subtracing overlap (inexact homology) and repeated bases from the score
+        String fullSequence = mAssemblyAlignment.fullSequence();
+
+        nonZeroAlignments.forEach(x -> x.setFullSequenceData(fullSequence, mAssemblyAlignment.fullSequenceLength()));
+
+        // set modified map qual and then filtered low qual alignments
+        Collections.sort(nonZeroAlignments, Comparator.comparingInt(x -> x.sequenceStart()));
+
+        for(int i = 0; i < nonZeroAlignments.size(); ++i)
+        {
+            AlignData alignment = nonZeroAlignments.get(i);
+
+            int overlapStart = 0;
+            int overlapEnd = 0;
+
+            if(i > 0)
+            {
+                AlignData prevAlignment = nonZeroAlignments.get(i - 1);
+                if(prevAlignment.sequenceEnd() >= alignment.sequenceStart())
+                {
+                    overlapStart = prevAlignment.sequenceEnd() - alignment.sequenceStart() + 1;
+                }
+            }
+
+            if(i < nonZeroAlignments.size() - 1)
+            {
+                AlignData nextAlignment = nonZeroAlignments.get(i + 1);
+
+                if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
+                {
+                    overlapEnd = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
+                }
+            }
+
+            alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
+        }
+
+        for(AlignData alignment : nonZeroAlignments)
+        {
+            if(alignment.adjustedAlignment() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
+                validAlignments.add(alignment);
+            else
+                lowQualAlignments.add(alignment);
         }
     }
 
@@ -299,9 +357,9 @@ public class BreakendBuilder
 
                 if(assemblyOverlapBases.isEmpty())
                 {
-                    int overlapSeqStart = alignment.sequenceEnd();
-                    int overlap = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
-                    assemblyOverlapBases = fullSequence.substring(overlapSeqStart, overlapSeqStart + overlap);
+                    // int overlapSeqStart = alignment.sequenceEnd();
+                    //int overlap = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
+                    assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
                 }
 
                 homology = HomologyData.determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
@@ -353,13 +411,6 @@ public class BreakendBuilder
 
             breakend.setOtherBreakend(nextBreakend);
             nextBreakend.setOtherBreakend(breakend);
-
-            if(homology != null)
-            {
-                int inexactLength = homology.inexactLength();
-                alignment.setRepeatTrimmedLength(fullSequence, inexactLength, false);
-                nextAlignment.setRepeatTrimmedLength(fullSequence, inexactLength, true);
-            }
 
             List<AlternativeAlignment> altAlignments = buildAltAlignments(alignment, nextAlignment, zeroQualAlignments);
 

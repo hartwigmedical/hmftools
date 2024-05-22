@@ -263,8 +263,7 @@ public class ReadFilters
 
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases);
 
-        int repeatTrimmedLength = repeats != null ?
-                calcTrimmedBaseLength(0, alignedBases.length - 1, repeats) : alignedBases.length;
+        int repeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length - 1, repeats);
 
         return repeatTrimmedLength >= minLength;
     }

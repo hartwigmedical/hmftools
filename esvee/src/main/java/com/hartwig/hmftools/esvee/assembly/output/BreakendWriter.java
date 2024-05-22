@@ -77,7 +77,7 @@ public class BreakendWriter
             sj.add("AlignedBases");
             sj.add("MapQual");
             sj.add("Score");
-            sj.add("RepeatTrimLength");
+            sj.add("AdjAlignedBases");
             sj.add("AvgFragmentLength");
             sj.add("BreakendQual");
 
@@ -194,7 +194,7 @@ public class BreakendWriter
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
                 sj.add(String.valueOf(segment.Alignment.MapQual));
                 sj.add(String.valueOf(segment.Alignment.Score));
-                sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
+                sj.add(String.valueOf(segment.Alignment.adjustedAlignment()));
                 sj.add(String.valueOf(breakend.averageFragmentLength()));
 
                 sj.add(String.valueOf(breakend.calcQual()));

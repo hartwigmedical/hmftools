@@ -149,12 +149,10 @@ public class Breakend implements Comparable<Breakend>
     {
         int maxSegmentQual = 0;
 
-        int inexactHomology = Homology != null ? Homology.inexactLength() : 0;
-
         for(BreakendSegment segment : mSegments)
         {
-            int repeatAdjustment = segment.Alignment.segmentLength() - segment.Alignment.repeatTrimmedLength() + inexactHomology;
-            int segmentQual = QualCalcs.calcQual(repeatAdjustment, segment.Alignment.Score, segment.Alignment.MapQual);
+            int segmentQual = (int)round(segment.Alignment.calcModifiedMapQual());
+            // int segmentQual = QualCalcs.calcQual(repeatAdjustment, segment.Alignment.Score, segment.Alignment.MapQual);
 
             maxSegmentQual = max(segmentQual, maxSegmentQual);
         }

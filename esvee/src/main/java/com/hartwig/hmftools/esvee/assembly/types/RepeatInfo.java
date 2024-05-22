@@ -276,6 +276,9 @@ public class RepeatInfo
 
     public static int calcTrimmedBaseLength(final int seqStart, final int seqEnd, final List<RepeatInfo> repeats)
     {
+        if(repeats == null || repeats.isEmpty())
+            return seqEnd - seqStart + 1;
+
         int currentIndex = seqStart;
 
         int currentRepeatIndex = 0;
