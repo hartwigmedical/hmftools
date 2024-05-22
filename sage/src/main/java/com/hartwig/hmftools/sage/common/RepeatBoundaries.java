@@ -63,8 +63,14 @@ public class RepeatBoundaries
                 }
                 else
                 {
+                    // keep the second longest if the max doesn't full cover the starting start & end indez
                     if(repeat.length() > maxRepeat.length())
                     {
+                        if(repeat.Index > requiredIndexStart && maxRepeat.Index <= requiredIndexStart)
+                        {
+                            secondRepeat = maxRepeat;
+                        }
+
                         maxRepeat = repeat;
                     }
                     else if(maxRepeat.endIndex() < requiredIndexEnd && repeat.endIndex() >= requiredIndexEnd)
@@ -83,8 +89,8 @@ public class RepeatBoundaries
         if(maxRepeat == null)
             return null;
 
-        int lowerRepeatIndex = maxRepeat.Index;
-        int upperRepeatIndex = secondRepeat != null ? secondRepeat.endIndex() : maxRepeat.endIndex();
+        int lowerRepeatIndex = secondRepeat != null ? min(secondRepeat.Index, maxRepeat.Index) : maxRepeat.Index;
+        int upperRepeatIndex = secondRepeat != null ? max(secondRepeat.endIndex(), maxRepeat.endIndex()) : maxRepeat.endIndex();
 
         return new RepeatBoundaries(lowerRepeatIndex - 1, upperRepeatIndex + 1, maxRepeat);
     }

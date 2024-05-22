@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.common.RepeatBoundaries.findRepeatBoundaries;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMaxRepeat;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -11,6 +16,35 @@ public class RepeatInfoTest
 {
     @Test
     public void testRepeats()
+    {
+        //              0123456789
+        String bases = "AAACCTTTTT";
+
+        // first check limits
+        RepeatInfo repeatInfo = findMultiBaseRepeat(bases.getBytes(), 6, 1, 4);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 7, 1, 4);
+        assertNull(repeatInfo);
+
+        //       01234567890
+        bases = "AACGGTACGGT";
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 1, 5, 2);
+        assertNotNull(repeatInfo);
+        assertEquals("ACGGT", repeatInfo.Bases);
+        assertEquals(2, repeatInfo.Count);
+        assertEquals(10, repeatInfo.length());
+        assertEquals(5, repeatInfo.repeatLength());
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 2, 5, 2);
+        assertNull(repeatInfo);
+    }
+
+    @Test
+    public void testMaxRepeats()
     {
         //              01234567890123456789
         String bases = "ACGTACGTTTTTTGTACGT";
@@ -91,5 +125,44 @@ public class RepeatInfoTest
         assertEquals("CG", repeat.Bases);
         assertEquals(4, repeat.Index);
         assertEquals(4, repeat.Count);
+    }
+
+    @Test
+    public void testFindRepeatBoundaries()
+    {
+        //                  0123456789012345678901234567890123456789
+        String readBases = "ACGTAGCTTGCGCGCGCCACACACTACGTAGCT";
+
+        // test 1: a transitioning repeat where the lower repeat is the max
+
+        int readCoreStart = 13;
+        int readCoreEnd = 18;
+
+        RepeatBoundaries repeatBoundaries = findRepeatBoundaries(
+                readBases.getBytes(), readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+
+        assertNotNull(repeatBoundaries);
+        assertEquals("GC", repeatBoundaries.MaxRepeat.Bases);
+        assertEquals(4, repeatBoundaries.MaxRepeat.Count);
+        assertEquals(8, repeatBoundaries.LowerIndex);
+        assertEquals(23, repeatBoundaries.UpperIndex);
+
+
+        // test 2: now where the upper repeat is the max but the second is still used to set the lower index boundary
+
+        //           0123456789012345678901234567890123456789
+        readBases = "ACGTAGCTTGCGCGCCACACACACTACGTAGCT";
+
+        readCoreStart = 11;
+        readCoreEnd = 16;
+
+        repeatBoundaries = findRepeatBoundaries(
+                readBases.getBytes(), readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+
+        assertNotNull(repeatBoundaries);
+        assertEquals("CA", repeatBoundaries.MaxRepeat.Bases);
+        assertEquals(4, repeatBoundaries.MaxRepeat.Count);
+        assertEquals(8, repeatBoundaries.LowerIndex);
+        assertEquals(23, repeatBoundaries.UpperIndex);
     }
 }

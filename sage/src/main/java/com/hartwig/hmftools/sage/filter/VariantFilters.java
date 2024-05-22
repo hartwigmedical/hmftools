@@ -370,14 +370,6 @@ public class VariantFilters
             final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
     {
         double normalVaf = normal.vaf();
-
-        if(!primaryTumor.isIndel() && normal.altBaseQualityTotal() > 0 && normal.altBaseQualityTotal() < NORMAL_RAW_ALT_BQ_MAX
-        && normal.altSupport() == normal.altSupport())
-        {
-            double normalBqVaf = normal.altBaseQualityTotal() / (double)(normal.baseQualityTotal());
-            normalVaf = min(normalVaf, normalBqVaf);
-        }
-
         return Doubles.greaterThan(normalVaf, config.MaxGermlineVaf);
     }
 

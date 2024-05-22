@@ -34,7 +34,6 @@ public class Microhomology
         final byte[] readBases = read.getReadBases();
 
         // start looking in the read in the first base after the variant
-
         int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
         int homReadIndex = homReadIndexStart;
 

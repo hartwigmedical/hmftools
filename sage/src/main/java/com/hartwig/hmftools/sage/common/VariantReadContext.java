@@ -21,7 +21,7 @@ public class VariantReadContext
     public final int AlignmentStart; // alignments of the flanks using read bases
     public final int AlignmentEnd;
 
-    public final byte[] RefBases; // capture for the core only
+    public final byte[] RefBases; // captured for the core only
 
     // read bases and info
     public final byte[] ReadBases;

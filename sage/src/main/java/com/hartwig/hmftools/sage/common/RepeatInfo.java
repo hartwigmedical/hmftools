@@ -27,42 +27,6 @@ public class RepeatInfo
 
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
-    public static RepeatInfo findMaxRepeat(
-            final byte[] bases, final int searchIndexStart, final int searchIndexEnd,
-            final int maxLength, final int minCount, boolean extendLower, final int requiredIndex)
-    {
-        RepeatInfo maxRepeat = null;
-
-        int index = searchIndexStart;
-
-        int minTotalRepeatLength = minCount; // being a single-base repeat
-
-        while(index <= min(bases.length - minTotalRepeatLength, searchIndexEnd))
-        {
-            for(int repeatLength = 1; repeatLength <= maxLength; ++repeatLength)
-            {
-                RepeatInfo repeat = findMultiBaseRepeat(bases, index, repeatLength, minCount);
-
-                if(repeat == null)
-                    continue;
-
-                // search backwards for longer instances of this repeat
-                if(extendLower && repeat != null)
-                    repeat = extendRepeatLower(repeat, bases);
-
-                if(requiredIndex >= 0 && !positionWithin(requiredIndex, repeat.Index, repeat.endIndex()))
-                    continue;
-
-                if(maxRepeat == null || repeat.length() > maxRepeat.length())
-                    maxRepeat = repeat;
-            }
-
-            ++index;
-        }
-
-        return maxRepeat;
-    }
-
     public static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
     {
         int extraCount = 0;
@@ -148,5 +112,41 @@ public class RepeatInfo
                 refSequence.Bases, searchIndexStart, searchIndexEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, -1);
 
         variant.readContext().setRefMaxRepeat(maxRepeat);
+    }
+
+    public static RepeatInfo findMaxRepeat(
+            final byte[] bases, final int searchIndexStart, final int searchIndexEnd,
+            final int maxLength, final int minCount, boolean extendLower, final int requiredIndex) // note: required index not used in Sage
+    {
+        RepeatInfo maxRepeat = null;
+
+        int index = searchIndexStart;
+
+        int minTotalRepeatLength = minCount; // being a single-base repeat
+
+        while(index <= min(bases.length - minTotalRepeatLength, searchIndexEnd))
+        {
+            for(int repeatLength = 1; repeatLength <= maxLength; ++repeatLength)
+            {
+                RepeatInfo repeat = findMultiBaseRepeat(bases, index, repeatLength, minCount);
+
+                if(repeat == null)
+                    continue;
+
+                // search backwards for longer instances of this repeat
+                if(extendLower && repeat != null)
+                    repeat = extendRepeatLower(repeat, bases);
+
+                if(requiredIndex >= 0 && !positionWithin(requiredIndex, repeat.Index, repeat.endIndex()))
+                    continue;
+
+                if(maxRepeat == null || repeat.length() > maxRepeat.length())
+                    maxRepeat = repeat;
+            }
+
+            ++index;
+        }
+
+        return maxRepeat;
     }
 }

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
@@ -21,10 +22,10 @@ import htsjdk.samtools.SAMRecord;
 public class ReadCigarInfo
 {
     public List<CigarElement> Cigar;
-    public final int UnclippedStart;  // note: these are unclipped values
+    public final int UnclippedStart;  // unclipped positions, ie possibly extending past the read's alignment boundaries
     public final int UnclippedEnd;
 
-    // stored for the scenario where an indel in the flanks pushes out the alignment beyond the standard flank length
+    // calculated for the scenario where an indel in the flanks pushes out the alignment beyond the standard flank length
     public final int FlankIndexStart;
     public final int FlankIndexEnd;
 
@@ -73,11 +74,15 @@ public class ReadCigarInfo
                 int elementStart = max(readIndex, indexStart);
                 int elementEnd = min(elementEndIndex, indexEnd);
 
-                cigar.add(new CigarElement(elementEnd - elementStart + 1, element.getOperator()));
+                // cap this new element to what is required to reach the end of the core (ie the index end) unless it falls in an indel or split
+                int elementLength = element.getOperator().isIndel() || element.getOperator() == N ?
+                        element.getLength() : elementEnd - elementStart + 1;
+
+                cigar.add(new CigarElement(elementLength, element.getOperator()));
 
                 if(unclippedPosStart == 0)
                 {
-                    if(element.getOperator() == I)
+                    if(element.getOperator().isIndel())
                     {
                         // handles an insert that pushes the alignment out - always take the prior alignment base and reduce index start
                         // eg looking to find the alignment boundary for index start 12 for 10M5I1350M, alignment start == 100
@@ -88,10 +93,12 @@ public class ReadCigarInfo
                         finalIndexStart -= extraIndexStart;
                         unclippedPosStart = max(refPosition - 1, read.getAlignmentStart());
                     }
+                    /*
                     else if(element.getOperator() == D)
                     {
                         unclippedPosStart = max(refPosition - 1, read.getAlignmentStart());
                     }
+                    */
                     else
                     {
                         unclippedPosStart = refPosition + (indexStart - readIndex);

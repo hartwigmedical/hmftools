@@ -47,7 +47,7 @@ public class ReadContextMatcher
         }
         else
         {
-            int altLength = mContext.variant().alt().length();
+            int altLength = mContext.variant().altLength();
             mLowQualExclusionRange = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + altLength - 1 };
             int refIndex = mContext.leftCoreLength();
             mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };

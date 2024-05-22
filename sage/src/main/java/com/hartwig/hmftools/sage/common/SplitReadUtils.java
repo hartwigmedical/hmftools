@@ -18,6 +18,8 @@ public final class SplitReadUtils
 {
     public static final int MAX_SKIPPED_REFERENCE_REGIONS = 50;
 
+    // TODO: improve method for intronic section representation around exon boundaries
+
     // purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
     public static ReadIndexBases expandSplitRead(int readIndex, final SAMRecord record)
     {
