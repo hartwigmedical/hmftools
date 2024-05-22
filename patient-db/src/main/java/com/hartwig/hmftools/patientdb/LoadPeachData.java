@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadPeachData
 {
-    private static final String PEACH_GENOTYPE_TXT = "peach_genotype_txt";
+    private static final String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
@@ -29,13 +29,13 @@ public class LoadPeachData
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addPath(PEACH_GENOTYPE_TXT, true, "Path towards the PEACH genotype txt file");
+        configBuilder.addPath(PEACH_GENOTYPE_TSV, true, "Path towards the PEACH genotype TSV file");
 
         configBuilder.checkAndParseCommandLine(args);
 
         String sample = configBuilder.getValue(SAMPLE);
 
-        String peachGenotypeTxt = configBuilder.getValue(PEACH_GENOTYPE_TXT);
+        String peachGenotypeTxt = configBuilder.getValue(PEACH_GENOTYPE_TSV);
 
         try(DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
