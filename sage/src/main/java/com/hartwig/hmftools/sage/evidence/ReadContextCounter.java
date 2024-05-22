@@ -319,9 +319,13 @@ public class ReadContextCounter
 
         if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
-            // TODO: check if strand bias and frag coords need to be updated in this scenario - cannot now rely on raw AltSupport
-            // if(rawContext.AltSupport)
-            //     countAltSupportMetrics(record, fragmentData);
+            if(rawContext.PositionType != VariantReadPositionType.DELETED)
+            {
+                ReadContextMatch matchType = determineReadContextMatch(record, readIndex, true);
+
+                if(matchType.SupportsAlt)
+                    countAltSupportMetrics(record, fragmentData);
+            }
 
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return UNRELATED;

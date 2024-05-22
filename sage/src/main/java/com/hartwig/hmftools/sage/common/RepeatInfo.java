@@ -109,7 +109,7 @@ public class RepeatInfo
         int searchIndexEnd = refIndex + variant.ref().length();
 
         RepeatInfo maxRepeat = findMaxRepeat(
-                refSequence.Bases, searchIndexStart, searchIndexEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, -1);
+                refSequence.Bases, searchIndexStart, searchIndexEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, refIndex);
 
         variant.readContext().setRefMaxRepeat(maxRepeat);
     }

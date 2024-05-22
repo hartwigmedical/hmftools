@@ -132,8 +132,14 @@ public class SageAppendApplication
                     continue;
             }
 
-            if(!mConfig.Common.SpecificPositions.isEmpty() && mConfig.Common.SpecificPositions.stream().noneMatch(x -> x == variant.getStart()))
-                continue;
+            if(!mConfig.Common.SpecificPositions.isEmpty())
+            {
+                if(mConfig.Common.SpecificPositions.stream()
+                        .noneMatch(x -> x.Position == variant.getStart() && x.Chromosome.equals(variant.getContig())))
+                {
+                    continue;
+                }
+            }
 
             existingVariants.add(variant);
         }

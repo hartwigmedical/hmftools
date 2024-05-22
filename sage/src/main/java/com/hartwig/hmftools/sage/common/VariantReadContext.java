@@ -45,7 +45,8 @@ public class VariantReadContext
 
     private ArtefactContext mArtefactContext;
     private UltimaQualModel mUltimaQualModel;
-    private RepeatInfo mMaxRefRepeat; // maximun repeat in the reference
+
+    private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
 
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
