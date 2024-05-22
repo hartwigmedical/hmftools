@@ -134,8 +134,7 @@ public class SageAppendApplication
 
             if(!mConfig.Common.SpecificPositions.isEmpty())
             {
-                if(mConfig.Common.SpecificPositions.stream()
-                        .noneMatch(x -> x.Position == variant.getStart() && x.Chromosome.equals(variant.getContig())))
+                if(mConfig.Common.SpecificPositions.stream().noneMatch(x -> x.matches(variant.getContig(), variant.getStart())))
                 {
                     continue;
                 }

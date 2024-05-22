@@ -108,7 +108,7 @@ public class Candidates
 
             for(Candidate candidate : mCandidateList)
             {
-                if(restrictedList.stream().anyMatch(x -> x.chromosome().equals(candidate.chromosome()) && x.position() == candidate.position()))
+                if(restrictedPositions.stream().anyMatch(x -> x.matches(candidate.chromosome(), candidate.position())))
                 {
                     restrictedList.add(candidate);
                 }
