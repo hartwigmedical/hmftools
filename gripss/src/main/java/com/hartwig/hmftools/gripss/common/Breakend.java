@@ -103,7 +103,7 @@ public class Breakend
         InsertSequence = altInsertCoords.InsertSequence;
         OtherChromosome = altInsertCoords.OtherChromsome;
         OtherPosition = altInsertCoords.OtherPosition;
-        OtherOrientation = altInsertCoords.OtherOrient.asByte();
+        OtherOrientation = altInsertCoords.OtherOrient != null ? altInsertCoords.OtherOrient.asByte() : 0;
 
         IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
 
