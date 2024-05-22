@@ -89,10 +89,54 @@ public class RepeatBoundaries
         if(maxRepeat == null)
             return null;
 
-        int lowerRepeatIndex = secondRepeat != null ? min(secondRepeat.Index, maxRepeat.Index) : maxRepeat.Index;
-        int upperRepeatIndex = secondRepeat != null ? max(secondRepeat.endIndex(), maxRepeat.endIndex()) : maxRepeat.endIndex();
+        // look for partial extensions of repeats up and down
+        RepeatInfo lowerRepeat = secondRepeat != null && secondRepeat.Index < maxRepeat.Index ? secondRepeat : maxRepeat;
+        RepeatInfo upperRepeat = secondRepeat != null && secondRepeat.endIndex() > maxRepeat.endIndex() ? secondRepeat : maxRepeat;
 
-        return new RepeatBoundaries(lowerRepeatIndex - 1, upperRepeatIndex + 1, maxRepeat);
+        int lowerRepeatIndex = findPostRepeatIndex(lowerRepeat, bases, true);
+        int upperRepeatIndex = findPostRepeatIndex(upperRepeat, bases, false);
+
+        return new RepeatBoundaries(lowerRepeatIndex, upperRepeatIndex, maxRepeat);
+    }
+
+    private static int findPostRepeatIndex(final RepeatInfo repeat, final byte[] bases, boolean searchDown)
+    {
+        int partialBaseMatch = 0;
+
+        if(searchDown)
+        {
+            int baseIndex = repeat.Index - 1;
+            int indexInRepeat = repeat.repeatLength() - 1;
+
+            while(baseIndex >= 0 && partialBaseMatch < repeat.repeatLength())
+            {
+                if(bases[baseIndex] != repeat.Bases.charAt(indexInRepeat))
+                    break;
+
+                ++partialBaseMatch;
+                --baseIndex;
+                --indexInRepeat;
+            }
+
+            return repeat.Index - partialBaseMatch - 1;
+        }
+        else
+        {
+            int baseIndex = repeat.endIndex() + 1;
+            int indexInRepeat = 0;
+
+            while(baseIndex < bases.length && partialBaseMatch < repeat.repeatLength())
+            {
+                if(bases[baseIndex] != repeat.Bases.charAt(indexInRepeat))
+                    break;
+
+                ++partialBaseMatch;
+                ++baseIndex;
+                ++indexInRepeat;
+            }
+
+            return repeat.endIndex() + partialBaseMatch + 1;
+        }
     }
 
     public String toString()

@@ -113,16 +113,16 @@ public class VariantReadContextTest
         assertEquals("GC", readContext.MaxRepeat.Bases);
         assertEquals(4, readContext.MaxRepeat.Count);
         assertEquals(131, readContext.AlignmentStart);
-        assertEquals(156, readContext.AlignmentEnd);
+        assertEquals(157, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(12, readContext.VarReadIndex);
-        assertEquals(20, readContext.CoreIndexEnd);
+        assertEquals(21, readContext.CoreIndexEnd);
         assertEquals(12, readContext.AltIndexLower);
         assertEquals(13, readContext.AltIndexUpper);
-        assertEquals("TGCGCGCTACACACAC", readContext.refBases());
-        assertEquals("TGCGCGCGCCACACAC", readContext.coreStr());
-        assertEquals("26M", readContext.readCigar());
-        assertEquals(16, readContext.coreLength());
+        assertEquals("TGCGCGCTACACACACT", readContext.refBases());
+        assertEquals("TGCGCGCGCCACACACT", readContext.coreStr());
+        assertEquals("27M", readContext.readCigar());
+        assertEquals(17, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
     }
@@ -236,7 +236,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(8, readContext.AltIndexUpper);
-        assertEquals("GCTGTC", readContext.refBases());
+        assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
@@ -317,7 +317,7 @@ public class VariantReadContextTest
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(10, readContext.AltIndexUpper);
-        assertEquals("GCTGTCTGT", readContext.refBases());
+        assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTGTGTCTGTGAC", readContext.readBases());
         assertEquals("7M2I10M", readContext.readCigar());
         assertEquals(9, readContext.coreLength());

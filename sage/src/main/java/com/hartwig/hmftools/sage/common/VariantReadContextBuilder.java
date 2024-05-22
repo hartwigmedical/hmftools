@@ -126,42 +126,20 @@ public class VariantReadContextBuilder
 
         // ref bases are the core width around the variant's position
         int leftCoreLength = readVarIndex - coreIndexStart;
-        int coreLength = coreIndexEnd - coreIndexStart + 1;
         int rightCoreLength = coreIndexEnd - readVarIndex;
 
-        int[] refPosCoords = getRefBaseCoordinates(variant, coreLength, leftCoreLength, rightCoreLength);
+        int corePositionStart = findPositionStart(variant.Position, leftCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexStart);
+        int corePositionEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
 
-        byte[] refBases = refSequence.baseRange(refPosCoords[SE_START], refPosCoords[SE_END]);
+        byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
 
         int altIndexLower = readVarIndex;
         int refIndex = leftCoreLength;
         int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex,  refIndex, coreIndexEnd);
 
-        int corePositionStart = findPositionStart(variant.Position, leftCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexStart);
-        int corePositionEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
-
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
                 coreIndexEnd, homology, maxRepeat, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
-    }
-
-    public static int[] getRefBaseCoordinates(final SimpleVariant variant, int coreLength, int leftCoreLength, int rightCoreLength)
-    {
-        int refPosStart = variant.Position - leftCoreLength;
-        int refPosEnd;
-
-        if(variant.isDelete())
-        {
-            // ensure is long enough to cover the ref bases prior to deletion, so find the core position end in the ref
-            int rightCoreLengthExtension = max(rightCoreLength - MIN_CORE_DISTANCE, 0);
-            refPosEnd = variant.positionEnd() + 1 + rightCoreLengthExtension;
-        }
-        else
-        {
-            refPosEnd = refPosStart + coreLength - 1;
-        }
-
-        return new int[] { refPosStart, refPosEnd };
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)

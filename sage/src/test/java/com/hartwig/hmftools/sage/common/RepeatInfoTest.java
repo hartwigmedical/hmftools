@@ -145,7 +145,7 @@ public class RepeatInfoTest
         assertEquals("GC", repeatBoundaries.MaxRepeat.Bases);
         assertEquals(4, repeatBoundaries.MaxRepeat.Count);
         assertEquals(8, repeatBoundaries.LowerIndex);
-        assertEquals(23, repeatBoundaries.UpperIndex);
+        assertEquals(24, repeatBoundaries.UpperIndex);
 
 
         // test 2: now where the upper repeat is the max but the second is still used to set the lower index boundary
@@ -163,6 +163,22 @@ public class RepeatInfoTest
         assertEquals("CA", repeatBoundaries.MaxRepeat.Bases);
         assertEquals(4, repeatBoundaries.MaxRepeat.Count);
         assertEquals(8, repeatBoundaries.LowerIndex);
-        assertEquals(23, repeatBoundaries.UpperIndex);
+        assertEquals(24, repeatBoundaries.UpperIndex);
+
+        // test 3: with partial repeats at the end which need to be included
+        //           0123456789012345678901234567890123456789
+        readBases = "AACTTTCTTTCTTTCTTAGGGGCGGGGCGGGGCGGGGTT";
+
+        readCoreStart = 15;
+        readCoreEnd = 19;
+
+        repeatBoundaries = findRepeatBoundaries(
+                readBases.getBytes(), readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+
+        assertNotNull(repeatBoundaries);
+        assertEquals("GGGGC", repeatBoundaries.MaxRepeat.Bases);
+        assertEquals(3, repeatBoundaries.MaxRepeat.Count);
+        assertEquals(1, repeatBoundaries.LowerIndex);
+        assertEquals(37, repeatBoundaries.UpperIndex);
     }
 }

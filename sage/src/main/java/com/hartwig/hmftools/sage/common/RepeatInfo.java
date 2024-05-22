@@ -27,43 +27,6 @@ public class RepeatInfo
 
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
-    public static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
-    {
-        int extraCount = 0;
-
-        int repeatLength = repeatInfo.repeatLength();
-        int repeatStart = repeatInfo.Index - repeatLength;
-        byte[] repeatBases = repeatInfo.Bases.getBytes();
-
-        while(repeatStart > 0)
-        {
-            boolean matched = true;
-            for(int i = 0; i < repeatLength; ++i)
-            {
-                if(bases[repeatStart + i] != repeatBases[i])
-                {
-                    matched = false;
-                    break;
-                }
-            }
-
-            if(!matched)
-            {
-                if(extraCount > 0)
-                    repeatStart += repeatLength; // back out last
-                break;
-            }
-
-            ++extraCount;
-            repeatStart -= repeatLength;
-        }
-
-        if(extraCount == 0)
-            return repeatInfo;
-
-        return new RepeatInfo(repeatStart, repeatInfo.Bases, repeatInfo.Count + extraCount);
-    }
-
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount, final int minCount)
     {
         if(index + (minCount * repeatCount) - 1 >= bases.length)
@@ -99,6 +62,43 @@ public class RepeatInfo
             repeat += (char)bases[index + j];
 
         return new RepeatInfo(index, repeat, repeatLength);
+    }
+
+    public static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
+    {
+        int extraCount = 0;
+
+        int repeatLength = repeatInfo.repeatLength();
+        int repeatStart = repeatInfo.Index - repeatLength;
+        byte[] repeatBases = repeatInfo.Bases.getBytes();
+
+        while(repeatStart > 0)
+        {
+            boolean matched = true;
+            for(int i = 0; i < repeatLength; ++i)
+            {
+                if(bases[repeatStart + i] != repeatBases[i])
+                {
+                    matched = false;
+                    break;
+                }
+            }
+
+            if(!matched)
+            {
+                if(extraCount > 0)
+                    repeatStart += repeatLength; // back out last
+                break;
+            }
+
+            ++extraCount;
+            repeatStart -= repeatLength;
+        }
+
+        if(extraCount == 0)
+            return repeatInfo;
+
+        return new RepeatInfo(repeatStart, repeatInfo.Bases, repeatInfo.Count + extraCount);
     }
 
     public static void setReferenceMaxRepeatInfo(final SageVariant variant, final RefSequence refSequence)
