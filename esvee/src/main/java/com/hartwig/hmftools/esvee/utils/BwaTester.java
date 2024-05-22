@@ -65,6 +65,9 @@ public class BwaTester
     private final RefGenomeVersion mRefGenomeVersion;
     private final BwaAligner mAligner;
 
+    private static final String FLD_QUERY_ID = "QueryId";
+    private static final String FLD_QUERY_SEQUENCE = "QuerySequence";
+
     public BwaTester(final ConfigBuilder configBuilder)
     {
         String refGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -92,44 +95,46 @@ public class BwaTester
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mOutputFile);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
-
-            sj.add(FLD_REF_LOCATION);
-            sj.add(FLD_SEQUENCE_COORDS);
-            sj.add(FLD_MAP_QUAL);
-            sj.add(FLD_CIGAR);
-            sj.add(FLD_ORIENTATION);
-            sj.add(FLD_ALIGNED_BASES);
-            sj.add(FLD_SCORE);
-            sj.add(FLD_FLAGS);
-            sj.add(FLD_NMATCHES);
-            sj.add(FLD_XA_TAG);
-            sj.add(FLD_MD_TAG);
-
-            writer.write(sj.toString());
-            writer.newLine();
+            BufferedWriter writer = initializeWriter();
 
             List<String> lines = Files.readAllLines(Paths.get(mInputFile));
-            lines.remove(0);
+            lines.remove(0); // Skip header
 
             SV_LOGGER.info("test BWA alignment tests for {} regions", lines.size());
 
             int chrIndex = 0;
             int posStartIndex = 1;
             int posEndIndex = 2;
-            Integer sequenceIndex = 3;
+            int sequenceIndex = 3;
 
+            int queryId = -1;
             for(String line : lines)
             {
+                queryId++;
+
                 String[] values = line.split(TSV_DELIM);
 
-                ChrBaseRegion region = new ChrBaseRegion(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]));
+                String chromosome = values[chrIndex];
+                String startString = values[posStartIndex];
+                String endString = values[posEndIndex];
                 String sequence = values.length > sequenceIndex ? values[sequenceIndex] : null;
 
-                testRegion(region, sequence, writer);
+                ChrBaseRegion region = null;
+                if(chromosome.length()>0 && startString.length()>0 && endString.length()>0)
+                {
+                    region = new ChrBaseRegion(chromosome, Integer.parseInt(startString), Integer.parseInt(endString));
+                }
+
+                // Get sequence from region if sequence is empty
+                if(sequence == null || sequence.length() == 0)
+                {
+                    sequence = mRefGenome.getBaseString(chromosome, region.start(), region.end());
+                }
+
+                List<AlignData> alignments = alignSequence(sequence);
+                SV_LOGGER.debug("query({}) region({}) found {} alignments", queryId, region, alignments.size());
+
+                writeAlignments(alignments, queryId, region, sequence, writer);
             }
 
             writer.close();
@@ -143,27 +148,71 @@ public class BwaTester
         SV_LOGGER.info("BWA alignment tests complete");
     }
 
-    private void testRegion(final ChrBaseRegion region, @Nullable final String sequence, final BufferedWriter writer) throws IOException
+    private List<AlignData> alignSequence(final String sequence)
     {
-        String testSequence = sequence != null ? sequence : mRefGenome.getBaseString(region.Chromosome, region.start(), region.end());
+        List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(sequence.getBytes());
 
-        SV_LOGGER.debug("testing region({})", region);
-
-        List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(testSequence.getBytes());
-
-        SV_LOGGER.debug("region({}) found {} alignments", region, bwaAlignments.size());
-
-        List<AlignData> alignments = bwaAlignments.stream()
+        return bwaAlignments.stream()
                 .map(x -> AlignData.from(x, mRefGenomeVersion))
-                .filter(x -> x != null).collect(Collectors.toList());
+                .filter(x -> x != null)
+                .collect(Collectors.toList());
+    }
 
+    private BufferedWriter initializeWriter() throws IOException
+    {
+        BufferedWriter writer = createBufferedWriter(mOutputFile);
+
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        sj.add(FLD_QUERY_ID);
+
+        sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
+
+        sj.add(FLD_REF_LOCATION);
+        sj.add(FLD_SEQUENCE_COORDS);
+        sj.add(FLD_MAP_QUAL);
+        sj.add(FLD_CIGAR);
+        sj.add(FLD_ORIENTATION);
+        sj.add(FLD_ALIGNED_BASES);
+        sj.add(FLD_SCORE);
+        sj.add(FLD_FLAGS);
+        sj.add(FLD_NMATCHES);
+        sj.add(FLD_XA_TAG);
+        sj.add(FLD_MD_TAG);
+        sj.add(FLD_QUERY_SEQUENCE);
+
+        writer.write(sj.toString());
+        writer.newLine();
+
+        return writer;
+    }
+
+    private static void writeAlignments(
+            final List<AlignData> alignments,
+            int queryId,
+            @Nullable ChrBaseRegion region,
+            String sequence,
+            final BufferedWriter writer
+    ) throws IOException
+    {
         for(AlignData alignment : alignments)
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add(region.Chromosome);
-            sj.add(String.valueOf(region.start()));
-            sj.add(String.valueOf(region.end()));
+            sj.add(String.valueOf(queryId));
+
+            if(region != null)
+            {
+                sj.add(region.Chromosome);
+                sj.add(String.valueOf(region.start()));
+                sj.add(String.valueOf(region.end()));
+            }
+            else
+            {
+                sj.add(null);
+                sj.add(null);
+                sj.add(null);
+            }
 
             sj.add(alignment.RefLocation.toString());
             sj.add(format("%d-%d", alignment.rawSequenceStart(), alignment.rawSequenceEnd()));
@@ -180,6 +229,8 @@ public class BwaTester
             sj.add(String.valueOf(alignment.NMatches));
             sj.add(alignment.XaTag);
             sj.add(alignment.MdTag);
+
+            sj.add(sequence);
 
             writer.write(sj.toString());
             writer.newLine();
