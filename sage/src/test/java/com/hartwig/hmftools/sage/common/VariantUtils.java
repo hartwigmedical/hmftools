@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineUpperAltIndex;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionEnd;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionStart;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,13 +32,6 @@ public final class VariantUtils
     {
         return new SimpleVariant(CHR_1, position, ref, alt);
     }
-
-    /*
-    public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
-    {
-        return createSimpleVariant(chromosome, position, ref, alt);
-    }
-    */
 
     // Variant read context creation               0123456789
     public static final String TEST_LEFT_FLANK  = "ACCGCTGACT"; // DEFAULT_READ_CONTEXT_FLANK_SIZE
@@ -93,12 +84,12 @@ public final class VariantUtils
 
         List<CigarElement> readCigar = List.of(new CigarElement(readBases.length(), CigarOperator.M));
 
+        int corePositionStart = variant.Position - leftCore.length();
+        int corePositionEnd = variant.Position + rightCore.length();
+
         int altIndexLower = varReadIndex;
         int refIndex = leftCore.length();
         int altIndexUpper = determineUpperAltIndex(variant, readBases.getBytes(), refBases.getBytes(), varReadIndex,  refIndex, coreIndexEnd);
-
-        int corePositionStart = findPositionStart(variant.Position, leftCore.length(), alignmentStart, readCigar, coreIndexStart);
-        int corePositionEnd = findPositionEnd(variant.Position, rightCore.length(), alignmentStart, readCigar, coreIndexEnd);
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,

@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextBuilder
@@ -158,56 +157,6 @@ public class VariantReadContextBuilder
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
-    }
-
-    public static final int INVALID_INDEX_POS = -1;
-
-    public static int findPositionStart(
-            int variantPosition, int leftCoreLength, int alignmentStart, final List<CigarElement> readCigar, int readIndex)
-    {
-        if(readCigar.size() == 1)
-            return variantPosition - leftCoreLength;
-
-        int position = findReadPositionFromIndex(alignmentStart, readCigar, readIndex);
-
-        return position > 0 ? position : variantPosition - leftCoreLength;
-    }
-
-    public static int findPositionEnd(
-            int variantPosition, int rightCoreLength, int alignmentStart, final List<CigarElement> readCigar, int readIndex)
-    {
-        if(readCigar.size() == 1)
-            return variantPosition + rightCoreLength;
-
-        int position = findReadPositionFromIndex(alignmentStart, readCigar, readIndex);
-
-        return position > 0 ? position : variantPosition + rightCoreLength;
-    }
-
-    public static int findReadPositionFromIndex(int alignmentStart, final List<CigarElement> readCigar, int readIndex)
-    {
-        int refPosition = alignmentStart;
-        int index = 0;
-
-        for(CigarElement element : readCigar)
-        {
-            if(index + element.getLength() >= readIndex && element.getOperator().consumesReadBases())
-            {
-                if(element.getOperator().consumesReferenceBases())
-                    refPosition += readIndex - index;
-
-                return refPosition;
-            }
-
-            if(element.getOperator().consumesReferenceBases())
-                refPosition += element.getLength();
-
-            if(element.getOperator().consumesReadBases())
-                index += element.getLength();
-        }
-
-        // shouldn't occur
-        return INVALID_INDEX_POS;
     }
 
     public static int determineLowerAltIndex(final SimpleVariant variant, final int varReadIndex)

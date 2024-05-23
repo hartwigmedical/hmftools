@@ -96,6 +96,9 @@ public class JitterData
                     }
                 }
 
+                if(readIndex >= readBases.length || readContextIndex >= readContext.ReadBases.length)
+                    break;
+
                 if(readBases[readIndex] != readContext.ReadBases[readContextIndex])
                 {
                     // mismatch cannot be in the core

@@ -82,8 +82,9 @@ public class ReadCigarInfo
             }
 
             int elementEndIndex = readIndex + element.getLength() - 1;
+            boolean isReadBases = element.getOperator().consumesReadBases();
 
-            if(readIndex <= leftFlankIndex && elementEndIndex >= rightFlankIndex)
+            if(isReadBases && readIndex <= leftFlankIndex && elementEndIndex >= rightFlankIndex)
             {
                 // this element straddles all required indices, must by definition be an aligned section
                 int elementStart = max(readIndex, leftFlankIndex);
@@ -101,7 +102,6 @@ public class ReadCigarInfo
             }
 
             boolean addedElement = false;
-            boolean isReadBases = element.getOperator().consumesReadBases();
 
             if(elementEndIndex >= leftFlankIndex)
             {
