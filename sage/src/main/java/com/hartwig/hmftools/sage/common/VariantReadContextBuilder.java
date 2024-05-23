@@ -133,9 +133,9 @@ public class VariantReadContextBuilder
 
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
 
-        int altIndexLower = readVarIndex;
+        int altIndexLower = determineLowerAltIndex(variant, readVarIndex);
         int refIndex = leftCoreLength;
-        int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex,  refIndex, coreIndexEnd);
+        int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex, refIndex, coreIndexEnd);
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
@@ -195,6 +195,15 @@ public class VariantReadContextBuilder
 
         // shouldn't occur
         return INVALID_INDEX_POS;
+    }
+
+    public static int determineLowerAltIndex(final SimpleVariant variant, final int varReadIndex)
+    {
+        if(!variant.isInsert())
+            return varReadIndex;
+
+        // return the last inserted base for insert, since this will be the first point of difference on the lower side
+        return varReadIndex + variant.indelLength();
     }
 
     public static int determineUpperAltIndex(
