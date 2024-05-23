@@ -35,10 +35,12 @@ public final class VariantUtils
         return new SimpleVariant(CHR_1, position, ref, alt);
     }
 
+    /*
     public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
     {
         return createSimpleVariant(chromosome, position, ref, alt);
     }
+    */
 
     // Variant read context creation               0123456789
     public static final String TEST_LEFT_FLANK  = "ACCGCTGACT"; // DEFAULT_READ_CONTEXT_FLANK_SIZE
@@ -98,10 +100,9 @@ public final class VariantUtils
         int corePositionStart = findPositionStart(variant.Position, leftCore.length(), alignmentStart, readCigar, coreIndexStart);
         int corePositionEnd = findPositionEnd(variant.Position, rightCore.length(), alignmentStart, readCigar, coreIndexEnd);
 
-
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
-                coreIndexEnd, null, null, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
+                coreIndexEnd, null, null, Collections.emptyList(), altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
     }
 
     // Read context counter
@@ -151,42 +152,4 @@ public final class VariantUtils
 
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
     }
-
-
-    // CLEAN-UP: old context and variant creation methods
-    /*
-    public static ReadContext createReadContext(
-            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
-    {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
-        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
-
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
-    }
-
-    @Deprecated
-    public static SageVariant createVariantOld(
-            final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
-    {
-        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
-
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        ReadContextCounter readCounter = new ReadContextCounter(
-                0, null, VariantTier.LOW_CONFIDENCE, 100, 1,
-                TestUtils.TEST_CONFIG, QUALITY_CALCULATOR, null);
-
-        List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
-
-        Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, tumorCounters.get(0).readContext(), 1, 1);
-
-        List<ReadContextCounter> normalCounters = Lists.newArrayList();
-
-        return new SageVariant(candidate, normalCounters, tumorCounters);
-    }
-    */
 }

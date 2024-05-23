@@ -149,11 +149,12 @@ public final class CandidateSerialisation
         Microhomology homology = !homologyStr.isEmpty() ? new Microhomology(homologyStr, homologyStr.length()) : null;
         RepeatInfo maxRepeat = !repeatSequence.isEmpty() ? new RepeatInfo(0, repeatSequence, repeatCount) : null;
 
-        // TODO:
+        // TODO: all repeats, core positions etc etc
 
         VariantReadContext readContext = new VariantReadContext(
                 variant, readAlignmentStart, readAlignmentEnd, refBases, readBases.getBytes(), readCigar,
-                coreIndexStart, varReadIndex, coreIndexEnd, homology, maxRepeat, 0, 0, 0, 0);
+                coreIndexStart, varReadIndex, coreIndexEnd, homology, maxRepeat, Lists.newArrayList(),
+                0, 0, 0, 0);
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }

@@ -28,6 +28,7 @@ public class VariantReadContext
 
     public final Microhomology Homology;
     public final RepeatInfo MaxRepeat;
+    public final List<RepeatInfo> AllRepeats;
 
     public final int AltIndexLower; // the first lower base relative to the index where the ref and alt differ
     public final int AltIndexUpper;
@@ -48,8 +49,8 @@ public class VariantReadContext
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
             final List<CigarElement> readCigar, final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
-            final Microhomology homology, final RepeatInfo maxRepeat, final int altIndexLower, final int altIndexUpper,
-            final int corePositionStart, final int corePositionEnd)
+            final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
+            final int altIndexLower, final int altIndexUpper, final int corePositionStart, final int corePositionEnd)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -61,6 +62,7 @@ public class VariantReadContext
         CoreIndexEnd = coreIndexEnd;
         Homology = homology;
         MaxRepeat = maxRepeat;
+        AllRepeats = allRepeats;
 
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);

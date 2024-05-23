@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LEN
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.evidence.JitterData.checkJitter;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
@@ -34,8 +35,6 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
@@ -382,6 +381,10 @@ public class ReadContextCounter
 
         mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
+        JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
+        mJitterData.update(jitterMatch);
+
+        /*
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readVarIndex, record);
 
         if(rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
@@ -392,6 +395,7 @@ public class ReadContextCounter
                 return SOFT_CLIP;
             }
         }
+        */
 
         mQualCounters.MapQualityTotal += record.getMappingQuality();
 
@@ -410,7 +414,7 @@ public class ReadContextCounter
         registerReadSupport(record, readSupport, quality);
 
         // add to jitter penalty as a function of the number of repeats found
-        mJitterData.update(jitterRealign, mConfig.Quality);
+        // mJitterData.updateOld(jitterRealign, mConfig.Quality);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, quality);

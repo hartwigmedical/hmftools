@@ -7,20 +7,27 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.addIfUnique;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.extendRepeatLower;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class RepeatBoundaries
 {
     public final int LowerIndex;
     public final int UpperIndex;
     public final RepeatInfo MaxRepeat;
+    public final List<RepeatInfo> AllRepeats;
 
-    public RepeatBoundaries(final int lowerIndex, final int upperIndex, final RepeatInfo maxRepeat)
+    public RepeatBoundaries(final int lowerIndex, final int upperIndex, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats)
     {
         LowerIndex = lowerIndex;
         UpperIndex = upperIndex;
         MaxRepeat = maxRepeat;
+        AllRepeats = allRepeats;
     }
 
     // set an initial search length long enough to find a min count of the longest repeat
@@ -41,6 +48,8 @@ public class RepeatBoundaries
         // find the longest repeat which crosses the required indices, and a second repeat if reaches to or past the required end
         // if the longest one does not do so
 
+        List<RepeatInfo> allRepeats = null;
+
         while(index <= min(bases.length - minTotalRepeatLength, requiredIndexEnd))
         {
             for(int repeatLength = 1; repeatLength <= maxLength; ++repeatLength)
@@ -57,6 +66,11 @@ public class RepeatBoundaries
                 if(!positionsOverlap(requiredIndexStart, requiredIndexEnd, repeat.Index, repeat.endIndex()))
                     continue;
 
+                if(allRepeats == null)
+                    allRepeats = Lists.newArrayList(repeat);
+                else if(!addIfUnique(allRepeats, repeat))
+                    continue;
+
                 if(maxRepeat == null)
                 {
                     maxRepeat = repeat;
@@ -64,7 +78,7 @@ public class RepeatBoundaries
                 else
                 {
                     // keep the second longest if the max doesn't full cover the starting start & end indez
-                    if(repeat.length() > maxRepeat.length())
+                    if(repeat.totalLength() > maxRepeat.totalLength())
                     {
                         if(repeat.Index > requiredIndexStart && maxRepeat.Index <= requiredIndexStart)
                         {
@@ -75,7 +89,7 @@ public class RepeatBoundaries
                     }
                     else if(maxRepeat.endIndex() < requiredIndexEnd && repeat.endIndex() >= requiredIndexEnd)
                     {
-                        if(secondRepeat == null || repeat.length() > secondRepeat.length())
+                        if(secondRepeat == null || repeat.totalLength() > secondRepeat.totalLength())
                         {
                             secondRepeat = repeat;
                         }
@@ -96,7 +110,7 @@ public class RepeatBoundaries
         int lowerRepeatIndex = findPostRepeatIndex(lowerRepeat, bases, true);
         int upperRepeatIndex = findPostRepeatIndex(upperRepeat, bases, false);
 
-        return new RepeatBoundaries(lowerRepeatIndex, upperRepeatIndex, maxRepeat);
+        return new RepeatBoundaries(lowerRepeatIndex, upperRepeatIndex, maxRepeat, allRepeats);
     }
 
     private static int findPostRepeatIndex(final RepeatInfo repeat, final byte[] bases, boolean searchDown)

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.RepeatBoundaries.REPEAT_SEARCH_LENGTH;
 
+import java.util.List;
+
 public class RepeatInfo
 {
     public final int Index;
@@ -21,9 +23,35 @@ public class RepeatInfo
         Count = count;
     }
 
-    public int length() { return Count * Bases.length(); }
+    public int totalLength() { return Count * Bases.length(); }
     public int repeatLength() { return Bases.length(); }
-    public int endIndex() { return Index + length() - 1; }
+    public int endIndex() { return Index + totalLength() - 1; }
+
+    public boolean matches(final RepeatInfo other)
+    {
+        return Index == other.Index && Bases.equals(other.Bases) && Count == other.Count;
+    }
+
+    public boolean isMultipleOf(final RepeatInfo other)
+    {
+        // test if the other repeat is a longer version of this repeat
+        if(other.repeatLength() < repeatLength())
+            return false;
+
+        if(other.Index < Index || other.endIndex() > endIndex())
+            return false;
+
+        for(int i = 0, j = 0; i < other.repeatLength(); ++i, ++j)
+        {
+            if(j >= Bases.length())
+                j = 0;
+
+            if(other.Bases.charAt(i) != Bases.charAt(j))
+                return false;
+        }
+
+        return true;
+    }
 
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
@@ -101,6 +129,21 @@ public class RepeatInfo
         return new RepeatInfo(repeatStart, repeatInfo.Bases, repeatInfo.Count + extraCount);
     }
 
+    public static boolean addIfUnique(final List<RepeatInfo> repeats, final RepeatInfo newRepeat)
+    {
+        for(RepeatInfo repeat: repeats)
+        {
+            if(newRepeat.matches(repeat))
+                return false;
+
+            if(newRepeat.isMultipleOf(repeat) || repeat.isMultipleOf(newRepeat))
+                return false;
+        }
+
+        repeats.add(newRepeat);
+        return true;
+    }
+
     public static void setReferenceMaxRepeatInfo(final SageVariant variant, final RefSequence refSequence)
     {
         int refIndex = refSequence.index(variant.position());
@@ -140,7 +183,7 @@ public class RepeatInfo
                 if(requiredIndex >= 0 && !positionWithin(requiredIndex, repeat.Index, repeat.endIndex()))
                     continue;
 
-                if(maxRepeat == null || repeat.length() > maxRepeat.length())
+                if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
                     maxRepeat = repeat;
             }
 

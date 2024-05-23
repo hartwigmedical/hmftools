@@ -11,8 +11,10 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 
@@ -93,13 +95,10 @@ public class VariantReadContextBuilder
 
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
-        RepeatInfo maxRepeat = null;
-
         if(repeatBoundaries != null)
         {
             readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
             readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
-            maxRepeat = repeatBoundaries.MaxRepeat;
         }
 
         int readFlankStart = max(readCoreStart - mFlankSize, 0);
@@ -137,9 +136,25 @@ public class VariantReadContextBuilder
         int refIndex = leftCoreLength;
         int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex, refIndex, coreIndexEnd);
 
+        RepeatInfo maxRepeat = repeatBoundaries != null ? repeatBoundaries.MaxRepeat : null;
+
+        List<RepeatInfo> allRepeats;
+
+        if(repeatBoundaries != null)
+        {
+            allRepeats = Lists.newArrayListWithCapacity(repeatBoundaries.AllRepeats.size());
+            int readFlankOffset = readFlankStart;
+            repeatBoundaries.AllRepeats.forEach(x -> allRepeats.add(new RepeatInfo(
+                    x.Index - readFlankOffset, x.Bases, x.Count)));
+        }
+        else
+        {
+            allRepeats = Collections.emptyList();
+        }
+
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
-                coreIndexEnd, homology, maxRepeat, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
+                coreIndexEnd, homology, maxRepeat, allRepeats, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)

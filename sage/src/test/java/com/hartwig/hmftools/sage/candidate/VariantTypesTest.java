@@ -93,7 +93,7 @@ public class VariantTypesTest
         assertEquals(49, readContext.coreLength());
         assertNotNull(readContext.MaxRepeat);
         assertEquals("AAAC", readContext.MaxRepeat.Bases);
-        assertEquals(24, readContext.MaxRepeat.length());
+        assertEquals(24, readContext.MaxRepeat.totalLength());
     }
 
     @Test

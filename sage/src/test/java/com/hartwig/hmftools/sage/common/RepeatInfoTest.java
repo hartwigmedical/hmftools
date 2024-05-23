@@ -3,12 +3,19 @@ package com.hartwig.hmftools.sage.common;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.RepeatBoundaries.findRepeatBoundaries;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.addIfUnique;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMaxRepeat;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
@@ -36,7 +43,7 @@ public class RepeatInfoTest
         assertNotNull(repeatInfo);
         assertEquals("ACGGT", repeatInfo.Bases);
         assertEquals(2, repeatInfo.Count);
-        assertEquals(10, repeatInfo.length());
+        assertEquals(10, repeatInfo.totalLength());
         assertEquals(5, repeatInfo.repeatLength());
 
         repeatInfo = findMultiBaseRepeat(bases.getBytes(), 2, 5, 2);
@@ -180,5 +187,39 @@ public class RepeatInfoTest
         assertEquals(3, repeatBoundaries.MaxRepeat.Count);
         assertEquals(1, repeatBoundaries.LowerIndex);
         assertEquals(37, repeatBoundaries.UpperIndex);
+    }
+
+    @Test
+    public void testUniqueRepeats()
+    {
+        List<RepeatInfo> repeats = Lists.newArrayList();
+
+        RepeatInfo repeat = new RepeatInfo(0, "A", 7);
+        RepeatInfo repeat2 = new RepeatInfo(0, "AAA", 2);
+        assertTrue(repeat.isMultipleOf(repeat2));
+
+        repeat2 = new RepeatInfo(0, "AA", 3);
+        assertTrue(repeat.isMultipleOf(repeat2));
+
+        repeat = new RepeatInfo(0, "ACT", 4);
+        repeat2 = new RepeatInfo(0, "ACTACT", 2);
+        assertTrue(repeat.isMultipleOf(repeat2));
+
+        repeat = new RepeatInfo(0, "ACT", 4);
+        repeat2 = new RepeatInfo(0, "ACTAGT", 2);
+        assertFalse(repeat.isMultipleOf(repeat2));
+
+        // too long
+        repeat = new RepeatInfo(0, "ACT", 4);
+        repeat2 = new RepeatInfo(0, "ACTACT", 3);
+        assertFalse(repeat.isMultipleOf(repeat2));
+
+        assertTrue(addIfUnique(repeats, new RepeatInfo(0, "ACT", 3)));
+        assertTrue(addIfUnique(repeats, new RepeatInfo(0, "A", 9)));
+        assertFalse(addIfUnique(repeats, new RepeatInfo(0, "AA", 2)));
+        assertFalse(addIfUnique(repeats, new RepeatInfo(1, "AA", 2)));
+
+
+
     }
 }
