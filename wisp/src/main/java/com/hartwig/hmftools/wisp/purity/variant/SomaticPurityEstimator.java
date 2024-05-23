@@ -90,6 +90,8 @@ public class SomaticPurityEstimator
             {
                 calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
             }
+
+            noiseRate = purityCalcData.ErrorRate;
         }
         else
         {
@@ -98,6 +100,7 @@ public class SomaticPurityEstimator
             purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, noiseRate);
             purityCalcData.ErrorRate = noiseRate;
         }
+
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
         ClonalityModel model = null;
