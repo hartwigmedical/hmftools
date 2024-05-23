@@ -57,7 +57,7 @@ public final class CandidateSerialisation
                 .attribute(READ_CONTEXT_CORE, readContext.coreStr())
                 .attribute(READ_CONTEXT_LEFT_FLANK, readContext.leftFlankStr())
                 .attribute(READ_CONTEXT_RIGHT_FLANK, readContext.rightFlankStr())
-                .attribute(READ_CONTEXT_INDEX, readContext.VarReadIndex)
+                .attribute(READ_CONTEXT_INDEX, readContext.VarIndex)
                 .attribute(READ_CONTEXT_CIGAR, readContext.readCigar())
                 .attribute(READ_CONTEXT_ALIGNMENT, new int[] { readContext.AlignmentStart, readContext.AlignmentEnd } )
                 .attribute(READ_CONTEXT_EVENTS, candidate.minNumberOfEvents())

@@ -195,8 +195,7 @@ public class ReadContextCounter
 
     public int tumorQuality()
     {
-        int tumorQuality = mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
-        return Math.max(0, tumorQuality - mJitterData.penalty());
+        return mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
     }
 
     public int[] counts() { return mCounts.toArray(); }
@@ -413,9 +412,6 @@ public class ReadContextCounter
 
         registerReadSupport(record, readSupport, quality);
 
-        // add to jitter penalty as a function of the number of repeats found
-        // mJitterData.updateOld(jitterRealign, mConfig.Quality);
-
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, quality);
 
@@ -501,7 +497,7 @@ public class ReadContextCounter
         SG_LOGGER.trace("READ_EV,{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 mSample, chromosome(), position(), ref(), alt(),
                 matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
-                mReadContext.CoreIndexStart, mReadContext.VarReadIndex,
+                mReadContext.CoreIndexStart, mReadContext.VarIndex,
                 mReadContext.CoreIndexEnd, readIndex, format("%.1f", quality));
     }
 

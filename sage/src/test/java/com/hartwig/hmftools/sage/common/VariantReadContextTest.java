@@ -41,7 +41,7 @@ public class VariantReadContextTest
         assertEquals(43, readContext.AlignmentStart);
         assertEquals(57, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
-        assertEquals(7, readContext.VarReadIndex);
+        assertEquals(7, readContext.VarIndex);
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(7, readContext.AltIndexLower);
         assertEquals(7, readContext.AltIndexUpper);
@@ -81,7 +81,7 @@ public class VariantReadContextTest
         assertEquals(44, readContext.AlignmentStart);
         assertEquals(55, readContext.AlignmentEnd);
         assertEquals(7, readContext.CoreIndexStart);
-        assertEquals(9, readContext.VarReadIndex);
+        assertEquals(9, readContext.VarIndex);
         assertEquals(11, readContext.CoreIndexEnd);
         assertEquals(9, readContext.AltIndexLower);
         assertEquals(9, readContext.AltIndexUpper);
@@ -114,7 +114,7 @@ public class VariantReadContextTest
         assertEquals(131, readContext.AlignmentStart);
         assertEquals(157, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
-        assertEquals(12, readContext.VarReadIndex);
+        assertEquals(12, readContext.VarIndex);
         assertEquals(21, readContext.CoreIndexEnd);
         assertEquals(12, readContext.AltIndexLower);
         assertEquals(13, readContext.AltIndexUpper);
@@ -151,7 +151,7 @@ public class VariantReadContextTest
         assertEquals(50, readContext.AlignmentStart);
         assertEquals(91, readContext.AlignmentEnd);
         assertEquals(10, readContext.CoreIndexStart);
-        assertEquals(22, readContext.VarReadIndex);
+        assertEquals(22, readContext.VarIndex);
         assertEquals(31, readContext.CoreIndexEnd);
         assertEquals(12, readContext.variantRefIndex());
         assertEquals("ATTTTTTTTTTTCTTTTTTTTG", readContext.refBases());
@@ -191,7 +191,7 @@ public class VariantReadContextTest
         assertNotNull(readContext.MaxRepeat);
         assertEquals("C", readContext.MaxRepeat.Bases);
         assertEquals(4, readContext.MaxRepeat.Count);
-        assertEquals(7, readContext.VarReadIndex);
+        assertEquals(7, readContext.VarIndex);
         assertEquals(11, readContext.CoreIndexEnd);
 
         // test 2 : repeats before and after but only the first is used
@@ -209,7 +209,7 @@ public class VariantReadContextTest
         assertNotNull(readContext.MaxRepeat);
         assertEquals("C", readContext.MaxRepeat.Bases);
         assertEquals(4, readContext.MaxRepeat.Count);
-        assertEquals(9, readContext.VarReadIndex);
+        assertEquals(9, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
     }
 
@@ -231,7 +231,7 @@ public class VariantReadContextTest
         assertEquals(44, readContext.AlignmentStart);
         assertEquals(60, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
-        assertEquals(6, readContext.VarReadIndex);
+        assertEquals(6, readContext.VarIndex);
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(8, readContext.AltIndexUpper);
@@ -263,7 +263,7 @@ public class VariantReadContextTest
         assertEquals(50, readContext.AlignmentStart);
         assertEquals(71, readContext.AlignmentEnd);
         assertEquals(10, readContext.CoreIndexStart);
-        assertEquals(11, readContext.VarReadIndex);
+        assertEquals(11, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(11, readContext.AltIndexLower);
         assertEquals(12, readContext.AltIndexUpper);
@@ -288,7 +288,7 @@ public class VariantReadContextTest
         assertEquals(16, readContext.AlignmentStart);
         assertEquals(37, readContext.AlignmentEnd);
         assertEquals(10, readContext.CoreIndexStart);
-        assertEquals(14, readContext.VarReadIndex);
+        assertEquals(14, readContext.VarIndex);
         assertEquals(16, readContext.CoreIndexEnd);
         assertEquals(14, readContext.AltIndexLower);
         assertEquals(15, readContext.AltIndexUpper);
@@ -312,7 +312,7 @@ public class VariantReadContextTest
         assertEquals(44, readContext.AlignmentStart);
         assertEquals(60, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
-        assertEquals(6, readContext.VarReadIndex);
+        assertEquals(6, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(8, readContext.AltIndexLower);
         assertEquals(10, readContext.AltIndexUpper);

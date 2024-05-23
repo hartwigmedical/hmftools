@@ -194,7 +194,7 @@ public class VariantVis
         mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
-        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarReadIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarIndex));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexStart));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexEnd));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.leftFlankLength()));

@@ -23,7 +23,7 @@ public class VariantReadContext
     // read bases and info
     public final byte[] ReadBases;
     public final int CoreIndexStart; // in the read to the start of the core
-    public final int VarReadIndex; // index in the read bases of the variant's position
+    public final int VarIndex; // index in the read bases of the variant's position
     public final int CoreIndexEnd;
 
     public final Microhomology Homology;
@@ -48,7 +48,7 @@ public class VariantReadContext
 
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
-            final List<CigarElement> readCigar, final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
+            final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
             final int altIndexLower, final int altIndexUpper, final int corePositionStart, final int corePositionEnd)
     {
@@ -58,7 +58,7 @@ public class VariantReadContext
         RefBases = refBases;
         ReadBases = readBases;
         CoreIndexStart = coreIndexStart;
-        VarReadIndex = varReadIndex;
+        VarIndex = varIndex;
         CoreIndexEnd = coreIndexEnd;
         Homology = homology;
         MaxRepeat = maxRepeat;
@@ -84,12 +84,12 @@ public class VariantReadContext
 
     public boolean hasHomology() { return Homology != null; }
     public int coreLength() { return CoreIndexEnd - CoreIndexStart + 1; }
-    public int leftCoreLength() { return VarReadIndex - CoreIndexStart; }
-    public int rightCoreLength() { return CoreIndexEnd - VarReadIndex; }
+    public int leftCoreLength() { return VarIndex - CoreIndexStart; }
+    public int rightCoreLength() { return CoreIndexEnd - VarIndex; }
     public int leftFlankLength() { return CoreIndexStart; }
     public int rightFlankLength() { return ReadBases.length - CoreIndexEnd - 1; }
-    public int leftLength() { return VarReadIndex; } // distance from position index to first read base
-    public int rightLength() { return ReadBases.length - VarReadIndex; } // distance to last base
+    public int leftLength() { return VarIndex; } // distance from position index to first read base
+    public int rightLength() { return ReadBases.length - VarIndex; } // distance to last base
     public int totalLength() { return ReadBases.length; }
 
     public int variantRefIndex() { return mVariant.position() - CorePositionStart; }
@@ -103,7 +103,7 @@ public class VariantReadContext
         if(coreLength() < minCoreLength)
             return false;
 
-        if(VarReadIndex <= CoreIndexStart || CoreIndexEnd <= VarReadIndex) // invalid var index
+        if(VarIndex <= CoreIndexStart || CoreIndexEnd <= VarIndex) // invalid var index
             return false;
 
         if(AltIndexLower > AltIndexUpper)
@@ -144,7 +144,7 @@ public class VariantReadContext
     {
         return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s) alt(%d-%d) ref(%s)",
                 mVariant, leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
-                CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "",
+                CoreIndexStart, VarIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "",
                 AltIndexLower, AltIndexUpper, refBases());
     }
 }

@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_BASE_QU
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class QualityConfig
 {
-    public final double JitterPenalty;
     public final int JitterMinRepeatCount;
     public final int BaseQualityFixedPenalty;
     public final int DistanceFromReadEdgeFixedPenalty;
@@ -31,7 +29,6 @@ public class QualityConfig
     public final boolean HighDepthMode;
     public final int HighBaseQualLimit;
 
-    private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
     private static final String BASE_QUAL_FIXED_PENALTY = "base_qual_fixed_penalty";
     private static final String READ_EDGE_FIXED_PENALTY = "read_edge_fixed_penalty";
@@ -45,7 +42,6 @@ public class QualityConfig
 
     public QualityConfig(final ConfigBuilder configBuilder)
     {
-        JitterPenalty = configBuilder.getDecimal(JITTER_PENALTY);
         JitterMinRepeatCount = configBuilder.getInteger(JITTER_MIN_REPEAT_COUNT);
         BaseQualityFixedPenalty = configBuilder.getInteger(BASE_QUAL_FIXED_PENALTY);
         DistanceFromReadEdgeFixedPenalty = configBuilder.getInteger(READ_EDGE_FIXED_PENALTY);
@@ -66,7 +62,6 @@ public class QualityConfig
 
     public QualityConfig(boolean highDepthMode)
     {
-        JitterPenalty = DEFAULT_JITTER_PENALTY;
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         DistanceFromReadEdgeFixedPenalty = DEFAULT_READ_EDGE_FIXED_PENALTY;
@@ -87,9 +82,6 @@ public class QualityConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addDecimal(
-                JITTER_PENALTY, "Penalty to apply to qual score when read context matches with jitter", DEFAULT_JITTER_PENALTY);
-
         configBuilder.addInteger(
                 JITTER_MIN_REPEAT_COUNT,"Minimum repeat count before applying jitter penalty", DEFAULT_JITTER_MIN_REPEAT_COUNT);
 

@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -101,17 +99,26 @@ public class VariantReadContextBuilder
             readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
         }
 
-        int readFlankStart = max(readCoreStart - mFlankSize, 0);
-        int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
+        int readFlankStart = readCoreStart - mFlankSize;
+        int readFlankEnd = readCoreEnd + mFlankSize;
 
         if(readFlankStart < 0 || readFlankEnd >= read.getReadBases().length)
             return null;
 
         // build a CIGAR from the read to cover this range
-        ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(read, readFlankStart, readFlankEnd);
+        ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+
+        if(readCigarInfo == null)
+            return null;
 
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
+
+        int corePositionStart = readCigarInfo.CorePositionStart;
+        int corePositionEnd = readCigarInfo.CorePositionEnd;
+
+        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.FlankPositionStart);
+        int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.FlankPositionEnd);
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
 
@@ -120,20 +127,11 @@ public class VariantReadContextBuilder
         int readVarIndex = varIndexInRead - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
 
-        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
-        int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);
-
         // ref bases are the core width around the variant's position
-        int leftCoreLength = readVarIndex - coreIndexStart;
-        int rightCoreLength = coreIndexEnd - readVarIndex;
-
-        int corePositionStart = findPositionStart(variant.Position, leftCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexStart);
-        int corePositionEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
-
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
 
         int altIndexLower = determineLowerAltIndex(variant, readVarIndex);
-        int refIndex = leftCoreLength;
+        int refIndex = readVarIndex - coreIndexStart;
         int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex, refIndex, coreIndexEnd);
 
         RepeatInfo maxRepeat = repeatBoundaries != null ? repeatBoundaries.MaxRepeat : null;

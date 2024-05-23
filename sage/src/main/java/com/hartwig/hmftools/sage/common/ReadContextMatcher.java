@@ -49,7 +49,7 @@ public class ReadContextMatcher
         {
             // just the alt bases themselves - for both ref and read
             int altLength = mContext.variant().altLength();
-            mLowQualExclusionRangeRead = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + altLength - 1 };
+            mLowQualExclusionRangeRead = new int[] { mContext.VarIndex, mContext.VarIndex + altLength - 1 };
             int refIndex = mContext.leftCoreLength();
             mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };
         }
@@ -89,8 +89,8 @@ public class ReadContextMatcher
 
     public boolean coversVariant(final SAMRecord record, final int readVarIndex)
     {
-        int requiredReadIndexLower = readVarIndex + mContext.VarReadIndex - mContext.AltIndexLower;
-        int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarReadIndex;
+        int requiredReadIndexLower = readVarIndex + mContext.VarIndex - mContext.AltIndexLower;
+        int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarIndex;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
         return requiredReadIndexLower >= 0 && requiredReadIndexUpper < record.getReadBases().length;
@@ -311,7 +311,7 @@ public class ReadContextMatcher
     {
         // compare the core and flanks for the 2 contexts, not allowing for mismatches
         ReadContextMatcher matcher = new ReadContextMatcher(first, false);
-        return matcher.determineReadMatch(second.ReadBases, null, second.VarReadIndex, true);
+        return matcher.determineReadMatch(second.ReadBases, null, second.VarIndex, true);
     }
 
     public double averageCoreQuality(final SAMRecord record, final int readVarIndex)

@@ -9,19 +9,16 @@ import static com.hartwig.hmftools.sage.evidence.JitterMatch.SHORTENED;
 
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.QualityConfig;
 
 import htsjdk.samtools.SAMRecord;
 
 public class JitterData
 {
-    private double mPenalty;
     private int mLengthened;
     private int mShortened;
 
     public JitterData()
     {
-        mPenalty = 0;
         mLengthened = 0;
         mShortened = 0;
     }
@@ -34,30 +31,9 @@ public class JitterData
             mShortened++;
     }
 
-    @Deprecated
-    public void updateOld(final RealignedContext jitterRealign, final QualityConfig config)
-    {
-        if(jitterRealign.Type == RealignedType.LENGTHENED || jitterRealign.Type == RealignedType.SHORTENED)
-        {
-            mPenalty += jitterPenalty(config, jitterRealign.RepeatCount);
+    public int[] summary() { return new int[] { mShortened, mLengthened, 0 }; }
 
-            if(jitterRealign.Type == RealignedType.LENGTHENED)
-                mLengthened++;
-            else
-                mShortened++;
-        }
-    }
-
-    private static double jitterPenalty(final QualityConfig config, int repeatCount)
-    {
-        return config.JitterPenalty * Math.max(0, repeatCount - config.JitterMinRepeatCount);
-    }
-
-    public int penalty() { return (int)mPenalty; }
-
-    public int[] summary() { return new int[] { mShortened, mLengthened, penalty() }; }
-
-    public String toString() { return format("short(%d) long(%d) penalty(%.0f)", mShortened, mLengthened, mPenalty); }
+    public String toString() { return format("short(%d) long(%d)", mShortened, mLengthened); }
 
     public static JitterMatch checkJitter(final VariantReadContext readContext, final SAMRecord record, int readVarIndex)
     {
@@ -143,6 +119,5 @@ public class JitterData
         }
 
         return JitterMatch.NONE;
-
     }
 }

@@ -1,35 +1,24 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realigned;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.NONE;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
-import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
 
@@ -62,7 +51,7 @@ public class RealignmentTest
         VariantReadContext readContext = builder.createContext(var, varBuildRead, 22, refSequence);
 
         assertEquals(113, readContext.variant().position());
-        assertEquals(11, readContext.VarReadIndex);
+        assertEquals(11, readContext.VarIndex);
         assertEquals("CGTTGTTGTTGTTGGTTTTTCTTGTTGTTGTTGGTTTTTCTGA", readContext.coreStr());
 
         // variant is at read index 41 when should be 22
@@ -227,6 +216,7 @@ public class RealignmentTest
         assertEquals(2, var3.tumorReadCounters().get(0).readSupportCounts().Full);
         assertEquals(2, var3.tumorReadCounters().get(0).readSupportCounts().Realigned);
     }
+    */
 
     @Test
     public void testRealignedTooShort()
@@ -263,36 +253,6 @@ public class RealignmentTest
         assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), 2));
     }
 
-    @Test
-    public void testPolyA()
-    {
-        String shorter = "GATCAAAAAAAAAGATC";
-        String ref = "GATCAAAAAAAAAAGATC";
-        String longer = "GATCAAAAAAAAAAAGATC";
-
-        int startIndex = 0;
-        int endIndex = ref.length() - 1;
-
-        assertRealigned(EXACT, realigned(startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), 10));
-        assertRealigned(SHORTENED, 9, realigned(startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), 10));
-        assertRealigned(LENGTHENED, 11, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), 10));
-    }
-
-    @Test
-    public void testDiNucleotideRepeat()
-    {
-        String shorter = "GATCATATATATGATC";
-        String ref = "GATCATATATATATGATC";
-        String longer = "GATCATATATATATATGATC";
-
-        int startIndex = 0;
-        int endIndex = ref.length() - 1;
-
-        assertRealigned(EXACT, realigned(startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), 10));
-        assertRealigned(SHORTENED, 4, realigned(startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), 10));
-        assertRealigned(LENGTHENED, 6, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), 10));
-    }
-
     private static void assertRealigned(RealignedType expectedType, int expectedCount, RealignedContext context)
     {
         assertEquals(expectedCount, context.RepeatCount);
@@ -303,5 +263,4 @@ public class RealignmentTest
     {
         assertEquals(expectedType, context.Type);
     }
-    */
 }

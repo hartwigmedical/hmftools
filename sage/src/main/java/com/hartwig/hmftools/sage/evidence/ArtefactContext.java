@@ -38,7 +38,7 @@ public class ArtefactContext
         // check for any single-base repeat of 8+ bases not covering the variant
         String flankAndBases = readContext.readBases();
 
-        int indexInBases = readContext.VarReadIndex;
+        int indexInBases = readContext.VarIndex;
 
         SimpleVariant variant = readContext.variant();
 

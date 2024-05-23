@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.evidence;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.evidence.Realignment.realigned;
+import static com.hartwig.hmftools.sage.evidence.Realignment.realignedAroundIndex;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +38,7 @@ public class JitterTest
 
         VariantReadContext readContext = builder.createContext(variant, read, 29, refSequence);
         assertTrue(readContext.isValid());
-        assertEquals(23, readContext.VarReadIndex);
+        assertEquals(23, readContext.VarIndex);
         assertEquals(3, readContext.AllRepeats.size());
 
         SAMRecord read1 = buildSamRecord(1, readCigar, readBases);
@@ -67,5 +69,38 @@ public class JitterTest
 
         jitterMatch = JitterData.checkJitter(readContext, read1, 28);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
+    }
+
+    @Test
+    public void testOldJitterRealignment()
+    {
+        SimpleVariant variant = createSimpleVariant(30, "A", "T");
+
+        //                           10        20        30        40        50        60        70        80        90
+        //                 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        String refBases = "ATGTCATTTTAGCGCGCATTCCTTCCTTCCAAAAAAAAAATGCTGGCACACACACATTAGTCGTAGATTAGTCGTAG";
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String readBases = refBases.substring(1, 30) + variant.alt() + refBases.substring(31, 71);
+        String readCigar = "70M";
+        SAMRecord read = buildSamRecord(1, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(variant, read, 29, refSequence);
+        assertTrue(readContext.isValid());
+        assertEquals(23, readContext.VarIndex);
+        assertEquals(3, readContext.AllRepeats.size());
+
+        readBases = refBases.substring(1, 30) + "TTCC" + variant.alt() + refBases.substring(31, 71);
+        SAMRecord read1 = buildSamRecord(1, readCigar, readBases);
+
+        JitterMatch jitterMatch = JitterData.checkJitter(readContext, read1, 33);
+        assertEquals(JitterMatch.LENGTHENED, jitterMatch);
+
+
+        RealignedContext realignedContext = realignedAroundIndex(readContext, 33, read1);
+
+        assertEquals(realignedContext, realignedContext);
     }
 }
