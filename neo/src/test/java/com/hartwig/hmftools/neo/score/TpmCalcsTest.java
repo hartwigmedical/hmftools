@@ -148,8 +148,7 @@ public class TpmCalcsTest
 
         return neoData;
     }
-
-    @Ignore
+    
     @Test
     public void testPoissonRangeCalcs()
     {
