@@ -9,15 +9,15 @@ import htsjdk.samtools.SAMRecord;
 
 public class RawContext
 {
-    public final int ReadIndex;
+    public final int ReadVariantIndex;
     public final VariantReadPositionType PositionType;
 
     protected static final RawContext INVALID_CONTEXT = new RawContext(-1, VariantReadPositionType.NONE);
 
     public RawContext(
-            final int readIndex, final VariantReadPositionType positionType)
+            final int readVariantIndex, final VariantReadPositionType positionType)
     {
-        ReadIndex = readIndex;
+        ReadVariantIndex = readVariantIndex;
         PositionType = positionType;
     }
 
@@ -31,6 +31,6 @@ public class RawContext
 
     public String toString()
     {
-        return format("index(%d) posType(%s)", ReadIndex, PositionType);
+        return format("readVarIndex(%d) posType(%s)", ReadVariantIndex, PositionType);
     }
 }

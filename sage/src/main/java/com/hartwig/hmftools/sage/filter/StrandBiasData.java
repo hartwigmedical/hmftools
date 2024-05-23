@@ -146,13 +146,13 @@ public class StrandBiasData
     {
         RawContext rawContext = RawContext.create(rcCounter.variant(), read);
 
-        if(rawContext.ReadIndex < 0)
+        if(rawContext.ReadVariantIndex < 0)
             return ReadContextMatch.NONE;
 
-        if(!rcCounter.readContextMatcher().coversVariant(read, rawContext.ReadIndex))
+        if(!rcCounter.readContextMatcher().coversVariant(read, rawContext.ReadVariantIndex))
             return ReadContextMatch.NONE;
 
-        return rcCounter.readContextMatcher().determineReadMatch(read, rawContext.ReadIndex);
+        return rcCounter.readContextMatcher().determineReadMatch(read, rawContext.ReadVariantIndex);
     }
 
     private boolean hasSupport(final ReadContextMatch matchType)

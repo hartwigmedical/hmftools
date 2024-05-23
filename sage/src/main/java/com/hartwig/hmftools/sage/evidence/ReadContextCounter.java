@@ -280,7 +280,7 @@ public class ReadContextCounter
         }
 
         // TODO: need to check if the soft-clip bases cover the variant and allow for realignment
-        if(rawContext.ReadIndex < 0)
+        if(rawContext.ReadVariantIndex < 0)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return UNRELATED;
@@ -292,9 +292,9 @@ public class ReadContextCounter
             return IN_SPLIT;
         }
 
-        int readIndex = rawContext.ReadIndex;
+        int readVarIndex = rawContext.ReadVariantIndex;
 
-        boolean covered = mReadContextMatcher.coversVariant(record, readIndex);
+        boolean covered = mReadContextMatcher.coversVariant(record, readVarIndex);
 
         if(!covered)
         {
@@ -315,13 +315,13 @@ public class ReadContextCounter
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
+        double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readVarIndex, record);
 
         if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
             if(rawContext.PositionType != VariantReadPositionType.DELETED)
             {
-                ReadContextMatch matchType = determineReadContextMatch(record, readIndex, true);
+                ReadContextMatch matchType = determineReadContextMatch(record, readVarIndex, true);
 
                 if(matchType.SupportsAlt)
                     countAltSupportMetrics(record, fragmentData);
@@ -332,13 +332,13 @@ public class ReadContextCounter
         }
 
         QualityCalculator.QualityScores qualityScores = mQualityCalculator.calculateQualityScores(
-                this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                this, readVarIndex, record, adjustedNumOfEvents, rawBaseQuality);
 
         double quality = qualityScores.ModifiedQuality;
 
         // Check if FULL, PARTIAL, OR CORE
         ReadContextMatch matchType = rawContext.PositionType != VariantReadPositionType.DELETED ?
-                determineReadContextMatch(record, readIndex, true) : NONE;
+                determineReadContextMatch(record, readVarIndex, true) : NONE;
 
         if(matchType.SupportsAlt)
         {
@@ -354,7 +354,7 @@ public class ReadContextCounter
             mReadEdgeDistance.update(record, fragmentData, true);
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-            logReadEvidence(record, matchType, readIndex, quality);
+            logReadEvidence(record, matchType, readVarIndex, quality);
             countAltSupportMetrics(record, fragmentData);
 
             checkImproperCount(record);
@@ -364,7 +364,7 @@ public class ReadContextCounter
         boolean canRealign = matchType != ReadContextMatch.REF
                 && (abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record));
 
-        RealignedContext realignment = canRealign ? checkRealignment(record, readIndex) : RealignedContext.NONE;
+        RealignedContext realignment = canRealign ? checkRealignment(record, readVarIndex) : RealignedContext.NONE;
 
         if(realignment.Type == EXACT)
         {
@@ -375,14 +375,14 @@ public class ReadContextCounter
             mQualCounters.AltMapQualityTotal += record.getMappingQuality();
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-            logReadEvidence(record, matchType, readIndex,quality);
+            logReadEvidence(record, matchType, readVarIndex,quality);
 
             return ALT_SUPPORT;
         }
 
         mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
-        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record);
+        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readVarIndex, record);
 
         if(rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
         {
@@ -413,7 +413,7 @@ public class ReadContextCounter
         mJitterData.update(jitterRealign, mConfig.Quality);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-        logReadEvidence(record, matchType, readIndex, quality);
+        logReadEvidence(record, matchType, readVarIndex, quality);
 
         return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }

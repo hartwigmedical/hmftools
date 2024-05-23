@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
-import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -154,7 +153,7 @@ public class VariantReadContextTest
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(22, readContext.VarReadIndex);
         assertEquals(31, readContext.CoreIndexEnd);
-        assertEquals(12, readContext.refIndex());
+        assertEquals(12, readContext.variantRefIndex());
         assertEquals("ATTTTTTTTTTTCTTTTTTTTG", readContext.refBases());
         assertEquals("CTTTTTTTTTATTTTTTTTTTTTTTTTTTTTGAGAGAGGCAA", readContext.readBases());
 

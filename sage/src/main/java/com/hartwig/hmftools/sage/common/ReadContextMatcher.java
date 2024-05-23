@@ -87,32 +87,32 @@ public class ReadContextMatcher
         return 1 + (segmentLength / CORE_LOW_QUAL_MISMATCH_FACTOR);
     }
 
-    public boolean coversVariant(final SAMRecord record, final int readIndex)
+    public boolean coversVariant(final SAMRecord record, final int readVarIndex)
     {
-        int requiredReadIndexLower = readIndex + mContext.VarReadIndex - mContext.AltIndexLower;
-        int requiredReadIndexUpper = readIndex + mContext.AltIndexUpper - mContext.VarReadIndex;
+        int requiredReadIndexLower = readVarIndex + mContext.VarReadIndex - mContext.AltIndexLower;
+        int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarReadIndex;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
         return requiredReadIndexLower >= 0 && requiredReadIndexUpper < record.getReadBases().length;
     }
 
-    public ReadContextMatch determineReadMatch(final SAMRecord record, final int readIndex)
+    public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
     {
-        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readIndex, false);
+        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
     }
 
-    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readIndex, boolean skipRefMatch)
+    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
     {
-        if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readIndex))
+        if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readVarIndex))
             return ReadContextMatch.REF;
 
-        ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readIndex);
+        ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
 
         if(coreMatch == NONE)
             return NONE;
 
-        BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readIndex, true);
-        BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readIndex, false);
+        BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readVarIndex, true);
+        BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readVarIndex, false);
 
         if(rightMatch == BaseMatchType.MISMATCH || leftMatch == BaseMatchType.MISMATCH)
             return CORE;
@@ -135,11 +135,12 @@ public class ReadContextMatcher
         }
     }
 
-    private boolean coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readIndex)
+    private boolean coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
     {
         int refIndexStart = 0;
 
-        int readIndexStart = readIndex - mContext.leftCoreLength();
+        int refIndex = mContext.variantRefIndex();
+        int readIndexStart = readVarIndex - refIndex;
         int readIndexEnd = readIndexStart + mContext.RefBases.length - 1;
 
         int compareLength = mContext.RefBases.length;
@@ -152,10 +153,10 @@ public class ReadContextMatcher
                 mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRef);
     }
 
-    private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readIndex)
+    private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
     {
-        int readIndexStart = readIndex - mContext.leftCoreLength();
-        int readIndexEnd = readIndex + mContext.rightCoreLength();
+        int readIndexStart = readVarIndex - mContext.leftCoreLength();
+        int readIndexEnd = readVarIndex + mContext.rightCoreLength();
 
         // have already checked that the read covers the min alt range
         if(readIndexStart >= 0 && readIndexEnd < readBases.length)
@@ -202,21 +203,21 @@ public class ReadContextMatcher
         MISMATCH;
     }
 
-    private BaseMatchType determineFlankMatch(final byte[] readBases, final byte[] readQuals, final int readIndex, boolean isLeft)
+    private BaseMatchType determineFlankMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean isLeft)
     {
         int readIndexStart, readIndexEnd, flankStartIndex, flankLength;
 
         if(isLeft)
         {
-            readIndexStart = readIndex - mContext.leftLength();
-            readIndexEnd = readIndex - mContext.leftCoreLength() - 1;
+            readIndexStart = readVarIndex - mContext.leftLength();
+            readIndexEnd = readVarIndex - mContext.leftCoreLength() - 1;
             flankStartIndex = 0;
             flankLength = mContext.leftFlankLength();
         }
         else
         {
-            readIndexStart = readIndex + mContext.rightCoreLength() + 1;
-            readIndexEnd = readIndex + mContext.rightLength() - 1;
+            readIndexStart = readVarIndex + mContext.rightCoreLength() + 1;
+            readIndexEnd = readVarIndex + mContext.rightLength() - 1;
             flankStartIndex = mContext.CoreIndexEnd + 1;
             flankLength = mContext.rightFlankLength();
         }
@@ -313,10 +314,10 @@ public class ReadContextMatcher
         return matcher.determineReadMatch(second.ReadBases, null, second.VarReadIndex, true);
     }
 
-    public double averageCoreQuality(final SAMRecord record, final int readIndex)
+    public double averageCoreQuality(final SAMRecord record, final int readVarIndex)
     {
-        int readIndexStart = max(readIndex - mContext.leftCoreLength(), 0);
-        int readIndexEnd = min(readIndex + mContext.rightCoreLength(), record.getReadBases().length - 1);
+        int readIndexStart = max(readVarIndex - mContext.leftCoreLength(), 0);
+        int readIndexEnd = min(readVarIndex + mContext.rightCoreLength(), record.getReadBases().length - 1);
 
         int baseLength = readIndexEnd - readIndexStart + 1;
 

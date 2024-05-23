@@ -3,9 +3,6 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineUpperAltIndex;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionEnd;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionStart;
 
 import java.util.List;
 
@@ -93,7 +90,7 @@ public class VariantReadContext
     public int rightLength() { return ReadBases.length - VarReadIndex; } // distance to last base
     public int totalLength() { return ReadBases.length; }
 
-    public int refIndex() { return leftCoreLength(); }
+    public int variantRefIndex() { return mVariant.position() - CorePositionStart; }
 
     public boolean isValid()
     {
@@ -125,7 +122,7 @@ public class VariantReadContext
 
     public final byte[] trinucleotide()
     {
-        int refIndex = refIndex();
+        int refIndex = variantRefIndex();
         return Arrays.subsetArray(RefBases, refIndex - 1, refIndex + 1);
     }
 
