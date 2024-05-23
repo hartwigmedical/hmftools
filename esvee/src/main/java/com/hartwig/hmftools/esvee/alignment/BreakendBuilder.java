@@ -158,7 +158,7 @@ public class BreakendBuilder
 
         for(AlignData alignment : nonZeroAlignments)
         {
-            if(alignment.adjustedAlignment() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
+            if(alignment.calcModifiedMapQual() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
                 validAlignments.add(alignment);
             else
                 lowQualAlignments.add(alignment);
