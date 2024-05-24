@@ -23,14 +23,36 @@ public class ReadContextMatcher
     private final int mMaxCoreLowQualMatches;
     private final boolean mAllowWildcardMatchInCore;
 
-    private final int[] mLowQualExclusionRangeRead; // for SNV & MNVs, the indices covering the variant & excluding low-qual mismatches
-    private final int[] mLowQualExclusionRangeRef;
+    private final LowQualExclusion mLowQualExclusionRead;
+    private final LowQualExclusion mLowQualExclusionRef;
 
     public static final byte WILDCARD_BASE = (byte) '.';
 
     public ReadContextMatcher(final VariantReadContext variantReadContext)
     {
         this(variantReadContext, true);
+    }
+
+    private class LowQualExclusion
+    {
+        public final int IndexLower;
+        public final int IndexUpper;
+        public final boolean IsRange;
+
+        public LowQualExclusion(final int indexLower, final int indexUpper, final boolean isRange)
+        {
+            IndexLower = indexLower;
+            IndexUpper = indexUpper;
+            IsRange = isRange;
+        }
+
+        public boolean coversIndex(int index)
+        {
+            if(IsRange)
+                return index >= IndexLower && index <= IndexUpper;
+            else
+                return index == IndexLower || index == IndexUpper;
+        }
     }
 
     public ReadContextMatcher(final VariantReadContext variantReadContext, boolean allowMismatches)
@@ -42,17 +64,49 @@ public class ReadContextMatcher
 
         if(mContext.variant().isIndel())
         {
-            mLowQualExclusionRangeRead = new int[] { mContext.AltIndexUpper, mContext.AltIndexUpper };
-            mLowQualExclusionRangeRef = mLowQualExclusionRangeRead;
+            int altIndexLower = determineIndelLowQualLowerIndex(variantReadContext);
+            int altIndexUpper = determineIndelLowQualUpperIndex(variantReadContext);
+
+            mLowQualExclusionRead = new LowQualExclusion(altIndexLower, altIndexUpper, false);
+            mLowQualExclusionRef = mLowQualExclusionRead;
         }
         else
         {
             // just the alt bases themselves - for both ref and read
-            int altLength = mContext.variant().altLength();
-            mLowQualExclusionRangeRead = new int[] { mContext.VarIndex, mContext.VarIndex + altLength - 1 };
+            int altRange = mContext.variant().altLength() - 1;
+            mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange, true);
+
             int refIndex = mContext.leftCoreLength();
-            mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };
+            mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange, true);
         }
+    }
+
+    private static int determineIndelLowQualLowerIndex(final VariantReadContext readContext)
+    {
+        if(!readContext.variant().isInsert())
+            return readContext.VarIndex;
+
+        // return the last inserted base for insert, since this will be the first point of difference on the lower side
+        return readContext.VarIndex + readContext.variant().indelLength();
+    }
+
+    private static int determineIndelLowQualUpperIndex(final VariantReadContext readContext)
+    {
+        // find the first base of difference (ref vs alt) up from the variant's position, and cap at the core indices
+        final SimpleVariant variant = readContext.variant();
+
+        int refIndex = readContext.variantRefIndex();
+        int readIndex = readContext.VarIndex;
+
+        for(; readIndex <= readContext.CoreIndexEnd & refIndex < readContext.RefBases.length; ++readIndex, ++refIndex)
+        {
+            if(readContext.RefBases[refIndex] != readContext.ReadBases[readIndex])
+                break;
+        }
+
+        int upperRefIndex = variant.isInsert() ? readContext.VarIndex + variant.altLength() : readContext.VarIndex + 1;
+
+        return max(min(readIndex, readContext.CoreIndexEnd), upperRefIndex);
     }
 
     private int calcMaxLowQualCoreMismatches()
@@ -150,7 +204,7 @@ public class ReadContextMatcher
 
         return matches(
                 mContext.RefBases, readBases, readQuals, refIndexStart, readIndexStart, compareLength,
-                mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRef);
+                mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRef);
     }
 
     private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
@@ -163,7 +217,7 @@ public class ReadContextMatcher
         {
             if(matches(
                     mContext.ReadBases, readBases, readQuals, mContext.CoreIndexStart, readIndexStart, mContext.coreLength(),
-                    mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRead))
+                    mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRead))
             {
                 return CORE;
             }
@@ -185,7 +239,7 @@ public class ReadContextMatcher
 
             if(matches(
                     mContext.ReadBases, readBases, readQuals, coreIndexStart, readIndexStart, compareLength,
-                    maxLowQualMismatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRead))
+                    maxLowQualMismatches, mAllowWildcardMatchInCore, mLowQualExclusionRead))
             {
                 return ReadContextMatch.PARTIAL_CORE;
             }
@@ -242,7 +296,7 @@ public class ReadContextMatcher
 
         boolean flankMatch = matches(
                 mContext.ReadBases, readBases, readQuals, flankStartIndex, readIndexStart, flankLength,
-                FLANK_LOW_QUAL_MISMATCHES, false, mLowQualExclusionRangeRead);
+                FLANK_LOW_QUAL_MISMATCHES, false, mLowQualExclusionRead);
 
         if(!flankMatch)
             return BaseMatchType.MISMATCH;
@@ -253,17 +307,17 @@ public class ReadContextMatcher
     private static boolean matches(
             final byte[] bases, final byte[] readBases, final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
             final int compareLength, final int maxLowQualMismatches, final boolean allowWildcardMismatches,
-            final int[] lowQualExclusionRange)
+            final LowQualExclusion lowQualExclusion)
     {
         return matchType(
                 bases, readBases, readQuals, baseIndexStart, readIndexStart, compareLength,
-                maxLowQualMismatches, allowWildcardMismatches, lowQualExclusionRange) == BaseMatchType.MATCH;
+                maxLowQualMismatches, allowWildcardMismatches, lowQualExclusion) == BaseMatchType.MATCH;
     }
 
     private static BaseMatchType matchType(
             final byte[] bases, final byte[] readBases, @Nullable final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
             final int compareLength, final int maxLowQualMismatches, final boolean allowWildcardMismatches,
-            @Nullable final int[] lowQualExclusionRange)
+            @Nullable final LowQualExclusion lowQualExclusion)
     {
         if(compareLength <= 0)
             return BaseMatchType.MISMATCH;
@@ -288,7 +342,7 @@ public class ReadContextMatcher
             if(readQuals == null)
                 return BaseMatchType.MISMATCH;
 
-            if(lowQualExclusionRange != null && i >= lowQualExclusionRange[0] && i <= lowQualExclusionRange[1])
+            if(lowQualExclusion != null && lowQualExclusion.coversIndex(i))
                 return BaseMatchType.MISMATCH;
 
             if(readQuals[j] < MATCHING_BASE_QUALITY)

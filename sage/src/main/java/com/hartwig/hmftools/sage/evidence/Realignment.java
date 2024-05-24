@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.sage.common.ReadCigarInfo.getReadIndexFromPosition;
 import static com.hartwig.hmftools.sage.evidence.RealignedContext.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -26,28 +27,10 @@ public class Realignment
         if(variantCoreEndPosition < record.getAlignmentStart() || variantCoreEndPosition > record.getAlignmentEnd())
             return INVALID_INDEX;
 
-        int refPosition = record.getAlignmentStart();
-        int index = 0;
-
-        for(CigarElement element : record.getCigar().getCigarElements())
-        {
-            if(refPosition + element.getLength() >= variantCoreEndPosition && element.getOperator().consumesReferenceBases())
-            {
-                if(element.getOperator().consumesReadBases())
-                    index += variantCoreEndPosition - refPosition;
-
-                break;
-            }
-
-            if(element.getOperator().consumesReferenceBases())
-                refPosition += element.getLength();
-
-            if(element.getOperator().consumesReadBases())
-                index += element.getLength();
-        }
+        int coreEndReadIndex = getReadIndexFromPosition(record.getAlignmentStart(), record.getCigar().getCigarElements(), variantCoreEndPosition);
 
         // convert back to the variant's index location
-        int adjustedReadIndex = index - readContext.rightCoreLength();
+        int adjustedReadIndex = coreEndReadIndex - readContext.rightCoreLength();
         return adjustedReadIndex;
     }
 

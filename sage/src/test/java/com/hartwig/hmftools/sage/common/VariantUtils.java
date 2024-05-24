@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineUpperAltIndex;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
 
 import java.util.Collections;
 import java.util.List;
@@ -88,8 +88,7 @@ public final class VariantUtils
         int corePositionEnd = variant.Position + rightCore.length();
 
         int altIndexLower = varReadIndex;
-        int refIndex = leftCore.length();
-        int altIndexUpper = determineUpperAltIndex(variant, readBases.getBytes(), refBases.getBytes(), varReadIndex,  refIndex, coreIndexEnd);
+        int altIndexUpper = determineAltIndexUpper(variant, varReadIndex, null);
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,

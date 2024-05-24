@@ -383,19 +383,6 @@ public class ReadContextCounter
         JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
         mJitterData.update(jitterMatch);
 
-        /*
-        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readVarIndex, record);
-
-        if(rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
-        {
-            if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
-            {
-                addVariantVisRecord(record, ReadContextMatch.NONE, qualityScores, fragmentData);
-                return SOFT_CLIP;
-            }
-        }
-        */
-
         mQualCounters.MapQualityTotal += record.getMappingQuality();
 
         VariantReadSupport readSupport = null;

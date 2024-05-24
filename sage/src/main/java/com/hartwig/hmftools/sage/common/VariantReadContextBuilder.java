@@ -129,9 +129,8 @@ public class VariantReadContextBuilder
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
 
-        int altIndexLower = determineLowerAltIndex(variant, readVarIndex);
-        int refIndex = readVarIndex - coreIndexStart;
-        int altIndexUpper = determineUpperAltIndex(variant, contextReadBases, refBases, readVarIndex, refIndex, coreIndexEnd);
+        int altIndexLower = readVarIndex;
+        int altIndexUpper = determineAltIndexUpper(variant, readVarIndex, homology);
 
         RepeatInfo maxRepeat = repeatBoundaries != null ? repeatBoundaries.MaxRepeat : null;
 
@@ -159,36 +158,11 @@ public class VariantReadContextBuilder
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
     }
 
-    public static int determineLowerAltIndex(final SimpleVariant variant, final int varReadIndex)
+    public static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
     {
-        if(!variant.isInsert())
-            return varReadIndex;
-
-        // return the last inserted base for insert, since this will be the first point of difference on the lower side
-        return varReadIndex + variant.indelLength();
-    }
-
-    public static int determineUpperAltIndex(
-            final SimpleVariant variant, final byte[] readBases, final byte[] refBases,
-            final int varReadIndex, final int varRefIndex, final int coreIndexEnd)
-    {
-        // find the first base of difference (ref vs alt) up and down from the variant's position, and cap at the core indices
-        if(!variant.isIndel())
-        {
-            return varReadIndex + variant.Alt.length() - 1;
-        }
-
-        int refIndex = varRefIndex;
-        int readIndex = varReadIndex;
-
-        for(; readIndex <= coreIndexEnd & refIndex < refBases.length; ++readIndex, ++refIndex)
-        {
-            if(refBases[refIndex] != readBases[readIndex])
-                break;
-        }
-
-        int upperRefIndex = variant.isInsert() ? varReadIndex + variant.Alt.length() : varReadIndex + 1;
-
-        return max(min(readIndex, coreIndexEnd), upperRefIndex);
+        if(variant.isIndel())
+            return readVarIndex + (homology != null ? homology.Length : 0) + 1;
+        else
+            return readVarIndex + variant.altLength() - 1;
     }
 }
