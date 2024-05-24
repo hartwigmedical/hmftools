@@ -41,7 +41,6 @@ public class SageConstants
     public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
     public static final int FLANK_LOW_QUAL_MISMATCHES = 3;
     public static final double SC_READ_EVENTS_FACTOR = 12;
-    public static final int REALIGN_READ_MIN_INDEL_LENGTH = 3;
     public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH = 20;
     public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER = 5;
 

@@ -7,7 +7,6 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
@@ -17,9 +16,6 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
@@ -37,11 +33,6 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
-
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -200,6 +191,8 @@ public class ReadContextCounter
 
     public int[] counts() { return mCounts.toArray(); }
     public int[] quality() { return mQualities.toArray(); }
+    public ReadSupportCounts readCounts() { return mCounts; }
+    public ReadSupportCounts readQuals() { return mQualities; }
 
     public int[] jitter()
     {
@@ -359,8 +352,7 @@ public class ReadContextCounter
             return ALT_SUPPORT;
         }
 
-        boolean canRealign = matchType != ReadContextMatch.REF
-                && (abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record));
+        boolean canRealign = matchType != ReadContextMatch.REF;
 
         RealignedContext realignment = canRealign ? checkRealignment(record, readVarIndex) : RealignedContext.NONE;
 
@@ -488,46 +480,15 @@ public class ReadContextCounter
                 mReadContext.CoreIndexEnd, readIndex, format("%.1f", quality));
     }
 
-    private boolean readHasIndelInCore(final SAMRecord record)
-    {
-        if(!record.getCigar().containsOperator(D) && !record.getCigar().containsOperator(I))
-            return false;
-
-        int variantLeftCorePos = mReadContext.CorePositionStart;
-        int variantRightCorePos = mReadContext.CorePositionEnd;
-
-        int currentPos = record.getAlignmentStart() - 1;
-
-        // eg 2S10M2D10M starting at 100: first non-SC element, in this case a delete, starts at 109
-        for(CigarElement element : record.getCigar())
-        {
-            if(element.getOperator() == S)
-                continue;
-
-            if(element.getOperator() == I || element.getOperator() == D)
-            {
-                int indelLowerPos = currentPos;
-                int indelUpperPos = indelLowerPos + (element.getOperator() == D ? element.getLength() : 1);
-
-                if(positionsOverlap(variantLeftCorePos, variantRightCorePos, indelLowerPos, indelUpperPos))
-                    return true;
-            }
-            else if(element.getOperator() == M)
-            {
-                currentPos += element.getLength();
-            }
-        }
-
-        return false;
-    }
-
     private RealignedContext checkRealignment(final SAMRecord record, int readIndex)
     {
         // do a comparison of the bases going from this calculated RI - coreLength - flankLength vs the variant's full read base sequence
 
         // the read index corresponding to the ref position at the end of the core
-
         int realignedReadIndex = Realignment.realignedReadIndexPosition(mReadContext, record);
+
+        if(readIndex == realignedReadIndex)
+            return RealignedContext.NONE;
 
         if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
             return RealignedContext.NONE;
@@ -610,116 +571,4 @@ public class ReadContextCounter
     public ReadSupportCounts readSupportCounts() { return mCounts; }
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
 
-
-    // CLEAN-UP: old realignment methods
-    private RealignedContext checkRealignmentOld(final SAMRecord record)
-    {
-        // try left and right alignment in turn
-        int realignLeftReadIndex = calcLeftAlignmentIndex(record);
-
-        if(realignLeftReadIndex >= 0) //  && realignLeftReadIndex != readIndex
-        {
-            ReadContextMatch match = determineReadContextMatch(record, realignLeftReadIndex, false);
-
-            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-                return new RealignedContext(EXACT, mReadContext.totalLength(), realignLeftReadIndex);
-        }
-
-        int realignRightReadIndex = calcRightAlignmentIndex(record);
-
-        if(realignRightReadIndex >= 0)
-        {
-            // still need to test even if this index matches the original readIndex since if the readIndex was in a delete
-            // it will have been skipped above
-            ReadContextMatch match = determineReadContextMatch(record, realignRightReadIndex, false);
-
-            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-                return new RealignedContext(RealignedType.EXACT, mReadContext.totalLength(), realignRightReadIndex);
-            // else if(match == ReadContextMatch.CORE_PARTIAL) // REALIGN
-            //    return new RealignedContext(RealignedType.CORE_PARTIAL, mReadContext.indexedBases().length(), realignRightReadIndex);
-        }
-
-        // try a simple string search and take it as exact if the matched index is within the expected range
-        String readContext = mReadContext.readBases();
-
-        if(readContext.length() >= REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH)
-        {
-            int matchedReadIndex = record.getReadString().indexOf(readContext);
-
-            if(matchedReadIndex >= 0)
-            {
-                int matchedIndex = matchedReadIndex + mReadContext.leftLength();
-                if(abs(matchedIndex - realignLeftReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER
-                        || abs(matchedIndex - realignRightReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER)
-                {
-                    return new RealignedContext(RealignedType.EXACT, mReadContext.totalLength(), matchedIndex);
-                }
-            }
-        }
-
-        return RealignedContext.NONE;
-    }
-
-    private int calcLeftAlignmentIndex(final SAMRecord record)
-    {
-        // Left alignment: Match full read context starting at base = pos - rc_index
-        int leftCoreOffset = mReadContext.leftCoreLength();
-        int realignLeftCorePos = position() - leftCoreOffset;
-        int realignLeftCoreIndex = record.getReadPositionAtReferencePosition(realignLeftCorePos);
-
-        if(realignLeftCoreIndex > 0)
-        {
-            int realignLeftReadIndex = realignLeftCoreIndex - 1 + leftCoreOffset;
-            return realignLeftReadIndex;
-        }
-
-        int deleteCount = (int)record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == D).count();
-        if(deleteCount == 0)
-            return -1;
-
-        int deleteStartPos = record.getAlignmentStart();
-        int deleteStartIndex = 0;
-        for(CigarElement element : record.getCigar())
-        {
-            if(element.getOperator() == S || element.getOperator() == I)
-                continue;
-
-            if(element.getOperator() == M)
-            {
-                deleteStartPos += element.getLength();
-                deleteStartIndex += element.getLength();
-            }
-            else if(element.getOperator() == D)
-            {
-                --deleteCount;
-
-                if(deleteCount == 0)
-                    break;
-
-                deleteStartPos += element.getLength();
-            }
-        }
-
-        --deleteStartPos;
-
-        int posDiff = realignLeftCorePos - deleteStartPos;
-        int realignLeftReadIndex = deleteStartIndex + posDiff - 1 + leftCoreOffset;
-        return realignLeftReadIndex;
-    }
-
-    private int calcRightAlignmentIndex(final SAMRecord record)
-    {
-        // Right alignment: Match full read context ending at base = pos + length[RC} - rc_index - 1 - length(alt) + length(ref)
-        int rightCoreOffset = mReadContext.rightCoreLength();
-        int realignRightPos = position() + rightCoreOffset - mVariant.alt().length() + mVariant.ref().length();
-        int realignRightCoreIndex = record.getReadPositionAtReferencePosition(realignRightPos);
-
-        if(realignRightCoreIndex > 0)
-        {
-            int realignRightReadIndex = realignRightCoreIndex - 1 - rightCoreOffset;
-            return realignRightReadIndex;
-        }
-
-        return -1;
-    }
 }
