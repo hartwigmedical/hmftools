@@ -125,4 +125,118 @@ public class RealignmentTest
 
         assertEquals(1, readContextCounter.readCounts().Realigned);
     }
+
+    private static final String REF_BASE_START = "ACGTTGCAACGTTGCAGGGG"; // 20 bases
+
+    @Test
+    public void testInsertRealignment2()
+    {
+        String refBases = REF_BASE_START
+                + "CTTTCTTTTCTTTCTTTTTCTTTA" + REF_BASES_200.substring(0, 50);
+        // index   0123456789012345678901234567890123456789
+        // pos     20        30        40
+
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String insertedBases = "TTTCTTTC";
+
+        int varPosition = 35;
+        int readPosStart = 20;
+        int varIndexInRead = varPosition - readPosStart;
+        String varBuildReadBases = refBases.substring(readPosStart, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1);
+
+        String readCigar = "16M8I20M";
+
+        SAMRecord varBuildRead = buildSamRecord(readPosStart, readCigar, varBuildReadBases);
+        String ref = refBases.substring(varPosition, varPosition + 1);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        SimpleVariant var = createSimpleVariant(varPosition, ref, ref + insertedBases);
+        VariantReadContext readContext = builder.createContext(var, varBuildRead, varIndexInRead, refSequence);
+
+        assertEquals(12, readContext.VarIndex);
+        assertEquals("TTTCTTT", readContext.Homology.Bases);
+        assertEquals(44, readContext.CorePositionEnd);
+        assertEquals("CTTTTTCTTTCTTTCTTTAC", readContext.coreStr());
+
+        ReadContextCounter readContextCounter = createReadCounter(0, readContext);
+
+        readContextCounter.processRead(varBuildRead, 0, null);
+        assertEquals(1, readContextCounter.readCounts().Full);
+
+        RawContext rawContext = RawContext.create(var, varBuildRead);
+        assertEquals(15, rawContext.ReadVariantIndex);
+
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        String readBases = "CTTTCTTTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20); // 17 + 20
+        int realignedStartPos = readPosStart;
+        readCigar = "5M1I9M2D22M";
+        SAMRecord realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
+
+        int realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
+        ReadContextMatch matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
+
+        assertEquals(FULL, matchType);
+
+        readContextCounter.processRead(realignedRead, 0, null);
+
+        assertEquals(1, readContextCounter.readCounts().Realigned);
+
+
+        refBases = REF_BASE_START
+                + "TTCTTTTCTTTCTTTTTCTTTA" + REF_BASES_200.substring(0, 50);
+        // index   0123456789012345678901234567890123456789
+        // pos     20        30        40
+
+        refSequence = new RefSequence(0, refBases.getBytes());
+
+        varPosition = 33;
+        ref = refBases.substring(varPosition, varPosition + 1);
+        var = createSimpleVariant(varPosition, ref, ref + insertedBases);
+
+        readPosStart = 20; // drop back to make the flank long enough
+        varIndexInRead = varPosition - readPosStart;
+        varBuildReadBases = refBases.substring(readPosStart, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1);
+        readCigar = "12M8I20M";
+        varBuildRead = buildSamRecord(readPosStart, readCigar, varBuildReadBases);
+
+        readContext = builder.createContext(var, varBuildRead, varIndexInRead, refSequence);
+
+        // 1:33 T>TTTTCTTTC read(TCTTTTCTTTCTTTTTCTTTCTTTCTTTACGCAATATTCG 11M8I20M) pos(21-0) index(10-12-29) repeat(14: TTTC-3) homology(TTTCTTT length(7)) alt(12-20) ref(CTTTTTCTTTAC)
+        readBases = "TCTTTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20); // 20 + 20
+        realignedStartPos = readPosStart;
+        readCigar = "12M2D28M";
+        realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
+
+        realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
+        matcher = new ReadContextMatcher(readContext);
+        matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
+        assertEquals(FULL, matchType);
+
+        readContextCounter = createReadCounter(0, readContext);
+        readContextCounter.processRead(realignedRead, 0, null);
+        assertEquals(1, readContextCounter.readCounts().Realigned);
+
+
+        varPosition = 36;
+        varIndexInRead = varPosition - readPosStart;
+        var = createSimpleVariant(varPosition, ref, ref + insertedBases);
+        readContext = builder.createContext(var, varBuildRead, varIndexInRead, refSequence);
+
+        readBases = "CTTTCTTTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20); // 23 + 20
+        realignedStartPos = 26;
+        readCigar = "6S9M2D8M";
+        realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
+
+        realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
+        matcher = new ReadContextMatcher(readContext);
+        matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
+        // assertEquals(FULL, matchType);
+
+        readContextCounter = createReadCounter(0, readContext);
+        readContextCounter.processRead(realignedRead, 0, null);
+       //  assertEquals(1, readContextCounter.readCounts().Realigned);
+    }
 }
