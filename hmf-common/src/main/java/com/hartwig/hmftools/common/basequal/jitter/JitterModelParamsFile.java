@@ -22,7 +22,7 @@ public class JitterModelParamsFile
         microsatelliteSkew,
     }
 
-    private static String FILE_EXTENSION = ".errorprofile.jitter_params.tsv";
+    private static String FILE_EXTENSION = ".jitter_params.tsv";
 
     public static String generateFilename(String basePath, String sample)
     {
