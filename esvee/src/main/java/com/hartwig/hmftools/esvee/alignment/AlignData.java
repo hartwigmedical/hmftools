@@ -179,6 +179,12 @@ public class AlignData
         return alternativeAlignments;
     }
 
+    public boolean isLowerAlignment(final AlignData other)
+    {
+        // returns true if this alignment is lower in genome position terms than the comparison alignment
+        return RefLocation.compareTo(other.RefLocation) < 0;
+    }
+
     public String toString()
     {
         return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d align=%d adj=%d)",

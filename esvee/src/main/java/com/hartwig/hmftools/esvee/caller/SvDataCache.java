@@ -8,30 +8,116 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class SvDataCache
 {
+    private final CallerConfig mConfig;
+    private final TargetRegions mTargetRegions;
+    private final StructuralVariantFactory mSvFactory;
+
     private final List<Variant> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
+    private int mHardFilteredCount;
 
-    public SvDataCache()
+    public SvDataCache(final CallerConfig config, final TargetRegions targetRegions)
     {
+        mConfig = config;
         mSvData = Lists.newArrayList();
         mChromosomeBreakends = Maps.newHashMap();
+
+        mTargetRegions = targetRegions;
+
+        mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
+        mHardFilteredCount = 0;
+    }
+
+    public void setGenotypeOrdinals(final GenotypeIds genotypeIds)
+    {
+        mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
     }
 
     public List<Variant> getSvList() { return mSvData; }
     public Map<String,List<Breakend>> getBreakendMap() { return mChromosomeBreakends; }
 
-    public void addSvData(final Variant sv) { mSvData.add(sv); }
+    public int sglCount() { return (int)mSvData.stream().filter(x -> x.isSgl()).count(); }
+    public int svCount() { return (int)mSvData.stream().filter(x -> !x.isSgl()).count(); }
+    public int hardFilteredCount() { return mHardFilteredCount; }
+    public int incompleteSVs() { return mSvFactory.unmatched().size(); }
+
+    public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
+    {
+        if(!HumanChromosome.contains(variant.getContig()))
+            return;
+
+        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
+
+        if(isSgl)
+        {
+            if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart()))
+            {
+                ++mHardFilteredCount;
+                return;
+            }
+
+            StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
+            addSvData(new Variant(sv, genotypeIds));
+            return;
+        }
+
+        String mateId = StructuralVariantFactory.mateId(variant);
+
+        if(mateId == null)
+            return;
+
+        int currentSvCount = mSvFactory.results().size();
+        mSvFactory.addVariantContext(variant);
+
+        // check if both breakends have now been encountered
+        if(currentSvCount == mSvFactory.results().size())
+            return;
+
+        final StructuralVariant sv = popLastSv(); // get and clear from storage
+
+        if(sv == null)
+            return;
+
+        addSvData(new Variant(sv, genotypeIds));
+    }
+
+    private StructuralVariant popLastSv()
+    {
+        if(mSvFactory.results().isEmpty())
+            return null;
+
+        StructuralVariant sv = mSvFactory.results().get(0);
+        mSvFactory.results().remove(0);
+
+        return sv;
+    }
+
+    private void addSvData(final Variant var)
+    {
+        // optionally filter out by config
+        if(mConfig.excludeVariant(var))
+            return;
+
+        mSvData.add(var);
+    }
 
     public void buildBreakendMap()
     {
-        for(Variant sv : mSvData)
+        for(Variant var : mSvData)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                Breakend breakend = sv.breakends()[se];
+                Breakend breakend = var.breakends()[se];
 
                 if(breakend == null)
                     continue;

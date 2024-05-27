@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRE
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -37,10 +35,8 @@ public class CallerApplication
 
     private final PonCache mPonCache;
     private final HotspotCache mHotspotCache;
-    private final VariantBuilder mVariantBuilder;
     private final VariantFilters mVariantFilters;
     private final RepeatMaskAnnotator mRepeatMaskAnnotator;
-    private final TargetRegions mTargetRegions;
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
@@ -53,9 +49,6 @@ public class CallerApplication
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
-        mTargetRegions = new TargetRegions(configBuilder);
-
-        mVariantBuilder = new VariantBuilder(mHotspotCache, mTargetRegions);
 
         String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.SampleId);
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
@@ -63,7 +56,7 @@ public class CallerApplication
         mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds);
 
         mProcessedVariants = 0;
-        mSvDataCache = new SvDataCache();
+        mSvDataCache = new SvDataCache(mConfig, new TargetRegions(configBuilder));
         mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
         if(configBuilder.hasValue(REPEAT_MASK_FILE))
@@ -110,7 +103,7 @@ public class CallerApplication
             System.exit(1);
         }
 
-        mVariantBuilder.setGenotypeOrdinals(genotypeIds);
+        mSvDataCache.setGenotypeOrdinals(genotypeIds);
 
         if(mConfig.GermlineOnly)
         {
@@ -129,8 +122,15 @@ public class CallerApplication
 
         vcfFileReader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
-        SV_LOGGER.info("read VCF: processedBreakends({}) unmatched({}) complete({}) hardFiltered({})",
-                mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
+        if(mSvDataCache.incompleteSVs() == 0)
+        {
+            SV_LOGGER.info("loaded {} breakends, SVs({}) SGLs({})", mProcessedVariants, mSvDataCache.svCount(), mSvDataCache.sglCount());
+        }
+        else
+        {
+            SV_LOGGER.warn("loaded {} breakeds with unmatched({}) complete({}) hardFiltered({})",
+                    mProcessedVariants, mSvDataCache.incompleteSVs(), mSvDataCache.getSvList().size(), mSvDataCache.hardFilteredCount());
+        }
 
         SV_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
 
@@ -145,7 +145,7 @@ public class CallerApplication
             return;
         }
 
-        SV_LOGGER.info("applying soft-filters and realignment");
+        SV_LOGGER.info("applying soft-filters");
 
         for(Variant var : mSvDataCache.getSvList())
         {
@@ -162,10 +162,12 @@ public class CallerApplication
         SV_LOGGER.info("deduplication of paired end single breakends");
         DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
 
+        /*
         // duplicateFinder.findDuplicateSVs(alternatePaths);
 
         SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
                 duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
+        */
 
         if(mPonCache.hasValidData())
         {
@@ -221,16 +223,7 @@ public class CallerApplication
             SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
         }
 
-        Variant svData = mVariantBuilder.checkCreateVariant(variant, genotypeIds);
-
-        if(svData == null)
-            return;
-
-        // optionally filter out by config
-        if(mConfig.excludeVariant(svData))
-            return;
-
-        mSvDataCache.addSvData(svData);
+        mSvDataCache.processVariant(variant, genotypeIds);
     }
 
     public static void main(@NotNull final String[] args)

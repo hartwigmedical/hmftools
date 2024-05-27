@@ -155,7 +155,7 @@ public class VcfWriter
 
     private void writeBreakend(final Breakend breakend)
     {
-        final Variant sv = breakend.sv();
+        final Variant var = breakend.sv();
 
         List<Genotype> genotypes = Lists.newArrayList();
 
@@ -171,15 +171,15 @@ public class VcfWriter
         double qual = breakend.Context.getPhredScaledQual();
         builder.log10PError(qual / -10);
 
-        if(sv.isHotspot())
+        if(var.isHotspot())
             builder.attribute(HOTSPOT, true);
 
-        if(sv.ponCount() > 0)
+        if(var.ponCount() > 0)
             builder.attribute(PON_COUNT, breakend.sv().ponCount());
 
-        if(sv.getRmAnnotation() != null)
+        if(var.getRmAnnotation() != null)
         {
-            final RepeatMaskAnnotation rmAnnotation = sv.getRmAnnotation();
+            final RepeatMaskAnnotation rmAnnotation = var.getRmAnnotation();
 
             // remove any previously set
             builder.attribute(REPEAT_MASK_REPEAT_CLASS, rmAnnotation.RmData.ClassType);

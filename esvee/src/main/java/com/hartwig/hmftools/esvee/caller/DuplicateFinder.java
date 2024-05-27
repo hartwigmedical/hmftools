@@ -30,14 +30,14 @@ public class DuplicateFinder
 
     public void findDuplicateSingles()
     {
-        for(Variant sv : mDataCache.getSvList())
+        for(Variant var : mDataCache.getSvList())
         {
-            if(!sv.isSgl())
+            if(!var.isSgl())
                 continue;
             
-            Breakend breakend = sv.breakendStart();
+            Breakend breakend = var.breakendStart();
             
-            boolean isPass = sv.isPass();
+            boolean isPass = var.isPass();
 
             List<Breakend> nearbyBreakends = mDataCache.selectOthersNearby(
                     breakend, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE);

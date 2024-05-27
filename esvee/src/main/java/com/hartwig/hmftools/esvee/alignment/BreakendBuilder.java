@@ -213,7 +213,17 @@ public class BreakendBuilder
             homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
 
             if(homology.Homology.isEmpty())
+            {
                 homology = null;
+            }
+            else
+            {
+                // CHECK: shift breakend positions forward by exact homology
+                /*
+                indelPosStart -= homologyPositionAdjustment(homology.ExactStart, FORWARD);
+                indelPosEnd -= homologyPositionAdjustment(homology.ExactEnd, FORWARD);
+                */
+            }
         }
 
         Breakend lowerBreakend = new Breakend(

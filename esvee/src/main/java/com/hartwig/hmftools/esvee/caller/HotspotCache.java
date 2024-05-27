@@ -50,16 +50,16 @@ public class HotspotCache
         hotspots.add(hotspot);
     }
 
-    public boolean isHotspotVariant(final Variant sv)
+    public boolean isHotspotVariant(final Variant var)
     {
         // check hotspot rescue
-        if(sv.isSgl())
+        if(var.isSgl())
             return false;
 
-        if(isPolyATSequence(sv.contextStart()) || (sv.contextEnd() != null && isPolyATSequence(sv.contextEnd())))
+        if(isPolyATSequence(var.contextStart()) || (var.contextEnd() != null && isPolyATSequence(var.contextEnd())))
             return false;
 
-        return matchesHotspot(sv.chromosomeStart(), sv.chromosomeEnd(), sv.posStart(), sv.posEnd(), sv.orientStart(), sv.orientEnd());
+        return matchesHotspot(var.chromosomeStart(), var.chromosomeEnd(), var.posStart(), var.posEnd(), var.orientStart(), var.orientEnd());
     }
 
     public boolean isHotspotVariant(final StructuralVariant sv)

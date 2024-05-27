@@ -28,8 +28,6 @@ public class HomologyData
         InexactEnd = inexactEnd;
     }
 
-    public int inexactLength() { return InexactEnd - InexactStart; }
-
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
     public static HomologyData determineHomology(
@@ -51,7 +49,19 @@ public class HomologyData
             basesEnd = Nucleotides.reverseComplementBases(basesEnd);
         }
 
-        return determineHomology(assemblyOverlap, basesStart, basesEnd, overlap);
+        HomologyData homology = determineHomology(assemblyOverlap, basesStart, basesEnd, overlap);
+
+        if(homology != null)
+        {
+            // by convention, where there is odd homology assign the larger value to the lower breakend
+            if(abs(homology.ExactStart) == homology.ExactEnd + 1 && alignEnd.isLowerAlignment(alignStart))
+            {
+                homology = new HomologyData(
+                        homology.Homology, -homology.ExactEnd, abs(homology.ExactStart), homology.InexactStart, homology.InexactEnd);
+            }
+        }
+
+        return homology;
     }
 
     public static HomologyData determineHomology(
