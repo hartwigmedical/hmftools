@@ -4,6 +4,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.DEFAULT_NUM_SITES_PER_TYPE;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MAX_SITES_PER_TYPE;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MAX_SITES_PER_TYPE_DESC;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -25,7 +30,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
-import static com.hartwig.hmftools.markdups.MarkDupsJitterAnalyserConfig.MICROSATELLITE_OUTPUT_DIR;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
@@ -42,7 +46,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -103,7 +106,8 @@ public class MarkDupsConfig
     public final boolean LogFinalCache;
     public final int WriteReadBaseLength;
 
-    public final MarkDupsJitterAnalyserConfig JitterAnalyser;
+    public final String JitterMsiFile;
+    public final int JitterMaxSitesPerType;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -241,7 +245,8 @@ public class MarkDupsConfig
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
-        JitterAnalyser = configBuilder.hasValue(MICROSATELLITE_OUTPUT_DIR) ? new MarkDupsJitterAnalyserConfig(configBuilder) : null;
+        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
+        JitterMaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
 
         if(RunChecks)
         {
@@ -300,6 +305,9 @@ public class MarkDupsConfig
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
+        configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
+        configBuilder.addInteger(JITTER_MAX_SITES_PER_TYPE, JITTER_MAX_SITES_PER_TYPE_DESC, DEFAULT_NUM_SITES_PER_TYPE);
+
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -312,8 +320,6 @@ public class MarkDupsConfig
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
-
-        MarkDupsJitterAnalyserConfig.registerConfig(configBuilder);
     }
 
     public MarkDupsConfig(
@@ -346,6 +352,9 @@ public class MarkDupsConfig
 
         UnmapRegions = new ReadUnmapper(Maps.newHashMap());
 
+        JitterMsiFile = null;
+        JitterMaxSitesPerType = 0;
+
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
@@ -359,18 +368,5 @@ public class MarkDupsConfig
         LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
-
-        JitterAnalyser = null;
-    }
-
-    public JitterAnalyserConfig toJitterAnalyserConfig()
-    {
-        if(JitterAnalyser == null)
-        {
-            return null;
-        }
-
-        return new JitterAnalyserConfig(SampleId, RefGenVersion, RefGenomeFile, JitterAnalyser.RefGenomeMicrosatelliteFile,
-                JitterAnalyser.OutputDir, JitterAnalyser.MinMapQuality, JitterAnalyser.MaxSitesPerType, Threads);
     }
 }

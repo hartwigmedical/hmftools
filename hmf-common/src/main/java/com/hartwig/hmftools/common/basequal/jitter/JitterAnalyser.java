@@ -73,7 +73,7 @@ public class JitterAnalyser
 
     private List<RefGenomeMicrosatellite> loadRefGenomeMicrosatellites()
     {
-        List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMicrosatelliteFile);
+        List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMsiFile);
 
         mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
 

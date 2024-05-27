@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSampler;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -59,9 +60,14 @@ public class MarkDuplicates
         setReadLength();
 
         JitterAnalyser jitterAnalyser = null;
-        if(mConfig.JitterAnalyser != null)
+
+        if(mConfig.JitterMsiFile != null)
         {
-            jitterAnalyser = new JitterAnalyser(mConfig.toJitterAnalyserConfig(), MD_LOGGER);
+            JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
+                    mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile,
+                    mConfig.OutputDir, JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY, mConfig.JitterMaxSitesPerType, mConfig.Threads);
+
+            jitterAnalyser = new JitterAnalyser(jitterConfig, MD_LOGGER);
         }
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
