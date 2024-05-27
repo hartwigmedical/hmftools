@@ -26,7 +26,6 @@
         <module>isofox</module>
         <module>lilac</module>
         <module>linx</module>
-        <module>mark-dups</module>
         <module>neo</module>
         <module>orange</module>
         <module>orange-datamodel</module>
@@ -35,6 +34,7 @@
         <module>purple</module>
         <module>pave</module>
         <module>peach</module>
+        <module>redux</module>
         <module>sage</module>
         <module>sigs</module>
         <module>stat-calcs</module>
@@ -76,7 +76,6 @@
         <isofox.version>1.7.1</isofox.version>
         <lilac.version>1.7</lilac.version>
         <linx.version>2.0</linx.version>
-        <mark-dups.version>1.2</mark-dups.version>
         <neo.version>1.2</neo.version>
         <orange.version>3.4.0</orange.version>
         <orange-datamodel.version>2.5.0</orange-datamodel.version>
@@ -85,6 +84,7 @@
         <pave.version>1.6</pave.version>
         <peach.version>2.0</peach.version>
         <purple.version>4.1</purple.version>
+        <redux.version>1.0</redux.version>
         <sage.version>3.5</sage.version>
         <sigs.version>1.2.1</sigs.version>
         <sv-tools.version>1.0</sv-tools.version>
