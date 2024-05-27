@@ -44,19 +44,11 @@ public class TaskExecutor
     {
         configBuilder.addConfigItem(
                 ConfigItemType.INTEGER, THREADS, false, threadDescription(defaultCount), String.valueOf(defaultCount));
+
+        setDefaultThreadExceptionHandler();
     }
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
-
-    public static int parseThreads(final CommandLine cmd)
-    {
-        return parseThreads(cmd, DEFAULT_THREAD_COUNT);
-    }
-
-    public static int parseThreads(final CommandLine cmd, final int defaultCount)
-    {
-        return Integer.parseInt(cmd.getOptionValue(THREADS, String.valueOf(defaultCount)));
-    }
 
     public static boolean executeTasks(final List<Callable> tasks, int threadCount)
     {
@@ -144,5 +136,15 @@ public class TaskExecutor
         }
 
         return true;
+    }
+
+    public static void setDefaultThreadExceptionHandler()
+    {
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            LOGGER.error("thread exception: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        });
     }
 }
