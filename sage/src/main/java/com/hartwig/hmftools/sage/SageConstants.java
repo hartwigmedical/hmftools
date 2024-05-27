@@ -41,8 +41,6 @@ public class SageConstants
     public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
     public static final int FLANK_LOW_QUAL_MISMATCHES = 3;
     public static final double SC_READ_EVENTS_FACTOR = 12;
-    public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH = 20;
-    public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER = 5;
 
     public static final int SC_INSERT_REF_TEST_LENGTH = 12;
     public static final int SC_INSERT_MIN_LENGTH = 5;
@@ -110,6 +108,9 @@ public class SageConstants
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
 
+    public static final double QUALITY_SITE_AVG_MQ_LIMIT = 7.5;
+    public static final int QUALITY_SITE_AVG_BASE_QUALITY = 32;
+
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
     public static final int DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY = -15;
@@ -118,22 +119,22 @@ public class SageConstants
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 55, 0.01,
+            "hotspot", 1e-3, 55, 0.01,
             0, 0, 0, 0,
             0.1);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 100, 0.02,
+            "panel", 1e-5, 80, 0.02,
             0, 0, 0, 0,
             0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "high_confidence", 160, 0.025,
+            "high_confidence", 5e-8, 100, 0.025,
             10, 15, 6, 9,
             0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "low_confidence", 240, 0.025,
+            "low_confidence", 1e-11, 180, 0.025,
             10, 15, 6, 9,
             0.04);
 }

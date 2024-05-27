@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 
 import java.util.Collections;
@@ -113,6 +114,7 @@ public class TestUtils
         record.setMateReferenceIndex(chromosome.ordinal());
         record.setMateAlignmentStart(readStart + 300);
         record.setMateNegativeStrandFlag(true);
+        record.setMappingQuality(DEFAULT_MAP_QUAL);
         record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar);
 
         // to be correct this should match the cigar element count

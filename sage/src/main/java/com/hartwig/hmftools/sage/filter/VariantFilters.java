@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.filter;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
@@ -17,7 +18,9 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUP
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
-import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
+import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_MQ_LIMIT;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 
@@ -28,6 +31,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -218,7 +222,51 @@ public class VariantFilters
     // each of the following filters returns true if a variant does not pass the test
     private static boolean belowMinTumorQual(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
     {
-        return primaryTumor.tumorQuality() < config.MinTumorQual;
+        int depth = primaryTumor.depth();
+
+        if(depth == 0)
+            return true;
+
+        int tumorQual = primaryTumor.tumorQuality();
+        int strongSupport = primaryTumor.strongAltSupport();
+        byte qualPerRead = (byte)round(tumorQual / (double)strongSupport);
+        double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerRead);
+
+        BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
+
+        double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
+
+        if(prob < config.QualPScore)
+            return false;
+
+        int altSupport = primaryTumor.altSupport();
+
+        return !isQualitySite(config, primaryTumor, depth, tumorQual, altSupport);
+    }
+
+    private static boolean isQualitySite(
+            final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final int qual, final int altSupport)
+    {
+        if(primaryTumor.jitter()[0] > 0 || primaryTumor.jitter()[1] > 0)
+            return false;
+
+        double avgMapQual = primaryTumor.mapQualityTotal() / depth;
+        double altAvgMapQual = primaryTumor.altMapQualityTotal() / altSupport;
+
+        if(abs(avgMapQual - altAvgMapQual) >= QUALITY_SITE_AVG_MQ_LIMIT)
+            return false;
+
+        if(qual < config.QualitySiteThreshold)
+            return false;
+
+        double readStrandBias = primaryTumor.readStrandBiasAlt().bias();
+
+        if(readStrandBias < STRAND_BIAS_CHECK_THRESHOLD && readStrandBias > (1 - STRAND_BIAS_CHECK_THRESHOLD))
+            return false;
+
+        double avgAltBaseQual = primaryTumor.altBaseQualityTotal() / (double)altSupport;
+
+        return avgAltBaseQual >= QUALITY_SITE_AVG_BASE_QUALITY;
     }
 
     private static boolean belowMinTumorVaf(final SoftFilterConfig config, final ReadContextCounter primaryTumor)

@@ -10,7 +10,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class SoftFilterConfig
 {
     public final String Name;
-    public final int MinTumorQual;
+    public final double QualPScore;
+    public final int QualitySiteThreshold;
     public final double MinTumorVaf;
     public final int MinGermlineCoverage;
     public final int MinGermlineCoverageLongInsert;
@@ -21,9 +22,9 @@ public class SoftFilterConfig
     public SoftFilterConfig(final ConfigBuilder configBuilder, final String prefix, final SoftFilterConfig defaultValue)
     {
         Name = defaultValue.Name;
-        MinTumorQual = configBuilder.getInteger(prefix + "_" + MIN_TUMOR_QUAL.configName());
+        QualPScore = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_QUAL.configName());
+        QualitySiteThreshold = defaultValue.QualitySiteThreshold;
         MinTumorVaf = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_VAF.configName());
-
         MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
@@ -32,12 +33,13 @@ public class SoftFilterConfig
     }
 
     public SoftFilterConfig(
-            final String name, final int minTumorQual, final double minTumorVaf, final int minGermlineCoverage,
+            final String name, final double qualPScore, final int qualitySiteThreshold, final double minTumorVaf, final int minGermlineCoverage,
             final int minGermlineCoverageLongInsert, final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
             final double maxGermlineVaf)
     {
         Name = name;
-        MinTumorQual = minTumorQual;
+        QualPScore = qualPScore;
+        QualitySiteThreshold = qualitySiteThreshold;
         MinTumorVaf = minTumorVaf;
         MinGermlineCoverage = minGermlineCoverage;
         MinGermlineCoverageLongInsert = minGermlineCoverageLongInsert;
@@ -50,9 +52,8 @@ public class SoftFilterConfig
     {
         String prefix = defaultConfig.Name;
 
-        configBuilder.addInteger(
-                prefix + "_" + MIN_TUMOR_QUAL.configName(),
-                "Minimum " + prefix + " tumor quality", defaultConfig.MinTumorQual);
+        configBuilder.addDecimal(
+                prefix + "_" + MIN_TUMOR_QUAL.configName(), "Minimum " + prefix + " tumor quality P-score", defaultConfig.QualPScore);
 
         configBuilder.addDecimal(
                 prefix + "_" + MIN_TUMOR_VAF.configName(), "Minimum " + prefix + " tumor VAF",defaultConfig.MinTumorVaf);
