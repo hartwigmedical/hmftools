@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class JitterAnalyserConfig
     public final int PartitionSize;
     public final ValidationStringency BamStringency;
     public final int Threads;
+    public final boolean WritePlots;
 
     public final List<ChrBaseRegion> SpecificRegions;
 
@@ -72,12 +74,13 @@ public class JitterAnalyserConfig
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
+        WritePlots = true;
         SpecificRegions = loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
     }
 
     public JitterAnalyserConfig(
             final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
-            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType, int threads)
+            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType, int threads, boolean writePlots)
     {
         SampleId = sampleId;
         BamPath = null;
@@ -90,6 +93,7 @@ public class JitterAnalyserConfig
         PartitionSize = DEFAULT_PARTITION_SIZE;
         BamStringency = ValidationStringency.STRICT;
         Threads = threads;
+        WritePlots = writePlots;
         SpecificRegions = null;
     }
 
