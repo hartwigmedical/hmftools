@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -145,7 +145,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         perfCountersStop();
 
-        MD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
+        RD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
 
         if(mConfig.PerfDebug)
             mCurrentPartitionData.logCacheCounts();
@@ -174,7 +174,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
-            MD_LOGGER.debug("specific read: {}", readToString(read));
+            RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
         if(read.isSecondaryAlignment())
@@ -210,7 +210,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         }
         catch(Exception e)
         {
-            MD_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
+            RD_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -222,7 +222,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             if(mStats.MissingMateCigar < 3 && mConfig.PerfDebug)
             {
-                MD_LOGGER.debug("read without mate cigar: {}", readToString(read));
+                RD_LOGGER.debug("read without mate cigar: {}", readToString(read));
             }
         }
     }
@@ -287,7 +287,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(mPendingIncompleteReads.size() > 100)
         {
-            MD_LOGGER.debug("partition({}) processing {} remote reads from {} remote partitions",
+            RD_LOGGER.debug("partition({}) processing {} remote reads from {} remote partitions",
                     mCurrentRegion, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum(), mPendingIncompleteReads.size());
         }
 
@@ -351,7 +351,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
+            RD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
                     mCurrentRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(), duplicateGroups.size(),
                     candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
                     format("%.1fs", timeTakenSec));
@@ -367,7 +367,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             if(timeTakenSec >= LOG_PERF_TIME_SEC)
             {
-                MD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
+                RD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
                         mCurrentRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
             }
         }

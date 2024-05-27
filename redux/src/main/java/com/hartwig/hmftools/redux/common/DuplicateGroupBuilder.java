@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.common;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
@@ -219,19 +219,19 @@ public class DuplicateGroupBuilder
 
         if(candidateCount + resolvedFragments.size() != fragmentCount)
         {
-            MD_LOGGER.error("failed to classify all fragments: original({}) resolved({}) candidates({})",
+            RD_LOGGER.error("failed to classify all fragments: original({}) resolved({}) candidates({})",
                     fragmentCount, resolvedFragments.size(), candidateCount);
 
             for(Fragment fragment : resolvedFragments)
             {
-                MD_LOGGER.error("resolved fragment: {}", fragment);
+                RD_LOGGER.error("resolved fragment: {}", fragment);
             }
 
             for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
             {
                 for(Fragment fragment : candidateDuplicates.fragments())
                 {
-                    MD_LOGGER.error("candidate dup fragment: {}", fragment);
+                    RD_LOGGER.error("candidate dup fragment: {}", fragment);
                 }
             }
         }

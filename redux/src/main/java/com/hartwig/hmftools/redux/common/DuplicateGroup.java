@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.bam.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
 
@@ -250,7 +250,7 @@ public class DuplicateGroup
 
             if(index >= mPrimaryReadTypeIndex.length)
             {
-                MD_LOGGER.error("group({}) non-supp read unmatched: {}", this, readToString(read));
+                RD_LOGGER.error("group({}) non-supp read unmatched: {}", this, readToString(read));
                 return index;
             }
 
@@ -373,11 +373,11 @@ public class DuplicateGroup
             }
             catch(Exception e)
             {
-                MD_LOGGER.error("error forming consensus: {}", toString());
+                RD_LOGGER.error("error forming consensus: {}", toString());
 
                 for(SAMRecord read : readGroup)
                 {
-                    MD_LOGGER.error("read: {}", readToString(read));
+                    RD_LOGGER.error("read: {}", readToString(read));
                 }
 
                 e.printStackTrace();

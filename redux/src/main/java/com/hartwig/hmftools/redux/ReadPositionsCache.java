@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -200,7 +200,7 @@ public class ReadPositionsCache
 
             if(index < 0 || index >= mCapacity)
             {
-                MD_LOGGER.error("fragment({}) outside forward strand array bounds, capacity({})", fragment, mCapacity);
+                RD_LOGGER.error("fragment({}) outside forward strand array bounds, capacity({})", fragment, mCapacity);
                 return;
             }
 
@@ -329,7 +329,7 @@ public class ReadPositionsCache
     {
         if(mFragmemtNoCacheCount > LOG_FRAG_COUNT || mFragmemtCacheCount > LOG_FRAG_COUNT)
         {
-            MD_LOGGER.debug("read cache eviction: chr({}:{}) fragments(fwd={} rev={}) cache(none={} cache={} unmatched={}) unmap({})",
+            RD_LOGGER.debug("read cache eviction: chr({}:{}) fragments(fwd={} rev={}) cache(none={} cache={} unmatched={}) unmap({})",
                     mChromosome, mMinPosition, mFragments.size(), mReversePositions.size(),
                     mFragmemtNoCacheCount, mFragmemtCacheCount, mFragmemtUnmatchedCount, mFragmemtUnmappedMatchCount);
         }
@@ -393,7 +393,7 @@ public class ReadPositionsCache
 
         mLastFragmentLogCount = fragmentSize;
 
-        MD_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) forward({} frags={}) reverse({} frags={})",
+        RD_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) forward({} frags={}) reverse({} frags={})",
                 mChromosome, mMinPosition, fragmentSize, forwardPositions, forwardFrags, mReversePositions.size(), reverseFrags);
     }
 }

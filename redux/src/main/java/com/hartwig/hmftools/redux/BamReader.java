@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
 import java.util.List;
@@ -92,7 +92,7 @@ public class BamReader
 
             if(topReader.finished())
             {
-                MD_LOGGER.trace("bam({}) finished", topReader.filename());
+                RD_LOGGER.trace("bam({}) finished", topReader.filename());
                 mFinishedBamReaders.add(topReader);
             }
             else

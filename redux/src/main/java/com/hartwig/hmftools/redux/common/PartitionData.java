@@ -5,7 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANO_IN_MILLISECOND;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.SUPPLEMENTARY;
@@ -408,10 +408,10 @@ public class PartitionData
         if(mDuplicateGroupMap.isEmpty() && mIncompleteFragments.isEmpty() && mFragmentStatus.isEmpty())
             return 0;
 
-        if(logCachedReads && MD_LOGGER.isDebugEnabled())
+        if(logCachedReads && RD_LOGGER.isDebugEnabled())
         {
             // not under lock since called only when all partitions are complete
-            MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
+            RD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
         }
 
         // a clean-up routine for cached fragments
@@ -449,7 +449,7 @@ public class PartitionData
 
             if(logCachedReads)
             {
-                MD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
+                RD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
                         cachedUmiReads, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
 
                 for(SAMRecord read : completeReads)
@@ -457,7 +457,7 @@ public class PartitionData
                     if(read.getSupplementaryAlignmentFlag() || read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
                         continue;
 
-                    MD_LOGGER.debug("writing umi read: {}", readToString(read));
+                    RD_LOGGER.debug("writing umi read: {}", readToString(read));
                 }
             }
         }
@@ -474,7 +474,7 @@ public class PartitionData
                         continue;
 
                     ++cachedReadCount;
-                    MD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
+                    RD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
                 }
             }
         }
@@ -483,7 +483,7 @@ public class PartitionData
         {
             for(Map.Entry<String,ResolvedFragmentState> entry : mFragmentStatus.entrySet())
             {
-                MD_LOGGER.debug("cached resolved status: {} : {}", entry.getKey(), entry.getValue());
+                RD_LOGGER.debug("cached resolved status: {} : {}", entry.getKey(), entry.getValue());
             }
         }
 
@@ -504,7 +504,7 @@ public class PartitionData
 
         mLastCacheCount = cacheCount;
 
-        MD_LOGGER.debug("partition({}) check state: {}}", mChrPartition, cacheCountsStr());
+        RD_LOGGER.debug("partition({}) check state: {}}", mChrPartition, cacheCountsStr());
     }
 
     private String cacheCountsStr()
@@ -534,7 +534,7 @@ public class PartitionData
         {
             acquireLock();
 
-            MD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
+            RD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
         }
         finally
         {

@@ -6,7 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.calcUmiIdDiff;
 
 import java.io.BufferedWriter;
@@ -279,7 +279,7 @@ public class UmiStatistics
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+            RD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
         }
     }
 
@@ -309,7 +309,7 @@ public class UmiStatistics
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+            RD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
         }
     }
     public void writePositionFragmentsData(final ReduxConfig config)
@@ -335,7 +335,7 @@ public class UmiStatistics
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to write position fragments stats: {}", e.toString());
+            RD_LOGGER.error(" failed to write position fragments stats: {}", e.toString());
         }
     }
 }

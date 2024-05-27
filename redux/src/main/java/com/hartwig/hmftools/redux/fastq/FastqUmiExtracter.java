@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 
 import java.io.BufferedReader;
@@ -93,23 +93,23 @@ public class FastqUmiExtracter
 
         if(fastqFiles.length != 2)
         {
-            MD_LOGGER.info("invalid fastq file config: {}", mFastqFiles);
+            RD_LOGGER.info("invalid fastq file config: {}", mFastqFiles);
             System.exit(1);
         }
 
         if(!Files.exists(Paths.get(fastqFiles[0])) || !Files.exists(Paths.get(fastqFiles[1])))
         {
-            MD_LOGGER.info("fastq files do not exist: {}", mFastqFiles);
+            RD_LOGGER.info("fastq files do not exist: {}", mFastqFiles);
             System.exit(1);
         }
 
-        MD_LOGGER.info("starting Fastq UMI extractions with files: {}", mFastqFiles);
+        RD_LOGGER.info("starting Fastq UMI extractions with files: {}", mFastqFiles);
 
         long startTimeMs = System.currentTimeMillis();
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        MD_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+        RD_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;
@@ -134,7 +134,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            MD_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
+            RD_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
             System.exit(1);
             return null;
         }
@@ -170,12 +170,12 @@ public class FastqUmiExtracter
                 {
                     if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
                     {
-                        MD_LOGGER.error("invalid entries at line({})", lineCount);
+                        RD_LOGGER.error("invalid entries at line({})", lineCount);
 
                         for(int i = 0; i < r1ReadBuffer.length; ++i)
                         {
-                            MD_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
-                            MD_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
+                            RD_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
+                            RD_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
                         }
 
                         System.exit(1);
@@ -188,7 +188,7 @@ public class FastqUmiExtracter
 
                 if(lineCount > 0 && (lineCount % LINE_LOG_COUNT) == 0)
                 {
-                    MD_LOGGER.info("processed {} lines", lineCount);
+                    RD_LOGGER.info("processed {} lines", lineCount);
                 }
             }
 
@@ -197,7 +197,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            MD_LOGGER.error("error reading fastq({}): {}", mFastqFiles, e.toString());
+            RD_LOGGER.error("error reading fastq({}): {}", mFastqFiles, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -321,7 +321,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            MD_LOGGER.error("failed to write output file: {}", e.toString());
+            RD_LOGGER.error("failed to write output file: {}", e.toString());
             return false;
         }
     }

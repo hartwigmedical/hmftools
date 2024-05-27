@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -54,7 +54,7 @@ public class PartitionThread extends Thread
 
                 if(processedCount > 0 && (processedCount % 100) == 0)
                 {
-                    MD_LOGGER.info("processed {} partitions, remaining({})", processedCount, remainingCount);
+                    RD_LOGGER.info("processed {} partitions, remaining({})", processedCount, remainingCount);
                 }
 
                 mPartitionReader.setupRegion(partition);
@@ -62,7 +62,7 @@ public class PartitionThread extends Thread
             }
             catch(NoSuchElementException e)
             {
-                MD_LOGGER.trace("all tasks complete");
+                RD_LOGGER.trace("all tasks complete");
                 break;
             }
             catch(Exception e)

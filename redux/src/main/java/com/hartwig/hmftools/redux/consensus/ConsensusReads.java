@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
@@ -334,14 +334,14 @@ public class ConsensusReads
         if(!mValidateConsensusReads)
             return;
 
-        MD_LOGGER.error("invalid consensus read({}): groupId({}) readCount({}) {} read: {}",
+        RD_LOGGER.error("invalid consensus read({}): groupId({}) readCount({}) {} read: {}",
                 reason, groupIdentifier, reads.size(), consensusState.IsForward ? "forward" : "reverse",
                 consensusRead != null ? readToString(consensusRead) : "none");
 
         // reads
         for(int i = 0; i < reads.size(); ++i)
         {
-            MD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
+            RD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
         }
     }
 

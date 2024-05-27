@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.redux.write;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,12 +99,12 @@ public class FileWriterCache
 
             if(multiId == null)
             {
-                MD_LOGGER.debug("writing BAM file: {}", filenamePart(filename));
+                RD_LOGGER.debug("writing BAM file: {}", filenamePart(filename));
 
             }
             else
             {
-                MD_LOGGER.debug("writing temp BAM file: {}", filenamePart(filename));
+                RD_LOGGER.debug("writing temp BAM file: {}", filenamePart(filename));
             }
 
             // no option to use library-based sorting
@@ -239,7 +239,7 @@ public class FileWriterCache
         if(!sortingOk && mConfig.Threads > 1)
         {
             // try again with a single thread
-            MD_LOGGER.debug("reattempting sort with single thread");
+            RD_LOGGER.debug("reattempting sort with single thread");
             sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, 1);
             sortBamTask.call();
             sortingOk = sortBamTask.success();
@@ -276,7 +276,7 @@ public class FileWriterCache
         }
         catch(IOException e)
         {
-            MD_LOGGER.error("error deleting interim bams: {}", e.toString());
+            RD_LOGGER.error("error deleting interim bams: {}", e.toString());
         }
     }
 
@@ -311,7 +311,7 @@ public class FileWriterCache
         {
             if(mSortedBamfile == null)
             {
-                MD_LOGGER.error("invalid bam filename({})", mBamfile);
+                RD_LOGGER.error("invalid bam filename({})", mBamfile);
                 mSuccess = false;
                 return (long) 0;
             }

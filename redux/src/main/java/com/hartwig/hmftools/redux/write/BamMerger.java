@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
 import java.util.List;
@@ -66,11 +66,11 @@ public class BamMerger
 
         if(mActiveBamReaders.isEmpty())
         {
-            MD_LOGGER.warn("no BAM files with records found", mActiveBamReaders.size());
+            RD_LOGGER.warn("no BAM files with records found", mActiveBamReaders.size());
             return false;
         }
 
-        MD_LOGGER.debug("merging {} BAMs", mActiveBamReaders.size());
+        RD_LOGGER.debug("merging {} BAMs", mActiveBamReaders.size());
 
         // begin the merge process:
         // 1. take the top record from the first BAM reader
@@ -87,7 +87,7 @@ public class BamMerger
 
             if((recordCount % LOG_COUNT) == 0)
             {
-                MD_LOGGER.debug("merged {} records, readers(active={} finished={}) reorders({})",
+                RD_LOGGER.debug("merged {} records, readers(active={} finished={}) reorders({})",
                         recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size(), mReorderCount);
             }
 
@@ -103,7 +103,7 @@ public class BamMerger
 
             if(topWriter.finished())
             {
-                MD_LOGGER.debug("bam({}) finished", topWriter.filename());
+                RD_LOGGER.debug("bam({}) finished", topWriter.filename());
                 mFinishedBamReaders.add(topWriter);
             }
             else
@@ -120,7 +120,7 @@ public class BamMerger
             topWriter = mActiveBamReaders.get(0);
         }
 
-        MD_LOGGER.info("merged {} BAM files with {} records, reorder count({})",
+        RD_LOGGER.info("merged {} BAM files with {} records, reorder count({})",
                 mInputBams.size(), recordCount, mReorderCount);
 
         mSamFileWriter.close();

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.redux.write;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -43,7 +43,7 @@ public class BamWriterSync extends BamWriter
     {
         if(mSamFileWriter != null)
         {
-            MD_LOGGER.debug("unsorted-writer records written({}) to BAM({})", mWriteCount, filenamePart(mFilename));
+            RD_LOGGER.debug("unsorted-writer records written({}) to BAM({})", mWriteCount, filenamePart(mFilename));
             mSamFileWriter.close();
         }
     }

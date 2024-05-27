@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
 
 import java.util.SortedSet;
@@ -159,7 +159,7 @@ public class SortedBamWriter
 
         if(mPerfDebug && (mReadCount % LOG_COUNT) == 0)
         {
-            MD_LOGGER.debug("sorted read cache chr({}:{}) records({}) avgWrite({})",
+            RD_LOGGER.debug("sorted read cache chr({}:{}) records({}) avgWrite({})",
                     mCurrentChromosome, mLastWrittenPosition, mRecords.size(), avgWriteCount());
         }
 
@@ -195,7 +195,7 @@ public class SortedBamWriter
             {
                 SAMRecord nextRecord = records.first().Read;
 
-                MD_LOGGER.error("sorted BAM cache({}) writing earlier(readStart={} vs last={}) from {} records, read: {}",
+                RD_LOGGER.error("sorted BAM cache({}) writing earlier(readStart={} vs last={}) from {} records, read: {}",
                         toString(), nextRecord.getAlignmentStart(), mLastWrittenPosition, records.size(), readToString(nextRecord));
 
                 System.exit(1);

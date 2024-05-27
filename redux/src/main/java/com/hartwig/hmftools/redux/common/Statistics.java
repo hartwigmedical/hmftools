@@ -3,7 +3,7 @@ package com.hartwig.hmftools.redux.common;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.DuplicateFrequency.roundFrequency;
 
 import java.io.BufferedWriter;
@@ -117,12 +117,12 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
+        RD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
                 TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
-        if(MD_LOGGER.isDebugEnabled())
+        if(RD_LOGGER.isDebugEnabled())
         {
-            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pairedAltChr={}))",
+            RD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pairedAltChr={}))",
                     LocalComplete, Incomplete, InterPartition, Unmapped, PairedAltChromosome);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
@@ -132,12 +132,12 @@ public class Statistics
                     .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Frequency))
                     .collect(Collectors.joining(", "));
 
-            MD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
+            RD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
         }
 
         if(MissingMateCigar > 0)
         {
-            MD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
+            RD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
         }
     }
 
@@ -174,7 +174,7 @@ public class Statistics
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+            RD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
         }
     }
 }

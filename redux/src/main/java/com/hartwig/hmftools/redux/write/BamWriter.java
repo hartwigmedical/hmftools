@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -117,7 +117,7 @@ public abstract class BamWriter
 
         if(fragment.readsWritten())
         {
-            MD_LOGGER.error("fragment({}) reads already written", fragment);
+            RD_LOGGER.error("fragment({}) reads already written", fragment);
             return;
         }
 

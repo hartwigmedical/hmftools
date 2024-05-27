@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
@@ -52,7 +52,7 @@ public class ReadUnmapper
 
         if(mEnabled)
         {
-            MD_LOGGER.info("loaded {} unmapping regions from {}",
+            RD_LOGGER.info("loaded {} unmapping regions from {}",
                     mChrLocationsMap.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
     }
@@ -827,12 +827,12 @@ public class ReadUnmapper
                     // to difficult to merge
                     if(lastRegion.overlaps(region))
                     {
-                        MD_LOGGER.error("unmap regions overlap: current({}) next({})", lastRegion, region);
+                        RD_LOGGER.error("unmap regions overlap: current({}) next({})", lastRegion, region);
                         System.exit(1);
                     }
                     else if(region.end() < lastRegion.start())
                     {
-                        MD_LOGGER.error("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                        RD_LOGGER.error("unmap regions not sorted: current({}) next({})", lastRegion, region);
                         System.exit(1);
                     }
                 }
@@ -844,7 +844,7 @@ public class ReadUnmapper
         }
         catch(IOException e)
         {
-            MD_LOGGER.error("failed to read high-depth regions file {}: {}", filename, e.toString());
+            RD_LOGGER.error("failed to read high-depth regions file {}: {}", filename, e.toString());
             System.exit(1);
             return null;
         }

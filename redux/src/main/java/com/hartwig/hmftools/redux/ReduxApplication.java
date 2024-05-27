@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
@@ -53,7 +53,7 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        MD_LOGGER.info("sample({}) starting mark duplicates", mConfig.SampleId);
+        RD_LOGGER.info("sample({}) starting mark duplicates", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -67,7 +67,7 @@ public class ReduxApplication
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile,
                     mConfig.OutputDir, JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY, mConfig.JitterMaxSitesPerType, mConfig.Threads);
 
-            jitterAnalyser = new JitterAnalyser(jitterConfig, MD_LOGGER);
+            jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER);
         }
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
@@ -102,12 +102,12 @@ public class ReduxApplication
             workers.add(partitionThread);
         }
 
-        MD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
+        RD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
 
         if(!runThreadTasks(workers))
             System.exit(1);
 
-        MD_LOGGER.info("all partition tasks complete");
+        RD_LOGGER.info("all partition tasks complete");
 
         long unmappedReads = writeUnmappedReads(fileWriterCache);
 
@@ -130,7 +130,7 @@ public class ReduxApplication
 
         if(totalUnwrittenFragments > 0)
         {
-            MD_LOGGER.info("wrote {} remaining cached fragments", totalUnwrittenFragments);
+            RD_LOGGER.info("wrote {} remaining cached fragments", totalUnwrittenFragments);
         }
 
         List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
@@ -152,11 +152,11 @@ public class ReduxApplication
             System.gc();
 
             // log interim time
-            MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
+            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
 
             if(!fileWriterCache.sortAndIndexBams())
             {
-                MD_LOGGER.error("sort-merge-index failed");
+                RD_LOGGER.error("sort-merge-index failed");
                 System.exit(1);
             }
         }
@@ -165,12 +165,12 @@ public class ReduxApplication
         {
             try
             {
-                MD_LOGGER.info("analysing microsatellite jitter");
+                RD_LOGGER.info("analysing microsatellite jitter");
                 jitterAnalyser.writeAnalysisOutput();
             }
             catch(Exception e)
             {
-                MD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
+                RD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
                 System.exit(1);
             }
         }
@@ -182,14 +182,14 @@ public class ReduxApplication
 
         if(mConfig.UnmapRegions.enabled())
         {
-            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+            RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
         }
 
         if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
         {
             long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
 
-            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
+            RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
                     combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
         }
 
@@ -211,7 +211,7 @@ public class ReduxApplication
 
         logPerformanceStats(combinedPerfCounters, partitionDataStore);
 
-        MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
+        RD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private long writeUnmappedReads(final FileWriterCache fileWriterCache)
@@ -241,7 +241,7 @@ public class ReduxApplication
 
         if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
         {
-            MD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
+            RD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
         }
 
         return unmappedCount.get() + nonHumanContigCount.get();
@@ -286,11 +286,11 @@ public class ReduxApplication
         if(bamSampler.calcBamCharacteristics(mConfig.BamFiles.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
         {
             readLength = bamSampler.maxReadLength();
-            MD_LOGGER.debug("BAM sampled max read-length({})", readLength);
+            RD_LOGGER.debug("BAM sampled max read-length({})", readLength);
         }
         else
         {
-            MD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+            RD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
         }
 
         mConfig.setReadLength(readLength);
@@ -338,14 +338,14 @@ public class ReduxApplication
 
                 if(lockTime > LOCK_ACQUIRE_LONG_TIME_MS)
                 {
-                    MD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
+                    RD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
                             partitionData.partitionStr(), format("%.1f", lockTime));
                 }
             }
 
             if(totalLockTimeMs > LOCK_ACQUIRE_LONG_TIME_MS)
             {
-                MD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
+                RD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
                         format("%.3f", totalLockTimeMs / 1000));
             }
         }

@@ -112,7 +112,7 @@ public class ReduxConfig
     private boolean mIsValid;
     private int mReadLength;
 
-    public static final Logger MD_LOGGER = LogManager.getLogger(ReduxConfig.class);
+    public static final Logger RD_LOGGER = LogManager.getLogger(ReduxConfig.class);
     public static final String APP_NAME = "Redux";
 
     // config strings
@@ -148,7 +148,7 @@ public class ReduxConfig
 
         if(BamFiles.isEmpty())
         {
-            MD_LOGGER.error("no BAM files configured");
+            RD_LOGGER.error("no BAM files configured");
             System.exit(1);
         }
 
@@ -159,7 +159,7 @@ public class ReduxConfig
 
         if(OutputBam != null && BamFiles.stream().anyMatch(x -> x.equals(OutputBam)))
         {
-            MD_LOGGER.error("output BAM({}) matches input BAM filename", OutputBam);
+            RD_LOGGER.error("output BAM({}) matches input BAM filename", OutputBam);
             System.exit(1);
         }
 
@@ -180,7 +180,7 @@ public class ReduxConfig
 
         if(SampleId == null || OutputDir == null || RefGenomeFile == null)
         {
-            MD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
+            RD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
                     SampleId != null, RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
@@ -188,7 +188,7 @@ public class ReduxConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
-        MD_LOGGER.info("output({})", OutputDir);
+        RD_LOGGER.info("output({})", OutputDir);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         BufferSize = configBuilder.getInteger(BUFFER_SIZE);
@@ -217,7 +217,7 @@ public class ReduxConfig
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
-        MD_LOGGER.info("duplicate logic: {}", duplicateLogic);
+        RD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -250,7 +250,7 @@ public class ReduxConfig
 
         if(RunChecks)
         {
-            MD_LOGGER.info("running debug options: read-checks({})", RunChecks);
+            RD_LOGGER.info("running debug options: read-checks({})", RunChecks);
         }
     }
 

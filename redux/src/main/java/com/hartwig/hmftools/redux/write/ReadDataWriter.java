@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.redux.write.ReadOutput.DUPLICATES;
@@ -73,7 +73,7 @@ public class ReadDataWriter
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to create read writer: {}", e.toString());
+            RD_LOGGER.error(" failed to create read writer: {}", e.toString());
         }
 
         return null;
@@ -140,7 +140,7 @@ public class ReadDataWriter
         }
         catch(IOException e)
         {
-            MD_LOGGER.error(" failed to write read data: {}", e.toString());
+            RD_LOGGER.error(" failed to write read data: {}", e.toString());
         }
     }
 

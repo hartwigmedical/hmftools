@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,11 +38,11 @@ public class MergeBams
     {
         long startTimeMs = System.currentTimeMillis();
 
-        MD_LOGGER.info("starting BAM merge");
+        RD_LOGGER.info("starting BAM merge");
 
         mBamMerger.merge();
 
-        MD_LOGGER.info("BAM merge complete, mins({})", runTimeMinsStr(startTimeMs));
+        RD_LOGGER.info("BAM merge complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
