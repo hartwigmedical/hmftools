@@ -57,7 +57,8 @@ public class BamToFastq
 
         final RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig);
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%02d").build();
+        int numDigits = Integer.toString(mConfig.Threads - 1).length();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%0" + numDigits + "d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
         final ThreadData threadData = new ThreadData(mConfig, remoteReadHandler);
@@ -128,10 +129,10 @@ public class BamToFastq
         {
             String chromosome = sequenceRecord.getSequenceName();
 
-            if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
+            if(mConfig.SpecificChrRegions != null && mConfig.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
-            if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+            if(mConfig.SpecificChrRegions != null && !mConfig.SpecificChrRegions.Regions.isEmpty())
             {
                 partitions.addAll(partitionChromosome(
                         chromosome, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
@@ -148,7 +149,9 @@ public class BamToFastq
     private void addCacheUnmappedReadFutures(final List<CompletableFuture<Void>> futures, final RemoteReadHandler remoteReadHandler,
             final ExecutorService executorService)
     {
-        if(!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
+        if(mConfig.SpecificChrRegions == null ||
+                !mConfig.SpecificChrRegions.hasFilters() ||
+                mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
         {
             // write all unmapped reads to hash bams
             int numTasks = Math.max(mConfig.Threads / 10, 1);
@@ -230,8 +233,7 @@ public class BamToFastq
         configBuilder.checkAndParseCommandLine(args);
 
         // set all thread exception handler
-        // we must do this otherwise unhandled exception in other threads will cause the program
-        // to hang and never return. This will cause the VM to hang around forever.
+        // we must do this otherwise unhandled exception in other threads might not be reported
         Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
         {
             BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);

@@ -2,73 +2,64 @@ package com.hartwig.hmftools.bamtools.compare;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+
+import org.apache.commons.lang3.tuple.Triple;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadWriter
+public class ReadWriter implements AutoCloseable
 {
-    private final BufferedWriter mWriter;
+    enum Column
+    {
+        readId, chromosome, posStart, mismatchType, diff, mateChr, matePos,
+        cigar, flags, mapQual, paired, isFirst, negStrand, duplicate, isSupp, suppData
+    }
+
+    private final DelimFileWriter<Triple<SAMRecord, MismatchType, List<String>>> mWriter;
 
     public ReadWriter(final CompareConfig config)
     {
-        mWriter = initialiseWriter(config.OutputFile);
+        mWriter = new DelimFileWriter<>(config.OutputFile, Column.values(),
+            (t, row) ->
+            {
+                SAMRecord read = t.getLeft();
+                @Nullable List<String> diffList = t.getRight();
+                String diffDetails = diffList != null ? String.join(";", diffList) : "";
+                row.set(Column.readId, read.getReadName());
+                row.set(Column.chromosome, read.getReferenceName());
+                row.set(Column.posStart, read.getAlignmentStart());
+                row.set(Column.mismatchType, t.getMiddle().name());
+                row.set(Column.diff, diffDetails);
+                row.set(Column.mateChr, read.getMateReferenceName());
+                row.set(Column.matePos, read.getMateAlignmentStart());
+                row.set(Column.cigar, read.getCigarString());
+                row.set(Column.flags, read.getFlags());
+                row.set(Column.mapQual, read.getMappingQuality());
+                row.set(Column.paired, Boolean.toString(read.getReadPairedFlag()));
+                row.set(Column.isFirst, Boolean.toString(read.getFirstOfPairFlag()));
+                row.set(Column.negStrand, Boolean.toString(read.getReadNegativeStrandFlag()));
+                row.set(Column.duplicate, Boolean.toString(read.getDuplicateReadFlag()));
+                row.set(Column.isSupp, Boolean.toString(read.getSupplementaryAlignmentFlag()));
+                row.set(Column.suppData, read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.extractAlignment(read).asCsv() : "N/A");
+            });
     }
 
     public boolean initialised() { return mWriter != null; }
 
-    private BufferedWriter initialiseWriter(final String filename)
+    public void writeComparison(final SAMRecord read, final MismatchType mismatchType, @Nullable final List<String> diffList)
     {
-        try
-        {
-            // write summary metrics
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("ReadId\tChromosome\tPosStart\tMismatchType\tDiff\tMateChr\tMatePos");
-            writer.write("\tCigar\tFlags\tMapQual\tPaired\tIsFirst\tNegStrand\tDuplicate\tIsSupp\tSuppData");
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            BT_LOGGER.error("failed to initialise BAM comparison file: {}", e.toString());
-            return null;
-        }
+        mWriter.writeRow(Triple.of(read, mismatchType, diffList));
     }
 
-    public synchronized void writeComparison(final SAMRecord read, final MismatchType mismatchType, final List<String> diffList)
-    {
-        try
-        {
-            String diffDetails = diffList != null ? diffList.stream().collect(Collectors.joining(";")) : "";
-            mWriter.write(format("%s\t%s\t%d\t%s\t%s\t%s\t%d",
-                    read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), mismatchType, diffDetails,
-                    read.getMateReferenceName(), read.getMateAlignmentStart()));
-
-            mWriter.write(format("\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
-                    read.getCigarString(), read.getFlags(), read.getMappingQuality(), read.getReadPairedFlag(), read.getFirstOfPairFlag(),
-                    read.getReadNegativeStrandFlag(), read.getDuplicateReadFlag(), read.getSupplementaryAlignmentFlag(),
-                    read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.extractAlignment(read).asCsv() : "N/A"));
-
-            mWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            BT_LOGGER.error("failed to write BAM comparison file: {}", e.toString());
-        }
-    }
-
-    public void close() { closeBufferedWriter(mWriter); }
+    @Override
+    public void close() { mWriter.close(); }
 
     public static String readDetails(final SAMRecord read)
     {
