@@ -68,6 +68,7 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final BqrConfig BQR;
+    public final String JitterParamsDir;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final int RegionSliceSize;
@@ -109,6 +110,7 @@ public class SageConfig
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
+    private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -160,6 +162,7 @@ public class SageConfig
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
         BQR = new BqrConfig(configBuilder);
+        JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -331,6 +334,7 @@ public class SageConfig
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
         SequencingConfig.registerConfig(configBuilder);
+        configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
 
@@ -358,6 +362,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
         BQR = new BqrConfig();
+        JitterParamsDir = null;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;

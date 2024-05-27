@@ -23,6 +23,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -63,7 +64,10 @@ public class RegionAppendTask implements Callable
         SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
         samSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
 
-        mEvidenceStage = new EvidenceStage(config.Common, mRefGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
+        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(config.Common.ReferenceIds, config.Common.JitterParamsDir);
+
+        mEvidenceStage = new EvidenceStage(
+                config.Common, mRefGenome, qualityRecalibrationMap, msiJitterCalcs, new PhaseSetCounter(), samSlicerFactory);
     }
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }

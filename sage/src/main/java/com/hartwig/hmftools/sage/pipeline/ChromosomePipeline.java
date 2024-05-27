@@ -31,6 +31,7 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -42,6 +43,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -58,13 +60,14 @@ public class ChromosomePipeline implements AutoCloseable
 
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
-            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
             final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
 
@@ -117,7 +120,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
+                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mCoverage, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
         }
 

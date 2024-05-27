@@ -17,6 +17,7 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 public class EvidenceStage
 {
@@ -28,12 +29,12 @@ public class EvidenceStage
 
     public EvidenceStage(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
-            final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
+            final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;
         mSamSlicerFactory = samSlicerFactory;
 
-        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
+        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap, msiJitterCalcs);
         mVariantPhaser = new VariantPhaser(phaseSetCounter);
     }
 

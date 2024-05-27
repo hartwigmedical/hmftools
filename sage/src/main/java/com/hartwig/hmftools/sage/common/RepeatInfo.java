@@ -161,6 +161,7 @@ public class RepeatInfo
             final byte[] bases, final int searchIndexStart, final int searchIndexEnd,
             final int maxLength, final int minCount, boolean extendLower, final int requiredIndex) // note: required index not used in Sage
     {
+        // returns the longest repeat for the defined input params based on max count not max length of the repeat sequence
         RepeatInfo maxRepeat = null;
 
         int index = searchIndexStart;
@@ -183,7 +184,7 @@ public class RepeatInfo
                 if(requiredIndex >= 0 && !positionWithin(requiredIndex, repeat.Index, repeat.endIndex()))
                     continue;
 
-                if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
+                if(maxRepeat == null || repeat.Count > maxRepeat.Count)
                     maxRepeat = repeat;
             }
 

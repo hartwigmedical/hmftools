@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +33,7 @@ public class JitterModelParamsFile
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    public static void write(final String filename, @NotNull final List<JitterModelParams> jitterModelParamsList)
+    public static void write(final String filename, final List<JitterModelParams> jitterModelParamsList)
     {
         List<String> columns = Arrays.stream(Column.values()).map(Enum::name).collect(Collectors.toList());
 
@@ -45,4 +49,26 @@ public class JitterModelParamsFile
         });
     }
 
+    public static List<JitterModelParams> read(final String filename) throws IOException
+    {
+        List<JitterModelParams> jitterModelParams = Lists.newArrayList();
+
+        DelimFileReader reader = new DelimFileReader(filename);
+
+        for(DelimFileReader.Row row : reader)
+        {
+            JitterModelParams params = new JitterModelParams(
+                    row.get(Column.unit),
+                    row.getDouble(Column.optimalScaleRepeat4),
+                    row.getDouble(Column.optimalScaleRepeat5),
+                    row.getDouble(Column.optimalScaleRepeat6),
+                    row.getDouble(Column.scaleFitGradient),
+                    row.getDouble(Column.scaleFitIntercept),
+                    row.getDouble(Column.microsatelliteSkew));
+
+            jitterModelParams.add(params);
+        }
+
+        return jitterModelParams;
+    }
 }

@@ -26,28 +26,31 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
     private final boolean mUseReadType;
     private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
-    private static final String NO_MODEL_NAME = "";
 
     public QualityCalculator(
             final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
-            final RefGenomeInterface refGenome)
+            final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
         mUseReadType = useReadType(config);
         mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
+
         mRefBases = refBases;
 
         mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
     }
 
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+    public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
 
     public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
     {
@@ -140,7 +143,11 @@ public class QualityCalculator
         }
 
         if(readContextCounter.isIndel())
-            return readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
+        {
+            double avgCoreQuality = readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
+            double msiIndelErrorRate = readContextCounter.qualCache().msiIndelErrorRate();
+            return msiIndelErrorRate > 0 ? min(avgCoreQuality, msiIndelErrorRate) : avgCoreQuality;
+        }
 
         if(readContextCounter.isSnv())
             return record.getBaseQualities()[readIndex];
@@ -166,7 +173,7 @@ public class QualityCalculator
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return readContextCounter.bqrQualCache().getQual(rawQuality, readType, 0, this);
+            return readContextCounter.qualCache().getQual(rawQuality, readType, 0);
         }
 
         // MNV case
@@ -179,7 +186,7 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = readContextCounter.bqrQualCache().getQual(rawQuality, readType, i, this);
+            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, readType, i);
             quality = min(quality, recalibratedQual);
         }
 

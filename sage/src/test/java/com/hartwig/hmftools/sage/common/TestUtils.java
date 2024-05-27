@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
@@ -26,6 +27,8 @@ public class TestUtils
     public static final SageConfig TEST_CONFIG = createSageConfig();
 
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
+
+    public static final MsiJitterCalcs MSI_JITTER_CALCS = new MsiJitterCalcs();
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
 
@@ -41,7 +44,8 @@ public class TestUtils
 
     // investigate how these are used and consider removing or switching to a full ref sequence
     private static final RefSequence QUAL_CALC_REF_BASES = new RefSequence(550, "TGTTTCTGTTTC".getBytes());
-    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, QUAL_CALC_REF_BASES, MOCK_REF_GENOME );
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
+            TEST_CONFIG, RECALIBRATION, QUAL_CALC_REF_BASES, MOCK_REF_GENOME, MSI_JITTER_CALCS);
 
     public static SageConfig createSageConfig()
     {

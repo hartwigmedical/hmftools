@@ -23,6 +23,7 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -34,6 +35,7 @@ public class RegionThread extends Thread
     private final RefGenomeSource mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -51,7 +53,7 @@ public class RegionThread extends Thread
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final Coverage coverage,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final Coverage coverage,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)
@@ -62,6 +64,7 @@ public class RegionThread extends Thread
         mRefGenomeFile = loadRefGenome(config.Common.RefGenomeFile);
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
         mFragmentLengths = fragmentLengths;
@@ -134,6 +137,7 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory, mFragmentLengths);
+                regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mCoverage, mSamSlicerFactory,
+                mFragmentLengths);
     }
 }

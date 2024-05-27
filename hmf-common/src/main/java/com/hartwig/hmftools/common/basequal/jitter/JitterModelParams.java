@@ -23,4 +23,12 @@ public class JitterModelParams
         ScaleFitIntercept = scaleFitIntercept;
         MicrosatelliteSkew = microsatelliteSkew;
     }
+
+    private static final String REPEAT_DELIM = "/";
+
+    public int repeatUnitLength()
+    {
+        String[] repeats = RepeatUnit.split(REPEAT_DELIM, -1);
+        return repeats[0].length();
+    }
 }

@@ -57,7 +57,6 @@ import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter
@@ -77,7 +76,7 @@ public class ReadContextCounter
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
     private final boolean mIsIndel;
-    private final BqrQualCache mBqrQualCache;
+    private final ReadContextQualCache mQualCache;
 
     // counts and quals by support type
     private final ReadSupportCounts mQualities;
@@ -125,7 +124,7 @@ public class ReadContextCounter
         // set local state to avoid testing on each read
         mIsMnv = mVariant.isMNV();
         mIsIndel = mVariant.isIndel();
-        mBqrQualCache = !mIsIndel ? new BqrQualCache(mVariant.position(), mVariant.alt()) : null;
+        mQualCache = new ReadContextQualCache(readContext, qualityCalculator, sampleId);
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
@@ -159,7 +158,7 @@ public class ReadContextCounter
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
-    public final BqrQualCache bqrQualCache() { return mBqrQualCache; }
+    public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
     public String ref() { return mVariant.ref(); }

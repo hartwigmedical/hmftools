@@ -135,8 +135,4 @@ public class SageCallConfig
         PanelOnly = false;
         mResourceDir = "";
     }
-
-
-
-
 }
