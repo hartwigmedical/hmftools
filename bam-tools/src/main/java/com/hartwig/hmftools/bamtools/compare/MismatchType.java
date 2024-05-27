@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.compare;
 public enum MismatchType
 {
     MATCH,
-    REF_ONLY,
+    ORIG_ONLY,
     NEW_ONLY,
-    VALUE;
+    VALUE
 }

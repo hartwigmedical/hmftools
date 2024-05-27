@@ -26,13 +26,12 @@ import org.apache.logging.log4j.util.BiConsumer;
  *
  * Example usage:
  *
- *    try(DelimFileWriter<Ratio> writer = new DelimFileWriter<>(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT),
+ *    try(DelimFileWriter<Ratio> writer = new DelimFileWriter<>(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ",",
  *           (ratio, row) -> {
  *               row.set(CHROMOSOME, ratio.chromosome());
  *               row.set(MEDIAN_RATIO, ratio.medianRatio(), FORMAT);
  *               row.set(COUNT, ratio.count()); })
  *    {
- *        writer.setDelimiter(",");
  *        for(Data d : dataList)
  *        {
  *            writer.writeRow(d);
@@ -53,7 +52,7 @@ public class DelimFileWriter<T> implements AutoCloseable
     private static final NumberFormat sDefaultNumberFormat = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
     private static final String sNullIndicator = "";
 
-    String mDelim = TSV_DELIM;
+    final String mDelimiter;
 
     final Writer mWriter;
 
@@ -61,70 +60,89 @@ public class DelimFileWriter<T> implements AutoCloseable
 
     final BiConsumer<T, Row> mRowEncoder;
 
-    Map<String, Integer> mColumnIndexMap = null;
+    final Map<String, Integer> mColumnIndexMap;
 
     public DelimFileWriter(String filename, Iterable<String> columns, BiConsumer<T, Row> rowEncoder)
     {
-        this(createBufferedWriterUnchecked(filename), columns, rowEncoder);
+        this(filename, columns, TSV_DELIM, rowEncoder);
     }
 
     public DelimFileWriter(Writer writer, Iterable<String> columns, BiConsumer<T, Row> rowEncoder)
     {
-        mWriter = writer;
-        mColumns = new ArrayList<>();
-        columns.forEach(mColumns::add);
-        mRowEncoder = rowEncoder;
+        this(writer, columns, TSV_DELIM, rowEncoder);
     }
 
     public DelimFileWriter(String filename, Enum<?>[] columns, BiConsumer<T, Row> rowEncoder)
     {
-        this(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), rowEncoder);
+        this(filename, columns, TSV_DELIM, rowEncoder);
     }
 
     public DelimFileWriter(Writer writer, Enum<?>[] columns, BiConsumer<T, Row> rowEncoder)
     {
-        this(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), rowEncoder);
+        this(writer, columns, TSV_DELIM, rowEncoder);
     }
 
-    public void setDelimiter(String delimiter)
+    public DelimFileWriter(String filename, Iterable<String> columns, String delimiter, BiConsumer<T, Row> rowEncoder)
     {
-        if(mColumnIndexMap != null)
-        {
-            throw new IllegalStateException("cannot change delimiter after writing started");
-        }
-        mDelim = delimiter;
+        this(createBufferedWriterUnchecked(filename), columns, delimiter, rowEncoder);
     }
 
+    public DelimFileWriter(Writer writer, Iterable<String> columns, String delimiter, BiConsumer<T, Row> rowEncoder)
+    {
+        mDelimiter = delimiter;
+        mWriter = writer;
+        mColumns = new ArrayList<>();
+        columns.forEach(mColumns::add);
+        mRowEncoder = rowEncoder;
+
+        // create a map of indices
+        mColumnIndexMap = new HashMap<>();
+        int i = 0;
+        for(String c : mColumns)
+        {
+            if(mColumnIndexMap.putIfAbsent(c, i++) != null)
+            {
+                throw new RuntimeException("duplicate column: " + c);
+            }
+        }
+        try
+        {
+            mWriter.write(String.join(mDelimiter, mColumns) + '\n');
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public DelimFileWriter(String filename, Enum<?>[] columns, String delimiter, BiConsumer<T, Row> rowEncoder)
+    {
+        this(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), delimiter, rowEncoder);
+    }
+
+    public DelimFileWriter(Writer writer, Enum<?>[] columns, String delimiter, BiConsumer<T, Row> rowEncoder)
+    {
+        this(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), delimiter, rowEncoder);
+    }
+
+    // This function is safe to be called from multiple threads.
+    // It is user's responsibility to ensure the provided row encoder is thread safe.
     public void writeRow(T obj)
     {
         try
         {
-            if(mColumnIndexMap == null)
-            {
-                // create a map of indices
-                mColumnIndexMap = new HashMap<>();
-                int i = 0;
-                for(String c : mColumns)
-                {
-                    if(mColumnIndexMap.putIfAbsent(c, i++) != null)
-                    {
-                        throw new RuntimeException("duplicate column: " + c);
-                    }
-                }
-
-                mWriter.write(String.join(mDelim, mColumns));
-                mWriter.write('\n');
-            }
-
             Row row = new Row(mColumnIndexMap, mColumns.size());
             mRowEncoder.accept(obj, row);
-            StringJoiner joiner = new StringJoiner(mDelim);
+            StringJoiner joiner = new StringJoiner(mDelimiter, "", "\n");
             for(String e : row.mValues)
             {
                 joiner.add(e != null ? e : sNullIndicator);
             }
+
+            // NOTE: in order for this function to be thread safe, we must only make a single call to writer
+            // otherwise race condition might occur where another thread writes to the file in between
+            // writer underneath contains a lock to make sure the write function is thread safe
             mWriter.write(joiner.toString());
-            mWriter.write('\n');
         }
         catch(IOException e)
         {

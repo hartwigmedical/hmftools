@@ -50,13 +50,12 @@ public class DelimFileReaderWriterTest
 
         try (BufferedWriter bufferedWriter = new BufferedWriter(stringWriter))
         {
-            DelimFileWriter<Data> writer = new DelimFileWriter<>(bufferedWriter, List.of("count", "name", "rate"), ((data, row) ->
+            DelimFileWriter<Data> writer = new DelimFileWriter<>(bufferedWriter, List.of("count", "name", "rate"), ",", ((data, row) ->
                 {
                     row.set("name", data.name);
                     row.set("count", data.count);
                     row.set("rate", data.rate);
                 }));
-            writer.setDelimiter(",");
             dataList.forEach(writer::writeRow);
         }
         catch (IOException e)

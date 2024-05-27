@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +16,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.bamtools.common.HashBamWriter;
+
 import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -26,6 +30,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class RemoteReadHandler
 {
     private static final int UNMAPPED_READ_CHUNK_SIZE = 100_000;
+    private static final int NUM_HASH_BAMS = 256;
 
     private final ToFastqConfig mConfig;
 
@@ -36,7 +41,19 @@ public class RemoteReadHandler
     public RemoteReadHandler(final ToFastqConfig config)
     {
         mConfig = config;
-        mHashBamWriter = new HashBamWriter(config);
+
+        SAMFileHeader samHeader;
+        try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
+        {
+            samHeader = samReader.getFileHeader();
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+
+        String tempDirPrefix = Paths.get(mConfig.BamFile).getFileName().toString().replace('.', '_') + "_hashbams_";
+        mHashBamWriter = new HashBamWriter(samHeader, tempDirPrefix, NUM_HASH_BAMS);
     }
 
     public void cacheRemoteRead(SAMRecord read)
@@ -53,7 +70,7 @@ public class RemoteReadHandler
         final List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         // use multiple threads to process the hash bams
-        for(File hashBam : mHashBamWriter.getHashBams())
+        for(File hashBam : mHashBamWriter.getHashBams().values())
         {
             futures.add(CompletableFuture.runAsync(() -> processHashBam(threadData, hashBam), executorService));
         }
