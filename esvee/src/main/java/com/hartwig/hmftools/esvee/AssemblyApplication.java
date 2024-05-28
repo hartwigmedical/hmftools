@@ -339,6 +339,7 @@ public class AssemblyApplication
 
             if(mConfig.RunAlignment)
             {
+                // add link assemblies into the same assembly alignment
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())
                 {
                     List<AssemblyAlignment> phaseSetAlignments = Lists.newArrayList();
@@ -357,6 +358,7 @@ public class AssemblyApplication
                         assemblyAlignmentGroups.add(phaseSetAlignments);
                 }
 
+                // and then add any assemblies not in a phase set into their own for alignment
                 for(JunctionAssembly assembly : phaseGroup.assemblies())
                 {
                     if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))

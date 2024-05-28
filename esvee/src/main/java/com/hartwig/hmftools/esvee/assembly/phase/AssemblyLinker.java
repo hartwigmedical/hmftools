@@ -43,7 +43,7 @@ public final class AssemblyLinker
         if(!lower.junction().isReverse())
             return null;
 
-        int linkDistance = upper.junction().Position - lower.junction().Position;
+        int linkDistance = upper.junction().Position - lower.junction().Position + 1;
 
         if(linkDistance < 0 || linkDistance > PHASED_ASSEMBLY_MAX_TI)
             return null;
@@ -59,6 +59,10 @@ public final class AssemblyLinker
         }
         else
         {
+            // cannot have ref bases extending past each other's junctions
+            if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
+                return null;
+
             // must share a junction read & mate in each
             boolean matched = false;
 
