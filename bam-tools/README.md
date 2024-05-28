@@ -68,38 +68,65 @@ threads | Multi-thread count, default 1
 
 
 ## BamCompare
-Compare 2 BAM files
+Compare 2 BAM/CRAM files and write differences into a TSV file.
 
 ### Usage
 
-java -cp /data/experiments/tools/bam-tools.jar com.hartwig.hmftools.bamtools.compare.BamCompare 
--ref_bam P001804_PB268552.bam -new_bam P001804_PB268552.mark_dups.sorted.bam 
--ref_genome /data/resources/bucket/reference_genome/38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna 
--ref_genome_version 38 -output_file P001804_PB268552.bam_compare.csv ./ -log_level DEBUG -threads 10 -partition_size 10000000
-
 ```
 java -cp bam-tools.jar com.hartwig.hmftools.bamtools.compare.BamCompare \
-   -ref_bam_file SAMPLE.original.bam \
+   -orig_bam_file SAMPLE.original.bam \
    -new_bam_file SAMPLE.new.bam \
    -ref_genome ref_genome.fasta \
-   -ref_genome_version 37 \
-   -output_file SAMPLE.bam_compare.csv \ 
+   -output_file SAMPLE.bam_compare.tsv.gz \ 
    -threads 10 \
 ```
 
 ### Configuration
 
-Filter | Description
----|---
-ref_bam_file | First BAM file
-new_bam_file | Second BAM file
-ref_genome | Reference genome file used to create the BAM
-ref_genome_version | Reference genome version, V37 (default) or V38
-partition_size | Default 100000 bases, splits chromosomes to analyse in partitions
-specific_regions | As above
-output_file | Output comparison file
-log_level | INFO or DEBUG
-threads | Multi-thread count, default 1
+| Filter                      | Required? | Description                                                                    |
+|-----------------------------|-----------|--------------------------------------------------------------------------------|
+| orig_bam_file               | Yes       | First BAM / CRAM file                                                          |
+| new_bam_file                | Yes       | Second BAM / CRAM file                                                         |
+| ref_genome                  | No        | Reference genome file, only required for CRAM input.                           |
+| output_file                 | Yes       | Output comparison file (tsv or tsv.gz)                                         |
+| ignore_dup_diffs            | No        | Ignore difference in duplicate flag                                            |
+| ignore_alterations          | No        | Ignore consensus reads and internal unmappings                                 |
+| ignore_consensus_reads      | No        | Ignore consensus reads                                                         |
+| ignore_supplementary_reads  | No        | Ignore supplementary reads                                                     |
+| partition_size              | No        | Default 10M bases, splits chromosomes to analyse in partitions                 |
+| max_cached_reads_per_thread | No        | Maximum number of cached reads per thread, automatically calculated if not set |
+| specific_regions            | No        | As above                                                                       |
+| log_level                   | No        | WARN, INFO, DEBUG or TRACE                                                     |
+| threads                     | No        | Multi-thread count, default 1                                                  |
+
+## BamToFastq
+
+Convert BAM / CRAM file into FASTQ
+
+### Usage
+
+```
+java -cp bam-tools.jar com.hartwig.hmftools.bamtools.tofastq.BamToFastq \
+   -bam_file SAMPLE.cram \
+   -ref_genome ref_genome.fasta \
+   -output_dir /output \
+   -split_mode READ_GROUP \ 
+   -threads 10 \
+```
+
+### Configuration
+
+| Filter           | Required? | Description                                                                    |
+|------------------|-----------|--------------------------------------------------------------------------------|
+| bam_file         | Yes       | input BAM / CRAM file                                                          |
+| ref_genome       | No        | Reference genome file, only required for CRAM input.                           |
+| output_dir       | Yes       | Directory to write output into.                                                |
+| output_id        | No        | Extra file name prefix for the output FASTQ files                              |
+| split_mode       | No        | How output FASTQ files are split (NONE, READ_GROUP, THREAD)                    |
+| specific_regions | No        | As above                                                                       |
+| log_level        | No        | WARN, INFO, DEBUG or TRACE                                                     |
+| threads          | No        | Multi-thread count, default 1                                                  |
+
 
 ## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.0)

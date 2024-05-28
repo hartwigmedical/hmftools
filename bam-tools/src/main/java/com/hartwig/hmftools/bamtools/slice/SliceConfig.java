@@ -50,7 +50,6 @@ public class SliceConfig
     public final boolean WriteReads;
     public final boolean DropExcluded;
     public final boolean DropRemoteSupplementaries;
-    public final int ReadLength;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
     public final int Threads;
@@ -99,7 +98,6 @@ public class SliceConfig
         DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
-        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -201,6 +199,5 @@ public class SliceConfig
         SpecificChrRegions = new SpecificRegions();
         Threads = 0;
         PerfDebug = false;
-        ReadLength = DEFAULT_READ_LENGTH;
     }
 }
