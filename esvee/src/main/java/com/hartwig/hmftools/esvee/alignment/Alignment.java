@@ -51,9 +51,8 @@ public class Alignment
 
     public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
-        // apply filters on what to bother aligning
+        // apply filters on what to run alignment on
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
-        || assembly.outcome() == AssemblyOutcome.DUP_SPLIT
         || assembly.outcome() == AssemblyOutcome.SECONDARY
         || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
         {
@@ -331,6 +330,7 @@ public class Alignment
                         if(fragmentSupport == null)
                         {
                             int inferredFragLength = breakend.calcInferredFragmentLength(read);
+                            read.setInferredFragmentLength(inferredFragLength);
 
                             fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend, inferredFragLength);
                             fragmentSupportMap.put(read.id(), fragmentSupport);

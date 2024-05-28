@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -177,8 +178,24 @@ public class PhaseSetBuilder
                         ++sharedCount;
                 }
 
+                for(SupportRead support : assembly1.candidateSupport())
+                {
+                    if(hasMatchingFragment(assembly2.support(), support))
+                        ++sharedCount;
+                }
+
+                int candidateOnlyCount = 0;
+
+                /*
+                for(SupportRead support : assembly1.candidateSupport())
+                {
+                    if(hasMatchingFragment(assembly2.candidateSupport(), support))
+                        ++candidateOnlyCount;
+                }
+                */
+
                 if(sharedCount > 0 || isLocalLink)
-                    assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, isLocalLink));
+                    assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, candidateOnlyCount, isLocalLink));
             }
         }
 
@@ -194,10 +211,11 @@ public class PhaseSetBuilder
             JunctionAssembly assembly1 = sharedReadPair.Assembly1;
             JunctionAssembly assembly2 = sharedReadPair.Assembly2;
 
-            boolean alreadyLinked = linkedAssemblies.contains(assembly1) || linkedAssemblies.contains(assembly2);
+            boolean assembly1Linked = linkedAssemblies.contains(assembly1);
+            boolean assembly2Linked = linkedAssemblies.contains(assembly2);
 
             // test if a link can be made
-            if(!alreadyLinked)
+            if(!assembly1Linked && !assembly2Linked)
             {
                 // first check if either assembly matches a local sequence (note both are checked)
                 if(!sharedReadPair.IsLocalDelDup)
@@ -237,13 +255,29 @@ public class PhaseSetBuilder
             if(assembly1.outcome().isDuplicate() || assembly2.outcome().isDuplicate())
                 continue;
 
-            if(isSupplementaryOnly(assembly1) || isSupplementaryOnly(assembly2))
-                continue;
-
-            AssemblyLink assemblyLink = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2, true);
+            boolean allowSequenceMismatches = true; // was false for secondaries
+            AssemblyLink assemblyLink = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2, allowSequenceMismatches);
 
             if(assemblyLink != null)
+            {
+                /*
+                JunctionAssembly linkedAssembly = assembly1Linked ? assembly1 : assembly2;
+                JunctionAssembly unlinkedAssembly = !assembly1Linked ? assembly1 : assembly2;
+
+                boolean suppOnly = isSupplementaryOnly(assembly1);
+
+                List<SupportRead> linkingSplitReads = unlinkedAssembly.support().stream()
+                            .filter(x -> hasMatchingFragment(linkedAssembly.support(), x) || hasMatchingFragment(linkedAssembly.candidateSupport(), x))
+                            .collect(Collectors.toList());
+
+                List<SupportRead> linkingCandidateReads = unlinkedAssembly.candidateSupport().stream()
+                            .filter(x -> hasMatchingFragment(linkedAssembly.support(), x) || hasMatchingFragment(linkedAssembly.candidateSupport(), x))
+                            .collect(Collectors.toList());
+                */
+
                 mSecondarySplitLinks.add(assemblyLink);
+            }
+
         }
     }
 
@@ -332,14 +366,17 @@ public class PhaseSetBuilder
         public final JunctionAssembly Assembly1;
         public final JunctionAssembly Assembly2;
         public final int SharedSupport;
+        public final int CandidateOnlySupport;
         public final boolean IsLocalDelDup;
 
         public SharedAssemblySupport(
-                final JunctionAssembly assembly1, final JunctionAssembly assembly2, final int sharedSupport, final boolean localDelDup)
+                final JunctionAssembly assembly1, final JunctionAssembly assembly2, int sharedSupport, int candidateOnlySupport,
+                final boolean localDelDup)
         {
             Assembly1 = assembly1;
             Assembly2 = assembly2;
             SharedSupport = sharedSupport;
+            CandidateOnlySupport = candidateOnlySupport;
             IsLocalDelDup = localDelDup;
         }
 
@@ -357,8 +394,9 @@ public class PhaseSetBuilder
 
         public String toString()
         {
-            return format("%s + %s shared(%d) %s",
-                    Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport, IsLocalDelDup ? "localDelDup" : "");
+            return format("%s + %s shared(%d) candidates(%d) %s",
+                    Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport, CandidateOnlySupport,
+                    IsLocalDelDup ? "localDelDup" : "");
         }
     }
 

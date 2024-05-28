@@ -67,7 +67,7 @@ public class LocalSequenceMatcher
         if(assemblySeqIndexInRef >= 0)
         {
             // simple sequence match, so can form a link between these 2 assemblies
-            return formLocalLink(assembly, assemblySeq, localRegionStart, assemblySeqIndexInRef);
+            return formLocalLink(assembly, localRegionStart, assemblySeqIndexInRef);
         }
 
         int juncSeqStartIndex = 0;
@@ -111,14 +111,13 @@ public class LocalSequenceMatcher
             int secondIndexStart = topMatchIndices[1];
 
             // return formLocalLink(assembly, assemblySeq, firstIndexStart, secondIndexStart);
-            return formLocalLink(assembly, assemblySeq, localRegionStart, secondIndexStart);
+            return formLocalLink(assembly, localRegionStart, secondIndexStart);
         }
 
         return null;
     }
 
-    private AssemblyLink formLocalLink(
-            final JunctionAssembly assembly, final JunctionSequence assemblySeq, final int localRegionStart, int localRefIndexStart)
+    private AssemblyLink formLocalLink(final JunctionAssembly assembly, final int localRegionStart, int localRefIndexStart)
     {
         // create a simple local assembly to contain this link info? depends perhaps on whether this will become an SV or not
         int localRefJunctionPos = localRegionStart + localRefIndexStart;
@@ -126,20 +125,22 @@ public class LocalSequenceMatcher
         int localRefSeqStart, localRefSeqEnd, localRefJunctionIndex;
         Orientation localRefOrientation;
 
+        int extensionBaseLength = assembly.extensionLength();
+
         if(assembly.isForwardJunction())
         {
             // the local assembly has the opposite, so in this case negative orientation
             localRefOrientation = REVERSE;
             localRefSeqStart = localRefJunctionPos;
-            localRefSeqEnd = localRefJunctionPos + LOCAL_ASSEMBLY_REF_LENGTH - 1;
+            localRefSeqEnd = localRefJunctionPos + extensionBaseLength - 1;
             localRefJunctionIndex = 0;
         }
         else
         {
             localRefOrientation = FORWARD;
-            localRefSeqStart = localRefJunctionPos - LOCAL_ASSEMBLY_REF_LENGTH + 1;
+            localRefSeqStart = localRefJunctionPos - extensionBaseLength + 1;
             localRefSeqEnd = localRefJunctionPos;
-            localRefJunctionIndex = LOCAL_ASSEMBLY_REF_LENGTH - 1;
+            localRefJunctionIndex = extensionBaseLength - 1;
         }
 
         Junction localRefJunction = new Junction(assembly.junction().Chromosome, localRefJunctionPos, localRefOrientation);

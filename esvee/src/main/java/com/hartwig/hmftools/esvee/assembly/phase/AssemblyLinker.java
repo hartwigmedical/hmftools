@@ -110,10 +110,10 @@ public final class AssemblyLinker
 
     public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return tryAssemblyOverlap(assembly1, assembly2, false);
+        return tryAssemblyOverlap(assembly1, assembly2, true);
     }
 
-    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean isSecondary)
+    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowMismatches)
     {
         JunctionAssembly first, second;
         JunctionSequence firstSeq, secondSeq;
@@ -151,7 +151,7 @@ public final class AssemblyLinker
             return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond, 0);
         }
 
-        if(isSecondary)
+        if(!allowMismatches)
             return null;
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence

@@ -64,6 +64,7 @@ public class SupportRead
     private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non junction reads
     private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
     private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
+    private int mInferredFragmentLength;
 
     // those past the junction
     private int mJunctionMatches;
@@ -106,6 +107,7 @@ public class SupportRead
         mReferenceMismatches = 0;
         mJunctionAssemblyIndex = -1;
         mLinkedAssemblyIndex = -1;
+        mInferredFragmentLength = -1;
 
         mRead = read;
     }
@@ -172,6 +174,9 @@ public class SupportRead
     public int junctionMatches() { return mJunctionMatches; }
     public int referenceMismatches() { return mReferenceMismatches; }
     public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
+
+    public int inferredFragmentLength() { return mInferredFragmentLength; }
+    public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
 
     public static boolean hasMatchingFragment(final List<SupportRead> support, final SupportRead read)
     {

@@ -71,6 +71,7 @@ public class AssemblyReadWriter
             sj.add("Supplementary");
             sj.add("SuppData");
 
+            sj.add("InferredFragLength");
             sj.add("ReadJunctionIndex");
             sj.add("JunctionAssemblyIndex");
             sj.add("LinkedAssemblyIndex");
@@ -140,6 +141,7 @@ public class AssemblyReadWriter
                     sj.add("");
                 }
 
+                sj.add(String.valueOf(support.inferredFragmentLength()));
                 sj.add(String.valueOf(support.junctionReadIndex()));
                 sj.add(String.valueOf(support.junctionAssemblyIndex()));
                 sj.add(String.valueOf(support.linkedAssemblyIndex()));

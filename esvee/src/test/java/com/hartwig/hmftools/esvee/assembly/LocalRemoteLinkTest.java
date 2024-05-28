@@ -63,6 +63,7 @@ public class LocalRemoteLinkTest
         assertNotNull(assemblyLink);
         assertEquals(DEL, assemblyLink.svType());
         assertEquals(400, assemblyLink.second().junction().Position);
+        assertEquals(50, assemblyLink.second().refBaseLength());
 
         Junction negJunction = new Junction(CHR_1, 300, REVERSE);
 
@@ -77,6 +78,7 @@ public class LocalRemoteLinkTest
         assertNotNull(assemblyLink);
         assertEquals(DUP, assemblyLink.svType());
         assertEquals(400, assemblyLink.second().junction().Position);
+        assertEquals(50, assemblyLink.second().refBaseLength());
     }
 
     @Test
