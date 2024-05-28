@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -95,6 +94,8 @@ public class Alignment
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
+        SV_LOGGER.debug("required supp alignments({})", alignerTasks.stream().mapToInt(x ->x.requeriedSuppCount()).sum());
+
         SV_LOGGER.info("alignment complete");
 
         mergePerfCounters(perfCounters, alignerTasks.stream().collect(Collectors.toList()));
@@ -104,15 +105,19 @@ public class Alignment
     {
         private final Queue<AssemblyAlignment> mAssemblyAlignments;
         private final int mAssemblyAlignmentCount;
+        private int mRequeriedSuppCount;
 
         public AssemblerAlignerTask(final Queue<AssemblyAlignment> assemblyAlignments)
         {
             super("AssemblerAlignment");
             mAssemblyAlignments = assemblyAlignments;
             mAssemblyAlignmentCount = assemblyAlignments.size();
+            mRequeriedSuppCount = 0;
         }
 
         private static final int LOG_COUNT = 10000;
+
+        public int requeriedSuppCount() { return mRequeriedSuppCount; }
 
         @Override
         public void run()
@@ -168,7 +173,7 @@ public class Alignment
                         .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                         .filter(x -> x != null).collect(Collectors.toList());
 
-                // alignments = requerySupplementaryAlignments(assemblyAlignment, alignments);
+                alignments = requerySupplementaryAlignments(assemblyAlignment, alignments);
             }
 
             processAlignmentResults(assemblyAlignment, alignments);
@@ -201,6 +206,8 @@ public class Alignment
 
         private List<AlignData> requeryAlignment(final AssemblyAlignment assemblyAlignment, final AlignData alignData)
         {
+            ++mRequeriedSuppCount;
+
             String fullSequence = assemblyAlignment.fullSequence();
 
             alignData.setFullSequenceData(fullSequence, assemblyAlignment.fullSequenceLength());
@@ -223,21 +230,19 @@ public class Alignment
                 // alignData = {AlignData@3240} "10:2543491-2543563 72S73M fwd seq(72-145 adj=72-144) score(58) flags(2048) mapQual(55 align=73 adj=73)"
                 // rqAlignment = {AlignData@3246} "10:2543809-2543878 3S70M fwd seq(3-73 adj=3-72) score(65) flags(0) mapQual(17 align=70 adj=70)"
 
-                if(rqAlignment.segmentLength() != alignData.segmentLength())
-                {
-                    // unclear how to handle differences like this so ignore for now
-                    continue;
-                }
-
-                int fullSequenceOffset = alignData.rawSequenceStart();
-
-                // restore values to be in terms of the original sequence
                 AlignData convertedAlignment = new AlignData(
                         rqAlignment.RefLocation,
-                        rqAlignment.rawSequenceStart() + fullSequenceOffset,
-                        rqAlignment.rawSequenceEnd() + fullSequenceOffset,
+                        rqAlignment.rawSequenceStart(),
+                        rqAlignment.rawSequenceEnd(),
                         rqAlignment.MapQual, rqAlignment.Score, rqAlignment.Flags, rqAlignment.Cigar, rqAlignment.NMatches,
                         rqAlignment.XaTag, rqAlignment.MdTag);
+
+                // restore values to be in terms of the original sequence
+                int rqSeqOffsetStart = rqAlignment.sequenceStart();
+                int adjSequenceStart = alignData.sequenceStart() + rqSeqOffsetStart;
+                int rqSeqOffsetEnd = alignmentSequence.length() - 1 - rqAlignment.sequenceEnd();
+                int adjSequenceEnd = alignData.sequenceEnd() - rqSeqOffsetEnd;
+                convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
 
                 convertedAlignments.add(convertedAlignment);
             }

@@ -53,6 +53,7 @@ public class AlignData
     private final int mRawSequenceEnd;
     private int mSequenceStart;
     private int mSequenceEnd;
+    private boolean mIsRequeried;
 
     private int mAdjustedAlignment;
 
@@ -83,6 +84,7 @@ public class AlignData
 
         mSequenceStart = sequenceStart;
         mSequenceEnd = max(sequenceEnd - 1, 0);
+        mIsRequeried = false;
         mAdjustedAlignment = mAlignedBases;
     }
 
@@ -99,6 +101,9 @@ public class AlignData
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
+        if(mIsRequeried)
+            return;
+
         if(mOrientation.isReverse())
         {
             int newSequenceStart = (fullSequenceLength - 1) - (mRawSequenceEnd - 1);
@@ -113,6 +118,13 @@ public class AlignData
             SV_LOGGER.error("alignment({}) invalid subsequence request({}-{}) vs fullSequenceLength({})",
                     toString(), mSequenceStart, mSequenceEnd, fullSequenceLength);
         }
+    }
+
+    public void setRequeriedSequenceCoords(int sequenceStart, int sequenceEnd)
+    {
+        mSequenceStart = sequenceStart;
+        mSequenceEnd = sequenceEnd;
+        mIsRequeried = true;
     }
 
     public int sequenceStart() { return mSequenceStart; }
