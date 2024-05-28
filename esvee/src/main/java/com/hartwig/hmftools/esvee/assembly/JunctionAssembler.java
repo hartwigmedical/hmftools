@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
@@ -95,34 +96,64 @@ public class JunctionAssembler
         if(assemblySupport.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return Collections.emptyList();
 
+        JunctionAssembly firstAssembly = new JunctionAssembly(
+                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
+                extensionSeqBuilder.repeatInfo());
+
+        List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
+
+        // test for a second well-supported, alternative assembly at the same junction
+        JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads());
+
+        if(secondAssembly != null)
+            assemblies.add(secondAssembly);
+
+        for(JunctionAssembly assembly : assemblies)
+        {
+            int mismatchCount = 0;
+
+            // test other reads against this new assembly
+            for(Read read : junctionReads)
+            {
+                if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
+                    continue;
+
+                if(!assembly.checkAddJunctionRead(read))
+                    ++mismatchCount;
+            }
+
+            assembly.addMismatchReadCount(mismatchCount);
+
+            // deal with mismatch reads by forming a new assembly if they are significant
+
+            // dedup assemblies for this junction based on overlapping read support
+            // AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
+
+            expandReferenceBases(assembly);
+
+            assembly.buildRepeatInfo();
+        }
+
+        return assemblies;
+    }
+
+    private JunctionAssembly checkSecondAssembly(final List<Read> extensionReads)
+    {
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
+
+        if(!extensionSeqBuilder.isValid())
+            return null;
+
+        List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
+
+        if(assemblySupport.size() < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT)
+            return null;
+
         JunctionAssembly assembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
 
-        // test other reads against this new assembly
-        int mismatchCount = extensionSeqBuilder.mismatches();
-
-        for(Read read : junctionReads)
-        {
-            if(assemblySupport.stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
-                continue;
-
-            if(!assembly.checkAddJunctionRead(read))
-                ++mismatchCount;
-        }
-
-        assembly.addMismatchReadCount(mismatchCount);
-
-        // deal with mismatch reads by forming a new assembly if they are significant
-
-        // dedup assemblies for this junction based on overlapping read support
-        // AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
-
-        expandReferenceBases(assembly);
-
-        assembly.buildRepeatInfo();
-
-        return Lists.newArrayList(assembly);
+        return assembly;
     }
 
     private void expandReferenceBases(final JunctionAssembly assembly)

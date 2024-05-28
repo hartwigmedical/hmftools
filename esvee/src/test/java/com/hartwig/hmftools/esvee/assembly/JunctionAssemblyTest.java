@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -273,104 +276,48 @@ public class JunctionAssemblyTest
         assertEquals(3, assemblies.get(0).mergedAssemblyCount());
     }
 
-    /* rework if assembly splitting makes a come-back
-
     @Test
-    public void testBuildJunctionSequencePosOrientation()
+    public void testJunctionAssemblySplitting()
     {
-        String refBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGGCCAATT";
+        String refSequence = REF_BASES_400;
 
-        //   pos           10        20         30
-        //   pos 012345678901234567890123456789 0123456789
-        //       GATCGATCGATCGATCGATCTTGGCCAATT AACCGGGG (first sequence)
-        // 1st-asm index  012345678901234567890 123456
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, refSequence);
 
-        //       GATCGATCGATCGATCGATCTTGGCCAATT AATCGGTT (2nd sequence)
-        // 2nd-asm index  012345678901234567890 12345678
+        Junction junction = new Junction(CHR_1, 100, FORWARD);
 
-        Junction junction = new Junction(CHR_1, 29, FORWARD);
+        String juncReadBases1 = refSequence.substring(51, 101) + refSequence.substring(200, 250);
 
-        // read 1 defines the first sequence
-        Read read1 = createRead("READ_01", 10, refBases.substring(10, 30) + "AACCGGGG", "20M8S");
-        Read read1b = cloneRead(read1, read1.getName() + "b");
+        Read juncRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases1, "50M50S", CHR_1, 1, false);
 
-        // read 2 has one mismatch on the first sequence and has a ref base mismatch
-        String readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TGGGCCAATT";
-        Read read2 = createRead("READ_02", 9, readRefBases.substring(9, 30) + "ACCCGG", "21M6S");
+        List<Read> junctionReads = Lists.newArrayList(juncRead1);
 
-        // read 3 defines the second sequence
-        Read read3 = createRead("READ_03", 15, refBases.substring(15, 30) + "AATCGGTT", "15M8S");
+        for(int i = 0; i < 9; ++i)
+        {
+            junctionReads.add(cloneRead(juncRead1, READ_ID_GENERATOR.nextId()));
+        }
 
-        // read 4 matches has mismatches against both sequences, but only one with the second
-        Read read4 = createRead("READ_04", 10, refBases.substring(10, 30) + "AATCGGA", "20M7S");
+        String juncReadBases2 = refSequence.substring(51, 101) + refSequence.substring(270, 320);
 
-        // read 5 matches the second sequence and also has a ref base mismatch
-        readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGCCCAATT";
-        Read read5 = createRead("READ_05", 10, readRefBases.substring(10, 30) + "AATCGGT", "20M7S");
+        Read juncRead2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases2, "50M50S", CHR_1, 1, false);
 
-        // has 1 mismatch against each so will support both
-        Read read6 = createRead("READ_06", 10, refBases.substring(10, 30) + "AATCGGG", "20M7S");
+        junctionReads.add(juncRead2);
 
-        List<Read> reads = List.of(read1, read1b, read2, read3, read4, read5, read6);
+        for(int i = 0; i < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT - 1; ++i)
+        {
+            junctionReads.add(cloneRead(juncRead2, READ_ID_GENERATOR.nextId()));
+        }
 
         JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
-        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
-        assertEquals(1, assemblies.size());
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
+
+        assertEquals(2, assemblies.size());
         JunctionAssembly assembly = assemblies.get(0);
-        assertEquals(3, assembly.supportCount());
+        assertEquals(10, assembly.supportCount());
 
-        assertEquals(0, assembly.junctionIndex());
-        assertEquals(29, assembly.minAlignedPosition());
-        assertEquals(37, assembly.maxAlignedPosition());
-
-        assertEquals(7, assembly.supportCount());
-        assertEquals(4, assembly.mismatchReadCount());
-    }
-
-    @Test
-    public void testBuildJunctionSequenceNegOrientation()
-    {
-        String refBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGGCCAATT" + REF_BASES_RANDOM_100.substring(30, 50);
-
-        //   pos           10        20         30
-        //   pos 012345678901234567890123456789 0123456789
-        //                  AACCGGGG TTGGCCAATT GATCGATCGATCGATCGATCTTGGCCAATT (2nd sequence)
-        // 1st-asm index   012345678 9012345678 90123456
-
-        //               TTTTCCTTGG TTGGCCAATT GATCGATCGATCGATCGATCTTGGCCAATT (1st sequence, designated since longest / high-qual SC)
-        // 2nd-asm index   01234567 8901234567890 12345678
-
-        Junction junction = new Junction(CHR_1, 20, REVERSE);
-
-        // read 1 defines the first sequence
-        Read read1 = createRead("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");
-
-        // read 2 supports the first sequence
-        Read read2 = createRead("READ_02", 20, "ACCGGGGT" + refBases.substring(21, 40), "7S20M");
-
-        // read 3 defines the second sequence
-        Read read3 = createRead("READ_03", 20, "TTTTCCTTGG" + refBases.substring(20, 35), "10S15M");
-
-        // read 4 matches has 1 mismatch against both sequences
-        Read read4 = createRead("READ_04", 20, "CCTGGG" + refBases.substring(20, 40), "6S20M");
-
-        // read 5 matches the second sequence
-        Read read5 = createRead("READ_05", 20, "TTCCTTGG" + refBases.substring(20, 37), "8S17M");
-
-        List<Read> reads = List.of(read1, read2, read3, read4, read5);
-
-        JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
-        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
-        assertEquals(1, assemblies.size());
-        JunctionAssembly assembly = assemblies.get(0);
+        assembly = assemblies.get(1);
         assertEquals(5, assembly.supportCount());
-
-        assertEquals(10, assembly.junctionIndex());
-        assertEquals(10, assembly.minAlignedPosition());
-        assertEquals(20, assembly.maxAlignedPosition());
-
-        assertEquals(4, assembly.mismatchReadCount());
     }
-
-     */
 }

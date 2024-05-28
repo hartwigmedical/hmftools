@@ -59,6 +59,7 @@ public class SupportRead
     private final int mNumOfEvents;
     private final int mInsertSize;
     private final int mTrimCount;
+    private final boolean mHasIndel;
 
     private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non junction reads
     private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
@@ -97,6 +98,7 @@ public class SupportRead
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
         mNumOfEvents = read.snvCount() + read.totalIndelBases();
+        mHasIndel = read.indelCoords() != null;
 
         mJunctionReadIndex = junctionReadIndex;
         mJunctionMatches = matches;
@@ -122,6 +124,7 @@ public class SupportRead
     public int baseLength() { return mBaseLength; }
     public int insertSize() { return mInsertSize; }
     public int trimCount() { return mTrimCount; }
+    public boolean hasIndel() { return mHasIndel; }
     public String cigar() { return mCigar; }
     public Orientation orientation() { return isFlagSet(READ_REVERSE_STRAND) ? REVERSE : FORWARD; }
     public Orientation mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? REVERSE : FORWARD; }

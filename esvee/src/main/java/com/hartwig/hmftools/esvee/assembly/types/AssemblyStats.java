@@ -71,7 +71,7 @@ public class AssemblyStats
 
         if(supportRead.type().isSplitSupport())
         {
-            if(supportRead.type() == INDEL)
+            if(supportRead.type() == INDEL || supportRead.hasIndel())
                 ++IndelReads;
 
             if(supportRead.isSupplementary())

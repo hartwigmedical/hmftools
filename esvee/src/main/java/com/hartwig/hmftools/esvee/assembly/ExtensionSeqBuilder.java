@@ -116,6 +116,11 @@ public class ExtensionSeqBuilder
         return supportReads;
     }
 
+    public List<Read> mismatchReads()
+    {
+        return mReads.stream().filter(x -> x.exceedsMaxMismatches()).map(x -> x.mRead).collect(Collectors.toList());
+    }
+
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
     private void buildSequence()
