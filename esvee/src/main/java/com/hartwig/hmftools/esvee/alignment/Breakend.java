@@ -225,30 +225,6 @@ public class Breakend implements Comparable<Breakend>
         }
     }
 
-    public int calcInferredFragmentLength(final SupportRead read)
-    {
-        // sum the aligned bases relative to the junction positions to infer a fragment length around the junction
-        if(mOtherBreakend == null)
-            return 0;
-
-        // this read relates to the breakend, but confirm that its mate does too
-        if(!mOtherBreakend.Chromosome.equals(read.mateChromosome()))
-            return 0;
-
-        if(!mOtherBreakend.isRelatedDiscordantRead(read.mateAlignmentStart(), read.mateAlignmentEnd(), read.mateOrientation()))
-            return 0;
-
-        int junctionDistance = Orient.isForward() ? Position - read.alignmentStart() : read.alignmentEnd() - Position;
-
-        int otherJunctionDistance = mOtherBreakend.Orient.isForward() ?
-                mOtherBreakend.Position - read.mateAlignmentStart() : read.mateAlignmentEnd() - mOtherBreakend.Position;
-
-        if(otherJunctionDistance >= DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
-            return 0;
-
-        return junctionDistance + otherJunctionDistance;
-    }
-
     public String toString()
     {
         return format("%d: %s:%d:%d %s hom(%s) otherId(%d) segs(%d) alts(%d)",

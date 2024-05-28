@@ -165,10 +165,11 @@ public class AssemblyApplication
 
             List<JunctionAssembly> finalAssemblies = Lists.newArrayList();
             List<AssemblyAlignment> assemblyAlignments = Lists.newArrayList();
+            List<List<AssemblyAlignment>> assemblyAlignmentGroups = Lists.newArrayList();
 
-            gatherAssemblies(finalAssemblies, assemblyAlignments);
+            gatherAssemblies(finalAssemblies, assemblyAlignments, assemblyAlignmentGroups);
 
-            runAlignment(assemblyAlignments);
+            runAlignment(assemblyAlignments, assemblyAlignmentGroups);
 
             List<Breakend> breakends = Lists.newArrayList();
             assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
@@ -180,6 +181,8 @@ public class AssemblyApplication
             }
 
             formBreakendFacingLinks(breakends);
+
+            new Alignment(mConfig, null).calcAssemblyFragmentLengths(assemblyAlignmentGroups);
 
             Deduplication.deduplicateBreakends(breakends);
 
@@ -292,7 +295,7 @@ public class AssemblyApplication
         mergePerfCounters(mPerfCounters, tasks);
     }
 
-    private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
+    private void runAlignment(final List<AssemblyAlignment> assemblyAlignments, final List<List<AssemblyAlignment>> assemblyAlignmentGroups)
     {
         if(!mConfig.RunAlignment)
             return;
@@ -303,7 +306,9 @@ public class AssemblyApplication
         alignment.close();
     }
 
-    private void gatherAssemblies(final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments)
+    private void gatherAssemblies(
+            final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments,
+            final List<List<AssemblyAlignment>> assemblyAlignmentGroups)
     {
         int assemblyId = 0;
 
@@ -336,17 +341,30 @@ public class AssemblyApplication
             {
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())
                 {
+                    List<AssemblyAlignment> phaseSetAlignments = Lists.newArrayList();
+
                     for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
                     {
                         if(assemblyLink.type() != FACING)
-                            assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assemblyLink));
+                        {
+                            AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assemblyLink);
+                            assemblyAlignments.add(assemblyAlignment);
+                            phaseSetAlignments.add(assemblyAlignment);
+                        }
                     }
+
+                    if(!phaseSetAlignments.isEmpty())
+                        assemblyAlignmentGroups.add(phaseSetAlignments);
                 }
 
                 for(JunctionAssembly assembly : phaseGroup.assemblies())
                 {
                     if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
-                        assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assembly));
+                    {
+                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assembly);
+                        assemblyAlignments.add(assemblyAlignment);
+                        assemblyAlignmentGroups.add(List.of(assemblyAlignment));
+                    }
                 }
             }
         }

@@ -180,7 +180,7 @@ public class AssemblyAlignment
         {
             if(!secondReversed)
             {
-                // use the read's relative position to the its assembly's junction to set its position in the full assembly
+                // use the read's relative position to its assembly's junction to set its position in the full assembly
                 read.setLinkedAssemblyIndex(secondStartAdjustment - read.junctionReadIndex());
             }
             else

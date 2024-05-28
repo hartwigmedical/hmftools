@@ -101,10 +101,11 @@ public class SupportRead
         mNumOfEvents = read.snvCount() + read.totalIndelBases();
         mHasIndel = read.indelCoords() != null;
 
-        mJunctionReadIndex = junctionReadIndex;
         mJunctionMatches = matches;
         mJunctionMismatches = mismatches;
         mReferenceMismatches = 0;
+
+        mJunctionReadIndex = junctionReadIndex;
         mJunctionAssemblyIndex = -1;
         mLinkedAssemblyIndex = -1;
         mInferredFragmentLength = -1;
