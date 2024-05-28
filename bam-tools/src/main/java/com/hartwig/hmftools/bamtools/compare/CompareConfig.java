@@ -117,15 +117,15 @@ public class CompareConfig
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addPath(ORIG_BAM_FILE, true, "Original BAM file");
         configBuilder.addPath(NEW_BAM_FILE,true, "New BAM file");
-        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size (performance only)", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_CACHED_READS_PER_THREAD, "Maximum cached reads per thread", 0);
 
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
-        configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
-        configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore consensus reads and internal unmappings");
-        configBuilder.addFlag(IGNORE_CONSENSUS_READS, "Ignore consensus reads");
-        configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "Ignore supplementary reads");
+        configBuilder.addFlag(EXCLUDE_REGIONS, "If set, ignore excluded regions");
+        configBuilder.addFlag(IGNORE_DUP_DIFFS, "If set, ignore duplicate diffs");
+        configBuilder.addFlag(IGNORE_ALTERATIONS, "If set, ignore consensus reads and internal unmappings");
+        configBuilder.addFlag(IGNORE_CONSENSUS_READS, "If set, ignore consensus reads");
+        configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "If set, ignore supplementary reads");
 
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);

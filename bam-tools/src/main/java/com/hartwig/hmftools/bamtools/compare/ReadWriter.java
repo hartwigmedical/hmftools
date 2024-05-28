@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
@@ -18,8 +19,8 @@ public class ReadWriter implements AutoCloseable
 {
     enum Column
     {
-        readId, chromosome, posStart, mismatchType, diff, mateChr, matePos,
-        cigar, flags, mapQual, paired, isFirst, negStrand, duplicate, isSupp, suppData
+        readId, isFirst, chromosome, posStart, mismatchType, diff, mateChr, matePos,
+        cigar, flags, mapQual, paired, negStrand, duplicate, isSupp, suppData
     }
 
     private final DelimFileWriter<Triple<SAMRecord, MismatchType, List<String>>> mWriter;
@@ -33,6 +34,7 @@ public class ReadWriter implements AutoCloseable
                 @Nullable List<String> diffList = t.getRight();
                 String diffDetails = diffList != null ? String.join(";", diffList) : "";
                 row.set(Column.readId, read.getReadName());
+                row.set(Column.isFirst, Boolean.toString(SamRecordUtils.firstInPair(read)));
                 row.set(Column.chromosome, read.getReferenceName());
                 row.set(Column.posStart, read.getAlignmentStart());
                 row.set(Column.mismatchType, t.getMiddle().name());
@@ -43,7 +45,6 @@ public class ReadWriter implements AutoCloseable
                 row.set(Column.flags, read.getFlags());
                 row.set(Column.mapQual, read.getMappingQuality());
                 row.set(Column.paired, Boolean.toString(read.getReadPairedFlag()));
-                row.set(Column.isFirst, Boolean.toString(read.getFirstOfPairFlag()));
                 row.set(Column.negStrand, Boolean.toString(read.getReadNegativeStrandFlag()));
                 row.set(Column.duplicate, Boolean.toString(read.getDuplicateReadFlag()));
                 row.set(Column.isSupp, Boolean.toString(read.getSupplementaryAlignmentFlag()));
