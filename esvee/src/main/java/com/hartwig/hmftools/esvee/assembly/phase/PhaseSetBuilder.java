@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isSupplementaryOnly;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
@@ -16,6 +15,8 @@ import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -107,7 +107,7 @@ public class PhaseSetBuilder
 
         if(assemblyLink != null)
         {
-            buildSplitLink(assembly1, assembly2, false);
+            applySplitLinkSupport(assembly1, assembly2, false);
             mPhaseSets.add(new PhaseSet(assemblyLink));
             return true;
         }
@@ -247,7 +247,7 @@ public class PhaseSetBuilder
                 linkedAssemblies.add(assembly1);
                 linkedAssemblies.add(assembly2);
                 boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
-                buildSplitLink(assembly1, assembly2, allowBranching);
+                applySplitLinkSupport(assembly1, assembly2, allowBranching);
                 continue;
             }
 
@@ -276,8 +276,14 @@ public class PhaseSetBuilder
                 */
 
                 mSecondarySplitLinks.add(assemblyLink);
-            }
 
+                if(!assembly1Linked)
+                    assembly1.setOutcome(SECONDARY);
+                else
+                    assembly2.setOutcome(SECONDARY);
+
+                applySplitLinkSupport(assembly1, assembly2, false);
+            }
         }
     }
 
@@ -295,10 +301,13 @@ public class PhaseSetBuilder
         return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
     }
 
-    private void buildSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
+    private void applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
     {
-        assembly1.setOutcome(LINKED);
-        assembly2.setOutcome(LINKED);
+        if(assembly1.outcome() == UNSET)
+            assembly1.setOutcome(LINKED);
+
+        if(assembly2.outcome() == UNSET)
+            assembly2.setOutcome(LINKED);
 
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<SupportRead> matchedCandidates1 = Lists.newArrayList();
@@ -456,11 +465,12 @@ public class PhaseSetBuilder
                     foundRemoteLink = true;
                     mSplitLinks.add(assemblyLink);
 
-                    buildSplitLink(assembly, remoteAssembly, true);
+                    applySplitLinkSupport(assembly, remoteAssembly, true);
                 }
                 else
                 {
                     mSecondarySplitLinks.add(assemblyLink);
+                    applySplitLinkSupport(assembly, remoteAssembly, false);
                 }
             }
         }

@@ -254,7 +254,57 @@ public class JunctionAssembly
         addRead(read, existingSupport.type(), existingSupport);
     }
 
-    public void addDiscordantSupport(final SupportRead support) { addRead(support.cachedRead(), DISCORDANT, null); }
+    public void addDiscordantSupport(final SupportRead support) { addDiscordantSupport(support, -1); }
+
+    public void addDiscordantSupport(final SupportRead support, int permittedMismatches)
+    {
+        if(permittedMismatches >= 0)
+        {
+            int mismatchCount = 0;
+            int assemblyIndex;
+
+            Read read = support.cachedRead();
+
+            int[] readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
+
+            if(mJunction.isForward())
+            {
+                assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
+            }
+            else
+            {
+                assemblyIndex = mJunctionIndex + read.unclippedStart() - mJunction.Position;
+            }
+
+            if(readIndexRange[SE_START] < 0)
+                return;
+
+            for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
+            {
+                if(assemblyIndex < 0)
+                    continue;
+
+                if(assemblyIndex >= mBases.length || i >= read.getBases().length)
+                    break;
+
+                byte base = read.getBases()[i];
+                byte qual = read.getBaseQuality()[i];
+
+                if(mBases[assemblyIndex] == 0)
+                    continue;
+
+                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD || mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
+                    continue;
+
+                ++mismatchCount;
+
+                if(mismatchCount >= permittedMismatches)
+                    return;
+            }
+        }
+
+        addRead(support.cachedRead(), DISCORDANT, null);
+    }
 
     private void addRead(final Read read, final SupportType type, @Nullable final SupportRead existingSupport)
     {

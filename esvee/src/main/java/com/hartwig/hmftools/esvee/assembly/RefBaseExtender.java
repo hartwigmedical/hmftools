@@ -214,6 +214,9 @@ public class RefBaseExtender
             final JunctionAssembly assembly, final List<SupportRead> nonJunctionSupport, final RefGenomeInterface refGenome,
             boolean allowBranching)
     {
+        if(nonJunctionSupport.isEmpty())
+            return;
+
         // find the maximal ref base extension point and make note of any recurrent soft-clip points including possible branched assemblies
         int minAlignedPosition = assembly.minAlignedPosition();
         int maxAlignedPosition = assembly.maxAlignedPosition();
@@ -260,6 +263,15 @@ public class RefBaseExtender
 
                 if(refBaseAssembly.supportCount() > 0)
                     assembly.mergeRefBaseAssembly(refBaseAssembly);
+            }
+            else
+            {
+                // add in supporting reads
+                for(SupportRead support : nonJunctionSupport)
+                {
+                    assembly.addDiscordantSupport(support, ASSEMBLY_EXTENSION_BASE_MISMATCH);
+                    support.clearCachedRead();
+                }
             }
 
             return;

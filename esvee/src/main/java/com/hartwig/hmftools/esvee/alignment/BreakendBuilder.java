@@ -490,6 +490,9 @@ public class BreakendBuilder
                 if(!nextBreakend.passing())
                     continue;
 
+                if(nextBreakend.otherBreakend() == breakend) // to avoid DUP breakends also being considered facing
+                    continue;
+
                 if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position - breakend.Position > PHASED_ASSEMBLY_MAX_TI)
                     break;
 

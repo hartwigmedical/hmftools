@@ -565,8 +565,18 @@ public class Alignment
             nextIsFacing = true;
         }
 
+        Set<Breakend> processedBreakends = Sets.newHashSet(breakend1);
+
         while(nextBreakend != null)
         {
+            if(processedBreakends.contains(nextBreakend))
+            {
+                SV_LOGGER.debug("inferred frag length breakend({}) re-encountered for read({})", nextBreakend, read1);
+                break;
+            }
+
+            processedBreakends.add(nextBreakend);
+
             if(nextBreakend == breakend2)
             {
                 if(breakend2.Orient.isForward())
@@ -597,7 +607,7 @@ public class Alignment
             else
             {
                 prevBreakend = nextBreakend;
-                nextBreakend = !nextBreakend.facingBreakends().isEmpty() ? nextBreakend.facingBreakends().get(0) : null;
+                nextBreakend = nextBreakend.facingBreakends().stream().filter(x -> !processedBreakends.contains(x)).findFirst().orElse(null);
                 nextIsFacing = true;
             }
         }
