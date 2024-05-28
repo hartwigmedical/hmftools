@@ -141,7 +141,9 @@ public class JunctionAssembly
         mAlignmentOutcome = NO_SET;
         mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
+
         mStats = new AssemblyStats();
+        assemblySupport.forEach(x -> mStats.addRead(x, mJunction, x.cachedRead()));
     }
 
     public void setId(int id) { mAssemblyId = id; }

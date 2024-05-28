@@ -69,50 +69,10 @@ public class RemoteRegionAssembler
         if(assembly.refBaseTrimLength() < MIN_VARIANT_LENGTH)
             return false;
 
-        int maxExtBaseMatchCount = 0;
-        int secondExtBaseMatchCount = 0;
-        int remoteJuncMates = 0;
-
-        for(SupportRead support : assembly.support())
-        {
-            if(support.type() != SupportType.JUNCTION)
-                continue;
-
-            if(support.junctionMatches() > maxExtBaseMatchCount)
-            {
-                secondExtBaseMatchCount = maxExtBaseMatchCount; // promote the second highest
-                maxExtBaseMatchCount = support.junctionMatches();
-            }
-            else if(support.junctionMatches() > secondExtBaseMatchCount)
-            {
-                secondExtBaseMatchCount = support.junctionMatches();
-            }
-
-            if(support.isSupplementary() || support.isMateUnmapped())
-                continue;
-
-            boolean matePastJunction = support.orientation().isForward() == assembly.isForwardJunction();
-
-            if(support.isDiscordant())
-            {
-                if(matePastJunction)
-                    ++remoteJuncMates;
-            }
-            else
-            {
-                // not local and concordant
-                if((assembly.isForwardJunction() && support.mateAlignmentStart() > assembly.junction().Position)
-                || (!assembly.isForwardJunction() && support.mateAlignmentEnd() < assembly.junction().Position))
-                {
-                    return false;
-                }
-            }
-        }
-
-        if(secondExtBaseMatchCount < MIN_VARIANT_LENGTH)
+        if(assembly.stats().SoftClipSecondMaxLength < MIN_VARIANT_LENGTH)
             return false;
 
-        if(remoteJuncMates < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(assembly.stats().JuncMateDiscordantRemote < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return false;
 
         return true;
@@ -122,9 +82,6 @@ public class RemoteRegionAssembler
     {
         return positionsOverlap(assembly.minAlignedPosition(), assembly.maxAlignedPosition(), remoteRegion.start(), remoteRegion.end());
     }
-
-    // private static final int REMOTE_REF_BASE_LENGTH_MAX = 300;
-    // private static final int REMOTE_REF_BASE_EXTENSION_LENGTH = 100;
 
     public AssemblyLink tryRemoteAssemblyLink(
             final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<String> sourceReadIds)

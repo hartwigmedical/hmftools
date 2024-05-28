@@ -402,16 +402,18 @@ public class PhaseSetBuilder
 
     private void extendRemoteAssemblies()
     {
-        // limit this to a subset of unliked assemblies:
-        // sufficient evidence and quality, and with remote junction mates
-        List<JunctionAssembly> unlinkedAssemblies = mAssemblies.stream()
-                .filter(x -> RemoteRegionAssembler.isExtensionCandidateAssembly(x))
-                .filter(x -> mSplitLinks.stream().noneMatch(y -> y.hasAssembly(x))).collect(Collectors.toList());
+        // form a fixed initial list since remote assemblies may be added to the phase group
+        List<JunctionAssembly> initialAssemblies = Lists.newArrayList(mAssemblies);
 
-        boolean foundRemoteLink = false;
-
-        for(JunctionAssembly assembly : unlinkedAssemblies)
+        for(JunctionAssembly assembly : initialAssemblies)
         {
+            if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
+                continue;
+
+            boolean alreadyLinked = mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+
+            boolean foundRemoteLink = false;
+
             // collect remote regions which aren't only supplementaries nor which overlap another phase assembly
             List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
@@ -448,8 +450,9 @@ public class PhaseSetBuilder
 
                 mPhaseGroup.addDerivedAssembly(remoteAssembly);
 
-                if(!foundRemoteLink)
+                if(!foundRemoteLink && !alreadyLinked)
                 {
+                    // only form one remote link for each assembly
                     foundRemoteLink = true;
                     mSplitLinks.add(assemblyLink);
 
