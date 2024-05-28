@@ -56,8 +56,7 @@ public class HomologyData
             // by convention, where there is odd homology assign the larger value to the lower breakend
             if(abs(homology.ExactStart) == homology.ExactEnd + 1 && alignEnd.isLowerAlignment(alignStart))
             {
-                homology = new HomologyData(
-                        homology.Homology, -homology.ExactEnd, abs(homology.ExactStart), homology.InexactStart, homology.InexactEnd);
+                homology = invert(homology, false);
             }
         }
 
@@ -181,8 +180,13 @@ public class HomologyData
 
     public static HomologyData inverse(final HomologyData homologyData)
     {
+        return invert(homologyData, true);
+    }
+
+    private static HomologyData invert(final HomologyData homologyData, final boolean reverseBases)
+    {
         return new HomologyData(
-                Nucleotides.reverseComplementBases(homologyData.Homology),
+                reverseBases ? Nucleotides.reverseComplementBases(homologyData.Homology) : homologyData.Homology,
                 -homologyData.ExactEnd, abs(homologyData.ExactStart), -homologyData.InexactEnd, abs(homologyData.InexactStart));
     }
 

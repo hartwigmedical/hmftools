@@ -218,11 +218,9 @@ public class BreakendBuilder
             }
             else
             {
-                // CHECK: shift breakend positions forward by exact homology
-                /*
+                // shift breakend positions forward by exact homology
                 indelPosStart -= homologyPositionAdjustment(homology.ExactStart, FORWARD);
                 indelPosEnd -= homologyPositionAdjustment(homology.ExactEnd, FORWARD);
-                */
             }
         }
 

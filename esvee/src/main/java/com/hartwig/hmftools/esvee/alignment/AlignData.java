@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBa
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
+import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +89,7 @@ public class AlignData
     public Orientation orientation() { return mOrientation; }
     public boolean isForward() { return mOrientation.isForward(); }
     public boolean isReverse() { return mOrientation.isReverse(); }
+    public boolean isSupplementary() { return SamRecordUtils.isFlagSet(Flags, SUPPLEMENTARY_ALIGNMENT); }
 
     public int maxSoftClipLength() { return max(mSoftClipLeft, mSoftClipRight); }
     public int leftSoftClipLength() { return mSoftClipLeft; }

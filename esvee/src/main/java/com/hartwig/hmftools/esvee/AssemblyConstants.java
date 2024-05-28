@@ -12,6 +12,8 @@ public final class AssemblyConstants
     // read adjustments
     public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = 10;
     public static final int INDEL_TO_SC_MAX_SIZE_SOFTCLIP = MIN_VARIANT_LENGTH - 1;
+    public static final int POLY_G_TRIM_LENGTH = 4;
+    public static final double LOW_BASE_TRIM_PERC = 0.35;
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
@@ -24,7 +26,6 @@ public final class AssemblyConstants
     public static final int PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
 
     // primary assembly deduplication
-    public static final int PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH = 1;
     public static final int PRIMARY_ASSEMBLY_READ_MAX_MISMATCH = mismatchesPerComparisonLength(500);
 
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
@@ -55,7 +56,7 @@ public final class AssemblyConstants
 
     // alignment
     public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
-    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 5;
+    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 3;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 }
