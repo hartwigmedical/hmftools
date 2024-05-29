@@ -10,6 +10,10 @@ public class JitterModelParams
     public double ScaleFitIntercept;
     public double MicrosatelliteSkew;
 
+    private final int mRepeatUnitLength;
+
+    public static final int MAX_SPECIFIC_LENGTH_UNIT = 2;
+
     public JitterModelParams(
             final String repeatUnit,
             final double optimalScaleRepeat4, final double optimalScaleRepeat5, final double optimalScaleRepeat6,
@@ -22,13 +26,20 @@ public class JitterModelParams
         ScaleFitGradient = scaleFitGradient;
         ScaleFitIntercept = scaleFitIntercept;
         MicrosatelliteSkew = microsatelliteSkew;
+
+        if(RepeatUnit.contains(REPEAT_DELIM))
+        {
+            String[] repeats = RepeatUnit.split(REPEAT_DELIM, -1);
+            mRepeatUnitLength = repeats[0].length();
+        }
+        else
+        {
+            mRepeatUnitLength = MAX_SPECIFIC_LENGTH_UNIT + 1;
+        }
     }
 
     private static final String REPEAT_DELIM = "/";
 
-    public int repeatUnitLength()
-    {
-        String[] repeats = RepeatUnit.split(REPEAT_DELIM, -1);
-        return repeats[0].length();
-    }
+    public int repeatUnitLength() { return mRepeatUnitLength; }
+    public boolean aboveSpecificLength() { return mRepeatUnitLength > MAX_SPECIFIC_LENGTH_UNIT; }
 }

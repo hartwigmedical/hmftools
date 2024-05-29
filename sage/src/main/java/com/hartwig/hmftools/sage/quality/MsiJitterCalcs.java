@@ -1,15 +1,18 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHANGE;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
@@ -20,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class MsiJitterCalcs
 {
-    private final Map<String,List<JitterModelParams>> mSampleParams;
+    private final Map<String,List<MsiModelParams>> mSampleParams;
 
     public MsiJitterCalcs()
     {
@@ -50,8 +53,9 @@ public class MsiJitterCalcs
                 if(!Files.exists(Paths.get(jitterParamFile)))
                     return false;
 
-                List<JitterModelParams> jitterParams = JitterModelParamsFile.read(jitterParamFile);
-                mSampleParams.put(sampleId, jitterParams);
+                List<JitterModelParams> rawParams = JitterModelParamsFile.read(jitterParamFile);
+                List<MsiModelParams> modelParams = rawParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
+                mSampleParams.put(sampleId, modelParams);
             }
 
             SG_LOGGER.debug("loaded {} fitter param files", sampleIds.size());
@@ -94,52 +98,55 @@ public class MsiJitterCalcs
         String altBases = readContext.variant().isInsert() ?
                 readContext.variant().Alt.substring(1) : readContext.variant().Ref.substring(1);
 
-        if(!altBases.equals(refRepeat.Bases))
+        int impliedAltChange = altBases.length() / refRepeat.repeatLength();
+
+        if(impliedAltChange > MSI_JITTER_MAX_REPEAT_CHANGE)
             return 0;
 
-        List<JitterModelParams> allParams = mSampleParams.get(sampleId);
+        List<MsiModelParams> allParams = mSampleParams.get(sampleId);
 
         if(allParams == null)
             return 0;
 
-        JitterModelParams varParams = findApplicableParams(allParams, refRepeat);
+        MsiModelParams varParams = findApplicableParams(allParams, refRepeat);
 
         if(varParams == null)
             return 0;
 
         if(refRepeat.Count == 4)
-            return varParams.OptimalScaleRepeat4;
+            return varParams.params().OptimalScaleRepeat4;
         else if(refRepeat.Count == 5)
-            return varParams.OptimalScaleRepeat5;
+            return varParams.params().OptimalScaleRepeat5;
         else if(refRepeat.Count == 6)
-            return varParams.OptimalScaleRepeat6;
+            return varParams.params().OptimalScaleRepeat6;
 
-        // apply skew model
-
-        return 0;
+        return varParams.calcSkew(refRepeat.Count, impliedAltChange);
     }
 
-    private static final int MAX_SPECIFIC_REPEAT_LENGTH = 2;
-
-    private static JitterModelParams findApplicableParams(final List<JitterModelParams> allParams, final RepeatInfo refRepeat)
+    private static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final RepeatInfo refRepeat)
     {
-        for(JitterModelParams params : allParams)
+        for(MsiModelParams params : allParams)
         {
-            if(refRepeat.repeatLength() <= MAX_SPECIFIC_REPEAT_LENGTH)
+            if(refRepeat.repeatLength() <= MAX_SPECIFIC_LENGTH_UNIT)
             {
-                if(params.repeatUnitLength() == refRepeat.repeatLength())
+                if(params.params().repeatUnitLength() == refRepeat.repeatLength())
                 {
-                    if(params.RepeatUnit.contains(refRepeat.Bases))
+                    if(params.params().RepeatUnit.contains(refRepeat.Bases))
                         return params;
                 }
             }
-            else
+            else if(params.params().aboveSpecificLength())
             {
-                if(params.RepeatUnit.length() > MAX_SPECIFIC_REPEAT_LENGTH)
-                    return params;
+                return params;
             }
         }
 
         return null;
+    }
+
+    @VisibleForTesting
+    public void setSampleParams(final String sampleId, final List<JitterModelParams> params)
+    {
+        mSampleParams.put(sampleId, params.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList()));
     }
 }
