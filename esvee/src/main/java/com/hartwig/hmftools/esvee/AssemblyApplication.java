@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutco
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
@@ -34,6 +32,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.alignment.BreakendFragLengths;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
@@ -182,7 +181,7 @@ public class AssemblyApplication
 
             formBreakendFacingLinks(breakends);
 
-            new Alignment(mConfig, null).calcAssemblyFragmentLengths(assemblyAlignmentGroups);
+            new BreakendFragLengths().calcAssemblyFragmentLengths(assemblyAlignmentGroups);
 
             Deduplication.deduplicateBreakends(breakends);
 
