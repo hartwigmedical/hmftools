@@ -6,6 +6,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
+import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;
@@ -115,12 +118,8 @@ public class QualityCalculator
 
         double modifiedBaseQuality = baseQuality - mConfig.BaseQualityFixedPenalty;
 
-        if(mConfig.DistanceFromReadEdgeFactor > 0)
-        {
-            int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
-            int readEdgePenalty = max(mConfig.DistanceFromReadEdgeFactor * distanceFromReadEdge - mConfig.DistanceFromReadEdgeFixedPenalty, 0);
-            modifiedBaseQuality = min(modifiedBaseQuality, readEdgePenalty);
-        }
+        int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
+        modifiedBaseQuality = modifiedBaseQuality - readEdgePenalty;
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
@@ -209,16 +208,28 @@ public class QualityCalculator
         return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType);
     }
 
-    private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    private int readEdgeDistancePenalty(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        // calculate the left and right core positions in the context of this read
-        int leftOffset = readContextCounter.readContext().leftCoreLength();
-        int rightOffset = readContextCounter.readContext().rightCoreLength();
+        int minDistance;
 
-        int adjustedLeftIndex = readIndex - leftOffset;
-        int adjustedRightIndex = readIndex + rightOffset;
+        if(readContextCounter.isIndel())
+        {
+            VariantReadContext readContext = readContextCounter.readContext();
+            int lowerVarIndex = readIndex - (readContext.VarIndex - readContext.AltIndexLower);
+            int upperVarIndex = readIndex + (readContext.AltIndexUpper - readContext.VarIndex);
 
-        // take the smaller of the left and right core index
-        return max(0, min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
+            minDistance = max(0, min(lowerVarIndex, record.getReadBases().length - 1 - upperVarIndex));
+        }
+        else
+        {
+            minDistance = max(0, min(readIndex, record.getReadBases().length - 1 - readIndex));
+        }
+
+        if(minDistance <= 0)
+            return READ_EDGE_PENALTY_0;
+        else if(minDistance == 1)
+            return READ_EDGE_PENALTY_1;
+        else
+            return 0;
     }
 }

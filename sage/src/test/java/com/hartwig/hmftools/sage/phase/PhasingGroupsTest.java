@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
-import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;

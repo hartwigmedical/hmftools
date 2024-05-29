@@ -103,8 +103,10 @@ public class SageConstants
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     public static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
-    public static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
-    public static final int DEFAULT_READ_EDGE_FACTOR = 3;
+
+    public static final int READ_EDGE_PENALTY_0 = 15;
+    public static final int READ_EDGE_PENALTY_1 = 5;
+
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;

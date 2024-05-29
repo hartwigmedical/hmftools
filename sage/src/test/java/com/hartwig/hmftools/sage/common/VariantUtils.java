@@ -3,9 +3,6 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
@@ -110,13 +107,6 @@ public final class VariantUtils
 
         VariantReadContext readContext = createReadContext(variant);
         return createSageVariant(readContext);
-    }
-
-    public static String buildReadContextBases(final String alt)
-    {
-        String flank = generateRandomBases(DEFAULT_FLANK_LENGTH);
-        String core = generateRandomBases(MIN_CORE_DISTANCE);
-        return flank + core + alt + core + flank;
     }
 
     public static SageVariant createSageVariant(final VariantReadContext readContext)
