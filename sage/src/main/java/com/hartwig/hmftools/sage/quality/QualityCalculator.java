@@ -153,14 +153,15 @@ public class QualityCalculator
 
         int varLength = readContextCounter.variant().ref().length();
 
-        double baseQualTotal = 0;
+        // take the minimum base qual for MNVs
+        double minBaseQual = record.getBaseQualities()[readIndex];
 
-        for(int i = readIndex; i < readIndex + varLength; ++i)
+        for(int i = readIndex + 1; i < readIndex + varLength; ++i)
         {
-            baseQualTotal += record.getBaseQualities()[i];
+            minBaseQual = min(minBaseQual, record.getBaseQualities()[i]);
         }
 
-        return baseQualTotal / varLength;
+        return minBaseQual;
     }
 
     private double recalibratedBaseQuality(

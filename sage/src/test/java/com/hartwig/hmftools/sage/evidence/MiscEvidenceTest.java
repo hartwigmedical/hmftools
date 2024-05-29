@@ -75,4 +75,33 @@ public class MiscEvidenceTest
         assertEquals(3, readContextCounter.readCounts().PartialCore);
         assertEquals(40, readContextCounter.readQuals().PartialCore);
     }
+
+    @Test
+    public void testMnvBaseQuality()
+    {
+        int position = 100;
+
+        VariantReadContext readContext = createReadContext(position, "ATG", "TGA");
+
+        ReadContextCounter readContextCounter = createReadCounter(0, readContext);
+
+        String altReadBases = REF_BASES_200.substring(0, 10) + readContext.readBases() + REF_BASES_200.substring(0, 10);
+        String readCigar = buildCigarString(altReadBases.length());
+        int readVarIndex = 10 + readContext.VarIndex;
+        int readPosStart = position - readVarIndex;
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+
+        readContextCounter.processRead(altRead, 1, null);
+
+        assertEquals(37, readContextCounter.qualCounters().AltBaseQualityTotal);
+
+        // min rather than average is used
+        altRead.getBaseQualities()[readVarIndex] = 11;
+
+        readContextCounter.processRead(altRead, 1, null);
+
+        assertEquals(48, readContextCounter.qualCounters().AltBaseQualityTotal);
+
+    }
 }
