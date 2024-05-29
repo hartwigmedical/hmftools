@@ -30,6 +30,19 @@ public class HomologyData
 
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
+    public int positionAdjustment(final Orientation orientation, boolean isLowerPosition)
+    {
+        int initialShift = InexactEnd - InexactStart;
+        int lowerPosShift = initialShift - abs(InexactStart); // back out the original overlap and then apply the inexact shift
+        int upperPosShift = InexactEnd;
+
+        // return as a negative if the position needs to be moved backwards
+        if(isLowerPosition)
+            return orientation.isForward() ? -abs(lowerPosShift) : abs(lowerPosShift);
+        else
+            return orientation.isForward() ? -abs(upperPosShift) : abs(upperPosShift);
+    }
+
     public static HomologyData determineHomology(
             final String assemblyOverlap, final AlignData alignStart, final AlignData alignEnd, final RefGenomeInterface refGenome)
     {

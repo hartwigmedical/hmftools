@@ -12,14 +12,14 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
+import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
-import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,143 +30,33 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.TestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
-import com.hartwig.hmftools.esvee.alignment.HomologyData;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 
 import org.junit.Test;
 
-import htsjdk.samtools.SAMFlag;
-
 public class AlignmentTest
 {
     private final MockRefGenome mRefGenome;
-    private int mAssemblyId;
 
     private static final String CHR_1_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_200 + REF_BASES_RANDOM_100;
     private static final String CHR_2_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_200 + REF_BASES_RANDOM_100; // matching for now
 
-    private static final int DEFAULT_MAP_QUAL = 60;
-    private static final int DEFAULT_NM = 0;
-
     public AlignmentTest()
     {
         mRefGenome = new MockRefGenome();
-        mAssemblyId = 0;
-
         mRefGenome.RefGenomeMap.put(CHR_1, CHR_1_REF_BASES);
         mRefGenome.RefGenomeMap.put(CHR_2, CHR_2_REF_BASES);
-    }
-
-    @Test
-    public void testHomology()
-    {
-        AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
-        AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
-
-        String assemblyOverlap = "";
-
-        assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, mRefGenome));
-
-        String basesStart = "TTCTTCTTCTC";
-        String basesEnd = basesStart;
-        assemblyOverlap = basesStart;
-
-        // test 1: exact match
-        HomologyData homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertNotNull(homology);
-        assertEquals(basesStart, homology.Homology);
-        assertEquals(-6, homology.ExactStart);
-        assertEquals(5, homology.ExactEnd);
-        assertEquals(-6, homology.InexactStart);
-        assertEquals(5, homology.InexactEnd);
-
-        // test 2: first base now no longer matches
-        basesStart = "GTCTTCTTCTC";
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("", homology.Homology);
-        assertEquals(0, homology.ExactStart);
-        assertEquals(0, homology.ExactEnd);
-        assertEquals(0, homology.InexactStart);
-        assertEquals(11, homology.InexactEnd);
-
-        // test 3: first base matches, range of lowest mismatches is 0-1
-        basesStart = "TGCATCTTCTC";
-        assemblyOverlap = "TTCATCTTCTC";
-        basesEnd = assemblyOverlap;
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("T", homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(0, homology.ExactEnd);
-        assertEquals(-1, homology.InexactStart);
-        assertEquals(10, homology.InexactEnd);
-
-        // test 4: second base has mismatch
-        basesStart = "TTGATCTTCTC";
-        assemblyOverlap = "TTCATCTTCTC";
-        basesEnd = assemblyOverlap;
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("TT", homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(1, homology.ExactEnd);
-        assertEquals(-1, homology.InexactStart);
-        assertEquals(10, homology.InexactEnd);
-
-        // test 5: min mismatches in range 4-6
-        basesStart = "TTCATCGTCTC";
-        assemblyOverlap = "TTCATCTTCTC";
-        basesEnd = "TTCTTCTTCTC";
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("TTC", homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(1, homology.ExactEnd);
-        assertEquals(-5, homology.InexactStart);
-        assertEquals(6, homology.InexactEnd);
-
-        // test 6: ref sequences match but have the same difference from the assembly
-        basesStart = "TTCATGTTCTC";
-        assemblyOverlap = "TTCATCTTCTC";
-        basesEnd = basesStart;
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals(basesStart, homology.Homology);
-        assertEquals(-6, homology.ExactStart);
-        assertEquals(5, homology.ExactEnd);
-        assertEquals(-6, homology.InexactStart);
-        assertEquals(5, homology.InexactEnd);
-
-        // test 7:
-        basesStart = "TTCATGTTCTC";
-        assemblyOverlap = "TTCATCTTCTC";
-        basesEnd = "TTCATATTCTC";
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("TTCAT", homology.Homology);
-        assertEquals(-6, homology.ExactStart);
-        assertEquals(5, homology.ExactEnd);
-        assertEquals(-6, homology.InexactStart);
-        assertEquals(5, homology.InexactEnd);
-
-        // test 8: with an even number of bases
-        basesStart = "AA";
-        assemblyOverlap = basesStart;
-        basesEnd = basesStart;
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals(basesStart, homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(1, homology.ExactEnd);
-        assertEquals(-1, homology.InexactStart);
-        assertEquals(1, homology.InexactEnd);
     }
 
     private static void addAssemblyRead(final JunctionAssembly assembly, int junctionOffset)
@@ -527,123 +417,10 @@ public class AlignmentTest
 
     }
 
-    private static AlignData createAlignment(
-            final String chromosome, int posStart, int posEnd, int segStart, int segEnd, final String cigar)
-    {
-        int score = segEnd - segStart + 1;
-        return createAlignment(chromosome, posStart, posEnd, false, DEFAULT_MAP_QUAL, score, segStart, segEnd, cigar, "");
-    }
-
-    private static AlignData createAlignment(
-            final String chromosome, int posStart, int posEnd, boolean reversed, int mapQual, int score, int segStart, int segEnd,
-            final String cigar, final String xaTag)
-    {
-        String mdTag = "";
-
-        int flags = 0;
-
-        if(reversed)
-            flags = setReadFlag(flags, SAMFlag.READ_REVERSE_STRAND);
-
-        // note: as per BWA conventions 1 will be subtracted from the segment end
-        return new AlignData(
-                new ChrBaseRegion(chromosome, posStart, posEnd), segStart, segEnd, mapQual,score, flags, cigar, DEFAULT_NM, xaTag, mdTag);
-    }
-
-    public AssemblyAlignment createAssemblyAlignment(
+    private AssemblyAlignment createAssemblyAlignment(
             final String chrStart, int posStart, Orientation orientStart,
             final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
     {
-        return createAssemblyAlignment(mRefGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases);
-    }
-
-    public static AssemblyAlignment createAssemblyAlignment(
-            final RefGenomeInterface refGenome, final String chrStart, int posStart, Orientation orientStart,
-            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
-    {
-        // first a basic exact match junction
-        Junction junctionStart = new Junction(chrStart, posStart, orientStart);
-        Junction junctionEnd = new Junction(chrEnd, posEnd, orientEnd);
-
-        int refBaseLength = 100;
-        int extBaseLength = 50;
-
-        String firstRefBases, secondRefBases;
-
-        if(orientStart.isForward())
-            firstRefBases = refGenome.getBaseString(chrStart, posStart - refBaseLength + 1, posStart);
-        else
-            firstRefBases = refGenome.getBaseString(chrStart, posStart, posStart + refBaseLength - 1);
-
-        if(orientEnd.isForward())
-            secondRefBases = refGenome.getBaseString(chrEnd, posEnd - refBaseLength + 1, posEnd);
-        else
-            secondRefBases = refGenome.getBaseString(chrEnd, posEnd, posEnd + refBaseLength - 1);
-
-        String firstExtBases = insertedBases;
-        String secondExtBases = insertedBases;
-
-        if(orientStart == orientEnd)
-        {
-            if(orientEnd.isForward())
-                firstExtBases += secondRefBases.substring(secondRefBases.length() - extBaseLength);
-            else
-                firstExtBases += secondRefBases.substring(0, extBaseLength);
-
-            firstExtBases = insertedBases + Nucleotides.reverseComplementBases(firstExtBases);
-
-            if(orientStart.isForward())
-                secondExtBases += firstRefBases.substring(firstRefBases.length() - extBaseLength);
-            else
-                secondExtBases += firstRefBases.substring(0, extBaseLength);
-
-            secondExtBases = Nucleotides.reverseComplementBases(insertedBases) + Nucleotides.reverseComplementBases(secondExtBases);
-        }
-        else
-        {
-            if(orientEnd.isForward())
-                firstExtBases += secondRefBases.substring(secondRefBases.length() - extBaseLength);
-            else
-                firstExtBases += secondRefBases.substring(0, extBaseLength);
-
-            if(orientStart.isForward())
-                secondExtBases += firstRefBases.substring(firstRefBases.length() - extBaseLength);
-            else
-                secondExtBases += firstRefBases.substring(0, extBaseLength);
-        }
-
-        String firstAssemblyBases, secondAssemblyBases;
-        int firstJunctionIndex, secondJunctionIndex;
-
-        if(orientStart.isForward())
-        {
-            firstAssemblyBases = firstRefBases + firstExtBases;
-            firstJunctionIndex = firstRefBases.length() - 1;
-        }
-        else
-        {
-            firstAssemblyBases = firstExtBases + firstRefBases;
-            firstJunctionIndex = firstExtBases.length();
-        }
-
-        if(orientEnd.isForward())
-        {
-            secondAssemblyBases = secondRefBases + secondExtBases;
-            secondJunctionIndex = secondRefBases.length() - 1;
-        }
-        else
-        {
-            secondAssemblyBases = secondExtBases + secondRefBases;
-            secondJunctionIndex = secondExtBases.length();
-        }
-
-        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
-
-        JunctionAssembly firstAssembly = new JunctionAssembly(junctionStart, firstAssemblyBases.getBytes(), baseQuals, firstJunctionIndex);
-        JunctionAssembly secondAssembly = new JunctionAssembly(junctionEnd, secondAssemblyBases.getBytes(), baseQuals, secondJunctionIndex);
-
-        AssemblyLink link = new AssemblyLink(secondAssembly, firstAssembly, LinkType.SPLIT, insertedBases, "");
-
-        return new AssemblyAlignment(0, link);
+        return AssemblyTestUtils.createAssemblyAlignment(mRefGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases);
     }
 }

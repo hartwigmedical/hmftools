@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.esvee.assembly.AlignmentTest.createAssemblyAlignment;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemblyAlignment;
 
 import static org.junit.Assert.assertTrue;
 

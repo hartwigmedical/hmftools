@@ -387,6 +387,7 @@ public class BreakendBuilder
                 // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
                 breakendPosition += homologyPositionAdjustment(homology.InexactStart, breakendOrientation);
                 nextPosition += homologyPositionAdjustment(homology.InexactEnd, nextOrientation);
+
             }
 
             Breakend breakend = new Breakend(
