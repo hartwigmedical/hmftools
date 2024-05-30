@@ -88,11 +88,11 @@ public class PhaseSetBuilder
 
         formFacingLinks();
 
-        // extendJunctions();
-
         formPhaseSets();
 
         addChainedSupport();
+
+        extendUnlinkedAssemblies();
 
         cleanupAssemblies();
     }
@@ -124,6 +124,8 @@ public class PhaseSetBuilder
             return;
 
         extendRemoteAssemblies();
+
+        extendUnlinkedAssemblies();
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
@@ -260,21 +262,6 @@ public class PhaseSetBuilder
 
             if(assemblyLink != null)
             {
-                /*
-                JunctionAssembly linkedAssembly = assembly1Linked ? assembly1 : assembly2;
-                JunctionAssembly unlinkedAssembly = !assembly1Linked ? assembly1 : assembly2;
-
-                boolean suppOnly = isSupplementaryOnly(assembly1);
-
-                List<SupportRead> linkingSplitReads = unlinkedAssembly.support().stream()
-                            .filter(x -> hasMatchingFragment(linkedAssembly.support(), x) || hasMatchingFragment(linkedAssembly.candidateSupport(), x))
-                            .collect(Collectors.toList());
-
-                List<SupportRead> linkingCandidateReads = unlinkedAssembly.candidateSupport().stream()
-                            .filter(x -> hasMatchingFragment(linkedAssembly.support(), x) || hasMatchingFragment(linkedAssembly.candidateSupport(), x))
-                            .collect(Collectors.toList());
-                */
-
                 mSecondarySplitLinks.add(assemblyLink);
 
                 if(!assembly1Linked)
@@ -299,6 +286,24 @@ public class PhaseSetBuilder
             return assemblyLink;
 
         return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+    }
+
+    private void extendUnlinkedAssemblies()
+    {
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.outcome() != UNSET)
+                continue;
+            
+            if(mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly)))
+                continue;
+
+            // add junction mate reads to the ref side bases
+            List<SupportRead> juncMates = assembly.candidateSupport().stream()
+                    .filter(x -> x.type() == SupportType.JUNCTION_MATE).collect(Collectors.toList());
+
+            extendRefBases(assembly, juncMates, mRefGenome, false);
+        }
     }
 
     private void applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
