@@ -222,7 +222,7 @@ public class BreakendBuilder
                 // by the same amount, being the exact homology at the start
                 // shift breakend positions forward by exact homology
                 indelPosStart += abs(homology.ExactStart);
-                indelPosEnd -= homology.ExactEnd;
+                indelPosEnd += abs(homology.ExactStart);
             }
         }
 
@@ -384,15 +384,36 @@ public class BreakendBuilder
             Orientation nextOrientation = segmentOrientation(nextAlignment, false);
             int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
+            HomologyData firstHomology = null;
+            HomologyData nextHomology = null;
+
             if(homology != null)
             {
                 // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
+                // shift positions using homology based on the alignments in the order they were returned, even if the first one isn't
+                // the lower in coordinate-terms
                 breakendPosition += homology.positionAdjustment(breakendOrientation, true);
                 nextPosition += homology.positionAdjustment(nextOrientation, false);
+
+                // then correct to the convention where the lower breakend has the higher start values if not even
+                boolean firstIsLower = alignment.isLowerAlignment(nextAlignment);
+                boolean sameOrientation = breakendOrientation == nextOrientation;
+
+                if(!homology.isSymmetrical() && !firstIsLower)
+                {
+                    firstHomology = homology.invert(true, false);
+
+                    if(sameOrientation)
+                        nextHomology = homology.invert(false, true);
+                }
+                else if(sameOrientation)
+                {
+                    nextHomology = homology.invert(true, true);
+                }
             }
 
             Breakend breakend = new Breakend(
-                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
+                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, firstHomology);
 
             mAssemblyAlignment.addBreakend(breakend);
 
@@ -404,9 +425,6 @@ public class BreakendBuilder
 
             String nextInsertedBases = breakendOrientation != nextOrientation ?
                     insertedBases : Nucleotides.reverseComplementBases(insertedBases);
-
-            HomologyData nextHomology = homology != null && breakendOrientation == nextOrientation ?
-                    HomologyData.inverse(homology) : homology;
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, nextInsertedBases, nextHomology);

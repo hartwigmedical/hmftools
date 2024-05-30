@@ -180,6 +180,7 @@ public class AlignmentWriter
             sj.add(FLD_NMATCHES);
             sj.add(FLD_XA_TAG);
             sj.add(FLD_MD_TAG);
+            sj.add("Requeried");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -222,6 +223,7 @@ public class AlignmentWriter
                 sj.add(String.valueOf(alignment.NMatches));
                 sj.add(alignment.XaTag);
                 sj.add(alignment.MdTag);
+                sj.add(String.valueOf(alignment.isRequeried()));
 
                 writer.write(sj.toString());
                 writer.newLine();

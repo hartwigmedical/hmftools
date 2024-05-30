@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -159,10 +160,12 @@ public class Alignment
         private void processAssembly(final AssemblyAlignment assemblyAlignment)
         {
             List<AlignData> alignments;
+            List<AlignData> requeriedAlignments;
 
             if(mAlignmentCache.enabled())
             {
                 alignments = mAlignmentCache.findAssemblyAlignments(assemblyAlignment.info());
+                requeriedAlignments = Collections.emptyList();
             }
             else
             {
@@ -172,7 +175,8 @@ public class Alignment
                         .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                         .filter(x -> x != null).collect(Collectors.toList());
 
-                alignments = requerySupplementaryAlignments(assemblyAlignment, alignments);
+                requeriedAlignments = Lists.newArrayList();
+                alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
             }
 
             processAlignmentResults(assemblyAlignment, alignments);
@@ -181,10 +185,25 @@ public class Alignment
                 AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
 
             if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
-                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignments);
+            {
+                List<AlignData> alignmentsToWrite;
+
+                if(!requeriedAlignments.isEmpty())
+                {
+                    alignmentsToWrite = Lists.newArrayList(alignments);
+                    alignmentsToWrite.addAll(requeriedAlignments);
+                }
+                else
+                {
+                    alignmentsToWrite = alignments;
+                }
+
+                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
+            }
         }
 
-        private List<AlignData> requerySupplementaryAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
+        private List<AlignData> requerySupplementaryAlignments(
+                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
         {
             // re-alignment supplementaries to get a more reliable map quality
             if(alignments.stream().noneMatch(x -> x.isSupplementary()))
@@ -200,6 +219,7 @@ public class Alignment
                     continue;
                 }
 
+                requeriedAlignments.add(alignData);
                 newAlignments.addAll(requeryAlignment(assemblyAlignment, alignData));
             }
 

@@ -127,6 +127,8 @@ public class AlignData
         mIsRequeried = true;
     }
 
+    public boolean isRequeried() { return mIsRequeried; }
+
     public int sequenceStart() { return mSequenceStart; }
     public int sequenceEnd() { return mSequenceEnd; }
 

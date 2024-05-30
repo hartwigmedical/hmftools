@@ -129,4 +129,6 @@ public class HomologyTest
         assertEquals(1, homology.positionAdjustment(REVERSE, true));
         assertEquals(-2, homology.positionAdjustment(FORWARD, false));
     }
+
+
 }
