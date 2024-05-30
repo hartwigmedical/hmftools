@@ -200,8 +200,8 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 ## Known Issues / Future improvements
 
 **Duplicate marking**
-- **Read length for unpaired** - Should read length need to match for non-paired reads 
-- **Reads with unmapped mates** – currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
+- **Read length for unpaired** - Currently this is not checked, and hence we tend to over collapse duplciates, but in some scenarios it may be valuable
+- **Reads with unmapped mates** – Currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
 - **Reads with mates with multiple similar local alignments** – These are currently under-clustered and lead to counting umi groups multiple times 
 - **Distinguish optical vs PCR duplicates** - Duplicates should be marked as ‘optical’ if the tile distance < opticalThreshold or otherwise as PCR duplicates. 
 - **Supplementary and Primary mixed up** - A fragment with a supplementary can be duplicated sometimes where there are the same 2 alignments for the read but the opposite alignment is marked as supplementary in each.  This leads us to fail to realise it is the same fragment
@@ -217,7 +217,8 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 - **DUAL strand consensus ref preference** - For DUAL strand consensus a qual 11 ref on one strand can cause a qual 37 alt on the other to be set to consensus ref.  This may be sub-optimal. 
 
 **Problematic regions definitions**
-- We should trinculeotide repeats of at least 30 length and all dinculeotide / single base repeats of  of 20-30 bases to the problematic regions file. 
-- We should increase minimum 10 bases outside of problematic region to 20. 
+- REDUX should trinculeotide repeats of at least 30 length and all dinculeotide / single base repeats of  of 20-30 bases to the problematic regions file. 
+- REDUX should increase minimum 10 bases outside of problematic region to 20.
+- REDUX should unmap any read with discordant mate if 'repeat trimmed length' < 30 bases
 
  ## Version History and Download Links
