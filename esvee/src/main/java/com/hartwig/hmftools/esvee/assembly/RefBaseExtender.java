@@ -4,12 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
@@ -99,59 +97,40 @@ public class RefBaseExtender
             candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
         }
 
+        // for now add these candidate discordant reads without any further checks
+        for(NonJunctionRead read : candidateReads)
+        {
+            assembly.addCandidateSupport(read.read(), read.type());
+        }
+
         // now all possible discordant and junction mate reads have been collected, so test for overlaps with the min/max aligned position
         // process in order of closest to furthest-out reads in the ref base direction
         List<NonJunctionRead> sortedCandidateReads = candidateReads.stream()
                 .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()))
                 .collect(Collectors.toList());
 
-        List<NonJunctionRead> candidateNonJunctionReads = Lists.newArrayList();
-
-        boolean hasGapped = false;
-
-        for(NonJunctionRead njRead : sortedCandidateReads)
+        // look for evidence of a soft-clip on the ref side for possible branching during phasing and linking, searching from those
+        // reads closest to the junction and stopping whenever a gap is encountered
+        for(NonJunctionRead nonJuncRead : sortedCandidateReads)
         {
-            Read read = njRead.read();
+            Read read = nonJuncRead.read();
 
             if(isForwardJunction)
             {
                 if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_REF_SIDE_OVERLAP_BASES)
-                {
-                    hasGapped = true;
-                }
-                else
-                {
-                    minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
-                }
+                    break;
+
+                minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
             }
             else
             {
                 if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_REF_SIDE_OVERLAP_BASES)
-                {
-                    hasGapped = true;
-                }
-                else
-                {
-                    maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
-                }
+                    break;
+
+                maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
             }
 
-            if(hasGapped)
-            {
-                if(njRead.type() == CANDIDATE_DISCORDANT)
-                    discordantReads.remove(read);
-            }
-            else
-            {
-                assembly.checkAddRefSideSoftClip(read);
-                candidateNonJunctionReads.add(njRead);
-            }
-        }
-
-        // for now add these candidate discordant reads without any further checks
-        for(NonJunctionRead njRead : candidateNonJunctionReads)
-        {
-            assembly.addCandidateSupport(njRead.read(), njRead.type());
+            assembly.checkAddRefSideSoftClip(read);
         }
 
         findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);

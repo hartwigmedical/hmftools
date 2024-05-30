@@ -218,9 +218,11 @@ public class BreakendBuilder
             }
             else
             {
+                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted foward
+                // by the same amount, being the exact homology at the start
                 // shift breakend positions forward by exact homology
-                indelPosStart -= homologyPositionAdjustment(homology.ExactStart, FORWARD);
-                indelPosEnd -= homologyPositionAdjustment(homology.ExactEnd, FORWARD);
+                indelPosStart += abs(homology.ExactStart);
+                indelPosEnd -= homology.ExactEnd;
             }
         }
 
@@ -385,9 +387,8 @@ public class BreakendBuilder
             if(homology != null)
             {
                 // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
-                breakendPosition += homologyPositionAdjustment(homology.InexactStart, breakendOrientation);
-                nextPosition += homologyPositionAdjustment(homology.InexactEnd, nextOrientation);
-
+                breakendPosition += homology.positionAdjustment(breakendOrientation, true);
+                nextPosition += homology.positionAdjustment(nextOrientation, false);
             }
 
             Breakend breakend = new Breakend(
@@ -431,11 +432,6 @@ public class BreakendBuilder
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);
-    }
-
-    private static int homologyPositionAdjustment(final int inexact, final Orientation orientation)
-    {
-        return orientation.isForward() ? -abs(inexact) : abs(inexact);
     }
 
     protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)

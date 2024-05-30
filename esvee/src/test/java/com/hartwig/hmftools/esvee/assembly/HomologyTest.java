@@ -123,6 +123,10 @@ public class HomologyTest
     {
         HomologyData homology = new HomologyData("", -2, 1, -2, 1);
         assertEquals(-1, homology.positionAdjustment(FORWARD, true));
-        assertEquals(1, homology.positionAdjustment(REVERSE, false));
+        assertEquals(2, homology.positionAdjustment(REVERSE, false));
+
+        // the same-orientation cases
+        assertEquals(1, homology.positionAdjustment(REVERSE, true));
+        assertEquals(-2, homology.positionAdjustment(FORWARD, false));
     }
 }

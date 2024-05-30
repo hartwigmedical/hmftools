@@ -30,17 +30,12 @@ public class HomologyData
 
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
-    public int positionAdjustment(final Orientation orientation, boolean isLowerPosition)
+    public int positionAdjustment(final Orientation orientation, boolean isFirstAlignment)
     {
-        int initialShift = InexactEnd - InexactStart;
-        int lowerPosShift = initialShift - abs(InexactStart); // back out the original overlap and then apply the inexact shift
-        int upperPosShift = InexactEnd;
-
-        // return as a negative if the position needs to be moved backwards
-        if(isLowerPosition)
-            return orientation.isForward() ? -abs(lowerPosShift) : abs(lowerPosShift);
-        else
-            return orientation.isForward() ? -abs(upperPosShift) : abs(upperPosShift);
+        // if the positions did not reflect the overlap then they would both need to be moved by the same amount
+        // but since they do, they should be adjusted in a way to add up to the overlap
+        int shiftDirection = orientation.isForward() ? -1 : 1;
+        return shiftDirection * (isFirstAlignment ? InexactEnd : abs(InexactStart));
     }
 
     public static HomologyData determineHomology(

@@ -229,6 +229,7 @@ public class AssemblyConfig
             }
 
             SV_LOGGER.debug("loaded {} specific junctions", SpecificJunctions.size());
+            Collections.sort(SpecificJunctions);
         }
 
         if(WriteTypes.contains(ASSEMBLY_READ) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())

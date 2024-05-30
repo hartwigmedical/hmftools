@@ -350,9 +350,8 @@ public class AlignmentTest
         assertEquals("CCCC", first.Homology.Homology);
 
         second = assemblyAlignment.breakends().get(1);
-        assertEquals(192, second.Position);
+        assertEquals(188, second.Position);
         assertEquals(REVERSE, second.Orient);
-
     }
 
     @Test
