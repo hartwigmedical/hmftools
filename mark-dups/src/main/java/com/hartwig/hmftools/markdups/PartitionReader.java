@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -37,6 +38,7 @@ import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public class PartitionReader implements Consumer<List<Fragment>>
 {
@@ -160,6 +162,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
+
+        if(read.getSupplementaryAlignmentFlag()) // drop supplementaries with alignment scores below default BWA settings
+        {
+            Integer alignmentScore = read.getIntegerAttribute(SAMTag.AS.name());
+            if(alignmentScore != null && alignmentScore < SUPP_ALIGNMENT_SCORE_MIN)
+                return;
+        }
 
         // clear any previously set duplicate flags - from a previous run or another application
         read.setDuplicateReadFlag(false);

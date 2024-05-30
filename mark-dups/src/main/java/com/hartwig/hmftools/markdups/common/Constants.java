@@ -23,6 +23,8 @@ public class Constants
     public static final int UNMAP_MIN_HIGH_DEPTH = 1000;
     public static final int UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
 
+    public static final int SUPP_ALIGNMENT_SCORE_MIN = 30;
+
     // performance
     public static final double LOCK_ACQUIRE_LONG_TIME_MS = 100;
 
