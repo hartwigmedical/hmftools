@@ -3,6 +3,8 @@ package com.hartwig.hmftools.bamtools.compare;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.compare.CompareUtils.basesMatch;
+import static com.hartwig.hmftools.bamtools.compare.CompareUtils.stringsMatch;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.ORIG_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
@@ -10,6 +12,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+
+import static htsjdk.samtools.util.SequenceUtil.reverseComplement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -242,6 +246,16 @@ public class PartitionReader implements Runnable
         ++mStats.OrigReadCount;
         ++mStats.NewReadCount;
 
+        List<String> diffs = compareReads(read1, read2, mConfig.IgnoreDupDiffs);
+        if(!diffs.isEmpty())
+        {
+            ++mStats.DiffCount;
+            mReadWriter.writeComparison(read1, VALUE, diffs);
+        }
+    }
+
+    static List<String> compareReads(final SAMRecord read1, final SAMRecord read2, boolean ignoreDupDiffs)
+    {
         List<String> diffs = new ArrayList<>();
 
         if(read1.getInferredInsertSize() != read2.getInferredInsertSize())
@@ -264,7 +278,7 @@ public class PartitionReader implements Runnable
             if(read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag())
                 diffs.add(format("negStrand(%s/%s)", read1.getReadNegativeStrandFlag(), read2.getReadNegativeStrandFlag()));
 
-            if(!mConfig.IgnoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
+            if(!ignoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
                 diffs.add(format("duplicate(%s/%s)", read1.getDuplicateReadFlag(), read2.getDuplicateReadFlag()));
         }
 
@@ -282,22 +296,24 @@ public class PartitionReader implements Runnable
             }
         }
 
-        // check the read string
-        if(!read1.getReadString().equals(read2.getReadString()))
+        // check the read bases, make sure we account for the read negative strand flag
+        if(!basesMatch(read1.getReadString(), read1.getReadNegativeStrandFlag(),
+                read2.getReadString(), read2.getReadNegativeStrandFlag()))
         {
-            diffs.add(format("bases(%s/%s)", read1.getReadString(), read2.getReadString()));
+            diffs.add(format("bases(%s/%s)",
+                read1.getReadNegativeStrandFlag() ? reverseComplement(read1.getReadString()) : read1.getReadString(),
+                read2.getReadNegativeStrandFlag() ? reverseComplement(read2.getReadString()) : read2.getReadString()));
         }
-        // check the base qual
-        if(!read1.getBaseQualityString().equals(read2.getBaseQualityString()))
+        // check the base qual, make sure we account for the read negative strand flag
+        if(!stringsMatch(read1.getBaseQualityString(), read1.getReadNegativeStrandFlag(),
+                read2.getBaseQualityString(), read2.getReadNegativeStrandFlag()))
         {
-            diffs.add(format("baseQual(%s/%s)", read1.getBaseQualityString(), read2.getBaseQualityString()));
+            diffs.add(format("baseQual(%s/%s)",
+                read1.getReadNegativeStrandFlag() ? new StringBuilder(read1.getBaseQualityString()).reverse() : read1.getBaseQualityString(),
+                read2.getReadNegativeStrandFlag() ? new StringBuilder(read2.getBaseQualityString()).reverse() : read2.getBaseQualityString()));
         }
 
-        if(diffs.isEmpty())
-            return;
-
-        ++mStats.DiffCount;
-        mReadWriter.writeComparison(read1, VALUE, diffs);
+        return diffs;
     }
 
     private boolean excludeRead(final SAMRecord read)
