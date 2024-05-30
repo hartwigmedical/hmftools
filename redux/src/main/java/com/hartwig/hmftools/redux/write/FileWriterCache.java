@@ -36,7 +36,7 @@ public class FileWriterCache
 
     private final JitterAnalyser mJitterAnalyser;
 
-    private static final String BAM_FILE_ID = "mark_dups";
+    private static final String BAM_FILE_ID = "redux";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
 

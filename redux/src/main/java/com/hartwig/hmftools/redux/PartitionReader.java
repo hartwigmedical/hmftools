@@ -2,10 +2,12 @@ package com.hartwig.hmftools.redux;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -160,6 +162,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
+
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(alignmentScore != null && alignmentScore < SUPP_ALIGNMENT_SCORE_MIN)
+                return;
+        }
 
         read.setDuplicateReadFlag(false);
 

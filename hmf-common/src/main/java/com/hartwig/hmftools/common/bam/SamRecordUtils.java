@@ -30,6 +30,7 @@ public final class SamRecordUtils
     public static final String MATE_CIGAR_ATTRIBUTE = SAMTag.MC.name();
     public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
+    public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
 
     // in-house attributes
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";

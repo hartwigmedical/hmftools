@@ -35,7 +35,7 @@ Argument | Required | Description
 ---|---|---
 sample | Required | Sample ID
 input_bam | Required | Path to BAM file(s)
-output_bam | Optional | Output BAM file, otherwise will write SAMPLE_ID.mark_dups.bam
+output_bam | Optional | Output BAM file, otherwise will write SAMPLE_ID.redux.bam
 ref_genome | Required | Path to reference genome files as used in alignment
 ref_genome_version | Required | V37 or V38
 form_consensus | Optional | Form a consensus read from duplicates
