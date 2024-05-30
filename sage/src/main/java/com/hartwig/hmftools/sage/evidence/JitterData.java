@@ -7,8 +7,10 @@ import static com.hartwig.hmftools.sage.evidence.JitterMatch.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.SHORTENED;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -16,11 +18,15 @@ public class JitterData
 {
     private int mLengthened;
     private int mShortened;
+    private double mQualBoost;
+    private boolean mWithinNoise;
 
     public JitterData()
     {
         mLengthened = 0;
         mShortened = 0;
+        mQualBoost = 0;
+        mWithinNoise = false;
     }
 
     public void update(final JitterMatch jitterMatch)
@@ -31,7 +37,12 @@ public class JitterData
             mShortened++;
     }
 
-    public int[] summary() { return new int[] { mShortened, mLengthened, 0 }; }
+    public int shortened() { return mShortened; }
+    public int lengthened() { return mLengthened; }
+    public int[] summary() { return new int[] { mShortened, mLengthened }; }
+
+    public double qualBoost() { return mQualBoost; }
+    public boolean isWithinNoise() { return mWithinNoise; }
 
     public String toString() { return format("short(%d) long(%d)", mShortened, mLengthened); }
 
@@ -122,5 +133,37 @@ public class JitterData
         }
 
         return JitterMatch.NONE;
+    }
+
+    public void setJitterQualFilterState(final MsiJitterCalcs msiJitterCalcs, final ReadContextCounter readContextCounter)
+    {
+        if(readContextCounter.readContext().MaxRepeat == null)
+            return;
+
+        int fullSupport = readContextCounter.readSupportCounts().Full;
+
+        Boolean withinNoise = msiJitterCalcs.isWithinJitterNoise(
+                readContextCounter.sampleId(), readContextCounter.readContext().MaxRepeat, fullSupport, mShortened, mLengthened);
+
+        if(withinNoise == null)
+            return;
+
+        if(withinNoise)
+        {
+            mWithinNoise = true;
+            return;
+        }
+
+        mWithinNoise = false;
+        mQualBoost = 1 + (mShortened + mLengthened) / (double)fullSupport;
+    }
+
+    @VisibleForTesting
+    public void setValues(int shortened, int lengthened)
+    {
+        mShortened = shortened;
+        mLengthened = lengthened;
+        mQualBoost = 0;
+        mWithinNoise = false;
     }
 }

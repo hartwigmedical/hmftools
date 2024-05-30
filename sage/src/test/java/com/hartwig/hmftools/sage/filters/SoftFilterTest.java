@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
-import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
@@ -132,9 +131,8 @@ public class SoftFilterTest
         SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
         readContextCounter.processRead(read4, 1, null);
 
-        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge());
-        assertEquals(7, readContextCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
-        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromUnclippedEdge());
+        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
+        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromEdge());
 
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 

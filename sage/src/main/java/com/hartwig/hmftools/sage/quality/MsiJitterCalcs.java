@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHANGE;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,6 +23,7 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.Nullable;
 
 public class MsiJitterCalcs
@@ -108,30 +113,37 @@ public class MsiJitterCalcs
         if(allParams == null)
             return 0;
 
-        MsiModelParams varParams = findApplicableParams(allParams, refRepeat);
+        MsiModelParams varParams = findApplicableParams(allParams, refRepeat.repeatLength(), refRepeat.Bases);
 
         if(varParams == null)
             return 0;
 
-        if(refRepeat.Count == 4)
-            return varParams.params().OptimalScaleRepeat4;
-        else if(refRepeat.Count == 5)
-            return varParams.params().OptimalScaleRepeat5;
-        else if(refRepeat.Count == 6)
-            return varParams.params().OptimalScaleRepeat6;
+        Double fixedScale = getScaleParam(varParams.params(), refRepeat.Count);
 
-        return varParams.calcSkew(refRepeat.Count, impliedAltChange);
+        return varParams.calcErrorRate(refRepeat.Count, impliedAltChange, fixedScale);
     }
 
-    private static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final RepeatInfo refRepeat)
+    private Double getScaleParam(final JitterModelParams params, int repeatCount)
+    {
+        if(repeatCount == 4)
+            return params.OptimalScaleRepeat4;
+        else if(repeatCount == 5)
+            return params.OptimalScaleRepeat5;
+        else if(repeatCount == 6)
+            return params.OptimalScaleRepeat6;
+        else
+            return null;
+    }
+
+    private static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final int repeatLength, final String repeatBases)
     {
         for(MsiModelParams params : allParams)
         {
-            if(refRepeat.repeatLength() <= MAX_SPECIFIC_LENGTH_UNIT)
+            if(repeatLength <= MAX_SPECIFIC_LENGTH_UNIT)
             {
-                if(params.params().repeatUnitLength() == refRepeat.repeatLength())
+                if(params.params().repeatUnitLength() == repeatLength)
                 {
-                    if(params.params().RepeatUnit.contains(refRepeat.Bases))
+                    if(params.params().RepeatUnit.contains(repeatBases))
                         return params;
                 }
             }
@@ -142,6 +154,77 @@ public class MsiJitterCalcs
         }
 
         return null;
+    }
+
+    public Boolean isWithinJitterNoise(
+            final String sampleId, final RepeatInfo maxRepeat, int fullSupport, int shortened, int lengthened)
+    {
+        List<MsiModelParams> allParams = mSampleParams.get(sampleId);
+
+        if(allParams == null)
+            return null;
+
+        double shortenedErrorRate = getErrorRate(allParams, maxRepeat, 1);
+        double lengthenedErrorRate = getErrorRate(allParams, maxRepeat, -1);
+
+        if(shortened > fullSupport && isWithinNoise(fullSupport, shortened, shortenedErrorRate))
+            return true;
+
+        if(lengthened > fullSupport && isWithinNoise(fullSupport, lengthened, lengthenedErrorRate))
+            return true;
+
+        if(min(shortened, lengthened) >= fullSupport)
+        {
+            int total = fullSupport + shortened + lengthened;
+            double jitterRatio = fullSupport / (double)total;
+            double avgErrorRate = (shortenedErrorRate + lengthenedErrorRate) * 0.5;
+
+            if(jitterRatio < 2 * avgErrorRate)
+                return true;
+
+            BinomialDistribution distribution = new BinomialDistribution(total, avgErrorRate);
+
+            double prob = 1 - distribution.cumulativeProbability(fullSupport - 1);
+
+            return prob > MSI_JITTER_NOISE_RATE;
+        }
+
+        return false;
+    }
+
+    private double getErrorRate(final List<MsiModelParams> allParams, final RepeatInfo maxRepeat, int repeatChangeVsRef)
+    {
+        // if variant measures shortened count for say a repeat of 5, then implies ref was 4 so get the error rate for 4 going to 5
+        int refRepeatCount = maxRepeat.Count - repeatChangeVsRef;
+
+        double errorRate = MSI_JITTER_DEFAULT_ERROR_RATE;
+
+        if(refRepeatCount < MIN_REPEAT_COUNT)
+            return errorRate;
+
+        MsiModelParams modelParams = findApplicableParams(allParams, refRepeatCount, maxRepeat.Bases);
+
+        if(modelParams == null)
+            return errorRate;
+
+        Double fixedScale = getScaleParam(modelParams.params(), refRepeatCount);
+
+        return modelParams.calcErrorRate(refRepeatCount, repeatChangeVsRef, fixedScale);
+    }
+
+    private boolean isWithinNoise(int fullSupport, int jitterCount, double errorRate)
+    {
+        // a low full count relative to the total will be classified as within noise
+        double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
+        if(jitterRatio < 2 * errorRate)
+            return true;
+
+        // also test a p-value of jitter vs the full support counts
+        BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRate);
+
+        double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
+
+        return prob > MSI_JITTER_NOISE_RATE;
     }
 
     @VisibleForTesting

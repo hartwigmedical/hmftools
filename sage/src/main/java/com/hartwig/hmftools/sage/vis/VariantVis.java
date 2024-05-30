@@ -270,7 +270,7 @@ public class VariantVis
                 body(
                         firstVis.renderVariantInfo(
                                 sageVariant.totalQuality(),
-                                firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge(), sageVariant.filters()),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filters()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
                         readTable,
@@ -369,7 +369,7 @@ public class VariantVis
                     td(format("%d", avgAltMapQuality)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
-                    td(String.valueOf(counter.jitter()[2]))));
+                    td(format("%d-%d", counter.jitter().shortened(), counter.jitter().lengthened()))));
 
             for(int j = 0; j < columnElems.size(); ++j)
             {

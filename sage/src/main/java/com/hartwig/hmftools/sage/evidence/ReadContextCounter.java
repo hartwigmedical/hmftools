@@ -163,6 +163,7 @@ public class ReadContextCounter
     public int position() { return mVariant.position(); }
     public String ref() { return mVariant.ref(); }
     public String alt() { return mVariant.alt(); }
+    public String sampleId() { return mSample; }
 
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
@@ -193,10 +194,7 @@ public class ReadContextCounter
     public ReadSupportCounts readCounts() { return mCounts; }
     public ReadSupportCounts readQuals() { return mQualities; }
 
-    public int[] jitter()
-    {
-        return mJitterData.summary();
-    }
+    public JitterData jitter() { return mJitterData; }
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }

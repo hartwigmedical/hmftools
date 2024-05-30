@@ -90,13 +90,9 @@ public class SageConstants
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
 
-    public static final int JITTER_INDEL_MAX_REPEATS = 3;
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
-    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;
-    public static final double JITTER_INDEL_VAF_THRESHOLD_LIMIT = 0.15;
-
-    public static final int JITTER_NON_INDEL_MAX_REPEATS = 5;
-    public static final double JITTER_NON_INDEL_VAF_THRESHOLD = 0.01;
+    public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
+    public static final double MSI_JITTER_NOISE_RATE = 0.00025;
 
     public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 

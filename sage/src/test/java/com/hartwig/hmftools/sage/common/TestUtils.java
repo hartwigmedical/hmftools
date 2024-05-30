@@ -25,6 +25,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 public class TestUtils
 {
     public static final SageConfig TEST_CONFIG = createSageConfig();
+    public static final String TEST_SAMPLE = "SAMPLE";
 
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 

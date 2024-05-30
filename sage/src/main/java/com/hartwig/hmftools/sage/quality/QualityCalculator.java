@@ -223,7 +223,8 @@ public class QualityCalculator
         }
         else
         {
-            minDistance = max(0, min(readIndex, record.getReadBases().length - 1 - readIndex));
+            int upperReadIndex = readIndex + readContextCounter.variant().altLength() - 1; // for MNVs
+            minDistance = max(0, min(readIndex, record.getReadBases().length - 1 - upperReadIndex));
         }
 
         if(minDistance <= 0)

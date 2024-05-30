@@ -81,7 +81,7 @@ public final class VariantContextFactory
 
         ReadContextCounter primaryRcCounter = variant.tumorReadCounters().get(0);
 
-        builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
+        builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromEdge());
 
         if(primaryRcCounter.ultimaQualModel() != null)
         {
@@ -116,7 +116,7 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
-                .attribute(READ_CONTEXT_JITTER, counter.jitter())
+                .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
                 .attribute(

@@ -25,25 +25,11 @@ public class MsiModelParams
 
     public JitterModelParams params() { return mParams; }
 
-    public double calcSkew(int repeatCount, int repeatCountChange)
+    public double calcErrorRate(int repeatCount, int repeatCountChange, final Double fixedScale)
     {
-        /*
-         skew = microsatelliteSkew = 1.0164
-         scale = scaleFitIntercept + scaleFitGradient * repeat_length (number of units) = -0.1835 + 0.0444 * 8 = 0.1717
+        double scale = fixedScale != null ? fixedScale : mParams.ScaleFitIntercept + mParams.ScaleFitGradient * repeatCount;
 
-        modified_asymmetric_laplace(x, scale, raw_skew):
-            skew = 1 + (raw_skew - 1) * min(scale, 1)
-            return raw_asymmetric_laplace(x, scale, skew) / pdf_sum
-
-        Where the raw asymmetric laplace distribution is as follows:
-
-        raw_asymmetric_laplace(x, scale, skew)
-            return 1 / (scale * (skew+ 1/skew))) * e ^ ((-x * sgn(x) * skew ^ sgn(x)) / scale)
-        */
-
-        double scale = mParams.ScaleFitIntercept + mParams.ScaleFitGradient * repeatCount;
-
-        double pdfSum = getOrCalcPdfSum(repeatCount);
+        double pdfSum = getOrCalcPdfSum(repeatCount, scale);
 
         if(pdfSum == 0)
             return 0;
@@ -59,7 +45,7 @@ public class MsiModelParams
         return 1 + (mParams.MicrosatelliteSkew - 1) * min(scale, 1);
     }
 
-    private double getOrCalcPdfSum(int repeatCount)
+    private double getOrCalcPdfSum(int repeatCount, double scale)
     {
         Double existingPdfSum = mRepeatCountPdfSum.get(repeatCount);
 
@@ -71,7 +57,6 @@ public class MsiModelParams
 
         for(int i = -MSI_JITTER_MAX_REPEAT_CHANGE; i <= MSI_JITTER_MAX_REPEAT_CHANGE; ++i)
         {
-            double scale = mParams.ScaleFitIntercept + mParams.ScaleFitGradient * repeatCount;
             double modifiedSkew = modifiedSkew(scale);
 
             double calc = calcAsymmetricLaplace(scale, modifiedSkew, i);

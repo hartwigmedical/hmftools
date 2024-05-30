@@ -13,6 +13,8 @@ public class JitterModelParams
     private final int mRepeatUnitLength;
 
     public static final int MAX_SPECIFIC_LENGTH_UNIT = 2;
+    public static final int MIN_REPEAT_COUNT = 4;
+    public static final String REPEAT_UNIT_3_PLUS_LABEL = "3-5bp repeat";
 
     public JitterModelParams(
             final String repeatUnit,

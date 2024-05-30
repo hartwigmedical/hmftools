@@ -141,6 +141,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
             mReadCounters.forEach(x -> x.applyMapQualityRatio());
         }
 
+        mReadCounters.forEach(x -> x.jitter().setJitterQualFilterState(mMsiJitterCalcs, x));
+
         return mReadCounters;
     }
 

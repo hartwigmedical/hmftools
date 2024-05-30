@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
 
 import java.util.Collections;
@@ -97,7 +98,7 @@ public final class VariantUtils
     {
         return new ReadContextCounter(
                 id, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE);
     }
 
     // Sage variant creation

@@ -8,11 +8,6 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_MAX_REPEATS;
-import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_VAF_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_VAF_THRESHOLD_LIMIT;
-import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_MAX_REPEATS;
-import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_VAF_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
@@ -37,13 +32,13 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class VariantFilters
 {
     private final FilterConfig mConfig;
-    private final boolean mHighDepthMode;
     private final int mReadEdgeDistanceThreshold;
 
     private final int[] mFilterCounts;
@@ -60,7 +55,6 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
-        mHighDepthMode = config.Quality.HighDepthMode;
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
         mFilterCounts = new int[HardFilterType.values().length];
     }
@@ -199,7 +193,7 @@ public class VariantFilters
                 filters.add(SoftFilter.READ_STRAND_BIAS.filterName());
             }
 
-            if(failsJitterFilter(primaryTumor))
+            if(applyJitterFilter(primaryTumor))
             {
                 filters.add(SoftFilter.JITTER.filterName());
             }
@@ -247,7 +241,7 @@ public class VariantFilters
     private static boolean isQualitySite(
             final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final int qual, final int altSupport)
     {
-        if(primaryTumor.jitter()[0] > 0 || primaryTumor.jitter()[1] > 0)
+        if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0)
             return false;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
@@ -313,37 +307,12 @@ public class VariantFilters
         return variant.isIndel() && variant.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
     }
 
-    private boolean failsJitterFilter(final ReadContextCounter primaryTumor)
+    private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
     {
-        if(!mHighDepthMode)
+        if(primaryTumor.readContext().MaxRepeat == null)
             return false;
 
-        int maxRepeats = primaryTumor.readContext().maxRepeatCount(); // repeat count not available yet
-
-        if(primaryTumor.isIndel())
-        {
-            // INDELs if inserted/deleted bases == RC_MH and VAF < (MAX_REP - 3) * 0.0125
-            // min(0.15, 0.015 * (RC_REPC - 3) * num_inserted_or_deleted_bases) if RC_REPS == inserted/deleted bases
-            // min(0.15, 0.015 * (RC_REPC - 3)) otherwise
-            String indelBases = primaryTumor.variant().isInsert() ?
-                    primaryTumor.alt().substring(1) : primaryTumor.ref().substring(1);
-
-            double vafLimit = (maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD;
-
-            if(indelBases.equals(primaryTumor.readContext().homologyBases()))
-            {
-                vafLimit *= indelBases.length();
-            }
-
-            vafLimit = min(vafLimit, JITTER_INDEL_VAF_THRESHOLD_LIMIT);
-
-            return primaryTumor.vaf() < vafLimit;
-        }
-        else
-        {
-            // SNVs/MNVs if MAX_REP > 5 and VAF < 0.01
-            return maxRepeats > JITTER_NON_INDEL_MAX_REPEATS && primaryTumor.vaf() < JITTER_NON_INDEL_VAF_THRESHOLD;
-        }
+        return primaryTumor.jitter().isWithinNoise();
     }
 
     private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)
@@ -351,12 +320,12 @@ public class VariantFilters
         if(isLongInsert(primaryTumor))
             return false;
 
-        int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromUnclippedEdge();
+        int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
 
         if(altMed >= mReadEdgeDistanceThreshold)
             return false;
 
-        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromUnclippedEdge();
+        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
 
         // note max MED for all reads * 2 covers scenarios were no reads have the variant centred
         double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());
