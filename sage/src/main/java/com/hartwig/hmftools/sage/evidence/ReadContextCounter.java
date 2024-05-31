@@ -173,11 +173,11 @@ public class ReadContextCounter
 
     public QualCounters qualCounters() { return mQualCounters; }
 
-    public int baseQualityTotal() { return mQualCounters.BaseQualityTotal; }
-    public int altBaseQualityTotal() { return mQualCounters.AltBaseQualityTotal; }
+    public int baseQualityTotal() { return mQualCounters.baseQualityTotal(); }
+    public int altBaseQualityTotal() { return mQualCounters.altBaseQualityTotal(); }
 
-    public long mapQualityTotal() { return mQualCounters.MapQualityTotal; }
-    public long altMapQualityTotal() { return mQualCounters.AltMapQualityTotal; }
+    public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
+    public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
 
     public double vaf()
     {
@@ -215,7 +215,7 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
-        return supportCount > 0 ? mQualCounters.AltBaseQualityTotal / (double)supportCount : 0;
+        return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
@@ -334,10 +334,7 @@ public class ReadContextCounter
 
             registerReadSupport(record, readSupport, quality);
 
-            mQualCounters.MapQualityTotal += record.getMappingQuality();
-            mQualCounters.AltMapQualityTotal += record.getMappingQuality();
-            mQualCounters.AltBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
-            mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+            mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
             mReadEdgeDistance.update(record, fragmentData, true);
 
@@ -358,8 +355,7 @@ public class ReadContextCounter
             matchType = ReadContextMatch.REALIGNED;
             registerReadSupport(record, REALIGNED, quality);
 
-            mQualCounters.MapQualityTotal += record.getMappingQuality();
-            mQualCounters.AltMapQualityTotal += record.getMappingQuality();
+            mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
             logReadEvidence(record, matchType, readVarIndex,quality);
@@ -367,12 +363,10 @@ public class ReadContextCounter
             return ALT_SUPPORT;
         }
 
-        mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+        mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), false);
 
         JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
         mJitterData.update(jitterMatch);
-
-        mQualCounters.MapQualityTotal += record.getMappingQuality();
 
         VariantReadSupport readSupport = null;
 
@@ -567,5 +561,4 @@ public class ReadContextCounter
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
     public ReadSupportCounts readSupportCounts() { return mCounts; }
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
-
 }

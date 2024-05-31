@@ -94,14 +94,14 @@ public class MiscEvidenceTest
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(37, readContextCounter.qualCounters().AltBaseQualityTotal);
+        assertEquals(37, readContextCounter.qualCounters().altBaseQualityTotal());
 
         // min rather than average is used
         altRead.getBaseQualities()[readVarIndex] = 11;
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(48, readContextCounter.qualCounters().AltBaseQualityTotal);
+        assertEquals(48, readContextCounter.qualCounters().altBaseQualityTotal());
 
     }
 }

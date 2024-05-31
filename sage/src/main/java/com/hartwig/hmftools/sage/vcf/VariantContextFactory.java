@@ -106,9 +106,9 @@ public final class VariantContextFactory
         int depth = counter.depth();
         int altSupport = counter.altSupport();
 
-        int avgMapQuality = depth > 0 ? (int) round(qualCounters.MapQualityTotal / (double)depth) : 0;
-        int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.AltMapQualityTotal / (double)altSupport) : 0;
-        int avgBaseQuality = depth > 0 ? (int)round(qualCounters.BaseQualityTotal / (double)depth) : 0;
+        int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
+        int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.altMapQualityTotal() / (double)altSupport) : 0;
+        int avgBaseQuality = depth > 0 ? (int)round(qualCounters.baseQualityTotal() / (double)depth) : 0;
         int avgAltBaseQuality = (int)round(counter.averageAltBaseQuality());
 
         builder.DP(depth)
