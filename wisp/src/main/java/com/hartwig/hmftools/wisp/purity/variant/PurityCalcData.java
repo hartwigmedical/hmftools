@@ -18,6 +18,7 @@ public class PurityCalcData
 
     public int BqrQualThreshold;
     public double ErrorRate;
+    public double RawBqrErrorRate;
     public final List<String> BqrExtraInfo;
 
     public static final double CALC_NO_SET = -1;
@@ -33,6 +34,7 @@ public class PurityCalcData
         DualProbability = CALC_NO_SET;
         BqrQualThreshold = 0;
         ErrorRate = 0;
+        RawBqrErrorRate = 0;
 
         Clonality = ClonalityData.NO_RESULT;
         BqrExtraInfo = Lists.newArrayList();

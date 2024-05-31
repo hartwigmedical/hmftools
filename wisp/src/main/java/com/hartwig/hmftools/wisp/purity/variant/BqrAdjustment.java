@@ -44,6 +44,14 @@ public class BqrAdjustment
                 mBqrContextData : mBqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
     }
 
+    public double calcErrorRate(final String triNucContext, final String alt)
+    {
+        BqrContextData bqrData = mBqrContextData.stream()
+                .filter(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt)).findFirst().orElse(null);
+
+        return bqrData != null ? bqrData.errorRate() : 0;
+    }
+
     public static double calcErrorRate(final List<BqrContextData> bqrContextData)
     {
         int depthTotal = 0;
@@ -72,11 +80,6 @@ public class BqrAdjustment
             final List<BqrContextData> bqrContextData, final String trinucleotideContext, final String alt)
     {
         return bqrContextData.stream().anyMatch(x -> x.Alt.equals(alt) && x.TrinucleotideContext.equals(trinucleotideContext));
-    }
-
-    public static double sampleErrorPerMillion(int depthTotal, int fragmentTotal)
-    {
-        return depthTotal > 0 ? round(100.0 * fragmentTotal / depthTotal * 1_000_000) / 100.0 : 0;
     }
 
     public void loadBqrData(final String sampleId)

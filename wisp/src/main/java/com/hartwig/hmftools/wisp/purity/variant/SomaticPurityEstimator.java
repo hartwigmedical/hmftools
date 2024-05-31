@@ -156,6 +156,11 @@ public class SomaticPurityEstimator
         return new SomaticPurityResult(true, totalVariantCount, chipVariants, fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
+    public double getBqrErrorRate(final SomaticVariant variant)
+    {
+        return mBqrAdjustment.calcErrorRate(variant.TriNucContext, variant.Alt);
+    }
+
     private void calculateThresholdValues(
             final String sampleId, final PurityCalcData purityCalcData, final List<SomaticVariant> variants, int qualThreshold)
     {
@@ -164,9 +169,11 @@ public class SomaticPurityEstimator
         if(filteredBqrData.isEmpty())
             return;
 
-        double bqrErrorRate = BqrAdjustment.calcErrorRate(filteredBqrData);
+        double rawBqrErrorRate = BqrAdjustment.calcErrorRate(filteredBqrData);
 
         FragmentTotals fragmentTotals = new FragmentTotals();
+
+        double depthWeightedErrorRate = 0;
 
         for(SomaticVariant variant : variants)
         {
@@ -174,6 +181,12 @@ public class SomaticPurityEstimator
                 continue;
 
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+
+            double varBqrErrorRate = getBqrErrorRate(variant);
+            sampleFragData.setBqrErrorRate(varBqrErrorRate);
+
+            depthWeightedErrorRate += varBqrErrorRate * sampleFragData.Depth;
+
             GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
             fragmentTotals.addVariantData(
@@ -183,6 +196,8 @@ public class SomaticPurityEstimator
 
         if(fragmentTotals.sampleDepthTotal() == 0)
             return;
+
+        double bqrErrorRate = depthWeightedErrorRate / fragmentTotals.sampleDepthTotal();
 
         double probability = estimatedProbability(fragmentTotals, bqrErrorRate);
 
@@ -205,6 +220,7 @@ public class SomaticPurityEstimator
             purityCalcData.Probability = probability;
             purityCalcData.BqrQualThreshold = qualThreshold;
             purityCalcData.ErrorRate = bqrErrorRate;
+            purityCalcData.RawBqrErrorRate = rawBqrErrorRate;
             purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), bqrErrorRate, fragmentTotals);
         }
     }

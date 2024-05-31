@@ -28,6 +28,7 @@ public class BqrContextData
     {
         return TotalCount > 0 ? round(100.0 * AltCount / TotalCount * PER_MILLION) / 100.0 : 0;
     }
+    public double errorRate() { return TotalCount > 0 ? AltCount / (double)TotalCount : 0;  }
 
     public double calculatedQual()
     {

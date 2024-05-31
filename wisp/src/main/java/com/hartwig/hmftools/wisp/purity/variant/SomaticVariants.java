@@ -321,6 +321,9 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
+        SomaticPurityResult purityResult = mEstimator.calculatePurity(
+                sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
+
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {
             for(SomaticVariant variant : mVariants)
@@ -335,7 +338,7 @@ public class SomaticVariants
             }
         }
 
-        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
+        return purityResult;
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -392,7 +395,8 @@ public class SomaticVariants
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
             sj.add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD").add("SeqGcRatio");
+            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
+            sj.add("SeqGcRatio").add("BqrErrorRate");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -438,6 +442,7 @@ public class SomaticVariants
             sj.add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
+            sj.add(format("%.6f", sampleFragData.bqrErrorRate()));
 
             writer.write(sj.toString());
 

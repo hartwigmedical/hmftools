@@ -14,6 +14,8 @@ public class GenotypeFragments
     // where UMI counts are available then the Depth and AlleleCount are just the total from these, otherwise they are standard DP and AD
     public final UmiTypeCounts UmiCounts;
 
+    private double mBqrErrorRate;
+
     public GenotypeFragments(final String sampleName, final int alleleCount, final int depth, final double qualTotal,
             final UmiTypeCounts umiCounts)
     {
@@ -22,6 +24,8 @@ public class GenotypeFragments
         Depth = depth;
         QualTotal = qualTotal;
         UmiCounts = umiCounts;
+
+        mBqrErrorRate = 0;
     }
 
     public double qualPerAlleleFragment()
@@ -32,6 +36,9 @@ public class GenotypeFragments
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
 
     public boolean isLowQual() { return AlleleCount > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
+
+    public void setBqrErrorRate(double errorRate) { mBqrErrorRate = errorRate; }
+    public double bqrErrorRate() { return mBqrErrorRate; }
 
     public String toString()
     {

@@ -78,6 +78,7 @@ public class SomaticPurityResult
         sj.add("PeakBandwidthLow");
         sj.add("PeakBandwidthHigh");
         sj.add("ErrorRate");
+        sj.add("RawBqrErrorRate");
         sj.add("BqrThreshold");
         sj.add("BqrExtraInfo");
         return sj.toString();
@@ -117,6 +118,7 @@ public class SomaticPurityResult
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthLow));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthHigh));
         sj.add(format("%.6f", PurityCalcs.ErrorRate));
+        sj.add(format("%.6f", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));
 
         String bqrDataStr = PurityCalcs.BqrExtraInfo.stream().collect(Collectors.joining(";"));

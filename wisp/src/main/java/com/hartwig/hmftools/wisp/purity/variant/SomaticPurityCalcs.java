@@ -53,6 +53,9 @@ public final class SomaticPurityCalcs
         double sampleDepth = fragmentTotals.sampleDepthTotal();
         double expectedNoiseFrags = noiseRate * sampleDepth;
 
+        if(expectedNoiseFrags <= 0)
+            return -1;
+
         int iterations = 0;
         double requiredProb = LOW_PROBABILITY;
 
