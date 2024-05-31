@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -161,7 +162,7 @@ public class VariantReadContextBuilder
     public static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
     {
         if(variant.isIndel())
-            return readVarIndex + (homology != null ? homology.Length : 0) + 1;
+            return readVarIndex + (homology != null ? homology.Length : 0) + 1 + abs(variant.indelLength());
         else
             return readVarIndex + variant.altLength() - 1;
     }

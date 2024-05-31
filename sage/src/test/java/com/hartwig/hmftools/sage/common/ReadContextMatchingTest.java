@@ -58,8 +58,8 @@ public class ReadContextMatchingTest
 
         assertTrue(matcher.coversVariant(read, 20));
         assertTrue(matcher.coversVariant(read, 0));
-        assertTrue(matcher.coversVariant(read, 38));
-        assertFalse(matcher.coversVariant(read, 39));
+        assertTrue(matcher.coversVariant(read, 36));
+        assertFalse(matcher.coversVariant(read, 37));
 
         var = createSimpleVariant(position, "ACGT", "A");
         readContext = createReadContext(var, "AA", "GG");
@@ -67,8 +67,8 @@ public class ReadContextMatchingTest
 
         assertTrue(matcher.coversVariant(read, 20));
         assertTrue(matcher.coversVariant(read, 0));
-        assertTrue(matcher.coversVariant(read, 38));
-        assertFalse(matcher.coversVariant(read, 39));
+        assertTrue(matcher.coversVariant(read, 35));
+        assertFalse(matcher.coversVariant(read, 36));
     }
 
     @Test
