@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
@@ -386,8 +387,10 @@ public class SomaticVariants
             addCommonHeaderFields(sj, config);
 
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT).add("IsProbe");
-            sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
-            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
+            sj.add("Filter").add("Tier").add("Type").add("TNC");
+            sj.add("Mappability").add("SubclonalPerc").add("RepeatCount");
+            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
+            sj.add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
             sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD").add("SeqGcRatio");
 
@@ -417,24 +420,22 @@ public class SomaticVariants
 
             addCommonFields(sj, config, sampleData, sampleId);
 
-            sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
-            sj.add(String.valueOf(variant.isProbeVariant()));
+            sj.add(variant.Chromosome).add(valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
+            sj.add(valueOf(variant.isProbeVariant()));
 
             String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
 
             if(filtersStr.isEmpty())
                 filtersStr = PASS;
 
-            sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(String.valueOf(variant.Reported))
-                    .add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc));
+            sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(variant.TriNucContext);
+            sj.add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc)).add(valueOf(variant.RepeatCount));
+            sj.add(variant.CanonicalGeneName).add(variant.CanonicalCodingEffect).add(valueOf(variant.Hotspot)).add(valueOf(variant.Reported));
+            sj.add(format("%.2f", variant.VariantCopyNumber)).add(format("%.2f", variant.CopyNumber));
 
-            sj.add(variant.CanonicalGeneName).add(variant.CanonicalCodingEffect)
-                    .add(String.valueOf(variant.Hotspot)).add(String.valueOf(variant.Reported))
-                    .add(format("%.2f", variant.VariantCopyNumber)).add(format("%.2f", variant.CopyNumber));
-
-            sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
-            sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));
-            sj.add(String.valueOf(sampleFragData.UmiCounts.TotalDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
+            sj.add(valueOf(tumorData.Depth)).add(valueOf(tumorData.AlleleCount));
+            sj.add(valueOf(sampleFragData.Depth)).add(valueOf(sampleFragData.AlleleCount));
+            sj.add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
 

@@ -85,7 +85,7 @@ public class BqrAdjustment
 
         String bqrFileDir;
 
-        if(!mConfig.BqrDir.isEmpty())
+        if(mConfig.BqrDir != null)
             bqrFileDir = mConfig.BqrDir;
         else if(!mConfig.SomaticVcf.isEmpty())
             bqrFileDir = pathFromFile(mConfig.getSomaticVcf(sampleId));
