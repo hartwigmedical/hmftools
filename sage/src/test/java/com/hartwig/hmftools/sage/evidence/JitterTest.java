@@ -171,12 +171,31 @@ public class JitterTest
 
         JitterData jitterData = new JitterData();
 
+        // lengthened is noise
         jitterData.setValues(10, 10);
         readContextCounter.readSupportCounts().Full = 50;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
-        assertEquals(1.4, jitterData.qualBoost(), 0.01);
+        assertEquals(1.2, jitterData.qualBoost(), 0.01);
+        assertFalse(jitterData.isWithinNoise());
+
+        // shortened is noise
+        jitterData.setValues(5, 35);
+        readContextCounter.readSupportCounts().Full = 50;
+
+        jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
+
+        assertEquals(1.1, jitterData.qualBoost(), 0.01);
+        assertFalse(jitterData.isWithinNoise());
+
+        // both noise
+        jitterData.setValues(5, 2);
+        readContextCounter.readSupportCounts().Full = 50;
+
+        jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
+
+        assertEquals(1.14, jitterData.qualBoost(), 0.01);
         assertFalse(jitterData.isWithinNoise());
 
         // shortened too high
@@ -188,7 +207,7 @@ public class JitterTest
         assertTrue(jitterData.isWithinNoise());
         assertEquals(0, jitterData.qualBoost(), 0.01);
 
-        // again for lenthened
+        // again for lengthened
         jitterData.setValues(1, 60);
         readContextCounter.readSupportCounts().Full = 2;
 
@@ -206,5 +225,4 @@ public class JitterTest
         assertTrue(jitterData.isWithinNoise());
         assertEquals(0, jitterData.qualBoost(), 0.01);
     }
-
 }

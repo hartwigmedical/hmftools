@@ -47,6 +47,8 @@ public class MsiJitterCalcs
         return msiJitterCalcs;
     }
 
+    public List<MsiModelParams> getSampleParams(final String sampleId) { return mSampleParams.get(sampleId); }
+
     public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir)
     {
         try
@@ -135,7 +137,7 @@ public class MsiJitterCalcs
             return null;
     }
 
-    private static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final int repeatLength, final String repeatBases)
+    public static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final int repeatLength, final String repeatBases)
     {
         for(MsiModelParams params : allParams)
         {
@@ -156,60 +158,22 @@ public class MsiJitterCalcs
         return null;
     }
 
-    public Boolean isWithinJitterNoise(
-            final String sampleId, final RepeatInfo maxRepeat, int fullSupport, int shortened, int lengthened)
-    {
-        List<MsiModelParams> allParams = mSampleParams.get(sampleId);
-
-        if(allParams == null)
-            return null;
-
-        double shortenedErrorRate = getErrorRate(allParams, maxRepeat, 1);
-        double lengthenedErrorRate = getErrorRate(allParams, maxRepeat, -1);
-
-        if(shortened > fullSupport && isWithinNoise(fullSupport, shortened, shortenedErrorRate))
-            return true;
-
-        if(lengthened > fullSupport && isWithinNoise(fullSupport, lengthened, lengthenedErrorRate))
-            return true;
-
-        if(min(shortened, lengthened) >= fullSupport)
-        {
-            int total = fullSupport + shortened + lengthened;
-            double jitterRatio = fullSupport / (double)total;
-            double avgErrorRate = (shortenedErrorRate + lengthenedErrorRate) * 0.5;
-
-            if(jitterRatio < 2 * avgErrorRate)
-                return true;
-
-            BinomialDistribution distribution = new BinomialDistribution(total, avgErrorRate);
-
-            double prob = 1 - distribution.cumulativeProbability(fullSupport - 1);
-
-            return prob > MSI_JITTER_NOISE_RATE;
-        }
-
-        return false;
-    }
-
-    private double getErrorRate(final List<MsiModelParams> allParams, final RepeatInfo maxRepeat, int repeatChangeVsRef)
+    public double getErrorRate(final List<MsiModelParams> allParams, final String repeatBases, int repeatCount, int repeatChange)
     {
         // if variant measures shortened count for say a repeat of 5, then implies ref was 4 so get the error rate for 4 going to 5
-        int refRepeatCount = maxRepeat.Count - repeatChangeVsRef;
-
         double errorRate = MSI_JITTER_DEFAULT_ERROR_RATE;
 
-        if(refRepeatCount < MIN_REPEAT_COUNT)
+        if(repeatCount < MIN_REPEAT_COUNT)
             return errorRate;
 
-        MsiModelParams modelParams = findApplicableParams(allParams, refRepeatCount, maxRepeat.Bases);
+        MsiModelParams modelParams = findApplicableParams(allParams, repeatCount, repeatBases);
 
         if(modelParams == null)
             return errorRate;
 
-        Double fixedScale = getScaleParam(modelParams.params(), refRepeatCount);
+        Double fixedScale = getScaleParam(modelParams.params(), repeatCount);
 
-        return modelParams.calcErrorRate(refRepeatCount, repeatChangeVsRef, fixedScale);
+        return modelParams.calcErrorRate(repeatCount, repeatChange, fixedScale);
     }
 
     private boolean isWithinNoise(int fullSupport, int jitterCount, double errorRate)
