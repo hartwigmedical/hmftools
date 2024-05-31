@@ -111,8 +111,10 @@ public class ReadCigarInfo
                 if(corePosStart == 0 && positionWithin(leftCoreIndex, readIndex, readEndIndex))
                 {
                     // adjust position back if in an indel
-                    if(element.getOperator().isIndel() || element.getOperator() == N)
+                    if(element.getOperator() == I)
                         corePosStart = refPosition - 1;
+                    else if(element.getOperator() == D || element.getOperator() == N)
+                        corePosStart = refPosition + element.getLength(); // read index points to the next non-skipped base
                     else
                         corePosStart = refPosition + (leftCoreIndex - readIndex);
                 }

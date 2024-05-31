@@ -3,7 +3,9 @@ package com.hartwig.hmftools.sage.common;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
 
@@ -109,6 +111,30 @@ public class ReadContextUtilsTest
         assertEquals(172, readCigarInfo.FlankPositionEnd);
         assertEquals(8, readCigarInfo.FlankIndexStart);
         assertEquals(52, readCigarInfo.FlankIndexEnd);
+
+        // test 4b: cores start in deletes
+        // elements:
+        // 100-120    21M     index 0-20
+        // 120-121    1D      no change
+        // 122-146    25M     index 21-45
+
+        readBases = REF_BASES_200.substring(100, 121) + REF_BASES_200.substring(122, 124) + "A" + REF_BASES_200.substring(125, 147);
+        readCigar = "21M1D25M";
+        read = buildSamRecord(100, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        SimpleVariant var = createSimpleVariant(124, "T", "A");
+        VariantReadContext readContext = builder.createContext(var, read, 23, REF_SEQUENCE_200);
+        assertEquals(122, readContext.CorePositionStart);
+
+        // repeat just testing the cigar building
+        readFlankStart = 11;
+        readFlankEnd = 35;
+        readCoreStart = readFlankStart + flankSize;
+        readCoreEnd = readFlankEnd - flankSize;
+
+        readCigarInfo = ReadCigarInfo.buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertEquals(122, readCigarInfo.CorePositionStart);
 
 
         // test 5: flanks ending in inserts at both ends
