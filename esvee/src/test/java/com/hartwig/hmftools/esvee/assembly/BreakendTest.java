@@ -32,7 +32,7 @@ public class BreakendTest
         refGenome.RefGenomeMap.put(CHR_2, REF_BASES_200);
 
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                refGenome, CHR_1, 100, FORWARD, CHR_2, 50, REVERSE, "");
+                refGenome, CHR_1, 100, FORWARD, CHR_2, 50, REVERSE, "", "");
 
         Breakend breakend1 = new Breakend(assemblyAlignment, CHR_1, 100, FORWARD, "", null);
         Breakend breakend2 = new Breakend(assemblyAlignment, CHR_1, 100, REVERSE, "", null);

@@ -119,7 +119,7 @@ public class BreakendBuilder
         if(nonZeroAlignments.isEmpty())
             return;
 
-        // for all the rest calculated an adjusted alignment score by subtracing overlap (inexact homology) and repeated bases from the score
+        // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
         String fullSequence = mAssemblyAlignment.fullSequence();
 
         nonZeroAlignments.forEach(x -> x.setFullSequenceData(fullSequence, mAssemblyAlignment.fullSequenceLength()));
@@ -367,8 +367,6 @@ public class BreakendBuilder
 
                 if(assemblyOverlapBases.isEmpty())
                 {
-                    // int overlapSeqStart = alignment.sequenceEnd();
-                    //int overlap = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
                     assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
                 }
 
@@ -384,32 +382,30 @@ public class BreakendBuilder
             Orientation nextOrientation = segmentOrientation(nextAlignment, false);
             int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
-            HomologyData firstHomology = null;
-            HomologyData nextHomology = null;
+            HomologyData firstHomology = homology;
+            HomologyData nextHomology = homology;
 
             if(homology != null)
             {
-                // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
-                // shift positions using homology based on the alignments in the order they were returned, even if the first one isn't
-                // the lower in coordinate-terms
-                breakendPosition += homology.positionAdjustment(breakendOrientation, true);
-                nextPosition += homology.positionAdjustment(nextOrientation, false);
-
-                // then correct to the convention where the lower breakend has the higher start values if not even
                 boolean firstIsLower = alignment.isLowerAlignment(nextAlignment);
                 boolean sameOrientation = breakendOrientation == nextOrientation;
 
-                if(!homology.isSymmetrical() && !firstIsLower)
+                // correct to the convention where the lower breakend has the higher start values if they're not symmetrical
+                if(!homology.isSymmetrical() && sameOrientation && !firstIsLower)
                 {
                     firstHomology = homology.invert(true, false);
+                }
 
-                    if(sameOrientation)
-                        nextHomology = homology.invert(false, true);
-                }
-                else if(sameOrientation)
+                if(sameOrientation)
                 {
-                    nextHomology = homology.invert(true, true);
+                    boolean reversePositions = !homology.isSymmetrical() && sameOrientation;
+                    boolean reverseBases = sameOrientation;
+                    nextHomology = homology.invert(reversePositions, reverseBases);
                 }
+
+                // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
+                breakendPosition += firstHomology.positionAdjustment(breakendOrientation);
+                nextPosition += nextHomology.positionAdjustment(nextOrientation);
             }
 
             Breakend breakend = new Breakend(

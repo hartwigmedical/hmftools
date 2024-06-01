@@ -422,6 +422,7 @@ public class AlignmentTest
             final String chrStart, int posStart, Orientation orientStart,
             final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
     {
-        return AssemblyTestUtils.createAssemblyAlignment(mRefGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases);
+        return AssemblyTestUtils.createAssemblyAlignment(
+                mRefGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases, "");
     }
 }

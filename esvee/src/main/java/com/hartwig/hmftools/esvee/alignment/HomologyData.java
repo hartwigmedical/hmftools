@@ -32,24 +32,9 @@ public class HomologyData
 
     public boolean isSymmetrical() { return abs(InexactStart) == InexactEnd; }
 
-    public int positionAdjustment(final Orientation orientation, boolean isFirstAlignment)
+    public int positionAdjustment(final Orientation orientation)
     {
-        // if the positions did not reflect the overlap then they would both need to be moved by the same amount
-        // but since they do, they should be adjusted in a way to add up to the overlap
-
-        // the first alignment moves back by the inexact end since it has already been shifted by the full overlap
-        // the second alignment moves forward by the inexact start since it has not been shifted at all
-        // so the net effect is that they are both shifted by the inexact start
-
-        // if either orientation does not match +1 for the first and -1 for the second, then reverse its direction of movement
-        int shiftDirection;
-
-        if(isFirstAlignment)
-            shiftDirection = orientation.isForward() ? -1 : 1;
-        else
-            shiftDirection = orientation.isReverse() ? 1 : -1;
-
-        return shiftDirection * (isFirstAlignment ? InexactEnd : abs(InexactStart));
+        return orientation.isForward() ? -InexactEnd : abs(InexactStart);
     }
 
     public HomologyData invert(final boolean reversePositions, final boolean reverseBases)
@@ -58,14 +43,6 @@ public class HomologyData
                 reverseBases ? Nucleotides.reverseComplementBases(Homology) : Homology,
                 reversePositions ? -ExactEnd : ExactStart, reversePositions ? abs(ExactStart) : ExactEnd,
                 reversePositions ? -InexactEnd : InexactStart, reversePositions ? abs(InexactStart) : InexactEnd);
-    }
-
-    public int positionAdjustmentOld(final Orientation orientation, boolean isFirstAlignment)
-    {
-        // if the positions did not reflect the overlap then they would both need to be moved by the same amount
-        // but since they do, they should be adjusted in a way to add up to the overlap
-        int shiftDirection = orientation.isForward() ? -1 : 1;
-        return shiftDirection * (isFirstAlignment ? InexactEnd : abs(InexactStart));
     }
 
     public static HomologyData determineHomology(

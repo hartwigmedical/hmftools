@@ -36,7 +36,7 @@ public class AssemblyTestUtils
 
     public static AssemblyAlignment createAssemblyAlignment(
             final RefGenomeInterface refGenome, final String chrStart, int posStart, Orientation orientStart,
-            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
+            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases, final String overlapBases)
     {
         // first a basic exact match junction
         Junction junctionStart = new Junction(chrStart, posStart, orientStart);
@@ -119,7 +119,7 @@ public class AssemblyTestUtils
         JunctionAssembly firstAssembly = new JunctionAssembly(junctionStart, firstAssemblyBases.getBytes(), baseQuals, firstJunctionIndex);
         JunctionAssembly secondAssembly = new JunctionAssembly(junctionEnd, secondAssemblyBases.getBytes(), baseQuals, secondJunctionIndex);
 
-        AssemblyLink link = new AssemblyLink(secondAssembly, firstAssembly, LinkType.SPLIT, insertedBases, "");
+        AssemblyLink link = new AssemblyLink(secondAssembly, firstAssembly, LinkType.SPLIT, insertedBases, overlapBases);
 
         return new AssemblyAlignment(0, link);
     }
