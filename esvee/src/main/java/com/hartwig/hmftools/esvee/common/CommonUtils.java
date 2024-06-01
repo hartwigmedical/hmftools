@@ -42,7 +42,7 @@ public final class CommonUtils
 
         int fragmentSize = abs(read.getInferredInsertSize());
 
-        return fragmentSize == 0 || fragmentSize >= fragmentLengthUpperBound;
+        return fragmentSize == 0 || (fragmentLengthUpperBound > 0 && fragmentSize >= fragmentLengthUpperBound);
     }
 
     public static int compareJunctions(

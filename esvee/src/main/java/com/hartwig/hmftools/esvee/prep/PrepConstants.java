@@ -52,7 +52,7 @@ public final class PrepConstants
     public static final int MIN_JUNCTION_SUPPORT = 2;
 
     // fragment length distribution and filtering
-    public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
+    public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 100000;
     public static final int FRAG_LENGTH_DIST_MIN_QUAL = 60;
     public static final int DISCORDANT_FRAGMENT_LENGTH_MIN = 1100;
     public static final int FRAG_LENGTH_DIST_MAX_LENGTH = 1500;

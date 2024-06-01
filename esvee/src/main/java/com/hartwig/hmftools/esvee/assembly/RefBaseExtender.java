@@ -206,23 +206,15 @@ public class RefBaseExtender
         Collections.sort(nonJunctionSupport,
                 Comparator.comparingInt(x -> isForwardJunction ? -x.cachedRead().alignmentEnd() : x.cachedRead().alignmentStart()));
 
-        boolean hasGapped = false; // currently unused since gaps are filled in with ref bases
-
+        // extend RSSC with these new candidate reads
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
-        refSideSoftClips.clear(); // will be re-established
 
         for(SupportRead support : nonJunctionSupport)
         {
             if(isForwardJunction)
-            {
-                hasGapped |= support.alignmentEnd() < minAlignedPosition;
                 minAlignedPosition = min(minAlignedPosition, support.alignmentStart());
-            }
             else
-            {
-                hasGapped |= support.alignmentStart() > maxAlignedPosition;
                 maxAlignedPosition = max(maxAlignedPosition, support.alignmentEnd());
-            }
 
             RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), support.cachedRead());
         }

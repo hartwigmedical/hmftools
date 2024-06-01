@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_PER
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_SAMPLE_SIZE;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 
+import static htsjdk.samtools.CigarOperator.M;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -125,8 +127,6 @@ public class FragmentSizeDistribution
         int upperBound = 0;
         int stdDevLength = 0;
         int median = 0;
-        double average = lengthCountTotal / (double)totalFragments;
-        double sdTotal = 0;
 
         for(LengthFrequency lengthData : lengthFrequencies)
         {
@@ -153,11 +153,8 @@ public class FragmentSizeDistribution
             {
                 cumulativeTotal += lengthData.Frequency;
             }
-
-            // sdTotal += pow(abs(lengthData.Length - average), 2);
         }
 
-        // double stdDeviation = sqrt(sdTotal / totalFragments);
         double stdDeviation = median - stdDevLength;
 
         return new FragmentLengthBounds(lowerBound, upperBound, median, stdDeviation);
@@ -280,7 +277,8 @@ public class FragmentSizeDistribution
                     return false;
             }
 
-            if(record.getCigar().containsOperator(CigarOperator.N) || record.getCigar().containsOperator(CigarOperator.S))
+            // only fully aligned reads
+            if(record.getCigar().getCigarElements().size() != 1 || record.getCigar().getCigarElements().get(0).getOperator() != M)
                 return false;
 
             return true;

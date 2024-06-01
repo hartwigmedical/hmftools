@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
@@ -38,6 +39,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class PhaseSetBuilder
 {
@@ -323,6 +325,34 @@ public class PhaseSetBuilder
 
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+
+        // remove any ref discordant candidates if their only criteria for inclusion is being long
+        List<SupportRead> refCandidates1 = Lists.newArrayList();
+        boolean hasNonLocalTumorFragment = false;
+        boolean hasNonLocalRefFragment = false;
+
+        for(SupportRead supportRead : matchedCandidates1)
+        {
+            if(supportRead.isReference())
+            {
+                refCandidates1.add(supportRead);
+
+                hasNonLocalRefFragment |= CommonUtils.isDiscordantFragment(
+                        supportRead.cachedRead().bamRecord(), -1, supportRead.supplementaryData());
+            }
+            else
+            {
+                hasNonLocalTumorFragment |= CommonUtils.isDiscordantFragment(
+                        supportRead.cachedRead().bamRecord(), -1, supportRead.supplementaryData());
+            }
+        }
+
+        if(hasNonLocalTumorFragment && !hasNonLocalRefFragment)
+        {
+            List<SupportRead> refCandidates2 = matchedCandidates2.stream().filter(x -> x.isReference()).collect(Collectors.toList());
+            refCandidates1.forEach(x -> matchedCandidates1.remove(x));
+            refCandidates2.forEach(x -> matchedCandidates2.remove(x));
+        }
 
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching);
