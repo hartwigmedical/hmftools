@@ -216,6 +216,9 @@ public class PhaseSetBuilder
             boolean assembly1Linked = linkedAssemblies.contains(assembly1);
             boolean assembly2Linked = linkedAssemblies.contains(assembly2);
 
+            if(assembly1Linked && assembly2Linked)
+                continue;
+
             // test if a link can be made
             if(!assembly1Linked && !assembly2Linked)
             {
