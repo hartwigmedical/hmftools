@@ -104,6 +104,7 @@ public class RefBaseAssembly
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
+    public Junction junction() { return mJunction; }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }

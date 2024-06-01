@@ -9,7 +9,9 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
@@ -52,7 +54,7 @@ public class JunctionAssembler
         }
         else
         {
-            Map<Integer, List<Read>> indelLengthReads = Maps.newHashMap();
+            Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();
 
             // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
 
@@ -225,42 +227,5 @@ public class JunctionAssembler
 
             assembly.extendRefBasesWithJunctionRead(support.cachedRead(), support);
         }
-    }
-
-    private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
-    {
-        int maxIndelLength = maxIndelLength(read.cigarElements());
-
-        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
-        {
-            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
-            if(lengthReads == null)
-            {
-                lengthReads = Lists.newArrayList();
-                indelLengthReads.put(maxIndelLength, lengthReads);
-            }
-
-            lengthReads.add(read);
-        }
-    }
-
-    private static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
-    {
-        if(indelLengthReads.isEmpty())
-            return Collections.emptyList();
-
-        int maxFrequency = 0;
-        int indelLength = 0;
-
-        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
-        {
-            if(entry.getValue().size() > maxFrequency)
-            {
-                indelLength = entry.getKey();
-                maxFrequency = entry.getValue().size();
-            }
-        }
-
-        return indelLengthReads.get(indelLength);
     }
 }

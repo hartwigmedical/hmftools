@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 
 import java.util.Set;
@@ -79,6 +80,12 @@ public class Variant
         mInsertSequence = sv.insertSequence();
 
         mFilters = Sets.newHashSet();
+
+        // keep any non-pass filters from assembly
+        sv.startContext().getFilters().stream().filter(x -> !x.equals(PASS)).forEach(x -> mFilters.add(FilterType.valueOf(x)));
+
+        if(sv.type() != SGL)
+            sv.endContext().getFilters().stream().filter(x -> !x.equals(PASS)).forEach(x -> mFilters.add(FilterType.valueOf(x)));
 
         mPonCount = 0;
         mIsHotspot = false;
