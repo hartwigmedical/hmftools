@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedExtensionBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.formLink;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -73,6 +75,12 @@ public class RemoteRegionAssembler
             return false;
 
         if(assembly.stats().JuncMateDiscordantRemote < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return false;
+
+        // check for sufficient diversity in the extension bases
+        int trimmedExtBaseLength = calcTrimmedExtensionBaseLength(assembly);
+
+        if(trimmedExtBaseLength < MIN_VARIANT_LENGTH)
             return false;
 
         return true;
@@ -340,7 +348,11 @@ public class RemoteRegionAssembler
 
         remoteAssembly.buildRepeatInfo();
 
-        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, 0);
+        // switch if first is -ve orientation as per normal link testing
+        if(assemblySeq.Reversed)
+            return new AssemblyLink(remoteAssembly, assembly, LinkType.SPLIT, "", "");
+        else
+            return new AssemblyLink(assembly, remoteAssembly, LinkType.SPLIT, "", "");
     }
 
     @VisibleForTesting

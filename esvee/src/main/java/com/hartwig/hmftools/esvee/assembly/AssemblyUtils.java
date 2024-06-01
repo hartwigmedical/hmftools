@@ -153,6 +153,19 @@ public final class AssemblyUtils
         return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
     }
 
+    public static int calcTrimmedExtensionBaseLength(final JunctionAssembly assembly)
+    {
+        int extBaseLength = assembly.extensionLength();
+
+        if(assembly.repeatInfo().isEmpty())
+            return extBaseLength;
+
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() + 1 : 0;
+        int seqEnd = assembly.isForwardJunction() ? seqStart + extBaseLength - 1 : extBaseLength - 1;
+
+        return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
+    }
+
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {
         if(assembly.outcome() != AssemblyOutcome.UNSET)

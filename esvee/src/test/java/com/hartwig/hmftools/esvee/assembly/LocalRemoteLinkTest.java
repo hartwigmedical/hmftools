@@ -154,10 +154,12 @@ public class LocalRemoteLinkTest
 
         assertNotNull(assemblyLink);
         assertEquals(BND, assemblyLink.svType());
-        assertEquals(150, assemblyLink.second().junction().Position);
+        assertEquals(CHR_2, assemblyLink.first().junction().Chromosome);
+        assertEquals(150, assemblyLink.first().junction().Position);
+        assertEquals(REVERSE, assemblyLink.first().junction().Orient);
+        assertEquals(1, assemblyLink.first().supportCount());
+
+        assertEquals(100, assemblyLink.second().junction().Position);
         assertEquals(REVERSE, assemblyLink.second().junction().Orient);
-        assertEquals(1, assemblyLink.second().supportCount());
-
     }
-
 }
