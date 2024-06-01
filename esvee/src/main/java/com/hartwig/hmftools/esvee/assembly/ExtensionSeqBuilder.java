@@ -95,7 +95,7 @@ public class ExtensionSeqBuilder
     public byte[] baseQualitiies() { return mBaseQuals; }
     public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
-    public boolean isValid() { return mIsValid; }
+    public boolean  isValid() { return mIsValid; }
 
     public List<SupportRead> formAssemblySupport()
     {
