@@ -237,7 +237,7 @@ public class RefBaseExtender
                 checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, Collections.emptySet());
 
                 if(refBaseAssembly.supportCount() > 0)
-                    assembly.mergeRefBaseAssembly(refBaseAssembly);
+                    assembly.mergeRefBaseAssembly(refBaseAssembly, "non-branched");
             }
             else
             {
@@ -310,7 +310,7 @@ public class RefBaseExtender
                 if(refBaseAssembly.supportCount() == 0)
                     continue;
 
-                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, "branched new");
 
                 if(AssemblyUtils.hasUnsetBases(junctionAssembly))
                     continue;
@@ -326,7 +326,7 @@ public class RefBaseExtender
             {
                 if(refBaseAssembly.supportCount() > 0) // same criteria as above
                 {
-                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, "branched original");
                 }
             }
         }
@@ -429,6 +429,7 @@ public class RefBaseExtender
             refBaseAssembly.checkAddRead(support.cachedRead(), type, ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
         }
 
+        refBaseAssembly.checkValidBases();
 
         /* UNUSED for now: check for recurring indels in the ref base region, and de-prioritise these if not dominant
         Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();

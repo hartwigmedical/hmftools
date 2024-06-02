@@ -6,7 +6,9 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import static htsjdk.samtools.CigarOperator.S;
@@ -271,6 +273,16 @@ public class RefBaseAssembly
         }
 
         mSupport.add(new SupportRead(read, supportType, 0, 0, mismatchCount));
+    }
+
+    public void checkValidBases()
+    {
+        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
+
+        if(!emptyBaseRanges.isEmpty())
+        {
+            SV_LOGGER.debug("refAssembly({}) has empty ranges: {}", toString(), emptyBaseRanges);
+        }
     }
 
     public String toString()

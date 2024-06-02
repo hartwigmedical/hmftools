@@ -525,7 +525,7 @@ public class JunctionAssembly
         }
     }
 
-    public void mergeRefBaseAssembly(final RefBaseAssembly refBaseAssembly)
+    public void mergeRefBaseAssembly(final RefBaseAssembly refBaseAssembly, final String context)
     {
         // find the longest length of aligned reference bases extending back from the junction
         int newRefBaseCount = refBaseAssembly.validRefBaseLength();
@@ -555,8 +555,8 @@ public class JunctionAssembly
 
         if(!emptyBaseRanges.isEmpty())
         {
-            SV_LOGGER.debug("assembly({}) refBases(existing={} new={}) empty ranges: {}",
-                    refBaseAssembly, existingRefBaseCount, newRefBaseCount, emptyBaseRanges);
+            SV_LOGGER.debug("assembly({}) context({}) refBases(existing={} new={}) empty ranges: {}",
+                    toString(), context, existingRefBaseCount, newRefBaseCount, emptyBaseRanges);
         }
     }
 
