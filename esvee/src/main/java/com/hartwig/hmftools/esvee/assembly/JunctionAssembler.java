@@ -214,7 +214,6 @@ public class JunctionAssembler
 
         assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
 
-        // order by NM to favour the ref where possible
         if(topSupportRead != null)
         {
             assembly.extendRefBasesWithJunctionRead(topSupportRead.cachedRead(), topSupportRead);

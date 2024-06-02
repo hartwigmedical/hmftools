@@ -29,8 +29,6 @@ public final class ReadAdjustments
                 read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
                 minIndelLength, maxIndelLength);
 
-        int leftEdgeDistance = leftSoftClipLength > 0 ? read.cigarElements().get(0).getLength() : 0;
-
         int lastIndex = read.cigarElements().size() - 1;
 
         int rightSoftClipLength = calcIndelToSoftClipLength(

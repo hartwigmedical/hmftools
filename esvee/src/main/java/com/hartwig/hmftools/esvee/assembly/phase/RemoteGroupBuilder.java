@@ -141,6 +141,7 @@ public class RemoteGroupBuilder extends ThreadTask
             linkedJunctionGroups.addAll(overlappingJunctions);
         }
 
+        // CHECK: really necessary if already checked by local phase group (same junction) building?
         if(!assembly.refSideSoftClips().isEmpty())
         {
             // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
