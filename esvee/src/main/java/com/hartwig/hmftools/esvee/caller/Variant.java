@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -82,10 +83,8 @@ public class Variant
         mFilters = Sets.newHashSet();
 
         // keep any non-pass filters from assembly
-        sv.startContext().getFilters().stream().filter(x -> !x.equals(PASS)).forEach(x -> mFilters.add(FilterType.valueOf(x)));
-
-        if(sv.type() != SGL)
-            sv.endContext().getFilters().stream().filter(x -> !x.equals(PASS)).forEach(x -> mFilters.add(FilterType.valueOf(x)));
+        addExistingFilters(sv.startContext());
+        addExistingFilters(sv.endContext());
 
         mPonCount = 0;
         mIsHotspot = false;
@@ -155,6 +154,24 @@ public class Variant
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }
     public boolean isPass() { return mFilters.isEmpty(); }
+
+    private void addExistingFilters(final VariantContext variantContext)
+    {
+        if(variantContext == null)
+            return;
+
+        // keep any non-pass filters from assembly
+        for(String filterStr : variantContext.getFilters())
+        {
+            if(filterStr.equals(PASS))
+                continue;
+
+            FilterType filterType = Arrays.stream(FilterType.values()).filter(x -> x.vcfTag().equals(x)).findFirst().orElse(null);
+
+            if(filterType != null)
+                mFilters.add(filterType);
+        }
+    }
 
     public String toString()
     {
