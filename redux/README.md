@@ -212,9 +212,11 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 - **UMI Base qual** - Not currently used, but could add value. Used in fgbio.
 - **G>T errors on 1st base on UMIs** – We have observed this frequently in TWIST data, but don’t know why. 
 - **INDELS near 5' read end** - We should add a final pass to UMI collapsing to allow for indels at the 5’ end of the read where we collapse groups with identical UMIs that match coordinates on 1 end and within 8 bases on the other end.
+- **R2 UMI sometimes is Poly G** - Sometimes R2 fails to be read by illumin sequencers and returns Poly G.  In this case we may end up with a 2nd fragment covering R1 with an unmapped R2.
 
 **Consensus Fragment**
-- **DUAL strand consensus ref preference** - For DUAL strand consensus a qual 11 ref on one strand can cause a qual 37 alt on the other to be set to consensus ref.  This may be sub-optimal. 
+- **DUAL strand consensus ref preference** - For DUAL strand consensus a qual 11 ref on one strand can cause a qual 37 alt on the other to be set to consensus ref.  This may be sub-optimal.
+- **Max QUAL not always representative** - Sometimes we may see n fragments collaped with n-1 having base qual 11 and the nth fragment having base qual 37.  The low median qual indicates a potential issue, but we take the max qual right now.  This can lead to over confident DUPLEX calls
 
 **Problematic regions definitions**
 - REDUX should trinculeotide repeats of at least 30 length and all dinculeotide / single base repeats of  of 20-30 bases to the problematic regions file. 
