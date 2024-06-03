@@ -60,7 +60,7 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>4.0</amber.version>
+        <amber.version>4.0.1</amber.version>
         <bam-tools.version>1.4</bam-tools.version>
         <cider.version>1.0.2</cider.version>
         <cobalt.version>2.0</cobalt.version>

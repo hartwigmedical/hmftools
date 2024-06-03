@@ -183,7 +183,10 @@ public class AmberApplication implements AutoCloseable
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory,
                 germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream().sorted().collect(toList());
+        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
+                .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
+                .sorted().collect(toList());
+
         final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
 
         final List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
