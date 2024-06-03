@@ -83,9 +83,6 @@ public class PurpleConstants
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
-    // somatic enrichment
-    public static final double BIALLELIC_PROBABILITY = 0.005;
-
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
@@ -126,5 +123,11 @@ public class PurpleConstants
 
     // drivers
     public static final int MAX_INDEL_DRIVER_REPEAT_COUNT = 7;
+
+    // biallelic (no wildtype allele remaining) probability
+    public static final int BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE = 612; // input into LOH probability
+    public static final int BIALLELIC_GROWTH_FACTOR = 20; // input into LOH probability
+    public static final double BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH = 0.0395; // input into LOH probability
+    public static final double BIALLELIC_BASE_LOH_ERROR_RATE = 0.01;
 
 }

@@ -1,14 +1,21 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.Math.exp;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_PROBABILITY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_BASE_LOH_ERROR_RATE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_GROWTH_FACTOR;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +24,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -69,11 +75,11 @@ public class SomaticPurityEnrichment
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 
         double vaf = mPurityAdjuster.purityAdjustedVAF(
-                purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), variant.alleleFrequency(), isGermlineHetDeletion);
+                purpleCopyNumber.chromosome(), max(0.001, copyNumber), variant.alleleFrequency(), isGermlineHetDeletion);
 
-        double variantCopyNumber = Math.max(0, vaf * copyNumber);
-
-        boolean biallelic = isBiallelic(variant, purpleCopyNumber, variantCopyNumber);
+        double variantCopyNumber = max(0, vaf * copyNumber);
+        
+        double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
 
         VariantContext variantContext = variant.context();
 
@@ -82,32 +88,90 @@ public class SomaticPurityEnrichment
 
         variantContext.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
         variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
-        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
+        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, biallelicProbability);
     }
 
-    private static boolean isBiallelic(final SomaticVariant variant, final PurpleCopyNumber purpleCopyNumber, double variantCopyNumber)
+    // version 6.0 - New biallelic model
+    private static double probabilityLoh(double minorAlleleCopyNumber)
     {
-        /* if the minorAlleleCN > 0.5 then a biallelic state should not generally be possible unless either the minorAlleleCN is measured incorrectly
-        or the variant is on both alleles. Therefore, we add an extra check for biallelic:
+        double probabilityLoh = (1 - 1 / pow((1 + BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE * exp(-BIALLELIC_GROWTH_FACTOR * minorAlleleCopyNumber)), 1 / BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH));
 
-        If minorAlleleCopyNumber > 0.5 then only call as biallelic if:
-            Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)],AlleleReadCount)<0.005
-        */
+        return probabilityLoh;
+    }
+
+    private static double probabilityNoLoh(double probabilityLoh)
+    {
+        double probabilityNoLoh = 1 - probabilityLoh;
+
+        return probabilityNoLoh;
+    }
+
+    private static double vcnThresholdForNoWildtype(double copyNumber)
+    {
+        double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(1.5, copyNumber - 0.8));
+
+        return vcnThresholdForNoWildtype;
+    }
+
+    private static double variantReadCountAtThreshold(double threshold, double variantCopyNumber, double observedAlleleReadCount)
+    {
+        double variantReadCountAtThreshold = (threshold / variantCopyNumber) * observedAlleleReadCount;
+
+        return variantReadCountAtThreshold;
+    }
+
+    private static double conditionalProbNoWildtypeAssumeLoh(double variantReadCountAtThreshold, double observedAlleleReadCount)
+    {
+        PoissonDistribution poissonDist = new PoissonDistribution(observedAlleleReadCount);
+
+        int variantReadCountAtThresholdInteger = (int)round(variantReadCountAtThreshold);
+        double conditionalProbNoWildtypeAssumeLoh = 1 - poissonDist.cumulativeProbability(variantReadCountAtThresholdInteger);
+
+        return conditionalProbNoWildtypeAssumeLoh;
+    }
+
+    private static double conditionalProbNoWildtypeAssumeNoLoh(double conditionalProbNoWildtypeAssumeLoh, double probabilityLoh)
+    {
+        double conditionalProbNoWildtypeAssumeNoLOH = max(probabilityLoh, BIALLELIC_BASE_LOH_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh) + max(probabilityLoh, BIALLELIC_BASE_LOH_ERROR_RATE));
+
+        if(Double.isNaN(conditionalProbNoWildtypeAssumeNoLOH))
+        {
+            return 0.0d;
+        }
+
+        return conditionalProbNoWildtypeAssumeNoLOH;
+    }
+
+    private static double probabilityNoWildtype(double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh, double conditionalProbNoWildtypeAssumeNoLoh)
+    {
+        double probabilityNoWildtype = probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
+
+        return probabilityNoWildtype;
+    }
+
+    public static double calculateBiallelic(final PurpleCopyNumber purpleCopyNumber, final SomaticVariant purpleSomaticVariant)
+    {
+        // inputs
+        double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 
-        if(Doubles.greaterThan(copyNumber, 0) && copyNumber - variantCopyNumber >= 0.5)
-            return false;
+        double variantCopyNumber = purpleSomaticVariant.decorator().variantCopyNumber();
+        double alleleReadCount = purpleSomaticVariant.alleleReadCount();
 
-        double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
-        if(minorAlleleCopyNumber < 0.5)
-            return true;
+        // part 1
+        double probabilityLoh = probabilityLoh(minorAlleleCopyNumber);
+        double probabilityNoLoh = probabilityNoLoh(probabilityLoh);
 
-        int alleleReadCount = variant.alleleReadCount();
+        // part 2
+        double vcnThresholdForNoWildtype = vcnThresholdForNoWildtype(copyNumber);
+        double variantReadCountAtThreshold = variantReadCountAtThreshold(vcnThresholdForNoWildtype, variantCopyNumber, alleleReadCount);
 
-        double expectedAlleleReadCount = alleleReadCount / variantCopyNumber * (copyNumber - min(1, minorAlleleCopyNumber));
-        PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleReadCount);
-        double poissonProb = 1 - poissonDist.cumulativeProbability(alleleReadCount - 1);
+        // part 3
+        double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(variantReadCountAtThreshold, alleleReadCount);
+        double conditionalProbNoWildtypeAssumeNoLoh = conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
 
-        return poissonProb < BIALLELIC_PROBABILITY;
+        // Final calculation
+        double probabilityNoWildtype = probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
+        return probabilityNoWildtype;
     }
 }
