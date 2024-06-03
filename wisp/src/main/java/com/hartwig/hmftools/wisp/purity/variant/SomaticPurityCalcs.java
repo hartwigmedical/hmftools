@@ -36,7 +36,7 @@ public final class SomaticPurityCalcs
 
     public static double estimatedProbability(int alleleFragments, double noiseFragments)
     {
-        if(alleleFragments <= noiseFragments || noiseFragments == 0)
+        if(alleleFragments == 0 && noiseFragments == 0)
             return 1;
 
         PoissonDistribution poisson = new PoissonDistribution(noiseFragments);

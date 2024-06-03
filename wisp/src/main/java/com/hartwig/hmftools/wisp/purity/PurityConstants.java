@@ -19,6 +19,7 @@ public class PurityConstants
     public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
     public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;
 
+    // somatic variants
     public static final double LOW_PROBABILITY = 0.01;
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
 
@@ -42,7 +43,9 @@ public class PurityConstants
 
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
 
-    public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45, 48);
+    public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45);
+    public static final int BQR_MIN_QUAL = 35;
+    public static final double BQR_MIN_ERROR_RATE = 1e-5;
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 

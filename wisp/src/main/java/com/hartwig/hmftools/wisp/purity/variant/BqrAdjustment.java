@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.round;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_QUAL;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,8 +36,6 @@ public class BqrAdjustment
         mBqrContextData = Lists.newArrayList();
     }
 
-    private static final int BQR_MIN_QUAL = 35;
-
     private static final byte NO_KEY_VALUE = 1;
 
     public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
@@ -49,7 +49,7 @@ public class BqrAdjustment
         BqrContextData bqrData = mBqrContextData.stream()
                 .filter(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt)).findFirst().orElse(null);
 
-        return bqrData != null ? bqrData.errorRate() : 0;
+        return bqrData != null ? max(bqrData.errorRate(), BQR_MIN_ERROR_RATE) : BQR_MIN_ERROR_RATE;
     }
 
     public static double calcErrorRate(final List<BqrContextData> bqrContextData)
