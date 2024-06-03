@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
@@ -43,11 +44,23 @@ public class MsiJitterCalcs
         {
             msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir);
         }
+        else
+        {
+            for(String sampleId : sampleIds)
+            {
+                msiJitterCalcs.setSampleParams(sampleId, DEFAULT_JITTER_PARAMS);
+            }
+        }
 
         return msiJitterCalcs;
     }
 
     public List<MsiModelParams> getSampleParams(final String sampleId) { return mSampleParams.get(sampleId); }
+
+    public void setSampleParams(final String sampleId, final List<JitterModelParams> params)
+    {
+        mSampleParams.put(sampleId, params.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList()));
+    }
 
     public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir)
     {
@@ -189,11 +202,5 @@ public class MsiJitterCalcs
         double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
 
         return prob > MSI_JITTER_NOISE_RATE;
-    }
-
-    @VisibleForTesting
-    public void setSampleParams(final String sampleId, final List<JitterModelParams> params)
-    {
-        mSampleParams.put(sampleId, params.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList()));
     }
 }

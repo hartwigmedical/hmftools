@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
+
+import java.util.List;
+
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
@@ -136,4 +141,19 @@ public class SageConstants
             "low_confidence", 1e-11, 180, 0.025,
             10, 15, 6, 9,
             0.04);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP = new JitterModelParams(
+            "A/C/G/T", 0.05, 0.09, 0.13, 0.04,
+            -0.11, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN = new JitterModelParams(
+            "AC/AG/AT/CA/CG/CT/GA/GC/GT/TA/TC/TG", 0.11, 0.15, 0.19, 0.04,
+            -0.05, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_3P = new JitterModelParams(
+            REPEAT_UNIT_3_PLUS_LABEL, 0.15, 0.19, 0.23, 0.04,
+            -0.01, 1);
+
+    public static final List<JitterModelParams> DEFAULT_JITTER_PARAMS = List.of(
+            DEFAULT_JITTER_PARAMS_HP, DEFAULT_JITTER_PARAMS_DN, DEFAULT_JITTER_PARAMS_3P);
 }
