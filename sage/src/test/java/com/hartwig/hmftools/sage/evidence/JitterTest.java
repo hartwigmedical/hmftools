@@ -119,20 +119,20 @@ public class JitterTest
         String sampleId = TEST_SAMPLE;
         msiJitterCalcs.setSampleParams(sampleId, List.of(jitterParams1, jitterParams2, jitterParams3));
 
-        SimpleVariant variant = createSimpleVariant(100, "AA", "A");
+        SimpleVariant variant = createSimpleVariant(100, "TA", "T");
         VariantReadContext readContext = createReadContext(variant, "GT", "AAAAT");
 
         double errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(5.68e-8, errorRate, 1e-9);
+        assertEquals(5.87e-8, errorRate, 1e-9);
 
-        variant = createSimpleVariant(100, "A", "AAAA");
+        variant = createSimpleVariant(100, "T", "TAAAA");
         readContext = createReadContext(variant, "GT", "AAAAT");
 
         errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(8.3e-27, errorRate, 1e-28);
+        assertEquals(1.69e-35, errorRate, 1e-35);
 
         // too many repeats changing
-        variant = createSimpleVariant(100, "A", "AAAAAAA");
+        variant = createSimpleVariant(100, "T", "TAAAAAAA");
         readContext = createReadContext(variant, "GT", "AAAAT");
 
         errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
@@ -143,7 +143,7 @@ public class JitterTest
         readContext = createReadContext(variant, "GT", "CGTACGTACGTACGTACGTGG");
 
         errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(1.71e-8, errorRate, 1e-9);
+        assertEquals(1.80e-7, errorRate, 1e-8);
     }
 
     @Test

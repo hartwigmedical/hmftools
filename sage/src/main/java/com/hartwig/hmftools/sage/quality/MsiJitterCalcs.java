@@ -120,6 +120,9 @@ public class MsiJitterCalcs
 
         int impliedAltChange = altBases.length() / refRepeat.repeatLength();
 
+        if(readContext.variant().isDelete())
+            impliedAltChange *= -1;
+
         if(impliedAltChange > MSI_JITTER_MAX_REPEAT_CHANGE)
             return 0;
 

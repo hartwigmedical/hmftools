@@ -144,7 +144,7 @@ public class QualityCalculator
         if(readContextCounter.isIndel())
         {
             double avgCoreQuality = readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
-            double msiIndelErrorRate = readContextCounter.qualCache().msiIndelErrorRate();
+            double msiIndelErrorRate = readContextCounter.qualCache().msiIndelErrorQual();
             return msiIndelErrorRate > 0 ? min(avgCoreQuality, msiIndelErrorRate) : avgCoreQuality;
         }
 

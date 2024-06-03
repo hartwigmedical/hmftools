@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.quality.MsiJitterCalcs.getVariantRepeatInfo;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.qual.BqrReadType;
-import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
@@ -16,7 +14,7 @@ public class ReadContextQualCache
     private final String mVariantAlt;
     private final Map<String,Double>[] mQualMapByIndex;
     private final QualityCalculator mQualityCalculator;
-    private final double mMsiIndelErrorRate;
+    private final double mMsiIndelErrorQual;
 
     public ReadContextQualCache(final VariantReadContext readContext, final QualityCalculator qualityCalculator, final String sampleId)
     {
@@ -25,8 +23,8 @@ public class ReadContextQualCache
 
         mQualityCalculator = qualityCalculator;
 
-        RepeatInfo repeatInfo = getVariantRepeatInfo(readContext);
-        mMsiIndelErrorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
+        double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
+        mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : 0;
 
         mQualMapByIndex = new HashMap[mVariantAlt.length()];
 
@@ -36,7 +34,7 @@ public class ReadContextQualCache
         }
     }
 
-    public double msiIndelErrorRate() { return mMsiIndelErrorRate; }
+    public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
 
     public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
     {
