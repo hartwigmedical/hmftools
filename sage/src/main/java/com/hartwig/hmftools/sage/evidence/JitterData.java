@@ -4,13 +4,10 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.SHORTENED;
-import static com.hartwig.hmftools.sage.quality.MsiJitterCalcs.findApplicableParams;
 
 import java.util.List;
 
@@ -29,14 +26,14 @@ public class JitterData
     private int mLengthened;
     private int mShortened;
     private double mQualBoost;
-    private boolean mWithinNoise;
+    private boolean mFilterOnNoise;
 
     public JitterData()
     {
         mLengthened = 0;
         mShortened = 0;
-        mQualBoost = 0;
-        mWithinNoise = false;
+        mQualBoost = 1;
+        mFilterOnNoise = false;
     }
 
     public void update(final JitterMatch jitterMatch)
@@ -52,7 +49,7 @@ public class JitterData
     public int[] summary() { return new int[] { mShortened, mLengthened }; }
 
     public double qualBoost() { return mQualBoost; }
-    public boolean isWithinNoise() { return mWithinNoise; }
+    public boolean filterOnNoise() { return mFilterOnNoise; }
 
     public String toString() { return format("short(%d) long(%d)", mShortened, mLengthened); }
 
@@ -161,11 +158,11 @@ public class JitterData
 
         if(noiseOutcome == JitterNoiseOutcome.FILTER_VARIANT)
         {
-            mWithinNoise = true;
+            mFilterOnNoise = true;
             return;
         }
 
-        mWithinNoise = false;
+        mFilterOnNoise = false;
         mQualBoost = 1;
 
         if(noiseOutcome == JitterNoiseOutcome.SHORTENED_NOISE || noiseOutcome == JitterNoiseOutcome.BOTH_NOISE)
@@ -265,7 +262,7 @@ public class JitterData
     {
         mShortened = shortened;
         mLengthened = lengthened;
-        mQualBoost = 0;
-        mWithinNoise = false;
+        mQualBoost = 1;
+        mFilterOnNoise = false;
     }
 }

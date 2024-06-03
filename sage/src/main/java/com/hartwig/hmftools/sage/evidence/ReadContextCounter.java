@@ -184,9 +184,14 @@ public class ReadContextCounter
         return mCounts.Total == 0 ? 0d : mCounts.altSupport() / (double)mCounts.Total;
     }
 
-    public int tumorQuality()
+    public double tumorQuality()
     {
-        return mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
+        int qualTotal = mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
+
+        if(!mJitterData.filterOnNoise())
+            qualTotal *= mJitterData.qualBoost();
+
+        return qualTotal;
     }
 
     public int[] counts() { return mCounts.toArray(); }

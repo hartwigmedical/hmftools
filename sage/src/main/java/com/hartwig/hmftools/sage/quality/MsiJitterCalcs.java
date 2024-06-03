@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
@@ -9,7 +7,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHANGE;
-import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,14 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.Nullable;
 
 public class MsiJitterCalcs
@@ -88,18 +83,6 @@ public class MsiJitterCalcs
         return true;
     }
 
-    public static RepeatInfo getVariantRepeatInfo(final VariantReadContext readContext)
-    {
-        if(!readContext.variant().isIndel())
-            return null;
-
-        int repeatIndexStart = readContext.variantRefIndex() + 1;
-
-        return RepeatInfo.findMaxRepeat(
-                readContext.RefBases, repeatIndexStart, repeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
-                false, repeatIndexStart);
-    }
-
     public double calcErrorRate(final VariantReadContext readContext, final String sampleId)
     {
         if(!readContext.variant().isIndel())
@@ -131,7 +114,7 @@ public class MsiJitterCalcs
         if(allParams == null)
             return 0;
 
-        MsiModelParams varParams = findApplicableParams(allParams, refRepeat.repeatLength(), refRepeat.Bases);
+        MsiModelParams varParams = findApplicableParams(allParams, refRepeat.Bases);
 
         if(varParams == null)
             return 0;
@@ -153,8 +136,28 @@ public class MsiJitterCalcs
             return null;
     }
 
-    public static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final int repeatLength, final String repeatBases)
+    public double getErrorRate(final List<MsiModelParams> allParams, final String repeatBases, int repeatCount, int repeatChange)
     {
+        // if variant measures shortened count for say a repeat of 5, then implies ref was 4 so get the error rate for 4 going to 5
+        double errorRate = MSI_JITTER_DEFAULT_ERROR_RATE;
+
+        if(repeatCount < MIN_REPEAT_COUNT)
+            return errorRate;
+
+        MsiModelParams modelParams = findApplicableParams(allParams, repeatBases);
+
+        if(modelParams == null)
+            return errorRate;
+
+        Double fixedScale = getScaleParam(modelParams.params(), repeatCount);
+
+        return modelParams.calcErrorRate(repeatCount, repeatChange, fixedScale);
+    }
+
+    private static MsiModelParams findApplicableParams(final List<MsiModelParams> allParams, final String repeatBases)
+    {
+        int repeatLength = repeatBases.length();
+
         for(MsiModelParams params : allParams)
         {
             if(repeatLength <= MAX_SPECIFIC_LENGTH_UNIT)
@@ -172,38 +175,5 @@ public class MsiJitterCalcs
         }
 
         return null;
-    }
-
-    public double getErrorRate(final List<MsiModelParams> allParams, final String repeatBases, int repeatCount, int repeatChange)
-    {
-        // if variant measures shortened count for say a repeat of 5, then implies ref was 4 so get the error rate for 4 going to 5
-        double errorRate = MSI_JITTER_DEFAULT_ERROR_RATE;
-
-        if(repeatCount < MIN_REPEAT_COUNT)
-            return errorRate;
-
-        MsiModelParams modelParams = findApplicableParams(allParams, repeatCount, repeatBases);
-
-        if(modelParams == null)
-            return errorRate;
-
-        Double fixedScale = getScaleParam(modelParams.params(), repeatCount);
-
-        return modelParams.calcErrorRate(repeatCount, repeatChange, fixedScale);
-    }
-
-    private boolean isWithinNoise(int fullSupport, int jitterCount, double errorRate)
-    {
-        // a low full count relative to the total will be classified as within noise
-        double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
-        if(jitterRatio < 2 * errorRate)
-            return true;
-
-        // also test a p-value of jitter vs the full support counts
-        BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRate);
-
-        double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
-
-        return prob > MSI_JITTER_NOISE_RATE;
     }
 }
