@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;
@@ -95,10 +96,10 @@ public class CobaltApplication
                     gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
-            if (mConfig.TargetRegionPath != null)
+            if(mConfig.TargetRegionPath != null)
             {
                 CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath)
-                        .separator('\t')
+                        .separator(TSV_DELIM.charAt(0))
                         .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
                 Table targetRegionEnrichment = Table.read().usingOptions(options);
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);

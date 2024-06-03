@@ -7,10 +7,11 @@ kmin = 1
 baf = read.table(bafFile, header=TRUE, stringsAsFactors = T)
 
 library(dplyr)
-library(copynumber)
 
 if(nrow(baf) > 0)
 {
+    library(copynumber)
+
     chromosomeLevels = levels(baf$chromosome)
     chromosomePrefix = ""
     if (any(grepl("chr", chromosomeLevels, ignore.case = T))) {
