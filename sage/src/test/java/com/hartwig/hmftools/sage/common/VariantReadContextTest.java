@@ -234,7 +234,7 @@ public class VariantReadContextTest
         assertEquals(6, readContext.VarIndex);
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
-        assertEquals(10, readContext.AltIndexUpper);
+        assertEquals(8, readContext.AltIndexUpper);
         assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
@@ -266,7 +266,7 @@ public class VariantReadContextTest
         assertEquals(11, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(11, readContext.AltIndexLower);
-        assertEquals(13, readContext.AltIndexUpper);
+        assertEquals(12, readContext.AltIndexUpper);
         assertEquals("3S8M1D13M", readContext.readCigar());
         assertEquals("TACT", readContext.coreStr());
         assertEquals("CCGCTGTCTG", readContext.leftFlankStr());
@@ -291,7 +291,7 @@ public class VariantReadContextTest
         assertEquals(14, readContext.VarIndex);
         assertEquals(16, readContext.CoreIndexEnd);
         assertEquals(14, readContext.AltIndexLower);
-        assertEquals(17, readContext.AltIndexUpper);
+        assertEquals(15, readContext.AltIndexUpper);
         assertEquals("15M2D5M7S", readContext.readCigar());
     }
 
