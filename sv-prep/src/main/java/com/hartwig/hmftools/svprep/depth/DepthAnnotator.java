@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -121,13 +122,15 @@ public class DepthAnnotator
             System.exit(1);
         }
 
-        SV_LOGGER.info("loaded {} variants from vcf({})", vcfCount, mConfig.InputVcf);
-
         if(mChrVariantMap.isEmpty())
         {
             SV_LOGGER.warn("all variants filtered from vcf({})", vcfCount, mConfig.InputVcf);
+
+            writeVcf(vcfHeader, Collections.emptyList());
             return;
         }
+
+        SV_LOGGER.info("loaded {} variants from vcf({})", vcfCount, mConfig.InputVcf);
 
         if(mConfig.PerfLogTime > 0)
             analyseVariantDistribution();
