@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.ALT_COUNT;
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.REF_COUNT;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_ALT_COUNT;
@@ -8,6 +10,8 @@ import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_REF_COU
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.VARIANT_FRAG_LENGTHS_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
@@ -15,10 +19,13 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFiel
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.sage.VariantFragmentLength;
@@ -43,11 +50,42 @@ public class SampleFragmentLengths
         mVariantStatusMap = Maps.newHashMap();
     }
 
+    private List<VariantFragmentLength> loadFragmentLengths(final String variantVcf)
+    {
+        List<VariantFragmentLength> fragmentLengths = Lists.newArrayList();
+
+        // either load from a file named similarly to the VCF or a patient file incremented with multiples of samples
+        String somaticVcf = filenamePart(variantVcf);
+        String somaticVcfDir = pathFromFile(variantVcf);
+        String fragLengthsDir = mConfig.FragmentLengthDir != null ? mConfig.FragmentLengthDir : somaticVcfDir;
+        String fragmentLengthFile = fragLengthsDir + somaticVcf.replace(".vcf.gz", VARIANT_FRAG_LENGTHS_FILE_ID);
+
+        if(Files.exists(Paths.get(fragmentLengthFile)))
+        {
+            fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
+        }
+        else
+        {
+            int index = 0;
+            fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
+
+            while(Files.exists(Paths.get(fragmentLengthFile)))
+            {
+                fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
+                index += 3;
+                fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
+            }
+
+            CT_LOGGER.debug("patient({}) loaded {} fragment entries from {} files",
+                    mSample.PatientId, fragmentLengths.size(), index / 3);
+        }
+
+        return fragmentLengths;
+    }
+
     public void processSample(final String variantVcf, final List<SomaticVariant> variants)
     {
-        String fragmentLengthFile = variantVcf.replace(".vcf.gz", VARIANT_FRAG_LENGTHS_FILE_ID);
-
-        List<VariantFragmentLength> fragmentLengths = VariantFragmentLength.read(fragmentLengthFile);
+        List<VariantFragmentLength> fragmentLengths = loadFragmentLengths(variantVcf);
 
         if(fragmentLengths == null || fragmentLengths.isEmpty())
             return;
