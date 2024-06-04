@@ -31,6 +31,9 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
@@ -351,27 +354,38 @@ public class ReadContextCounter
             return ALT_SUPPORT;
         }
 
-        boolean canRealign = matchType != ReadContextMatch.REF;
+        RealignedType realignedType = RealignedType.NONE;
 
-        RealignedContext realignment = canRealign ? checkRealignment(record, readVarIndex) : RealignedContext.NONE;
-
-        if(realignment.Type == EXACT)
+        if(matchType != ReadContextMatch.REF)
         {
-            matchType = ReadContextMatch.REALIGNED;
-            registerReadSupport(record, REALIGNED, quality);
+            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex);
 
-            mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
+            if(realignedType == EXACT)
+            {
+                matchType = ReadContextMatch.REALIGNED;
+                registerReadSupport(record, REALIGNED, quality);
 
-            addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-            logReadEvidence(record, matchType, readVarIndex,quality);
+                mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
-            return ALT_SUPPORT;
+                addVariantVisRecord(record, matchType, qualityScores, fragmentData);
+                logReadEvidence(record, matchType, readVarIndex, quality);
+
+                return ALT_SUPPORT;
+            }
+
+            if(realignedType == SHORTENED)
+                mJitterData.update(JitterMatch.SHORTENED);
+            else if(realignedType == LENGTHENED)
+                mJitterData.update(JitterMatch.SHORTENED);
         }
 
         mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), false);
 
-        JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
-        mJitterData.update(jitterMatch);
+        if(realignedType == RealignedType.NONE)
+        {
+            JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
+            mJitterData.update(jitterMatch);
+        }
 
         VariantReadSupport readSupport = null;
 
@@ -474,27 +488,6 @@ public class ReadContextCounter
                 matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
                 mReadContext.CoreIndexStart, mReadContext.VarIndex,
                 mReadContext.CoreIndexEnd, readIndex, format("%.1f", quality));
-    }
-
-    private RealignedContext checkRealignment(final SAMRecord record, int readIndex)
-    {
-        // do a comparison of the bases going from this calculated RI - coreLength - flankLength vs the variant's full read base sequence
-
-        // the read index corresponding to the ref position at the end of the core
-        int realignedReadIndex = Realignment.realignedReadIndexPosition(mReadContext, record);
-
-        if(readIndex == realignedReadIndex)
-            return RealignedContext.NONE;
-
-        if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
-            return RealignedContext.NONE;
-
-        ReadContextMatch match = determineReadContextMatch(record, realignedReadIndex, true);
-
-        if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-            return new RealignedContext(EXACT, mReadContext.totalLength(), realignedReadIndex);
-
-        return RealignedContext.NONE;
     }
 
     public void addLocalPhaseSet(int lps, int readCount, double allocCount)
