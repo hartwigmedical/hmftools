@@ -987,7 +987,7 @@
     ]
   },
   "immuneEscape": {
-    "hasHlaEscapePresent": false,
+    "hasHlaEscape": false,
     "hasAntigenPresentationPathwayEscape": false,
     "hasIFNGammaPathwayEscape": false,
     "hasPDL1OverexpressionEscape": false,

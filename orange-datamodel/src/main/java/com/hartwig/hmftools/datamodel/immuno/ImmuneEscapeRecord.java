@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ImmuneEscapeRecord
 {
-    boolean hasHlaEscapePresent();
+    boolean hasHlaEscape();
 
     boolean hasAntigenPresentationPathwayEscape();
 

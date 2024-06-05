@@ -66,7 +66,7 @@ public class ImmuneEscapeInterpreterTest
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
-        assertTrue(immuneEscape.hasHlaEscapePresent());
+        assertTrue(immuneEscape.hasHlaEscape());
         assertFalse(immuneEscape.hasAntigenPresentationPathwayEscape());
         assertTrue(immuneEscape.hasIFNGammaPathwayEscape());
         assertFalse(immuneEscape.hasPDL1OverexpressionEscape());
@@ -79,17 +79,17 @@ public class ImmuneEscapeInterpreterTest
     {
         String matchingGene = ImmuneEscapeInterpreter.HLA_GENES.iterator().next();
 
-        assertTrue(runWithPurple(withLOH(matchingGene)).hasHlaEscapePresent());
-        assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false)).hasHlaEscapePresent());
-        assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.MISSENSE, true)).hasHlaEscapePresent());
-        assertTrue(runWithPurple(withDeletion(matchingGene)).hasHlaEscapePresent());
-        assertTrue(runWithLinx(withHomozygousDisruption(matchingGene)).hasHlaEscapePresent());
+        assertTrue(runWithPurple(withLOH(matchingGene)).hasHlaEscape());
+        assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false)).hasHlaEscape());
+        assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.MISSENSE, true)).hasHlaEscape());
+        assertTrue(runWithPurple(withDeletion(matchingGene)).hasHlaEscape());
+        assertTrue(runWithLinx(withHomozygousDisruption(matchingGene)).hasHlaEscape());
 
-        assertFalse(runWithPurple(withoutLOH(matchingGene)).hasHlaEscapePresent());
-        assertFalse(runWithPurple(withSubclonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false)).hasHlaEscapePresent());
-        assertFalse(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.MISSENSE, false)).hasHlaEscapePresent());
-        assertFalse(runWithPurple(withAmplification(matchingGene)).hasHlaEscapePresent());
-        assertFalse(runWithPurple(withLOH("random gene")).hasHlaEscapePresent());
+        assertFalse(runWithPurple(withoutLOH(matchingGene)).hasHlaEscape());
+        assertFalse(runWithPurple(withSubclonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false)).hasHlaEscape());
+        assertFalse(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.MISSENSE, false)).hasHlaEscape());
+        assertFalse(runWithPurple(withAmplification(matchingGene)).hasHlaEscape());
+        assertFalse(runWithPurple(withLOH("random gene")).hasHlaEscape());
     }
 
     @Test

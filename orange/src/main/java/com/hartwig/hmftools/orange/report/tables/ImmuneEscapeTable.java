@@ -22,7 +22,7 @@ public final class ImmuneEscapeTable
                 new Cell[] { cells.createHeader("Escape Mechanism"), cells.createHeader("Present?"), cells.createHeader(Strings.EMPTY) });
 
         table.addCell(cells.createContent("HLA-1 loss-of-function"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasHlaEscapePresent(), isTumorFail)));
+        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasHlaEscape(), isTumorFail)));
         table.addCell(cells.createContent(Strings.EMPTY));
 
         table.addCell(cells.createContent("Antigen presentation pathway inactivation"));

@@ -34,7 +34,7 @@ public final class ImmuneEscapeInterpreter
     public static ImmuneEscapeRecord interpret(@NotNull PurpleRecord purple, @NotNull LinxRecord linx)
     {
         return ImmutableImmuneEscapeRecord.builder()
-                .hasHlaEscapePresent(anyGeneWithLOH(purple, HLA_GENES) || anyGeneWithInactivation(purple, linx, HLA_GENES))
+                .hasHlaEscape(anyGeneWithLOH(purple, HLA_GENES) || anyGeneWithInactivation(purple, linx, HLA_GENES))
                 .hasAntigenPresentationPathwayEscape(anyGeneWithInactivation(purple, linx, ANTIGEN_PRESENTATION_GENES))
                 .hasIFNGammaPathwayEscape(anyGeneWithInactivation(purple, linx, IFN_GAMMA_PATHWAY_GENES))
                 .hasPDL1OverexpressionEscape(anyGeneWithAmplification(purple, PD_L1_GENES))

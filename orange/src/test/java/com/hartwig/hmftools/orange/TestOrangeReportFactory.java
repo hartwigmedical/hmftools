@@ -208,7 +208,7 @@ public final class TestOrangeReportFactory
     @NotNull
     private static ImmuneEscapeRecord createTestImmuneEscapeRecord()
     {
-        return TestImmuneEscapeFactory.builder().hasHlaEscapePresent(true).build();
+        return TestImmuneEscapeFactory.builder().hasHlaEscape(true).build();
     }
 
     @NotNull

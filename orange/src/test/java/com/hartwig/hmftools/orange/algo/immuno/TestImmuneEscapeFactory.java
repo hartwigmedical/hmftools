@@ -9,7 +9,7 @@ public final class TestImmuneEscapeFactory
     @NotNull
     public static ImmutableImmuneEscapeRecord.Builder builder() {
         return ImmutableImmuneEscapeRecord.builder()
-                .hasHlaEscapePresent(false)
+                .hasHlaEscape(false)
                 .hasAntigenPresentationPathwayEscape(false)
                 .hasIFNGammaPathwayEscape(false)
                 .hasPDL1OverexpressionEscape(false)
