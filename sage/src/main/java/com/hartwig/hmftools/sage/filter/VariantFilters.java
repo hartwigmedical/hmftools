@@ -32,7 +32,6 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -221,7 +220,7 @@ public class VariantFilters
         if(depth == 0)
             return true;
 
-        int tumorQual = primaryTumor.tumorQuality();
+        double tumorQual = primaryTumor.tumorQuality();
         int strongSupport = primaryTumor.strongAltSupport();
         byte qualPerRead = (byte)round(tumorQual / (double)strongSupport);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerRead);
@@ -239,7 +238,7 @@ public class VariantFilters
     }
 
     private static boolean isQualitySite(
-            final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final int qual, final int altSupport)
+            final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final double qual, final int altSupport)
     {
         if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0)
             return false;
@@ -312,7 +311,7 @@ public class VariantFilters
         if(primaryTumor.readContext().MaxRepeat == null)
             return false;
 
-        return primaryTumor.jitter().isWithinNoise();
+        return primaryTumor.jitter().filterOnNoise();
     }
 
     private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)

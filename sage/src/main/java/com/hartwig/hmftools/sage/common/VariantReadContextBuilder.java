@@ -161,8 +161,10 @@ public class VariantReadContextBuilder
 
     public static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
     {
-        if(variant.isIndel())
+        if(variant.isInsert())
             return readVarIndex + (homology != null ? homology.Length : 0) + 1 + abs(variant.indelLength());
+        else if(variant.isDelete())
+            return readVarIndex + (homology != null ? homology.Length : 0) + 1;
         else
             return readVarIndex + variant.altLength() - 1;
     }

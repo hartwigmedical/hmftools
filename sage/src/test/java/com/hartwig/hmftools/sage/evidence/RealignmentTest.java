@@ -239,4 +239,45 @@ public class RealignmentTest
         readContextCounter.processRead(realignedRead, 0, null);
        //  assertEquals(1, readContextCounter.readCounts().Realigned);
     }
+
+    @Test
+    public void testDelBeforeUnclippedStart()
+    {
+        String refBases = REF_BASES_200.substring(0, 100)
+                + "GGGGATTGGTCTATCTATCTATCTAGG" + REF_BASES_200.substring(0, 100);
+        //         0123456789012345678901234567890123456789
+
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String deletedBases = "TCTATCTA";
+
+        int varPosition = 108;
+        int readPosStart = 89;
+        int varIndexInRead = varPosition - readPosStart;
+        String varBuildReadBases = refBases.substring(readPosStart, varPosition + 1) + refBases.substring(varPosition + 1 + deletedBases.length(), 149);
+
+        String readCigar = "20M8D32M";
+
+        SAMRecord varBuildRead = buildSamRecord(readPosStart, readCigar, varBuildReadBases);
+        String ref = refBases.substring(varPosition, varPosition + 1);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        SimpleVariant var = createSimpleVariant(varPosition, ref + deletedBases, ref);
+        VariantReadContext readContext = builder.createContext(var, varBuildRead, varIndexInRead, refSequence);
+
+        ReadContextCounter readContextCounter = createReadCounter(0, readContext);
+
+        String readBases = "TGGTCTATCTAGG" + REF_BASES_200.substring(0, 20);
+        readCigar = "3S30M";
+        SAMRecord realignedRead = buildSamRecord(varPosition + deletedBases.length() + 1, readCigar, readBases);
+
+        // core end position for this read is 126
+        // index in read for this should be:
+        // 3S   index 0-2   pre position 116
+        // 30M  index 3-32  positions 116-145
+
+        readContextCounter.processRead(realignedRead, 0, null);
+        assertEquals(1, readContextCounter.readCounts().Realigned);
+    }
 }

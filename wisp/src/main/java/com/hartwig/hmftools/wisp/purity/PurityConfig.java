@@ -55,6 +55,7 @@ public class PurityConfig
     public final String PurpleDir;
     public final String AmberDir;
     public final String CobaltDir;
+    public final String FragmentLengthDir;
 
     public final ProbeVariantCache ProbeVariants;
 
@@ -76,6 +77,7 @@ public class PurityConfig
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_DIR = "somatic_dir";
     private static final String BQR_DIR = "bqr_dir";
+    private static final String FRAG_LENGTH_DIR = "frag_length_dir";
     private static final String SKIP_BQR = "skip_bqr";
     private static final String PLOT_DIR = "plot_dir";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
@@ -112,6 +114,7 @@ public class PurityConfig
         AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
         BqrDir = checkAddDirSeparator(configBuilder.getValue(BQR_DIR, SomaticDir));
+        FragmentLengthDir = checkAddDirSeparator(configBuilder.getValue(FRAG_LENGTH_DIR, SomaticDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
@@ -248,6 +251,7 @@ public class PurityConfig
         configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addConfigItem(BQR_DIR, false, "Directory for Sage BQR files");
+        configBuilder.addConfigItem(FRAG_LENGTH_DIR, false, "Directory for Sage fragment length files");
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");
 
         configBuilder.addConfigItem(

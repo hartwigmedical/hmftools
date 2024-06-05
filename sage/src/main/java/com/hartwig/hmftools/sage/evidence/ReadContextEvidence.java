@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
@@ -305,7 +306,18 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
-            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents, fragmentData);
+            ReadMatchType matchType = null;
+
+            try
+            {
+                matchType = readCounter.processRead(record, numberOfEvents, fragmentData);
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("var({}) read({}) error: {}", readCounter.readContext(), readToString(record), e.toString());
+                e.printStackTrace();
+                System.exit(1);
+            }
 
             ++mStats.SupportCounts[matchType.ordinal()];
 

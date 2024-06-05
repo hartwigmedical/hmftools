@@ -21,8 +21,6 @@ public class RawContextCigarHandler implements CigarHandler
 {
     private final SimpleVariant mVariant;
     private final boolean mIsInsert;
-    private final boolean mIsDelete;
-    private final boolean mIsSNV;
 
     private RawContext mResult;
 
@@ -30,8 +28,6 @@ public class RawContextCigarHandler implements CigarHandler
     {
         mVariant = variant;
         mIsInsert = variant.isInsert();
-        mIsDelete = variant.isDelete();
-        mIsSNV = variant.ref().length() == variant.alt().length();
     }
 
     public RawContext result()
@@ -81,35 +77,6 @@ public class RawContextCigarHandler implements CigarHandler
         int variantPosDiff = mVariant.Position - record.getAlignmentEnd();
         int variantReadIndex = scStartIndex + variantPosDiff - 1;
         mResult = new RawContext(variantReadIndex, SOFT_CLIP);
-
-        /* CLEANUP: cannot explain any of the logic below
-
-        if(mIsInsert)
-        {
-            // for inserts from the soft-clipped bases, the variant's position will be the last ref position prior to the SC start
-            if(mVariant.position() != record.getAlignmentEnd())
-                return;
-
-            int readVariantStartPos = readIndex - 1;
-
-            boolean altSupport = element.getLength() >= mVariant.alt().length() && matchesString(record, readVariantStartPos, mVariant.alt());
-
-            if(!altSupport)
-                return;
-
-            mResult = new RawContext(readVariantStartPos, SOFT_CLIP);
-        }
-        else
-        {
-            if(mVariant.position() >= refPosition && mVariant.position() <= refPositionEnd)
-            {
-                int alignmentEnd = record.getAlignmentEnd();
-                int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + mVariant.position();
-
-                mResult = new RawContext(actualIndex, SOFT_CLIP);
-            }
-        }
-        */
     }
 
     @Override
@@ -179,25 +146,6 @@ public class RawContextCigarHandler implements CigarHandler
         }
 
         handleDelete(record, e, readIndex, refPosition);
-    }
-
-    private static boolean matchesString(final SAMRecord record, int index, final String expected)
-    {
-        if(index < 0)
-            return false;
-
-        int readLength = record.getReadBases().length;
-
-        for(int i = 0; i < expected.length(); i++)
-        {
-            if(index + i >= readLength)
-                return false;
-
-            if((byte) expected.charAt(i) != record.getReadBases()[index + i])
-                return false;
-        }
-
-        return true;
     }
 
     public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)

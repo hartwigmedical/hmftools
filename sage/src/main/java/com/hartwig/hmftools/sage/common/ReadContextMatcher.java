@@ -143,6 +143,9 @@ public class ReadContextMatcher
 
     public boolean coversVariant(final SAMRecord record, final int readVarIndex)
     {
+        if(readVarIndex < 0)
+            return false;
+
         int requiredReadIndexLower = readVarIndex + mContext.VarIndex - mContext.AltIndexLower;
         int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarIndex;
 

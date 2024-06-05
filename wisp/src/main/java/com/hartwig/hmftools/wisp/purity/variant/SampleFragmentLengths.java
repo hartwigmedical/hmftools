@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.ALT_COUNT;
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.REF_COUNT;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_ALT_COUNT;
@@ -8,6 +10,8 @@ import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_REF_COU
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.VARIANT_FRAG_LENGTHS_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
@@ -15,11 +19,16 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFiel
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.sage.VariantFragmentLength;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
@@ -43,14 +52,62 @@ public class SampleFragmentLengths
         mVariantStatusMap = Maps.newHashMap();
     }
 
+    private List<VariantFragmentLength> loadFragmentLengths(final String variantVcf)
+    {
+        List<VariantFragmentLength> fragmentLengths = Lists.newArrayList();
+
+        // either load from a file named similarly to the VCF or a patient file incremented with multiples of samples
+        String somaticVcf = filenamePart(variantVcf);
+        String somaticVcfDir = pathFromFile(variantVcf);
+        String fragLengthsDir = mConfig.FragmentLengthDir != null ? mConfig.FragmentLengthDir : somaticVcfDir;
+        String fragmentLengthFile = fragLengthsDir + somaticVcf.replace(".vcf.gz", VARIANT_FRAG_LENGTHS_FILE_ID);
+
+        if(Files.exists(Paths.get(fragmentLengthFile)))
+        {
+            fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
+        }
+        else
+        {
+            int index = 0;
+            fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
+
+            while(Files.exists(Paths.get(fragmentLengthFile)))
+            {
+                fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
+                index += 3;
+                fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
+            }
+
+            CT_LOGGER.debug("patient({}) loaded {} fragment entries from {} files",
+                    mSample.PatientId, fragmentLengths.size(), index / 3);
+        }
+
+        return fragmentLengths;
+    }
+
     public void processSample(final String variantVcf, final List<SomaticVariant> variants)
     {
-        String fragmentLengthFile = variantVcf.replace(".vcf.gz", VARIANT_FRAG_LENGTHS_FILE_ID);
-
-        List<VariantFragmentLength> fragmentLengths = VariantFragmentLength.read(fragmentLengthFile);
+        List<VariantFragmentLength> fragmentLengths = loadFragmentLengths(variantVcf);
 
         if(fragmentLengths == null || fragmentLengths.isEmpty())
             return;
+
+        Map<String,List<SomaticVariant>> variantsMap = Maps.newHashMap();
+
+        String currentChr = "";
+        List<SomaticVariant> currentChrVariants = null;
+
+        for(SomaticVariant variant : variants)
+        {
+            if(!variant.Chromosome.equals(currentChr))
+            {
+                currentChr = variant.Chromosome;
+                currentChrVariants = Lists.newArrayList();
+                variantsMap.put(variant.Chromosome, currentChrVariants);
+            }
+
+            currentChrVariants.add(variant);
+        }
 
         Map<String,FragmentLengthCounts> sampleLengthDistributions = Maps.newHashMap();
 
@@ -65,7 +122,7 @@ public class SampleFragmentLengths
             if(!varFragLength.VariantInfo.equals(currentVariantInfo))
             {
                 currentVariantInfo = varFragLength.VariantInfo;
-                currentUseVariant = useVariant(varFragLength.VariantInfo, variants);
+                currentUseVariant = useVariant(varFragLength.VariantInfo, variantsMap);
             }
 
             useVariant = currentUseVariant;
@@ -102,7 +159,7 @@ public class SampleFragmentLengths
         }
     }
 
-    private boolean useVariant(final String variantInfo, final List<SomaticVariant> variants)
+    private boolean useVariant(final String variantInfo, final Map<String,List<SomaticVariant>> variantsMap)
     {
         Boolean useVariant = mVariantStatusMap.get(variantInfo);
 
@@ -118,18 +175,115 @@ public class SampleFragmentLengths
         String ref = refAlt[0];
         String alt = refAlt[1];
 
-        for(SomaticVariant variant : variants)
-        {
-            if(variant.Chromosome.equals(chromosome) && variant.Position == position && variant.Ref.equals(ref) && variant.Alt.equals(alt))
-            {
-                useVariant = !variant.isFiltered();
-                mVariantStatusMap.put(variantInfo, useVariant);
+        List<SomaticVariant> variants = variantsMap.get(chromosome);
 
-                return useVariant;
+        if(variants == null)
+            return false;
+
+        SomaticVariant variant = findMatchingVariant(position, ref, alt, variants);
+
+        if(variant == null)
+            return false;
+
+        useVariant = !variant.isFiltered();
+        mVariantStatusMap.put(variantInfo, useVariant);
+        return useVariant;
+    }
+
+    private static final int NO_POSITION_MATCH = -1;
+
+    private SomaticVariant findMatchingVariant(final int position, final String ref, final String alt, final List<SomaticVariant> variants)
+    {
+        int matchedIndex = NO_POSITION_MATCH;
+
+        if(variants.size() < 10)
+        {
+            for(int i = 0; i < variants.size(); ++i)
+            {
+                if(variants.get(i).Position == position)
+                {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            int lowIndex = 0;
+            int highIndex = variants.size() - 1;
+            int currentIndex = variants.size() / 2;
+
+            while(true)
+            {
+                int currentPosition = variants.get(currentIndex).Position;
+
+                if(currentPosition == position)
+                {
+                    matchedIndex = currentIndex;
+                    break;
+                }
+
+                if(position < currentPosition)
+                {
+                    // current index is looking too high in the list
+                    if(currentIndex == lowIndex + 1)
+                        break;
+
+                    highIndex = currentIndex;
+                }
+                else
+                {
+                    if(currentIndex == highIndex - 1)
+                        break;
+
+                    lowIndex = currentIndex;
+                }
+
+                int newIndex = lowIndex + (highIndex - lowIndex) / 2;
+
+                if(newIndex == currentIndex)
+                    break;
+
+                currentIndex = newIndex;
             }
         }
 
-        return false;
+        if(matchedIndex == NO_POSITION_MATCH)
+            return null;
+
+        SomaticVariant variant = variants.get(matchedIndex);
+
+        if(variant.Alt.equals(alt) && variant.Ref.equals(ref))
+            return variant;
+
+        // check for ref & alt match
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean searchBack = (i == 0);
+
+            int index = searchBack ? matchedIndex - 1 : matchedIndex + 1;
+
+            while(true)
+            {
+                if(index < 0 || index >= variants.size())
+                    break;
+
+                variant = variants.get(index);
+
+                if(variant.Position != position)
+                    break;
+
+                if(variant.Alt.equals(alt) && variant.Ref.equals(ref))
+                    return variant;
+
+                if(searchBack)
+                    --index;
+                else
+                    ++index;
+            }
+        }
+
+        return null;
     }
 
     public static BufferedWriter initialiseFragmentLengthWriter(final PurityConfig config)

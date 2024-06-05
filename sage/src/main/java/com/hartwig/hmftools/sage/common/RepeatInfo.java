@@ -29,7 +29,12 @@ public class RepeatInfo
 
     public boolean matches(final RepeatInfo other)
     {
-        return Index == other.Index && Bases.equals(other.Bases) && Count == other.Count;
+        return matches(other.Bases, other.Index, other.Count);
+    }
+
+    public boolean matches(final String bases, final int index, final int count)
+    {
+        return Index == index && Bases.equals(bases) && Count == count;
     }
 
     public boolean isMultipleOf(final RepeatInfo other)
