@@ -41,6 +41,7 @@ public class VariantImpactBuilder
 
         VariantTransImpact worstCanonicalImpact = null;
         int worstCanonicalRank = -1;
+        String canonicalGeneName = "";
         String worstGeneName = "";
         String otherReportableTransData = "";
 
@@ -99,8 +100,10 @@ public class VariantImpactBuilder
                         CodingEffect codingEffect = determineCodingEffect(transImpact);
 
                         sj.add(AltTranscriptReportableInfo.serialise(
-                                transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
+                                geneName, transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
                                 transImpact.effectsStr(), codingEffect));
+
+                        canonicalGeneName = geneName;
                     }
                 }
 
@@ -108,7 +111,6 @@ public class VariantImpactBuilder
             }
         }
 
-        String canonicalGeneName = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = NONE;
