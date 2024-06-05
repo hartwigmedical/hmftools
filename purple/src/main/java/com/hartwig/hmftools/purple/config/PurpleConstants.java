@@ -129,5 +129,4 @@ public class PurpleConstants
     public static final int BIALLELIC_GROWTH_FACTOR = 20; // input into LOH probability
     public static final double BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH = 0.0395; // input into LOH probability
     public static final double BIALLELIC_BASE_LOH_ERROR_RATE = 0.01;
-
 }
