@@ -23,7 +23,7 @@ public abstract class ClonalityModel
         mVariants = variants;
     }
 
-    abstract ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity);
+    abstract ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData);
 
     public boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {

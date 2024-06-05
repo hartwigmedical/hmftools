@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_V
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 import static com.hartwig.hmftools.wisp.purity.variant.BqrAdjustment.hasVariantContext;
+import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.convertVafToPurity;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
 import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
@@ -103,6 +104,17 @@ public class SomaticPurityEstimator
 
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
+        int alleleCount = fragmentTotals.sampleAdTotal();
+
+        double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
+
+        double sampleAdjVafLow = lowProbAlleleCount / fragmentTotals.sampleDepthTotal();
+        purityCalcData.PurityRangeLow = estimatedPurity(sampleAdjVafLow, noiseRate, fragmentTotals);
+
+        double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
+        double sampleAdjVafHigh = highProbAlleleCount / fragmentTotals.sampleDepthTotal();
+        purityCalcData.PurityRangeHigh = estimatedPurity(sampleAdjVafHigh, noiseRate, fragmentTotals);
+
         ClonalityModel model = null;
 
         if(VafPeakModel.canUseModel(fragmentTotals))
@@ -121,29 +133,23 @@ public class SomaticPurityEstimator
 
         if(model != null)
         {
-            purityCalcData.Clonality = model.calculate(sampleId, fragmentTotals, purityCalcData.RawPurityEstimate);
+            purityCalcData.Clonality = model.calculate(sampleId, fragmentTotals, purityCalcData);
 
             if(isRecomputed(purityCalcData.Clonality.Method))
             {
-                purityCalcData.PurityEstimate = estimatedPurity(purityCalcData.Clonality.Vaf, noiseRate, fragmentTotals);
-
-                purityCalcData.PurityRangeLow = estimatedPurity(purityCalcData.Clonality.VafLow, noiseRate, fragmentTotals);
-
-                purityCalcData.PurityRangeHigh = estimatedPurity(purityCalcData.Clonality.VafHigh, noiseRate, fragmentTotals);
+                if(convertVafToPurity(purityCalcData.Clonality.Method))
+                {
+                    purityCalcData.PurityEstimate = estimatedPurity(purityCalcData.Clonality.Vaf, noiseRate, fragmentTotals);
+                    purityCalcData.PurityRangeLow = estimatedPurity(purityCalcData.Clonality.VafLow, noiseRate, fragmentTotals);
+                    purityCalcData.PurityRangeHigh = estimatedPurity(purityCalcData.Clonality.VafHigh, noiseRate, fragmentTotals);
+                }
+                else
+                {
+                    purityCalcData.PurityEstimate = purityCalcData.Clonality.Vaf;
+                    purityCalcData.PurityRangeLow = purityCalcData.Clonality.VafLow;
+                    purityCalcData.PurityRangeHigh = purityCalcData.Clonality.VafHigh;
+                }
             }
-        }
-        else
-        {
-            int alleleCount = fragmentTotals.sampleAdTotal();
-
-            double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
-
-            double sampleAdjVafLow = lowProbAlleleCount / fragmentTotals.sampleDepthTotal();
-            purityCalcData.PurityRangeLow = estimatedPurity(sampleAdjVafLow, noiseRate, fragmentTotals);
-
-            double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
-            double sampleAdjVafHigh = highProbAlleleCount / fragmentTotals.sampleDepthTotal();
-            purityCalcData.PurityRangeHigh = estimatedPurity(sampleAdjVafHigh, noiseRate, fragmentTotals);
         }
 
         // report final probability as min of Dual and Normal Prob

@@ -84,9 +84,10 @@ public class LowCountModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity)
+    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
         double estimateVaf = fragmentTotals.adjSampleVaf();
+        double rawEstimatedPurity = purityCalcData.RawPurityEstimate;
 
         if(estimateVaf == 0)
             return NO_RESULT;
