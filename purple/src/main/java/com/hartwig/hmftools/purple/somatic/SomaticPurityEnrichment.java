@@ -13,10 +13,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_BASE_LOH_ERROR_RATE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_GROWTH_FACTOR;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
 
 import java.util.List;
 import java.util.Optional;
@@ -95,7 +93,7 @@ public class SomaticPurityEnrichment
     // version 6.0 - New biallelic model
     private static double probabilityLoh(double minorAlleleCopyNumber)
     {
-        double probabilityLoh = (1 - 1 / pow((1 + BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE * exp(-BIALLELIC_GROWTH_FACTOR * minorAlleleCopyNumber)), 1 / BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH));
+        double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE * (minorAlleleCopyNumber - 0.5)));
 
         return probabilityLoh;
     }
