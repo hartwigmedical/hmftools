@@ -185,7 +185,18 @@ public class JunctionGroupAssembler extends ThreadTask
                 continue;
             }
 
-            List<JunctionAssembly> candidateAssemblies = junctionAssembler.processJunction(candidateReads);
+            List<JunctionAssembly> candidateAssemblies = null;
+
+            try
+            {
+                candidateAssemblies = junctionAssembler.processJunction(candidateReads);
+            }
+            catch(Exception e)
+            {
+                SV_LOGGER.error("failed to process junction({}) with {} reads", junction, candidateReads.size());
+                e.printStackTrace();
+                System.exit(1);
+            }
 
             // dedup assemblies with close junction positions, same orientation
             dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);

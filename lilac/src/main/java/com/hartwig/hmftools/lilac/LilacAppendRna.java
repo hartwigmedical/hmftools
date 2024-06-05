@@ -146,7 +146,7 @@ public class LilacAppendRna
             return ComplexCoverage.create(Lists.newArrayList());
         }
 
-        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config.RefGenome, referenceData.HlaTranscriptData, nucleotideFragFactory);
+        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, referenceData.HlaTranscriptData, nucleotideFragFactory);
 
         List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.enrich(rnaBamReader.findGeneFragments());
 

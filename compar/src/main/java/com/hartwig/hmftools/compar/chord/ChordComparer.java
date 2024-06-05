@@ -57,7 +57,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         ChordData chordData = dbAccess.readChord(sampleId);
         final List<ComparableItem> comparableItems = Lists.newArrayList();

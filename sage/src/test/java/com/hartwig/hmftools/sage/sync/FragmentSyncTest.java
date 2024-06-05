@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
+import static com.hartwig.hmftools.sage.common.TestUtils.MSI_JITTER_CALCS;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -193,13 +194,13 @@ public class FragmentSyncTest
 
         SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
 
-        String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
-
-        VariantReadContext readContext = createReadContext(position, refBase, altBase);
+        VariantReadContext readContext = createReadContext(
+                variant, REF_BASES.substring(position - 2, position), REF_BASES.substring(position + 1, position + 2));
 
         final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
 
-        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME);
+        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
+                TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME, MSI_JITTER_CALCS);
 
         final ReadContextCounter readContextCounter = new ReadContextCounter(
                 1, readContext, VariantTier.PANEL, 100, 0,

@@ -72,6 +72,8 @@ public class VafPeakModel extends ClonalityModel
         double sampleWad = fragmentTotals.weightedSampleDepth();
         int depthThreshold = (int)max(SOMATIC_PEAK_MIN_AVG_DEPTH, sampleWad * SOMATIC_PEAK_MIN_DEPTH_PERC);
 
+        boolean writePeakData = mResultsWriter.getSomaticPeakWriter() != null;
+
         for(SomaticVariant variant : mVariants)
         {
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
@@ -82,8 +84,8 @@ public class VafPeakModel extends ClonalityModel
             if(!canUseVariant(variant, sampleFragData, depthThreshold))
                 continue;
 
-            double copyNumber = variant.copyNumber();
-            double variantCopyNumber = variant.variantCopyNumber();
+            double copyNumber = variant.CopyNumber;
+            double variantCopyNumber = variant.VariantCopyNumber;
 
             double expectedDp = ((1 - rawEstimatedPurity) * sampleWad * 2 + rawEstimatedPurity * sampleWad * copyNumber) / 2;
 
@@ -104,7 +106,8 @@ public class VafPeakModel extends ClonalityModel
 
             variantVafRatios.add(vafRatio);
 
-            writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, vafRatio);
+            if(writePeakData)
+                writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, vafRatio);
         }
 
         int variantCount = variantVafRatios.size();

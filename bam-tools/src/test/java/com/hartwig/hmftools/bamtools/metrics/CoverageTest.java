@@ -8,11 +8,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Test;
 

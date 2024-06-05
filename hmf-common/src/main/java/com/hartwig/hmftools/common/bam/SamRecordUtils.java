@@ -30,6 +30,7 @@ public final class SamRecordUtils
     public static final String MATE_CIGAR_ATTRIBUTE = SAMTag.MC.name();
     public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
+    public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
 
     // in-house attributes
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
@@ -216,5 +217,12 @@ public final class SamRecordUtils
         }
 
         return format("%s1%s2", firstStr, secondStr);
+    }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 }

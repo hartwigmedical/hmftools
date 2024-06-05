@@ -8,13 +8,15 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -25,7 +27,14 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_
 
 import static htsjdk.samtools.CigarOperator.M;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
+
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadFilters
@@ -123,9 +132,9 @@ public class ReadFilters
             else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
             {
                 // make an exception if the soft-clip sequence meets the LINE criteria
-                byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
+                Orientation orientation = useLeftClip ? REVERSE : FORWARD;
 
-                if(isMobileLineElement(orientation, scBases)
+                if(isMobileLineElement(orientation.asByte(), scBases)
                 && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
                     filters = ReadFilterType.unset(filters, ReadFilterType.SOFT_CLIP_LENGTH);
@@ -226,5 +235,36 @@ public class ReadFilters
         }
 
         return allMatch;
+    }
+
+    public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength)
+    {
+        int readIndex = 0;
+
+        int alignedLength = read.cigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+        if(alignedLength == 0)
+            return false;
+
+        byte[] alignedBases = new byte[alignedLength];
+        int alignedIndex = 0;
+
+        for(CigarElement element : read.cigar().getCigarElements())
+        {
+            if(element.getOperator() == M)
+            {
+                copyArray(read.record().getReadBases(), alignedBases, readIndex, readIndex + element.getLength(), alignedIndex);
+                alignedIndex += element.getLength();
+            }
+
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
+        }
+
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases);
+
+        int repeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length - 1, repeats);
+
+        return repeatTrimmedLength >= minLength;
     }
 }

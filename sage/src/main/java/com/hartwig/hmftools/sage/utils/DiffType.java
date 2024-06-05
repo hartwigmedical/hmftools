@@ -5,16 +5,9 @@ import static java.lang.Math.max;
 
 public enum DiffType
 {
-    MATCHED,
     NO_NEW,
     NO_ORIG,
-    FILTER_PASS,
-    FILTER_DIFF,
-    QUAL,
-    TIER,
-    ALLELE_DEPTH,
-    LOCAL_PHASE,
-    OTHER_VALUE;
+    VALUE;
 
     public static boolean hasValueDiff(final double value1, final double value2, final double diffAbs, final double diffPerc)
     {

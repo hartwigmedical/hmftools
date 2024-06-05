@@ -8,15 +8,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,19 +44,11 @@ public class TaskExecutor
     {
         configBuilder.addConfigItem(
                 ConfigItemType.INTEGER, THREADS, false, threadDescription(defaultCount), String.valueOf(defaultCount));
+
+        setDefaultThreadExceptionHandler();
     }
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
-
-    public static int parseThreads(final CommandLine cmd)
-    {
-        return parseThreads(cmd, DEFAULT_THREAD_COUNT);
-    }
-
-    public static int parseThreads(final CommandLine cmd, final int defaultCount)
-    {
-        return Integer.parseInt(cmd.getOptionValue(THREADS, String.valueOf(defaultCount)));
-    }
 
     public static boolean executeTasks(final List<Callable> tasks, int threadCount)
     {
@@ -79,20 +71,18 @@ public class TaskExecutor
             return true;
         }
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Thread-%d").build();
+        int digits = Integer.toString(threadCount - 1).length();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%0" + digits + "d").build();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
-        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
+        List<Future<?>> threadTaskList = new ArrayList<>();
 
-        for(Callable task : tasks)
+        for(Callable<?> task : tasks)
         {
-            FutureTask futureTask = new FutureTask(task);
-
-            threadTaskList.add(futureTask);
-            executorService.execute(futureTask);
+            threadTaskList.add(executorService.submit(task));
         }
 
-        if(!checkThreadCompletion(threadTaskList))
+        if(!checkTaskCompletion(threadTaskList))
         {
             LOGGER.info("shutting down remaining tasks");
             threadTaskList.forEach(x -> x.cancel(true));
@@ -104,13 +94,18 @@ public class TaskExecutor
         return true;
     }
 
-    private static boolean checkThreadCompletion(final List<FutureTask> taskList)
+    public static boolean executeRunnables(final List<? extends Runnable> tasks, int threadCount)
+    {
+        return executeTasks(tasks.stream().map(Executors::callable).collect(Collectors.toList()), threadCount);
+    }
+
+    private static boolean checkTaskCompletion(final List<Future<?>> taskList)
     {
         try
         {
-            for(FutureTask futureTask : taskList)
+            for(Future<?> future : taskList)
             {
-                futureTask.get();
+                future.get();
             }
         }
         catch (Exception e)
@@ -123,9 +118,9 @@ public class TaskExecutor
         return true;
     }
 
-    public static boolean runThreadTasks(final List<Thread> workers)
+    public static boolean runThreadTasks(final List<? extends Thread> workers)
     {
-        workers.stream().filter(x -> x.getState() == NEW).forEach(x -> x.start());
+        workers.stream().filter(x -> x.getState() == NEW).forEach(Thread::start);
 
         for(Thread worker : workers)
         {
@@ -141,5 +136,15 @@ public class TaskExecutor
         }
 
         return true;
+    }
+
+    public static void setDefaultThreadExceptionHandler()
+    {
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            LOGGER.error("thread exception: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        });
     }
 }

@@ -64,7 +64,7 @@ public class BaseSeqViewModel
     public static BaseSeqViewModel fromVariant(final VariantReadContext readContext, final String ref, final String alt)
     {
         String rawBases = readContext.readBases();
-        int posStart = readContext.variant().Position - readContext.VarReadIndex;
+        int posStart = readContext.variant().Position - readContext.VarIndex;
         if(ref.length() == alt.length())
         {
             return fromStr(rawBases, posStart);
@@ -77,7 +77,7 @@ public class BaseSeqViewModel
 
             // alt is single char
             List<BaseViewModel> bases = Lists.newArrayList();
-            for(int i = 0; i <= readContext.VarReadIndex; ++i)
+            for(int i = 0; i <= readContext.VarIndex; ++i)
             {
                 bases.add(new BaseViewModel(rawBases.charAt(i)));
             }
@@ -87,7 +87,7 @@ public class BaseSeqViewModel
                 bases.add(BaseViewModel.createDelBase());
             }
 
-            for(int i = readContext.VarReadIndex + 1; i < readContext.totalLength(); ++i)
+            for(int i = readContext.VarIndex + 1; i < readContext.totalLength(); ++i)
             {
                 bases.add(new BaseViewModel(rawBases.charAt(i)));
             }
@@ -100,14 +100,14 @@ public class BaseSeqViewModel
 
         // ref is single char
         List<BaseViewModel> bases = Lists.newArrayList();
-        for(int i = 0; i <= readContext.VarReadIndex; ++i)
+        for(int i = 0; i <= readContext.VarIndex; ++i)
         {
             bases.add(new BaseViewModel(rawBases.charAt(i)));
         }
 
         bases.get(bases.size() - 1).incRightInsertCount(insLen);
 
-        for(int i = readContext.VarReadIndex + insLen + 1; i < readContext.totalLength(); ++i)
+        for(int i = readContext.VarIndex + insLen + 1; i < readContext.totalLength(); ++i)
         {
             bases.add(new BaseViewModel(rawBases.charAt(i)));
         }

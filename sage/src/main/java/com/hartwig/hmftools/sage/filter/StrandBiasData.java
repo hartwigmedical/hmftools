@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 
 import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.RawContext;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import htsjdk.samtools.SAMRecord;
@@ -81,7 +83,8 @@ public class StrandBiasData
         */
     }
 
-    public void registerRead(final SAMRecord record, final FragmentData fragment, final SimpleVariant variant)
+    public void registerRead(
+            final SAMRecord record, final FragmentData fragment, final ReadContextCounter rcCounter)
     {
         // no fragment sync - take the read's strand
         if(fragment == null)
@@ -94,52 +97,67 @@ public class StrandBiasData
             return; // ignore the inverted case
 
         // read falls only within one or the other read's bounds - use that read's strand
-        boolean withinFirst = positionWithin(variant.position(), fragment.First.getAlignmentStart(), fragment.First.getAlignmentEnd());
-        boolean withinSecond = positionWithin(variant.position(), fragment.Second.getAlignmentStart(), fragment.Second.getAlignmentEnd());
+        boolean withinFirst = positionWithin(rcCounter.position(), fragment.First.getAlignmentStart(), fragment.First.getAlignmentEnd());
+        boolean withinSecond = positionWithin(rcCounter.position(), fragment.Second.getAlignmentStart(), fragment.Second.getAlignmentEnd());
 
         /*
         SG_LOGGER.debug("read({}) var({}) withinRead(first={} second={})",
                 record.getReadName(), variant.position(), withinFirst, withinSecond);
         */
 
+        SimpleVariant variant = rcCounter.variant();
+
         if(withinFirst && !withinSecond)
         {
-            RawContext firstRawContext = RawContext.create(variant, fragment.First);
+            ReadContextMatch matchType = determineReadContextMatch(rcCounter, fragment.First);
 
-            if(hasSupport(firstRawContext))
+            if(hasSupport(matchType))
                 registerRead(fragment.First);
 
             return;
         }
         else if(!withinFirst && withinSecond)
         {
-            RawContext secondRawContext = RawContext.create(variant, fragment.Second);
+            ReadContextMatch matchType = determineReadContextMatch(rcCounter, fragment.Second);
 
-            if(hasSupport(secondRawContext))
+            if(hasSupport(matchType))
                 registerRead(fragment.Second);
 
             return;
         }
 
         // look at the raw alt support from each read to determine which to count
-        RawContext firstRawContext = RawContext.create(variant, fragment.First);
-        RawContext secondRawContext = RawContext.create(variant, fragment.Second);
+        ReadContextMatch firstMatchType = determineReadContextMatch(rcCounter, fragment.First);
+        ReadContextMatch secondMatchType = determineReadContextMatch(rcCounter, fragment.Second);
 
-        if(hasSupport(firstRawContext))
+        if(hasSupport(firstMatchType))
             registerRead(fragment.First);
 
-        if(hasSupport(secondRawContext))
+        if(hasSupport(secondMatchType))
             registerRead(fragment.Second);
 
         /*
         SG_LOGGER.debug("read({}) var({}) isAltBias({}) altSupport(first={} second={})",
-                record.getReadName(), variant.position(), mIsAltBias, firstRawContext.AltSupport, secondRawContext.AltSupport);
+                record.getReadName(), variant.position(), mIsAltBias, firstMatchType, secondMatchType);
         */
     }
 
-    private boolean hasSupport(final RawContext rawContext)
+    private ReadContextMatch determineReadContextMatch(final ReadContextCounter rcCounter, final SAMRecord read)
     {
-        return mIsAltBias ? rawContext.AltSupport : rawContext.RefSupport;
+        RawContext rawContext = RawContext.create(rcCounter.variant(), read);
+
+        if(rawContext.ReadVariantIndex < 0)
+            return ReadContextMatch.NONE;
+
+        if(!rcCounter.readContextMatcher().coversVariant(read, rawContext.ReadVariantIndex))
+            return ReadContextMatch.NONE;
+
+        return rcCounter.readContextMatcher().determineReadMatch(read, rawContext.ReadVariantIndex);
+    }
+
+    private boolean hasSupport(final ReadContextMatch matchType)
+    {
+        return mIsAltBias ? matchType.SupportsAlt : matchType.SupportsRef;
     }
 
     public String toString() { return format("fwd=%d rev=%d total=%d bias=%.3f", mForwardCount, mReverseCount, depth(), bias()); }

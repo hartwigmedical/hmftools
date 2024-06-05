@@ -4,6 +4,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
+
 public final class LineElements
 {
     public static final String POLY_A_HOMOLOGY = "AAAAAAA";
@@ -11,6 +13,11 @@ public final class LineElements
 
     public static final int LINE_POLY_AT_TEST_LEN = 18;
     public static final int LINE_POLY_AT_REQ = 16;
+
+    public static boolean isMobileLineElement(final Orientation orientation, final String insertSequence)
+    {
+        return isMobileLineElement(orientation.asByte(), insertSequence);
+    }
 
     public static boolean isMobileLineElement(final byte orientation, final String insertSequence)
     {

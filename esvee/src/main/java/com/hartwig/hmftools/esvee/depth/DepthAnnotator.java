@@ -10,10 +10,14 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
+import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -58,7 +62,7 @@ public class DepthAnnotator
 
     public void run()
     {
-        if(mConfig.InputVcf == null || !Files.exists(Paths.get(mConfig.InputVcf)) || mConfig.OutputVcf == null)
+        if(mConfig.InputVcf == null || !Files.exists(Paths.get(mConfig.InputVcf)))
         {
             SV_LOGGER.error("missing VCF config or file");
             System.exit(1);
@@ -70,7 +74,7 @@ public class DepthAnnotator
             System.exit(1);
         }
 
-        SV_LOGGER.info("SvPrep depth annotation for samples: {}", mConfig.Samples);
+        SV_LOGGER.info("running depth annotation for samples: {}", mConfig.Samples);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -126,6 +130,8 @@ public class DepthAnnotator
         if(mChrVariantMap.isEmpty())
         {
             SV_LOGGER.warn("all variants filtered from vcf({})", vcfCount, mConfig.InputVcf);
+
+            writeVcf(vcfHeader, Collections.emptyList());
             return;
         }
 
@@ -155,7 +161,7 @@ public class DepthAnnotator
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
 
-        SV_LOGGER.info("SvPrep depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
 
         PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
         for(int i = 1; i < depthTasks.size(); ++i)
@@ -168,11 +174,13 @@ public class DepthAnnotator
 
     private void writeVcf(final VCFHeader header, final List<DepthTask> depthTasks)
     {
-        SV_LOGGER.info("writing VCF: {}", mConfig.OutputVcf);
+        String outputVcf = formOutputFile(mConfig.OutputDir, mConfig.sampleId(), ESVEE_FILE_ID, DEPTH_VCF_SUFFIX, mConfig.OutputId);
+
+        SV_LOGGER.info("writing VCF: {}", outputVcf);
 
         VariantContextWriter writer = new VariantContextWriterBuilder()
                 .setReferenceDictionary(header.getSequenceDictionary())
-                .setOutputFile(mConfig.OutputVcf)
+                .setOutputFile(outputVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
 

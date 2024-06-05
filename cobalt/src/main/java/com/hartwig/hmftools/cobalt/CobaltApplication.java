@@ -7,10 +7,13 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -93,9 +96,11 @@ public class CobaltApplication
                     gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
-            if (mConfig.TargetRegionPath != null)
+            if(mConfig.TargetRegionPath != null)
             {
-                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath).separator('\t').build();
+                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath)
+                        .separator(TSV_DELIM.charAt(0))
+                        .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
                 Table targetRegionEnrichment = Table.read().usingOptions(options);
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
@@ -126,7 +131,7 @@ public class CobaltApplication
 
             applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
 
-            final VersionInfo version = new VersionInfo("cobalt.version");
+            final VersionInfo version = fromAppName(APP_NAME);
             version.write(mConfig.OutputDir);
         }
         catch(Exception e)

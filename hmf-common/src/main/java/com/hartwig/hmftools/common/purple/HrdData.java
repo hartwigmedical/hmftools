@@ -7,6 +7,8 @@ public class HrdData
     public final int SegmentBreaks;
     public final HrdStatus Status;
 
+    public static final HrdData INVALID = new HrdData(0, 0, 0, HrdStatus.UNKNOWN);
+
     public HrdData(final int lohSegments, final int segmentImbalances, final int segmentBreaks, final HrdStatus status)
     {
         LohSegments = lohSegments;

@@ -14,15 +14,17 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
 import java.util.List;
 
@@ -48,7 +50,6 @@ public class SliceConfig
     public final boolean WriteReads;
     public final boolean DropExcluded;
     public final boolean DropRemoteSupplementaries;
-    public final int ReadLength;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
     public final int Threads;
@@ -72,10 +73,24 @@ public class SliceConfig
     {
         mIsValid = true;
 
-        OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
         BamFile = configBuilder.getValue(BAM_FILE);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        OutputDir = parseOutputDir(configBuilder);
+
+        OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : pathFromFile(BamFile);
+
+        if(configBuilder.hasValue(OUTPUT_PREFIX))
+        {
+            OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
+        }
+        else
+        {
+            String filename = filenamePart(BamFile);
+            int extIndex = filename.lastIndexOf(".");
+            String bamFileName = filename.substring(0, extIndex);
+
+            OutputPrefix = bamFileName + ".slice";
+        }
+
         WriteReads = configBuilder.hasFlag(WRITE_READS);
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
@@ -83,7 +98,6 @@ public class SliceConfig
         DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
-        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -136,7 +150,6 @@ public class SliceConfig
         return outputFile;
     }
 
-
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
@@ -186,6 +199,5 @@ public class SliceConfig
         SpecificChrRegions = new SpecificRegions();
         Threads = 0;
         PerfDebug = false;
-        ReadLength = DEFAULT_READ_LENGTH;
     }
 }

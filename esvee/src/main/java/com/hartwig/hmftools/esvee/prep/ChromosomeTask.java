@@ -24,20 +24,17 @@ public class ChromosomeTask
     private final String mChromosome;
     private final PrepConfig mConfig;
     private final SpanningReadCache mSpanningReadCache;
-    private final ExistingJunctionCache mExistingJunctionCache;
     private final ResultsWriter mWriter;
     private final Queue<ChrBaseRegion> mPartitions;
 
     private final CombinedStats mCombinedStats;
 
     public ChromosomeTask(
-            final String chromosome, final PrepConfig config, final SpanningReadCache spanningReadCache,
-            final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer)
+            final String chromosome, final PrepConfig config, final SpanningReadCache spanningReadCache, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mSpanningReadCache = spanningReadCache;
-        mExistingJunctionCache = existingJunctionCache;
         mWriter = writer;
 
         mCombinedStats = new CombinedStats();
@@ -68,7 +65,7 @@ public class ChromosomeTask
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mWriter, mCombinedStats));
         }
 
         if(!runThreadTasks(workers))

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -27,68 +29,9 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class AssemblyUtils
 {
-    public static void expandReferenceBases(final JunctionAssembly assembly)
+    public static int mismatchesPerComparisonLength(final int sequenceLength)
     {
-        // find the longest length of aligned reference bases extending back from the junction
-        int minAlignedPosition = assembly.minAlignedPosition();
-        int maxAlignedPosition = assembly.maxAlignedPosition();
-
-        int junctionPosition = assembly.junction().Position;
-        boolean junctionIsForward = assembly.junction().isForward();
-
-        int maxDistanceFromJunction = 0;
-
-        SupportRead minNmSupport = null;
-        int minNmSupportMaxDistance = 0;
-
-        for(SupportRead support : assembly.support())
-        {
-            Read read = support.cachedRead();
-            int readJunctionIndex = read.getReadIndexAtReferencePosition(junctionPosition, true);
-
-            // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
-            // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
-            int readExtensionDistance;
-
-            if(junctionIsForward)
-            {
-                minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
-                readExtensionDistance = max(readJunctionIndex - read.leftClipLength(), 0);
-            }
-            else
-            {
-                maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
-                readExtensionDistance = max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
-            }
-
-            assembly.checkAddRefSideSoftClip(read);
-
-            maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
-
-            if(minNmSupport == null
-            || read.numberOfEvents() < minNmSupport.cachedRead().numberOfEvents()
-            || (read.numberOfEvents() == minNmSupport.cachedRead().numberOfEvents() && readExtensionDistance < minNmSupportMaxDistance))
-            {
-                minNmSupport = support;
-                minNmSupportMaxDistance = readExtensionDistance;
-            }
-        }
-
-        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
-
-        // order by NM to favour the ref where possible
-        if(minNmSupport != null)
-        {
-            assembly.extendJunctionReadSupport(minNmSupport.cachedRead(), minNmSupport);
-        }
-
-        for(SupportRead support : assembly.support())
-        {
-            if(support == minNmSupport)
-                continue;
-
-            assembly.extendJunctionReadSupport(support.cachedRead(), support);
-        }
+        return (int)floor(log10(sequenceLength + 1));
     }
 
     public static int readQualFromJunction(final Read read, final Junction junction)
@@ -148,7 +91,7 @@ public final class AssemblyUtils
 
     public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
     {
-        if(!first.junction().chromosome().equals(second.junction().chromosome()))
+        if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return false;
 
         // assemblies must have DEL or DUP orientations, be within threshold distances of each other
@@ -206,6 +149,19 @@ public final class AssemblyUtils
 
         int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
         int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
+
+        return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
+    }
+
+    public static int calcTrimmedExtensionBaseLength(final JunctionAssembly assembly)
+    {
+        int extBaseLength = assembly.extensionLength();
+
+        if(assembly.repeatInfo().isEmpty())
+            return extBaseLength;
+
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() + 1 : 0;
+        int seqEnd = assembly.isForwardJunction() ? seqStart + extBaseLength - 1 : extBaseLength - 1;
 
         return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
     }

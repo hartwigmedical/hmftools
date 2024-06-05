@@ -5,11 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
+import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.READ_PAIRED;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.jetbrains.annotations.Nullable;
@@ -57,10 +59,12 @@ public class SupportRead
     private final int mNumOfEvents;
     private final int mInsertSize;
     private final int mTrimCount;
+    private final boolean mHasIndel;
 
-    private final int mJunctionReadIndex; // index within this read of the junction position
+    private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non junction reads
     private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
     private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
+    private int mInferredFragmentLength;
 
     // those past the junction
     private int mJunctionMatches;
@@ -80,11 +84,8 @@ public class SupportRead
         mFlags = read.getFlags();
         mCigar = read.cigarString();
 
-        mUnclippedStart = read.indelImpliedAlignmentStart() > 0 ?
-                min(read.indelImpliedAlignmentStart(), read.unclippedStart()) : read.unclippedStart();
-
-        mUnclippedEnd = read.indelImpliedAlignmentEnd() > 0 ?
-                max(read.indelImpliedAlignmentEnd(), read.unclippedEnd()) : read.unclippedEnd();
+        mUnclippedStart = read.unclippedStart();
+        mUnclippedEnd = read.unclippedEnd();
 
         mMateChromosome = read.mateChromosome();
         mMateAlignmentStart = read.mateAlignmentStart();
@@ -97,14 +98,17 @@ public class SupportRead
         mInsertSize = abs(read.bamRecord().getInferredInsertSize());
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
-        mNumOfEvents = read.numberOfEvents();
+        mNumOfEvents = read.snvCount() + read.totalIndelBases();
+        mHasIndel = read.indelCoords() != null;
 
-        mJunctionReadIndex = junctionReadIndex;
         mJunctionMatches = matches;
         mJunctionMismatches = mismatches;
         mReferenceMismatches = 0;
+
+        mJunctionReadIndex = junctionReadIndex;
         mJunctionAssemblyIndex = -1;
         mLinkedAssemblyIndex = -1;
+        mInferredFragmentLength = -1;
 
         mRead = read;
     }
@@ -123,8 +127,10 @@ public class SupportRead
     public int baseLength() { return mBaseLength; }
     public int insertSize() { return mInsertSize; }
     public int trimCount() { return mTrimCount; }
+    public boolean hasIndel() { return mHasIndel; }
     public String cigar() { return mCigar; }
-    public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
+    public Orientation orientation() { return isFlagSet(READ_REVERSE_STRAND) ? REVERSE : FORWARD; }
+    public Orientation mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? REVERSE : FORWARD; }
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int mapQual() { return mMapQual; }
     public int numOfEvents() { return mNumOfEvents; }
@@ -142,6 +148,14 @@ public class SupportRead
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
 
     public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
+
+    public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
+    {
+        if(!mId.equals(other.id()))
+            return false;
+
+        return allowReadMatch || mFlags != other.flags();
+    }
 
     public void clearCachedRead() { mRead = null; }
 
@@ -162,6 +176,9 @@ public class SupportRead
     public int referenceMismatches() { return mReferenceMismatches; }
     public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
 
+    public int inferredFragmentLength() { return mInferredFragmentLength; }
+    public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
+
     public static boolean hasMatchingFragment(final List<SupportRead> support, final SupportRead read)
     {
         return support.stream().anyMatch(x -> x.matchesFragment(read));
@@ -174,8 +191,8 @@ public class SupportRead
 
     public String toString()
     {
-        return format("type(%s) read(%s %d-%d %s) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
-                mType, mId, mAlignmentStart, mAlignmentEnd, mCigar, mJunctionReadIndex, mJunctionAssemblyIndex, mLinkedAssemblyIndex,
-                mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
+        return format("type(%s) read(%s %s:%d-%d %s %d) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
+                mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadIndex,
+                mJunctionAssemblyIndex, mLinkedAssemblyIndex, mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
     }
 }

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.util.StringJoiner;
 
+// purely used for statistics
 public enum ReadMatchType
 {
     ALT_SUPPORT,

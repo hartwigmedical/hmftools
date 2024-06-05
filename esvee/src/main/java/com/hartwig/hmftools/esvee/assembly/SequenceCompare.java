@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
@@ -252,5 +255,73 @@ public final class SequenceCompare
         }
 
         return true;
+    }
+
+    public static List<SequenceDiffInfo> getSequenceMismatchInfo(
+            final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
+            final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
+    {
+        List<SequenceDiffInfo> diffs = Lists.newArrayList();
+
+        int firstIndex = firstIndexStart;
+        int secondIndex = secondIndexStart;
+
+        while(firstIndex <= firstIndexEnd && secondIndex <= secondIndexEnd)
+        {
+            // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
+            // the solution may be to start the matching process from the other end
+            if(basesMatch(
+                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
+                    LOW_BASE_QUAL_THRESHOLD))
+            {
+                ++firstIndex;
+                ++secondIndex;
+                continue;
+            }
+
+            // check if the mismatch is a single-base INDEL and if so skip it
+            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex);
+
+            if(recoverySkipBases != 0)
+            {
+                if(recoverySkipBases > 0)
+                    firstIndex += recoverySkipBases;
+                else
+                    secondIndex += -recoverySkipBases;
+
+                boolean isFirst = recoverySkipBases > 0;
+
+                diffs.add(new SequenceDiffInfo(
+                        isFirst ? firstIndex : secondIndex, SequenceDiffType.INDEL, recoverySkipBases));
+
+                continue; // check the next base again
+            }
+
+            // check for a repeat diff - must be of the same type and just a different count
+            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats);
+
+            if(expectedRepeatBaseDiff != 0)
+            {
+                // positive means the first's repeat was longer so move it ahead
+                if(expectedRepeatBaseDiff > 0)
+                    firstIndex += expectedRepeatBaseDiff;
+                else
+                    secondIndex += -expectedRepeatBaseDiff;
+
+                boolean isFirst = expectedRepeatBaseDiff > 0;
+
+                diffs.add(new SequenceDiffInfo(
+                        isFirst ? firstIndex : secondIndex, SequenceDiffType.REPEAT, expectedRepeatBaseDiff));
+
+                continue; // check the next base again
+            }
+
+            diffs.add(new SequenceDiffInfo(firstIndex, SequenceDiffType.BASE, 1));
+
+            ++firstIndex;
+            ++secondIndex;
+        }
+
+        return diffs;
     }
 }

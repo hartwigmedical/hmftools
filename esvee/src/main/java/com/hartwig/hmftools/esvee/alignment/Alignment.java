@@ -1,25 +1,29 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -48,9 +52,8 @@ public class Alignment
 
     public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
-        // apply filters on what to bother aligning
+        // apply filters on what to run alignment on
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
-        || assembly.outcome() == AssemblyOutcome.DUP_SPLIT
         || assembly.outcome() == AssemblyOutcome.SECONDARY
         || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
         {
@@ -91,6 +94,8 @@ public class Alignment
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
+        SV_LOGGER.debug("requeried supp alignments({})", alignerTasks.stream().mapToInt(x ->x.requeriedSuppCount()).sum());
+
         SV_LOGGER.info("alignment complete");
 
         mergePerfCounters(perfCounters, alignerTasks.stream().collect(Collectors.toList()));
@@ -100,15 +105,19 @@ public class Alignment
     {
         private final Queue<AssemblyAlignment> mAssemblyAlignments;
         private final int mAssemblyAlignmentCount;
+        private int mRequeriedSuppCount;
 
         public AssemblerAlignerTask(final Queue<AssemblyAlignment> assemblyAlignments)
         {
             super("AssemblerAlignment");
             mAssemblyAlignments = assemblyAlignments;
             mAssemblyAlignmentCount = assemblyAlignments.size();
+            mRequeriedSuppCount = 0;
         }
 
         private static final int LOG_COUNT = 10000;
+
+        public int requeriedSuppCount() { return mRequeriedSuppCount; }
 
         @Override
         public void run()
@@ -133,7 +142,7 @@ public class Alignment
                         SV_LOGGER.debug("processed {} assembly alignments", processedCount);
                     }
 
-                    mPerfCounter.stop();
+                    stopCheckLog(assemblyAlignment.info(), mConfig.PerfLogTime);
                 }
                 catch(NoSuchElementException e)
                 {
@@ -151,10 +160,12 @@ public class Alignment
         private void processAssembly(final AssemblyAlignment assemblyAlignment)
         {
             List<AlignData> alignments;
+            List<AlignData> requeriedAlignments;
 
             if(mAlignmentCache.enabled())
             {
                 alignments = mAlignmentCache.findAssemblyAlignments(assemblyAlignment.info());
+                requeriedAlignments = Collections.emptyList();
             }
             else
             {
@@ -163,12 +174,102 @@ public class Alignment
                 alignments = bwaAlignments.stream()
                         .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                         .filter(x -> x != null).collect(Collectors.toList());
+
+                requeriedAlignments = Lists.newArrayList();
+                alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
             }
 
             processAlignmentResults(assemblyAlignment, alignments);
 
-            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
-            AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignments);
+            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
+                AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
+
+            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
+            {
+                List<AlignData> alignmentsToWrite;
+
+                if(!requeriedAlignments.isEmpty())
+                {
+                    alignmentsToWrite = Lists.newArrayList(alignments);
+                    alignmentsToWrite.addAll(requeriedAlignments);
+                }
+                else
+                {
+                    alignmentsToWrite = alignments;
+                }
+
+                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
+            }
+        }
+
+        private List<AlignData> requerySupplementaryAlignments(
+                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+        {
+            // re-alignment supplementaries to get a more reliable map quality
+            if(alignments.stream().noneMatch(x -> x.isSupplementary()))
+                return alignments;
+
+            List<AlignData> newAlignments = Lists.newArrayList();
+
+            for(AlignData alignData : alignments)
+            {
+                if(!alignData.isSupplementary())
+                {
+                    newAlignments.add(alignData);
+                    continue;
+                }
+
+                requeriedAlignments.add(alignData);
+                newAlignments.addAll(requeryAlignment(assemblyAlignment, alignData));
+            }
+
+            return newAlignments;
+        }
+
+        private List<AlignData> requeryAlignment(final AssemblyAlignment assemblyAlignment, final AlignData alignData)
+        {
+            ++mRequeriedSuppCount;
+
+            String fullSequence = assemblyAlignment.fullSequence();
+
+            alignData.setFullSequenceData(fullSequence, assemblyAlignment.fullSequenceLength());
+
+            String alignmentSequence = fullSequence.substring(alignData.sequenceStart(), alignData.sequenceEnd() + 1);
+
+            List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(alignmentSequence.getBytes());
+
+            List<AlignData> requeryAlignments = requeryBwaAlignments.stream()
+                    .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                    .filter(x -> x != null).collect(Collectors.toList());
+
+            List<AlignData> convertedAlignments = Lists.newArrayList();
+
+            for(AlignData rqAlignment : requeryAlignments)
+            {
+                rqAlignment.setFullSequenceData(alignmentSequence, alignmentSequence.length());
+
+                // eg:
+                // alignData = {AlignData@3240} "10:2543491-2543563 72S73M fwd seq(72-145 adj=72-144) score(58) flags(2048) mapQual(55 align=73 adj=73)"
+                // rqAlignment = {AlignData@3246} "10:2543809-2543878 3S70M fwd seq(3-73 adj=3-72) score(65) flags(0) mapQual(17 align=70 adj=70)"
+
+                AlignData convertedAlignment = new AlignData(
+                        rqAlignment.RefLocation,
+                        rqAlignment.rawSequenceStart(),
+                        rqAlignment.rawSequenceEnd(),
+                        rqAlignment.MapQual, rqAlignment.Score, rqAlignment.Flags, rqAlignment.Cigar, rqAlignment.NMatches,
+                        rqAlignment.XaTag, rqAlignment.MdTag);
+
+                // restore values to be in terms of the original sequence
+                int rqSeqOffsetStart = rqAlignment.sequenceStart();
+                int adjSequenceStart = alignData.sequenceStart() + rqSeqOffsetStart;
+                int rqSeqOffsetEnd = alignmentSequence.length() - 1 - rqAlignment.sequenceEnd();
+                int adjSequenceEnd = alignData.sequenceEnd() - rqSeqOffsetEnd;
+                convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
+
+                convertedAlignments.add(convertedAlignment);
+            }
+
+            return convertedAlignments;
         }
 
         private void processAlignmentResults(
@@ -183,7 +284,7 @@ public class Alignment
 
                 for(Breakend breakend : assemblyAlignment.breakends())
                 {
-                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation))
+                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient))
                     {
                         assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
                         matched = true;
@@ -198,7 +299,6 @@ public class Alignment
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
 
-
             allocateSupport(assemblyAlignment);
         }
 
@@ -206,6 +306,7 @@ public class Alignment
         {
             List<String> combinedSampleIds = mConfig.combinedSampleIds();
 
+            // build up a map of read ID to the set of breakends it supports, and the top type of support (split then discordant)
             Map<String,BreakendFragmentSupport> fragmentSupportMap = Maps.newHashMap();
 
             for(Breakend breakend : assemblyAlignment.breakends())
@@ -231,14 +332,18 @@ public class Alignment
                         BreakendSupport support = sampleSupport.get(read.sampleIndex());
 
                         if(breakend.readSpansJunction(read, false))
+                        {
                             isSplitFragment = true;
-                        else
+                        }
+                        else if(breakend.isRelatedDiscordantRead(read.alignmentStart(), read.alignmentEnd(), read.orientation()))
+                        {
                             isDiscFragment = true;
+                        }
 
-                        if((!isSplitFragment && !isDiscFragment))
+                        if(!isSplitFragment && !isDiscFragment)
                             continue;
 
-                        if(read.orientation() == POS_ORIENT)
+                        if(read.orientation().isForward())
                             ++support.ForwardReads;
                         else
                             ++support.ReverseReads;
@@ -259,10 +364,18 @@ public class Alignment
                 }
             }
 
+            // count fragments to both breakends if it is in either
             for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
             {
+                Set<Breakend> processed = Sets.newHashSet();
+
                 for(Breakend breakend : fragmentSupport.Breakends)
                 {
+                    if(processed.contains(breakend) || (!breakend.isSingle() && processed.contains(breakend.otherBreakend())))
+                        continue;
+
+                    processed.add(breakend);
+
                     boolean allowDiscordantSupport = !breakend.isShortLocalDelDupIns();
 
                     BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
@@ -271,6 +384,21 @@ public class Alignment
                         ++support.SplitFragments;
                     else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
+
+                    if(breakend.isSingle())
+                        continue;
+
+                    Breakend otherBreakend = breakend.otherBreakend();
+
+                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
+
+                    processed.add(otherBreakend);
+
+                    // assign each read preferably as split over discordant
+                    if(fragmentSupport.IsSplit)
+                        ++otherSupport.SplitFragments;
+                    else if(allowDiscordantSupport)
+                        ++otherSupport.DiscordantFragments;
                 }
             }
         }
@@ -280,13 +408,15 @@ public class Alignment
     {
         public final int SampleIndex;
         public boolean IsSplit;
-        public final List<Breakend> Breakends;
+        public final Set<Breakend> Breakends;
 
         public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
         {
             SampleIndex = sampleIndex;
             IsSplit = isSplit;
-            Breakends = Lists.newArrayList(breakend);
+            Breakends = Sets.newHashSet(breakend);
         }
+
+        public String toString() { return format("%d: %s breakends(%d)", SampleIndex, IsSplit ? "split" : "disc", Breakends.size()); }
     }
 }

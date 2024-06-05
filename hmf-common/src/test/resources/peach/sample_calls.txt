@@ -1,7 +1,0 @@
-gene	chromosome	position_v37	position_v38	ref_v37	ref_v38	allele1	allele2	rsid	variant_annotation_v37	filter_v37	variant_annotation_v38	filter_v38	panel_version	repo_version
-GENE	1	10	12	A	A	A	A	rs12	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0
-GENE	1	100	110	T	T	T	T	rs54	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0
-GENE	1	300	500	G	G	G	G	rs60	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0
-GENE	1	20	600	A	A	A	A	rs33	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0
-GENE	1	40	350	T	T	T	T	rs88	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0
-GENE	1	123	345	GAT	GAT	GAT	GAT	rs87	REF_CALL	NO_CALL	REF_CALL	NO_CALL	PGx_min_DPYD_v0.3	1.0

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.filters.FilterType.filtersAsStr;
+import static com.hartwig.hmftools.esvee.common.FilterType.filtersAsStr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -77,7 +77,8 @@ public class BreakendWriter
             sj.add("AlignedBases");
             sj.add("MapQual");
             sj.add("Score");
-            sj.add("RepeatTrimLength");
+            sj.add("AdjAlignedBases");
+            sj.add("AvgFragmentLength");
             sj.add("BreakendQual");
 
             sj.add("FacingBreakendIds");
@@ -119,13 +120,13 @@ public class BreakendWriter
                 sj.add(String.valueOf(breakend.svType()));
                 sj.add(breakend.Chromosome);
                 sj.add(String.valueOf(breakend.Position));
-                sj.add(String.valueOf(breakend.Orientation));
+                sj.add(String.valueOf(breakend.Orient));
 
                 if(breakend.otherBreakend() != null)
                 {
                     sj.add(breakend.otherBreakend().Chromosome);
                     sj.add(String.valueOf(breakend.otherBreakend().Position));
-                    sj.add(String.valueOf(breakend.otherBreakend().Orientation));
+                    sj.add(String.valueOf(breakend.otherBreakend().Orient));
                     sj.add(String.valueOf(breakend.svLength()));
 
                 }
@@ -188,19 +189,20 @@ public class BreakendWriter
                 BreakendSegment segment = breakend.segments().get(0);
                 sj.add(String.valueOf(breakend.segments().size()));
                 sj.add(String.valueOf(segment.SequenceIndex));
-                sj.add(String.valueOf(segment.Orientation));
+                sj.add(String.valueOf(segment.Orient));
                 sj.add(String.valueOf(segment.Index));
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
                 sj.add(String.valueOf(segment.Alignment.MapQual));
                 sj.add(String.valueOf(segment.Alignment.Score));
-                sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
+                sj.add(String.valueOf(segment.Alignment.adjustedAlignment()));
+                sj.add(String.valueOf(breakend.averageFragmentLength()));
 
                 sj.add(String.valueOf(breakend.calcQual()));
 
                 String facingBreakendIds = breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(ITEM_DELIM));
                 sj.add(facingBreakendIds);
 
-                sj.add(AlternativeAlignment.altAlignmentsStr(breakend.alternativeAlignments()));
+                sj.add(AlternativeAlignment.toVcfTag(breakend.alternativeAlignments()));
 
                 if(mTruthsetAnnotation.enabled())
                     sj.add(mTruthsetAnnotation.findTruthsetAnnotation(breakend));

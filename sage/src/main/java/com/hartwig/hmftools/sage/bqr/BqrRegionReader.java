@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.bam.CigarTraversal;
 import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -257,7 +256,7 @@ public class BqrRegionReader implements CigarHandler
         if(mUseReadType)
             mCurrentReadType = extractReadType(record, mSequencingType);
 
-        CigarTraversal.traverseCigar(record, this);
+        CigarHandler.traverseCigar(record, this);
 
         if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
         {
@@ -313,18 +312,14 @@ public class BqrRegionReader implements CigarHandler
     @Override
     public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        // need to add one because indel is actually AFTER this by convention
-        int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, false, readIndex, refPos);
-        markIndelPosition(indelPos);
+        // note: ref position here is the last base of the previous aligned element - likewise for deletes
+        markIndelPosition(refPos);
     }
 
     @Override
     public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, false, readIndex, refPos);
-        markIndelPosition(indelPos);
+        markIndelPosition(refPos);
     }
 
     private void markIndelPosition(int position)
@@ -339,7 +334,7 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @Override
-    public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, boolean beforeIndel, final int startReadIndex, final int refPos)
+    public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
     {
         for(int i = 0; i < cigarElement.getLength(); i++)
         {

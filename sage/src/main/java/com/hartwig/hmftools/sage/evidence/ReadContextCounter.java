@@ -7,9 +7,6 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
@@ -19,13 +16,10 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
-import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
@@ -36,17 +30,9 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NON_CORE;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
-
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -71,7 +57,6 @@ import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter
@@ -91,9 +76,9 @@ public class ReadContextCounter
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
     private final boolean mIsIndel;
-    private final BqrQualCache mBqrQualCache;
+    private final ReadContextQualCache mQualCache;
 
-    // counts of various
+    // counts and quals by support type
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
@@ -105,19 +90,8 @@ public class ReadContextCounter
     private final JitterData mJitterData;
     private int mImproperPairCount;
 
-    private int mRawDepth;
-    private int mRawAltSupport;
-    private int mRawRefSupport;
-    private int mRawAltBaseQualityTotal;
-    private int mRawRefBaseQualityTotal;
-    private int mRawContextAltBaseQualityTotal;
-    private int mRecalibratedBaseQualityTotal;
-    private double mSupportAltBaseQualityTotal;
+    private final QualCounters mQualCounters;
 
-    private long mMapQualityTotal;
-    private long mAltMapQualityTotal;
-
-    private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
 
@@ -150,7 +124,7 @@ public class ReadContextCounter
         // set local state to avoid testing on each read
         mIsMnv = mVariant.isMNV();
         mIsIndel = mVariant.isIndel();
-        mBqrQualCache = !mIsIndel ? new BqrQualCache(mVariant.position(), mVariant.alt()) : null;
+        mQualCache = new ReadContextQualCache(readContext, qualityCalculator, sampleId);
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
@@ -164,18 +138,8 @@ public class ReadContextCounter
 
         mImproperPairCount = 0;
 
-        mRawDepth = 0;
-        mRawAltSupport = 0;
-        mRawRefSupport = 0;
-        mRawAltBaseQualityTotal = 0;
-        mRawRefBaseQualityTotal = 0;
-        mRecalibratedBaseQualityTotal = 0;
-        mRawContextAltBaseQualityTotal = 0;
-        mSupportAltBaseQualityTotal = 0;
-        mSoftClipInsertSupport = 0;
+        mQualCounters = new QualCounters();
         mMaxCandidateDeleteLength = 0;
-        mMapQualityTotal = 0;
-        mAltMapQualityTotal = 0;
 
         mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
@@ -194,35 +158,48 @@ public class ReadContextCounter
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
-    public final BqrQualCache bqrQualCache() { return mBqrQualCache; }
+    public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
     public String ref() { return mVariant.ref(); }
     public String alt() { return mVariant.alt(); }
+    public String sampleId() { return mSample; }
 
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
+
     public int depth() { return mCounts.Total; }
+
+    public QualCounters qualCounters() { return mQualCounters; }
+
+    public int baseQualityTotal() { return mQualCounters.baseQualityTotal(); }
+    public int altBaseQualityTotal() { return mQualCounters.altBaseQualityTotal(); }
+
+    public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
+    public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
 
     public double vaf()
     {
         return mCounts.Total == 0 ? 0d : mCounts.altSupport() / (double)mCounts.Total;
     }
 
-    public int tumorQuality()
+    public double tumorQuality()
     {
-        int tumorQuality = mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
-        return Math.max(0, tumorQuality - mJitterData.penalty());
+        int qualTotal = mQualities.Full + mQualities.PartialCore + mQualities.Realigned;
+
+        if(!mJitterData.filterOnNoise())
+            qualTotal *= mJitterData.qualBoost();
+
+        return qualTotal;
     }
 
     public int[] counts() { return mCounts.toArray(); }
     public int[] quality() { return mQualities.toArray(); }
+    public ReadSupportCounts readCounts() { return mCounts; }
+    public ReadSupportCounts readQuals() { return mQualities; }
 
-    public int[] jitter()
-    {
-        return mJitterData.summary();
-    }
+    public JitterData jitter() { return mJitterData; }
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }
@@ -232,17 +209,6 @@ public class ReadContextCounter
     public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
     public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
-
-    public int rawDepth() { return mRawDepth; }
-    public int rawAltSupport() { return mRawAltSupport; }
-    public int rawRefSupport() { return mRawRefSupport; }
-    public int rawAltBaseQualityTotal() { return mRawAltBaseQualityTotal; }
-    public int rawContextAltBaseQualityTotal() { return mRawContextAltBaseQualityTotal; }
-    public int rawRefBaseQualityTotal() { return mRawRefBaseQualityTotal; }
-    public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
-
-    public long mapQualityTotal() { return mMapQualityTotal; }
-    public long altMapQualityTotal() { return mAltMapQualityTotal; }
 
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
@@ -254,10 +220,8 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
-        return supportCount > 0 ? mSupportAltBaseQualityTotal / (double)supportCount : 0;
+        return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
     }
-
-    public int softClipInsertSupport() { return mSoftClipInsertSupport; }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
     public int maxCandidateDeleteLength() { return mMaxCandidateDeleteLength; }
@@ -283,23 +247,6 @@ public class ReadContextCounter
         return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
 
-    public enum MatchType implements Comparable<MatchType>
-    {
-        FULL(0),
-        PARTIAL_CORE(1),
-        CORE(2),
-        REALIGNED(3),
-        REF(6),
-        NONE(7);
-
-        public final int SortKey;
-
-        MatchType(int sortKey)
-        {
-            SortKey = sortKey;
-        }
-    }
-
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
         if(exceedsMaxCoverage())
@@ -307,62 +254,44 @@ public class ReadContextCounter
 
         if(mTier != VariantTier.HOTSPOT && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
         {
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return MAP_QUAL;
         }
 
         if(mConfig.Quality.HighDepthMode && isChimericRead(record))
         {
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return CHIMERIC;
         }
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(mConfig.Quality.HighDepthMode && rawContext.ReadIndexInSoftClip)
+        if(mConfig.Quality.HighDepthMode && rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
         {
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return SOFT_CLIP;
         }
 
-        if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
+        // TODO: need to check if the soft-clip bases cover the variant and allow for realignment
+        if(rawContext.ReadVariantIndex < 0)
         {
-            if(rawContext.DepthSupport || rawContext.AltSupport || rawContext.RefSupport)
-            {
-                SG_LOGGER.error("rawContext missing readIndex but with support(depth={} ref={} alt={}",
-                        rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
-            }
-
-            // search for a core match within soft-clipped bases, checking if a proximate DEL may explain the soft-clipping
-            rawContext = createRawContextFromCoreMatch(record);
-
-            if(rawContext.ReadIndex < 0)
-            {
-                addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
-                return UNRELATED;
-            }
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+            return UNRELATED;
         }
 
-        if(rawContext.ReadIndexInSkipped)
+        if(rawContext.PositionType == VariantReadPositionType.SKIPPED)
         {
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return IN_SPLIT;
         }
 
-        int readIndex = rawContext.ReadIndex;
-        boolean baseDeleted = rawContext.ReadIndexInDelete;
+        int readVarIndex = rawContext.ReadVariantIndex;
 
-        mRawDepth += rawContext.DepthSupport ? 1 : 0;
-
-        if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
-            ++mSoftClipInsertSupport;
-
-        boolean covered = mReadContextMatcher.coversVariant(record, readIndex);
+        boolean covered = mReadContextMatcher.coversVariant(record, readVarIndex);
 
         if(!covered)
         {
-            registerRawSupport(rawContext, 0);
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return NON_CORE;
         }
 
@@ -379,155 +308,89 @@ public class ReadContextCounter
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
+        double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readVarIndex, record);
 
         if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
-            if(rawContext.AltSupport)
-                countAltSupportMetrics(record, fragmentData);
+            if(rawContext.PositionType != VariantReadPositionType.DELETED)
+            {
+                ReadContextMatch matchType = determineReadContextMatch(record, readVarIndex, true);
 
-            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+                if(matchType.SupportsAlt)
+                    countAltSupportMetrics(record, fragmentData);
+            }
+
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return UNRELATED;
         }
 
         QualityCalculator.QualityScores qualityScores = mQualityCalculator.calculateQualityScores(
-                this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                this, readVarIndex, record, adjustedNumOfEvents, rawBaseQuality);
 
         double quality = qualityScores.ModifiedQuality;
 
-        MatchType matchType = MatchType.NONE;
-
         // Check if FULL, PARTIAL, OR CORE
-        if(!baseDeleted)
+        ReadContextMatch matchType = rawContext.PositionType != VariantReadPositionType.DELETED ?
+                determineReadContextMatch(record, readVarIndex, true) : NONE;
+
+        if(matchType.SupportsAlt)
         {
-            final ReadContextMatch match = determineReadContextMatch(record, readIndex, true);
+            VariantReadSupport readSupport = matchType.toReadSupport();
 
-            if(match != NONE && match != ReadContextMatch.REF)
-            {
-                VariantReadSupport readSupport = null;
+            registerReadSupport(record, readSupport, quality);
 
-                switch(match)
-                {
-                    case FULL:
-                        readSupport = FULL;
-                        matchType = MatchType.FULL;
-                        break;
+            mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
-                    case PARTIAL_CORE:
-                        readSupport = VariantReadSupport.PARTIAL_CORE;
-                        matchType = MatchType.PARTIAL_CORE;
-                        break;
+            mReadEdgeDistance.update(record, fragmentData, true);
 
-                    case CORE:
-                        readSupport = CORE;
-                        matchType = MatchType.CORE;
-                        break;
-                }
+            addVariantVisRecord(record, matchType, qualityScores, fragmentData);
+            logReadEvidence(record, matchType, readVarIndex, quality);
+            countAltSupportMetrics(record, fragmentData);
 
-                registerReadSupport(record, readSupport, quality);
-
-                mMapQualityTotal += record.getMappingQuality();
-                mAltMapQualityTotal += record.getMappingQuality();
-
-                mSupportAltBaseQualityTotal += rawBaseQuality;
-                mRawContextAltBaseQualityTotal += rawContext.BaseQuality;
-
-                registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
-
-                if(rawContext.AltSupport)
-                    mReadEdgeDistance.update(record, fragmentData, true);
-
-                addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-                logReadEvidence(record, matchType, readIndex, quality);
-
-                if(rawContext.AltSupport || readSupport != null)
-                    countAltSupportMetrics(record, fragmentData);
-
-                checkImproperCount(record);
-                return ALT_SUPPORT;
-            }
+            checkImproperCount(record);
+            return ALT_SUPPORT;
         }
 
-        boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
-        RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
+        boolean canRealign = matchType != ReadContextMatch.REF;
+
+        RealignedContext realignment = canRealign ? checkRealignment(record, readVarIndex) : RealignedContext.NONE;
 
         if(realignment.Type == EXACT)
         {
+            matchType = ReadContextMatch.REALIGNED;
             registerReadSupport(record, REALIGNED, quality);
 
-            mMapQualityTotal += record.getMappingQuality();
-            mAltMapQualityTotal += record.getMappingQuality();
+            mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
-            addVariantVisRecord(record, MatchType.REALIGNED, qualityScores, fragmentData);
-            logReadEvidence(record, MatchType.REALIGNED, readIndex,quality);
-            rawContext.updateSupport(false, rawContext.AltSupport);
-            registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
+            addVariantVisRecord(record, matchType, qualityScores, fragmentData);
+            logReadEvidence(record, matchType, readVarIndex,quality);
 
             return ALT_SUPPORT;
         }
-        /* REALIGN
-        else if(realignment.Type == CORE_PARTIAL)
-        {
-            matchType = MatchType.CORE_PARTIAL;
-            rawContext.updateSupport(false, false);
-        }
-        */
 
-        registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
+        mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), false);
 
-        // switch back to the old method to test for jitter
-        // REALIGN
-        RealignedContext jitterRealign = RealignedContext.NONE;
-                // Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
-
-        if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
-        {
-            if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
-            {
-                addVariantVisRecord(record, MatchType.NONE, qualityScores, fragmentData);
-                return SOFT_CLIP;
-            }
-        }
-
-        ReadMatchType readMatchType = UNRELATED;
-
-        mMapQualityTotal += record.getMappingQuality();
+        JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
+        mJitterData.update(jitterMatch);
 
         VariantReadSupport readSupport = null;
 
-        if(rawContext.RefSupport)
+        if(matchType == ReadContextMatch.REF)
         {
             readSupport = REF;
-            readMatchType = REF_SUPPORT;
 
             mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, mVariant);
+            mRefReadStrandBias.registerRead(record, fragmentData, this);
 
             mReadEdgeDistance.update(record, fragmentData, false);
-        }
-        else if(rawContext.AltSupport)
-        {
-            // readSupport = OTHER_ALT; // CLEAN-UP
-
-            mAltMapQualityTotal += record.getMappingQuality();
-
-            countAltSupportMetrics(record, fragmentData);
         }
 
         registerReadSupport(record, readSupport, quality);
 
-        // add to jitter penalty as a function of the number of repeats found
-        mJitterData.update(jitterRealign, mConfig.Quality);
-
-        if(rawContext.RefSupport)
-            matchType = MatchType.REF;
-        else if(rawContext.AltSupport)
-            matchType = MatchType.NONE;
-
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
-        logReadEvidence(record, matchType, readIndex, quality);
+        logReadEvidence(record, matchType, readVarIndex, quality);
 
-        return readMatchType;
+        return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }
 
     private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
@@ -590,31 +453,15 @@ public class ReadContextCounter
             ++mUmiTypeCounts[umiReadType.ordinal() + 3];
     }
 
-    private void registerRawSupport(final RawContext rawContext, double recalibratedBaseQuality)
-    {
-        if(rawContext.AltSupport)
-        {
-            ++mRawAltSupport;
-            mRawAltBaseQualityTotal += rawContext.BaseQuality;
-            mRecalibratedBaseQualityTotal += recalibratedBaseQuality;
-        }
-        else if(rawContext.RefSupport)
-        {
-            ++mRawRefSupport;
-            mRawRefBaseQualityTotal += rawContext.BaseQuality;
-            mRecalibratedBaseQualityTotal += recalibratedBaseQuality;
-        }
-    }
-
     private void addVariantVisRecord(
-            final SAMRecord record, final MatchType matchType,
+            final SAMRecord record, final ReadContextMatch matchType,
             @Nullable QualityCalculator.QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
     {
         if(mVariantVis != null)
             mVariantVis.addEvidence(record, fragmentData, matchType, modifiedQualities);
     }
 
-    private void logReadEvidence(final SAMRecord record, final MatchType matchType, int readIndex, double quality)
+    private void logReadEvidence(final SAMRecord record, final ReadContextMatch matchType, int readIndex, double quality)
     {
         if(!mConfig.LogEvidenceReads || !SG_LOGGER.isTraceEnabled())
             return;
@@ -625,205 +472,27 @@ public class ReadContextCounter
         SG_LOGGER.trace("READ_EV,{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 mSample, chromosome(), position(), ref(), alt(),
                 matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
-                mReadContext.CoreIndexStart, mReadContext.VarReadIndex,
+                mReadContext.CoreIndexStart, mReadContext.VarIndex,
                 mReadContext.CoreIndexEnd, readIndex, format("%.1f", quality));
     }
 
-    private RawContext createRawContextFromCoreMatch(final SAMRecord record)
+    private RealignedContext checkRealignment(final SAMRecord record, int readIndex)
     {
-        // check for an exact core match by which to centre the read
-        if(mMaxCandidateDeleteLength < 5)
-            return RawContext.INVALID_CONTEXT;
+        // do a comparison of the bases going from this calculated RI - coreLength - flankLength vs the variant's full read base sequence
 
-        int scLenLeft = leftSoftClipLength(record);
-        int scLenRight = rightSoftClipLength(record);
+        // the read index corresponding to the ref position at the end of the core
+        int realignedReadIndex = Realignment.realignedReadIndexPosition(mReadContext, record);
 
-        if(max(scLenLeft, scLenRight) < 5)
-            return RawContext.INVALID_CONTEXT;
+        if(readIndex == realignedReadIndex)
+            return RealignedContext.NONE;
 
-        String variantCore = mReadContext.coreStr();
-        int coreStartIndex = record.getReadString().indexOf(variantCore);
-        if(coreStartIndex < 1)
-            return RawContext.INVALID_CONTEXT;
+        if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
+            return RealignedContext.NONE;
 
-        int coreEndIndex = coreStartIndex + variantCore.length() - 1;
-        boolean isValidRead = false;
-        int baseQuality = 0;
+        ReadContextMatch match = determineReadContextMatch(record, realignedReadIndex, true);
 
-        if(scLenLeft > scLenRight)
-        {
-            // the core match must span from the left soft-clipping into the matched bases
-            int readRightCorePosition = record.getReferencePositionAtReadPosition(coreEndIndex + 1);
-
-            if(readRightCorePosition > mVariant.position() && coreStartIndex < scLenLeft)
-            {
-                isValidRead = true;
-                baseQuality = record.getBaseQualities()[scLenLeft];
-            }
-        }
-        else
-        {
-            // the core match must span from the matched bases into the right soft-clipping
-            int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreStartIndex + 1);
-            int postCoreIndexDiff = record.getReadBases().length - coreEndIndex;
-
-            if(readLeftCorePosition > 0 && readLeftCorePosition < mVariant.position() && postCoreIndexDiff < scLenRight)
-            {
-                isValidRead = true;
-                baseQuality = record.getBaseQualities()[record.getReadBases().length - scLenRight];
-            }
-        }
-
-        if(!isValidRead)
-            return RawContext.INVALID_CONTEXT;
-
-        int readIndex = coreStartIndex + mReadContext.VarReadIndex - mReadContext.CoreIndexStart;
-
-        return new RawContext(
-                readIndex, false, false, true,
-                true, false, true, baseQuality);
-    }
-
-    private boolean readHasIndelInCore(final SAMRecord record)
-    {
-        if(!record.getCigar().containsOperator(D) && !record.getCigar().containsOperator(I))
-            return false;
-
-        int variantLeftCorePos = mVariant.position() - mReadContext.leftCoreLength();
-        int variantRightCorePos = mVariant.position() + mReadContext.rightCoreLength();
-
-        int currentPos = record.getAlignmentStart() - 1;
-
-        // eg 2S10M2D10M starting at 100: first non-SC element, in this case a delete, starts at 109
-        for(CigarElement element : record.getCigar())
-        {
-            if(element.getOperator() == S)
-                continue;
-
-            if(element.getOperator() == I || element.getOperator() == D)
-            {
-                int indelLowerPos = currentPos;
-                int indelUpperPos = indelLowerPos + (element.getOperator() == D ? element.getLength() : 1);
-
-                if(positionsOverlap(variantLeftCorePos, variantRightCorePos, indelLowerPos, indelUpperPos))
-                    return true;
-            }
-            else if(element.getOperator() == M)
-            {
-                currentPos += element.getLength();
-            }
-        }
-
-        return false;
-    }
-
-    private int calcLeftAlignmentIndex(final SAMRecord record)
-    {
-        // Left alignment: Match full read context starting at base = pos - rc_index
-        int leftCoreOffset = mReadContext.leftCoreLength();
-        int realignLeftCorePos = position() - leftCoreOffset;
-        int realignLeftCoreIndex = record.getReadPositionAtReferencePosition(realignLeftCorePos);
-
-        if(realignLeftCoreIndex > 0)
-        {
-            int realignLeftReadIndex = realignLeftCoreIndex - 1 + leftCoreOffset;
-            return realignLeftReadIndex;
-        }
-
-        int deleteCount = (int)record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == D).count();
-        if(deleteCount == 0)
-            return -1;
-
-        int deleteStartPos = record.getAlignmentStart();
-        int deleteStartIndex = 0;
-        for(CigarElement element : record.getCigar())
-        {
-            if(element.getOperator() == S || element.getOperator() == I)
-                continue;
-
-            if(element.getOperator() == M)
-            {
-                deleteStartPos += element.getLength();
-                deleteStartIndex += element.getLength();
-            }
-            else if(element.getOperator() == D)
-            {
-                --deleteCount;
-
-                if(deleteCount == 0)
-                    break;
-
-                deleteStartPos += element.getLength();
-            }
-        }
-
-        --deleteStartPos;
-
-        int posDiff = realignLeftCorePos - deleteStartPos;
-        int realignLeftReadIndex = deleteStartIndex + posDiff - 1 + leftCoreOffset;
-        return realignLeftReadIndex;
-    }
-
-    private int calcRightAlignmentIndex(final SAMRecord record)
-    {
-        // Right alignment: Match full read context ending at base = pos + length[RC} - rc_index - 1 - length(alt) + length(ref)
-        int rightCoreOffset = mReadContext.rightCoreLength();
-        int realignRightPos = position() + rightCoreOffset - mVariant.alt().length() + mVariant.ref().length();
-        int realignRightCoreIndex = record.getReadPositionAtReferencePosition(realignRightPos);
-
-        if(realignRightCoreIndex > 0)
-        {
-            int realignRightReadIndex = realignRightCoreIndex - 1 - rightCoreOffset;
-            return realignRightReadIndex;
-        }
-
-        return -1;
-    }
-
-    private RealignedContext checkRealignment(final SAMRecord record)
-    {
-        // try left and right alignment in turn
-        int realignLeftReadIndex = calcLeftAlignmentIndex(record);
-
-        if(realignLeftReadIndex >= 0) //  && realignLeftReadIndex != readIndex
-        {
-            ReadContextMatch match = determineReadContextMatch(record, realignLeftReadIndex, false);
-
-            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-                return new RealignedContext(EXACT, mReadContext.totalLength(), realignLeftReadIndex);
-        }
-
-        int realignRightReadIndex = calcRightAlignmentIndex(record);
-
-        if(realignRightReadIndex >= 0)
-        {
-            // still need to test even if this index matches the original readIndex since if the readIndex was in a delete
-            // it will have been skipped above
-            ReadContextMatch match = determineReadContextMatch(record, realignRightReadIndex, false);
-
-            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-                return new RealignedContext(RealignedType.EXACT, mReadContext.totalLength(), realignRightReadIndex);
-            // else if(match == ReadContextMatch.CORE_PARTIAL) // REALIGN
-            //    return new RealignedContext(RealignedType.CORE_PARTIAL, mReadContext.indexedBases().length(), realignRightReadIndex);
-        }
-
-        // try a simple string search and take it as exact if the matched index is within the expected range
-        String readContext = mReadContext.readBases();
-
-        if(readContext.length() >= REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH)
-        {
-            int matchedReadIndex = record.getReadString().indexOf(readContext);
-
-            if(matchedReadIndex >= 0)
-            {
-                int matchedIndex = matchedReadIndex + mReadContext.leftLength();
-                if(abs(matchedIndex - realignLeftReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER
-                || abs(matchedIndex - realignRightReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER)
-                {
-                    return new RealignedContext(RealignedType.EXACT, mReadContext.totalLength(), matchedIndex);
-                }
-            }
-        }
+        if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
+            return new RealignedContext(EXACT, mReadContext.totalLength(), realignedReadIndex);
 
         return RealignedContext.NONE;
     }
@@ -854,7 +523,7 @@ public class ReadContextCounter
 
     private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)
     {
-        mAltReadStrandBias.registerRead(record, fragmentData, mVariant);
+        mAltReadStrandBias.registerRead(record, fragmentData, this);
         mAltFragmentStrandBias.registerFragment(record);
 
         if(mFragmentCoords != null)
@@ -864,17 +533,6 @@ public class ReadContextCounter
             else
                 mFragmentCoords.addRead(record, null);
         }
-    }
-
-    private int getMaxRealignDistance(final SAMRecord record)
-    {
-        int leftOffset = mReadContext.leftCoreLength();
-        int rightOffset = mReadContext.rightCoreLength();
-
-        int indelLength = record.getCigar().getCigarElements().stream()
-                .filter(x -> x.getOperator() == I || x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
-
-        return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realignment.MAX_REPEAT_SIZE) + 1;
     }
 
     private void checkImproperCount(final SAMRecord record)

@@ -13,18 +13,18 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.NO_CALL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 
@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.append.CandidateSerialization;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -210,7 +210,7 @@ public class SyntheticVcfWriter
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        VersionInfo version = new VersionInfo("sage.version");
+        VersionInfo version = fromAppName(APP_NAME);
         VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
         // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
@@ -280,11 +280,9 @@ public class SyntheticVcfWriter
                 .attribute(READ_CONTEXT_COUNT, 0)
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, 0)
                 .attribute(READ_CONTEXT_JITTER, 0)
-                .attribute(RAW_SUPPORT_DEPTH, new int[] { 0, 0 })
-                .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { 0, 0 })
-                .attribute(RAW_DEPTH, 0)
                 .attribute(FRAG_STRAND_BIAS, 0)
-                .attribute(AVG_BASE_QUAL, 0)
+                .attribute(AVG_BASE_QUAL, new int[] { 0, 0 })
+                .attribute(AVG_MAP_QUALITY, new int[] { 0, 0 })
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, 0)
                 .alleles(NO_CALL)
                 .make();
@@ -298,7 +296,7 @@ public class SyntheticVcfWriter
 
         Candidate candidate = new Candidate(VariantTier.PANEL, readContext, 0, 0);
 
-        VariantContextBuilder builder = CandidateSerialization.toContext(candidate)
+        VariantContextBuilder builder = CandidateSerialisation.toContext(candidate)
                 .log10PError(0)
                 .genotypes(genotype)
                 .filters(PASS);

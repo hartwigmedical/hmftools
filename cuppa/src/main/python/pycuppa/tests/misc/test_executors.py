@@ -8,7 +8,7 @@ from cuppa.misc.executors import RscriptExecutor
 class TestRscriptExecutor:
     def test_crash_on_error(self):
         executor = RscriptExecutor(
-            args="dummy_rscript",
+            args=["dummy_rscript"],
             ignore_error=True
         )
         executor.run()

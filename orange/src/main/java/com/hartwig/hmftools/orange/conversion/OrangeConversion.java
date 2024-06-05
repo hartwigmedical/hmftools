@@ -143,6 +143,8 @@ public final class OrangeConversion
     {
         return ImmutablePeachGenotype.builder()
                 .gene(peachGenotype.gene())
+                .allele(peachGenotype.allele())
+                .alleleCount(peachGenotype.alleleCount())
                 .haplotype(peachGenotype.haplotype())
                 .function(peachGenotype.function())
                 .linkedDrugs(peachGenotype.linkedDrugs())

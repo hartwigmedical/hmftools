@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_COUNT;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_MAX;
 
@@ -68,7 +70,7 @@ public class VcfWriter
 
     public final void writeHeader(final ReferenceData referenceData, boolean setReportability)
     {
-        final VersionInfo version = new VersionInfo("pave.version");
+        final VersionInfo version = fromAppName(APP_NAME);
 
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
         newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", version.version()));

@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -66,6 +68,7 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final BqrConfig BQR;
+    public final String JitterParamsDir;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final int RegionSliceSize;
@@ -86,7 +89,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final Set<Integer> SpecificPositions;
+    public final List<BasePosition> SpecificPositions;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -107,6 +110,7 @@ public class SageConfig
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
+    private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -158,6 +162,7 @@ public class SageConfig
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
         BQR = new BqrConfig(configBuilder);
+        JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -182,14 +187,22 @@ public class SageConfig
             }
         }
 
-        SpecificPositions = Sets.newHashSet();
+        SpecificPositions = Lists.newArrayList();
 
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
         {
-            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
-            if(!positionList.isEmpty())
+            String[] specPositionsStr = configBuilder.getValue(SPECIFIC_POSITIONS).split(ITEM_DELIM);
+
+            for(String specPosStr : specPositionsStr)
             {
-                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
+                String[] items = specPosStr.split(":", 2);
+                SpecificPositions.add(new BasePosition(items[0], Integer.parseInt(items[1])));
+            }
+
+            if(SpecificChrRegions.Regions.isEmpty())
+            {
+                SpecificPositions.forEach(x -> SpecificChrRegions.addRegion(
+                        new ChrBaseRegion(x.Chromosome, x.Position - 300, x.Position + 300)));
             }
         }
 
@@ -321,6 +334,7 @@ public class SageConfig
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
         SequencingConfig.registerConfig(configBuilder);
+        configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
 
@@ -331,7 +345,9 @@ public class SageConfig
         configBuilder.addDecimal(PERF_WARN_TIME, "Log details of partitions taking longer than X seconds", 0.0);
 
         // debug
-        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
+        configBuilder.addConfigItem(
+                SPECIFIC_POSITIONS,
+                "Restrict to specific positions(s) of form chromosome:position, separated by ';'");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -346,6 +362,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
         BQR = new BqrConfig();
+        JitterParamsDir = null;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;
@@ -367,7 +384,7 @@ public class SageConfig
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
-        SpecificPositions = Sets.newHashSet();
+        SpecificPositions = Collections.emptyList();
         LogEvidenceReads = false;
     }
 }

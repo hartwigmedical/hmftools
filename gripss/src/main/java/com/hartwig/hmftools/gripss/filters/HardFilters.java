@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
-import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
+import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -52,9 +52,9 @@ public class HardFilters
         if(isSgl)
         {
             String ref = variant.getAlleles().get(0).getDisplayString();
-            final VariantAltInsertCoords altInsertCoords = parseRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
+            final VariantAltInsertCoords altInsertCoords = fromRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
 
-            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orientation, altInsertCoords.InsertSequence);
+            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orient, altInsertCoords.InsertSequence);
 
             final String qualTag = isLineInsertion ? GRIDSS_BQ : GRIDSS_BAQ;
             qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);

@@ -4,12 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTI
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
@@ -37,6 +38,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -217,10 +219,6 @@ public class JunctionTracker
         }
     }
 
-    public void addExistingJunctions(final List<JunctionData> existingJunctions)
-    {
-        mJunctions.addAll(existingJunctions);
-    }
     public void setExpectedReads(final Set<String> expectedReads) { mExpectedReadIds.addAll(expectedReads); }
 
     public void assignFragments()
@@ -426,7 +424,7 @@ public class JunctionTracker
             if(scSide == null || ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH) || scSide.Length < MIN_LINE_SOFT_CLIP_LENGTH)
                 continue;
 
-            byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+            Orientation orientation = scSide.isLeft() ? REVERSE : FORWARD;
             int position = scSide.isLeft() ? read.start() : read.end();
 
             // junctions cannot fall in blacklist regions
@@ -459,7 +457,7 @@ public class JunctionTracker
             for(JunctionData junctionData : junctions)
             {
                 // ignore remotes (typically) supplementaries which point to junction in another read in this group
-                if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orientation))
+                if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orient))
                     continue;
 
                 junctionData.addRemoteJunction(remoteJunction);
@@ -500,8 +498,8 @@ public class JunctionTracker
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
-        JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, POS_ORIENT);
-        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords.PosEnd, NEG_ORIENT);
+        JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, FORWARD);
+        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords.PosEnd, REVERSE);
 
         junctionStart.markInternalIndel();
         junctionStart.JunctionGroups.add(readGroup);
@@ -580,13 +578,13 @@ public class JunctionTracker
         }
     }
 
-    private JunctionData getOrCreateJunction(final PrepRead read, final byte orientation)
+    private JunctionData getOrCreateJunction(final PrepRead read, final Orientation orientation)
     {
-        int junctionPosition = orientation == NEG_ORIENT ? read.start() : read.end();
+        int junctionPosition = orientation.isReverse() ? read.start() : read.end();
         return getOrCreateJunction(read, junctionPosition, orientation);
     }
 
-    private JunctionData getOrCreateJunction(final PrepRead read, final int junctionPosition, final byte orientation)
+    private JunctionData getOrCreateJunction(final PrepRead read, final int junctionPosition, final Orientation orientation)
     {
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
 
@@ -595,7 +593,7 @@ public class JunctionTracker
         {
             JunctionData junctionData = mJunctions.get(mLastJunctionIndex);
 
-            if(junctionData.Position == junctionPosition && junctionData.Orientation == orientation)
+            if(junctionData.Position == junctionPosition && junctionData.Orient == orientation)
                 return junctionData;
         }
 
@@ -607,7 +605,7 @@ public class JunctionTracker
 
             if(junctionData.Position == junctionPosition)
             {
-                if(junctionData.Orientation == orientation)
+                if(junctionData.Orient == orientation)
                 {
                     setLastJunctionIndex(index);
                     return junctionData;
@@ -637,7 +635,7 @@ public class JunctionTracker
 
             if(junctionData.Position == newJunction.Position)
             {
-                if(junctionData.Orientation == newJunction.Orientation)
+                if(junctionData.Orient == newJunction.Orient)
                     return;
             }
             else if(junctionData.Position > newJunction.Position)
@@ -842,7 +840,7 @@ public class JunctionTracker
         // otherwise can be distant if discordant and with an orientation cross the junction
         int junctionDistance = 0;
 
-        if(junctionData.Orientation != read.orientation())
+        if(junctionData.Orient != read.orientation())
             return false;
 
         if(junctionData.isForward())
@@ -1128,7 +1126,18 @@ public class JunctionTracker
                 return true;
         }
 
-        boolean hasPassingMapQualRead = junctionData.ReadTypeReads.get(ReadType.JUNCTION).stream().anyMatch(x -> x.mapQuality() > MIN_MAP_QUALITY);
+        boolean hasPassingMapQualRead = false;
+        boolean hasPassingAlignedRead = false;
+
+        for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+        {
+            hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
+
+            hasPassingMapQualRead |= read.mapQuality() >= MIN_MAP_QUALITY;
+        }
+
+        if(!hasPassingAlignedRead)
+            return false;
 
         if(hasPassingMapQualRead && junctionFrags >= mFilterConfig.MinJunctionSupport)
             return true;

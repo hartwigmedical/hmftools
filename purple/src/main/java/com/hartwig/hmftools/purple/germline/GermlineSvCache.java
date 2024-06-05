@@ -14,8 +14,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -254,8 +253,7 @@ public class GermlineSvCache
         int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0)
                 + getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0);
 
-        int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAG_COUNT, 0) +
-                getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0);
+        int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
         double total = variantFrags + totalReadCoverage;
         return variantFrags / total;

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityVa
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class SomaticPurityResult
 {
@@ -71,9 +72,15 @@ public class SomaticPurityResult
         sj.add("AlleleFragments");
         sj.add("AlleleDual");
         sj.add("WeightedAvgDepth");
+        sj.add("WadVCN");
+        sj.add("WadCN");
         sj.add("PeakBandwidth");
         sj.add("PeakBandwidthLow");
         sj.add("PeakBandwidthHigh");
+        sj.add("ErrorRate");
+        sj.add("RawBqrErrorRate");
+        sj.add("BqrThreshold");
+        sj.add("BqrExtraInfo");
         return sj.toString();
     }
 
@@ -105,9 +112,17 @@ public class SomaticPurityResult
         sj.add(format("%d", FragTotals.sampleAdTotal()));
         sj.add(format("%d", UmiCounts.AlleleDual));
         sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
+        sj.add(format("%.1f", FragTotals.weightedVariantCopyNumber()));
+        sj.add(format("%.1f", FragTotals.weightedCopyNumber()));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidth));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthLow));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthHigh));
+        sj.add(format("%.6f", PurityCalcs.ErrorRate));
+        sj.add(format("%.6f", PurityCalcs.RawBqrErrorRate));
+        sj.add(format("%d", PurityCalcs.BqrQualThreshold));
+
+        String bqrDataStr = PurityCalcs.BqrExtraInfo.stream().collect(Collectors.joining(";"));
+        sj.add(bqrDataStr);
 
         return sj.toString();
     }

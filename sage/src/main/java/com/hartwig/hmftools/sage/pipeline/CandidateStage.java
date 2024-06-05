@@ -8,13 +8,13 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -22,14 +22,14 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 public class CandidateStage
 {
     private final SageCallConfig mConfig;
-    private final List<VariantHotspot> mHotspots;
+    private final List<SimpleVariant> mHotspots;
     private final List<BaseRegion> mPanelRegions;
     private final CandidateEvidence mCandidateEvidence;
     private final List<BaseRegion> mHighConfidenceRegions;
     private final SamSlicerFactory mSamSlicerFactory;
 
     public CandidateStage(
-            final SageCallConfig config, final List<VariantHotspot> hotspots,
+            final SageCallConfig config, final List<SimpleVariant> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
             final SamSlicerFactory samSlicerFactory)
     {

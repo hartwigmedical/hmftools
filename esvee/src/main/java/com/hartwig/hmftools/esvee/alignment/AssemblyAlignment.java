@@ -61,10 +61,7 @@ public class AssemblyAlignment
     public String fullSequence() { return mFullSequence; }
     public int fullSequenceLength() { return mFullSequenceLength; }
 
-    public void setOutcome(final AlignmentOutcome outcome)
-    {
-        mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));
-    }
+    public String overlapBases() { return mAssemblyLink != null ? mAssemblyLink.overlapBases() : ""; }
 
     public String assemblyIds()
     {
@@ -116,7 +113,7 @@ public class AssemblyAlignment
         boolean firstReversed = false;
         boolean secondReversed = false;
 
-        if(mAssemblyLink.first().junction().Orientation != mAssemblyLink.second().junction().Orientation)
+        if(mAssemblyLink.first().junction().Orient != mAssemblyLink.second().junction().Orient)
         {
             if(mAssemblyLink.first().junction().isForward())
             {
@@ -151,7 +148,12 @@ public class AssemblyAlignment
         fullSequence.append(firstReversed ? Nucleotides.reverseComplementBases(first.formRefBaseSequence()) : first.formRefBaseSequence());
 
         if(!insertedBases.isEmpty())
-            fullSequence.append(insertedBases);
+        {
+            if(firstReversed)
+                fullSequence.append(Nucleotides.reverseComplementBases(insertedBases)); // keep inserted bases in the same direction as a full sequence
+            else
+                fullSequence.append(insertedBases);
+        }
 
         String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formRefBaseSequence()) : second.formRefBaseSequence();
 
@@ -178,7 +180,7 @@ public class AssemblyAlignment
         {
             if(!secondReversed)
             {
-                // use the read's relative position to the its assembly's junction to set its position in the full assembly
+                // use the read's relative position to its assembly's junction to set its position in the full assembly
                 read.setLinkedAssemblyIndex(secondStartAdjustment - read.junctionReadIndex());
             }
             else

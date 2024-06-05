@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.setReferenceMaxRepeatInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -16,13 +17,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 
 public class RegionTask
@@ -59,9 +61,9 @@ public class RegionTask
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
-            final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
             final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;
@@ -72,7 +74,9 @@ public class RegionTask
         mFragmentLengths = fragmentLengths;
 
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
-        mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
+
+        mEvidenceStage = new EvidenceStage(
+                config.Common, refGenome, qualityRecalibrationMap, msiJitterCalcs, phaseSetCounter, samSlicerFactory);
 
         mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength());
 
@@ -155,6 +159,7 @@ public class RegionTask
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
                 SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
+                setReferenceMaxRepeatInfo(sageVariant, refSequence);
                 mSageVariants.add(sageVariant);
 
                 // apply filters

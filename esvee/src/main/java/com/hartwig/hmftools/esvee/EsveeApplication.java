@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -24,7 +24,7 @@ public class EsveeApplication
         SV_LOGGER.info("writing to output directory({}){}",
                 mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
-        JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
+        AssemblyApplication junctionProcessor = new AssemblyApplication(mConfig);
 
         if(!junctionProcessor.loadJunctionFiles())
         {

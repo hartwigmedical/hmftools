@@ -152,7 +152,9 @@ public class FittedPurityFactory
             fittedPurities.add(fitPurity(purity, impliedNormFactor));
         }
 
+        System.out.println(5 / 0);
         return fittedPurities;
+       // return fittedPurities;
     }
 
     private FittedPurity fitPurity(final double purity, final double normFactor)

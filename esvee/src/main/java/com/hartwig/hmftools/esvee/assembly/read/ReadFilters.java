@@ -3,20 +3,33 @@ package com.hartwig.hmftools.esvee.assembly.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 public final class ReadFilters
 {
     public static boolean recordSoftClipsAndCrossesJunction(final Read read, final Junction junction)
     {
+        int junctionOverlap = 0;
+
         if(junction.isForward())
         {
-            return read.isRightClipped() && read.unclippedEnd() > junction.Position;
+            if(read.isRightClipped())
+                return read.maxUnclippedEnd() > junction.Position;
+
+            // consider alignments with small junction overlap, which ought to have mismatched bases
+            junctionOverlap = read.alignmentEnd() - junction.Position;
         }
         else
         {
-            return read.isLeftClipped() && read.unclippedStart() < junction.Position;
+            if(read.isLeftClipped())
+                return read.minUnclippedStart() < junction.Position;
+
+            junctionOverlap = junction.Position - read.alignmentStart();
         }
+
+        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
     }
 
     public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)
@@ -35,11 +48,11 @@ public final class ReadFilters
     {
         if(junction.isForward())
         {
-            return read.isRightClipped() ? max(read.unclippedEnd() - junction.Position, 0) : 0;
+            return read.isRightClipped() ? max(read.maxUnclippedEnd() - junction.Position, 0) : 0;
         }
         else
         {
-            return read.isLeftClipped() ? max(junction.Position - read.unclippedStart(), 0) : 0;
+            return read.isLeftClipped() ? max(junction.Position - read.minUnclippedStart(), 0) : 0;
         }
     }
 

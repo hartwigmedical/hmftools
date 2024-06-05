@@ -23,14 +23,15 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -42,6 +43,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -52,19 +54,20 @@ public class ChromosomePipeline implements AutoCloseable
 
     // cache of chromosome-specific ref data
     private final List<BaseRegion> mPanelRegions;
-    private final List<VariantHotspot> mHotspots;
+    private final List<SimpleVariant> mHotspots;
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
 
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
-            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
             final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
 
@@ -117,7 +120,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
+                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mCoverage, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
         }
 

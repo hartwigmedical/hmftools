@@ -95,6 +95,7 @@ public class CopyNumberProfile
             Map<Chromosome,List<CobaltRatio>> cobaltRatios = CobaltRatioFile.readWithGender(cobaltFilename, null, true);
 
             buildCopyNumberGcRatios(cobaltRatios);
+            cobaltRatios.clear();
 
             if(mCnDataWriter != null)
             {

@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.Nullable;
 

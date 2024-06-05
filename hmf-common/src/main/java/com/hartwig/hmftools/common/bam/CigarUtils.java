@@ -4,11 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.N;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,17 +60,23 @@ public final class CigarUtils
 
     public static int cigarBaseLength(final Cigar cigar)
     {
-        return cigar.getCigarElements().stream().filter(x -> x.getOperator() != N && x.getOperator() != D).mapToInt(x -> x.getLength()).sum();
+        return cigar.getCigarElements().stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
     }
 
-    public static int calcCigarLength(final String cigarStr)
+    public static int cigarAlignedLength(final Cigar cigar)
     {
+        return cigar.getCigarElements().stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
+    }
+
+    public static int calcCigarAlignedLength(final String cigarStr)
+    {
+        // a string-parsing version of the method above
         int baseLength = 0;
         int currentElementLength = 0;
         for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
-            boolean isAddItem = (c == 'D' || c == 'M');
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
 
             if(isAddItem)
             {
@@ -119,6 +120,11 @@ public final class CigarUtils
     {
         CigarElement firstElement = cigar.getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
+    }
+
+    public static int leftSoftClipLength(final List<CigarElement> elements)
+    {
+        return elements.get(0).getOperator() == CigarOperator.S ? elements.get(0).getLength() : 0;
     }
 
     public static int rightSoftClipLength(final Cigar cigar)

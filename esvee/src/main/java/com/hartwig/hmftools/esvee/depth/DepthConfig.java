@@ -10,8 +10,14 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificReg
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
+import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
+import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +29,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import org.apache.commons.cli.ParseException;
 
@@ -31,7 +38,8 @@ import htsjdk.samtools.ValidationStringency;
 public class DepthConfig
 {
     public final String InputVcf;
-    public final String OutputVcf;
+    public final String OutputDir;
+    public final String OutputId;
     public final List<String> Samples;
     public final List<String> BamFiles;
     public final String RefGenome;
@@ -45,8 +53,6 @@ public class DepthConfig
     public final double PerfLogTime;
     public final List<ChrBaseRegion> SpecificRegions;
 
-    private static final String INPUT_VCF = "input_vcf";
-    private static final String OUTPUT_VCF = "output_vcf";
     private static final String SAMPLES = "samples";
     private static final String BAM_FILES = "bam_files";
     private static final String PROXIMITY_DISTANCE = "proximity_distance";
@@ -61,11 +67,16 @@ public class DepthConfig
 
     public DepthConfig(final ConfigBuilder configBuilder)
     {
-        InputVcf = configBuilder.getValue(INPUT_VCF);
-        OutputVcf = configBuilder.getValue(OUTPUT_VCF);
-
         Samples = Arrays.stream(configBuilder.getValue(SAMPLES).split(DELIM, -1)).collect(Collectors.toList());
         BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
+
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        if(configBuilder.hasValue(INPUT_VCF))
+            InputVcf = configBuilder.getValue(INPUT_VCF);
+        else
+            InputVcf = formEsveeInputFilename(OutputDir, Samples.get(0), RAW_VCF_SUFFIX, OutputId);
 
         RefGenome = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -90,6 +101,8 @@ public class DepthConfig
         VcfTagPrefix = configBuilder.getValue(VCF_TAG_PREFIX);
     }
 
+    public String sampleId() { return Samples.get(0); }
+
     public String getVcfTag(final String vcfTag)
     {
         return VcfTagPrefix != null ? format("%s_%s", VcfTagPrefix, vcfTag) : vcfTag;
@@ -97,10 +110,9 @@ public class DepthConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(INPUT_VCF, true, "Input VCF File");
+        configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addConfigItem(SAMPLES, true, "Sample IDs corresponding to BAM files");
         configBuilder.addConfigItem(BAM_FILES, true, "BAM file(s) to slice for depth");
-        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF File");
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
 
@@ -119,7 +131,8 @@ public class DepthConfig
     public DepthConfig(double vcfCap, int proximityDistance)
     {
         InputVcf = "";
-        OutputVcf = "";
+        OutputDir = "";
+        OutputId = "";
 
         Samples = Lists.newArrayList();
         BamFiles = Lists.newArrayList();

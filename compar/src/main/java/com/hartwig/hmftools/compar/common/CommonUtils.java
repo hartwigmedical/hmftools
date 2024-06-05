@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.compar.common;
 
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
@@ -16,6 +19,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -134,7 +140,7 @@ public class CommonUtils
 
             if(!config.DbConnections.isEmpty())
             {
-                items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName));
+                items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName), sourceName);
             }
             else
             {
@@ -222,5 +228,23 @@ public class CommonUtils
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+    }
+
+    public static BasePosition determineComparisonGenomePosition(
+            final String chromosome, final int position, final String fileSource,
+            final boolean requiresLiftover, final GenomeLiftoverCache liftoverCache)
+    {
+        if(requiresLiftover && liftoverCache.hasMappings())
+        {
+            RefGenomeVersion destVersion = fileSource.equals(REF_SOURCE) ? V38 : V37;
+            int newPosition = liftoverCache.convertPosition(chromosome, position, destVersion);
+
+            if(newPosition != UNMAPPED_POSITION)
+            {
+                return new BasePosition(destVersion.versionedChromosome(chromosome), newPosition);
+            }
+        }
+
+        return new BasePosition(chromosome, position);
     }
 }

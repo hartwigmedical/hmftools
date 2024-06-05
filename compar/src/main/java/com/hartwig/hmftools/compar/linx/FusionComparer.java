@@ -55,7 +55,7 @@ public class FusionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
         return processFusions(fusions);

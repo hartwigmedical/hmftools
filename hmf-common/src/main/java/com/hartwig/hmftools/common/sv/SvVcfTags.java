@@ -1,37 +1,16 @@
 package com.hartwig.hmftools.common.sv;
 
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-
-public class SvVcfTags
+public final class SvVcfTags
 {
-    // Esvee and Gridss
-    public static final String CIPOS = "CIPOS";
-    public static final String CIPOS_DESC = "Confidence interval around position for imprecise variants";
-
-    public static final String CIRPOS = "CIRPOS";
-    public static final String CIRPOS_DESC = "CIRPOS";
-
+    // set by Esvee
     public static final String SVTYPE = "SVTYPE";
     public static final String SVTYPE_DESC = "Type of structural variant";
-
-    public static final String EVENT = "EVENT";
-    public static final String EVENT_DESC = "Linking SV event ID";
 
     public static final String MATE_ID = "MATEID";
     public static final String MATE_ID_DESC = "Mate breakend ID";
 
-    public static final String BEID = "BEID";
-    public static final String BEID_DESC = "Identifiers of assemblies supporting the variant";
-
-    public static final String BEIDL = "BEIDL";
-    public static final String BEIDL_DESC = "Local alignment offset of corresponding BEID assembly";
-
-    public static final String BEIDH = "BEIDL";
-    public static final String BEIDH_DESC = "Remote alignment offset of corresponding BEID assembly";
-
-    public static final String BEALN = "BEALN";
-    public static final String BEALN_DESC = "Potential alignment locations of breakend sequence in the format chr:start|strand|cigar|mapq";
+    public static final String CIPOS = "CIPOS";
+    public static final String CIPOS_DESC = "Confidence interval around position";
 
     public static final String HOMSEQ = "HOMSEQ";
     public static final String HOMSEQ_DESC = "Sequence of base pair identical micro-homology at event breakpoints";
@@ -39,94 +18,63 @@ public class SvVcfTags
     public static final String IHOMPOS = "IHOMPOS";
     public static final String IHOMPOS_DESC = "Position of inexact homology";
 
-    public static final String QUAL = "QUAL";
-    public static final String QUAL_DESC = "Quality score of breakend evidence";
+    public static final String INSALN = "INSALN";
+    public static final String INSALN_DESC = "Alternative alignment locations of insert sequence";
 
-    public static final String SPLIT_READS = "SR";
-    public static final String SPLIT_READS_DESC = "Count of split reads supporting breakpoint";
+    public static final String ASMID = "ASMID";
+    public static final String ASMID_DESC = "Unique id(s) of assembly(s) containing the breakend";
 
-    public static final String DISCORDANT_READS = "DP";
-    public static final String DISCORDANT_READS_DESC = "Count of discordant reads supporting breakpoint";
+    public static final String ASMLEN = "ASMLEN";
+    public static final String ASMLEN_DESC = "Assembly sequence length";
+
+    public static final String ASMSEG = "ASMSEG";
+    public static final String ASMSEG_DESC = "Segment indices in assembly(s) containing the breakend";
+
+    public static final String BEAPOS = "BEAPOS";
+    public static final String BEAPOS_DESC = "Breakend position(s) in assembly(s)";
+
+    public static final String BEOR = "BEOR";
+    public static final String BEOR_DESC = "Breakend orientation(s) in reference genome";
+
+    public static final String BEAOR = "BEAOR";
+    public static final String BEAOR_DESC = "Breakend orientation(s) in assembly(s)";
+
+    public static final String SEGID = "SEGID";
+    public static final String SEGID_DESC = "Unique id(s) of segment(s) containing the breakend";
+
+    public static final String SEGALEN = "SEGALEN";
+    public static final String SEGALEN_DESC = "Aligned length of segment(s) in reference genome";
+
+    public static final String SEGMAPQ = "SEGMAPQ";
+    public static final String SEGMAPQ_DESC = "MAPQ of segment containing the breakend with highest QUAL contribution";
+
+    public static final String SEGSCO = "SEGSCO";
+    public static final String SEGSCO_DESC = "Alignment score of segments containing the breakend with highest QUAL contribution";
+
+    public static final String SEGRL = "SEGRL";
+    public static final String SEGRL_DESC = "Repeat length of segment with highest QUAL contribution";
+
+    // NOTE: this is used by Linx to form assembly TIs
+    public static final String ASSEMBLY_LINKS = "ASMLNKS";
+    public static final String ASSEMBLY_LINKS_DESC = "Id(s) of breakend(s) linked by assembly";
+
+    public static final String TOTAL_FRAGS = "VF";
+    public static final String TOTAL_FRAGS_DESC = "Total variant fragments supporting the breakend";
+
+    public static final String AVG_FRAG_LENGTH = "AVGLEN";
+    public static final String AVG_FRAG_LENGTH_DESC = "Average variant fragment length";
+
+    // per sample
+    public static final String SPLIT_FRAGS = "SF";
+    public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";
+
+    public static final String DISC_FRAGS = "DF";
+    public static final String DISC_FRAGS_DESC = "Count of discordant fragments with a read either side of the breakend";
 
     public static final String STRAND_BIAS = "SB";
-    public static final String STRAND_BIAS_DESC = "SB";
+    public static final String STRAND_BIAS_DESC = "Strand read bias";
 
-    public static final String SV_FRAG_COUNT = "VF";
-    public static final String SV_FRAG_COUNT_DESC = "Count of fragments supporting the variant breakpoint";
-
-    public static final String ANCHOR_SUPPORT_CIGAR = "SC";
-    public static final String ANCHOR_SUPPORT_CIGAR_DESC = "CIGAR of local anchor, one per assembly";
-
-    public static final String ANCHOR_SUPPORT_CIGAR_LENGTH = "SC_LEN";
-    public static final String ANCHOR_SUPPORT_CIGAR_LENGTH_DESC = "Length of local anchor CIGAR, one per assembly";
-
-
-    // Esvee only
-    public static final String MAPQ = "MAPQ";
-    public static final String MAPQ_DESC = "The anchor's mapping quality";
-
-    public static final String OVERHANG = "OVERHANG";
-    public static final String OVERHANG_DESC = "The minimum of the left & right overhang for this assembly";
-
-    public static final String ASSEMBLY = "ASSEMBLY";
-    public static final String ASSEMBLY_DESC = "The minimum of the left & right overhang for this assembly";
-
-
-    // need to check
-    public static final String IMPRECISE = "IMPRECISE";
-    public static final String IMPRECISE_DESC = "Imprecise structural variation";
-
-    public static final String READ_PAIRS = "RP";
-    public static final String READ_PAIRS_DESC = "Count of read pairs supporting breakpoint";
-
-    public static final String INDEL_COUNT = "IC";
-
-    public static final String PAR_ID = "PARID";
-    public static final String TAF = "TAF";
-    public static final String TAF_DESC = "Tumor allelic frequency (fragment support / total support)";
-
-    public static final String INS_SEQ = "SVINSSEQ";
-    public static final String INS_SEQ_DESC = "SVINSSEQ";
-
-    public static final String SGL_FRAG_COUNT = "BVF";
-    public static final String SGL_FRAG_COUNT_DESC = "BVF";
-
-
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
-
-
-    // Gridss only
-    public static final String GRIDSS_BQ = "BQ";
-    public static final String GRIDSS_BAQ = "BAQ";
-    public static final String GRIDSS_SRQ = "SRQ";
-    public static final String GRIDSS_RPQ = "RPQ";
-    public static final String GRIDSS_BUMQ = "BUMQ";
-    public static final String GRIDSS_BUM = "BUM";
-    public static final String GRIDSS_ASRP = "ASRP";
-    public static final String GRIDSS_ASSR = "ASSR";
-    public static final String GRIDSS_BASRP = "BASRP";
-    public static final String GRIDSS_BASSR = "BASSR";
-    public static final String GRIDSS_AS = "AS";
-    public static final String GRIDSS_CAS = "CAS";
-    public static final String GRIDSS_RAS = "RAS";
-    public static final String GRIDSS_BSC = "BSC";
-
-
-    // Esvee only
-
-    // also set by Gripss when run with Gridss
-    public static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    public static final String LOCAL_LINKED_BY_DESC = "Breakend linking information";
-
-    public static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
-    public static final String REMOTE_LINKED_BY_DESC = "Partner breakend linking information";
-
-    public static final String LINKED_BY_DELIM = ",";
-
-    // set by SvPrep depth annotation
+    // set by Esvee depth annotation
     public static final String REF_DEPTH = "REF";
     public static final String REF_DEPTH_DESC = "Count of reads mapping across this breakend";
 
@@ -136,26 +84,26 @@ public class SvVcfTags
             "Count of reference read pairs spanning this breakend supporting the reference allele";
 
     public static final String ALLELE_FRACTION = "AF";
-    public static final String ALLELE_FRACTION_DESC = "Allele fraction";
+    public static final String ALLELE_FRACTION_DESC = "Allele frequency of the breakend";
 
+    public static final String VCF_ITEM_DELIM = ",";
 
-    // set by Gripss
+    // set by Esvee caller (formerly Gripss)
     public static final String PON_FILTER_PON = "PON";
     public static final String PON_COUNT = "PON_COUNT";
 
-    public static final String REALIGN = "REALIGN";
-    public static final String REALIGN_DESC = "Variant was realigned";
-
-    // may be merged with SV_TYPE? Gripss uses this to set StructuralVariantType
-    public static final String EVENT_TYPE = "EVENTTYPE";
-    public static final String EVENT_TYPE_DESC = "Structural variant type";
-
-    public static final String ALT_PATH = "ALT_PATH";
-    public static final String ALT_PATH_DESC = "Alternate path";
-    public static final String RESCUE_INFO = "RESCUED";
-    public static final String RESCUE_INFO_DESC = "Partner breakend rescue";
     public static final String HOTSPOT = "HOTSPOT";
     public static final String HOTSPOT_DESC = "Variant is a hotspot";
+
+    public static final String REPEAT_MASK_REPEAT_CLASS = "INSRMRC";
+    public static final String REPEAT_MASK_REPEAT_CLASS_DESC = "Inserted sequence repeatmasker repeat class";
+    public static final String REPEAT_MASK_REPEAT_TYPE = "INSRMRT";
+    public static final String REPEAT_MASK_REPEAT_TYPE_DESC = "Inserted sequence repeatmasker repeat type";
+    public static final String REPEAT_MASK_ORIENTATION = "INSRMRO";
+    public static final String REPEAT_MASK_ORIENTATION_DESC = "INSRMRO";
+    public static final String REPEAT_MASK_COVERAGE = "INSRMP";
+    public static final String REPEAT_MASK_COVERAGE_DESC = "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat";
+
 
     // set by Purple
     public static final String REF_CONTEXT_FLAG = "REFG";

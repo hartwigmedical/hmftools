@@ -2,22 +2,22 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
-import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -61,55 +61,55 @@ public class CandidateCreationTest
     }
 
     @Test
-    public void testSoftClipInsertProd1()
+    public void testSnvBeforeInsert()
     {
-        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
+        // create an SNV directly before a 1-base insert - confirm impact on read contexts and how reads are handled
 
-        RegionTaskTester tester = new RegionTaskTester();
+        String refBases = REF_BASES_200.substring(0, 100) + TEST_LEFT_FLANK + "ACGTTCCAACCTTGCA" + REF_BASES_200.substring(0, 100);
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
 
-        tester.PanelRegions.add(new BaseRegion(1, 1000));
+        //            110               120         130
+        // 0123456789 0123456 7      8 9012345  6789012345
+        // test flank ACGTTCC A>G insT ACCTTGCA AAAAAGGGGG
 
-        RegionTask task = tester.createRegionTask(region);
+        int position = 117;
+        SimpleVariant variant = new SimpleVariant(CHR_1, position, "A", "G");
 
-        // bases from 21,974,750 -> 950
-        String refBases = "TCTACCCGACCCCGGGCCGCGGCCGTGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCC"
-                + "CTCTCCGCAGCCGCCGAGCGCACGCGGTCCGCCCCACCCTCTGGTGACCAGCCAGCCCCTCCTCTTTCTTCCTCCGGTGCTGGCGGAAGAG";
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 0, 200);
 
-        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1100)); // need to cover the ref sequence buffer
+        RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
 
-        List<SAMRecord> reads = Lists.newArrayList(
-                createSamRecord(
-                        "36996", CHR_1,  45,
-                        "TGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTG",
-                        "44S57M"),
-                createSamRecord(
-                        "8077", CHR_1,  45,
-                        "GCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCACCCTGCT",
-                        "42S59M"),
-                createSamRecord(
-                        "19351", CHR_1,  45,
-                        "CGCCAGGCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTC",
-                        "39S62M"),
-                createSamRecord(
-                        "24001", CHR_1,  45,
-                        "AGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCCCTCTC",
-                        "31S70M"));
+        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
 
-        reads.get(1).setFirstOfPairFlag(false);
-        reads.get(3).setFirstOfPairFlag(false);
+        // send through a read with the SNV, then another with the SNV also immediately followed by an insert
+        String readBases = refBases.substring(100, 117) + variant.alt() + refBases.substring(118, 135);
 
-        tester.TumorSamSlicer.ReadRecords.addAll(reads);
-        tester.TumorSamSlicer.ReadRecords.addAll(reads); // repeat to get over qual thresholds
-        tester.TumorSamSlicer.ReadRecords.addAll(reads);
+        String cigar = buildCigarString(readBases.length());
 
-        /* CLEAN-UP
+        // the read's alignment start with the first base of the read context
+        SAMRecord read = buildSamRecord(100, cigar, readBases);
+        read.setMappingQuality(60);
 
-        task.run();
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read); // repeat to add support
 
-        SageVariant var = task.getVariants().stream().filter(x -> x.position() == 44 && x.isIndel()).findFirst().orElse(null);
+        readBases = refBases.substring(100, 117) + variant.alt() + "T" + refBases.substring(118, 135);
 
-        Assert.assertNotNull(var);
-        assertEquals(12, var.tumorReadCounters().get(0).softClipInsertSupport());
-        */
+        cigar ="18M1I17M";
+
+        read = buildSamRecord(100, cigar, readBases);
+        read.setMappingQuality(60);
+
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read);
+
+        List<AltContext> altContexts = refContextCache.altContexts();
+        assertEquals(2, altContexts.size());
+
+        AltContext snv = altContexts.stream().filter(x -> x.Ref.equals(variant.ref()) && x.Alt.equals(variant.alt())).findFirst().orElse(null);
+        assertNotNull(snv);
+
+        AltContext snvInsert = altContexts.stream().filter(x -> x.Ref.equals(variant.ref()) && x.Alt.equals("GT")).findFirst().orElse(null);
+        assertNotNull(snvInsert);
     }
 }

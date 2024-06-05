@@ -104,6 +104,7 @@ public class RepeatInfo
 
     public static RepeatInfo findSingleBaseRepeat(final byte[] bases, int index)
     {
+        // the first base counts towards the repeat, so if length = 10, last index = 9, index cannot be higher than 9 - 4 + 1 = 6
         if(index + MIN_SINGLE_REPEAT - 1 >= bases.length)
             return null;
 
@@ -151,7 +152,7 @@ public class RepeatInfo
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount)
     {
-        if(index + MIN_OTHER_REPEAT - 1 * repeatCount >= bases.length)
+        if(index + MIN_OTHER_REPEAT * repeatCount - 1 >= bases.length)
             return null;
 
         int i = index + repeatCount;
@@ -275,6 +276,9 @@ public class RepeatInfo
 
     public static int calcTrimmedBaseLength(final int seqStart, final int seqEnd, final List<RepeatInfo> repeats)
     {
+        if(repeats == null || repeats.isEmpty())
+            return seqEnd - seqStart + 1;
+
         int currentIndex = seqStart;
 
         int currentRepeatIndex = 0;

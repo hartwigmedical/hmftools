@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.bam.CigarTraversal;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +17,8 @@ import htsjdk.samtools.SAMRecord;
 public final class SplitReadUtils
 {
     public static final int MAX_SKIPPED_REFERENCE_REGIONS = 50;
+
+    // TODO: improve method for intronic section representation around exon boundaries
 
     // purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
     public static ReadIndexBases expandSplitRead(int readIndex, final SAMRecord record)
@@ -43,7 +44,7 @@ public final class SplitReadUtils
             }
         };
 
-        CigarTraversal.traverseCigar(record, handler);
+        CigarHandler.traverseCigar(record, handler);
 
         if(indexes.isEmpty())
         {

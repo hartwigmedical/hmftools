@@ -6,23 +6,23 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
+import static com.hartwig.hmftools.sage.common.TestUtils.MSI_JITTER_CALCS;
+import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.isGermlineAndNotTumorFiltered;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -45,7 +45,7 @@ public class SoftFilterTest
     private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
 
     private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME);
+            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME, MSI_JITTER_CALCS);
 
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
@@ -55,16 +55,47 @@ public class SoftFilterTest
     private static final VariantFilters FILTERS = new VariantFilters(TEST_CONFIG);
 
     @Test
-    public void testIsGermlineAndNotTumorFiltered()
+    public void testTumorQualFilter()
     {
-        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName())));
-        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(), MAX_GERMLINE_VAF.filterName())));
+        int position = 50;
 
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet()));
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(), MIN_TUMOR_QUAL.filterName())));
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(), "Random Filter")));
+        VariantReadContext readContext = createReadContext(
+                createSimpleVariant(position, "A", "T"),
+                REF_BASES.substring(48, 50), REF_BASES.substring(51, 53), REF_BASES.substring(38, 48), REF_BASES.substring(53, 63));
+
+        ReadContextCounter readContextCounter = new ReadContextCounter(
+                1, readContext, VariantTier.PANEL, 100, 0,
+                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+
+        String altBase = readContextCounter.alt();
+
+        String altReadBases = REF_BASES.substring(20, position) + altBase + REF_BASES.substring(position + 1, 80);
+        String readCigar = buildCigarString(altReadBases.length());
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, altReadBases, readCigar);
+
+        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES.substring(20, 80), readCigar);
+
+        readContextCounter.processRead(altRead, 1, null);
+        readContextCounter.processRead(altRead, 1, null);
+        readContextCounter.processRead(refRead, 1, null);
+        readContextCounter.processRead(refRead, 1, null);
+
+        SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
+        FILTERS.applySoftFilters(variant);
+
+        assertTrue(variant.filters().contains(MIN_TUMOR_QUAL.filterName()));
+
+        readContextCounter.processRead(altRead, 1, null);
+        readContextCounter.processRead(altRead, 1, null);
+
+        variant = sageVariantFromReadContextCounter(readContextCounter);
+        FILTERS.applySoftFilters(variant);
+
+        assertFalse(variant.filters().contains(MIN_TUMOR_QUAL.filterName()));
+
+        // TODO: add more variations to test quality site criteria
     }
-
     @Test
     public void testMaxReadEdgeDistanceFilter()
     {
@@ -100,9 +131,8 @@ public class SoftFilterTest
         SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
         readContextCounter.processRead(read4, 1, null);
 
-        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge());
-        assertEquals(7, readContextCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
-        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromUnclippedEdge());
+        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
+        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromEdge());
 
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 

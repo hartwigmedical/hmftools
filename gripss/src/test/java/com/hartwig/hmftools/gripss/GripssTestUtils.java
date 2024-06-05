@@ -1,42 +1,42 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_REGIONS_V37;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASRP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASSR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BUM;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BUMQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RPQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_SRQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.PAR_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_ASRP;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_ASSR;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BUM;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BUMQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_RPQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_SRQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.INDEL_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MIN_TUMOR_QUAL;
@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
@@ -79,9 +80,9 @@ public class GripssTestUtils
 
     public static final double DEFAULT_QUAL = 5000;
 
-    public static StructuralVariantFactory defaultSvFactory()
+    public static GridssSvFactory defaultSvFactory()
     {
-        return new StructuralVariantFactory(new CompoundFilter(false));
+        return new GridssSvFactory(new CompoundFilter(false));
     }
 
     public static SvData createSv(

@@ -5,9 +5,9 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
@@ -49,9 +49,9 @@ public class VariantData
 
     // other key data
     private int mLocalPhaseSetId;
-    public String mMicrohomology;
-    public int mRepeatCount;
-    public String mRepeatSequence;
+    private String mMicrohomology;
+    private int mRepeatCount;
+    private String mRepeatSequence;
 
     private final int mIndelBaseDiff;
 
@@ -176,9 +176,9 @@ public class VariantData
 
         variant.setVariantDetails(
                 !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET,
-                variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
-                variantContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY),
-                variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
+                variantContext.getAttributeAsString(MICROHOMOLOGY, Strings.EMPTY),
+                variantContext.getAttributeAsString(REPEAT_SEQUENCE, Strings.EMPTY),
+                variantContext.getAttributeAsInt(REPEAT_COUNT, 0));
 
         return variant;
     }

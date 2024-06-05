@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.round;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -161,10 +163,7 @@ public class SageVariant
     public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }
 
-    public int totalQuality()
-    {
-        return mTumorReadCounters.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
-    }
+    public int totalQuality() { return mTumorReadCounters.stream().mapToInt(x -> (int)round(x.tumorQuality())).sum(); }
 
     public boolean isIndel() { return variant().ref().length() != variant().alt().length(); }
     public boolean isMnv()

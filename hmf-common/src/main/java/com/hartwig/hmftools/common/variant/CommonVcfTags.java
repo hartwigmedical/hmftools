@@ -7,6 +7,9 @@ public final class CommonVcfTags
     // common
     public static final String PASS = "PASS";
 
+    public static final String QUAL = "QUAL";
+    public static final String QUAL_DESC = "Variant quality";
+
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String REPORTED_DESC = "Variant is reported in the driver catalog";
 

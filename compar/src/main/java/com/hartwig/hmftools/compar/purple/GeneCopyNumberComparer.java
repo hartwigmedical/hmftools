@@ -65,7 +65,7 @@ public class GeneCopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         List<ComparableItem> items = Lists.newArrayList();
 

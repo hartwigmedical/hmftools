@@ -66,15 +66,15 @@ public class AssemblyWriter
 
             addPhasingHeader(sj);
 
-            if(mTruthsetAnnotation.enabled())
-                sj.add(TruthsetAnnotation.tsvHeader());
-
-            addRemoteRegionHeader(sj);
-
             sj.add("RefBaseTrimmed");
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+
+            if(mTruthsetAnnotation.enabled())
+                sj.add(TruthsetAnnotation.tsvHeader());
+
+            addRemoteRegionHeader(sj);
 
             if(mConfig.RunAlignment)
             {
@@ -116,7 +116,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.id()));
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
-            sj.add(String.valueOf(assembly.junction().Orientation));
+            sj.add(String.valueOf(assembly.junction().Orient));
 
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));
@@ -131,11 +131,6 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.outcome()));
 
             addPhasingInfo(assembly, sj);
-
-            if(mTruthsetAnnotation.enabled())
-                sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));
-
-            addRemoteRegionInfo(assembly, sj);
 
             sj.add(assembly.refBasesRepeatedTrimmed());
             sj.add(String.valueOf(assembly.refBaseTrimLength()));
@@ -152,6 +147,11 @@ public class AssemblyWriter
                 int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
+
+            if(mTruthsetAnnotation.enabled())
+                sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));
+
+            addRemoteRegionInfo(assembly, sj);
 
             if(mConfig.RunAlignment)
             {

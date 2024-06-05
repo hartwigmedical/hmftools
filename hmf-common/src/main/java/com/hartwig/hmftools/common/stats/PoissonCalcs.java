@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.stats;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -13,14 +14,16 @@ public final class PoissonCalcs
     private static final Logger LOGGER = LogManager.getLogger(PoissonCalcs.class);
 
     private static final int DEFAULT_MAX_ITERATIONS = 20;
-    private static final double MIN_PROB_DIFF_PERC = 0.05;
+    private static final double MIN_PROB_DIFF_PERC_HIGH = 0.005;
 
     public static double calcPoissonNoiseValue(int observedCount, double requiredProb)
     {
-        return calcPoissonNoiseValue(observedCount, requiredProb, DEFAULT_MAX_ITERATIONS);
+        double defaultProbDiffThreshold = requiredProb < 0.01 ? requiredProb * 0.1 : MIN_PROB_DIFF_PERC_HIGH;
+
+        return calcPoissonNoiseValue(observedCount, requiredProb, defaultProbDiffThreshold, DEFAULT_MAX_ITERATIONS);
     }
 
-    public static double calcPoissonNoiseValue(int observedCount, double requiredProb, int maxIterations)
+    public static double calcPoissonNoiseValue(int observedCount, double requiredProb, double probDiffThreshold, int maxIterations)
     {
         // calculate the mean of a Poisson distribution where the observed value would fall at the required probability
         if(observedCount < 0)
@@ -40,7 +43,7 @@ public final class PoissonCalcs
         {
             currentValue = observedCount * 0.5;
             testValueUpper = observedCount;
-            testValueLower = currentValue * 0.5;
+            testValueLower = currentValue * 0.01;
         }
         else
         {
@@ -56,9 +59,9 @@ public final class PoissonCalcs
 
         while(iterations < maxIterations)
         {
-            probDiff = abs(requiredProb - currentProb) / requiredProb;
+            probDiff = abs(requiredProb - currentProb);
 
-            if(probDiff <= MIN_PROB_DIFF_PERC)
+            if(probDiff <= probDiffThreshold)
                 return currentValue;
 
             // if prob is too low, need to lower the test value
@@ -87,7 +90,7 @@ public final class PoissonCalcs
         return currentValue;
     }
 
-    private static double findUpperStartValue(int observedCount, double requiredProb, int maxIterations)
+    public static double findUpperStartValue(int observedCount, double requiredProb, int maxIterations)
     {
         double currentValue = max(1, observedCount * 2);
 

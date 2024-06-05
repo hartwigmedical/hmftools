@@ -18,6 +18,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class ReadGroup
@@ -34,12 +35,12 @@ public class ReadGroup
     private class JunctionPosition
     {
         public final int Position;
-        public final byte Orientation;
+        public final Orientation Orient;
 
-        public JunctionPosition(final int position, final byte orientation)
+        public JunctionPosition(final int position, final Orientation orientation)
         {
             Position = position;
-            Orientation = orientation;
+            Orient = orientation;
         }
     }
 
@@ -77,7 +78,7 @@ public class ReadGroup
             return "";
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orientation)));
+        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orient.asByte())));
         return sj.toString();
     }
 
@@ -89,7 +90,7 @@ public class ReadGroup
     public boolean hasJunctionPosition(final JunctionData junctionData)
     {
         return mJunctionPositions != null
-                && mJunctionPositions.stream().anyMatch(x -> x.Position == junctionData.Position && x.Orientation == junctionData.Orientation);
+                && mJunctionPositions.stream().anyMatch(x -> x.Position == junctionData.Position && x.Orient == junctionData.Orient);
     }
 
     public boolean noRegisteredJunctionPositions()
@@ -105,7 +106,7 @@ public class ReadGroup
             mJunctionPositions = Lists.newArrayList();
 
         if(!hasJunctionPosition(junctionData))
-            mJunctionPositions.add(new JunctionPosition(junctionData.Position, junctionData.Orientation));
+            mJunctionPositions.add(new JunctionPosition(junctionData.Position, junctionData.Orient));
     }
 
     public void clearJunctionPositions()

@@ -2,18 +2,18 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASRP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASSR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_ASRP;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_ASSR;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.INDEL_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -51,7 +51,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.sv.SvVcfTags;
+import com.hartwig.hmftools.common.sv.gridss.GridssVcfTags;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -309,7 +309,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // imprecise
-        commonOverrides.put(SvVcfTags.IMPRECISE, "true");
+        commonOverrides.put(GridssVcfTags.IMPRECISE, "true");
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);

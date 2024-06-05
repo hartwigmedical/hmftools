@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.basequal.jitter;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -19,8 +20,6 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -52,7 +51,7 @@ public class SampleBamProcessor
                 .collect(Collectors.toCollection(() -> Sets.newTreeSet(Comparator.comparingInt(HumanChromosome::chromosomeRank)
                         .thenComparing(Function.identity()))));
 
-        mPartitions = Lists.newArrayList();
+        mPartitions = new ArrayList<>();
         for(String chromosome : chromosomes)
         {
             mPartitions.addAll(partitionChromosome(chromosome, config.RefGenVersion, config.PartitionSize));

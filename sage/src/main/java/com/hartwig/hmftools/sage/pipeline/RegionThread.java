@@ -15,14 +15,15 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -34,6 +35,7 @@ public class RegionThread extends Thread
     private final RefGenomeSource mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -42,7 +44,7 @@ public class RegionThread extends Thread
 
     // cache of chromosome-specific ref data
     private final List<BaseRegion> mPanelRegions;
-    private final List<VariantHotspot> mHotspots;
+    private final List<SimpleVariant> mHotspots;
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
 
@@ -51,8 +53,8 @@ public class RegionThread extends Thread
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final Coverage coverage,
-            final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final Coverage coverage,
+            final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)
     {
@@ -62,6 +64,7 @@ public class RegionThread extends Thread
         mRefGenomeFile = loadRefGenome(config.Common.RefGenomeFile);
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
         mFragmentLengths = fragmentLengths;
@@ -121,7 +124,7 @@ public class RegionThread extends Thread
                 .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
                 : Lists.newArrayList();
 
-        List<VariantHotspot> regionHotspots = mHotspots != null ? mHotspots.stream()
+        List<SimpleVariant> regionHotspots = mHotspots != null ? mHotspots.stream()
                 .filter(x -> region.containsPosition(x.position())).collect(Collectors.toList()) : Lists.newArrayList();
 
         List<TranscriptData> regionsTranscripts = mTranscripts != null ? mTranscripts.stream()
@@ -134,6 +137,7 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory, mFragmentLengths);
+                regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mCoverage, mSamSlicerFactory,
+                mFragmentLengths);
     }
 }

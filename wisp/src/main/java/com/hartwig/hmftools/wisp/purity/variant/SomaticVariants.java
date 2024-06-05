@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
@@ -101,12 +102,17 @@ public class SomaticVariants
 
         if(mConfig.SomaticVcf.isEmpty())
         {
-            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID;
+            String vcfFilename = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID;
 
             if(!mSample.VcfTag.isEmpty())
-                somaticVcf += mSample.VcfTag + ".";
+                vcfFilename += mSample.VcfTag + ".";
 
-            somaticVcf += "vcf.gz";
+            vcfFilename += "vcf.gz";
+
+            if(Files.exists(Paths.get(vcfFilename)))
+                somaticVcf = vcfFilename;
+            else
+                somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID + "vcf.gz";
         }
         else
         {
@@ -166,7 +172,7 @@ public class SomaticVariants
 
             if(variantCount > 0 && (variantCount % 100000) == 0)
             {
-                CT_LOGGER.info("processed {} variants", variantCount);
+                CT_LOGGER.info("loaded {} variants", variantCount);
             }
         }
 
@@ -315,6 +321,9 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
+        SomaticPurityResult purityResult = mEstimator.calculatePurity(
+                sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
+
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {
             for(SomaticVariant variant : mVariants)
@@ -329,7 +338,7 @@ public class SomaticVariants
             }
         }
 
-        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
+        return purityResult;
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -381,10 +390,13 @@ public class SomaticVariants
             addCommonHeaderFields(sj, config);
 
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT).add("IsProbe");
-            sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
-            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
+            sj.add("Filter").add("Tier").add("Type").add("TNC");
+            sj.add("Mappability").add("SubclonalPerc").add("RepeatCount");
+            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
+            sj.add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD").add("SeqGcRatio");
+            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
+            sj.add("SeqGcRatio").add("BqrErrorRate");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -408,33 +420,29 @@ public class SomaticVariants
 
         try
         {
-            VariantContextDecorator decorator = variant.decorator();
-            VariantImpact variantImpact = decorator.variantImpact();
-
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             addCommonFields(sj, config, sampleData, sampleId);
 
-            sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
-            sj.add(String.valueOf(variant.isProbeVariant()));
+            sj.add(variant.Chromosome).add(valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
+            sj.add(valueOf(variant.isProbeVariant()));
 
             String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
 
             if(filtersStr.isEmpty())
                 filtersStr = PASS;
 
-            sj.add(filtersStr).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
-                    .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));
+            sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(variant.TriNucContext);
+            sj.add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc)).add(valueOf(variant.RepeatCount));
+            sj.add(variant.CanonicalGeneName).add(variant.CanonicalCodingEffect).add(valueOf(variant.Hotspot)).add(valueOf(variant.Reported));
+            sj.add(format("%.2f", variant.VariantCopyNumber)).add(format("%.2f", variant.CopyNumber));
 
-            sj.add(variantImpact.CanonicalGeneName).add(variantImpact.CanonicalCodingEffect.toString())
-                    .add(Hotspot.fromVariant(decorator.context()).toString()).add(String.valueOf(decorator.reported()))
-                    .add(format("%.2f", decorator.variantCopyNumber())).add(format("%.2f", decorator.adjustedCopyNumber()));
-
-            sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
-            sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));
-            sj.add(String.valueOf(sampleFragData.UmiCounts.TotalDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
+            sj.add(valueOf(tumorData.Depth)).add(valueOf(tumorData.AlleleCount));
+            sj.add(valueOf(sampleFragData.Depth)).add(valueOf(sampleFragData.AlleleCount));
+            sj.add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
+            sj.add(format("%.6f", sampleFragData.bqrErrorRate()));
 
             writer.write(sj.toString());
 

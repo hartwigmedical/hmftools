@@ -6,18 +6,21 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
+import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;
@@ -26,34 +29,39 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
     private final boolean mUseReadType;
     private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
-    private static final String NO_MODEL_NAME = "";
 
     public QualityCalculator(
             final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
-            final RefGenomeInterface refGenome)
+            final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
         mUseReadType = useReadType(config);
         mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
+
         mRefBases = refBases;
 
         mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
     }
 
-    public UltimaQualModel createUltimateQualModel(final SimpleVariant variant)
+    public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+    public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
+
+    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
     {
         return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean isImproperPair)
+            final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(config.isHighlyPolymorphic(position))
         {
@@ -110,12 +118,8 @@ public class QualityCalculator
 
         double modifiedBaseQuality = baseQuality - mConfig.BaseQualityFixedPenalty;
 
-        if(mConfig.DistanceFromReadEdgeFactor > 0)
-        {
-            int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
-            int readEdgePenalty = max(mConfig.DistanceFromReadEdgeFactor * distanceFromReadEdge - mConfig.DistanceFromReadEdgeFixedPenalty, 0);
-            modifiedBaseQuality = min(modifiedBaseQuality, readEdgePenalty);
-        }
+        int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
+        modifiedBaseQuality = modifiedBaseQuality - readEdgePenalty;
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
@@ -138,21 +142,26 @@ public class QualityCalculator
         }
 
         if(readContextCounter.isIndel())
-            return readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
+        {
+            double avgCoreQuality = readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
+            double msiIndelErrorRate = readContextCounter.qualCache().msiIndelErrorQual();
+            return msiIndelErrorRate > 0 ? min(avgCoreQuality, msiIndelErrorRate) : avgCoreQuality;
+        }
 
         if(readContextCounter.isSnv())
             return record.getBaseQualities()[readIndex];
 
         int varLength = readContextCounter.variant().ref().length();
 
-        double baseQualTotal = 0;
+        // take the minimum base qual for MNVs
+        double minBaseQual = record.getBaseQualities()[readIndex];
 
-        for(int i = readIndex; i < readIndex + varLength; ++i)
+        for(int i = readIndex + 1; i < readIndex + varLength; ++i)
         {
-            baseQualTotal += record.getBaseQualities()[i];
+            minBaseQual = min(minBaseQual, record.getBaseQualities()[i]);
         }
 
-        return baseQualTotal / varLength;
+        return minBaseQual;
     }
 
     private double recalibratedBaseQuality(
@@ -164,7 +173,7 @@ public class QualityCalculator
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return readContextCounter.bqrQualCache().getQual(rawQuality, readType, 0, this);
+            return readContextCounter.qualCache().getQual(rawQuality, readType, 0);
         }
 
         // MNV case
@@ -177,7 +186,7 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = readContextCounter.bqrQualCache().getQual(rawQuality, readType, i, this);
+            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, readType, i);
             quality = min(quality, recalibratedQual);
         }
 
@@ -200,16 +209,29 @@ public class QualityCalculator
         return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType);
     }
 
-    private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    private int readEdgeDistancePenalty(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        // calculate the left and right core positions in the context of this read
-        int leftOffset = readContextCounter.readContext().leftCoreLength();
-        int rightOffset = readContextCounter.readContext().rightCoreLength();
+        int minDistance;
 
-        int adjustedLeftIndex = readIndex - leftOffset;
-        int adjustedRightIndex = readIndex + rightOffset;
+        if(readContextCounter.isIndel())
+        {
+            VariantReadContext readContext = readContextCounter.readContext();
+            int lowerVarIndex = readIndex - (readContext.VarIndex - readContext.AltIndexLower);
+            int upperVarIndex = readIndex + (readContext.AltIndexUpper - readContext.VarIndex);
 
-        // take the smaller of the left and right core index
-        return max(0, min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
+            minDistance = max(0, min(lowerVarIndex, record.getReadBases().length - 1 - upperVarIndex));
+        }
+        else
+        {
+            int upperReadIndex = readIndex + readContextCounter.variant().altLength() - 1; // for MNVs
+            minDistance = max(0, min(readIndex, record.getReadBases().length - 1 - upperReadIndex));
+        }
+
+        if(minDistance <= 0)
+            return READ_EDGE_PENALTY_0;
+        else if(minDistance == 1)
+            return READ_EDGE_PENALTY_1;
+        else
+            return 0;
     }
 }

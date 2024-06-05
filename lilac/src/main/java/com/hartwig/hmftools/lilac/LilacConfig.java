@@ -37,6 +37,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERA
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
@@ -51,6 +52,8 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import htsjdk.samtools.ValidationStringency;
 
 public class LilacConfig
 {
@@ -75,6 +78,7 @@ public class LilacConfig
     public final int MinFragmentsToRemoveSingle;
     public final int Threads;
     public final double TopScoreThreshold;
+    public final ValidationStringency BamStringency;
 
     public final String CopyNumberFile;
     public final String SomaticVariantsFile;
@@ -193,6 +197,7 @@ public class LilacConfig
         MaxEliminationCandidates = configBuilder.getInteger(MAX_ELIM_CANDIDATES);
 
         Threads = parseThreads(configBuilder);
+        BamStringency = BamUtils.validationStringency(configBuilder);
 
         DebugPhasing = configBuilder.hasFlag(DEBUG_PHASING);
         RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
@@ -274,6 +279,7 @@ public class LilacConfig
         RestrictedAlleles = Lists.newArrayList();
         MaxEliminationCandidates = 0;
 
+        BamStringency = ValidationStringency.STRICT;
         Threads = 0;
         DebugPhasing = false;
         RunValidation = true;
@@ -316,6 +322,8 @@ public class LilacConfig
         configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
         configBuilder.addFlag(LOG_PERF_CALCS,"Log performance metrics");
         ResultsWriter.registerConfig(configBuilder);
+
+        BamUtils.addValidationStringencyOption(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);

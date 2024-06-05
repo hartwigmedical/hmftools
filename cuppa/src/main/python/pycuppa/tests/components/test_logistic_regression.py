@@ -1,65 +1,56 @@
 import pandas as pd
 
 from cuppa.components.logistic_regression import LogisticRegression
-from cuppa.misc.cached_class_property import cached_class_property
 
 
 class TestLogisticRegression:
+    X = pd.DataFrame([
+        [1, 0, 0],
+        [1, 0, 0],
+        [1, 0, 0],
+        [1, 0, 0],
+        [0, 0, 0],
 
-    #from cuppa.components.test.test_logistic_regression import TestLogisticRegression
-    #self = TestLogisticRegression
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
 
-    @cached_class_property
-    def fitted_lr(self):
-        X = pd.DataFrame([
-            [1, 0, 0],
-            [1, 0, 0],
-            [1, 0, 0],
-            [1, 0, 0],
-            [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 0],
+    ])
+    X.columns = ["RUNX1_RUNX1T1", "KIAA1549_BRAF", "TMPRSS2_ERG"]
 
-            [0, 1, 0],
-            [0, 1, 0],
-            [0, 1, 0],
-            [0, 1, 0],
-            [0, 1, 0],
+    y = pd.Series([
+        "Acute myeloid leukemia",
+        "Acute myeloid leukemia",
+        "Acute myeloid leukemia",
+        "Acute myeloid leukemia",
+        "Acute myeloid leukemia",
 
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 0],
-        ])
-        X.columns = ["RUNX1_RUNX1T1", "KIAA1549_BRAF", "TMPRSS2_ERG"]
+        "Liposarcoma",
+        "Liposarcoma",
+        "Liposarcoma",
+        "Liposarcoma",
+        "Liposarcoma",
 
-        y = pd.Series([
-            "Acute myeloid leukemia",
-            "Acute myeloid leukemia",
-            "Acute myeloid leukemia",
-            "Acute myeloid leukemia",
-            "Acute myeloid leukemia",
+        "Prostate",
+        "Prostate",
+        "Prostate",
+        "Prostate",
+        "Prostate",
+    ])
 
-            "Liposarcoma",
-            "Liposarcoma",
-            "Liposarcoma",
-            "Liposarcoma",
-            "Liposarcoma",
-
-            "Prostate",
-            "Prostate",
-            "Prostate",
-            "Prostate",
-            "Prostate",
-        ])
-
-        lr = LogisticRegression()
-        lr.fit(X, y)
-
-        return lr
+    lr = LogisticRegression()
+    lr.fit(X, y)
 
     def test_fit(self):
 
-        coefs = self.fitted_lr.feat_imp("coef")
+        coefs = self.lr.feat_imp("coef")
 
         assert round(coefs.loc["Acute myeloid leukemia","RUNX1_RUNX1T1"], 3) == 1.099
         assert round(coefs.loc["Liposarcoma","KIAA1549_BRAF"], 3) == 1.437
@@ -71,7 +62,7 @@ class TestLogisticRegression:
         ])
         X_new.columns = ["RUNX1_RUNX1T1", "KIAA1549_BRAF", "TMPRSS2_ERG"]
 
-        probs = self.fitted_lr.predict_proba(X_new)
+        probs = self.lr.predict_proba(X_new)
 
         assert round(probs.loc[0, "Acute myeloid leukemia"], 3) == 0.725
 
@@ -81,6 +72,6 @@ class TestLogisticRegression:
         ])
         X_new.columns = ["RUNX1_RUNX1T1", "KIAA1549_BRAF", "TMPRSS2_ERG"]
 
-        contribs = self.fitted_lr.feat_contrib(X_new)
+        contribs = self.lr.feat_contrib(X_new)
 
         assert round(contribs.loc[(0, "Acute myeloid leukemia"), "RUNX1_RUNX1T1"], 3) == 0.806

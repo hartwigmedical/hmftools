@@ -5,9 +5,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 
@@ -29,23 +32,19 @@ public class ExtensionSeqBuilder
     private final Junction mJunction;
     private final List<ReadState> mReads;
     private final boolean mIsForward;
-    private final int mMaxMismatches;
 
     private byte[] mBases;
     private byte[] mBaseQuals;
-    private int[] mReadCount;
-    private int[] mBaseQualTotals;
     private int mMinSupportLength;
 
     private List<RepeatInfo> mExtensionRepeats;
 
     private boolean mIsValid;
 
-    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads, final int maxMismatches)
+    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
         mJunction = junction;
         mIsForward = mJunction.isForward();
-        mMaxMismatches = maxMismatches;
         mReads = Lists.newArrayListWithCapacity(reads.size());
 
         int maxExtension = 0;
@@ -54,28 +53,38 @@ public class ExtensionSeqBuilder
         {
             int readJunctionIndex = getReadIndexAtReferencePosition(read, junction.Position, true);
 
+            if(readJunctionIndex == INVALID_INDEX)
+                continue;
+
             // calculate how many bases beyond the junction the read extends
             // for positive orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 3
             // for negative orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
             int extensionLength = junction.isForward() ? read.basesLength() - readJunctionIndex - 1 : readJunctionIndex;
+
+            // indel-based reads may have much shorter extensions than the typical 32-base requirement, so ensure they can extend far enough
+            // to satisfy the min-high-qual match filter used post-consensus
+            if(extensionLength < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+                continue;
 
             maxExtension = max(maxExtension, extensionLength);
 
             mReads.add(new ReadState(read, readJunctionIndex, extensionLength));
         }
 
-        int baseLength = maxExtension + 1;
+        int baseLength = maxExtension + 1; // since the junction base itself is included (which is a ref base)
 
         mBases = new byte[baseLength];
         mBaseQuals = new byte[baseLength];
-        mReadCount = new int[baseLength];
-        mBaseQualTotals = new int[baseLength];
         mMinSupportLength = 0;
         mExtensionRepeats = Lists.newArrayList();
 
         mIsValid = true;
 
-        buildConsensus();
+        buildSequence();
+
+        formConsensusSequence();
+
+        findRepeats();
 
         assignReads();
 
@@ -84,26 +93,43 @@ public class ExtensionSeqBuilder
 
     public byte[] extensionBases() { return mBases; }
     public byte[] baseQualitiies() { return mBaseQuals; }
-    public int[] baseQualTotals() { return mBaseQualTotals; }
     public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
-    public boolean isValid() { return mIsValid; }
+    public boolean  isValid() { return mIsValid; }
 
     public List<SupportRead> formAssemblySupport()
     {
-        return mReads.stream().filter(x -> x.Mismatches <= mMaxMismatches)
-                .map(x -> new SupportRead(
-                        x.read(), SupportType.JUNCTION, x.junctionIndex(), x.matchedBases(), x.Mismatches))
-                .collect(Collectors.toList());
+        List<SupportRead> supportReads = Lists.newArrayList();
+
+        for(ReadState read : mReads)
+        {
+            if(read.exceedsMaxMismatches())
+                continue;
+
+            if(read.highQualMatches() < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+                continue;
+
+            supportReads.add(new SupportRead(
+                    read.read(), SupportType.JUNCTION, read.junctionIndex(), read.matchedBases(), read.mismatches()));
+        }
+
+        return supportReads;
     }
 
-    public int mismatches() { return (int)mReads.stream().filter(x -> x.Mismatches > mMaxMismatches).count(); }
+    public List<Read> mismatchReads()
+    {
+        return mReads.stream().filter(x -> x.exceedsMaxMismatches()).map(x -> x.mRead).collect(Collectors.toList());
+    }
 
-    private void buildConsensus()
+    public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
+
+    private void buildSequence()
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
         int baseCount = Nucleotides.DNA_BASES.length;
+
+        mMinSupportLength = 0;
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
@@ -120,6 +146,9 @@ public class ExtensionSeqBuilder
             for(ReadState read : mReads)
             {
                 if(read.exhausted())
+                    continue;
+
+                if(read.exceedsMaxMismatches()) // be relevant when building the final consensus
                     continue;
 
                 byte base = read.currentBase();
@@ -188,14 +217,11 @@ public class ExtensionSeqBuilder
 
                 consensusBase = DNA_BASE_BYTES[maxBaseIndex];
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
-                consensusQualTotal = totalQuals[maxBaseIndex];
                 consensusReadCount = readCounts[maxBaseIndex];
             }
 
             mBases[extensionIndex] = consensusBase;
             mBaseQuals[extensionIndex] = (byte)consensusMaxQual;
-            mBaseQualTotals[extensionIndex] = consensusQualTotal;
-            mReadCount[extensionIndex] = consensusReadCount;
 
             if(consensusReadCount >= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
                 ++mMinSupportLength;
@@ -205,15 +231,11 @@ public class ExtensionSeqBuilder
             else
                 --extensionIndex;
         }
-
-        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases);
-
-        if(repeats != null)
-            mExtensionRepeats.addAll(repeats);
     }
 
-    private void assignReads()
+    private void formConsensusSequence()
     {
+        // test reads against the initial sequence, filtering out those with too many mismatches, and forming a consensus from the rest
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
         mReads.forEach(x -> x.resetIndex());
@@ -231,7 +253,9 @@ public class ExtensionSeqBuilder
                 if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
                 {
                     if(base != mBases[extensionIndex])
-                        ++read.Mismatches;
+                        read.addMismatch();
+                    else
+                        read.addHighQualMatch();
                 }
 
                 read.moveNext(mIsForward);
@@ -243,20 +267,70 @@ public class ExtensionSeqBuilder
                 --extensionIndex;
         }
 
-        List<ReadState> mismatchReads = mReads.stream().filter(x -> x.Mismatches > mMaxMismatches).collect(Collectors.toList());
+        int mismatchReadCount = (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count();
 
-        if(mismatchReads.isEmpty())
+        // if no reads have been excluded then keep the initial sequence
+        if(mismatchReadCount == 0)
             return;
 
-        // test mismatch reads using the sequence matcher
-        mismatchReads.forEach(x -> x.resetIndex());
-        mismatchReads.forEach(x -> x.Mismatches = 0);
+        // otherwise filter out the mismatch reads and build the sequence again
+        int baseLength = mBases.length;
+        mBases = new byte[baseLength];
+        mBaseQuals = new byte[baseLength];
 
-        for(ReadState read : mismatchReads)
+        mReads.forEach(x -> x.resetIndex());
+
+        buildSequence();
+    }
+
+    private void findRepeats()
+    {
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases);
+
+        if(repeats != null)
+            mExtensionRepeats.addAll(repeats);
+    }
+
+    private void assignReads()
+    {
+        int extensionIndex = mIsForward ? 0 : mBases.length - 1;
+
+        for(ReadState read : mReads)
         {
-            read.Mismatches = calcReadSequenceMismatches(
-                    mIsForward, mBases, mBaseQuals, mExtensionRepeats, read.read(), read.junctionIndex(), mMaxMismatches);
+            read.resetIndex();
+
+            if(!read.exceedsMaxMismatches())
+                read.resetMatches();
         }
+
+        while(extensionIndex >= 0 && extensionIndex < mBases.length)
+        {
+            for(ReadState read : mReads)
+            {
+                if(read.exhausted() || read.exceedsMaxMismatches())
+                    continue;
+
+                byte base = read.currentBase();
+                byte qual = read.currentQual();
+
+                if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
+                {
+                    if(base != mBases[extensionIndex])
+                        read.addMismatch();
+                    else
+                        read.addHighQualMatch();
+                }
+
+                read.moveNext(mIsForward);
+            }
+
+            if(mIsForward)
+                ++extensionIndex;
+            else
+                --extensionIndex;
+        }
+
+        // no longer use the sequence matcher on reads exceeding the mismatch limit - this is just handled when re-testing all junction reads
     }
 
     private void determineFinalBases()
@@ -265,7 +339,7 @@ public class ExtensionSeqBuilder
 
         for(ReadState read : mReads)
         {
-            if(read.Mismatches > mMaxMismatches)
+            if(read.exceedsMaxMismatches())
                 continue;
 
             // note the read's extension length does not include the junction base itself, hence the +1
@@ -324,8 +398,10 @@ public class ExtensionSeqBuilder
         private final int mExtensionLength;
         private int mCurrentIndex;
         private boolean mExhausted;
+        private final int mPermittedMismatches;
 
-        public int Mismatches;
+        private int mMismatches;
+        public int mHighQualMatches;
 
         public ReadState(final Read read, final int junctionIndex, final int extensionLength)
         {
@@ -333,15 +409,34 @@ public class ExtensionSeqBuilder
             mJunctionIndex = junctionIndex;
             mCurrentIndex = junctionIndex;
             mExtensionLength = extensionLength;
+            mPermittedMismatches = mismatchesPerComparisonLength(extensionLength);
             mExhausted = false;
-            Mismatches = 0;
+
+            mMismatches = 0;
+            mHighQualMatches = 0;
         }
 
         public Read read() { return mRead; }
         public int junctionIndex() { return mJunctionIndex; }
         public int extensionLength() { return mExtensionLength; }
-        public int matchedBases() { return mExtensionLength - Mismatches; }
+        public int matchedBases() { return mExtensionLength - mMismatches; }
+        public int mismatches() { return mMismatches; }
+        public int highQualMatches() { return mHighQualMatches; }
+        public boolean exceedsMaxMismatches() { return mMismatches > mPermittedMismatches; }
         public boolean exhausted() { return mExhausted; }
+
+        public void resetMatches()
+        {
+            mMismatches = 0;
+            mHighQualMatches = 0;
+        }
+
+        public void addMismatch() { ++mMismatches; }
+        public void addHighQualMatch()
+        {
+            if(mCurrentIndex != mJunctionIndex)
+                ++mHighQualMatches;
+        }
 
         public byte currentBase() { return mRead.getBases()[mCurrentIndex]; }
         public byte currentQual() { return mRead.getBaseQuality()[mCurrentIndex]; }
@@ -364,9 +459,9 @@ public class ExtensionSeqBuilder
 
         public String toString()
         {
-            return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) mismatches(%d) %s",
+            return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) hqMatch(%d) mismatches(%d/%d) %s",
                     mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
-                    mExtensionLength, mCurrentIndex, Mismatches, mExhausted ? "exhausted" : "");
+                    mExtensionLength, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches, mExhausted ? "exhausted" : "");
         }
     }
 

@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedReader;
@@ -12,6 +10,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class HotspotCache
@@ -27,7 +26,8 @@ public class HotspotCache
 
     public boolean isValid() { return mIsValid; }
 
-    public boolean matchesHotspot(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
+    public boolean matchesHotspot(
+            final String chrStart, final String chrEnd, int posStart, int posEnd, Orientation orientStart, Orientation orientEnd)
     {
         List<KnownHotspot> regions = mHotspotRegions.get(chrStart);
         if(regions != null)
@@ -90,8 +90,8 @@ public class HotspotCache
 
                 ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2]));
                 ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(values[4]) + 1, Integer.parseInt(values[5]));
-                Byte orientStart = values[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
-                Byte orientEnd = values[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                Orientation orientStart = Orientation.fromChar(values[8].charAt(0));
+                Orientation orientEnd = Orientation.fromChar(values[9].charAt(0));
                 String geneInfo = values[6];
 
                 KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
@@ -137,13 +137,13 @@ public class HotspotCache
     public class KnownHotspot
     {
         public final ChrBaseRegion RegionStart;
-        public final Byte OrientStart;
+        public final Orientation OrientStart;
         public final ChrBaseRegion RegionEnd;
-        public final Byte OrientEnd;
+        public final Orientation OrientEnd;
         public final String GeneInfo;
 
         public KnownHotspot(
-                final ChrBaseRegion regionStart, final Byte orientStart, final ChrBaseRegion regionEnd, final Byte orientEnd,
+                final ChrBaseRegion regionStart, final Orientation orientStart, final ChrBaseRegion regionEnd, final Orientation orientEnd,
                 final String geneInfo)
         {
             RegionStart = regionStart;
@@ -153,7 +153,7 @@ public class HotspotCache
             GeneInfo = geneInfo;
         }
 
-        public boolean matches(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
+        public boolean matches(final String chrStart, final String chrEnd, int posStart, int posEnd, Orientation orientStart, Orientation orientEnd)
         {
             if(RegionStart.containsPosition(chrStart, posStart) && OrientStart == orientStart
             && RegionEnd.containsPosition(chrEnd, posEnd) && OrientEnd == orientEnd)

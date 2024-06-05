@@ -10,9 +10,11 @@ import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENE
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
+import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
@@ -24,6 +26,7 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFitte
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,20 +34,28 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.HrdData;
 import com.hartwig.hmftools.common.purple.HrdDataFile;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
@@ -108,7 +119,7 @@ public class PurpleApplication
 
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
-        mPurpleVersion = new VersionInfo("purple.version");
+        mPurpleVersion = fromAppName(APP_NAME);
 
         mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
 
@@ -233,23 +244,19 @@ public class PurpleApplication
         final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
         final SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
 
+        PPL_LOGGER.info("purple output directory: {}", mConfig.OutputDir);
+        mPurpleVersion.write(mConfig.OutputDir);
+
         PPL_LOGGER.info("applying segmentation");
         final List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
 
-        if(observedRegions.isEmpty())
+        if(observedRegions.isEmpty() || !validateObservedRegions(observedRegions))
         {
-            PPL_LOGGER.warn("no observed regions created, exiting");
+            PPL_LOGGER.warn("no valid observed regions created, exiting");
+
+            writeEmptyResultFiles(tumorId, sampleData, sampleDataFiles);
             System.exit(0);
         }
-
-        if(!validateObservedRegions(observedRegions))
-        {
-            PPL_LOGGER.warn("invalid observed regions, exiting");
-            System.exit(0);
-        }
-
-        PPL_LOGGER.info("purple output directory: {}", mConfig.OutputDir);
-        mPurpleVersion.write(mConfig.OutputDir);
 
         final List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
@@ -604,9 +611,83 @@ public class PurpleApplication
         }
     }
 
+    private void writeEmptyResultFiles(
+            final String tumorId, final SampleData sampleData, final SampleDataFiles sampleDataFiles) throws IOException
+    {
+        Gender gender = Gender.FEMALE;
+
+        if(mConfig.runTumor())
+        {
+            SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, Collections.emptyList());
+            somaticStream.processAndWrite(null);
+
+            sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);
+
+            FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, Collections.emptyList());
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), Collections.emptyList());
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), Collections.emptyList());
+            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+
+            if(mReferenceData.TargetRegions.hasTargetRegions())
+            {
+                HrdDataFile.write(mConfig.OutputDir, tumorId, HrdData.INVALID);
+            }
+
+            FittedPurity fittedPurity = ImmutableFittedPurity.builder()
+                    .purity(0).ploidy(0).score(0).diploidProportion(0).normFactor(0).somaticPenalty(0).build();
+
+            FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()
+                    .maxPurity(0).minPurity(0).maxPloidy(0).minPloidy(0).maxDiploidProportion(0).minDiploidProportion(0).build();
+
+            PurpleQC purpleQC = ImmutablePurpleQC.builder()
+                    .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
+                    .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
+                    .status(Collections.emptyList()).germlineAberrations(Collections.emptyList()).amberMeanDepth(0).build();
+
+            PurityContext purityContext =  ImmutablePurityContext.builder()
+                    .bestFit(fittedPurity)
+                    .method(FittedPurityMethod.NO_TUMOR)
+                    .gender(gender)
+                    .runMode(mConfig.runMode())
+                    .score(fittedPurityScore)
+                    .polyClonalProportion(0)
+                    .wholeGenomeDuplication(false)
+                    .microsatelliteIndelsPerMb(0)
+                    .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                    .tumorMutationalLoad(0)
+                    .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                    .tumorMutationalBurdenPerMb(0)
+                    .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                    .svTumorMutationalBurden(0)
+                    .qc(purpleQC)
+                    .targeted(mConfig.TargetRegionsMode)
+                    .build();
+
+            PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
+            SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorId, true), Collections.emptyList());
+        }
+
+        if(mConfig.runGermline())
+        {
+            if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
+            {
+                GermlineSvCache germlineSvCache = new GermlineSvCache();
+                germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
+            }
+
+            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorId, false), Collections.emptyList());
+        }
+    }
+
+    private static final String APP_NAME = "Purple";
+
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("Purple");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         PurpleConfig.addOptions(configBuilder);
 

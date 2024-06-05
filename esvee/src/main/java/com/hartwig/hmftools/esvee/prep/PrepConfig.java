@@ -27,10 +27,10 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
+import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
@@ -78,7 +78,6 @@ public class PrepConfig
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
     public final BlacklistLocations Blacklist;
-    public final String ExistingJunctionFile;
 
     public final int PartitionSize;
     public int ReadLength; // can be set from default, config or the fragment length distribution routine
@@ -111,7 +110,6 @@ public class PrepConfig
     public static final String BAM_FILES = "bam_files";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
-    private static final String EXISTING_JUNCTION_FILE = "existing_junction_file";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -169,8 +167,6 @@ public class PrepConfig
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
-
-        ExistingJunctionFile = configBuilder.getValue(EXISTING_JUNCTION_FILE);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         ReadLength = configBuilder.getInteger(READ_LENGTH);
@@ -277,7 +273,6 @@ public class PrepConfig
 
         Hotspots = new HotspotCache(null);
         Blacklist = new BlacklistLocations(null);
-        ExistingJunctionFile = null;
 
         PartitionSize = partitionSize;
 
@@ -317,7 +312,6 @@ public class PrepConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist regions BED file");
-        configBuilder.addPath(EXISTING_JUNCTION_FILE, false, "Load existing junction file to find supporting reads");
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addFlag(CALC_FRAG_LENGTH, "Calculate distribution for fragment length");

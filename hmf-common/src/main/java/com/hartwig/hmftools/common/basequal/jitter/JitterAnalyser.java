@@ -63,7 +63,8 @@ public class JitterAnalyser
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);
 
         // draw a chart of the 9 ms profiles
-        drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
+        if(mConfig.WritePlots)
+            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
         List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers);
@@ -73,7 +74,7 @@ public class JitterAnalyser
 
     private List<RefGenomeMicrosatellite> loadRefGenomeMicrosatellites()
     {
-        List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMicrosatelliteFile);
+        List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMsiFile);
 
         mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
 
@@ -165,7 +166,7 @@ public class JitterAnalyser
     private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
             throws IOException, InterruptedException
     {
-        int result = RExecutor.executeFromClasspath("basequal/microsatellite/ms_plot.R", outputDir, sampleId, statsTableFile);
+        int result = RExecutor.executeFromClasspath("basequal/msi_jitter_plot.R", outputDir, sampleId, statsTableFile);
         if(result != 0)
         {
             throw new IOException("R execution failed. Unable to complete segmentation.");

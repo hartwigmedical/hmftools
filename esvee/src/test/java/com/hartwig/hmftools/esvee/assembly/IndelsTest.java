@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -69,7 +70,7 @@ public class IndelsTest
     @Test
     public void testLongDeleteAssemblies()
     {
-        Junction posJunction = new Junction(CHR_1, 50, POS_ORIENT, false, true, false);
+        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false);
 
         // first a basic assembly with all reads agreeing
         String readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
@@ -92,7 +93,7 @@ public class IndelsTest
         assertEquals(0, assembly.mismatchReadCount());
 
         // test the other side
-        Junction negJunction = new Junction(CHR_1, 100, NEG_ORIENT, false, true, false);
+        Junction negJunction = new Junction(CHR_1, 100, REVERSE, false, true, false);
 
         readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 160);
         read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases, "20S60M");

@@ -81,6 +81,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -104,9 +105,24 @@ public class VariantVis
     private static final DomContent JQUERY_SCRIPT =
             rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
 
-    private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Arrays.stream(ReadContextCounter.MatchType.values())
-            .sorted(Comparator.comparingInt(x -> x.SortKey))
+    private static final List<ReadContextMatch> SORTED_MATCH_TYPES = Arrays.stream(ReadContextMatch.values())
+            .sorted(Comparator.comparingInt(x -> visSortKey(x)))
             .collect(Collectors.toList());
+
+    public static int visSortKey(final ReadContextMatch type)
+    {
+        switch(type)
+        {
+            case FULL: return 0;
+            case PARTIAL_CORE: return 1;
+            case REALIGNED: return 2;
+            case CORE: return 3;
+            case REF: return 3;
+            case NONE:
+            default:
+                return 5;
+        }
+    }
 
     private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
 
@@ -115,13 +131,13 @@ public class VariantVis
     private final String mSample;
     private final SimpleVariant mVariant;
     private final VariantTier mVariantTier;
-    private final EnumMap<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
+    private final EnumMap<ReadContextMatch, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
     private final VariantReadContext mReadContext;
     private final BaseRegion mViewRegion;
     private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
     private final BaseSeqViewModel mRefViewModel;
     private final BaseSeqViewModel mContextViewModel;
-    private final EnumMap<ReadContextCounter.MatchType, Integer> mReadCountByType;
+    private final EnumMap<ReadContextMatch, Integer> mReadCountByType;
     private final String mVariantKey;
     private final String mIndexedBasesKey;
     private final RefGenomeSource mRefGenome;
@@ -137,14 +153,14 @@ public class VariantVis
         mSample = sample;
         mVariant = variant;
         mVariantTier = variantTier;
-        mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadContext = readContext;
         mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
-        int coreStart = mReadContext.corePositionStart();
-        int coreEnd = mReadContext.corePositionEnd() + indelSize;
-        int flankStart = coreStart + mReadContext.leftFlankLength();
+        int coreStart = mReadContext.CorePositionStart;
+        int coreEnd = mReadContext.CorePositionEnd;
+        int flankStart = coreStart - mReadContext.leftFlankLength();
         int flankEnd = coreEnd + mReadContext.rightFlankLength();
         mViewRegion = new BaseRegion(coreStart - SageVisConstants.READ_EXTEND_LENGTH, coreEnd + SageVisConstants.READ_EXTEND_LENGTH);
 
@@ -178,14 +194,14 @@ public class VariantVis
         mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
-        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarReadIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarIndex));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexStart));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexEnd));
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.leftFlankLength()));
         indexedBasesKeyBuilder.add(new String(mReadContext.ReadBases));
         mIndexedBasesKey = indexedBasesKeyBuilder.toString();
 
-        mReadCountByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadCountByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadCount = 0;
 
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
@@ -254,7 +270,7 @@ public class VariantVis
                 body(
                         firstVis.renderVariantInfo(
                                 sageVariant.totalQuality(),
-                                firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge(), sageVariant.filters()),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filters()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
                         readTable,
@@ -291,7 +307,7 @@ public class VariantVis
         List<DomContent> rows = Lists.newArrayList();
 
         List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
-        headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextCounter.MatchType::name).collect(Collectors.toList()));
+        headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextMatch::name).collect(Collectors.toList()));
         headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
 
         List<DomContent> headerColumns = Lists.newArrayList();
@@ -342,7 +358,7 @@ public class VariantVis
                     td(String.valueOf(depth)));
 
             VariantVis variantVis = counter.variantVis();
-            for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+            for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
             {
                 int count = variantVis.mReadCountByType.getOrDefault(matchType, 0);
                 columnElems.add(td(String.valueOf(count)));
@@ -353,7 +369,7 @@ public class VariantVis
                     td(format("%d", avgAltMapQuality)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
-                    td(String.valueOf(counter.jitter()[2]))));
+                    td(format("%d-%d", counter.jitter().shortened(), counter.jitter().lengthened()))));
 
             for(int j = 0; j < columnElems.size(); ++j)
             {
@@ -402,7 +418,8 @@ public class VariantVis
         return filename + "_" + format(formatStr, variantFileNum) + ".html";
     }
 
-    public void addEvidence(final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextCounter.MatchType matchType,
+    public void addEvidence(
+            final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextMatch matchType,
             @Nullable final QualityCalculator.QualityScores modifiedQualities)
     {
         ++mReadCount;
@@ -528,7 +545,7 @@ public class VariantVis
                 tr(td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderContext()));
         tableRows.add(contextRow);
 
-        for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+        for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
         {
             List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
             if(records == null || records.isEmpty())
@@ -718,9 +735,9 @@ public class VariantVis
 
     private void downsampleReadEvidenceRecords()
     {
-        for(Map.Entry<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> entry : mReadEvidenceRecordsByType.entrySet())
+        for(Map.Entry<ReadContextMatch, List<ReadEvidenceRecord>> entry : mReadEvidenceRecordsByType.entrySet())
         {
-            ReadContextCounter.MatchType matchType = entry.getKey();
+            ReadContextMatch matchType = entry.getKey();
             List<ReadEvidenceRecord> records = entry.getValue();
 
             int maxReads = SageVisConstants.MAX_READS_PER_TYPE.get(matchType);

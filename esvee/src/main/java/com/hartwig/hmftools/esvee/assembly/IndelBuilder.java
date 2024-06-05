@@ -1,14 +1,19 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import static htsjdk.samtools.CigarOperator.I;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -31,7 +36,7 @@ public final class IndelBuilder
             if(indelCoords != null)
             {
                 // must match junction exactly to be considered for support
-                if(!indelCoords.matchesJunction(junction.Position, junction.Orientation))
+                if(!indelCoords.matchesJunction(junction.Position, junction.Orient))
                     continue;
 
                 if(indelCoords.Length >= MIN_INDEL_LENGTH)
@@ -57,12 +62,12 @@ public final class IndelBuilder
         if(junction.isForward())
         {
             if(read.unclippedEnd() > junction.Position)
-                return read.indelImpliedAlignmentEnd() > 0 || read.isConvertedIndel();
+                return read.indelImpliedAlignmentEnd() > 0;
         }
         else
         {
             if(read.unclippedStart() < junction.Position)
-                return read.indelImpliedAlignmentStart() > 0 || read.isConvertedIndel();
+                return read.indelImpliedAlignmentStart() > 0;
         }
 
         return false;
@@ -148,5 +153,42 @@ public final class IndelBuilder
         }
 
         return "";
+    }
+
+    public static void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
+    {
+        int maxIndelLength = read.indelCoords() != null ? read.indelCoords().Length : maxIndelLength(read.cigarElements());
+
+        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
+        {
+            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
+            if(lengthReads == null)
+            {
+                lengthReads = Lists.newArrayList();
+                indelLengthReads.put(maxIndelLength, lengthReads);
+            }
+
+            lengthReads.add(read);
+        }
+    }
+
+    public static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
+    {
+        if(indelLengthReads.isEmpty())
+            return Collections.emptyList();
+
+        int maxFrequency = 0;
+        int indelLength = 0;
+
+        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
+        {
+            if(entry.getValue().size() > maxFrequency)
+            {
+                indelLength = entry.getKey();
+                maxFrequency = entry.getValue().size();
+            }
+        }
+
+        return indelLengthReads.get(indelLength);
     }
 }

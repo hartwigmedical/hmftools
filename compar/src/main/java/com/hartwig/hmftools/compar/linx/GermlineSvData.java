@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -19,13 +20,19 @@ public class GermlineSvData implements ComparableItem
 {
     public final LinxGermlineSv SvData;
     private final boolean mIsReported;
+    private final BasePosition mComparisonStartPosition;
+    private final BasePosition mComparisonEndPosition;
 
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
 
-    public GermlineSvData(final LinxGermlineSv svData, boolean isReported)
+    public GermlineSvData(
+            final LinxGermlineSv svData, boolean isReported, final BasePosition comparisonStartPosition,
+            final BasePosition comparisonEndPosition)
     {
         SvData = svData;
         mIsReported = isReported;
+        mComparisonStartPosition = comparisonStartPosition;
+        mComparisonEndPosition = comparisonEndPosition;
     }
 
     @Override
@@ -34,9 +41,19 @@ public class GermlineSvData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s:%s %s:%d:%d-%s:%d%d %s",
-                SvData.EventId, SvData.Type, SvData.ChromosomeStart, SvData.PositionStart, SvData.OrientStart,
-                SvData.ChromosomeEnd, SvData.PositionEnd, SvData.OrientEnd, SvData.GeneName);
+        if(mComparisonStartPosition.Position != SvData.PositionStart || mComparisonEndPosition.Position != SvData.PositionEnd)
+        {
+            return String.format("%s:%s %s:%d:%d-%s:%d%d %s liftover(%s-%s)",
+                    SvData.EventId, SvData.Type, SvData.ChromosomeStart, SvData.PositionStart, SvData.OrientStart,
+                    SvData.ChromosomeEnd, SvData.PositionEnd, SvData.OrientEnd, SvData.GeneName,
+                    mComparisonStartPosition, mComparisonEndPosition);
+        }
+        else
+        {
+            return String.format("%s:%s %s:%d:%d-%s:%d%d %s",
+                    SvData.EventId, SvData.Type, SvData.ChromosomeStart, SvData.PositionStart, SvData.OrientStart,
+                    SvData.ChromosomeEnd, SvData.PositionEnd, SvData.OrientEnd, SvData.GeneName);
+        }
     }
 
     @Override
@@ -62,10 +79,12 @@ public class GermlineSvData implements ComparableItem
         if(otherSv.SvData.Type != SvData.Type)
             return false;
 
-        if(!otherSv.SvData.ChromosomeStart.equals(SvData.ChromosomeStart) || !otherSv.SvData.ChromosomeEnd.equals(SvData.ChromosomeEnd))
+        if(!otherSv.SvData.ChromosomeStart.equals(mComparisonStartPosition.Chromosome)
+        || !otherSv.SvData.ChromosomeEnd.equals(mComparisonEndPosition.Chromosome))
             return false;
 
-        if(otherSv.SvData.PositionStart != SvData.PositionStart || otherSv.SvData.PositionEnd != SvData.PositionEnd)
+        if(otherSv.SvData.PositionStart != mComparisonStartPosition.Position
+        || otherSv.SvData.PositionEnd != mComparisonEndPosition.Position)
             return false;
 
         if(otherSv.SvData.OrientStart != SvData.OrientStart || otherSv.SvData.OrientEnd != SvData.OrientEnd)

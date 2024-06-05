@@ -262,7 +262,7 @@ A special and very common case of templated insertions we observe are very small
 The following figure shows a number examples of synthetic events with the shards marked.
 
 <p align="center">
-    <img src="../extended-docs/linx/one_break_events.png" width="600" alt="One Break Events">
+    <img src="./docs/one_break_events.png" width="600" alt="One Break Events">
 </p>
 
 #### Deletion Bridges, Anchor Distance & Overlapping Deletion Bridges
@@ -304,7 +304,7 @@ Tandem Duplication + Double Stranded Break | RECIP_INV_DEL_DUP - inversion enclo
 A facing pair of foldback inversions (FB_INV_PAIR) is also classified as a reciprocal, although the mechanism for forming this structure is unclear. It is possible that many of these events are formed from a breakage fusion bridge event but have not been properly clustered with a resolving break junction which may be distant in a breakage fusion bridge scenario.
 
 <p align="center">
-    <img src="../extended-docs/linx/two_break_events.png" width="860" alt="Two Break Events">
+    <img src="./docs/two_break_events.png" width="860" alt="Two Break Events">
 </p>
 
 
@@ -317,7 +317,7 @@ A deletion and duplication can together also form either a duplication or deleti
 
 
 <p align="center">
-    <img src="../extended-docs/linx/del_dup_ti_event.png" width="300" alt="Del-Dup Events">
+    <img src="./docs/del_dup_ti_event.png" width="300" alt="Del-Dup Events">
 </p>
 
 #### Insertions
@@ -356,7 +356,7 @@ There are 4 key steps in the Linx algorithm:
 
 The following schematic outlines the overall workflow in the Linx algorithm. Each step is described in detail below. 
 
-![Linx Routine](../extended-docs/linx/linx_routine_steps.png)
+![Linx Routine](./docs/linx_routine_steps.png)
 
 
 ### Annotation of genomic properties and features
@@ -731,7 +731,7 @@ For each single SV and for every facing pair of SVs in the same chain identify a
 - The combined length of all segments in the chain must be less than 150kb.
 - The SV or chain must join appropriate contexts of the 5’ and 3’ genes (see table below) and for coding regions must be inframe after allowing for any skipped exons. For exonic to exonic fusions exact base phasing is also checked as splice acceptor to splice donor phasing. The following table shows allowed contexts:
 
-![Fusion Configurations](../extended-docs/linx/fusion_configurations.png)
+![Fusion Configurations](./docs/fusion_configurations.png)
 
 Notes:
 (1) for breakends in the upstream region of the 3’ partner, the 1st exon is not considered as it does not have a splice acceptor and so the 2nd exon is assumed to be the 3’ fusion partner. 5’ partner coding to 3’ partner upstream is also possible if the 3’ partner coding region starts in the 1st exon.
@@ -824,7 +824,7 @@ Visualisations of the Linx output can be generated with the accompanying tool as
 Shown below is an example of a SS18-SSX1 fusion: 
 
 <p align="center">
-    <img src="../extended-docs/linx/default.png" width="800" alt="default">
+    <img src="./docs/default.png" width="800" alt="default">
 </p>
 
 ## Known issues / points for improvement

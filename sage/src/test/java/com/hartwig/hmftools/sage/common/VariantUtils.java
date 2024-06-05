@@ -3,11 +3,10 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +31,6 @@ public final class VariantUtils
         return new SimpleVariant(CHR_1, position, ref, alt);
     }
 
-    public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
-    {
-        return createSimpleVariant(chromosome, position, ref, alt);
-    }
-
     // Variant read context creation               0123456789
     public static final String TEST_LEFT_FLANK  = "ACCGCTGACT"; // DEFAULT_READ_CONTEXT_FLANK_SIZE
     public static final String TEST_RIGHT_FLANK = "CTGAGACTCA";
@@ -56,6 +50,16 @@ public final class VariantUtils
     }
 
     public static VariantReadContext createReadContext(
+            final SimpleVariant variant, final String readBases, int leftCoreIndex, int varIndex, int rightCoreIndex)
+    {
+        String leftFlank = readBases.substring(0, leftCoreIndex);
+        String leftCore = readBases.substring(leftCoreIndex, varIndex);
+        String rightCore = readBases.substring(varIndex + 1, rightCoreIndex + 1);
+        String rightFlank = readBases.substring(rightCoreIndex + 1);
+        return createReadContext(variant, leftCore, rightCore, leftFlank, rightFlank);
+    }
+
+    public static VariantReadContext createReadContext(
             final SimpleVariant variant, final String leftCore, final String rightCore)
     {
         return createReadContext(variant, leftCore, rightCore, TEST_LEFT_FLANK, TEST_RIGHT_FLANK);
@@ -68,7 +72,7 @@ public final class VariantUtils
         int coreIndexStart = leftFlank.length();
         int varReadIndex = coreIndexStart + leftCore.length();
         int coreIndexEnd = varReadIndex + variant.alt().length() - 1 + rightCore.length();
-        String refBases = leftFlank + leftCore + variant.ref() + rightCore + rightFlank;
+        String refBases = leftCore + variant.ref() + rightCore;
         String readBases = leftFlank + leftCore + variant.alt() + rightCore + rightFlank;
 
         int alignmentStart = variant.Position - varReadIndex;
@@ -78,9 +82,15 @@ public final class VariantUtils
 
         List<CigarElement> readCigar = List.of(new CigarElement(readBases.length(), CigarOperator.M));
 
+        int corePositionStart = variant.Position - leftCore.length();
+        int corePositionEnd = variant.Position + rightCore.length();
+
+        int altIndexLower = varReadIndex;
+        int altIndexUpper = determineAltIndexUpper(variant, varReadIndex, null);
+
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar,
-                coreIndexStart, varReadIndex, coreIndexEnd, null, null);
+                variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
+                coreIndexEnd, null, null, Collections.emptyList(), altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
     }
 
     // Read context counter
@@ -88,7 +98,7 @@ public final class VariantUtils
     {
         return new ReadContextCounter(
                 id, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE);
     }
 
     // Sage variant creation
@@ -98,13 +108,6 @@ public final class VariantUtils
 
         VariantReadContext readContext = createReadContext(variant);
         return createSageVariant(readContext);
-    }
-
-    public static String buildReadContextBases(final String alt)
-    {
-        String flank = generateRandomBases(DEFAULT_FLANK_LENGTH);
-        String core = generateRandomBases(MIN_CORE_DISTANCE);
-        return flank + core + alt + core + flank;
     }
 
     public static SageVariant createSageVariant(final VariantReadContext readContext)
@@ -130,42 +133,4 @@ public final class VariantUtils
 
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
     }
-
-
-    // CLEAN-UP: old context and variant creation methods
-    /*
-    public static ReadContext createReadContext(
-            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
-    {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
-        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
-
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
-    }
-
-    @Deprecated
-    public static SageVariant createVariantOld(
-            final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
-    {
-        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
-
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        ReadContextCounter readCounter = new ReadContextCounter(
-                0, null, VariantTier.LOW_CONFIDENCE, 100, 1,
-                TestUtils.TEST_CONFIG, QUALITY_CALCULATOR, null);
-
-        List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
-
-        Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, tumorCounters.get(0).readContext(), 1, 1);
-
-        List<ReadContextCounter> normalCounters = Lists.newArrayList();
-
-        return new SageVariant(candidate, normalCounters, tumorCounters);
-    }
-    */
 }

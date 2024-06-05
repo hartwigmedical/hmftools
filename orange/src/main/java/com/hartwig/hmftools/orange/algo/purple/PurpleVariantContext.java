@@ -52,4 +52,7 @@ public interface PurpleVariantContext extends Variant
 
     @Nullable
     List<Integer> localPhaseSets();
+
+    @NotNull
+    List<String> reportableTranscripts();
 }

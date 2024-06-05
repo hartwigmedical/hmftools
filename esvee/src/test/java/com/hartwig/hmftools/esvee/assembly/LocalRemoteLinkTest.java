@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
-import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
-import static com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler.isExtensionCandidateAssembly;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.isExtensionCandidateAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 
 import static org.junit.Assert.assertEquals;
@@ -26,9 +26,10 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.phase.LocalSequenceMatcher;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
@@ -49,7 +50,7 @@ public class LocalRemoteLinkTest
         LocalSequenceMatcher localSequenceMatcher = new LocalSequenceMatcher(refGenome, 200);
 
         // first a basic exact match junction
-        Junction posJunction = new Junction(CHR_1, 300, POS_ORIENT);
+        Junction posJunction = new Junction(CHR_1, 300, FORWARD);
 
         String assemblyRefBases = localRefSequence.substring(201, 301);
         String assemblyExtensionBases = localRefSequence.substring(400, 450);
@@ -61,9 +62,10 @@ public class LocalRemoteLinkTest
         AssemblyLink assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
         assertNotNull(assemblyLink);
         assertEquals(DEL, assemblyLink.svType());
-        assertEquals(400, assemblyLink.second().junction().position());
+        assertEquals(400, assemblyLink.second().junction().Position);
+        assertEquals(50, assemblyLink.second().refBaseLength());
 
-        Junction negJunction = new Junction(CHR_1, 300, NEG_ORIENT);
+        Junction negJunction = new Junction(CHR_1, 300, REVERSE);
 
         assemblyRefBases = localRefSequence.substring(300, 400);
         assemblyExtensionBases = localRefSequence.substring(400, 450);
@@ -75,7 +77,8 @@ public class LocalRemoteLinkTest
         assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
         assertNotNull(assemblyLink);
         assertEquals(DUP, assemblyLink.svType());
-        assertEquals(400, assemblyLink.second().junction().position());
+        assertEquals(400, assemblyLink.second().junction().Position);
+        assertEquals(50, assemblyLink.second().refBaseLength());
     }
 
     @Test
@@ -91,7 +94,7 @@ public class LocalRemoteLinkTest
         String assemblyExtensionBases = refGenome.getBaseString(CHR_2, 200, 300);
         String assemblyBases = assemblyRefBases + assemblyExtensionBases;
 
-        JunctionAssembly assembly = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases, 99);
+        JunctionAssembly assembly = createAssembly(CHR_1, 100, FORWARD, assemblyBases, 99);
 
         String juncReadBases = REF_BASES_200.substring(51, 101) + refGenome.getBaseString(CHR_2, 200, 250);
 
@@ -110,7 +113,7 @@ public class LocalRemoteLinkTest
         Read remoteRead = createRead(READ_ID_GENERATOR.nextId(), 200, refGenome.getBaseString(CHR_2, 200, 300), "100M");
 
         RemoteRegion remoteRegion = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 200, 300), NEG_ORIENT, remoteRead.id(), DISCORDANT);
+                new ChrBaseRegion(CHR_2, 200, 300), REVERSE, remoteRead.id(), DISCORDANT);
 
         remoteRegionAssembler.addMatchedReads(List.of(remoteRead), remoteRegion);
 
@@ -121,22 +124,22 @@ public class LocalRemoteLinkTest
 
         assertNotNull(assemblyLink);
         assertEquals(BND, assemblyLink.svType());
-        assertEquals(200, assemblyLink.second().junction().position());
-        assertEquals(NEG_ORIENT, assemblyLink.second().junction().Orientation);
+        assertEquals(200, assemblyLink.second().junction().Position);
+        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
         assertEquals(1, assemblyLink.second().supportCount());
 
         // now a match upstream of the remote read, inferring the missing ref bases
         assemblyExtensionBases = refGenome.getBaseString(CHR_2, 150, 250);
         assemblyBases = assemblyRefBases + assemblyExtensionBases;
 
-        assembly = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases, 99);
+        assembly = createAssembly(CHR_1, 100, FORWARD, assemblyBases, 99);
 
         assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(assembly, 200, 300, remoteRegionBases);
 
         assertNotNull(assemblyLink);
         assertEquals(BND, assemblyLink.svType());
-        assertEquals(150, assemblyLink.second().junction().position());
-        assertEquals(NEG_ORIENT, assemblyLink.second().junction().Orientation);
+        assertEquals(150, assemblyLink.second().junction().Position);
+        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
         assertEquals(1, assemblyLink.second().supportCount());
 
         // now test negative to negative orientation (a la 3-6-3)
@@ -145,16 +148,18 @@ public class LocalRemoteLinkTest
         String assemblyExtensionBasesReversed = Nucleotides.reverseComplementBases(assemblyExtensionBases);
         assemblyBases = assemblyExtensionBasesReversed + assemblyRefBases;
 
-        assembly = createAssembly(CHR_1, 100, NEG_ORIENT, assemblyBases, assemblyExtensionBasesReversed.length());
+        assembly = createAssembly(CHR_1, 100, REVERSE, assemblyBases, assemblyExtensionBasesReversed.length());
 
         assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(assembly, 200, 300, remoteRegionBases);
 
         assertNotNull(assemblyLink);
         assertEquals(BND, assemblyLink.svType());
-        assertEquals(150, assemblyLink.second().junction().position());
-        assertEquals(NEG_ORIENT, assemblyLink.second().junction().Orientation);
-        assertEquals(1, assemblyLink.second().supportCount());
+        assertEquals(CHR_2, assemblyLink.first().junction().Chromosome);
+        assertEquals(150, assemblyLink.first().junction().Position);
+        assertEquals(REVERSE, assemblyLink.first().junction().Orient);
+        assertEquals(1, assemblyLink.first().supportCount());
 
+        assertEquals(100, assemblyLink.second().junction().Position);
+        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
     }
-
 }

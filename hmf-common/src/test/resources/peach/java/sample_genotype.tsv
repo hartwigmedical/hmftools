@@ -1,0 +1,4 @@
+gene	haplotype	count	function	linkedDrugs	prescriptionUrls
+GENE	*1	1	Reduced Function	Capecitabine;otherDrug	link;otherLink
+GENE2	*3	2	Normal Function	Capecitabine	link
+GENE3	Unresolved Haplotype	2	Unknown Function	Capecitabine	link

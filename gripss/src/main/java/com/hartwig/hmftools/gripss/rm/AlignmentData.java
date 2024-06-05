@@ -3,7 +3,7 @@ package com.hartwig.hmftools.gripss.rm;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -64,7 +64,7 @@ public class AlignmentData
         int position = Integer.parseInt(location[1]);
 
         final String cigar = values[2];
-        int cigarLength = calcCigarLength(cigar);
+        int cigarLength = calcCigarAlignedLength(cigar);
 
         return new AlignmentData(chromosome, new BaseRegion(position, position + cigarLength - 1), cigar);
     }

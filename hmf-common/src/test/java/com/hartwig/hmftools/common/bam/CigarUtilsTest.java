@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.bam;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -33,14 +33,14 @@ public class CigarUtilsTest
     @Test
     public void testCalcCigarLength()
     {
-        TestCase.assertEquals(100, calcCigarLength("100M"));
-        TestCase.assertEquals(100, calcCigarLength("10M10D80M"));
-        TestCase.assertEquals(100, calcCigarLength("10M1I1000N10D2I80M"));
-        TestCase.assertEquals(10, calcCigarLength("9M10I1D"));
+        TestCase.assertEquals(100, calcCigarAlignedLength("100M"));
+        TestCase.assertEquals(100, calcCigarAlignedLength("10M10D80M"));
+        TestCase.assertEquals(1100, calcCigarAlignedLength("10M1I1000N10D2I80M"));
+        TestCase.assertEquals(10, calcCigarAlignedLength("9M10I1D"));
 
         // error handling
-        TestCase.assertEquals(0, calcCigarLength("12345"));
-        TestCase.assertEquals(0, calcCigarLength("G10Z2QR100"));
+        TestCase.assertEquals(0, calcCigarAlignedLength("12345"));
+        TestCase.assertEquals(0, calcCigarAlignedLength("G10Z2QR100"));
     }
 
     @Test

@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TpmCalcsTest
@@ -147,7 +148,7 @@ public class TpmCalcsTest
 
         return neoData;
     }
-
+    
     @Test
     public void testPoissonRangeCalcs()
     {
@@ -157,8 +158,8 @@ public class TpmCalcsTest
         double lowValue = TpmCalculator.calcPoissonMean(10, reqProbLow);
         double highValue = TpmCalculator.calcPoissonMean(10, reqProbHigh);
 
-        assertEquals(13.125, lowValue, 0.1);
-        assertEquals(8.75, highValue, 0.1);
+        assertEquals(13.0, lowValue, 0.1);
+        assertEquals(8.6, highValue, 0.1);
 
         lowValue = TpmCalculator.calcPoissonMean(0, reqProbLow);
         highValue = TpmCalculator.calcPoissonMean(0, reqProbHigh);

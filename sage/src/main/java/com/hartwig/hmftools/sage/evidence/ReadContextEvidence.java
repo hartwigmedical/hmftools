@@ -26,6 +26,7 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -41,7 +42,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final SageConfig mConfig;
     private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
-    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
+    private final Map<String,BqrRecordMap> mQualityRecalibrationMap;
+    private final MsiJitterCalcs mMsiJitterCalcs;
 
     // state per slice region
     private RefSequence mRefSequence;
@@ -54,12 +56,14 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final EvidenceStats mStats;
 
     public ReadContextEvidence(
-            final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap)
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config;
         mRefGenome = refGenome;
         mFactory = new ReadContextCounterFactory(config);
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mMsiJitterCalcs = msiJitterCalcs;
         mFragmentSync = new FragmentSync(this);
 
         mRefSequence = null;
@@ -103,7 +107,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
         BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
-        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome);
+        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome, mMsiJitterCalcs);
 
         mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
         mLastCandidateIndex = 0;
@@ -136,6 +140,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             mReadCounters.forEach(x -> x.applyMapQualityRatio());
         }
+
+        mReadCounters.forEach(x -> x.jitter().setJitterQualFilterState(mMsiJitterCalcs, x));
 
         return mReadCounters;
     }

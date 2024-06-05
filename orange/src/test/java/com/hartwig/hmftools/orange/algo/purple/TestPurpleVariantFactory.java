@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
@@ -26,7 +30,6 @@ public final class TestPurpleVariantFactory
                 .worstCodingEffect(PurpleCodingEffect.UNDEFINED)
                 .canonicalImpact(impactBuilder().build())
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .reported(false)
                 .tumorDepth(depthBuilder().build())
                 .rnaDepth(null)
                 .adjustedCopyNumber(0)
@@ -56,6 +59,37 @@ public final class TestPurpleVariantFactory
                 .affectedCodon(null)
                 .affectedExon(null)
                 .inSpliceRegion(false)
-                .codingEffect(PurpleCodingEffect.UNDEFINED);
+                .codingEffect(PurpleCodingEffect.UNDEFINED)
+                .reported(false);
+    }
+
+    public static ImmutablePurpleVariantContext.Builder contextBuilder()
+    {
+        return ImmutablePurpleVariantContext.builder()
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .type(VariantType.UNDEFINED)
+                .gene(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .spliceRegion(false)
+                .worstCodingEffect(CodingEffect.UNDEFINED)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .reported(false)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAlleleCopyNumber(0)
+                .variantCopyNumber(0)
+                .biallelic(false)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
+                .repeatCount(0)
+                .subclonalLikelihood(0);
     }
 }

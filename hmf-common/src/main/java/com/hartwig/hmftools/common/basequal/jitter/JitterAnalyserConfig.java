@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class JitterAnalyserConfig
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
-    public final String RefGenomeMicrosatelliteFile;
+    public final String RefGenomeMsiFile;
     public final String OutputDir;
 
     public final int MinMappingQuality;
@@ -43,13 +44,19 @@ public class JitterAnalyserConfig
     public final int PartitionSize;
     public final ValidationStringency BamStringency;
     public final int Threads;
+    public final boolean WritePlots;
 
     public final List<ChrBaseRegion> SpecificRegions;
 
-    private static final String REF_GENOME_MICROSATELLITES = "ref_genome_microsatellites";
+    public static final String JITTER_MSI_SITES_FILE = "ref_genome_msi_file";
+    public static final String JITTER_MSI_SITES_FILE_DESC = "Path to ref genome MSI sitesΩ tsv";
+
+    public static final String JITTER_MAX_SITES_PER_TYPE = "max_sites_per_type";
+    public static final String JITTER_MAX_SITES_PER_TYPE_DESC = "Max number of sites per microsatellite unit / length type";
+
     private static final String MIN_MAP_QUALITY = "min_map_quality";
-    private static final String MAX_SITES_PER_TYPE = "max_sites_per_type";
     private static final String PARTITION_SIZE = "partition_size";
+
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
     public static final int DEFAULT_PARTITION_SIZE = 1_000_000;
@@ -60,31 +67,33 @@ public class JitterAnalyserConfig
         BamPath = configBuilder.getValue("bam");
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenomeMicrosatelliteFile = configBuilder.getValue(REF_GENOME_MICROSATELLITES);
+        RefGenomeMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
         OutputDir = parseOutputDir(configBuilder);
         Threads = parseThreads(configBuilder);
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
-        MaxSitesPerType = configBuilder.getInteger(MAX_SITES_PER_TYPE);
+        MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
+        WritePlots = true;
         SpecificRegions = loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
     }
 
-    public JitterAnalyserConfig(final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
-            final String refGenomeMicrosatelliteFile,
-            final String outputDir, int minMappingQuality, int maxSitesPerType, int threads)
+    public JitterAnalyserConfig(
+            final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
+            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType, int threads, boolean writePlots)
     {
         SampleId = sampleId;
         BamPath = null;
         RefGenVersion = refGenVersion;
         RefGenomeFile = refGenomeFile;
-        RefGenomeMicrosatelliteFile = refGenomeMicrosatelliteFile;
+        RefGenomeMsiFile = refGenomeMsiFile;
         OutputDir = outputDir;
         MinMappingQuality = minMappingQuality;
         MaxSitesPerType = maxSitesPerType;
         PartitionSize = DEFAULT_PARTITION_SIZE;
         BamStringency = ValidationStringency.STRICT;
         Threads = threads;
+        WritePlots = writePlots;
         SpecificRegions = null;
     }
 
@@ -96,14 +105,14 @@ public class JitterAnalyserConfig
         addRefGenomeVersion(configBuilder);
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC + ", required when using CRAM files");
 
-        configBuilder.addPath(REF_GENOME_MICROSATELLITES, true, "path to ref genome microsatellites tsv");
+        configBuilder.addPath(JITTER_MSI_SITES_FILE, true, JITTER_MSI_SITES_FILE_DESC);
 
         addOutputDir(configBuilder);
 
         configBuilder.addInteger(
                 MIN_MAP_QUALITY, "Minimum mapping quality for an alignment to be used", DEFAULT_MIN_MAPPING_QUALITY);
 
-        configBuilder.addInteger(MAX_SITES_PER_TYPE, "max number of sites per microsatellite unit / length type", DEFAULT_NUM_SITES_PER_TYPE);
+        configBuilder.addInteger(JITTER_MAX_SITES_PER_TYPE, JITTER_MAX_SITES_PER_TYPE_DESC, DEFAULT_NUM_SITES_PER_TYPE);
 
         configBuilder.addInteger(PARTITION_SIZE, "size of the partitions/jobs processed by worker threads", DEFAULT_PARTITION_SIZE);
 

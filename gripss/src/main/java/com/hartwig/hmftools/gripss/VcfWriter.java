@@ -1,26 +1,26 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ALT_PATH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ALT_PATH_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RESCUE_INFO;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RESCUE_INFO_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.RESCUE_INFO;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.RESCUE_INFO_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
@@ -136,13 +136,13 @@ public class VcfWriter
                 RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, RESCUE_INFO_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
+                REPEAT_MASK_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
+                REPEAT_MASK_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
+                REPEAT_MASK_COVERAGE, 1, VCFHeaderLineType.Float,
                 "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat"));
 
         writer.writeHeader(newHeader);
@@ -227,12 +227,12 @@ public class VcfWriter
             final RepeatMaskAnnotation rmAnnotation = sv.getRmAnnotation();
 
             // remove any previously set
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, rmAnnotation.Coverage);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_CLASS);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_TYPE);
+            builder.rmAttribute(REPEAT_MASK_COVERAGE);
+            builder.attribute(REPEAT_MASK_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
+            builder.attribute(REPEAT_MASK_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
+            builder.attribute(REPEAT_MASK_COVERAGE, rmAnnotation.Coverage);
         }
 
         List<FilterType> svFilters;

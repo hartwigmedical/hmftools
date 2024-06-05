@@ -5,8 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -18,7 +17,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BLACKLIST_BED;
 
 import java.io.BufferedWriter;
@@ -131,8 +130,8 @@ public class BlacklistExplorer
                     + variantContext.getAttributeAsInt(REF_DEPTH_PAIR, 0);
 
             Genotype tumor = variantContext.getGenotype(1);
-            int tumorFrags = getGenotypeAttributeAsInt(tumor, SV_FRAG_COUNT, 0)
-                    + getGenotypeAttributeAsInt(tumor, SGL_FRAG_COUNT, 0);
+
+            int tumorFrags = getGenotypeAttributeAsInt(tumor, TOTAL_FRAGS, 0);
 
             mWriter.write(format(",%.1f,%d,%d,%s",
                     variantContext.getPhredScaledQual(), tumorFrags, refDepth, filtersStr));

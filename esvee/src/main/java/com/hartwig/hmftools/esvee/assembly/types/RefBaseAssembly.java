@@ -6,8 +6,12 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -102,6 +106,7 @@ public class RefBaseAssembly
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
+    public Junction junction() { return mJunction; }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
@@ -162,7 +167,7 @@ public class RefBaseAssembly
 
         while(index >= 0 && index < mBases.length)
         {
-            if(mBases[index] != 0)
+            if(mBases[index] != 0) //  no check on base qual or actual read base support, despite possible gaps
                 ++validRefBaseCount;
             else
                 break;
@@ -173,37 +178,44 @@ public class RefBaseAssembly
                 ++index;
         }
 
-        return validRefBaseCount;
+        // and cap at the max observed read's position
+        int maxSupportedLength = mJunction.isForward() ?
+                mJunction.Position - mMinAlignedPosition + 1 : mMaxAlignedPosition - mJunction.Position;
+
+        return min(maxSupportedLength, validRefBaseCount);
     }
 
     private int[] getReadAssemblyStartIndices(final Read read)
     {
+        // ensure no indel-adjusted unclipped start is used when aligned to ref bases
+        int unclippedStart = read.unclippedStart();
+
         if(mJunction.isForward())
         {
-            if(!positionWithin(read.unclippedStart(), mExtensionRefPosition, mJunction.Position))
+            if(!positionWithin(unclippedStart, mExtensionRefPosition, mJunction.Position))
             {
-                if(read.unclippedStart() >= mJunction.Position)
+                if(unclippedStart >= mJunction.Position)
                     return null;
 
-                int readIndex = mExtensionRefPosition - read.unclippedStart();
+                int readIndex = mExtensionRefPosition - unclippedStart;
                 return new int[] {readIndex, 0};
             }
 
-            return new int[] {0, read.unclippedStart() - mExtensionRefPosition};
+            return new int[] {0, unclippedStart - mExtensionRefPosition};
         }
         else
         {
-            if(!positionWithin(read.unclippedStart(), mJunction.Position, mExtensionRefPosition))
+            if(!positionWithin(unclippedStart, mJunction.Position, mExtensionRefPosition))
             {
-                if(read.unclippedStart() >= mExtensionRefPosition)
+                if(unclippedStart >= mExtensionRefPosition)
                     return null;
 
                 // index off the relative start positions
-                int readIndex = mJunction.Position - read.unclippedStart();
+                int readIndex = mJunction.Position - unclippedStart;
                 return new int[] {readIndex, mJunctionSequenceIndex};
             }
 
-            return new int[] {0, read.unclippedStart() - mJunction.Position};
+            return new int[] {0, unclippedStart - mJunction.Position};
         }
     }
 
@@ -261,6 +273,16 @@ public class RefBaseAssembly
         }
 
         mSupport.add(new SupportRead(read, supportType, 0, 0, mismatchCount));
+    }
+
+    public void checkValidBases()
+    {
+        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
+
+        if(!emptyBaseRanges.isEmpty())
+        {
+            SV_LOGGER.debug("refAssembly({}) has empty ranges: {}", toString(), emptyBaseRanges);
+        }
     }
 
     public String toString()

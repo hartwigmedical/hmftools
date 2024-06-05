@@ -19,25 +19,23 @@ CUPPA is intended to provide:
 * [Table of contents](#table-of-contents)
 * [Usage](#usage)
   * [Feature extraction (Java component)](#feature-extraction--java-component-)
-    * [Required input files](#required-input-files)
     * [Single sample example](#single-sample-example)
     * [Multi sample example](#multi-sample-example)
-    * [All arguments](#all-arguments)
-  * [Classification (Python component)](#classification--python-component-)
+  * [Classifier (Python component)](#classifier--python-component-)
     * [Installation](#installation)
-    * [Running CUPPA within python](#running-cuppa-within-python)
-    * [Command line interface](#command-line-interface)
-    * [Input files format](#input-files-format)
-      * [Features](#features)
+    * [Predicting](#predicting)
+    * [Training](#training)
+    * [Additional input files for training CUPPA](#additional-input-files-for-training-cuppa)
       * [Metadata](#metadata)
-      * [Fusion overrides file](#fusion-overrides-file)
+      * [Fusion overrides file (optional)](#fusion-overrides-file--optional-)
+    * [Running CUPPA within python](#running-cuppa-within-python)
 * [Classifier output](#classifier-output)
     * [Probabilities by classifier](#probabilities-by-classifier)
     * [SNV96: Mutational signatures](#snv96--mutational-signatures)
     * [EVENT: Feature contributions](#event--feature-contributions)
     * [DNA_COMBINED: Training set performance](#dnacombined--training-set-performance)
     * [TSV file](#tsv-file)
-* [Features](#features-1)
+* [Features](#features)
     * [GEN_POS](#genpos)
     * [SNV96](#snv96)
     * [EVENT](#event)
@@ -79,7 +77,28 @@ CUPPA is intended to provide:
 The `CuppaDataPrep` java class can be used to extract the features required for CUPPA. `CuppaDataPrep` can be run for a single sample or 
 multiple samples.
 
-### Required input files
+### Single sample example
+The below command will extract the DNA and RNA features for one sample:
+```shell
+java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
+  -sample COLO829v003T \
+  -categories ALL \
+  -ref_genome_version V37 \
+  -sample_data_dir /dir/with/all/input/files/ \
+  -output_dir /output/dir/ \
+  -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz
+```
+
+This will produce a TSV file with the following format:
+```
+Source      Category       Key  Value
+   DNA         snv96   C>A_ACA	  131
+   DNA	     gen_pos  1_500000      2
+   DNA  event.driver  TP53.mut    1.0
+   ...           ...       ...    ...
+```
+
+Below is a description of the required input files:
 
 | Tool              | Filename suffix          | File details                                     |
 |-------------------|--------------------------|--------------------------------------------------|
@@ -92,25 +111,28 @@ multiple samples.
 | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
 | Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
 
-### Single sample example
-The below command will extract the DNA features for one sample:
-```shell
-java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
-  -sample COLO829v003T \
-  -categories DNA \
-  -ref_genome_version V37 \
-  -sample_data_dir /dir/with/all/input/files/ \
-  -output_dir /output/dir/
-```
 
-This will produce a TSV file with the following format:
-```
-Source      Category       Key  Value
-   DNA         snv96   C>A_ACA	  131
-   DNA	     gen_pos  1_500000      2
-   DNA  event.driver  TP53.mut    1.0
-   ...           ...       ...    ...
-```
+Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbers mark conditionally required arguments.
+
+| Argument              | Example                             | Description                                                                                                                                   |
+|-----------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `-sample`             | COLO829v003T                        | [Required <sup>1</sup>] Sample name                                                                                                           |
+| `-sample_id_file`     | sample_ids.tsv                      | [Required <sup>1</sup>] One column text file with "SampleId" as the header, and where each row is a sample name                               |
+| `-output_dir`         |                                     | [Required] Directory to write the output files                                                                                                |
+| `-categories`         | DNA                                 | [Required] Valid values: DNA, RNA, ALL (both DNA and RNA)                                                                                     |
+| `-sample_data_dir`    |                                     | [Required <sup>2</sup>] Directory containing all input files                                                                                  |
+| `-purple_dir`         | /data/datasets/*/purple/            | [Required <sup>2</sup>] Directory containing the PURPLE files. Wildcards (*) are replaced with sample names                                   |
+| `-linx_dir`           | /data/datasets/*/linx/              | [Required <sup>2</sup>] Directory containing the LINX files. Wildcards (*) are replaced with sample names                                     |
+| `-virus_dir`          | /data/datasets/*/virus_interpreter/ | [Required <sup>2</sup>] Directory containing the Virus Interpreter files. Wildcards (*) are replaced with sample names                        |
+| `-isofox_dir`         | /data/rna/*/                        | [Required <sup>2</sup>] Directory containing the ISOFOX files. Wildcards (*) are replaced with sample names                                   |
+| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz         | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd |
+| `-ref_genome_version` | V37                                 | Valid values: V37 (default), V38                                                                                                              |
+| `-threads`            | 8                                   | Number of threads to use. Each thread processes one sample at a time                                                                          |
+| `-write_by_category`  |                                     | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
+Conditional requirements:
+1. Either `sample` or `sample_id_file` is required
+2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files 
+3. `ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL). `alt_sj.selected_loci.tsv.gz` files for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo
 
 ### Multi sample example
 The below command will extract the DNA and RNA features for multiple samples. The wildcards (*) are converted to sample ids as specified in 
@@ -119,13 +141,13 @@ the `-sample_id_file` arg.
 ```shell
 java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -sample_id_file sample_ids.tsv \
-  -categories DNA \
+  -categories ALL \
   -ref_genome_version V37 \
   -purple_dir /data/datasets/*/purple/ \
   -linx_dir /data/datasets/*/linx/ \
   -virus_dir /data/datasets/*/virus_interpreter/ \
   -isofox_dir /data/rna/*/ \
-  -ref_alt_sj_sites alt_sj.selected_loci.tsv.gz \
+  -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz \
   -write_by_category \
   -threads 8
 ```
@@ -138,123 +160,103 @@ This will produce multi TSV files:
 * `cuppa_data.cohort.sample_trait.tsv.gz`
 * `cuppa_data.cohort.snv.tsv.gz`
 
-**NOTE: the python component of CUPPA does not yet support loading of multi-sample CuppaDataPrep output**
-
-### All arguments
-
-| Argument              | Example                             | Description                                                                                                                            |
-|-----------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `-sample`             | COLO829v003T                        | Sample name                                                                                                                            |
-| `-sample_id_file`     | sample_ids.tsv                      | One column text file with "SampleId" as the header, and where each row is a sample name                                                |
-| `-categories`         | DNA                                 | Valid values: DNA, RNA, ALL (both DNA and RNA)                                                                                         |
-| `-ref_genome_version` | V37                                 | Valid values: V37, V38                                                                                                                 |
-| `-output_dir`         |                                     | Directory to write the output files                                                                                                    |
-| `-sample_data_dir`    |                                     | Directory containing all of the above mentioned input files                                                                            |
-| `-purple_dir`         | /data/datasets/*/purple/            | Directory containing the PURPLE files. Accepts wildcards (*) that are replaced with sample names                                       |
-| `-linx_dir`           | /data/datasets/*/linx/              | Directory containing the LINX files. Accepts wildcards (*) that are replaced with sample names                                         |
-| `-virus_dir`          | /data/datasets/*/virus_interpreter/ | Directory containing the Virus Interpreter files. Accepts wildcards (*) that are replaced with sample names                            |
-| `-isofox_dir`         | /data/rna/*/                        | Directory containing the ISOFOX files. Accepts wildcards (*) that are replaced with sample names                                       |
-| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv            | TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd                  |
-| `-threads`            | 8                                   | Number of threads to use. Each thread processes one sample at a time                                                                   |
-| `-write_by_category`  |                                     | Flag. Output of `CuppaDataPrep` will be split over multiple files to prevent each find being to big. Only applies to multi-sample mode |
-
-## Classification (Python component)
+## Classifier (Python component)
 
 ### Installation
-The core classification component of CUPPA is a python package (`pycuppa`) and can be installed using the below bash commands:
+The core classification component of CUPPA is a python package (`pycuppa`). You may skip to step 3 if you have Python correctly set up.
+However, it is recommended to install Python via `pyenv` (step 1 and 2). This ensures that the correct Python version is installed, as well 
+as ensuring no dependency collisions with the system pre-installed Python.
 
+1. Install `pyenv` (for details see: https://github.com/pyenv/pyenv)
 ```shell
-## Clone the `hmftools` git repository
+## Download and run the auto-install script
+curl https://pyenv.run | bash
+
+## Set up the shell environment
+echo '
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+' >> ~/.bashrc ## On MacOS, change this to ~/.zshrc
+```
+
+2. Install Python and create a virtual environment:
+```shell
+## `pycuppa` requires Python 3.9.4 or higher 
+pyenv install 3.9.4
+
+## Create virtual environment in pyenv
+pyenv virtualenv pycuppa_env
+
+## Activate the virtual environment
+pyenv activate pycuppa_env
+```
+
+3. Install `pycuppa`:
+```shell
+## Clone the hmftools repository
 git clone https://github.com/hartwigmedical/hmftools/
-
-## Create a python virtual environment
-python3 -m venv pycuppa_env
-
-## Activate the environment
-source pycuppa_env/bin/activate
 
 ## Install `pycuppa` using `pip`. This will also install required python packages
 pip install hmftools/cuppa/src/main/python/pycuppa
 ```
 
-### Running CUPPA within python
-Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
-for example code at [doc/notebooks/](src/main/python/pycuppa/doc/notebooks/). This below links:
-- [predict_example.ipynb](src/main/python/pycuppa/doc/notebooks/predict_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/predict_example.ipynb)
-- [train_example.ipynb](src/main/python/pycuppa/doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
+### Predicting
+Pre-trained classifiers (as `cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo.
 
-### Command line interface
-CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` classes). 
-
-To predict on a single sample, the below example commands can be used.  This produces the outputs as specified in 
-section: [Classifier output](#classifier-output).
+To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: [Classifier output](#classifier-output).
 
 ```shell
 ## Activate the previously created virtual environment (see above)
-source pycuppa_env/bin/activate
-
-## Create output dir
-mkdir predict_output/
+pyenv activate pycuppa_env
 
 ## Call the module `pycuppa/cuppa/predict.py`
 python3 -m cuppa.predict \
---features_path=hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz \
---classifier_path=hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/cuppa_classifier.pickle.gz \
---output_dir=predict_output/ 
+--classifier_path=/path/to/cuppa_classifier.pickle.gz \
+--features_path=/path/to/features/ \
+--output_dir=predict_output/
 ```
 
-To train a new model, the following example commands can be used.
+### Training
+
+To train a new model, the following example command can be used:
 ```shell
 ## Activate the previously created virtual environment (see above)
-source pycuppa_env/bin/activate
+pyenv activate pycuppa_env
 
 ## Call the module `pycuppa/cuppa/train.py`
 python3 -m cuppa.train \
 --features_path=/path/to/features/ \
 --metadata_path=/path/to/metadata/ \
 --output_dir=/path/to/output_dir/ \
---using_old_features_format \
 --n_jobs=5 \
 --log_to_file
 ```
 
-The below table lists all possible arguments of `TrainingRunner` and `PredictionRunner`.
+The below table lists all possible arguments for training and/or predicting.
 
-| Argument                      | Runner           | Description                                                                                                                                                                                              |
-|-------------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--features_path`             | Both             | **Required**. Old features format: Directory with the input features csv files. New features format: Path to the input features tsv file                                                                 |
-| `--output_dir`                | Both             | **Required**. Output directory                                                                                                                                                                           |
-| `--metadata_path`             | TrainingRunner   | **Required**. Path to the metadata file with cancer type labels per sample                                                                                                                               |
-| `--classifier_path`           | PredictionRunner | **Required**. Path to the pickle file containing a CuppaClassifier python object                                                                                                                         |
-| `--cv_predictions_path`       | PredictionRunner | Path to a CuppaPrediction tsv file containing the cross-validation predictions. If provided, sample ids found in this file will have their predictions returned from this file instead of being computed |
-| `--sample_id`                 | PredictionRunner | If provided, will prepend `sample_id` to the output filenames when running `PredictionRunner`. `sample_id` will also be reflected in the sample_id column of the output tables                           |
-| `--compress_tsv_files`        | PredictionRunner | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                                       |
-| `--using_old_features_format` | Both             | Are the features from `features_path` in the old input features format?                                                                                                                                  |
-| `--genome_version`            | Both             | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                                     |
-| `--excl_chroms`               | Both             | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: ChrY,Y                                                                                      |
-| `--excl_classes`              | TrainingRunner   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                             |
-| `--min_samples_with_rna`      | TrainingRunner   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, the cancer subtype will be excluded from training. Default: 5               |
-| `--fusion_overrides_path`     | TrainingRunner   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                                     |
-| `--cv_folds`                  | TrainingRunner   | Number of cross-validation folds. Default: 10                                                                                                                                                            |
-| `--skip_cv`                   | TrainingRunner   | Skip cross-validation?                                                                                                                                                                                   |
-| `--no_cache_training`         | TrainingRunner   | Don't cache models during cross-validation and training of final model?                                                                                                                                  |
-| `--n_jobs`                    | TrainingRunner   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                                  |
-| `--log_to_file`               | TrainingRunner   | Output logs to a file?                                                                                                                                                                                   |
-| `--log_path`                  | TrainingRunner   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                                         |
+| Argument                  | Task    | Description                                                                                                                                                                                     |
+|---------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--features_path`         | Both    | [Required] **Single sample mode**: Path to the \*.cuppa_data.tsv.gz file. <br/>**Multi-sample mode**: Path to the directory with the cuppa_data.cohort.*.tsv.gz files                           |
+| `--output_dir`            | Both    | [Required] Output directory                                                                                                                                                                     |
+| `--classifier_path`       | Predict | [Required] Path to the pickle file containing a CuppaClassifier python object                                                                                                                   |
+| `--sample_id`             | Predict | [Required in single sample mode] Adds `sample_id` within output files and to the output filenames                                                                                               ||
+| `--metadata_path`         | Train   | [Required] Path to the metadata file with cancer type labels per sample                                                                                                                         |
+| `--cv_predictions_path`   | Predict | Path to a CuppaPrediction tsv file containing the cross-validation predictions. Samples found in <br/>this file will have their predictions returned from this file instead of being computed   |
+| `--compress_tsv_files`    | Predict | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                              |
+| `--genome_version`        | Both    | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                            |
+| `--excl_chroms`           | Both    | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: 'ChrY,Y'                                                                           |
+| `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                    |
+| `--min_samples_with_rna`  | Train   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, <br/>the cancer subtype will be excluded from training. Default: 5 |
+| `--fusion_overrides_path` | Train   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                            |
+| `--cv_folds`              | Train   | Number of cross-validation folds. Default: 10                                                                                                                                                   |
+| `--skip_cv`               | Train   | Skip cross-validation?                                                                                                                                                                          |
+| `--no_cache_training`     | Train   | Don't cache models during cross-validation and training of final model?                                                                                                                         |
+| `--n_jobs`                | Train   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                         |
+| `--log_to_file`           | Train   | Output logs to a file?                                                                                                                                                                          |
+| `--log_path`              | Train   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                                |
 
-### Input files format
-
-#### Features
-
-The features for one sample are provided to CUPPA in the following format (as described [in the previous section](#per-sample)):
-
-```
-Source      Category       Key  Value
-   DNA         snv96   C>A_ACA	  131
-   DNA	     gen_pos  1_500000      2
-   DNA  event.driver  TP53.mut    1.0
-   ...           ...       ...    ...
-```
+### Additional input files for training CUPPA
 
 #### Metadata
 
@@ -273,7 +275,9 @@ sample_2       Skin  Skin: Melanoma              0
      ...        ...             ...            ...
 ```
 
-#### Fusion overrides file
+#### Fusion overrides file (optional)
+
+For more details about this file, see section: [FusionProbOverrider](#fusionproboverrider).
 
 ```
   feat_prefix  feat_basename                     target_class
@@ -283,6 +287,11 @@ event.fusion.      FUS_DDIT3    Bone/Soft tissue: Liposarcoma
           ...            ...                              ...
 ```
 
+### Running CUPPA within python
+Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
+for example code at [doc/notebooks/](src/main/python/pycuppa/doc/notebooks/). This below links:
+- [predict_example.ipynb](src/main/python/pycuppa/doc/notebooks/predict_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/predict_example.ipynb)
+- [train_example.ipynb](src/main/python/pycuppa/doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
 
 # Classifier output
 For each sample CUPPA outputs a visualization of the predictions (PNG file), as well as the raw visualization data as a 

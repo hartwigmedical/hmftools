@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.mateId;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_LENGTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY;
@@ -118,7 +117,7 @@ public class RecoveredVariantFactory implements AutoCloseable
         {
             final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
 
-            final String mateId = mateId(potentialVariant);
+            final String mateId = StructuralVariantFactory.mateId(potentialVariant);
             final String mateLocation = mateLocation(alt);
             final String mateChromosome = mateChromosome(mateLocation);
             final Long matePosition = matePosition(mateLocation);

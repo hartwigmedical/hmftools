@@ -10,7 +10,8 @@ public final class PeachTestFactory
     {
         return ImmutablePeachGenotype.builder()
                 .gene(Strings.EMPTY)
-                .haplotype(Strings.EMPTY)
+                .allele(Strings.EMPTY)
+                .alleleCount(2)
                 .function(Strings.EMPTY)
                 .linkedDrugs(Strings.EMPTY)
                 .urlPrescriptionInfo(Strings.EMPTY)

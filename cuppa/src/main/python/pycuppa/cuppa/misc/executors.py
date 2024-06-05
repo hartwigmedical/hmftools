@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import subprocess
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from cuppa.logger import LoggerMixin
 
@@ -6,8 +8,8 @@ from cuppa.logger import LoggerMixin
 class RscriptExecutor(LoggerMixin):
     def __init__(
         self,
-        args: str | list[str],
-        ignore_error: bool = False,
+        args: list[str],
+        ignore_error: bool = False, ## Used for testing
         verbose: bool = True
     ):
         self.args = args
@@ -17,31 +19,36 @@ class RscriptExecutor(LoggerMixin):
         self.stderrs: list[str] = []
         self.return_code: int = 0
 
-    @property
-    def shell_command(self) -> str:
-        if isinstance(self.args, str):
-            args = self.args
-        elif isinstance(self.args, list):
-            args = " ".join(self.args)
+        self.check_R_installed()
+
+    def check_R_installed(self) -> None:
+
+        result = subprocess.run(["which", "Rscript"], capture_output=True)
+
+        if result.returncode > 0:
+            self.logger.error("R is not installed!")
+            raise CalledProcessError
         else:
-            self.logger.error("`args` must be a str or list[str]")
+            self.logger.debug("Found Rscript binary at: " + result.stdout.decode("utf-8").strip())
+
+    @property
+    def command(self) -> list[str]:
+
+        if not isinstance(self.args, list):
+            self.logger.error("`args` must be a list[str]")
             raise ValueError
 
-        return "Rscript --vanilla " + args
-
-    def raise_if_error(self) -> None:
-        if self.return_code != 0:
-            raise CalledProcessError(self.return_code, self.shell_command)
+        return ["Rscript", "--vanilla"] + self.args
 
     def run(self) -> None:
 
         if self.verbose:
-            self.logger.info("Running shell command: '%s'" % self.shell_command)
+            self.logger.info("Running command: " + " ".join(self.command))
 
-        with Popen(self.shell_command, shell=True, stdout=PIPE, stderr=STDOUT) as process:
+        with Popen(args=self.command, shell=False, stdout=PIPE, stderr=STDOUT) as process:
             for line in iter(process.stdout.readline, b''):
                 stderr = line.decode("utf-8").strip()
-                self.logger.info("[R process] " + stderr)
+                self.logger.debug("[R] " + stderr)
 
                 self.stderrs.append(stderr)
 
@@ -49,3 +56,7 @@ class RscriptExecutor(LoggerMixin):
 
         if not self.ignore_error:
             self.raise_if_error()
+
+    def raise_if_error(self) -> None:
+        if self.return_code != 0:
+            raise CalledProcessError(self.return_code, " ".join(self.command))

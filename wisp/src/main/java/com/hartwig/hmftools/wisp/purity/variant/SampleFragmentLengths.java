@@ -1,19 +1,15 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.ALT_COUNT;
 import static com.hartwig.hmftools.common.sage.FragmentLengthCounts.REF_COUNT;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_ALT_COUNT;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_LENGTH;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.FLD_REF_COUNT;
 import static com.hartwig.hmftools.common.sage.VariantFragmentLength.VARIANT_FRAG_LENGTHS_FILE_ID;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.FRAGMENT_LENGTHS;
-import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 

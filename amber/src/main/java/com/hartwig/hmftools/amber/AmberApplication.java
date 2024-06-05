@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class AmberApplication implements AutoCloseable
     {
         long startTimeMs = System.currentTimeMillis();
 
-        mVersionInfo = new VersionInfo("amber.version");
+        mVersionInfo = fromAppName(APP_NAME);
 
         mPersistence = new ResultsWriter(mConfig);
 
@@ -182,7 +183,10 @@ public class AmberApplication implements AutoCloseable
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory,
                 germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream().sorted().collect(toList());
+        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
+                .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
+                .sorted().collect(toList());
+
         final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
 
         final List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());

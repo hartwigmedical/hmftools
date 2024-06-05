@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QU
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -23,12 +22,18 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
@@ -40,13 +45,13 @@ public class TestUtils
     public static final String TEST_READ_ID_2 = "READ_02";
 
     public static final String TEST_CIGAR_100  = "100M";
-    public static final String TEST_CIGAR_50  = "50M";
-    public static final String TEST_CIGAR_30  = "30M";
-    public static final String TEST_CIGAR_20  = "20M";
 
     public static final AssemblyConfig TEST_CONFIG = new AssemblyConfig();
 
     public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
+
+    public static final int DEFAULT_MAP_QUAL = 60;
+    public static final int DEFAULT_NM = 0;
 
     public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
@@ -64,43 +69,7 @@ public class TestUtils
           + "TGTAGCTGATCGCAGGTCGAACCTGGTGATCGATGTCGATCGACTGATGTAGTAGCTGATCGGATGCATGCGTAGCGATGCTAGCTGATCGATTGGCTAA"
           + "GTCGCTTCCGGTATTTGCGTTCCGGGTTTTTTCCGAGCCTACCCCAGTTGGTTAAAAGGATATTATATATATGGCGGCTATATATGCGGTGTGTGTAACC";
 
-    public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
-    {
-        List<String> lines = new BufferedReader(new InputStreamReader(
-                TestUtils.class.getResourceAsStream(testFilename))).lines().collect(Collectors.toList());
-
-        for(String line : lines)
-        {
-            String[] values = line.split(CSV_DELIM, 2);
-            String chr = values[0];
-
-            if(chr.startsWith("#")) // comment lines
-                continue;
-
-            String bases = values[1];
-
-            String existingBases = refGenome.RefGenomeMap.get(chr);
-
-            if(existingBases != null)
-                bases = existingBases + bases;
-
-            refGenome.RefGenomeMap.put(chr, bases);
-        }
-    }
-
-    public static JunctionAssembly createAssembly(
-            final String chromosome, final int junctionPosition, final byte junctionOrientation,
-            final String assemblyBases, final int junctionIndex)
-    {
-        Junction junction = new Junction(chromosome, junctionPosition, junctionOrientation);
-
-        int baseLength = assemblyBases.length();
-        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(baseLength);
-
-        JunctionAssembly assembly = new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
-        assembly.buildRepeatInfo();
-        return assembly;
-    }
+    public static final MockRefGenome REF_GENOME = new MockRefGenome();
 
     public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
     {
@@ -159,8 +128,8 @@ public class TestUtils
 
     public static List<SAMRecord> createJunctionReads(
             final MockRefGenome refGenome, final String readId, int anchorLength,
-            final String chrStart, int junctionPosStart, byte junctionOrientStart,
-            final String chrEnd, int junctionPosEnd, byte junctionOrientEnd, int mateStart)
+            final String chrStart, int junctionPosStart, Orientation junctionOrientStart,
+            final String chrEnd, int junctionPosEnd, Orientation junctionOrientEnd, int mateStart)
     {
         // creates a junction read, its supplementary and a local mate if the coords are supplied
         int readBaseLength = anchorLength * 2;
@@ -168,7 +137,7 @@ public class TestUtils
         String readCigar, suppCigar;
         String basesStart, basesEnd;
 
-        if(junctionOrientStart == POS_ORIENT)
+        if(junctionOrientStart.isForward())
         {
             readStart = junctionPosStart - anchorLength + 1;
             readEnd = junctionPosStart;
@@ -183,7 +152,7 @@ public class TestUtils
 
         basesStart = refGenome.getBaseString(chrStart, readStart, readEnd);
 
-        if(junctionOrientEnd == POS_ORIENT)
+        if(junctionOrientEnd.isForward())
         {
             suppStart = junctionPosEnd - anchorLength + 1;
             suppEnd = junctionPosEnd;
@@ -203,7 +172,7 @@ public class TestUtils
 
         if(junctionOrientStart != junctionOrientEnd)
         {
-            if(junctionOrientStart == POS_ORIENT)
+            if(junctionOrientStart.isForward())
                 readBases = basesStart + basesEnd;
             else
                 readBases = basesEnd + basesStart;
@@ -215,7 +184,7 @@ public class TestUtils
             isSuppNegStrand = false;
 
             // keep the first read's bases in the 5' to 3' direction
-            if(junctionOrientStart == POS_ORIENT)
+            if(junctionOrientStart.isForward())
             {
                 readBases = basesStart + Nucleotides.reverseComplementBases(basesEnd);
                 suppBases = basesEnd + Nucleotides.reverseComplementBases(basesStart);
@@ -386,5 +355,34 @@ public class TestUtils
         record.setInferredInsertSize(400);
 
         return record;
+    }
+
+    public static int getSupportTypeCount(final JunctionAssembly assembly, final SupportType type)
+    {
+        return (int)assembly.support().stream().filter(x -> x.type() == type).count();
+    }
+
+    public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
+    {
+        List<String> lines = new BufferedReader(new InputStreamReader(
+                TestUtils.class.getResourceAsStream(testFilename))).lines().collect(Collectors.toList());
+
+        for(String line : lines)
+        {
+            String[] values = line.split(CSV_DELIM, 2);
+            String chr = values[0];
+
+            if(chr.startsWith("#")) // comment lines
+                continue;
+
+            String bases = values[1];
+
+            String existingBases = refGenome.RefGenomeMap.get(chr);
+
+            if(existingBases != null)
+                bases = existingBases + bases;
+
+            refGenome.RefGenomeMap.put(chr, bases);
+        }
     }
 }

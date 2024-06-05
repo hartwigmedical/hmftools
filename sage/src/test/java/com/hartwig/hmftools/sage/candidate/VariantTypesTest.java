@@ -8,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
@@ -91,9 +90,10 @@ public class VariantTypesTest
 
         VariantReadContext readContext = var.candidate().readContext();
         assertTrue(readContext.isValid());
-        assertEquals(47, readContext.coreLength());
+        assertEquals(49, readContext.coreLength());
         assertNotNull(readContext.MaxRepeat);
-        assertEquals(12, readContext.MaxRepeat.length());
+        assertEquals("AAAC", readContext.MaxRepeat.Bases);
+        assertEquals(24, readContext.MaxRepeat.totalLength());
     }
 
     @Test
@@ -115,10 +115,10 @@ public class VariantTypesTest
         // extend the read to the end of the sequence so it's past the section of repeats
         String readBases = refBases.substring(readStartPos, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1, 81);
 
-        SAMRecord read1 = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "34M11I46M");
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
+        SAMRecord read = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "34M11I46M");
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
 
         task.run();
 
@@ -134,5 +134,4 @@ public class VariantTypesTest
         assertEquals(21, readContext.coreLength());
         assertEquals("GGGGG", readContext.homologyBases());
     }
-
 }

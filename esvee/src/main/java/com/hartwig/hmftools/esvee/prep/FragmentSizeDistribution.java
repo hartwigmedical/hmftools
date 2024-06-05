@@ -3,18 +3,23 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FragmentLengthBounds.INVALID;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_1_STD_DEV_PERCENTILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MIN_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_PERCENTILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_SAMPLE_SIZE;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
+
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -111,12 +116,17 @@ public class FragmentSizeDistribution
             return INVALID;
 
         int totalFragments = lengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
+        long lengthCountTotal = lengthFrequencies.stream().mapToInt(x -> x.Frequency * x.Length).sum();
         int cumulativeTotal = 0;
         int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
+        int requiredStdDevTotal = (int)floor(totalFragments * FRAG_LENGTH_1_STD_DEV_PERCENTILE);
         int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
+        int medianFragment = totalFragments / 2;
 
         int lowerBound = 0;
         int upperBound = 0;
+        int stdDevLength = 0;
+        int median = 0;
 
         for(LengthFrequency lengthData : lengthFrequencies)
         {
@@ -125,10 +135,19 @@ public class FragmentSizeDistribution
                 lowerBound = lengthData.Length;
             }
 
-            if(lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
+            if(stdDevLength == 0 && lengthData.Frequency + cumulativeTotal >= requiredStdDevTotal)
+            {
+                stdDevLength = lengthData.Length;
+            }
+
+            if(median == 0 && lengthData.Frequency + cumulativeTotal >= medianFragment)
+            {
+                median = lengthData.Length;
+            }
+
+            if(upperBound == 0 && lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
             {
                 upperBound = lengthData.Length;
-                break;
             }
             else
             {
@@ -136,7 +155,9 @@ public class FragmentSizeDistribution
             }
         }
 
-        return new FragmentLengthBounds(lowerBound, upperBound);
+        double stdDeviation = median - stdDevLength;
+
+        return new FragmentLengthBounds(lowerBound, upperBound, median, stdDeviation);
     }
 
     private void mergeDistributions(final List<LengthFrequency> lengthFrequencies, final List<LengthFrequency> otherFrequencies)
@@ -256,7 +277,8 @@ public class FragmentSizeDistribution
                     return false;
             }
 
-            if(record.getCigar().containsOperator(CigarOperator.N) || record.getCigar().containsOperator(CigarOperator.S))
+            // only fully aligned reads
+            if(record.getCigar().getCigarElements().size() != 1 || record.getCigar().getCigarElements().get(0).getOperator() != M)
                 return false;
 
             return true;

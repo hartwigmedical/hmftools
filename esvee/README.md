@@ -3,7 +3,7 @@
 ## Overview and algorithm
 
 
-## SV Prep - pre-GRIDSS filtering
+## ESVEE Prep - pre filtering
 
 SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
 that junction. The BAM file is intended to be fed into the GRIDSS assembly.   SV Prep reduces the overall runtime of GRIDSS SV calling by ~80%.

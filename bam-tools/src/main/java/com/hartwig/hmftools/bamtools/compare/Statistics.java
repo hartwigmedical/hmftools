@@ -2,20 +2,20 @@ package com.hartwig.hmftools.bamtools.compare;
 
 public class Statistics
 {
-    public int RefReadCount;
-    public int NewReadCount;
-    public int DiffCount;
+    public long OrigReadCount;
+    public long NewReadCount;
+    public long DiffCount;
 
     public Statistics()
     {
-        RefReadCount = 0;
+        OrigReadCount = 0;
         NewReadCount = 0;
         DiffCount = 0;
     }
 
     public void merge(final Statistics other)
     {
-        RefReadCount += other.RefReadCount;
+        OrigReadCount += other.OrigReadCount;
         NewReadCount += other.NewReadCount;
         DiffCount += other.DiffCount;
     }
