@@ -232,9 +232,12 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
-    - Add PurpleTranscriptImpact.reported and make PurpleVariant.reported a derived field. This
+    - Add `PurpleTranscriptImpact.reported` and make `PurpleVariant.reported` a derived field. This
       uses the REPORTABLE_TRANSCRIPTS vcf field introduced in PURPLE 4.0.
     - Split pharmacogenetic haplotype into separate haplotype and genotype on front page and in table.
+    - A new Genetic Immune Escape analysis has been added to datamodel and report. This analysis determines whether the sample uses any of
+      the immune escape mechanisms known in cancer. See
+      also [Genetic immune landscape paper](https://www.nature.com/articles/s41588-023-01367-1)
 - [3.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.4.0)
     - Produce ORANGE datamodel v2.4.0 (including max copy number for gene copy numbers)
     - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort.

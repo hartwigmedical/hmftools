@@ -19,7 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class GeneticImmuneEscapeInterpreter
+public final class GeneticImmuneEscapeInterpreter
 {
     private static final Logger LOGGER = LogManager.getLogger(GeneticImmuneEscapeInterpreter.class);
 
@@ -31,12 +31,12 @@ public class GeneticImmuneEscapeInterpreter
     static final Set<String> EPIGENETIC_SETDB1_GENES = Sets.newHashSet("SETDB1");
 
     @NotNull
-    public GeneticImmuneEscapeRecord interpret(@NotNull PurpleRecord purple, @NotNull LinxRecord linx)
+    public static GeneticImmuneEscapeRecord interpret(@NotNull PurpleRecord purple, @NotNull LinxRecord linx)
     {
         return ImmutableGeneticImmuneEscapeRecord.builder()
                 .hasHlaEscapePresent(anyGeneWithLOH(purple, HLA_GENES) || anyGeneWithInactivation(purple, linx, HLA_GENES))
                 .hasAntigenPresentationPathwayEscape(anyGeneWithInactivation(purple, linx, ANTIGEN_PRESENTATION_GENES))
-                .hasIFNGammaInactivationEscape(anyGeneWithInactivation(purple, linx, IFN_GAMMA_PATHWAY_GENES))
+                .hasIFNGammaPathwayEscape(anyGeneWithInactivation(purple, linx, IFN_GAMMA_PATHWAY_GENES))
                 .hasPDL1OverexpressionEscape(anyGeneWithAmplification(purple, PD_L1_GENES))
                 .hasCD58InactivationEscape(anyGeneWithInactivation(purple, linx, CD58_GENES))
                 .hasEpigeneticSETDB1Escape(anyGeneWithAmplification(purple, EPIGENETIC_SETDB1_GENES))

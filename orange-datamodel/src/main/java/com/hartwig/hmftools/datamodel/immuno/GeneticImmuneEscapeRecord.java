@@ -14,7 +14,7 @@ public interface GeneticImmuneEscapeRecord
 
     boolean hasAntigenPresentationPathwayEscape();
 
-    boolean hasIFNGammaInactivationEscape();
+    boolean hasIFNGammaPathwayEscape();
 
     boolean hasPDL1OverexpressionEscape();
 

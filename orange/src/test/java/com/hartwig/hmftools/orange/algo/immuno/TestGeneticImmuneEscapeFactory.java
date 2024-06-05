@@ -11,7 +11,7 @@ public final class TestGeneticImmuneEscapeFactory
         return ImmutableGeneticImmuneEscapeRecord.builder()
                 .hasHlaEscapePresent(false)
                 .hasAntigenPresentationPathwayEscape(false)
-                .hasIFNGammaInactivationEscape(false)
+                .hasIFNGammaPathwayEscape(false)
                 .hasPDL1OverexpressionEscape(false)
                 .hasCD58InactivationEscape(false)
                 .hasEpigeneticSETDB1Escape(false);
