@@ -567,6 +567,14 @@
       }
     ]
   },
+  "geneticImmuneEscape": {
+    "hasHlaEscapePresent": true,
+    "hasAntigenPresentationPathwayEscape": false,
+    "hasIFNGammaInactivationEscape": false,
+    "hasPDL1OverexpressionEscape": false,
+    "hasCD58InactivationEscape": false,
+    "hasEpigeneticSETDB1Escape": false
+  },
   "plots": {
     "purpleFinalCircosPlot": "plot/empty.circos.png",
     "sageTumorBQRPlot": "",

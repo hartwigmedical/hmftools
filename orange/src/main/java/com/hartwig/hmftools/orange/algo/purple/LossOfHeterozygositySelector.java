@@ -46,8 +46,8 @@ final class LossOfHeterozygositySelector
         {
             boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
-            boolean hasReportedGermlineLoss =
-                    hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(), GermlineStatus.HOM_DELETION, allGermlineDeletions);
+            boolean hasReportedGermlineLoss = hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(),
+                    GermlineStatus.HOM_DELETION, allGermlineDeletions);
             boolean fullyLostInTumor = geneCopyNumber.minCopyNumber() < 0.5;
             if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineLoss && !fullyLostInTumor)
             {
@@ -55,7 +55,8 @@ final class LossOfHeterozygositySelector
                 {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
                 }
-                else if(hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(), GermlineStatus.HET_DELETION, allGermlineDeletions))
+                else if(hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(), GermlineStatus.HET_DELETION,
+                        allGermlineDeletions))
                 {
                     suspectGeneCopyNumbersWithLOH.add(correctForGermlineImpact(geneCopyNumber, allGermlineDeletions));
                 }

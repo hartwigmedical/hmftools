@@ -986,6 +986,14 @@
       }
     ]
   },
+  "geneticImmuneEscape": {
+    "hasHlaEscapePresent": false,
+    "hasAntigenPresentationPathwayEscape": false,
+    "hasIFNGammaInactivationEscape": false,
+    "hasPDL1OverexpressionEscape": false,
+    "hasCD58InactivationEscape": false,
+    "hasEpigeneticSETDB1Escape": false
+  },
   "virusInterpreter": {
     "allViruses": [],
     "reportableViruses": []

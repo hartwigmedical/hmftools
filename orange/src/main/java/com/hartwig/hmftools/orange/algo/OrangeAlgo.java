@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
+import com.hartwig.hmftools.datamodel.immuno.GeneticImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
@@ -59,6 +60,7 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
+import com.hartwig.hmftools.orange.algo.immuno.GeneticImmuneEscapeInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
@@ -197,6 +199,8 @@ public class OrangeAlgo
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, germlineLOHFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
+        GeneticImmuneEscapeRecord geneticImmuneEscape = new GeneticImmuneEscapeInterpreter().interpret();
+
         IsofoxRecord isofox = null;
         if(isofoxData != null)
         {
@@ -242,6 +246,7 @@ public class OrangeAlgo
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
                 .lilac(OrangeConversion.convert(lilac, hasRef, hasRna))
+                .geneticImmuneEscape(geneticImmuneEscape)
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
