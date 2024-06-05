@@ -199,7 +199,7 @@ public class OrangeAlgo
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, germlineLOHFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
-        GeneticImmuneEscapeRecord geneticImmuneEscape = new GeneticImmuneEscapeInterpreter().interpret();
+        GeneticImmuneEscapeRecord geneticImmuneEscape = new GeneticImmuneEscapeInterpreter().interpret(purple, linx);
 
         IsofoxRecord isofox = null;
         if(isofoxData != null)
