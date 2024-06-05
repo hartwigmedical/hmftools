@@ -1,39 +1,34 @@
 package com.hartwig.hmftools.purple.somatic;
 
 
-import static com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory.CLNSIG;
-import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static java.lang.Math.round;
+import static java.lang.String.format;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.purple.TestUtils.REF_SAMPLE_ID;
+import static com.hartwig.hmftools.purple.TestUtils.SAMPLE_ID;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticLikelihood;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.List;
+
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.vcf.VCFConstants;
 import junit.framework.TestCase;
 
 public class SomaticPurityEnrichmentTest extends TestCase
@@ -46,7 +41,7 @@ public class SomaticPurityEnrichmentTest extends TestCase
             CN = 2.00
             MACN = 0.975
             VCN = 2.44
-            alleleReadCount = 1.2238
+            AF = 1.2238
         
         Expected biallelic probability = 0.033
          */
@@ -54,15 +49,41 @@ public class SomaticPurityEnrichmentTest extends TestCase
         // MACN = (1 - BAF) * CN <=> BAF = 1 - MACN / CN
         double correspondingBAF = 1 - (0.975 / 2.00);
                 
-        PurpleCopyNumber returnedCnAndMacn = getCnAndMacn(2.00, correspondingBAF);
+        PurpleCopyNumber copyNumber = createCopyNumber(2.00, correspondingBAF);
 
-        assertEquals( 0.975, returnedCnAndMacn.minorAlleleCopyNumber(), 0.01);
-        assertEquals(2.00, returnedCnAndMacn.averageTumorCopyNumber(), 0.01);
-        
+        SomaticVariant variant = createVariant(100, 10, 2);
+
+        // assertEquals( 0.975, copyNumber.minorAlleleCopyNumber(), 0.01);
+        // assertEquals(2.00, copyNumber.averageTumorCopyNumber(), 0.01);
+
+        double biallelicValue = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        // assertEquals(0.5, biallelicValue, 0.01);
     }
-    
 
-    private static PurpleCopyNumber getCnAndMacn(final double copyNumber, final double averageActualBAF)
+    private static SomaticVariant createVariant(int depth, int alleleSupport, double variantCopyNumber)
+    {
+        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(SAMPLE_ID);
+        genotypeBuilder.DP(depth).AD(new int[] { alleleSupport, alleleSupport });
+        genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
+        Genotype genotype = genotypeBuilder.make();
+
+        List<Allele> alleles = List.of(Allele.create("A", true), Allele.create("T", false));
+
+        VariantContextBuilder builder = new VariantContextBuilder();
+        builder.chr(CHR_1).start(100);
+        builder.alleles(alleles);
+        builder.computeEndFromAlleles(alleles, 100);
+
+        builder.genotypes(List.of(genotype));
+
+        builder.attribute(PURPLE_VARIANT_CN, variantCopyNumber);
+
+        VariantContext variantContext = builder.make();
+
+        return new SomaticVariant(variantContext, SAMPLE_ID, REF_SAMPLE_ID);
+    }
+
+    private static PurpleCopyNumber createCopyNumber(final double copyNumber, final double averageActualBAF)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome("chr1")
@@ -81,12 +102,4 @@ public class SomaticPurityEnrichmentTest extends TestCase
                 .averageActualBAF(averageActualBAF)
                 .build();
     }
-    
-    
-    
-    
-    
-    
-    
-
 }

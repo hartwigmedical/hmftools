@@ -149,14 +149,14 @@ public class SomaticPurityEnrichment
         return probabilityNoWildtype;
     }
 
-    public static double calculateBiallelic(final PurpleCopyNumber purpleCopyNumber, final SomaticVariant purpleSomaticVariant)
+    public static double calculateBiallelic(final PurpleCopyNumber purpleCopyNumber, final SomaticVariant variant)
     {
         // inputs
         double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 
-        double variantCopyNumber = purpleSomaticVariant.decorator().variantCopyNumber();
-        double alleleReadCount = purpleSomaticVariant.alleleReadCount();
+        double variantCopyNumber = variant.decorator().variantCopyNumber();
+        double alleleReadCount = variant.alleleReadCount();
 
         // part 1
         double probabilityLoh = probabilityLoh(minorAlleleCopyNumber);
