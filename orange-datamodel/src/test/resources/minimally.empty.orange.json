@@ -118,7 +118,7 @@
     "alleles": [
     ]
   },
-  "geneticImmuneEscape": {
+  "immuneEscape": {
     "hasHlaEscapePresent": false,
     "hasAntigenPresentationPathwayEscape": false,
     "hasIFNGammaPathwayEscape": false,

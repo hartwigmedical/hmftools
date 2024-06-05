@@ -4,7 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.datamodel.immuno.GeneticImmuneEscapeRecord;
+import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GeneticImmuneEscapeInterpreterTest
+public class ImmuneEscapeInterpreterTest
 {
     @Test
     public void doesNotCrashOnMinimalData()
@@ -27,7 +27,7 @@ public class GeneticImmuneEscapeInterpreterTest
         PurpleRecord purple = TestPurpleInterpretationFactory.createMinimalTestPurpleData();
         LinxRecord linx = TestLinxInterpretationFactory.createMinimalTestLinxData();
 
-        assertNotNull(GeneticImmuneEscapeInterpreter.interpret(purple, linx));
+        assertNotNull(ImmuneEscapeInterpreter.interpret(purple, linx));
     }
 
     @Test
@@ -64,20 +64,20 @@ public class GeneticImmuneEscapeInterpreterTest
                         .build())
                 .build();
 
-        GeneticImmuneEscapeRecord geneticImmuneEscape = GeneticImmuneEscapeInterpreter.interpret(purple, linx);
+        ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
-        assertTrue(geneticImmuneEscape.hasHlaEscapePresent());
-        assertFalse(geneticImmuneEscape.hasAntigenPresentationPathwayEscape());
-        assertTrue(geneticImmuneEscape.hasIFNGammaPathwayEscape());
-        assertFalse(geneticImmuneEscape.hasPDL1OverexpressionEscape());
-        assertFalse(geneticImmuneEscape.hasCD58InactivationEscape());
-        assertTrue(geneticImmuneEscape.hasEpigeneticSETDB1Escape());
+        assertTrue(immuneEscape.hasHlaEscapePresent());
+        assertFalse(immuneEscape.hasAntigenPresentationPathwayEscape());
+        assertTrue(immuneEscape.hasIFNGammaPathwayEscape());
+        assertFalse(immuneEscape.hasPDL1OverexpressionEscape());
+        assertFalse(immuneEscape.hasCD58InactivationEscape());
+        assertTrue(immuneEscape.hasEpigeneticSETDB1Escape());
     }
 
     @Test
     public void canDetectHlaEscape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.HLA_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.HLA_GENES.iterator().next();
 
         assertTrue(runWithPurple(withLOH(matchingGene)).hasHlaEscapePresent());
         assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false)).hasHlaEscapePresent());
@@ -95,7 +95,7 @@ public class GeneticImmuneEscapeInterpreterTest
     @Test
     public void canDetectAntigenPresentationPathwayEscape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.ANTIGEN_PRESENTATION_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.ANTIGEN_PRESENTATION_GENES.iterator().next();
 
         assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false))
                 .hasAntigenPresentationPathwayEscape());
@@ -115,7 +115,7 @@ public class GeneticImmuneEscapeInterpreterTest
     @Test
     public void canDetectIFNGammaPathwayEscape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.IFN_GAMMA_PATHWAY_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.IFN_GAMMA_PATHWAY_GENES.iterator().next();
 
         assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false))
                 .hasIFNGammaPathwayEscape());
@@ -135,7 +135,7 @@ public class GeneticImmuneEscapeInterpreterTest
     @Test
     public void canDetectPDL1OverexpressionEscape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.PD_L1_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.PD_L1_GENES.iterator().next();
 
         assertTrue(runWithPurple(withAmplification(matchingGene)).hasPDL1OverexpressionEscape());
 
@@ -146,7 +146,7 @@ public class GeneticImmuneEscapeInterpreterTest
     @Test
     public void canDetectCD58InactivationEscape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.CD58_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.CD58_GENES.iterator().next();
 
         assertTrue(runWithPurple(withClonalVariant(matchingGene, PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, false))
                 .hasCD58InactivationEscape());
@@ -166,7 +166,7 @@ public class GeneticImmuneEscapeInterpreterTest
     @Test
     public void canDetectEpigeneticSETDB1Escape()
     {
-        String matchingGene = GeneticImmuneEscapeInterpreter.EPIGENETIC_SETDB1_GENES.iterator().next();
+        String matchingGene = ImmuneEscapeInterpreter.EPIGENETIC_SETDB1_GENES.iterator().next();
 
         assertTrue(runWithPurple(withAmplification(matchingGene)).hasEpigeneticSETDB1Escape());
 
@@ -175,15 +175,15 @@ public class GeneticImmuneEscapeInterpreterTest
     }
 
     @NotNull
-    private static GeneticImmuneEscapeRecord runWithPurple(@NotNull PurpleRecord purple)
+    private static ImmuneEscapeRecord runWithPurple(@NotNull PurpleRecord purple)
     {
-        return GeneticImmuneEscapeInterpreter.interpret(purple, TestLinxInterpretationFactory.createMinimalTestLinxData());
+        return ImmuneEscapeInterpreter.interpret(purple, TestLinxInterpretationFactory.createMinimalTestLinxData());
     }
 
     @NotNull
-    private static GeneticImmuneEscapeRecord runWithLinx(@NotNull LinxRecord linx)
+    private static ImmuneEscapeRecord runWithLinx(@NotNull LinxRecord linx)
     {
-        return GeneticImmuneEscapeInterpreter.interpret(TestPurpleInterpretationFactory.createMinimalTestPurpleData(), linx);
+        return ImmuneEscapeInterpreter.interpret(TestPurpleInterpretationFactory.createMinimalTestPurpleData(), linx);
     }
 
     @NotNull

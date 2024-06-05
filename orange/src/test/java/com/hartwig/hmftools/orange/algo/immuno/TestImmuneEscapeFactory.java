@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
-import com.hartwig.hmftools.datamodel.immuno.ImmutableGeneticImmuneEscapeRecord;
+import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TestGeneticImmuneEscapeFactory
+public final class TestImmuneEscapeFactory
 {
     @NotNull
-    public static ImmutableGeneticImmuneEscapeRecord.Builder builder() {
-        return ImmutableGeneticImmuneEscapeRecord.builder()
+    public static ImmutableImmuneEscapeRecord.Builder builder() {
+        return ImmutableImmuneEscapeRecord.builder()
                 .hasHlaEscapePresent(false)
                 .hasAntigenPresentationPathwayEscape(false)
                 .hasIFNGammaPathwayEscape(false)

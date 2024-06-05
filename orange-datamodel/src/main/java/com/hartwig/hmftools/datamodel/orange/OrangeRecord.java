@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.immuno.GeneticImmuneEscapeRecord;
+import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
@@ -71,7 +71,7 @@ public interface OrangeRecord
     LilacRecord lilac();
 
     @NotNull
-    GeneticImmuneEscapeRecord geneticImmuneEscape();
+    ImmuneEscapeRecord immuneEscape();
 
     @Nullable
     VirusInterpreterData virusInterpreter();

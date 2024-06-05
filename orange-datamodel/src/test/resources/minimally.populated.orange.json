@@ -567,7 +567,7 @@
       }
     ]
   },
-  "geneticImmuneEscape": {
+  "immuneEscape": {
     "hasHlaEscapePresent": true,
     "hasAntigenPresentationPathwayEscape": false,
     "hasIFNGammaPathwayEscape": false,
