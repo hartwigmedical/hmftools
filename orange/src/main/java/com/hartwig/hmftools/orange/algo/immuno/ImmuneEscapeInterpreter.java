@@ -62,8 +62,7 @@ public final class ImmuneEscapeInterpreter
         {
             if(somaticGeneCopyNumber.gene().equals(geneToCheck))
             {
-                double minMajorAlleleCopyNumber = somaticGeneCopyNumber.minCopyNumber() - somaticGeneCopyNumber.minMinorAlleleCopyNumber();
-                return somaticGeneCopyNumber.minMinorAlleleCopyNumber() < 0.3 && minMajorAlleleCopyNumber > 0.7;
+                return somaticGeneCopyNumber.minCopyNumber() > 0.5  && somaticGeneCopyNumber.minMinorAlleleCopyNumber() < 0.3;
             }
         }
 
