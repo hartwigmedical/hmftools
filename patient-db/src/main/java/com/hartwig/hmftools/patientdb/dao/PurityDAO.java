@@ -35,19 +35,22 @@ import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class PurityDAO {
+class PurityDAO
+{
 
-    @NotNull
     private final DSLContext context;
 
-    PurityDAO(@NotNull final DSLContext context) {
+    PurityDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
     @Nullable
-    PurityContext readPurityContext(@NotNull String sample) {
+    PurityContext readPurityContext(final String sample)
+    {
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
-        if (result == null) {
+        if(result == null)
+        {
             return null;
         }
 
@@ -116,8 +119,8 @@ class PurityDAO {
                 .build();
     }
 
-    @NotNull
-    List<String> getSamplesPassingQC(double minPurity) {
+    List<String> getSamplesPassingQC(double minPurity)
+    {
         List<String> sampleIds = Lists.newArrayList();
 
         Result<Record> result = context.select()
@@ -127,27 +130,30 @@ class PurityDAO {
                 .and(PURITY.QCSTATUS.eq(PASS.toString()))
                 .fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             sampleIds.add(record.getValue(PURITY.SAMPLEID));
         }
 
         return sampleIds;
     }
 
-    @NotNull
-    List<String> getSampleIds() {
+    List<String> getSampleIds()
+    {
         List<String> sampleIds = Lists.newArrayList();
 
         Result<Record> result = context.select().from(PURITY).fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             sampleIds.add(record.getValue(PURITY.SAMPLEID));
         }
 
         return sampleIds;
     }
 
-    void write(@NotNull String sample, @NotNull PurityContext purity, @NotNull PurpleQC checks) {
+    void write(final String sample, final PurityContext purity, final PurpleQC checks)
+    {
         FittedPurity bestFit = purity.bestFit();
         FittedPurityScore score = purity.score();
 
@@ -155,40 +161,40 @@ class PurityDAO {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
 
         context.insertInto(PURITY,
-                PURITY.SAMPLEID,
-                PURITY.PURITY_,
-                PURITY.GENDER,
-                PURITY.FITMETHOD,
-                PURITY.QCSTATUS,
-                PURITY.RUNMODE,
-                PURITY.NORMFACTOR,
-                PURITY.SCORE,
-                PURITY.SOMATICPENALTY,
-                PURITY.PLOIDY,
-                PURITY.DIPLOIDPROPORTION,
-                PURITY.MINDIPLOIDPROPORTION,
-                PURITY.MAXDIPLOIDPROPORTION,
-                PURITY.MINPURITY,
-                PURITY.MAXPURITY,
-                PURITY.MINPLOIDY,
-                PURITY.MAXPLOIDY,
-                PURITY.POLYCLONALPROPORTION,
-                PURITY.WHOLEGENOMEDUPLICATION,
-                PURITY.MSINDELSPERMB,
-                PURITY.MSSTATUS,
-                PURITY.TMBPERMB,
-                PURITY.TMBSTATUS,
-                PURITY.TML,
-                PURITY.TMLSTATUS,
-                PURITY.SVTMB,
-                PURITY.DELETEDGENES,
-                PURITY.COPYNUMBERSEGMENTS,
-                PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
-                PURITY.CONTAMINATION,
-                PURITY.GERMLINEABERRATION,
-                PURITY.AMBERGENDER,
-                PURITY.TARGETED,
-                PURITY.MODIFIED)
+                        PURITY.SAMPLEID,
+                        PURITY.PURITY_,
+                        PURITY.GENDER,
+                        PURITY.FITMETHOD,
+                        PURITY.QCSTATUS,
+                        PURITY.RUNMODE,
+                        PURITY.NORMFACTOR,
+                        PURITY.SCORE,
+                        PURITY.SOMATICPENALTY,
+                        PURITY.PLOIDY,
+                        PURITY.DIPLOIDPROPORTION,
+                        PURITY.MINDIPLOIDPROPORTION,
+                        PURITY.MAXDIPLOIDPROPORTION,
+                        PURITY.MINPURITY,
+                        PURITY.MAXPURITY,
+                        PURITY.MINPLOIDY,
+                        PURITY.MAXPLOIDY,
+                        PURITY.POLYCLONALPROPORTION,
+                        PURITY.WHOLEGENOMEDUPLICATION,
+                        PURITY.MSINDELSPERMB,
+                        PURITY.MSSTATUS,
+                        PURITY.TMBPERMB,
+                        PURITY.TMBSTATUS,
+                        PURITY.TML,
+                        PURITY.TMLSTATUS,
+                        PURITY.SVTMB,
+                        PURITY.DELETEDGENES,
+                        PURITY.COPYNUMBERSEGMENTS,
+                        PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
+                        PURITY.CONTAMINATION,
+                        PURITY.GERMLINEABERRATION,
+                        PURITY.AMBERGENDER,
+                        PURITY.TARGETED,
+                        PURITY.MODIFIED)
                 .values(sample,
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
@@ -226,7 +232,8 @@ class PurityDAO {
                 .execute();
     }
 
-    void write(@NotNull String sample, @NotNull List<FittedPurity> purities) {
+    void write(final String sample, final List<FittedPurity> purities)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
@@ -244,8 +251,9 @@ class PurityDAO {
         inserter.execute();
     }
 
-    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
-            @NotNull FittedPurity purity) {
+    private static void addPurity(final Timestamp timestamp, final InsertValuesStep8 inserter, final String sample,
+            final FittedPurity purity)
+    {
         inserter.values(sample,
                 DatabaseUtil.decimal(purity.purity()),
                 DatabaseUtil.decimal(purity.normFactor()),
@@ -256,7 +264,8 @@ class PurityDAO {
                 timestamp);
     }
 
-    void deletePurityForSample(@NotNull String sample) {
+    void deletePurityForSample(final String sample)
+    {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
     }

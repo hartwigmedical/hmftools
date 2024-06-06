@@ -20,22 +20,21 @@ import org.jooq.InsertValuesStep8;
 
 public class CiderDAO
 {
-    @NotNull
     private final DSLContext context;
 
     private static final int DB_BATCH_INSERT_SIZE = 10000;
 
-    public CiderDAO(@NotNull final DSLContext context) {
+    public CiderDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void deleteCiderDataForSample(@NotNull String sampleId)
+    void deleteCiderDataForSample(final String sampleId)
     {
         context.delete(CDR3SEQUENCE).where(CDR3SEQUENCE.SAMPLEID.eq(sampleId)).execute();
         context.delete(CDR3LOCUSSUMMARY).where(CDR3LOCUSSUMMARY.SAMPLEID.eq(sampleId)).execute();
     }
 
-    public void writeCdr3Sequence(@NotNull String sampleId, @NotNull Collection<Cdr3Sequence> cdr3Sequences)
+    public void writeCdr3Sequence(final String sampleId, final Collection<Cdr3Sequence> cdr3Sequences)
     {
         context.delete(CDR3SEQUENCE).where(CDR3SEQUENCE.SAMPLEID.eq(sampleId)).execute();
 
@@ -72,7 +71,7 @@ public class CiderDAO
         }
     }
 
-    public void writeLocusSummaries(@NotNull String sampleId, @NotNull Collection<Cdr3LocusSummary> locusSummaries)
+    public void writeLocusSummaries(final String sampleId, final Collection<Cdr3LocusSummary> locusSummaries)
     {
         context.delete(CDR3LOCUSSUMMARY).where(CDR3LOCUSSUMMARY.SAMPLEID.eq(sampleId)).execute();
 

@@ -14,21 +14,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 
-class VirusBreakendDAO {
-
-    @NotNull
+class VirusBreakendDAO
+{
     private final DSLContext context;
 
-    VirusBreakendDAO(@NotNull final DSLContext context) {
+    VirusBreakendDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
+    void writeVirusBreakend(final String sample, final List<VirusBreakend> virusBreakends)
+    {
         deleteVirusBreakendForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        for (List<VirusBreakend> virusBreakend : Iterables.partition(virusBreakends, DB_BATCH_INSERT_SIZE)) {
+        for(List<VirusBreakend> virusBreakend : Iterables.partition(virusBreakends, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStepN inserter = context.insertInto(VIRUSBREAKEND,
                     VIRUSBREAKEND.MODIFIED,
                     VIRUSBREAKEND.SAMPLEID,
@@ -62,8 +64,9 @@ class VirusBreakendDAO {
         }
     }
 
-    private static void addVirusBreakend(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull VirusBreakend virusBreakend) {
+    private static void addVirusBreakend(
+            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final VirusBreakend virusBreakend)
+    {
         inserter.values(timestamp,
                 sample,
                 virusBreakend.taxidGenus(),
@@ -93,7 +96,8 @@ class VirusBreakendDAO {
                 virusBreakend.qcStatus());
     }
 
-    void deleteVirusBreakendForSample(@NotNull String sample) {
+    void deleteVirusBreakendForSample(final String sample)
+    {
         context.delete(VIRUSBREAKEND).where(VIRUSBREAKEND.SAMPLEID.eq(sample)).execute();
     }
 }

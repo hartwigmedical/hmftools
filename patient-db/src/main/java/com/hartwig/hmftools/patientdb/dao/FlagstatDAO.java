@@ -8,40 +8,42 @@ import com.hartwig.hmftools.common.flagstat.FlagstatQC;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-public class FlagstatDAO {
+public class FlagstatDAO
+{
 
-    @NotNull
     private final DSLContext context;
 
-    FlagstatDAO(@NotNull final DSLContext context) {
+    FlagstatDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat) {
+    void writeFlagstats(final String sample, final Flagstat refFlagstat, final Flagstat tumorFlagstat)
+    {
         deleteFlagstatsForSample(sample);
 
         boolean passQC = FlagstatQC.pass(refFlagstat) && FlagstatQC.pass(tumorFlagstat);
         context.insertInto(FLAGSTAT,
-                FLAGSTAT.SAMPLEID,
-                FLAGSTAT.REFUNIQUEREADCOUNT,
-                FLAGSTAT.REFSECONDARYCOUNT,
-                FLAGSTAT.REFSUPPLEMENTARYCOUNT,
-                FLAGSTAT.REFDUPLICATEPROPORTION,
-                FLAGSTAT.REFMAPPEDPROPORTION,
-                FLAGSTAT.REFPAIREDINSEQUENCINGPROPORTION,
-                FLAGSTAT.REFPROPERLYPAIREDPROPORTION,
-                FLAGSTAT.REFWITHITSELFANDMATEMAPPEDPROPORTION,
-                FLAGSTAT.REFSINGLETONPROPORTION,
-                FLAGSTAT.TUMORUNIQUEREADCOUNT,
-                FLAGSTAT.TUMORSECONDARYCOUNT,
-                FLAGSTAT.TUMORSUPPLEMENTARYCOUNT,
-                FLAGSTAT.TUMORDUPLICATEPROPORTION,
-                FLAGSTAT.TUMORMAPPEDPROPORTION,
-                FLAGSTAT.TUMORPAIREDINSEQUENCINGPROPORTION,
-                FLAGSTAT.TUMORPROPERLYPAIREDPROPORTION,
-                FLAGSTAT.TUMORWITHITSELFANDMATEMAPPEDPROPORTION,
-                FLAGSTAT.TUMORSINGLETONPROPORTION,
-                FLAGSTAT.PASSQC)
+                        FLAGSTAT.SAMPLEID,
+                        FLAGSTAT.REFUNIQUEREADCOUNT,
+                        FLAGSTAT.REFSECONDARYCOUNT,
+                        FLAGSTAT.REFSUPPLEMENTARYCOUNT,
+                        FLAGSTAT.REFDUPLICATEPROPORTION,
+                        FLAGSTAT.REFMAPPEDPROPORTION,
+                        FLAGSTAT.REFPAIREDINSEQUENCINGPROPORTION,
+                        FLAGSTAT.REFPROPERLYPAIREDPROPORTION,
+                        FLAGSTAT.REFWITHITSELFANDMATEMAPPEDPROPORTION,
+                        FLAGSTAT.REFSINGLETONPROPORTION,
+                        FLAGSTAT.TUMORUNIQUEREADCOUNT,
+                        FLAGSTAT.TUMORSECONDARYCOUNT,
+                        FLAGSTAT.TUMORSUPPLEMENTARYCOUNT,
+                        FLAGSTAT.TUMORDUPLICATEPROPORTION,
+                        FLAGSTAT.TUMORMAPPEDPROPORTION,
+                        FLAGSTAT.TUMORPAIREDINSEQUENCINGPROPORTION,
+                        FLAGSTAT.TUMORPROPERLYPAIREDPROPORTION,
+                        FLAGSTAT.TUMORWITHITSELFANDMATEMAPPEDPROPORTION,
+                        FLAGSTAT.TUMORSINGLETONPROPORTION,
+                        FLAGSTAT.PASSQC)
                 .values(sample,
                         refFlagstat.uniqueReadCount(),
                         refFlagstat.secondaryCount(),
@@ -65,7 +67,8 @@ public class FlagstatDAO {
                 .execute();
     }
 
-    void deleteFlagstatsForSample(@NotNull String sample) {
+    void deleteFlagstatsForSample(final String sample)
+    {
         context.delete(FLAGSTAT).where(FLAGSTAT.SAMPLEID.eq(sample)).execute();
     }
 }

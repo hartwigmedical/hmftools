@@ -14,21 +14,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
 
-class PeachDAO {
-
-    @NotNull
+class PeachDAO
+{
     private final DSLContext context;
 
-    PeachDAO(@NotNull final DSLContext context) {
+    PeachDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes) {
+    void writePeach(final String sample, final List<PeachGenotype> peachGenotypes)
+    {
         deletePeachForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        for (List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE)) {
+        for(List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStep8 inserter = context.insertInto(PEACHGENOTYPE,
                     PEACHGENOTYPE.MODIFIED,
                     PEACHGENOTYPE.SAMPLEID,
@@ -43,8 +45,9 @@ class PeachDAO {
         }
     }
 
-    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
-            @NotNull PeachGenotype genotype) {
+    private static void addGenotype(
+            final Timestamp timestamp, final InsertValuesStep8 inserter, final String sample, final PeachGenotype genotype)
+    {
         inserter.values(timestamp,
                 sample,
                 genotype.gene(),
@@ -55,7 +58,8 @@ class PeachDAO {
                 genotype.urlPrescriptionInfo());
     }
 
-    void deletePeachForSample(@NotNull String sample) {
+    void deletePeachForSample(@NotNull String sample)
+    {
         context.delete(PEACHGENOTYPE).where(PEACHGENOTYPE.SAMPLEID.eq(sample)).execute();
     }
 }

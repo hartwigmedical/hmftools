@@ -32,10 +32,9 @@ import org.jooq.Result;
 
 class StructuralVariantClusterDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    StructuralVariantClusterDAO(@NotNull final DSLContext context) {
+    StructuralVariantClusterDAO(final DSLContext context) {
         this.context = context;
     }
 

@@ -15,14 +15,14 @@ import org.jooq.InsertValuesStep16;
 
 public class DriverGenePanelDAO {
 
-    @NotNull
     private final DSLContext context;
 
-    public DriverGenePanelDAO(@NotNull final DSLContext context) {
+    public DriverGenePanelDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void writeDriverGenes(@NotNull final List<DriverGene> driverGenes) {
+    void writeDriverGenes(final List<DriverGene> driverGenes)
+    {
         context.truncate(DRIVERGENEPANEL).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
         InsertValuesStep16 inserter = context.insertInto(DRIVERGENEPANEL,
@@ -43,7 +43,7 @@ public class DriverGenePanelDAO {
                 DRIVERGENEPANEL.ADDITIONALREPORTEDTRANSCRIPTS,
                 DRIVERGENEPANEL.REPORTPGX);
 
-        for (DriverGene driverGene : driverGenes)
+        for(DriverGene driverGene : driverGenes)
         {
             StringJoiner altTrans = new StringJoiner(";");
             driverGene.additionalReportedTranscripts().forEach(x -> altTrans.add(x));

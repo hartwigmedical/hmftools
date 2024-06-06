@@ -29,16 +29,14 @@ class StructuralVariantDAO
 {
     private static final int MAX_LINKED_BY = 1024;
 
-    @NotNull
     private final DSLContext context;
 
-    StructuralVariantDAO(@NotNull final DSLContext context)
+    StructuralVariantDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    @NotNull
-    public List<StructuralVariantData> read(@NotNull String sample)
+    public List<StructuralVariantData> read(final String sample)
     {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
@@ -124,31 +122,7 @@ class StructuralVariantDAO
         return structuralVariants;
     }
 
-    @NotNull
-    List<String> getSamplesList(@NotNull String sampleSearch)
-    {
-        Result<Record1<String>> result = sampleSearch.equals("")
-                ? context.select(STRUCTURALVARIANT.SAMPLEID)
-                .from(STRUCTURALVARIANT)
-                .groupBy(STRUCTURALVARIANT.SAMPLEID)
-                .fetch()
-                : context.select(STRUCTURALVARIANT.SAMPLEID)
-                        .from(STRUCTURALVARIANT)
-                        .where(STRUCTURALVARIANT.SAMPLEID.like(sampleSearch))
-                        .groupBy(STRUCTURALVARIANT.SAMPLEID)
-                        .fetch();
-
-        List<String> samplesList = Lists.newArrayList();
-
-        for(Record record : result)
-        {
-            samplesList.add(record.getValue(STRUCTURALVARIANT.SAMPLEID));
-        }
-
-        return samplesList;
-    }
-
-    void write(@NotNull String sample, @NotNull List<StructuralVariantData> variants)
+    void write(final String sample, final List<StructuralVariantData> variants)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -217,8 +191,8 @@ class StructuralVariantDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull StructuralVariantData variant)
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStepN inserter, final String sample,
+            final StructuralVariantData variant)
     {
         boolean isSingle = variant.type() == SGL;
 
@@ -279,12 +253,12 @@ class StructuralVariantDAO
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample)
+    void deleteStructuralVariantsForSample(final String sample)
     {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
-    private static boolean byteToBoolean(@NotNull Byte b)
+    private static boolean byteToBoolean(final Byte b)
     {
         return b != 0;
     }

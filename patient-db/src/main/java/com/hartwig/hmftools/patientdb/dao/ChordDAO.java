@@ -12,10 +12,9 @@ import org.jooq.Record;
 
 class ChordDAO {
 
-    @NotNull
     private final DSLContext context;
 
-    ChordDAO(@NotNull final DSLContext context) {
+    ChordDAO(final DSLContext context) {
         this.context = context;
     }
 
@@ -37,7 +36,8 @@ class ChordDAO {
                 .build();
     }
 
-    void writeChord(@NotNull String sample, @NotNull ChordData chordData) {
+    void writeChord(final String sample, final ChordData chordData)
+    {
         deleteChordForSample(sample);
 
         context.insertInto(CHORD,
@@ -60,7 +60,7 @@ class ChordDAO {
                 .execute();
     }
 
-    void deleteChordForSample(@NotNull String sample) {
+    void deleteChordForSample(final String sample) {
         context.delete(CHORD).where(CHORD.SAMPLEID.eq(sample)).execute();
     }
 }

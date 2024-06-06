@@ -35,17 +35,15 @@ import org.jooq.Result;
 
 public class SomaticVariantDAO
 {
-    @NotNull
     private final DSLContext context;
 
     private static final int DB_BATCH_INSERT_SIZE = 10000;
 
-    SomaticVariantDAO(@NotNull final DSLContext context)
+    SomaticVariantDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    @NotNull
     public BufferedWriter<SomaticVariant> writer(String tumorSample)
     {
         BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>()
@@ -66,8 +64,7 @@ public class SomaticVariantDAO
         return new BufferedWriter<>(consumer, DB_BATCH_INSERT_SIZE);
     }
 
-    @NotNull
-    public List<SomaticVariant> read(@NotNull String sample, VariantType type)
+    public List<SomaticVariant> read(final String sample, VariantType type)
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
@@ -153,7 +150,7 @@ public class SomaticVariantDAO
     }
 
 
-    void writeAll(@NotNull final Timestamp timestamp, @NotNull String sample, @NotNull List<SomaticVariant> variants)
+    void writeAll(final Timestamp timestamp, final String sample, final List<SomaticVariant> variants)
     {
         final InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,

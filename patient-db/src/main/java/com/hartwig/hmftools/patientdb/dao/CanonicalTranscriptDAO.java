@@ -16,14 +16,14 @@ import org.jooq.InsertValuesStep19;
 
 class CanonicalTranscriptDAO {
 
-    @NotNull
     private final DSLContext context;
 
-    CanonicalTranscriptDAO(@NotNull final DSLContext context) {
+    CanonicalTranscriptDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void write(final String refGenomeVersion, final List<GeneData> geneDataList, final List<TranscriptData> transcripts) {
+    void write(final String refGenomeVersion, final List<GeneData> geneDataList, final List<TranscriptData> transcripts)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(CANONICALTRANSCRIPT).where(CANONICALTRANSCRIPT.ASSEMBLY.eq(refGenomeVersion)).execute();
 
@@ -59,7 +59,8 @@ class CanonicalTranscriptDAO {
         inserter.execute();
     }
 
-    private static void addRecord(final Timestamp timestamp, final InsertValuesStep19 inserter, final String refGenomeVersion,
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep19 inserter, final String refGenomeVersion,
             final GeneData geneData, final TranscriptData tranData)
     {
         int exonBases = tranData.exons().stream().mapToInt(x -> x.baseLength()).sum();

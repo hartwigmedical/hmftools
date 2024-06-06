@@ -17,14 +17,13 @@ import org.jooq.InsertValuesStep11;
 
 public class TealDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    public TealDAO(@NotNull final DSLContext context) {
+    public TealDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void deleteTealDataForSample(@NotNull String sampleId)
+    void deleteTealDataForSample(final String sampleId)
     {
         try (DeleteUsingStep<TelomerelengthRecord> deleter = context.delete(TELOMERELENGTH))
         {
@@ -32,7 +31,7 @@ public class TealDAO
         }
     }
 
-    public void writeTelomereLength(@NotNull String sampleId, @Nullable TelomereLength germelineTelomereLength,
+    public void writeTelomereLength(final String sampleId, @Nullable TelomereLength germelineTelomereLength,
             @Nullable TelomereLength somaticTelomereLength)
     {
         deleteTealDataForSample(sampleId);

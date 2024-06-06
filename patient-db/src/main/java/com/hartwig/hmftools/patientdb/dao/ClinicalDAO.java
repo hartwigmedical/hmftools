@@ -35,18 +35,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 
-class ClinicalDAO {
-
+class ClinicalDAO
+{
     private static final Logger LOGGER = LogManager.getLogger(ClinicalDAO.class);
 
-    @NotNull
     private final DSLContext context;
 
-    ClinicalDAO(@NotNull final DSLContext context) {
+    ClinicalDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
-    void clear() {
+    void clear()
+    {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
@@ -64,7 +65,8 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
+    void writeFullClinicalData(final Patient patient, boolean blacklisted)
+    {
         int patientId = writePatient(patient.patientIdentifier(), blacklisted);
         writePatientData(patientId, patient.baselineData(), patient.preTreatmentData());
         patient.sequencedBiopsies().forEach(sample -> writeSampleData(patientId, sample));
@@ -75,12 +77,14 @@ class ClinicalDAO {
         patient.ranoMeasurements().forEach(ranoMeasurement -> writeRanoMeasurementData(patientId, ranoMeasurement));
     }
 
-    void writeSampleClinicalData(@NotNull String patientIdentifier, boolean blacklisted, @NotNull List<SampleData> samples) {
+    void writeSampleClinicalData(final String patientIdentifier, boolean blacklisted, final List<SampleData> samples)
+    {
         int patientId = writePatient(patientIdentifier, blacklisted);
         samples.forEach(sample -> writeSampleData(patientId, sample));
     }
 
-    private int writePatient(@NotNull String patientIdentifier, boolean blacklisted) {
+    private int writePatient(final String patientIdentifier, boolean blacklisted)
+    {
         return context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER, PATIENT.BLACKLISTED)
                 .values(patientIdentifier, (byte) (blacklisted ? 1 : 0))
                 .returning(PATIENT.ID)
@@ -88,7 +92,8 @@ class ClinicalDAO {
                 .getValue(PATIENT.ID);
     }
 
-    private void writeSampleData(int patientId, @NotNull SampleData sample) {
+    private void writeSampleData(int patientId, final SampleData sample)
+    {
         context.insertInto(SAMPLE,
                         SAMPLE.SAMPLEID,
                         SAMPLE.COHORTID,
@@ -113,16 +118,19 @@ class ClinicalDAO {
                 .execute();
     }
 
-    private void writePatientData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
+    private void writePatientData(int patientId, final BaselineData patient, final PreTreatmentData preTreatmentData)
+    {
         // preTreatmentTypes exceeds the usual 255 length of varchar fields in production.
         String preTreatmentTypes = preTreatmentData.concatenatedType();
-        if (preTreatmentTypes != null && preTreatmentTypes.length() > BASELINE.PRETREATMENTSTYPE.getDataType().length()) {
+        if(preTreatmentTypes != null && preTreatmentTypes.length() > BASELINE.PRETREATMENTSTYPE.getDataType().length())
+        {
             LOGGER.warn("Truncating pre-treatment type: {}", preTreatmentTypes);
             preTreatmentTypes = preTreatmentTypes.substring(0, BASELINE.PRETREATMENTSTYPE.getDataType().length());
         }
 
         String preTreatmentMechanism = preTreatmentData.concatenatedMechanism();
-        if (preTreatmentMechanism != null && preTreatmentMechanism.length() > BASELINE.PRETREATMENTSMECHANISM.getDataType().length()) {
+        if(preTreatmentMechanism != null && preTreatmentMechanism.length() > BASELINE.PRETREATMENTSMECHANISM.getDataType().length())
+        {
             LOGGER.warn("Truncating pre-treatment type: {}", preTreatmentMechanism);
             preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
         }
@@ -173,20 +181,25 @@ class ClinicalDAO {
                 .execute();
 
         List<DoidNode> doidNodes = patient.curatedPrimaryTumor().doidNodes();
-        if (doidNodes != null) {
-            for (DoidNode doidNode : doidNodes) {
+        if(doidNodes != null)
+        {
+            for(DoidNode doidNode : doidNodes)
+            {
                 writeDoidNode(patientId, doidNode);
             }
         }
 
         List<String> snomedConceptIds = patient.curatedPrimaryTumor().snomedConceptIds();
-        if (snomedConceptIds != null) {
-            for (String snomedConceptId : snomedConceptIds) {
+        if(snomedConceptIds != null)
+        {
+            for(String snomedConceptId : snomedConceptIds)
+            {
                 writeSnomedConceptId(patientId, snomedConceptId);
             }
         }
 
-        for (DrugData drug : preTreatmentData.drugs()) {
+        for(DrugData drug : preTreatmentData.drugs())
+        {
             writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus());
         }
 
@@ -200,26 +213,32 @@ class ClinicalDAO {
     }
 
     @Nullable
-    public static Byte toByte(@Nullable Boolean bool) {
+    public static Byte toByte(@Nullable Boolean bool)
+    {
         return bool != null ? (byte) (bool ? 1 : 0) : null;
     }
 
-    private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatus formStatus) {
+    private void writeBaselineFormStatus(int patientId, final String form, final FormStatus formStatus)
+    {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
+    private void writeDoidNode(int patientId, final DoidNode doidNode)
+    {
         context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDCONCEPTID)
                 .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedConceptId())
                 .execute();
     }
 
-    private void writeSnomedConceptId(int patientId, @NotNull String snomedConceptId) {
+    private void writeSnomedConceptId(int patientId, final String snomedConceptId)
+    {
         context.insertInto(SNOMED, SNOMED.PATIENTID, SNOMED.SNOMEDCONCEPTID).values(patientId, snomedConceptId).execute();
     }
 
-    private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
-        drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
+    private void writePreTreatmentDrugData(int patientId, final DrugData drug, final FormStatus formStatus)
+    {
+        drug.filteredCuratedDrugs().forEach(curatedTreatment ->
+        {
             int id = context.insertInto(PRETREATMENTDRUG,
                             PRETREATMENTDRUG.PATIENTID,
                             PRETREATMENTDRUG.STARTDATE,
@@ -243,7 +262,8 @@ class ClinicalDAO {
         });
     }
 
-    private void writeBiopsyData(int patientId, @NotNull BiopsyData biopsy) {
+    private void writeBiopsyData(int patientId, final BiopsyData biopsy)
+    {
         context.insertInto(BIOPSY,
                         BIOPSY.ID,
                         BIOPSY.SAMPLEID,
@@ -267,7 +287,8 @@ class ClinicalDAO {
         writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus());
     }
 
-    private void writeTreatmentData(int patientId, @NotNull BiopsyTreatmentData treatment) {
+    private void writeTreatmentData(int patientId, final BiopsyTreatmentData treatment)
+    {
         context.insertInto(TREATMENT,
                         TREATMENT.ID,
                         TREATMENT.BIOPSYID,
@@ -294,8 +315,10 @@ class ClinicalDAO {
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
     }
 
-    private void writeDrugData(int patientId, int treatmentId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
-        drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
+    private void writeDrugData(int patientId, int treatmentId, final DrugData drug, final FormStatus formStatus)
+    {
+        drug.filteredCuratedDrugs().forEach(curatedTreatment ->
+        {
             int id = context.insertInto(DRUG,
                             DRUG.TREATMENTID,
                             DRUG.PATIENTID,
@@ -318,7 +341,8 @@ class ClinicalDAO {
         });
     }
 
-    private void writeTreatmentResponseData(int patientId, @NotNull BiopsyTreatmentResponseData treatmentResponse) {
+    private void writeTreatmentResponseData(int patientId, final BiopsyTreatmentResponseData treatmentResponse)
+    {
         int id = context.insertInto(TREATMENTRESPONSE,
                         TREATMENTRESPONSE.TREATMENTID,
                         TREATMENTRESPONSE.PATIENTID,
@@ -339,7 +363,8 @@ class ClinicalDAO {
         writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus());
     }
 
-    private void writeTumorMarkerData(int patientId, @NotNull TumorMarkerData tumorMarker) {
+    private void writeTumorMarkerData(int patientId, final TumorMarkerData tumorMarker)
+    {
         int id = context.insertInto(TUMORMARKER,
                         TUMORMARKER.PATIENTID,
                         TUMORMARKER.DATE,
@@ -358,7 +383,8 @@ class ClinicalDAO {
         writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
     }
 
-    private void writeRanoMeasurementData(int patientId, @NotNull RanoMeasurementData RanoMeasurement) {
+    private void writeRanoMeasurementData(int patientId, final RanoMeasurementData RanoMeasurement)
+    {
         int id = context.insertInto(RANOMEASUREMENT,
                         RANOMEASUREMENT.PATIENTID,
                         RANOMEASUREMENT.RESPONSEDATE,
@@ -379,7 +405,8 @@ class ClinicalDAO {
         writeFormStatus(id, RANOMEASUREMENT.getName(), "RanoMeasurement", RanoMeasurement.formStatus());
     }
 
-    private void writeFormStatus(int id, @NotNull String tableName, @NotNull String formName, @NotNull FormStatus formStatus) {
+    private void writeFormStatus(int id, final String tableName, final String formName, final FormStatus formStatus)
+    {
         context.insertInto(FORMSMETADATA,
                 FORMSMETADATA.ID,
                 FORMSMETADATA.TABLENAME,

@@ -10,28 +10,31 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-class ValidationFindingDAO {
+class ValidationFindingDAO
+{
 
-    @NotNull
     private final DSLContext context;
 
-    ValidationFindingDAO(@NotNull final DSLContext context) {
+    ValidationFindingDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void clear() {
+    void clear()
+    {
         context.truncate(CLINICALFINDINGS).execute();
     }
 
-    void write(@NotNull List<ValidationFinding> findings) {
+    void write(final List<ValidationFinding> findings)
+    {
         context.batch(findings.stream()
                 .map(finding -> context.insertInto(CLINICALFINDINGS,
-                        CLINICALFINDINGS.LEVEL,
-                        CLINICALFINDINGS.PATIENTID,
-                        CLINICALFINDINGS.FORMSTATUS,
-                        CLINICALFINDINGS.FORMLOCKED,
-                        CLINICALFINDINGS.MESSAGE,
-                        CLINICALFINDINGS.DETAILS)
+                                CLINICALFINDINGS.LEVEL,
+                                CLINICALFINDINGS.PATIENTID,
+                                CLINICALFINDINGS.FORMSTATUS,
+                                CLINICALFINDINGS.FORMLOCKED,
+                                CLINICALFINDINGS.MESSAGE,
+                                CLINICALFINDINGS.DETAILS)
                         .values(finding.level(),
                                 finding.patientIdentifier(),
                                 finding.formStatus().stateString(),
