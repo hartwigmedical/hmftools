@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.SOMATIC_VARIANTS_DIR;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_CHR;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_GENE;
@@ -18,11 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.cup.prep.DataSource;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +38,9 @@ public class SomaticVariantsLoader
             final String sampleId,
             @Nullable final List<VariantType> variantTypes
     ){
-        if(!config.PurpleDir.isEmpty() & config.SomaticVariantsDir.isEmpty())
+        if(config.PurpleDir.isEmpty() & config.SomaticVariantsDir.isEmpty())
         {
-            CUP_LOGGER.error("Config must have either purple_dir or somatic_variants_dir");
+            CUP_LOGGER.error("Config must have either -{} or -{}", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR);
             System.exit(1);
         }
 
