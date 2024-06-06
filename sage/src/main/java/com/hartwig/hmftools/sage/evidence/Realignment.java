@@ -45,13 +45,11 @@ public class Realignment
         return RealignedType.NONE;
     }
 
-    public static boolean considerRealignedDel(final SimpleVariant variant, final SAMRecord record)
+    public static boolean considerRealignedDel(final SAMRecord record, final int minPositionVsRead)
     {
-        if(!variant.isDelete())
-            return false;
-
+        // eg a DEL at position 100 with 4 bases deleted (ref length 5) needs to consider reads starting as late as 104
         int unclippedStartPos = record.getAlignmentStart() - CigarUtils.leftSoftClipLength(record);
-        return unclippedStartPos - variant.Position < abs(variant.indelLength());
+        return minPositionVsRead >= unclippedStartPos;
     }
 
     public static final int INVALID_INDEX = -1;

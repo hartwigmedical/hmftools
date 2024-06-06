@@ -421,17 +421,6 @@ public class PhasingGroupsTest
     {
         SimpleVariant variant = createSimpleVariant(position);
         return createSageVariant(variant.Position, variant.ref(), variant.alt());
-
-        /*
-
-        List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
-
-        Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(), 1, 1);
-
-        List<ReadContextCounter> normalCounters = Lists.newArrayList();
-        return new SageVariant(candidate, normalCounters, tumorCounters);
-        */
     }
 
     private ReadContextCounter createReadCounter(int position)
@@ -440,5 +429,4 @@ public class PhasingGroupsTest
         VariantReadContext readContext = createReadContext(variant);
         return VariantUtils.createReadCounter(mNextReadCounterId++, readContext);
     }
-
 }

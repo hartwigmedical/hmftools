@@ -150,12 +150,13 @@ public class TestUtils
         record.setReadString(readBases);
         record.setReadNegativeStrandFlag(false);
         record.setBaseQualities(qualities);
-        record.setMappingQuality(20);
+        record.setMappingQuality(DEFAULT_MAP_QUAL);
         record.setDuplicateReadFlag(false);
         record.setReadUnmappedFlag(false);
         record.setProperPairFlag(true);
         record.setReadPairedFlag(true);
         record.setInferredInsertSize(600);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 0);
         return record;
     }
 }

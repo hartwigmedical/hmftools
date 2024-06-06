@@ -100,6 +100,7 @@ public class ReadContextCounter
 
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
+    private final int mMaxPositionVsReadStart;
 
     private List<Integer> mLocalPhaseSets;
     private List<Integer> mLpsCounts;
@@ -146,6 +147,7 @@ public class ReadContextCounter
 
         mQualCounters = new QualCounters();
         mMaxCandidateDeleteLength = 0;
+        mMaxPositionVsReadStart = mVariant.isDelete() ? mVariant.Position + abs(mVariant.indelLength()) : mVariant.Position;
 
         mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
@@ -231,6 +233,7 @@ public class ReadContextCounter
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
     public int maxCandidateDeleteLength() { return mMaxCandidateDeleteLength; }
+    public int maxPositionVsReadStart() { return mMaxPositionVsReadStart; }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
     public List<Integer> lpsCounts() { return mLpsCounts; }
@@ -283,7 +286,7 @@ public class ReadContextCounter
 
         if(rawContext.ReadVariantIndex < 0)
         {
-            if(considerRealignedDel(mVariant, record))
+            if(considerRealignedDel(record, mMaxPositionVsReadStart))
             {
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
                 checkRealigned = realignedReadIndex != INVALID_INDEX;

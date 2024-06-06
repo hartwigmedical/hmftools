@@ -6,11 +6,10 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
-
-import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -180,9 +180,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
 
+        /*
         int medianGap = gapDistances.get(gapCount / 2);
 
-        /*
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
@@ -236,18 +236,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mSelectedReadCounters.clear();
 
         // find any candidate potentially interested in this record
-        int readStart = record.getAlignmentStart();
-        int readEnd = record.getAlignmentEnd();
-
-        if(record.getCigar().getFirstCigarElement().getOperator() == S)
-        {
-            readStart -= record.getCigar().getFirstCigarElement().getLength();
-        }
-
-        if(record.getCigar().getLastCigarElement().getOperator() == S)
-        {
-            readEnd += record.getCigar().getLastCigarElement().getLength();
-        }
+        int readStart = record.getAlignmentStart() - CigarUtils.leftSoftClipLength(record);
+        int readEnd = record.getAlignmentEnd() + CigarUtils.rightSoftClipLength(record);
 
         // first check previous candidates starting with the current
         int nextIndex = mLastCandidateIndex + 1;
@@ -257,7 +247,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(prevIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
+            if(considerRead(readCounter, readStart, readEnd))
             {
                 mLastCandidateIndex = prevIndex;
                 mSelectedReadCounters.add(0, readCounter);
@@ -277,7 +267,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(nextIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
+            if(considerRead(readCounter, readStart, readEnd))
             {
                 mSelectedReadCounters.add(readCounter);
             }
@@ -334,5 +324,18 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
         }
+    }
+
+    private boolean considerRead(final ReadContextCounter readCounter, final int unclippedStart, final int unclippedEnd)
+    {
+        if(readCounter.exceedsMaxCoverage())
+            return false;
+
+        if(readCounter.variant().isDelete())
+        {
+            return positionsWithin(readCounter.position(), readCounter.maxPositionVsReadStart(), unclippedStart, unclippedEnd);
+        }
+
+        return positionWithin(readCounter.position(), unclippedStart, unclippedEnd);
     }
 }

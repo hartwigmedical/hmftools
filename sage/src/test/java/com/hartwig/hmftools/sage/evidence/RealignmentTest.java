@@ -250,7 +250,7 @@ public class RealignmentTest
 
         readContextCounter = createReadCounter(0, readContext);
         readContextCounter.processRead(realignedRead, 0, null);
-       //  assertEquals(1, readContextCounter.readCounts().Realigned);
+       //  assertEquals(1, readContextCounter.readCounts().Realigned); // TODO
     }
 
     @Test
