@@ -85,7 +85,7 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -categories ALL \
   -ref_genome_version V37 \
   -sample_data_dir /dir/with/all/input/files/ \
-  -output_dir /output/dir/ \
+  -output_dir path/to/output/dir/ \
   -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz
 ```
 
@@ -147,6 +147,7 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -linx_dir /data/datasets/*/linx/ \
   -virus_dir /data/datasets/*/virus_interpreter/ \
   -isofox_dir /data/rna/*/ \
+  -output_dir /path/to/output/dir/ \
   -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz \
   -write_by_category \
   -threads 8
@@ -214,7 +215,7 @@ pyenv activate pycuppa_env
 python3 -m cuppa.predict \
 --classifier_path=/path/to/cuppa_classifier.pickle.gz \
 --features_path=/path/to/features/ \
---output_dir=predict_output/
+--output_dir=/path/to/output/dir/
 ```
 
 ### Training
@@ -228,7 +229,7 @@ pyenv activate pycuppa_env
 python3 -m cuppa.train \
 --features_path=/path/to/features/ \
 --metadata_path=/path/to/metadata/ \
---output_dir=/path/to/output_dir/ \
+--output_dir=/path/to/output/dir/ \
 --n_jobs=5 \
 --log_to_file
 ```
