@@ -240,7 +240,7 @@ public class VariantFilters
     private static boolean isQualitySite(
             final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final double qual, final int altSupport)
     {
-        if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0)
+        if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0 || altSupport == 0)
             return false;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;

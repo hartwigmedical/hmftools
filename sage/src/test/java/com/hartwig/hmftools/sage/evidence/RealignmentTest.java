@@ -110,7 +110,7 @@ public class RealignmentTest
         readCigar = "9S38M";
         SAMRecord realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
 
-        RawContext rawContext = RawContext.create(var, realignedRead);
+        RawContext rawContext = RawContext.createFromRead(var, realignedRead);
         assertEquals(8, rawContext.ReadVariantIndex);
 
         int realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
@@ -165,11 +165,12 @@ public class RealignmentTest
         readContextCounter.processRead(varBuildRead, 0, null);
         assertEquals(1, readContextCounter.readCounts().Full);
 
-        RawContext rawContext = RawContext.create(var, varBuildRead);
+        RawContext rawContext = RawContext.createFromRead(var, varBuildRead);
         assertEquals(15, rawContext.ReadVariantIndex);
 
         ReadContextMatcher matcher = new ReadContextMatcher(readContext);
 
+        // test 1: basic realignment
         String readBases = "CTTTCTTTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20); // 17 + 20
         int realignedStartPos = readPosStart;
         readCigar = "5M1I9M2D22M";
@@ -183,6 +184,18 @@ public class RealignmentTest
         readContextCounter.processRead(realignedRead, 0, null);
 
         assertEquals(1, readContextCounter.readCounts().Realigned);
+
+
+        // test 2: jitter realignment
+        readBases = "CTTTCTTTTTCTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20);
+        readCigar = "9M1I10M2I25M";
+        realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
+
+        realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
+        matcher = new ReadContextMatcher(readContext);
+        RealignedType realignedType = Realignment.checkRealignment(readContext, matcher, realignedRead,  16, realignedReadIndex);
+        // works if realignedReadIndex is 6 rather than 10, since the 1xTATT lengthened jitter causes the realignedIndex to be off
+        // assertEquals(RealignedType.LENGTHENED, realignedType); // TODO
 
 
         refBases = REF_BASE_START

@@ -56,7 +56,7 @@ public enum JitterMatch
 
             if(relativeRepeatIndex < readVarIndex)
             {
-                // factor in repeats before the variant read index by shifting the implied flank start
+                // factor in repeats which finish before the variant read index by shifting the implied flank start
                 if(jitterType == SHORTENED)
                     flankReadIndexStart += repeatLength;
                 else

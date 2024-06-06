@@ -90,7 +90,6 @@ public class JitterTest
         jitterMatch = checkJitter(readContext, read1, 29);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
 
-
         // test a partial core on each side - still valid for jitter
 
         // first missing the left core
@@ -116,6 +115,69 @@ public class JitterTest
 
         jitterMatch = checkJitter(readContext, read1, 29);
         assertEquals(JitterMatch.NONE, jitterMatch);
+    }
+
+    @Test
+    public void testJitterSpanningVariantPos()
+    {
+        SimpleVariant variant = createSimpleVariant(30, "G", "A");
+
+        //                           10        20        30        40        50        60        70
+        //                 01234567890123456789012345678901234567890123456789012345678901234567890
+        String refBases = "ATGTCATTTTAGCGCGCATTCTACACACACGCACACACACACACACACATTAGTCGTAGATTAGTCGTAGT";
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String readBases = refBases.substring(1, 30) + variant.alt() + refBases.substring(31, 71);
+        String readCigar = buildCigarString(readBases.length());
+        SAMRecord read = buildSamRecord(1, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        VariantReadContext readContext = builder.createContext(variant, read, 29, refSequence);
+
+        String read1Bases = refBases.substring(1, 30) + "AC" + variant.alt() + refBases.substring(31, 71);
+        SAMRecord read1_withCigarElem = buildSamRecord(1, "21M2I49M", read1Bases);
+        JitterMatch longMatch_withCigarElem = checkJitter(readContext, read1_withCigarElem, 31);
+        assertEquals(JitterMatch.LENGTHENED, longMatch_withCigarElem);
+
+        SAMRecord read1_noCigarElem = buildSamRecord(1, buildCigarString(read1Bases.length()), read1Bases);
+        JitterMatch longMatch_noCigarElem = checkJitter(readContext, read1_noCigarElem, 29);
+        // assertEquals(JitterMatch.LENGTHENED, longMatch_noCigarElem); // TODO
+
+        String read2Bases = refBases.substring(1, 28) + variant.alt() + refBases.substring(31, 71);
+        SAMRecord read2_withCigarElem = buildSamRecord(1, "21M2D47M", read2Bases);
+        JitterMatch shortMatch_withCigarElem = checkJitter(readContext, read2_withCigarElem, 27);
+        assertEquals(JitterMatch.SHORTENED, shortMatch_withCigarElem);
+
+        SAMRecord read2_noCigarElem = buildSamRecord(1, buildCigarString(read2Bases.length()), read1Bases);
+        JitterMatch shortMatch_noCigarElem = checkJitter(readContext, read2_noCigarElem, 29);
+        // assertEquals(JitterMatch.SHORTENED, shortMatch_noCigarElem); // TODO
+    }
+
+    @Test
+    public void testJitterEndingOnVariantPos()
+    {
+        SimpleVariant variant = createSimpleVariant(49, "T", "C");
+
+        //                           10        20        30        40        50        60        70
+        //                 01234567890123456789012345678901234567890123456789012345678901234567890
+        String refBases = "ATGTCATTTTAGCGCGCATTCTACACACACACACACACACACACACACATTAGTCGTAGATTAGTCGTAGT";
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String readBases = refBases.substring(1, 49) + variant.alt() + refBases.substring(50, 71);
+        String readCigar = buildCigarString(readBases.length());
+        SAMRecord read = buildSamRecord(1, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        VariantReadContext readContext = builder.createContext(variant, read, 48, refSequence);
+
+        String read1Bases = refBases.substring(1, 49) + "CA" + variant.alt() + refBases.substring(50, 71);
+        SAMRecord read1_withCigarElem = buildSamRecord(1, "21M2I49M", read1Bases);
+        JitterMatch jitterMatch_withCigarElem = checkJitter(readContext, read1_withCigarElem, 50);
+        assertEquals(JitterMatch.LENGTHENED, jitterMatch_withCigarElem);
+
+        SAMRecord read1_noCigarElem = buildSamRecord(1, buildCigarString(read1Bases.length()), read1Bases);
+        JitterMatch jitterMatch_noCigarElem = checkJitter(readContext, read1_noCigarElem, 48);
+        // assertEquals(JitterMatch.LENGTHENED, jitterMatch_noCigarElem); // TODO
     }
 
     @Test

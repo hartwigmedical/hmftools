@@ -58,7 +58,7 @@ public class RepeatInfo
         return true;
     }
 
-    public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
+    public String toString() { return format("%s-%d index(%d-%d)", Bases, Count, Index, endIndex()); }
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount, final int minCount)
     {

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
-import static com.hartwig.hmftools.sage.evidence.RawContextCigarHandler.exceedsSoftClipLowBaseQual;
+import static com.hartwig.hmftools.sage.evidence.RawContext.exceedsSoftClipLowBaseQual;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
