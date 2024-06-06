@@ -14,23 +14,17 @@ import org.apache.logging.log4j.Level;
 public class PredictionRunner
 {
     public final PrepConfig mPrepConfig;
-    public final PredictionConfig mPycuppaConfig;
-    public final PythonEnv mPythonEnv;
+    public final PredictionConfig mPredictionConfig;
+
     private String mFeaturesPath;
 
     private static final String PYTHON_LOG_FORMAT = "'[python] %(levelname)s %(name)s | %(message)s'";
+    private static final String PYCUPPA_PKG_NAME = "pycuppa";
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
         mPrepConfig = new PrepConfig(configBuilder);
-        mPycuppaConfig = new PredictionConfig(configBuilder);
-
-        mPythonEnv = new PythonEnv(
-                PycuppaInstaller.PYTHON_VERSION,
-                PycuppaInstaller.PYCUPPA_VENV_NAME,
-                mPycuppaConfig.InstallDir
-        );
-        mPythonEnv.checkRequiredPackages(PycuppaInstaller.PYCUPPA_PKG_NAME);
+        mPredictionConfig = new PredictionConfig(configBuilder);
     }
 
     public void createOutputDirIfNotExist()
@@ -45,10 +39,10 @@ public class PredictionRunner
 
     public void extractFeatures()
     {
-        if(!mPycuppaConfig.FeaturesPath.isEmpty())
+        if(!mPredictionConfig.FeaturesPath.isEmpty())
         {
-            CUP_LOGGER.info("Using pre-extracted features at: " + mPycuppaConfig.FeaturesPath);
-            mFeaturesPath =  mPycuppaConfig.FeaturesPath;
+            CUP_LOGGER.info("Using pre-extracted features at: " + mPredictionConfig.FeaturesPath);
+            mFeaturesPath =  mPredictionConfig.FeaturesPath;
             return;
         }
 
@@ -60,16 +54,18 @@ public class PredictionRunner
 
     public void predict()
     {
-        String[] commandString = new String[] {
-                "python3 -m cuppa.predict",
-                "--sample_id", mPycuppaConfig.SampleId,
-                "--classifier_path", mPycuppaConfig.ClassifierPath,
-                "--output_dir", mPycuppaConfig.OutputDir,
+        PythonInterpreter pythonInterpreter = new PythonInterpreter(mPredictionConfig.PythonPath)
+                .requirePackages(PYCUPPA_PKG_NAME);
+
+        ShellCommand command = pythonInterpreter.command(
+                "-m cuppa.predict",
+                "--sample_id", mPredictionConfig.SampleId,
+                "--classifier_path", mPredictionConfig.ClassifierPath,
+                "--output_dir", mPredictionConfig.OutputDir,
                 "--features_path", mFeaturesPath,
                 "--log_format", PYTHON_LOG_FORMAT
-        };
-
-        ShellCommand command = new PythonEnvCommand(mPythonEnv, String.join(" ", commandString)).logLevel(Level.INFO);
+        );
+        command.logLevel(Level.INFO);
         CUP_LOGGER.info("Predicting using command: {}", command);
         command.run();
     }

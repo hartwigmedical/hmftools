@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.exp;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -12,10 +13,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_BASE_LOH_ERROR_RATE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_GROWTH_FACTOR;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
 
 import java.util.List;
 import java.util.Optional;
@@ -94,7 +93,7 @@ public class SomaticPurityEnrichment
     // version 6.0 - New biallelic model
     private static double probabilityLoh(double minorAlleleCopyNumber)
     {
-        double probabilityLoh = (1 - 1 / pow((1 + BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE * exp(-BIALLELIC_GROWTH_FACTOR * minorAlleleCopyNumber)), 1 / BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH));
+        double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE * (minorAlleleCopyNumber - 0.5)));
 
         return probabilityLoh;
     }
@@ -113,19 +112,19 @@ public class SomaticPurityEnrichment
         return vcnThresholdForNoWildtype;
     }
 
-    private static double variantReadCountAtThreshold(double threshold, double variantCopyNumber, double observedAlleleReadCount)
+    private static double readCountAtThreshold(double threshold, double variantCopyNumber, int alleleReadCount)
     {
-        double variantReadCountAtThreshold = (threshold / variantCopyNumber) * observedAlleleReadCount;
+        double readCountAtThreshold = (threshold / variantCopyNumber) * alleleReadCount;
 
-        return variantReadCountAtThreshold;
+        return readCountAtThreshold;
     }
 
-    private static double conditionalProbNoWildtypeAssumeLoh(double variantReadCountAtThreshold, double observedAlleleReadCount)
+    private static double conditionalProbNoWildtypeAssumeLoh(double readCountAtThreshold, int alleleReadCount)
     {
-        PoissonDistribution poissonDist = new PoissonDistribution(observedAlleleReadCount);
+        PoissonDistribution poissonDist = new PoissonDistribution(alleleReadCount);
 
-        int variantReadCountAtThresholdInteger = (int)round(variantReadCountAtThreshold);
-        double conditionalProbNoWildtypeAssumeLoh = 1 - poissonDist.cumulativeProbability(variantReadCountAtThresholdInteger);
+        int readCountAtThresholdInteger = (int)floor(readCountAtThreshold);
+        double conditionalProbNoWildtypeAssumeLoh = 1 - poissonDist.cumulativeProbability(readCountAtThresholdInteger);
 
         return conditionalProbNoWildtypeAssumeLoh;
     }
@@ -156,7 +155,7 @@ public class SomaticPurityEnrichment
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 
         double variantCopyNumber = variant.decorator().variantCopyNumber();
-        double alleleReadCount = variant.alleleReadCount();
+        int alleleReadCount = variant.alleleReadCount();
 
         // part 1
         double probabilityLoh = probabilityLoh(minorAlleleCopyNumber);
@@ -164,10 +163,10 @@ public class SomaticPurityEnrichment
 
         // part 2
         double vcnThresholdForNoWildtype = vcnThresholdForNoWildtype(copyNumber);
-        double variantReadCountAtThreshold = variantReadCountAtThreshold(vcnThresholdForNoWildtype, variantCopyNumber, alleleReadCount);
+        double readCountAtThreshold = readCountAtThreshold(vcnThresholdForNoWildtype, variantCopyNumber, alleleReadCount);
 
         // part 3
-        double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(variantReadCountAtThreshold, alleleReadCount);
+        double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(readCountAtThreshold, alleleReadCount);
         double conditionalProbNoWildtypeAssumeNoLoh = conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
 
         // Final calculation

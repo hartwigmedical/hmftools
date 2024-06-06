@@ -125,8 +125,6 @@ public class PurpleConstants
     public static final int MAX_INDEL_DRIVER_REPEAT_COUNT = 7;
 
     // biallelic (no wildtype allele remaining) probability
-    public static final int BIALLELIC_LEFT_HORIZONTAL_ASYMPTOTE = 612; // input into LOH probability
-    public static final int BIALLELIC_GROWTH_FACTOR = 20; // input into LOH probability
-    public static final double BIALLELIC_ASYMPTOTE_BEHAVIOUR_NEAR_MAX_GROWTH = 0.0395; // input into LOH probability
+    public static final int BIALLELIC_LOH_GROWTH_RATE = 40;
     public static final double BIALLELIC_BASE_LOH_ERROR_RATE = 0.01;
 }

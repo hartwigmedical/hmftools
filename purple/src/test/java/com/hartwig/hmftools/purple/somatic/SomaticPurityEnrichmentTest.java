@@ -1,14 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
-
-import static java.lang.Math.round;
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.purple.TestUtils.REF_SAMPLE_ID;
 import static com.hartwig.hmftools.purple.TestUtils.SAMPLE_ID;
 
@@ -19,7 +12,6 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.junit.Test;
-import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
@@ -28,7 +20,6 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.vcf.VCFConstants;
 import junit.framework.TestCase;
 
 public class SomaticPurityEnrichmentTest extends TestCase
@@ -36,39 +27,111 @@ public class SomaticPurityEnrichmentTest extends TestCase
     @Test
     public void testCalculateBiallelic()
     {
-        /* 
-        input values:
-            CN = 2.00
-            MACN = 0.975
-            VCN = 2.44
-            AF = 1.2238
-        
-        Expected biallelic probability = 0.033
-         */
-        
+        /* Scenario 1: High MACN -> No LOH -> expect low probability of biallelic */
+
+        // input values:
+        double CN = 3.08;
+        double MACN = 1.01;
+        double VCN = 0.941; // has totalReadCount as an input
+        int alleleReadCount = 39;
+
+        // expected output:
+        double expectedBiallelicProbability = 0.01;
+
         // MACN = (1 - BAF) * CN <=> BAF = 1 - MACN / CN
-        double correspondingBAF = 1 - (0.975 / 2.00);
-                
-        PurpleCopyNumber copyNumber = createCopyNumber(2.00, correspondingBAF);
+        double correspondingBAF = 1 - (MACN / CN);
 
-        SomaticVariant variant = createVariant(100, 10, 2);
+        PurpleCopyNumber copyNumber = createCopyNumber(CN, correspondingBAF);
 
-        // assertEquals( 0.975, copyNumber.minorAlleleCopyNumber(), 0.01);
-        // assertEquals(2.00, copyNumber.averageTumorCopyNumber(), 0.01);
+        SomaticVariant variant = createVariant(alleleReadCount, VCN);
 
-        double biallelicValue = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        // assertEquals(0.5, biallelicValue, 0.01);
+        double biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        /* Scenario 2: Low MACN -> LOH -> expect high probability of biallelic */
+
+        // input values:
+        CN = 0.991;
+        MACN = 0.0021;
+        VCN = 1.06;
+        alleleReadCount = 37;
+
+        // expected output:
+        expectedBiallelicProbability = 1.00;
+        
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        /* Scenario 3: Opposing evidence -> expect probability of biallelic about 0.5 */
+
+        // input values:
+        CN = 2.06;
+        MACN = 0.04;
+        VCN = 1.57;
+        alleleReadCount = 11;
+
+        // expected output:
+        expectedBiallelicProbability = 0.54;
+
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        /* Scenario 4 - another example of uncertain biallelic status */
+
+        // input values:
+        CN = 1.91;
+        MACN = 0.0;
+        VCN = 1.49;
+        alleleReadCount = 16;
+
+        // expected output:
+        expectedBiallelicProbability = 0.533;
+
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        /* Scenario 5 - another example of uncertain biallelic status */
+
+        // input values:
+        CN = 2.16;
+        MACN = 0.0;
+        VCN = 1.51;
+        alleleReadCount = 22;
+
+        // expected output:
+        expectedBiallelicProbability = 0.528;
+
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
     }
-
-    private static SomaticVariant createVariant(int depth, int alleleSupport, double variantCopyNumber)
+    
+    
+    
+    private static SomaticVariant createVariant(int alleleReadCount, double variantCopyNumber)
     {
         GenotypeBuilder genotypeBuilder = new GenotypeBuilder(SAMPLE_ID);
-        genotypeBuilder.DP(depth).AD(new int[] { alleleSupport, alleleSupport });
+        genotypeBuilder.AD(new int[] { alleleReadCount, alleleReadCount });
         genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
         Genotype genotype = genotypeBuilder.make();
-
+        
         List<Allele> alleles = List.of(Allele.create("A", true), Allele.create("T", false));
-
+        
         VariantContextBuilder builder = new VariantContextBuilder();
         builder.chr(CHR_1).start(100);
         builder.alleles(alleles);
