@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionContext;
 import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
@@ -48,6 +49,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
+import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
@@ -76,6 +78,7 @@ public final class TestOrangeReportFactory
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
+                .immuneEscape(TestImmuneEscapeFactory.builder().build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
@@ -93,7 +96,7 @@ public final class TestOrangeReportFactory
     {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
-                .platinumVersion("v5.33")
+                .platinumVersion("v5.35")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())
@@ -101,6 +104,7 @@ public final class TestOrangeReportFactory
                 .addWildTypeGenes(TestWildTypeFactory.create("gene"))
                 .isofox(createTestIsofoxData())
                 .lilac(createTestLilacData())
+                .immuneEscape(createTestImmuneEscapeRecord())
                 .virusInterpreter(createTestVirusInterpreterData())
                 .peach(createTestPeachData())
                 .build();
@@ -199,6 +203,12 @@ public final class TestOrangeReportFactory
                 .build(), true, true));
 
         return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
+    }
+
+    @NotNull
+    private static ImmuneEscapeRecord createTestImmuneEscapeRecord()
+    {
+        return TestImmuneEscapeFactory.builder().hasHlaEscape(true).build();
     }
 
     @NotNull

@@ -4,6 +4,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.HLAAlleleTable;
+import com.hartwig.hmftools.orange.report.tables.ImmuneEscapeTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
@@ -47,6 +48,7 @@ public class ImmunologyChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addHLAData(document);
+        addImmuneEscapeData(document);
     }
 
     private void addHLAData(@NotNull Document document)
@@ -61,5 +63,12 @@ public class ImmunologyChapter implements ReportChapter
         String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
         boolean isTumorFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
         document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources, isTumorFail));
+    }
+
+    private void addImmuneEscapeData(@NotNull Document document)
+    {
+        String title = "Genetic Immune Escape";
+        boolean isTumorFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
+        document.add(ImmuneEscapeTable.build(title, contentWidth(), report.immuneEscape(), reportResources, isTumorFail));
     }
 }
