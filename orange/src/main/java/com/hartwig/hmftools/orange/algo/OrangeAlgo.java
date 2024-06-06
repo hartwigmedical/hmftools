@@ -221,12 +221,7 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
-        // TODO update hasRef flag after LILAC v1.6 is released, which fixes tumor-only fragments
-        // being written to the ref field.
-        //   boolean hasRef = config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null;
-        boolean hasRef = true;
-        boolean hasRna = config.rnaConfig() != null;
-
+        boolean hasRefSample = config.wgsRefConfig() != null && config.wgsRefConfig().referenceSampleId() != null;
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .samplingDate(config.samplingDate())
@@ -241,7 +236,7 @@ public class OrangeAlgo
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(OrangeConversion.convert(lilac, hasRef, hasRna))
+                .lilac(OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null))
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
