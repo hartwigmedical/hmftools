@@ -505,7 +505,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
 
         private static boolean valueIndicatesNull(String rawValue)
         {
-            return rawValue.isEmpty() || rawValue.equals("null") || rawValue.equals("NULL");
+            return rawValue.equals("null") || rawValue.equals("NULL");
         }
     }
 }

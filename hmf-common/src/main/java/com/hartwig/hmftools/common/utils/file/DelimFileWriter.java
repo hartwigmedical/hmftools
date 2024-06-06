@@ -50,7 +50,7 @@ public class DelimFileWriter<T> implements AutoCloseable
 {
     // by default, use 4 decimal places for doubles
     private static final NumberFormat sDefaultNumberFormat = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
-    private static final String sNullIndicator = "";
+    private static final String sNullIndicator = "null";
 
     final String mDelimiter;
 
