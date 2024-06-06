@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
@@ -49,7 +48,7 @@ public class ReportGeneratorTestApplication
 
     // Switch LIMIT_JSON_OUTPUT to true if you want to generate the real.orange.json test resource in orange-datamodel!
     private static final boolean LIMIT_JSON_OUTPUT = false;
-    private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR);
+    private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
     private static final boolean TUMOR_ONLY = false;
 
     public static void main(String[] args) throws Exception
