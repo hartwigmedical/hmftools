@@ -68,7 +68,10 @@ public abstract class ShellCommand
         return this;
     }
 
-    public abstract String toString();
+    public String toString()
+    {
+        return mProcessBuilder.command().toString();
+    };
 
     public ShellCommand run()
     {
@@ -99,7 +102,6 @@ public abstract class ShellCommand
         }
         catch(IOException | RuntimeException e)
         {
-
             CUP_LOGGER.error("Failed to run command({}) with exit code({})", mProcessBuilder.command(), String.valueOf(mExitCode));
             System.exit(mExitCode);
         }
@@ -134,16 +136,16 @@ public abstract class ShellCommand
         return stdout;
     }
 
-    public List<String> getStdout()
+    public List<String> getStdout(boolean warnEmpty)
     {
-        if(mStdout.size()==0)
+        if(warnEmpty & mStdout.size()==0)
             CUP_LOGGER.warn("stdout is empty for command({})", mProcessBuilder.command());
 
         return mStdout;
     }
 
-    public String getStdoutAsString()
+    public List<String> getStdout()
     {
-        return String.join("\n", getStdout());
+        return getStdout(true);
     }
 }
