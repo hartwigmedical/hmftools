@@ -154,7 +154,7 @@
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000335508",
-          "hgvsCodingImpact": "c.2153C\u003eT",
+          "hgvsCodingImpact": "c.2153C>T",
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": null,
           "affectedExon": null,
@@ -168,7 +168,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000462613",
-            "hgvsCodingImpact": "n.108C\u003eT",
+            "hgvsCodingImpact": "n.108C>T",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -181,7 +181,7 @@
           },
           {
             "transcript": "NM_012433",
-            "hgvsCodingImpact": "c.2153C\u003eT",
+            "hgvsCodingImpact": "c.2153C>T",
             "hgvsProteinImpact": "p.Pro718Leu",
             "affectedCodon": null,
             "affectedExon": null,
@@ -381,7 +381,7 @@
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000355716",
-          "hgvsCodingImpact": "c.50A\u003eG",
+          "hgvsCodingImpact": "c.50A>G",
           "hgvsProteinImpact": "p.Lys17Arg",
           "affectedCodon": null,
           "affectedExon": null,
@@ -395,7 +395,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000416860",
-            "hgvsCodingImpact": "n.36-18T\u003eC",
+            "hgvsCodingImpact": "n.36-18T>C",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -408,7 +408,7 @@
           },
           {
             "transcript": "ENST00000452793",
-            "hgvsCodingImpact": "n.56-18T\u003eC",
+            "hgvsCodingImpact": "n.56-18T>C",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -421,7 +421,7 @@
           },
           {
             "transcript": "ENST00000426449",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -434,7 +434,7 @@
           },
           {
             "transcript": "ENST00000434817",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -447,7 +447,7 @@
           },
           {
             "transcript": "ENST00000435221",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -460,7 +460,7 @@
           },
           {
             "transcript": "ENST00000451778",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -473,7 +473,7 @@
           },
           {
             "transcript": "ENST00000409119",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -486,7 +486,7 @@
           },
           {
             "transcript": "ENST00000475523",
-            "hgvsCodingImpact": "n.70+259A\u003eG",
+            "hgvsCodingImpact": "n.70+259A>G",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -499,7 +499,7 @@
           },
           {
             "transcript": "ENST00000442392",
-            "hgvsCodingImpact": "n.310A\u003eG",
+            "hgvsCodingImpact": "n.310A>G",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -512,7 +512,7 @@
           },
           {
             "transcript": "ENST00000482074",
-            "hgvsCodingImpact": "n.309A\u003eG",
+            "hgvsCodingImpact": "n.309A>G",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -525,7 +525,7 @@
           },
           {
             "transcript": "ENST00000496064",
-            "hgvsCodingImpact": "n.158A\u003eG",
+            "hgvsCodingImpact": "n.158A>G",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -538,7 +538,7 @@
           },
           {
             "transcript": "ENST00000463471",
-            "hgvsCodingImpact": "n.144A\u003eG",
+            "hgvsCodingImpact": "n.144A>G",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -551,7 +551,7 @@
           },
           {
             "transcript": "NM_003820",
-            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsCodingImpact": "c.50A>G",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -593,7 +593,7 @@
         "worstCodingEffect": "NONE",
         "canonicalImpact": {
           "transcript": "ENST00000336411",
-          "hgvsCodingImpact": "c.522-191C\u003eT",
+          "hgvsCodingImpact": "c.522-191C>T",
           "hgvsProteinImpact": "",
           "affectedCodon": null,
           "affectedExon": null,
@@ -607,7 +607,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000354593",
-            "hgvsCodingImpact": "c.72-191C\u003eT",
+            "hgvsCodingImpact": "c.72-191C>T",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
