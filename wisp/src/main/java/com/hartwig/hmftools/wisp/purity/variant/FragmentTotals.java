@@ -109,24 +109,12 @@ public class FragmentTotals
 
     public double adjSampleVaf() { return mSampleDepthPerCopyNumberTotal > 0 ? mSampleAdjustedFragsTotal / mSampleDepthPerCopyNumberTotal : 0; }
 
-    public double adjSampleVaf(double sampleAdAdjustment)
+    public double weightedSampleDepth()
     {
-        if(mSampleDepthPerCopyNumberTotal == 0)
-            return 0;
-
-        double avgCopyNumber = mTumorCopyNumberTotal / mVariantCount;
-        double adjSampleAdTotal = mSampleAdjustedFragsTotal + sampleAdAdjustment / avgCopyNumber;
-
-        return adjSampleAdTotal / mSampleDepthPerCopyNumberTotal;
+        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
     }
 
     // for WA_VCN and WA_CN
     public double weightedVariantCopyNumber() { return mSampleDepthTotal > 0 ? mVcnSampleDepthTotal / mSampleDepthTotal : 0; }
     public double weightedCopyNumber() { return mSampleDepthTotal > 0 ? mCnSampleDepthTotal / mSampleDepthTotal : 0; }
-
-    public double weightedSampleDepth()
-    {
-        // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
-        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
-    }
 }

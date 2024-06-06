@@ -56,14 +56,14 @@ format_purity<-function(purity)
 
 if(nrow(sampleSummary) == 1 & nrow(variantImpliedTFs) > 0 & clonalMethod != 'NONE')
 {
-    # no further filters to apply
-
     # filtering and plotting threshold
-    minVariantCount = 4
+    minVariantCount = 3
 
     rawSomaticPurity = sampleSummary$RawSomaticPurity
     maxImpliedTF = max(variantImpliedTFs$ImpliedTF)
     impliedTfBucket = pmin(0.01,maxImpliedTF/100)
+
+    variantImpliedTFs = variantImpliedTFs %>% mutate(ImpliedTF=pmin(ImpliedTF,2.0))
 
     peakPurity = sampleSummary$SNVPurity
     peakPurityLow = sampleSummary$SNVPurityLow

@@ -25,7 +25,6 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_NTH_
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
-import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.NO_PEAK;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.VAF_PEAK;
 
 import java.io.BufferedWriter;
