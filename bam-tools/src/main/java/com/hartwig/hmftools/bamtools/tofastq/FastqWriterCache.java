@@ -39,7 +39,7 @@ public class FastqWriterCache implements AutoCloseable
         }
         else
         {
-            mSingleWriter = new FastqWriter(mConfig.formFilePrefix(threadId, ""));
+            mSingleWriter = new FastqWriter(mConfig.formFilePrefix(threadId, "", true));
         }
     }
 
@@ -47,7 +47,7 @@ public class FastqWriterCache implements AutoCloseable
     {
         for(String readGroupId : ToFastqUtils.getReadGroupIds(mConfig))
         {
-            FastqWriter fastqWriter = new FastqWriter(mConfig.formFilePrefix(mThreadId, readGroupId));
+            FastqWriter fastqWriter = new FastqWriter(mConfig.formFilePrefix(mThreadId, readGroupId, false));
             mReadGroupWriters.put(readGroupId, fastqWriter);
         }
     }

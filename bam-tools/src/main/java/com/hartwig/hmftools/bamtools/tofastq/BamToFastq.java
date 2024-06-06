@@ -176,7 +176,7 @@ public class BamToFastq
             case NONE:
             {
                 BT_LOGGER.info("start merging fastqs");
-                String filePrefix = mConfig.formFilePrefix("", "");
+                String filePrefix = mConfig.formFilePrefix("", "", true);
                 String r1Fastq = formFilename(filePrefix, R1);
                 String r2Fastq = formFilename(filePrefix, R2);
                 String unpairedFastq = formFilename(filePrefix, UNPAIRED);
@@ -195,10 +195,12 @@ public class BamToFastq
                 BT_LOGGER.info("start merging fastqs by read groups");
                 for(String readGroupId : ToFastqUtils.getReadGroupIds(mConfig))
                 {
-                    String filePrefix = mConfig.formFilePrefix("", readGroupId);
+                    String filePrefix = mConfig.formFilePrefix("", readGroupId, false);
                     String r1Fastq = formFilename(filePrefix, R1);
                     String r2Fastq = formFilename(filePrefix, R2);
                     String unpairedFastq = formFilename(filePrefix, UNPAIRED);
+
+                    BT_LOGGER.info("RG({}) R1 fastq({}) R2 fastq({})", readGroupId, r1Fastq, r2Fastq);
 
                     // gather all the fastq writers
                     List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(o -> o.getReadGroupFastqWriter(readGroupId))

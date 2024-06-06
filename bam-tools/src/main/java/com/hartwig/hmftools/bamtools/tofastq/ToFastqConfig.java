@@ -21,6 +21,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -93,23 +96,26 @@ public class ToFastqConfig
         BT_LOGGER.info("splitMode({})", SplitMode);
     }
 
-    public String formFilePrefix(final String threadId, final String readGroupId)
+    public String formFilePrefix(final String threadId, final String readGroupId, boolean includeBamFilePrefix)
     {
-        String bamFile = filenamePart(BamFile);
-        String fileprefix = bamFile.substring(0, bamFile.indexOf("."));
+        List<String> filenameParts = new ArrayList<>();
 
-        String filename = OutputDir + fileprefix;
+        if(includeBamFilePrefix)
+        {
+            String bamFile = filenamePart(BamFile);
+            filenameParts.add(bamFile.substring(0, bamFile.indexOf(".")));
+        }
 
         if(!threadId.isEmpty())
-            filename += "." + threadId;
+            filenameParts.add(threadId);
 
         if(!readGroupId.isEmpty())
-            filename += "." + readGroupId;
+            filenameParts.add(readGroupId);
 
         if(OutputId != null)
-            filename += "." + OutputId;
+            filenameParts.add(OutputId);
 
-        return filename;
+        return OutputDir + String.join(".", filenameParts);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
