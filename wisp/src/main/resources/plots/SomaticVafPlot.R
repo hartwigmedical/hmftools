@@ -62,7 +62,6 @@ if(nrow(sampleSummary) == 1 & nrow(variantImpliedTFs) > 0 & clonalMethod != 'NON
     minVariantCount = 4
 
     rawSomaticPurity = sampleSummary$RawSomaticPurity
-    # impliedTfBucket = pmin(0.01,rawSomaticPurity/100)
     maxImpliedTF = max(variantImpliedTFs$ImpliedTF)
     impliedTfBucket = pmin(0.01,maxImpliedTF/100)
 

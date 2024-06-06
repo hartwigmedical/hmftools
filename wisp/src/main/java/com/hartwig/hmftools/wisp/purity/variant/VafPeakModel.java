@@ -10,8 +10,10 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_ABS_MIN;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MIN;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MAX_IMPLIED_TF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
@@ -89,7 +91,10 @@ public class VafPeakModel extends ClonalityModel
             double depth = sampleFragData.Depth;
             int alleleFrags = sampleFragData.AlleleCount;
             double variantAf = alleleFrags / depth;
-            double impliedTf = max(2 * variantAf / (variantCopyNumber + 2 * variantAf - copyNumber * variantAf), 0); // uncapped
+            double impliedTf = max(2 * variantAf / (variantCopyNumber + 2 * variantAf - copyNumber * variantAf), 0);
+
+            impliedTf = min(impliedTf, SOMATIC_PEAK_MAX_IMPLIED_TF);
+
             variantImpliedTFs.add(impliedTf);
 
             if(writePeakData)
@@ -148,25 +153,24 @@ public class VafPeakModel extends ClonalityModel
     private double calculateDensityBandwidth(
             final double rawEstimatedPurity, final double weightedSampleDepth, final List<Double> variantImpliedTFs, double multiplier)
     {
-        // bandwidth = min[max(0.2*rawTF,10/wAD, 0.25 * nth highest TF), 3*rawTF]
-
         int variantCount = variantImpliedTFs.size();
         int nthItem = (int)round(max(SOMATIC_PEAK_NTH_RATIO_MIN, SOMATIC_PEAK_NTH_RATIO * variantCount));
 
         double nthImpliedTf = variantImpliedTFs.get(variantCount - nthItem);
 
-        double densityBandwidth = max(nthImpliedTf * 0.125, 10 / weightedSampleDepth);
+        double densityBandwidth = max(nthImpliedTf * 0.125, 5 / weightedSampleDepth);
 
         densityBandwidth *= multiplier;
 
         densityBandwidth = max(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MIN);
         densityBandwidth = min(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MAX);
 
+        densityBandwidth = min(densityBandwidth, SOMATIC_PEAK_BANDWIDTH_ABS_MIN);
+
         return densityBandwidth;
     }
 
     private static final int PEAK_BUCKET_COUNT = 100;
-    private static final double PEAK_BUCKET_WIDTH = 0.1;
 
     private VafPeak findMaxVafPeak(final List<Double> variantImpliedTFs, double rawPurityEstimate, double densityBandwidth)
     {

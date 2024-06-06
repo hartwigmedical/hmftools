@@ -34,6 +34,8 @@ public class PurityConstants
     public static final double SOMATIC_PEAK_NTH_RATIO_MIN = 3;
     public static final double SOMATIC_PEAK_BANDWIDTH_MAX = 3;
     public static final double SOMATIC_PEAK_BANDWIDTH_MIN = 0.2;
+    public static final double SOMATIC_PEAK_BANDWIDTH_ABS_MIN = 0.1;
+    public static final double SOMATIC_PEAK_MAX_IMPLIED_TF = 2;
 
     public static final int LOW_COUNT_MODEL_MIN_FRAG_VARIANTS = 4;
     public static final int LOW_COUNT_MODEL_MIN_AVG_DEPTH = 50;
