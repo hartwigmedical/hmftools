@@ -41,7 +41,7 @@ public final class ImmuneEscapeTable
         table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasCD58InactivationEscape(), isTumorFail)));
         table.addCell(cells.createContent(Strings.EMPTY));
 
-        table.addCell(cells.createContent("Epigenetic driven immune escape via SETDB1"));
+        table.addCell(cells.createContent("Epigenetics driven immune escape via SETDB1"));
         table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasEpigeneticSETDB1Escape(), isTumorFail)));
         table.addCell(cells.createContent(Strings.EMPTY));
 
