@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
@@ -53,6 +54,8 @@ public class ReadContextMatcher
             else
                 return index == IndexLower || index == IndexUpper;
         }
+
+        public String toString() { return format("%d-%d %s", IndexLower, IndexUpper, IsRange ? "range" : "values"); }
     }
 
     public ReadContextMatcher(final VariantReadContext variantReadContext, boolean allowMismatches)
@@ -68,7 +71,8 @@ public class ReadContextMatcher
             int altIndexUpper = determineIndelLowQualUpperIndex(variantReadContext);
 
             mLowQualExclusionRead = new LowQualExclusion(altIndexLower, altIndexUpper, false);
-            mLowQualExclusionRef = mLowQualExclusionRead;
+            int refIndexDiff = mContext.leftFlankLength();
+            mLowQualExclusionRef = new LowQualExclusion(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff, false);
         }
         else
         {

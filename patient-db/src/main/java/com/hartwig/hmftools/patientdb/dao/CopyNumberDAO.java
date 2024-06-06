@@ -21,22 +21,23 @@ import org.jooq.InsertValuesStep18;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class CopyNumberDAO {
-
-    @NotNull
+class CopyNumberDAO
+{
     private final DSLContext context;
 
-    CopyNumberDAO(@NotNull final DSLContext context) {
+    CopyNumberDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    @NotNull
-    public List<PurpleCopyNumber> read(@NotNull String sample) {
+    public List<PurpleCopyNumber> read(final String sample)
+    {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
         Result<Record> result = context.select().from(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             copyNumbers.add(ImmutablePurpleCopyNumber.builder()
                     .chromosome(record.getValue(COPYNUMBER.CHROMOSOME))
                     .start(record.getValue(COPYNUMBER.START))
@@ -59,11 +60,13 @@ class CopyNumberDAO {
         return copyNumbers;
     }
 
-    void writeCopyNumber(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    void writeCopyNumber(final String sample, final List<PurpleCopyNumber> copyNumbers)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
-        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
+        for(List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStep18 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
@@ -88,8 +91,9 @@ class CopyNumberDAO {
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
-            @NotNull PurpleCopyNumber region) {
+    private static void addCopynumberRecord(
+            final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final PurpleCopyNumber region)
+    {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
@@ -110,7 +114,8 @@ class CopyNumberDAO {
                 timestamp);
     }
 
-    void deleteCopyNumberForSample(@NotNull String sample) {
+    void deleteCopyNumberForSample(final String sample)
+    {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 }

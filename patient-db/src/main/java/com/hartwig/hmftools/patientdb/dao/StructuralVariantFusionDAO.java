@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -35,12 +36,12 @@ public class StructuralVariantFusionDAO
     @NotNull
     private final DSLContext context;
 
-    public StructuralVariantFusionDAO(@NotNull final DSLContext context)
+    public StructuralVariantFusionDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    public void deleteAnnotationsForSample(@NotNull String sampleId)
+    public void deleteAnnotationsForSample(final String sampleId)
     {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
@@ -74,8 +75,7 @@ public class StructuralVariantFusionDAO
                 );
     }
 
-    public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<LinxBreakend> breakends,
-            @NotNull List<LinxFusion> fusions)
+    public void writeBreakendsAndFusions(final String sampleId, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
     {
         deleteAnnotationsForSample(sampleId);
 
@@ -138,7 +138,7 @@ public class StructuralVariantFusionDAO
 
         for(List<LinxFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep18 fusionInserter = context.insertInto(SVFUSION,
+            InsertValuesStep19 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -146,6 +146,7 @@ public class StructuralVariantFusionDAO
                     SVFUSION.NAME,
                     SVFUSION.REPORTED,
                     SVFUSION.REPORTEDTYPE,
+                    SVFUSION.REPORTEDREASON,
                     SVFUSION.PHASED,
                     SVFUSION.LIKELIHOOD,
                     SVFUSION.CHAINLENGTH,
@@ -175,6 +176,7 @@ public class StructuralVariantFusionDAO
                         fusion.name(),
                         fusion.reported(),
                         fusion.reportedType(),
+                        DatabaseUtil.checkStringLength(fusion.reportableReasons(), SVFUSION.REPORTEDREASON),
                         fusion.phased().toString(),
                         fusion.likelihood().toString(),
                         fusion.chainLength(),
@@ -193,7 +195,7 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    List<LinxFusion> readFusions(@NotNull String sample)
+    List<LinxFusion> readFusions(final String sample)
     {
         List<LinxFusion> fusionList = Lists.newArrayList();
 
@@ -234,7 +236,7 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    List<LinxBreakend> readBreakends(@NotNull String sample)
+    List<LinxBreakend> readBreakends(final String sample)
     {
         List<LinxBreakend> breakendList = Lists.newArrayList();
 

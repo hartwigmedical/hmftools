@@ -16,11 +16,9 @@ import org.jooq.InsertValuesStep7;
 
 public class CuppaDAO
 {
-
-    @NotNull
     private final DSLContext context;
 
-    CuppaDAO(@NotNull final DSLContext context)
+    CuppaDAO(final DSLContext context)
     {
         this.context = context;
     }
@@ -54,16 +52,12 @@ public class CuppaDAO
         return category.toString();
     }
 
-    void deleteCuppaForSample(@NotNull String sample)
+    void deleteCuppaForSample(final String sample)
     {
         context.delete(CUPPA).where(CUPPA.SAMPLEID.eq(sample)).execute();
     }
 
-    void writeCuppa2(
-            @NotNull final String sample,
-            @NotNull CuppaPredictions cuppaPredictions,
-            @NotNull final int topNProbs
-    ) throws IOException
+    void writeCuppa2(final String sample, final CuppaPredictions cuppaPredictions, final int topNProbs)
     {
         deleteCuppaForSample(sample);
 
@@ -80,12 +74,12 @@ public class CuppaDAO
 
         LocalDateTime timestamp = LocalDateTime.now();
 
-        cuppaPredictions = cuppaPredictions
+        CuppaPredictions cuppaPredictionsSorted = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)
                 .getTopPredictions(topNProbs)
                 .sortByRank();
 
-        for(CuppaPredictionEntry cuppaPredictionEntry : cuppaPredictions.PredictionEntries)
+        for(CuppaPredictionEntry cuppaPredictionEntry : cuppaPredictionsSorted.PredictionEntries)
         {
             inserter.values(
                     timestamp,
@@ -101,7 +95,7 @@ public class CuppaDAO
         inserter.execute();
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood)
+    void writeCuppa(final String sample, final String cancerType, double likelihood)
     {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();

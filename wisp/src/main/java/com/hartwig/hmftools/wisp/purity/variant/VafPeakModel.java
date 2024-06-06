@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_ABS_MIN;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MIN;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MAX_IMPLIED_TF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
@@ -31,7 +30,6 @@ import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.VAF_PEAK;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -65,9 +63,11 @@ public class VafPeakModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity)
+    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
-        List<Double> variantVafRatios = Lists.newArrayList();
+        List<Double> variantImpliedTFs = Lists.newArrayList();
+
+        double rawEstimatedPurity = purityCalcData.RawPurityEstimate;
 
         double sampleWad = fragmentTotals.weightedSampleDepth();
         int depthThreshold = (int)max(SOMATIC_PEAK_MIN_AVG_DEPTH, sampleWad * SOMATIC_PEAK_MIN_DEPTH_PERC);
@@ -87,62 +87,42 @@ public class VafPeakModel extends ClonalityModel
             double copyNumber = variant.CopyNumber;
             double variantCopyNumber = variant.VariantCopyNumber;
 
-            double expectedDp = ((1 - rawEstimatedPurity) * sampleWad * 2 + rawEstimatedPurity * sampleWad * copyNumber) / 2;
+            // calculate an implied tumor fraction per variant
+            double depth = sampleFragData.Depth;
+            int alleleFrags = sampleFragData.AlleleCount;
+            double variantAf = alleleFrags / depth;
+            double impliedTf = max(2 * variantAf / (variantCopyNumber + 2 * variantAf - copyNumber * variantAf), 0);
 
-            double expectedAd = rawEstimatedPurity * variantCopyNumber / (copyNumber * rawEstimatedPurity + (1 - rawEstimatedPurity) * 2) * expectedDp;
+            impliedTf = min(impliedTf, SOMATIC_PEAK_MAX_IMPLIED_TF);
 
-            /*
-            SampleExpDp = ((1 - SampleEstTF) * SampleWAD * 2 + SampleEstTF * SampleWAD * CopyNumber) / 2
-            SampleExpAd = SampleEstTF * VCN / (CopyNumber * SampleEstTF + (1 - SampleEstTF) * 2) * SampleExpDp
-            SampleExpVaf= SampleExpAd / SampleExpDp
-            */
-
-            if(expectedDp <= 0)
-                continue;
-
-            double expectedVaf = expectedAd / expectedDp;
-
-            double vafRatio = sampleFragData.vaf() / expectedVaf;
-
-            variantVafRatios.add(vafRatio);
+            variantImpliedTFs.add(impliedTf);
 
             if(writePeakData)
-                writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, vafRatio);
+                writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, impliedTf);
         }
 
-        int variantCount = variantVafRatios.size();
+        int variantCount = variantImpliedTFs.size();
 
         if(variantCount < SOMATIC_PEAK_MIN_VARIANTS)
             return NO_RESULT;
 
-        Collections.sort(variantVafRatios);
+        Collections.sort(variantImpliedTFs);
 
-        double sampleAdjVaf = fragmentTotals.adjSampleVaf();
+        double densityBandwidth = calculateDensityBandwidth(rawEstimatedPurity, sampleWad, variantImpliedTFs, 1);
 
-        double densityBandwidth = calculateDensityBandwidth(sampleAdjVaf, sampleWad, variantVafRatios, 1);
+        VafPeak impliedTfPeak = findMaxVafPeak(variantImpliedTFs, rawEstimatedPurity, densityBandwidth);
 
-        VafPeak vafRatioPeak = findMaxVafRatioPeak(variantVafRatios, densityBandwidth);
+        if(impliedTfPeak == null)
+            return NO_RESULT;
 
-        ClonalityMethod method = NO_PEAK;
-        double mainPeak = 1;
+        ClonalityMethod method = VAF_PEAK;
+        double mainPeak = impliedTfPeak.Peak;
 
-        if(vafRatioPeak != null && vafRatioPeak.Peak > 1)
-        {
-            mainPeak = vafRatioPeak.Peak;
-            method = VAF_PEAK;
-        }
+        double densityBandwidthLow = calculateDensityBandwidth(purityCalcData.PurityRangeLow, sampleWad, variantImpliedTFs, 2);
+        VafPeak vafRatioPeakLow = findMaxVafPeak(variantImpliedTFs, purityCalcData.PurityRangeLow, densityBandwidthLow);
 
-        int alleleCount = fragmentTotals.sampleAdTotal();
-
-        double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
-        double sampleAdjVafLow = fragmentTotals.adjSampleVaf(lowProbAlleleCount - alleleCount);
-        double densityBandwidthLow = calculateDensityBandwidth(sampleAdjVafLow, sampleWad, variantVafRatios, 2);
-        VafPeak vafRatioPeakLow = findMaxVafRatioPeak(variantVafRatios, densityBandwidthLow);
-
-        double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
-        double sampleAdjVafHigh = fragmentTotals.adjSampleVaf(highProbAlleleCount - alleleCount);
-        double densityBandwidthHigh = calculateDensityBandwidth(sampleAdjVafHigh, sampleWad, variantVafRatios, 0.5);
-        VafPeak vafRatioPeakHigh = findMaxVafRatioPeak(variantVafRatios, densityBandwidthHigh);
+        double densityBandwidthHigh = calculateDensityBandwidth(purityCalcData.PurityRangeHigh, sampleWad, variantImpliedTFs, 0.5);
+        VafPeak vafRatioPeakHigh = findMaxVafPeak(variantImpliedTFs, purityCalcData.PurityRangeHigh, densityBandwidthHigh);
 
         double peakHigh = 0;
         double peakLow = 0;
@@ -164,69 +144,56 @@ public class VafPeakModel extends ClonalityModel
         }
 
         return new ClonalityData(
-                method,
-                mainPeak * sampleAdjVaf,
-                peakLow * sampleAdjVafLow,
-                peakHigh * sampleAdjVafHigh,
-                vafRatioPeak != null ? vafRatioPeak.Count : 0,
+                method, mainPeak, peakLow, peakHigh,
+                impliedTfPeak != null ? impliedTfPeak.Count : 0,
                 0,
                 densityBandwidth, densityBandwidthLow, densityBandwidthHigh);
     }
 
     private double calculateDensityBandwidth(
-            final double sampleAdjVaf, final double weightedSampleDepth, final List<Double> sampleVafRatios, final double multiplier)
+            final double rawEstimatedPurity, final double weightedSampleDepth, final List<Double> variantImpliedTFs, double multiplier)
     {
-        /*
-        nthRatio = round(pmax(3,0.08*nrow(peakVars)))
-        calcBW = peakVars %>% arrange(-VafRatio) %>% summarise(NthRatio=nth(VafRatio-1,nthRatio))
-        minBW=10/(adjSampleVaf*weightedAvgDepth)
-        finalBW=pmin(pmax(0.2,pmax(calcBW$NthRatio/4,minBW)),3)
-         */
-
-        int variantCount = sampleVafRatios.size();
+        int variantCount = variantImpliedTFs.size();
         int nthItem = (int)round(max(SOMATIC_PEAK_NTH_RATIO_MIN, SOMATIC_PEAK_NTH_RATIO * variantCount));
 
-        double nthRatio = sampleVafRatios.get(variantCount - nthItem);
-        double minBandwidth = 10 / (sampleAdjVaf * weightedSampleDepth);
+        double nthImpliedTf = variantImpliedTFs.get(variantCount - nthItem);
 
-        double densityBandwidth = max((nthRatio - 1) / 4, minBandwidth);
+        double densityBandwidth = max(nthImpliedTf * 0.125, 5 / weightedSampleDepth);
 
         densityBandwidth *= multiplier;
 
-        return min(max(SOMATIC_PEAK_BANDWIDTH_MIN, densityBandwidth), SOMATIC_PEAK_BANDWIDTH_MAX);
+        densityBandwidth = max(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MIN);
+        densityBandwidth = min(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MAX);
+
+        densityBandwidth = min(densityBandwidth, SOMATIC_PEAK_BANDWIDTH_ABS_MIN);
+
+        return densityBandwidth;
     }
 
-    private static final double PEAK_VAF_RATIO_BUFFER = 0.1;
-    private static final double VAF_RATIO_BUCKET = 0.1; // ratio buckets
-    private static final int MAX_VAF_RATIO = 20;
+    private static final int PEAK_BUCKET_COUNT = 100;
 
-    private VafPeak findMaxVafRatioPeak(final List<Double> sampleVafRatios, double densityBandwidth)
+    private VafPeak findMaxVafPeak(final List<Double> variantImpliedTFs, double rawPurityEstimate, double densityBandwidth)
     {
-        double maxVafRatio = 0;
-        for(double vafRatio : sampleVafRatios)
+        int variantCount = variantImpliedTFs.size();
+        int nthItem = max((int)floor(variantImpliedTFs.size() * SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC), SOMATIC_PEAK_MIN_PEAK_VARIANTS);
+        double nthValue = variantImpliedTFs.get(variantCount - nthItem);
+
+        double bucketUnit = nthValue / PEAK_BUCKET_COUNT;
+
+        double[] impliedTFs = new double[PEAK_BUCKET_COUNT];
+
+        for(int i = 0; i < PEAK_BUCKET_COUNT; ++i)
         {
-            maxVafRatio = max(maxVafRatio, vafRatio);
+            impliedTFs[i] = i * bucketUnit;
         }
 
-        int maxVafRatioLimit = min((int)ceil(maxVafRatio), MAX_VAF_RATIO);
+        KernelEstimator estimator = new KernelEstimator(bucketUnit, densityBandwidth);
 
-        int vafRatioBuckets = (int)(maxVafRatioLimit / VAF_RATIO_BUCKET);
+        variantImpliedTFs.forEach(x -> estimator.addValue(x, 1.0));
 
-        double[] vafRatios = new double[vafRatioBuckets + 1];
-
-        for(int i = 0; i <= vafRatioBuckets; ++i)
-        {
-            vafRatios[i] = i * VAF_RATIO_BUCKET;
-        }
-
-        KernelEstimator estimator = new KernelEstimator(VAF_RATIO_BUCKET, densityBandwidth);
-
-        sampleVafRatios.forEach(x -> estimator.addValue(x, 1.0));
-
-        double[] densities = DoubleStream.of(vafRatios).map(estimator::getProbability).toArray();
+        double[] densities = DoubleStream.of(impliedTFs).map(estimator::getProbability).toArray();
 
         double densityTotal = Arrays.stream(densities).sum();
-        int ratioCount = sampleVafRatios.size();
 
         final List<VafPeak> vafPeaks = Lists.newArrayList();
 
@@ -248,7 +215,7 @@ public class VafPeakModel extends ClonalityModel
             if(!Doubles.greaterThan(density, densities[i - 1]) || !Doubles.greaterThan(density, densities[i + 1]))
                 continue;
 
-            double vafRatio = vafRatios[i];
+            double impliedTf = impliedTFs[i];
 
             if(peakStart < 0)
                 continue;
@@ -274,30 +241,18 @@ public class VafPeakModel extends ClonalityModel
                 peakDensityTotal += varDensity;
             }
 
-            double impliedPeakVarCount = peakDensityTotal / densityTotal * ratioCount;
-            double impliedPeakVarPerc = impliedPeakVarCount / ratioCount;
+            double impliedPeakVarCount = peakDensityTotal / densityTotal * variantCount;
+            double impliedPeakVarPerc = impliedPeakVarCount / variantCount;
 
             if(impliedPeakVarCount < SOMATIC_PEAK_MIN_PEAK_VARIANTS || impliedPeakVarPerc < SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC)
                 continue;
 
             int peakCount = (int)round(impliedPeakVarCount);
 
-            /*
-            int peakCount = 0;
-            for(Double variantVar : sampleVafRatios)
-            {
-                if(variantVar >= vafRatio - PEAK_VAF_RATIO_BUFFER && variantVar <= vafRatio + PEAK_VAF_RATIO_BUFFER)
-                    ++peakCount;
-            }
-
-            if(peakCount < SOMATIC_PEAK_MIN_PEAK_VARIANTS)
-                continue;
-            */
-
             CT_LOGGER.trace(format("somatic vafRatio peak(%.3f @ %d) count(%d) range(%d - %d)",
-                    vafRatio, i, peakCount, peakStart, peakEnd));
+                    impliedTf, i, peakCount, peakStart, peakEnd));
 
-            vafPeaks.add(new VafPeak(vafRatio, peakCount));
+            vafPeaks.add(new VafPeak(impliedTf, peakCount));
             lastPeakIndex = peakStart;
             peakStart = -1;
         }
@@ -344,7 +299,7 @@ public class VafPeakModel extends ClonalityModel
 
             addCommonHeaderFields(sj, config);
 
-            sj.add("VariantInfo").add("VafRatio");
+            sj.add("VariantInfo").add("ImpliedTF");
             writer.write(sj.toString());
             writer.newLine();
 
@@ -359,7 +314,7 @@ public class VafPeakModel extends ClonalityModel
 
     private static synchronized void writePeakData(
             final BufferedWriter writer, final PurityConfig config,
-            final SampleData sampleData, final String sampleId, final SomaticVariant variant, final double vafRatio)
+            final SampleData sampleData, final String sampleId, final SomaticVariant variant, final double impliedTf)
     {
         if(writer == null)
             return;
@@ -371,7 +326,7 @@ public class VafPeakModel extends ClonalityModel
             addCommonFields(sj, config, sampleData, sampleId);
 
             sj.add(format("%s %d %s>%s", variant.Chromosome, variant.Position, variant.Ref, variant.Alt));
-            sj.add(format("%.4f", vafRatio));
+            sj.add(format("%.6f", impliedTf));
 
             writer.write(sj.toString());
 

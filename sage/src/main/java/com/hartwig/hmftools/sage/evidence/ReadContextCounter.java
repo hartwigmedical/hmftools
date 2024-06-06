@@ -270,7 +270,7 @@ public class ReadContextCounter
             return CHIMERIC;
         }
 
-        RawContext rawContext = RawContext.create(mVariant, record);
+        RawContext rawContext = RawContext.createFromRead(mVariant, record);
 
         if(mConfig.Quality.HighDepthMode && rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
         {
@@ -413,9 +413,9 @@ public class ReadContextCounter
                 else if(realignedType == LENGTHENED)
                     mJitterData.update(JitterMatch.LENGTHENED);
             }
-            else
+            else if(!coreCovered || readVarIndex < 0)
             {
-                // since realignment also finds no valid overlap, there's nothing more to check
+                // exit if would have earlier but for the realignment test
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
                 return readVarIndex < 0 ? UNRELATED : NON_CORE;
             }

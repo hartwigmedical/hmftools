@@ -19,4 +19,9 @@ public enum ClonalityMethod
                 return false;
         }
     }
+
+    public static boolean convertVafToPurity(final ClonalityMethod method)
+    {
+        return method == LOW_COUNT;
+    }
 }

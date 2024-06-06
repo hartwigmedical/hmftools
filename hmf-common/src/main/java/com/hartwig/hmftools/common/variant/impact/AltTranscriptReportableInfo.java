@@ -12,19 +12,22 @@ import org.apache.logging.log4j.util.Strings;
 
 public class AltTranscriptReportableInfo
 {
+    public final String GeneName;
     public final String TransName;
     public final String HgvsCoding;
     public final String HgvsProtein;
     public final String Effects;
     public final CodingEffect Effect;
 
-    public static final String VAR_IMPACT_OTHER_REPORT_ITEM_DELIM = "|";
     public static final String VAR_IMPACT_OTHER_REPORT_DELIM = "--"; // a single hyphen conflicts with the HGVS coding annotation
-    public static final int VAR_IMPACT_OTHER_REPORT_ITEM_COUNT = 5;
+    private static final String VAR_IMPACT_OTHER_REPORT_ITEM_DELIM = "|";
+    private static final int VAR_IMPACT_OTHER_REPORT_ITEM_COUNT = 6;
+    private static final int VAR_IMPACT_OTHER_REPORT_ITEM_COUNT_OLD = 5;
 
     public AltTranscriptReportableInfo(
-            final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
+            final String geneName, final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
     {
+        GeneName = geneName;
         TransName = transName;
         HgvsCoding = hgvsCoding;
         HgvsProtein = hgvsProtein;
@@ -52,20 +55,34 @@ public class AltTranscriptReportableInfo
     public static AltTranscriptReportableInfo parse(final String transInfo)
     {
         String[] transValues = transInfo.split("\\" + VAR_IMPACT_OTHER_REPORT_ITEM_DELIM, -1);
-        if(transValues.length != VAR_IMPACT_OTHER_REPORT_ITEM_COUNT)
+        if(transValues.length < VAR_IMPACT_OTHER_REPORT_ITEM_COUNT_OLD)
             return null;
 
+        int itemIndex = 0;
+        String geneName = "";
+
+        if(transValues.length == VAR_IMPACT_OTHER_REPORT_ITEM_COUNT)
+        {
+            geneName = transValues[itemIndex++];
+        }
+
         return new AltTranscriptReportableInfo(
-                transValues[0], transValues[1], transValues[2], transValues[3], CodingEffect.valueOf(transValues[4]));
+                geneName,
+                transValues[itemIndex++],
+                transValues[itemIndex++],
+                transValues[itemIndex++],
+                transValues[itemIndex++],
+                CodingEffect.valueOf(transValues[itemIndex]));
     }
 
-    public String serialise() { return serialise(TransName, HgvsCoding, HgvsProtein, Effects, Effect); }
+    public String serialise() { return serialise(GeneName, TransName, HgvsCoding, HgvsProtein, Effects, Effect); }
 
     public static String serialise(
-            final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
+            final String geneName, final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
     {
-        // eg ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
+        // eg CDKN2A|ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
         StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_ITEM_DELIM);
+        sj.add(geneName);
         sj.add(transName);
         sj.add(hgvsCoding);
         sj.add(hgvsProtein);

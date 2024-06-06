@@ -144,7 +144,7 @@ public class StrandBiasData
 
     private ReadContextMatch determineReadContextMatch(final ReadContextCounter rcCounter, final SAMRecord read)
     {
-        RawContext rawContext = RawContext.create(rcCounter.variant(), read);
+        RawContext rawContext = RawContext.createFromRead(rcCounter.variant(), read);
 
         if(rawContext.ReadVariantIndex < 0)
             return ReadContextMatch.NONE;

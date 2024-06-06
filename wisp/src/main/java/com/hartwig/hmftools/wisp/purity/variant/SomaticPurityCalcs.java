@@ -13,11 +13,6 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public final class SomaticPurityCalcs
 {
-    public static double estimatedPurityOld(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double noiseRate)
-    {
-        return max(sampleVaf - noiseRate, 0) / tumorVaf * tumorPurity;
-    }
-
     public static double estimatedPurity(final double sampleVaf, final double noiseRate, final FragmentTotals fragmentTotals)
     {
         double noiseAdjSampleVaf = max(sampleVaf - noiseRate, 0);

@@ -19,3 +19,10 @@ CREATE TABLE `peachGenotype`
     `urlPrescriptionInfo` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 );
+
+
+
+# Linx
+
+ALTER TABLE somaticVariant
+    ADD COLUMN reportedReason varchar(255) NULL after reportedType;

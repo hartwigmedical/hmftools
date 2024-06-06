@@ -25,16 +25,15 @@ import org.jooq.InsertValuesStep20;
 
 public class IsofoxDAO
 {
-    @NotNull
     private final DSLContext context;
 
     private static final int DB_BATCH_INSERT_SIZE = 10000;
 
-    public IsofoxDAO(@NotNull final DSLContext context) {
+    public IsofoxDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void deleteSampleData(@NotNull String sampleId)
+    void deleteSampleData(final String sampleId)
     {
         context.delete(RNASTATISTICS).where(RNASTATISTICS.SAMPLEID.eq(sampleId)).execute();
         context.delete(GENEEXPRESSION).where(GENEEXPRESSION.SAMPLEID.eq(sampleId)).execute();
@@ -42,7 +41,7 @@ public class IsofoxDAO
         context.delete(RNAFUSION).where(RNAFUSION.SAMPLEID.eq(sampleId)).execute();
     }
 
-    public void writeRnaStatistics(@NotNull String sampleId, @NotNull RnaStatistics statistics)
+    public void writeRnaStatistics(final String sampleId, final RnaStatistics statistics)
     {
         context.delete(RNASTATISTICS).where(RNASTATISTICS.SAMPLEID.eq(sampleId)).execute();
 
@@ -84,7 +83,7 @@ public class IsofoxDAO
         inserter.execute();
     }
 
-    public void writeGeneExpressions(@NotNull String sampleId, @NotNull List<GeneExpression> geneExpressions)
+    public void writeGeneExpressions(final String sampleId, final List<GeneExpression> geneExpressions)
     {
         context.delete(GENEEXPRESSION).where(GENEEXPRESSION.SAMPLEID.eq(sampleId)).execute();
 
@@ -125,7 +124,7 @@ public class IsofoxDAO
                 DatabaseUtil.decimal(geneExpression.percentileCohort()));
     }
 
-    public void writeNovelSpliceJunctions(@NotNull String sampleId, @NotNull List<NovelSpliceJunction> novelJunctions)
+    public void writeNovelSpliceJunctions(final String sampleId, final List<NovelSpliceJunction> novelJunctions)
     {
         context.delete(NOVELSPLICEJUNCTION).where(NOVELSPLICEJUNCTION.SAMPLEID.eq(sampleId)).execute();
 
@@ -176,7 +175,7 @@ public class IsofoxDAO
                 novelJunction.cohortFrequency());
     }
 
-    public void writeRnaFusions(@NotNull String sampleId, @NotNull List<RnaFusion> rnaFusions)
+    public void writeRnaFusions(final String sampleId, final List<RnaFusion> rnaFusions)
     {
         context.delete(RNAFUSION).where(RNAFUSION.SAMPLEID.eq(sampleId)).execute();
 

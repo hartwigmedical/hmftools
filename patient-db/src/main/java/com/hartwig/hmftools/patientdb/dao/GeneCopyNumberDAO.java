@@ -30,16 +30,14 @@ import org.jooq.Result;
 
 public class GeneCopyNumberDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    GeneCopyNumberDAO(@NotNull final DSLContext context)
+    GeneCopyNumberDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    @NotNull
-    public List<GeneCopyNumber> readCopyNumbers(@NotNull String sample, @NotNull List<String> genes)
+    public List<GeneCopyNumber> readCopyNumbers(final String sample, final List<String> genes)
     {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -77,7 +75,6 @@ public class GeneCopyNumberDAO
         return geneCopyNumbers;
     }
 
-    @NotNull
     public List<GermlineDeletion> readGermlineDeletions(final String sample)
     {
         List<GermlineDeletion> germlineDeletions = Lists.newArrayList();

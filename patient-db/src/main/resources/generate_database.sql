@@ -1020,6 +1020,7 @@ CREATE TABLE `svFusion`
     `name` VARCHAR(50) NOT NULL,
     `reported` TINYINT(1) NOT NULL,
     `reportedType` VARCHAR(50) NOT NULL,
+    `reportedReason` VARCHAR(255),
     `phased` VARCHAR(20) NOT NULL,
     `likelihood` VARCHAR(10) NOT NULL,
     `chainLength` INT,

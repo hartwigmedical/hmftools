@@ -18,52 +18,62 @@ import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
 import org.jooq.tools.StringUtils;
 
-class EcrfDAO {
-
-    @NotNull
+class EcrfDAO
+{
     private final DSLContext context;
 
-    EcrfDAO(@NotNull final DSLContext context) {
+    EcrfDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void clearCpct() {
+    void clearCpct()
+    {
         clear(CPCTECRF.getName(), CPCTECRFDATAMODEL.getName());
     }
 
-    void clearDrup() {
+    void clearDrup()
+    {
         clear(DRUPECRF.getName(), DRUPECRFDATAMODEL.getName());
     }
 
-    private void clear(@NotNull String ecrfTable, @NotNull String ecrfDatamodelTable) {
+    private void clear(final String ecrfTable, final String ecrfDatamodelTable)
+    {
         context.truncate(ecrfTable).execute();
         context.truncate(ecrfDatamodelTable).execute();
     }
 
-    void writeCpctDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields) {
+    void writeCpctDatamodel(final Iterable<EcrfDatamodelField> datamodelFields)
+    {
         writeDatamodel(datamodelFields, this::cpctDatamodelInserter);
     }
 
-    void writeDrupDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields) {
+    void writeDrupDatamodel(final Iterable<EcrfDatamodelField> datamodelFields)
+    {
         writeDatamodel(datamodelFields, this::drupDatamodelInserter);
     }
 
-    private void writeDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields, @NotNull Supplier<InsertValuesStep4> inserter) {
-        context.batch(StreamSupport.stream(datamodelFields.spliterator(), false).map(field -> {
+    private void writeDatamodel(final Iterable<EcrfDatamodelField> datamodelFields, final Supplier<InsertValuesStep4> inserter)
+    {
+        context.batch(StreamSupport.stream(datamodelFields.spliterator(), false).map(field ->
+        {
             String codeList = StringUtils.join(field.codeList().values().toArray(), ",");
             return inserter.get().values(field.name(), field.description(), codeList, field.isRelevant() ? "TRUE" : "FALSE");
         }).collect(Collectors.toList())).execute();
     }
 
-    void writeCpctPatient(@NotNull EcrfPatient patient, boolean sequenced) {
+    void writeCpctPatient(final EcrfPatient patient, boolean sequenced)
+    {
         writePatient(patient, sequenced, this::cpctInserter);
     }
 
-    void writeDrupPatient(@NotNull EcrfPatient patient, boolean sequenced) {
+    void writeDrupPatient(final EcrfPatient patient, boolean sequenced)
+    {
         writePatient(patient, sequenced, this::drupInserter);
     }
 
-    private void writePatient(@NotNull EcrfPatient patient, boolean sequenced, @NotNull Supplier<InsertValuesStep14> inserter) {
+    private void writePatient(final EcrfPatient patient, boolean sequenced, final Supplier<InsertValuesStep14> inserter)
+    {
         context.batch(patient.fields()
                 .stream()
                 .map(field -> inserter.get()
@@ -84,8 +94,8 @@ class EcrfDAO {
                 .collect(Collectors.toList())).execute();
     }
 
-    @NotNull
-    private InsertValuesStep4 cpctDatamodelInserter() {
+    private InsertValuesStep4 cpctDatamodelInserter()
+    {
         return context.insertInto(CPCTECRFDATAMODEL,
                 CPCTECRFDATAMODEL.FIELDNAME,
                 CPCTECRFDATAMODEL.DESCRIPTION,
@@ -93,8 +103,8 @@ class EcrfDAO {
                 CPCTECRFDATAMODEL.RELEVANT);
     }
 
-    @NotNull
-    private InsertValuesStep4 drupDatamodelInserter() {
+    private InsertValuesStep4 drupDatamodelInserter()
+    {
         return context.insertInto(DRUPECRFDATAMODEL,
                 DRUPECRFDATAMODEL.FIELDNAME,
                 DRUPECRFDATAMODEL.DESCRIPTION,
@@ -102,8 +112,8 @@ class EcrfDAO {
                 DRUPECRFDATAMODEL.RELEVANT);
     }
 
-    @NotNull
-    private InsertValuesStep14 cpctInserter() {
+    private InsertValuesStep14 cpctInserter()
+    {
         return context.insertInto(CPCTECRF,
                 CPCTECRF.PATIENTID,
                 CPCTECRF.STUDYEVENT,
@@ -121,8 +131,8 @@ class EcrfDAO {
                 CPCTECRF.RELEVANT);
     }
 
-    @NotNull
-    private InsertValuesStep14 drupInserter() {
+    private InsertValuesStep14 drupInserter()
+    {
         return context.insertInto(DRUPECRF,
                 DRUPECRF.PATIENTID,
                 DRUPECRF.STUDYEVENT,

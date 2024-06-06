@@ -15,20 +15,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
 
-public class VirusInterpreterDAO {
+public class VirusInterpreterDAO
+{
 
-    @NotNull
     private final DSLContext context;
 
-    VirusInterpreterDAO(@NotNull final DSLContext context) {
+    VirusInterpreterDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+    void writeVirusInterpreter(final String sample, final List<AnnotatedVirus> virusAnnotations)
+    {
         deleteVirusAnnotationForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        for (List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
+        for(List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStep12 inserter = context.insertInto(VIRUSANNOTATION,
                     VIRUSANNOTATION.MODIFIED,
                     VIRUSANNOTATION.SAMPLEID,
@@ -47,8 +50,9 @@ public class VirusInterpreterDAO {
         }
     }
 
-    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
-            @NotNull AnnotatedVirus annotatedVirus) {
+    private static void addVirusAnnotation(final Timestamp timestamp, final InsertValuesStep12 inserter, final String sample,
+            final AnnotatedVirus annotatedVirus)
+    {
         VirusType interpretation = annotatedVirus.interpretation();
         inserter.values(timestamp,
                 sample,
@@ -64,7 +68,8 @@ public class VirusInterpreterDAO {
                 annotatedVirus.virusDriverLikelihoodType());
     }
 
-    void deleteVirusAnnotationForSample(@NotNull String sample) {
+    void deleteVirusAnnotationForSample(final String sample)
+    {
         context.delete(VIRUSANNOTATION).where(VIRUSANNOTATION.SAMPLEID.eq(sample)).execute();
     }
 }

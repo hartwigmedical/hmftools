@@ -31,15 +31,14 @@ import org.jooq.Result;
 
 class DriverCatalogDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    DriverCatalogDAO(@NotNull final DSLContext context)
+    DriverCatalogDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    void writePurpleDrivers(@NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog)
+    void writePurpleDrivers(final String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog)
     {
         if(somaticCatalog != null)
             write(sample, somaticCatalog, Sets.newHashSet(DRIVERS_PURPLE_SOMATIC));
@@ -48,7 +47,7 @@ class DriverCatalogDAO
             write(sample, germlineCatalog, Sets.newHashSet(DRIVERS_PURPLE_GERMLINE));
     }
 
-    void writeLinxDrivers(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes)
+    void writeLinxDrivers(final String sample, final List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes)
     {
         write(sample, driverCatalog, driverTypes);
     }
@@ -60,7 +59,7 @@ class DriverCatalogDAO
         insert(sample, filtered);
     }
 
-    private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog)
+    private void insert(final String sample, final List<DriverCatalog> driverCatalog)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for(List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE))

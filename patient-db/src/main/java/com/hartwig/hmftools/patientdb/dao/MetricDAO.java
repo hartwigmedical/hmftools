@@ -8,58 +8,60 @@ import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-class MetricDAO {
+class MetricDAO
+{
 
-    @NotNull
     private final DSLContext context;
 
-    MetricDAO(@NotNull final DSLContext context) {
+    MetricDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {
+    void writeMetrics(final String sample, final WGSMetricWithQC metrics)
+    {
         deleteMetricForSample(sample);
 
         WGSMetrics refMetrics = metrics.refMetrics();
         WGSMetrics tumorMetrics = metrics.tumorMetrics();
 
         context.insertInto(METRIC,
-                METRIC.SAMPLEID,
-                METRIC.REFMEANCOVERAGE,
-                METRIC.REFSDCOVERAGE,
-                METRIC.REFMEDIANCOVERAGE,
-                METRIC.REFMADCOVERAGE,
-                METRIC.REFPCTEXCADAPTER,
-                METRIC.REFPCTEXCMAPQ,
-                METRIC.REFPCTEXCDUPE,
-                METRIC.REFPCTEXCUNPAIRED,
-                METRIC.REFPCTEXCBASEQ,
-                METRIC.REFPCTEXCOVERLAP,
-                METRIC.REFPCTEXCCAPPED,
-                METRIC.REFPCTEXCTOTAL,
-                METRIC.REFCOVERAGE1XPERCENTAGE,
-                METRIC.REFCOVERAGE10XPERCENTAGE,
-                METRIC.REFCOVERAGE20XPERCENTAGE,
-                METRIC.REFCOVERAGE30XPERCENTAGE,
-                METRIC.REFCOVERAGE60XPERCENTAGE,
-                METRIC.TUMORMEANCOVERAGE,
-                METRIC.TUMORSDCOVERAGE,
-                METRIC.TUMORMEDIANCOVERAGE,
-                METRIC.TUMORMADCOVERAGE,
-                METRIC.TUMORPCTEXCADAPTER,
-                METRIC.TUMORPCTEXCMAPQ,
-                METRIC.TUMORPCTEXCDUPE,
-                METRIC.TUMORPCTEXCUNPAIRED,
-                METRIC.TUMORPCTEXCBASEQ,
-                METRIC.TUMORPCTEXCOVERLAP,
-                METRIC.TUMORPCTEXCCAPPED,
-                METRIC.TUMORPCTEXCTOTAL,
-                METRIC.TUMORCOVERAGE1XPERCENTAGE,
-                METRIC.TUMORCOVERAGE10XPERCENTAGE,
-                METRIC.TUMORCOVERAGE20XPERCENTAGE,
-                METRIC.TUMORCOVERAGE30XPERCENTAGE,
-                METRIC.TUMORCOVERAGE60XPERCENTAGE,
-                METRIC.SUFFICIENTCOVERAGE)
+                        METRIC.SAMPLEID,
+                        METRIC.REFMEANCOVERAGE,
+                        METRIC.REFSDCOVERAGE,
+                        METRIC.REFMEDIANCOVERAGE,
+                        METRIC.REFMADCOVERAGE,
+                        METRIC.REFPCTEXCADAPTER,
+                        METRIC.REFPCTEXCMAPQ,
+                        METRIC.REFPCTEXCDUPE,
+                        METRIC.REFPCTEXCUNPAIRED,
+                        METRIC.REFPCTEXCBASEQ,
+                        METRIC.REFPCTEXCOVERLAP,
+                        METRIC.REFPCTEXCCAPPED,
+                        METRIC.REFPCTEXCTOTAL,
+                        METRIC.REFCOVERAGE1XPERCENTAGE,
+                        METRIC.REFCOVERAGE10XPERCENTAGE,
+                        METRIC.REFCOVERAGE20XPERCENTAGE,
+                        METRIC.REFCOVERAGE30XPERCENTAGE,
+                        METRIC.REFCOVERAGE60XPERCENTAGE,
+                        METRIC.TUMORMEANCOVERAGE,
+                        METRIC.TUMORSDCOVERAGE,
+                        METRIC.TUMORMEDIANCOVERAGE,
+                        METRIC.TUMORMADCOVERAGE,
+                        METRIC.TUMORPCTEXCADAPTER,
+                        METRIC.TUMORPCTEXCMAPQ,
+                        METRIC.TUMORPCTEXCDUPE,
+                        METRIC.TUMORPCTEXCUNPAIRED,
+                        METRIC.TUMORPCTEXCBASEQ,
+                        METRIC.TUMORPCTEXCOVERLAP,
+                        METRIC.TUMORPCTEXCCAPPED,
+                        METRIC.TUMORPCTEXCTOTAL,
+                        METRIC.TUMORCOVERAGE1XPERCENTAGE,
+                        METRIC.TUMORCOVERAGE10XPERCENTAGE,
+                        METRIC.TUMORCOVERAGE20XPERCENTAGE,
+                        METRIC.TUMORCOVERAGE30XPERCENTAGE,
+                        METRIC.TUMORCOVERAGE60XPERCENTAGE,
+                        METRIC.SUFFICIENTCOVERAGE)
                 .values(sample,
                         DatabaseUtil.decimal(refMetrics.meanCoverage()),
                         DatabaseUtil.decimal(refMetrics.sdCoverage()),
@@ -99,7 +101,8 @@ class MetricDAO {
                 .execute();
     }
 
-    void deleteMetricForSample(@NotNull String sample) {
+    void deleteMetricForSample(final String sample)
+    {
         context.delete(METRIC).where(METRIC.SAMPLEID.eq(sample)).execute();
     }
 }

@@ -29,28 +29,31 @@ import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class AmberDAO {
-
-    @NotNull
+class AmberDAO
+{
     private final DSLContext context;
 
-    AmberDAO(@NotNull final DSLContext context) {
+    AmberDAO(final DSLContext context)
+    {
         this.context = context;
     }
 
-    void truncatePatients() {
+    void truncatePatients()
+    {
         context.delete(AMBERPATIENT).execute();
     }
 
-    void truncateMappings() {
+    void truncateMappings()
+    {
         context.delete(AMBERMAPPING).execute();
     }
 
-    @NotNull
-    List<AmberPatient> readPatients() {
+    public List<AmberPatient> readPatients()
+    {
         final List<AmberPatient> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERPATIENT).fetch();
-        for (Record record : queryResult) {
+        for(Record record : queryResult)
+        {
             result.add(ImmutableAmberPatient.builder()
                     .patientId(record.get(AMBERPATIENT.PATIENTID))
                     .sample(record.get(AMBERPATIENT.SAMPLEID))
@@ -60,15 +63,17 @@ class AmberDAO {
         return result;
     }
 
-    @NotNull
-    List<AmberSample> readSamples() {
+    public List<AmberSample> readSamples()
+    {
         final List<AmberSample> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERSAMPLE).fetch();
 
-        for (Record record : queryResult) {
+        for(Record record : queryResult)
+        {
             int size = record.valuesRow().size();
             final byte[] entries = new byte[size - 2];
-            for (int i = 0; i < size - 2; i++) {
+            for(int i = 0; i < size - 2; i++)
+            {
                 entries[i] = record.get(i + 2, Byte.class);
             }
 
@@ -78,8 +83,10 @@ class AmberDAO {
         return result;
     }
 
-    void writePatients(@NotNull List<AmberPatient> patients) {
-        if (patients.isEmpty()) {
+    public void writePatients(final List<AmberPatient> patients)
+    {
+        if(patients.isEmpty())
+        {
             return;
         }
 
@@ -90,7 +97,8 @@ class AmberDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         InsertValuesStep3 inserter = context.insertInto(AMBERPATIENT, AMBERPATIENT.MODIFIED, AMBERPATIENT.PATIENTID, AMBERPATIENT.SAMPLEID);
 
-        for (AmberPatient amberPatient : patients) {
+        for(AmberPatient amberPatient : patients)
+        {
             inserter.values(timestamp, amberPatient.patientId(), amberPatient.sample());
         }
 
@@ -98,8 +106,10 @@ class AmberDAO {
 
     }
 
-    void writeAnonymous(@NotNull List<AmberAnonymous> patients) {
-        if (patients.isEmpty()) {
+    public void writeAnonymous(final List<AmberAnonymous> patients)
+    {
+        if(patients.isEmpty())
+        {
             return;
         }
         context.truncate(AMBERANONYMOUS).execute();
@@ -109,18 +119,20 @@ class AmberDAO {
                 AMBERANONYMOUS.SAMPLEID,
                 AMBERANONYMOUS.HMFSAMPLEID,
                 AMBERANONYMOUS.DELETED);
-        for (AmberAnonymous amberPatient : patients) {
+        for(AmberAnonymous amberPatient : patients)
+        {
             inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId(), amberPatient.deleted());
         }
         inserter.execute();
     }
 
-    @NotNull
-    List<AmberAnonymous> readAnonymous() {
+    public List<AmberAnonymous> readAnonymous()
+    {
         final List<AmberAnonymous> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERANONYMOUS).fetch();
 
-        for (Record record : queryResult) {
+        for(Record record : queryResult)
+        {
             result.add(ImmutableAmberAnonymous.builder()
                     .sampleId(record.get(AMBERANONYMOUS.SAMPLEID))
                     .hmfSampleId(record.get(AMBERANONYMOUS.HMFSAMPLEID))
@@ -131,7 +143,8 @@ class AmberDAO {
         return result;
     }
 
-    void writeMapping(@NotNull String sample, @NotNull List<AmberMapping> mapping) {
+    void writeMapping(final String sample, final List<AmberMapping> mapping)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
@@ -145,7 +158,8 @@ class AmberDAO {
                 AMBERMAPPING.SITES,
                 AMBERMAPPING.LIKELIHOOD);
 
-        for (AmberMapping amberPatient : mapping) {
+        for(AmberMapping amberPatient : mapping)
+        {
             inserter.values(timestamp,
                     amberPatient.firstSample(),
                     amberPatient.secondSample(),
@@ -157,9 +171,11 @@ class AmberDAO {
         inserter.execute();
     }
 
-    void writeIdentity(@NotNull AmberSample identity) {
+    void writeIdentity(final AmberSample identity)
+    {
         byte[] entries = identity.entries();
-        if (entries.length != AMBERSAMPLE.fields().length - 2) {
+        if(entries.length != AMBERSAMPLE.fields().length - 2)
+        {
             throw new IllegalArgumentException(
                     "Identity has " + entries.length + " sites but " + (AMBERSAMPLE.fields().length - 2) + " are required");
 
@@ -273,7 +289,8 @@ class AmberDAO {
         List<Object> collection = new ArrayList<>();
         collection.add(new Timestamp(new Date().getTime()));
         collection.add(identity.sampleId());
-        for (final byte entry : entries) {
+        for(final byte entry : entries)
+        {
             collection.add(entry);
         }
 
@@ -281,7 +298,8 @@ class AmberDAO {
         inserter.execute();
     }
 
-    void deleteAmberRecordsForSample(@NotNull String sample) {
+    void deleteAmberRecordsForSample(final String sample)
+    {
         context.update(AMBERANONYMOUS).set(AMBERANONYMOUS.DELETED, (byte) 1).where(AMBERANONYMOUS.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERPATIENT).where(AMBERPATIENT.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();

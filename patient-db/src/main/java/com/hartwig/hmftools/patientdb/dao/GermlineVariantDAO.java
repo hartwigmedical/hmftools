@@ -40,15 +40,13 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineVariantDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    public GermlineVariantDAO(@NotNull final DSLContext context)
+    public GermlineVariantDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    @NotNull
     public BufferedWriter<VariantContext> writer(String tumorSample, String referenceSample, String rnaSample)
     {
         BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<>()
@@ -69,25 +67,24 @@ public class GermlineVariantDAO
         return new BufferedWriter<>(consumer);
     }
 
-    private void writeAll(@NotNull final Timestamp timestamp, String tumorSample, String referenceSample, String rnaSample,
-            @NotNull List<VariantContext> variants)
+    private void writeAll(final Timestamp timestamp, String tumorSample, String referenceSample, String rnaSample,
+            final List<VariantContext> variants)
     {
         final InsertValuesStepN inserter = createInserter();
         variants.forEach(variant -> addRecord(timestamp, inserter, tumorSample, referenceSample, rnaSample, variant));
         inserter.execute();
     }
 
-    public void deleteGermlineVariantsForSample(@NotNull String sampleId)
+    public void deleteGermlineVariantsForSample(final String sampleId)
     {
         context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
     }
 
-    public void deleteGermlineStructuralVariantsForSample(@NotNull String sampleId)
+    public void deleteGermlineStructuralVariantsForSample(final String sampleId)
     {
         context.delete(STRUCTURALVARIANTGERMLINE).where(STRUCTURALVARIANTGERMLINE.SAMPLEID.eq(sampleId)).execute();
     }
 
-    @NotNull
     private InsertValuesStepN createInserter()
     {
         return context.insertInto(GERMLINEVARIANT,
@@ -191,7 +188,7 @@ public class GermlineVariantDAO
         );
     }
 
-    protected static String checkTrimHgsvString(final String hgvsStr, @NotNull TableField<?, String> field)
+    protected static String checkTrimHgsvString(final String hgvsStr, final TableField<?, String> field)
     {
         int maxLength = field.getDataType().length();
 
@@ -360,8 +357,7 @@ public class GermlineVariantDAO
                 germlineBreakend.totalExonCount());
     }
 
-    @NotNull
-    public List<GermlineVariant> read(@NotNull String sample)
+    public List<GermlineVariant> read(final String sample)
     {
         List<GermlineVariant> variants = Lists.newArrayList();
 

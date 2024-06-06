@@ -72,7 +72,7 @@ public class LowCountModel extends ClonalityModel
                 ++oneFragVariantCount;
         }
 
-        if(oneFragVariantCount + twoPlusFragVariantCount < LOW_COUNT_MODEL_MIN_FRAG_VARIANTS)
+        if(twoPlusFragVariantCount < LOW_COUNT_MODEL_MIN_FRAG_VARIANTS)
             return false;
 
         if(fragmentTotals.weightedSampleDepth() >= LOW_COUNT_MODEL_MIN_AVG_DEPTH)
@@ -84,9 +84,10 @@ public class LowCountModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity)
+    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
         double estimateVaf = fragmentTotals.adjSampleVaf();
+        double rawEstimatedPurity = purityCalcData.RawPurityEstimate;
 
         if(estimateVaf == 0)
             return NO_RESULT;

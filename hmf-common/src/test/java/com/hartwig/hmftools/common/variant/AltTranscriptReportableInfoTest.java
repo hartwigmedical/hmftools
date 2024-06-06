@@ -32,11 +32,11 @@ public class AltTranscriptReportableInfoTest
     public void canExtractFromMultipleOtherEffects()
     {
         AltTranscriptReportableInfo altInfo1 = new AltTranscriptReportableInfo(
-                "ENST00000579755", "c.194-3_194-2delCA", "p.?",
+                "CDKN2A", "ENST00000579755", "c.194-3_194-2delCA", "p.?",
                 "splice_acceptor_variant&intron_variant", CodingEffect.SPLICE);
 
         AltTranscriptReportableInfo altInfo2 = new AltTranscriptReportableInfo(
-                "ENST00000123456", "c.194-3_194-2delCA", "p.?",
+                "SOME_GENE","ENST00000123456", "c.194-3_194-2delCA", "p.?",
                 "splice_acceptor_variant&intron_variant", CodingEffect.NONSENSE_OR_FRAMESHIFT);
 
         String example = altInfo1.serialise() + VAR_IMPACT_OTHER_REPORT_DELIM + altInfo2.serialise();

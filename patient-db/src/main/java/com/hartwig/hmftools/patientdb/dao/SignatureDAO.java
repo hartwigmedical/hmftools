@@ -20,15 +20,14 @@ import org.jooq.Result;
 
 class SignatureDAO
 {
-    @NotNull
     private final DSLContext context;
 
-    SignatureDAO(@NotNull final DSLContext context)
+    SignatureDAO(final DSLContext context)
     {
         this.context = context;
     }
 
-    public void write(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations)
+    public void write(final String sample, final List<SignatureAllocation> sigAllocations)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -48,8 +47,8 @@ class SignatureDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull SignatureAllocation sigAllocation)
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStep5 inserter, final String sample,
+            final SignatureAllocation sigAllocation)
     {
         inserter.values(sample,
                 timestamp,
@@ -58,8 +57,7 @@ class SignatureDAO
                 DatabaseUtil.decimal(sigAllocation.percent()));
     }
 
-    @NotNull
-    public List<SignatureAllocation> readAllocations(@NotNull String sample)
+    public List<SignatureAllocation> readAllocations(final String sample)
     {
         List<SignatureAllocation> sigAllocationList = Lists.newArrayList();
 
@@ -79,7 +77,7 @@ class SignatureDAO
         return sigAllocationList;
     }
 
-    void deleteSignatureDataForSample(@NotNull String sample)
+    void deleteSignatureDataForSample(final String sample)
     {
         context.delete(SIGNATURE).where(SIGNATURE.SAMPLEID.eq(sample)).execute();
     }

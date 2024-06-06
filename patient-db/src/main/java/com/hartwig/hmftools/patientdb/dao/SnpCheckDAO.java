@@ -5,21 +5,21 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SNPCHEC
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-public class SnpCheckDAO {
-
-    @NotNull
+public class SnpCheckDAO
+{
     private final DSLContext context;
 
-    SnpCheckDAO(@NotNull final DSLContext context) {
+    SnpCheckDAO(final DSLContext context) {
         this.context = context;
     }
 
-    void write(@NotNull String sample, boolean isPass) {
+    void write(final String sample, boolean isPass)
+    {
         deleteSnpCheckForSample(sample);
         context.insertInto(SNPCHECK, SNPCHECK.SAMPLEID, SNPCHECK.ISPASS).values(sample, isPass ? (byte) 1 : (byte) 0).execute();
     }
 
-    void deleteSnpCheckForSample(@NotNull String sample) {
+    void deleteSnpCheckForSample(final String sample) {
         context.delete(SNPCHECK).where(SNPCHECK.SAMPLEID.eq(sample)).execute();
     }
 }

@@ -50,8 +50,8 @@ public class Realignment
         if(!variant.isDelete())
             return false;
 
-        int posDiff = record.getAlignmentStart() - variant.Position;
-        return posDiff <= variant.refLength();
+        int unclippedStartPos = record.getAlignmentStart() - CigarUtils.leftSoftClipLength(record);
+        return unclippedStartPos - variant.Position < abs(variant.indelLength());
     }
 
     public static final int INVALID_INDEX = -1;
