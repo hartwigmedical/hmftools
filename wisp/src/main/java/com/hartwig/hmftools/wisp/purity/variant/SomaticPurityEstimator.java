@@ -102,6 +102,11 @@ public class SomaticPurityEstimator
             purityCalcData.ErrorRate = noiseRate;
         }
 
+        if(purityCalcData.RawPurityEstimate < 0)
+        {
+            purityCalcData.RawPurityEstimate = fragmentTotals.rawSampleVaf();
+        }
+
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
         int alleleCount = fragmentTotals.sampleAdTotal();

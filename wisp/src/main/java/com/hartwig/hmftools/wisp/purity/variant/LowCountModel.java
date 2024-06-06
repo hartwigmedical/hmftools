@@ -72,7 +72,7 @@ public class LowCountModel extends ClonalityModel
                 ++oneFragVariantCount;
         }
 
-        if(oneFragVariantCount + twoPlusFragVariantCount < LOW_COUNT_MODEL_MIN_FRAG_VARIANTS)
+        if(twoPlusFragVariantCount < LOW_COUNT_MODEL_MIN_FRAG_VARIANTS)
             return false;
 
         if(fragmentTotals.weightedSampleDepth() >= LOW_COUNT_MODEL_MIN_AVG_DEPTH)

@@ -25,8 +25,8 @@ public class PurityConstants
 
     public static final int SOMATIC_PEAK_MIN_VARIANTS = 10;
     public static final double SOMATIC_PEAK_MIN_DEPTH_PERC = 0.1;
-    public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 5;
-    public static final double SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC = 0.05;
+    public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 4;
+    public static final double SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC = 0.04;
 
     public static final int SOMATIC_PEAK_MIN_FRAG_VARIANTS = 10;
     public static final int SOMATIC_PEAK_MIN_AVG_DEPTH = 20;
@@ -35,7 +35,7 @@ public class PurityConstants
     public static final double SOMATIC_PEAK_BANDWIDTH_MAX = 3;
     public static final double SOMATIC_PEAK_BANDWIDTH_MIN = 0.2;
 
-    public static final int LOW_COUNT_MODEL_MIN_FRAG_VARIANTS = 5;
+    public static final int LOW_COUNT_MODEL_MIN_FRAG_VARIANTS = 4;
     public static final int LOW_COUNT_MODEL_MIN_AVG_DEPTH = 50;
 
     public static final int LOW_COUNT_MODEL_MIN_2_PLUS_FRAGS = 2;

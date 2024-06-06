@@ -114,9 +114,9 @@ public class SomaticPurityResult
         sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
         sj.add(format("%.1f", FragTotals.weightedVariantCopyNumber()));
         sj.add(format("%.1f", FragTotals.weightedCopyNumber()));
-        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidth));
-        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthLow));
-        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthHigh));
+        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidth));
+        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthLow));
+        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthHigh));
         sj.add(format("%.6f", PurityCalcs.ErrorRate));
         sj.add(format("%.6f", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));
