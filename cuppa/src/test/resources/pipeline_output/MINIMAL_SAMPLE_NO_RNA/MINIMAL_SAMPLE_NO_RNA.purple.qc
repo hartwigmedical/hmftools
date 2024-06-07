@@ -1,0 +1,12 @@
+QCStatus	PASS
+Method	NORMAL
+CopyNumberSegments	210
+UnsupportedCopyNumberSegments	0
+Purity	0.2000
+AmberGender	FEMALE
+CobaltGender	FEMALE
+DeletedGenes	4
+Contamination	0.0
+GermlineAberrations	NONE
+AmberMeanDepth	111
+LohPercent	0.1930
