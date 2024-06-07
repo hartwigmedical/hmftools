@@ -531,7 +531,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 * Reads cannot provide soft-clip support for a variant
-* Variants must have at least 3 supporting fragments with unique start and end coordinates, or get soft filtered with `minFragmentCoords`
+* Variants must have at least 3 supporting fragments with unique start AND 3 supporting fragments with unique end coordinates, or get soft filtered with `minFragmentCoords` (hotspots excluded)
 * INDEL variants in or near microsatellite repeats must meet a minimum VAF dependent upon the repeat context, or get soft filtered with `jitter`
 * SNV variants with VAF < 1% and inside a microsatellite repeat of length > 5 get soft filtered with `jitter`
 * Mapping quality is used in a different way. Specifically, we use a different fixed penalty for `modifiedMapQuality`:
