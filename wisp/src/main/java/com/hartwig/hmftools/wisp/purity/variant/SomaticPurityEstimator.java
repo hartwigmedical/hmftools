@@ -87,6 +87,9 @@ public class SomaticPurityEstimator
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
         if(!mConfig.SkipBqr)
         {
+            if(!mBqrAdjustment.hasValidData())
+                return INVALID_RESULT;
+
             for(int threshold : SNV_QUAL_THRESHOLDS)
             {
                 calculateThresholdValues(sampleId, purityCalcData, variants, threshold);

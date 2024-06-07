@@ -39,7 +39,9 @@ public class SomaticVariant
     private double mSequenceGcRatio;
     private boolean mIsProbeVariant;
 
-    public SomaticVariant(final VariantContextDecorator variantDecorator, final double subclonalPerc, final List<FilterReason> filterReasons)
+    public SomaticVariant(
+            final VariantContextDecorator variantDecorator, final double subclonalPerc, final List<FilterReason> filterReasons,
+            boolean hasSyntheticTumor)
     {
         Chromosome = variantDecorator.chromosome();
         Position = variantDecorator.position();
@@ -47,8 +49,8 @@ public class SomaticVariant
         Alt = variantDecorator.alt();
         Type = variantDecorator.type();
         SubclonalPerc = subclonalPerc;
-        CopyNumber = variantDecorator.adjustedCopyNumber();
-        VariantCopyNumber = variantDecorator.variantCopyNumber();
+        CopyNumber = !hasSyntheticTumor ? variantDecorator.adjustedCopyNumber() : 2;
+        VariantCopyNumber = !hasSyntheticTumor ? variantDecorator.variantCopyNumber() : 1;
         Tier = variantDecorator.tier();
         Reported = variantDecorator.reported();
         RepeatCount = variantDecorator.repeatCount();

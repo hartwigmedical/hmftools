@@ -38,6 +38,8 @@ public class BqrAdjustment
 
     private static final byte NO_KEY_VALUE = 1;
 
+    public boolean hasValidData() { return !mBqrContextData.isEmpty(); }
+
     public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
     {
         return qualThreshold <= 0 ?

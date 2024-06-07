@@ -207,6 +207,7 @@ public class SomaticVariants
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
+        boolean hasSyntheticTumor = mConfig.hasSyntheticTumor();
         double sequenceGcRatio = NO_GC_RATIO;
 
         if(mConfig.RefGenome != null && mSample.IsPanel)
@@ -227,7 +228,7 @@ public class SomaticVariants
 
             if(somaticVariant == null)
             {
-                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons);
+                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons, hasSyntheticTumor);
 
                 somaticVariant.setSequenceGcRatio(sequenceGcRatio);
                 mVariants.add(somaticVariant);
