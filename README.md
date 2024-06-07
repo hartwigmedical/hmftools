@@ -1,5 +1,4 @@
 # HMF Tools
-
 This repository contains the suite of tools used in the Hartwig Medical Foundation whole genome,targeted DNA and whole transcriptome analysis pipeline.  
 
 ## DNA Pipeline Components
@@ -9,13 +8,20 @@ This repository contains the suite of tools used in the Hartwig Medical Foundati
 #### Latest Pipeline Version
 The latest HMF pipeline is v5.34. Release notes are [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/docs/PipelineReleaseNotes.v5.34.pdf).
 
-The table below has links for the each tool used in this release. 
+The table below has links for each tool used in this release.
 
 #### Running the Pipeline
-The full pipeline can be run using a NextFlow implmentation called [OncoAnalyser](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_ONCOANALYSER.md).
+The full pipeline can be run using a NextFlow implementation called [OncoAnalyser](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_ONCOANALYSER.md).
 
 An example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
+
+#### Building from source
+Developers can build all the tools locally via the `hmftools-build.py` script, providing a semver-compliant release tag, i.e:
+
+```
+./hmftools-build.py --no-release sage-v6.6.6
+```
 
 #### Current versions
 | Component                         | Description                                                            | Current Version                                                                 |

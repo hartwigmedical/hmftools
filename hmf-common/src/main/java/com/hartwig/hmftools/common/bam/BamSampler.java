@@ -4,14 +4,15 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import htsjdk.io.HtsPath;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -58,9 +59,10 @@ public class BamSampler
         if(!Files.exists(Paths.get(bamFile)))
             return false;
 
+        HtsPath path = new HtsPath(bamFile);
         SamReader samReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(mRefGenome.refGenomeFile()))
-                .open(new File(bamFile));
+                .open(SamInputResource.of(path.getURI()));
 
         mSlicer.slice(samReader, sampleRegion, this::processRecord);
 

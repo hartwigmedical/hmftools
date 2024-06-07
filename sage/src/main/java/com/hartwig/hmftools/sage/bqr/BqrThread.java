@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 
+import htsjdk.io.HtsPath;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -46,10 +48,12 @@ public class BqrThread extends Thread
         mResults = results;
         mKnownVariantMap = knownVariantMap;
 
+        HtsPath path = new HtsPath(bamFile);
+
         mBamReader = SamReaderFactory.makeDefault()
                 .validationStringency(mConfig.BamStringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
-                .open(new File(bamFile));
+                .open(SamInputResource.of(path.getURI()));
 
         mRegionCounter = new BqrRegionReader(mConfig, mBamReader, mRefGenome, mResults, recordWriter);
 

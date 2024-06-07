@@ -17,6 +17,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import htsjdk.io.HtsPath;
 import org.apache.logging.log4j.util.Strings;
 
 public class SageCallConfig
@@ -80,7 +81,9 @@ public class SageCallConfig
 
         for(String tumorBam : TumorBams)
         {
-            if(!new File(tumorBam).exists())
+            HtsPath tumorPath = new HtsPath(tumorBam);
+
+            if(tumorPath.isPath() && !new File(tumorBam).exists())
             {
                 SG_LOGGER.error("Unable to locate tumor bam({})", tumorBam);
                 return false;

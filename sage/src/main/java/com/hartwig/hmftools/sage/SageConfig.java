@@ -51,6 +51,7 @@ import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.vis.VisConfig;
 
+import htsjdk.io.HtsPath;
 import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.ValidationStringency;
@@ -246,7 +247,10 @@ public class SageConfig
 
         for(String referenceBam : ReferenceBams)
         {
-            if(!new File(referenceBam).exists())
+            HtsPath tumorPath = new HtsPath(referenceBam);
+
+            // Delay remote file access checks for later when SamInputReader is instantiated
+            if(tumorPath.isPath() && !new File(referenceBam).exists())
             {
                 SG_LOGGER.error("Unable to locate reference bam({})", referenceBam);
                 return false;
