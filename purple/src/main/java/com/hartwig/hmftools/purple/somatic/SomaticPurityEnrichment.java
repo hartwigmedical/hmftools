@@ -4,17 +4,17 @@ import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.pow;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_BASE_LOH_ERROR_RATE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER;
 
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +79,7 @@ public class SomaticPurityEnrichment
         double variantCopyNumber = max(0, vaf * copyNumber);
         
         double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
+        boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
 
         VariantContext variantContext = variant.context();
 
@@ -88,6 +89,7 @@ public class SomaticPurityEnrichment
         variantContext.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
         variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
         variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, biallelicProbability);
+        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, classifyBiallelic);
     }
 
     // version 6.0 - New biallelic model
@@ -107,7 +109,7 @@ public class SomaticPurityEnrichment
 
     private static double vcnThresholdForNoWildtype(double copyNumber)
     {
-        double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(1.5, copyNumber - 0.8));
+        double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(BIALLELIC_THRESHOLD_PARAMETER, copyNumber - 0.8));
 
         return vcnThresholdForNoWildtype;
     }
@@ -131,7 +133,7 @@ public class SomaticPurityEnrichment
 
     private static double conditionalProbNoWildtypeAssumeNoLoh(double conditionalProbNoWildtypeAssumeLoh, double probabilityLoh)
     {
-        double conditionalProbNoWildtypeAssumeNoLOH = max(probabilityLoh, BIALLELIC_BASE_LOH_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh) + max(probabilityLoh, BIALLELIC_BASE_LOH_ERROR_RATE));
+        double conditionalProbNoWildtypeAssumeNoLOH = max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh) + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
 
         if(Double.isNaN(conditionalProbNoWildtypeAssumeNoLOH))
         {
@@ -172,5 +174,21 @@ public class SomaticPurityEnrichment
         // Final calculation
         double probabilityNoWildtype = probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
         return probabilityNoWildtype;
+    }
+    
+    public static boolean classifyBiallelic(double probabilityNoWildtype)
+    {
+        final boolean classifyBiallelic;
+        
+        if(probabilityNoWildtype >= 0.50)
+        {
+            classifyBiallelic = true;
+        }
+        else
+        {
+            classifyBiallelic = false;
+        }
+        
+        return classifyBiallelic;
     }
 }
