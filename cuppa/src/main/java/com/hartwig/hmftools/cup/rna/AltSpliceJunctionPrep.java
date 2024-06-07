@@ -100,7 +100,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to load sample alt-SJ file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("Failed to load sample alt-SJ file({}): {}", filename, e.toString());
             return null;
         }
     }
@@ -140,7 +140,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read selected alt-SJs from file({}): {}", filename, e.toString());
-            System.exit(0);
+            System.exit(1);
         }
 
         return true;

@@ -176,7 +176,7 @@ public class CuppaDataPrep
     {
         public DataItemMatrix extractDataOneCategory(CategoryType categoryType)
         {
-            CUP_LOGGER.info("Extracting categoryType({})", categoryType);
+            CUP_LOGGER.info("Extracting category({})", categoryType);
 
             ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.prep;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,8 +14,9 @@ public class SampleOneCategoryTask implements Callable
     public final PrepConfig mConfig;
     public final CategoryPrep mCategoryPrep;
     public final int mSampleIndex;
+    public final String mSampleName;
 
-    private List<DataItem> mDataItems;
+    @Nullable private List<DataItem> mDataItems;
     @Nullable ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
     public SampleOneCategoryTask(
@@ -26,6 +28,7 @@ public class SampleOneCategoryTask implements Callable
         mConfig = prepConfig;
         mCategoryPrep = categoryPrep;
         mSampleIndex = sampleIndex;
+        mSampleName = mConfig.SampleIds.get(mSampleIndex);
 
         if(mConfig.isMultiSample() & featureBySampleMatrix == null)
         {
@@ -41,24 +44,15 @@ public class SampleOneCategoryTask implements Callable
         return mConfig.SampleIds.get(mSampleIndex);
     }
 
-    public List<DataItem> processSample()
+    public void processSample()
     {
-        try
+        int sampleNum = mSampleIndex + 1;
+        if(mConfig.isMultiSample() & (sampleNum % 100 == 0))
         {
-            int sampleNum = mSampleIndex + 1;
-            if(mConfig.isMultiSample() & (sampleNum % 100 == 0))
-            {
-                CUP_LOGGER.info("{}/{}: sample({})", sampleNum, mConfig.SampleIds.size(), getSampleId());
-            }
-            mDataItems = mCategoryPrep.extractSampleData(getSampleId());
-        }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("Feature extraction failed for category({})", mCategoryPrep.categoryType());
-            System.exit(1);
+            CUP_LOGGER.info("{}/{}: sample({})", sampleNum, mConfig.SampleIds.size(), mSampleName);
         }
 
-        return mDataItems;
+        mDataItems = mCategoryPrep.extractSampleData(mSampleName);
     }
 
     public List<DataItem> getDataItems()
@@ -72,10 +66,8 @@ public class SampleOneCategoryTask implements Callable
 
         for(DataItem dataItem : mDataItems)
         {
-            DataItem.Index featureIndex = dataItem.Index;
-
-            FeatureBySampleMatrix.computeIfAbsent(featureIndex, k -> new String[nSamples]);
-            FeatureBySampleMatrix.get(featureIndex)[mSampleIndex] = dataItem.Value;
+            FeatureBySampleMatrix.computeIfAbsent(dataItem.Index, k -> new String[nSamples]);
+            FeatureBySampleMatrix.get(dataItem.Index)[mSampleIndex] = dataItem.Value;
         }
     }
 
@@ -83,7 +75,22 @@ public class SampleOneCategoryTask implements Callable
     {
         processSample();
 
-        if(mConfig.isMultiSample())
+        if(mDataItems == null)
+        {
+            String errorMessage = String.format("Failed feature extraction category(%s) for sample(%s)", mCategoryPrep.categoryType(), mSampleName);
+
+            if(mConfig.isSingleSample())
+            {
+                CUP_LOGGER.error(errorMessage);
+                System.exit(1);
+            }
+            else
+            {
+                CUP_LOGGER.error(errorMessage + ". Output feature matrix will contain nulls for this sample");
+            }
+        }
+
+        if(mDataItems != null & mConfig.isMultiSample())
         {
             addDataItemsToMatrix();
         }

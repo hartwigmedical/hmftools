@@ -68,8 +68,9 @@ public class CuppaDataPrepTest
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(Arrays.asList(
-                        "MINIMAL_SAMPLE", "MINIMAL_SAMPLE",
-                        "TUMOR_SAMPLE", "TUMOR_SAMPLE", "TUMOR_SAMPLE", "TUMOR_SAMPLE"
+                        "MINIMAL_SAMPLE", "MINIMAL_SAMPLE", "MINIMAL_SAMPLE",
+                        "MINIMAL_SAMPLE_NO_RNA",
+                        "TUMOR_SAMPLE"
                 ))
                 .categories(CategoryType.getAllCategories())
                 .refGenomeVersion("V37")
@@ -86,7 +87,7 @@ public class CuppaDataPrepTest
         HashMap<CategoryType, DataItemMatrix>  dataItemMatricesByCategory = cuppaDataPrep.mDataItemMatricesByCategory;
         for(CategoryType categoryType : categoryTypes)
         {
-            // Check that values of the 2 COLO829v003T runs are exactly the same.
+            // Check that values are exactly the same between duplicate MINIMAL_SAMPLE.
             // Thread unsafe operations lead to different feature values even though the samples are the same.
             DataItemMatrix dataItemMatrix = dataItemMatricesByCategory.get(categoryType);
             assertEquals(
@@ -99,10 +100,10 @@ public class CuppaDataPrepTest
                     dataItemMatrix.getFeatureValuesBySampleIndex(3)
             );
 
-            // Check that values of the COLO829v003T and COLO829v003T_modified are different
+            // Check that values of the MINIMAL_SAMPLE and TUMOR_SAMPLE are different
             assertNotEquals(
                     dataItemMatrix.getFeatureValuesBySampleIndex(0),
-                    dataItemMatrix.getFeatureValuesBySampleIndex(2)
+                    dataItemMatrix.getFeatureValuesBySampleIndex(4)
             );
 
             // Check output files exist
