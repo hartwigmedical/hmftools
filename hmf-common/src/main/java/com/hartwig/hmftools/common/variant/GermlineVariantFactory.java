@@ -68,7 +68,7 @@ public final class GermlineVariantFactory
                 .repeatSequence(decorator.repeatSequence())
                 .reported(decorator.reported())
                 .biallelic(decorator.biallelic())
-                .gene(variantImpact.CanonicalGeneName)
+                .gene(variantImpact.GeneName)
                 .canonicalTranscript(variantImpact.CanonicalTranscript)
                 .canonicalEffect(variantImpact.CanonicalEffect)
                 .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)

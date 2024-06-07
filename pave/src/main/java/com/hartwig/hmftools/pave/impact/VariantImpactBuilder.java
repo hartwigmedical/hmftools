@@ -41,7 +41,7 @@ public class VariantImpactBuilder
 
         VariantTransImpact worstCanonicalImpact = null;
         int worstCanonicalRank = -1;
-        String canonicalGeneName = "";
+        String canonicalGeneName = ""; // can be set to the gene name of other reportable transcripts if the canonical has no impact
         String worstGeneName = "";
         String otherReportableTransData = "";
 

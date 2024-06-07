@@ -2,12 +2,9 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -58,7 +55,7 @@ public class SomaticVariant
         TriNucContext = variantDecorator.trinucleotideContext();
         Mappability = variantDecorator.mappability();
         VariantImpact variantImpact = variantDecorator.variantImpact();
-        CanonicalGeneName = variantImpact.CanonicalGeneName;
+        CanonicalGeneName = variantImpact.GeneName;
         CanonicalCodingEffect = variantImpact.CanonicalCodingEffect.toString();
 
         Samples = Lists.newArrayList();

@@ -144,7 +144,7 @@ public class PurpleVariantContextLoader
                 .alleleReadCount(tumorDepth.alleleReadCount())
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .type(contextDecorator.type())
-                .gene(variantImpact.CanonicalGeneName)
+                .gene(variantImpact.GeneName)
                 .ref(contextDecorator.ref())
                 .alt(contextDecorator.alt())
                 .canonicalTranscript(variantImpact.CanonicalTranscript)

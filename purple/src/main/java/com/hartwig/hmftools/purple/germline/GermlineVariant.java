@@ -53,7 +53,7 @@ public class GermlineVariant
     public boolean isPass() { return mFilters.isEmpty() || (mFilters.size() == 1 && mFilters.contains(PASS)); }
 
     public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
-    public String gene() { return mDecorator.variantImpact().CanonicalGeneName; }
+    public String gene() { return mDecorator.variantImpact().GeneName; }
     public boolean biallelic() { return mDecorator.biallelic(); }
     public double copyNumber() { return mDecorator.variantCopyNumber(); }
 

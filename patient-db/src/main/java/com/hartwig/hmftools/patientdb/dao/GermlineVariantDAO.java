@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStepN;
@@ -169,7 +168,7 @@ public class GermlineVariantDAO
                 pathogenicSummary.ClinvarInfo,
                 pathogenicSummary.Status.toString(),
                 decorator.isPathogenic(),
-                variantImpact.CanonicalGeneName,
+                variantImpact.GeneName,
                 variantImpact.GenesAffected,
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,

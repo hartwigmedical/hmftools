@@ -85,7 +85,7 @@ public class TumorMutationalLoad
         if(variantImpact.WorstCodingEffect == NONE || variantImpact.WorstCodingEffect == UNDEFINED)
             return;
 
-        if(TMB_GENE_EXCLUSIONS.contains(variantImpact.CanonicalGeneName))
+        if(TMB_GENE_EXCLUSIONS.contains(variantImpact.GeneName))
             return;
 
         double gnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, 0);

@@ -140,7 +140,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public String gene()
     {
-        return variantImpact().CanonicalGeneName;
+        return variantImpact().GeneName;
     }
 
     public DriverImpact impact()

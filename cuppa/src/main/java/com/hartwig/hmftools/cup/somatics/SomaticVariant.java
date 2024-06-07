@@ -78,7 +78,7 @@ public class SomaticVariant
         if(variantContext.hasAttribute(VAR_IMPACT))
         {
             VariantImpact impact = fromVariantContext(variantContext);
-            gene = impact.CanonicalGeneName;
+            gene = impact.GeneName;
         }
 
         return new SomaticVariant(

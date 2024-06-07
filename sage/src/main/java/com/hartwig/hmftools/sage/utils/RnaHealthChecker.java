@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -225,7 +224,7 @@ public class RnaHealthChecker
 
                     VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variantContext);
 
-                    if(variantImpact == null || variantImpact.CanonicalGeneName.isEmpty())
+                    if(variantImpact == null || variantImpact.GeneName.isEmpty())
                         continue;
 
                     ++summaryData.GeneVariantCount;

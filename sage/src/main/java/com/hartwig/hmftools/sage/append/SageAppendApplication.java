@@ -128,7 +128,7 @@ public class SageAppendApplication
             {
                 VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variant);
 
-                if(variantImpact == null || variantImpact.CanonicalGeneName.isEmpty())
+                if(variantImpact == null || variantImpact.GeneName.isEmpty())
                     continue;
             }
 
