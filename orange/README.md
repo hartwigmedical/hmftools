@@ -231,7 +231,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming
+- [3.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.0)
     - Add `PurpleTranscriptImpact.reported` and make `PurpleVariant.reported` a derived field. This
       uses the REPORTABLE_TRANSCRIPTS vcf field introduced in PURPLE 4.0.
     - Split pharmacogenetic haplotype into separate haplotype and genotype on front page and in table.
