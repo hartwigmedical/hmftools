@@ -123,7 +123,7 @@ public class FeaturePrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to load drivers catalog: {}", sampleId, e.toString());
+            CUP_LOGGER.error("sample({}) failed to load driver catalog: {}", sampleId, e.toString());
             System.exit(1);
         }
     }

@@ -101,7 +101,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         catch(IOException e)
         {
             CUP_LOGGER.error("Failed to load sample alt-SJ file({}): {}", filename, e.toString());
-            return null;
+            return null; // No System.exit(1) allows RNA data to be missing for a sample in multi-sample mode
         }
     }
 

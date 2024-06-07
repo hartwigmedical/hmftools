@@ -160,13 +160,13 @@ public class SomaticVariantPrep implements CategoryPrep
             getSnvCount();
             getSignatureAllocations();
             getGenomicPositionCounts();
-
-            return mDataItems;
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) - failed to extract somatic variant features: {}", sampleId, e.toString());
-            return null;
+            CUP_LOGGER.error("sample({}) failed to extract somatic variant features: {}", sampleId, e.toString());
+            System.exit(1);
         }
+
+        return mDataItems;
     }
 }
