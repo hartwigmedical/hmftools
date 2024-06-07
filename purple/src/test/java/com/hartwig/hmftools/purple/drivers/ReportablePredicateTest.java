@@ -37,10 +37,10 @@ public class ReportablePredicateTest
     public void testAlternateTranscriptImpact()
     {
         AltTranscriptReportableInfo altTransInfo1 = new AltTranscriptReportableInfo(
-                "TRANS_03", "", "", VariantEffect.INTRONIC.effect(), CodingEffect.NONE);
+                "GENE_01", "TRANS_03", "", "", VariantEffect.INTRONIC.effect(), CodingEffect.NONE);
 
         AltTranscriptReportableInfo altTransInfo2 = new AltTranscriptReportableInfo(
-                "TRANS_02", "", "", VariantEffect.MISSENSE.effect(), CodingEffect.MISSENSE);
+                "GENE_01","TRANS_02", "", "", VariantEffect.MISSENSE.effect(), CodingEffect.MISSENSE);
 
         String altTransInfo = altTransInfo1.serialise() + VAR_IMPACT_OTHER_REPORT_DELIM + altTransInfo2.serialise();
 
