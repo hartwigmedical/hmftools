@@ -79,6 +79,7 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
                     logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
                 else:
                     logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
+                    raise FileNotFoundError
 
             if len(matched_files) > 1:
                 logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
@@ -208,19 +209,24 @@ class FeatureLoader(LoggerMixin):
             header = pd.read_table(self.path, nrows=0).columns
             return len(header) > len(self.INDEX_COLS)+1
 
-    def _read_single_sample_data(self) -> pd.DataFrame:
+    @property
+    def is_single_sample(self):
+        return not self.is_multi_sample
+
+    def _load_one_file(self) -> pd.DataFrame:
         df = pd.read_table(self.path)
         check_required_columns(df, self.INDEX_COLS)
 
-        if self.sample_id is None:
-            self.logger.error("`sample_id` must be provided when features are for one sample")
-            raise ValueError
+        if self.is_single_sample:
+            if self.sample_id is None:
+                self.logger.error("`sample_id` must be provided when features are for one sample")
+                raise ValueError
 
-        df.rename(columns={self.FLD_VALUE: self.sample_id}, inplace=True)
+            df.rename(columns={self.FLD_VALUE: self.sample_id}, inplace=True)
 
         return df
 
-    def _read_multi_sample_data(self) -> pd.DataFrame:
+    def _load_files_from_dir(self) -> pd.DataFrame:
         paths = CuppaFeaturesPaths.from_dir(self.path)
         dfs = {}
         for data_type, path in paths.items():
@@ -233,13 +239,21 @@ class FeatureLoader(LoggerMixin):
 
         return df_merged
 
-    def _read_files(self) -> None:
-        if self.is_multi_sample:
-            self.logger.info("Loading multi-sample data from dir: " + self.path)
-            self.df = self._read_multi_sample_data()
+    def _load_data(self) -> None:
+
+        if os.path.isfile(self.path):
+
+            self.logger.info(
+                "Loading %s sample data file: %s",
+                "single" if self.is_single_sample else "multi",
+                self.path
+            )
+
+            self.df = self._load_one_file()
+
         else:
-            self.logger.info("Loading single sample data file: " + self.path)
-            self.df = self._read_single_sample_data()
+            self.logger.info("Loading multi sample data from dir: " + self.path)
+            self.df = self._load_files_from_dir()
 
     def _assert_no_duplicate_features(self) -> None:
         duplicated_keys = self.df[self.FLD_KEY][self.df[self.FLD_KEY].duplicated()]
@@ -295,7 +309,7 @@ class FeatureLoader(LoggerMixin):
             self.logger.debug(f"Loaded {n_features} features from sample({self.sample_id})")
 
     def load(self) -> CuppaFeatures:
-        self._read_files()
+        self._load_data()
         self._assert_no_duplicate_features()
         self._filter_gen_pos_chroms()
         self._parse_signatures()
