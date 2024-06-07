@@ -18,7 +18,7 @@ public final class SomaticPurityCalcs
         double noiseAdjSampleVaf = max(sampleVaf - noiseRate, 0);
         double weightedVcn = fragmentTotals.weightedVariantCopyNumber();
         double weightedCn = fragmentTotals.weightedCopyNumber();
-        return 2 * noiseAdjSampleVaf * (weightedVcn + 2 * noiseAdjSampleVaf - weightedCn * noiseAdjSampleVaf);
+        return 2 * noiseAdjSampleVaf / (weightedVcn + 2 * noiseAdjSampleVaf - weightedCn * noiseAdjSampleVaf);
     }
 
     public static double estimatedProbability(final FragmentTotals fragmentTotals, double noiseRate)
