@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycuppa"
-version = "2.1.1"
+version = "2.1.2"
 authors = [{ name="Luan Nguyen", email="lnguyen@hartwigmedicalfoundation.nl" }]
 description = "Python machine learning component of CUPPA"
 readme = "README.md"
