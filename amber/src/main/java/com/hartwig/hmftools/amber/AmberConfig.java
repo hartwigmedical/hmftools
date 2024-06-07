@@ -161,7 +161,7 @@ public class AmberConfig
         configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
 
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
+        configBuilder.addPaths(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
 
         configBuilder.addPath(LOCI_FILE, true, "Path to BAF loci vcf file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
