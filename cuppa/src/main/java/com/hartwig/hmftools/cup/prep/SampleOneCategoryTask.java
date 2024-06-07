@@ -39,18 +39,13 @@ public class SampleOneCategoryTask implements Callable
         FeatureBySampleMatrix = featureBySampleMatrix;
     }
 
-    public String getSampleId()
-    {
-        return mConfig.SampleIds.get(mSampleIndex);
-    }
-
     public void processSample()
     {
         int sampleNum = mSampleIndex + 1;
-        if(mConfig.isMultiSample() & (sampleNum % 100 == 0))
-        {
-            CUP_LOGGER.info("{}/{}: sample({})", sampleNum, mConfig.SampleIds.size(), mSampleName);
-        }
+        int totalSamples = mConfig.SampleIds.size();
+
+        if(mConfig.isMultiSample() & (totalSamples < 10 || sampleNum % 100 == 0))
+            CUP_LOGGER.info("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
 
         mDataItems = mCategoryPrep.extractSampleData(mSampleName);
     }
