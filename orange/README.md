@@ -187,15 +187,43 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
 
 ## Immunology
 
-The immunology chapter is work-in-progress and will report on various immunology properties of the tumor sample.
+The immunology chapter reports on various immunology properties of the tumor sample.
 
-The chapter currently presents the following:
+The chapter presents the following:
 
 - HLA-A/B/C details
     1. QC Status
     2. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations)
 
 In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fragment support.
+
+- Genomic immune escape analysis (inspired by [this paper](https://www.biorxiv.org/content/10.1101/2022.02.23.481444v1.full.pdf)),
+  with the following mechanism that ORANGE makes an attempt at detecting:
+    - HLA-1 loss-of-function, detected in case one of the following mutations is present in either HLA-A, HLA-B or HLA-C:
+        - MACN < 0.3 without the presence of a loss (proxy for LOH)
+        - A clonal variant with canonical coding effect `NONSENSE_OR_FRAMESHIFT` or `SPLICE`
+        - A clonal, biallelic variant with canonical coding effect `MISSENSE`
+        - A full or partial loss
+        - A homozygous disruption
+    - Antigen presentation pathway inactivation, detected in case one of the following mutations is present in either B2M, CALR, TAP1, TAP2,
+      TABBP, NLRC5, CIITA or RFX5:
+        - A clonal variant with canonical coding effect `NONSENSE_OR_FRAMESHIFT` or `SPLICE`
+        - A clonal, biallelic variant with canonical coding effect `MISSENSE`
+        - A full or partial loss
+        - A homozygous disruption
+    - IFN gamma pathway inactivation, detected in case one of the following mutations is present in either JAK1, JAK2, IRF2, IFNGR1, IFNGR2,
+      APLNR or STAT1
+        - A clonal variant with canonical coding effect `NONSENSE_OR_FRAMESHIFT` or `SPLICE`
+        - A clonal, biallelic variant with canonical coding effect `MISSENSE`
+        - A full or partial loss
+        - A homozygous disruption
+    - (Potential) PD-L1 overexpression, detected in case CD274 is fully amplified.
+    - CD58 inactivation, detected in case any of the following mutations happened in CD58:
+        - A clonal variant with canonical coding effect `NONSENSE_OR_FRAMESHIFT` or `SPLICE`
+        - A clonal, biallelic variant with canonical coding effect `MISSENSE`
+        - A full or partial loss
+        - A homozygous disruption
+    - Epigenetics driven immune escape via SETDB1, detected in case SETDB1 is fully amplified.
 
 ## RNA Findings
 
@@ -238,6 +266,7 @@ investigate potential causes for QC failure.
     - A new Genetic Immune Escape analysis has been added to datamodel and report. This analysis determines whether the sample uses any of
       the immune escape mechanisms known in cancer. See
       also [Genetic immune landscape paper](https://www.nature.com/articles/s41588-023-01367-1)
+    - Technical: Removed work-around for pre v1.6 LILAC (incorrectly populating ref fragments in case of tumor-only)
 - [3.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.4.0)
     - Produce ORANGE datamodel v2.4.0 (including max copy number for gene copy numbers)
     - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort.
