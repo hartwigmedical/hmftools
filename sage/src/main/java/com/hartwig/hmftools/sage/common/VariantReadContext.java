@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.evidence.ArtefactContext;
+import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
 import htsjdk.samtools.CigarElement;

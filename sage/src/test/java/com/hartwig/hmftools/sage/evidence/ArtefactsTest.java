@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
-import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,6 +16,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.quality.ArtefactContext;
 
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class ArtefactsTest
 
         byte adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
 
-        assertEquals(adjustedBaseQual, NOT_APPLICABLE_BASE_QUAL);
+        assertEquals(adjustedBaseQual, INVALID_BASE_QUAL);
 
         record.setReadNegativeStrandFlag(true);
 
@@ -210,7 +211,7 @@ public class ArtefactsTest
         // ignore -ve strand for downstream HPs
         record.setReadNegativeStrandFlag(true);
         adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
-        assertEquals(NOT_APPLICABLE_BASE_QUAL, adjustedBaseQual);
+        assertEquals(INVALID_BASE_QUAL, adjustedBaseQual);
 
         // single base DEL on left of HP
         variant = new SimpleVariant(CHR_1, pos, "CA", "C");

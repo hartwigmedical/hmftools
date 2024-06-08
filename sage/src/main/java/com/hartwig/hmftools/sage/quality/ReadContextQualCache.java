@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.quality;
+
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +26,7 @@ public class ReadContextQualCache
         mQualityCalculator = qualityCalculator;
 
         double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
-        mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : 0;
+        mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
 
         mQualMapByIndex = new HashMap[mVariantAlt.length()];
 
@@ -35,6 +37,7 @@ public class ReadContextQualCache
     }
 
     public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
+    public boolean usesMsiIndelErrorQual() { return mMsiIndelErrorQual != INVALID_BASE_QUAL; }
 
     public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
     {

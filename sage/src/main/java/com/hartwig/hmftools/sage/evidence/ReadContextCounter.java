@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDel;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realignedReadIndexPosition;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import java.util.List;
@@ -57,7 +58,9 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
+import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.vis.VariantVis;
@@ -211,6 +214,7 @@ public class ReadContextCounter
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }
+    public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
     public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
@@ -329,15 +333,15 @@ public class ReadContextCounter
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
         ReadContextMatch matchType = NONE;
-        double rawBaseQuality = 0;
+        double calcBaseQuality = 0;
         double modifiedQuality = 0;
         QualityCalculator.QualityScores qualityScores = null;
 
         if(coreCovered)
         {
-            rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readVarIndex, record);
+            calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
-            if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
+            if(!mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit)
             {
                 if(rawContext.PositionType != VariantReadPositionType.DELETED)
                 {
@@ -352,7 +356,7 @@ public class ReadContextCounter
             }
 
             qualityScores = mQualityCalculator.calculateQualityScores(
-                    this, readVarIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
             modifiedQuality = qualityScores.ModifiedQuality;
 
@@ -391,10 +395,10 @@ public class ReadContextCounter
             if(realignedType != RealignedType.NONE)
             {
                 // recompute qual off this realigned index
-                rawBaseQuality = mQualityCalculator.rawBaseQuality(this, realignedReadIndex, record);
+                calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, realignedReadIndex, record);
 
                 qualityScores = mQualityCalculator.calculateQualityScores(
-                        this, realignedReadIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                        this, realignedReadIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
                 modifiedQuality = qualityScores.ModifiedQuality;
 

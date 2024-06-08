@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.averageCoreQuality;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -258,7 +259,7 @@ public class ReadContextMatchingTest
 
         SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        double average = matcher.averageCoreQuality(read, readVarIndex);
+        double average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(14, average, 0.01);
 
         // now with partial cores
@@ -271,7 +272,7 @@ public class ReadContextMatchingTest
 
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        average = matcher.averageCoreQuality(read, readVarIndex);
+        average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(13, average, 0.01);
 
         // partial on the left
@@ -285,7 +286,7 @@ public class ReadContextMatchingTest
         readVarIndex = 0;
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        average = matcher.averageCoreQuality(read, readVarIndex);
+        average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(11, average, 0.01);
     }
 }

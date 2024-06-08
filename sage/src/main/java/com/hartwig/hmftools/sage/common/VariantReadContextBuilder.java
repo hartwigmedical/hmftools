@@ -15,7 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.evidence.ArtefactContext;
+import com.hartwig.hmftools.sage.quality.ArtefactContext;
 
 import htsjdk.samtools.SAMRecord;
 

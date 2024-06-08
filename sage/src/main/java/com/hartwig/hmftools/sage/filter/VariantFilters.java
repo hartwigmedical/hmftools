@@ -295,6 +295,9 @@ public class VariantFilters
 
     private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
+        if(primaryTumor.useMsiErrorRate())
+            return false;
+
         if(tier == VariantTier.HOTSPOT)
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else

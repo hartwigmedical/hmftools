@@ -374,24 +374,4 @@ public class ReadContextMatcher
         ReadContextMatcher matcher = new ReadContextMatcher(first, false);
         return matcher.determineReadMatch(second.ReadBases, null, second.VarIndex, true);
     }
-
-    public double averageCoreQuality(final SAMRecord record, final int readVarIndex)
-    {
-        int readIndexStart = max(readVarIndex - mContext.leftCoreLength(), 0);
-        int readIndexEnd = min(readVarIndex + mContext.rightCoreLength(), record.getReadBases().length - 1);
-
-        int baseLength = readIndexEnd - readIndexStart + 1;
-
-        if(baseLength <= 0)
-            return 0;
-
-        double quality = 0;
-
-        for(int i = readIndexStart; i <= readIndexEnd; i++)
-        {
-            quality += record.getBaseQualities()[i];
-        }
-
-        return (int)round(quality / baseLength);
-    }
 }

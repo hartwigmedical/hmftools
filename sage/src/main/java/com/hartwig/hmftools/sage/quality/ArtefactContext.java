@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -20,7 +21,6 @@ public class ArtefactContext
     private final int[] mHomopolymerStartOffset;
     private final boolean mRequiresCheck;
 
-    public static final byte NOT_APPLICABLE_BASE_QUAL = -1;
     public static final byte NO_BASE = 0;
 
     private static final int NO_INDEX = -10; // beyond the permitted range
@@ -103,7 +103,7 @@ public class ArtefactContext
         int homopolSide = record.getReadNegativeStrandFlag() ? SE_END : SE_START;
 
         if(mHomopolymerStartOffset[homopolSide] == NO_INDEX)
-            return NOT_APPLICABLE_BASE_QUAL;
+            return INVALID_BASE_QUAL;
 
         return findHomopolymerBaseQual(
                 record, varReadIndex, mHomopolymerStartOffset[homopolSide], homopolSide == SE_START);
