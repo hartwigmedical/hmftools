@@ -94,6 +94,16 @@ public class ReadContextMatchingTest
 
         assertEquals(REF, matcher.determineReadMatch(read, readVarIndex));
 
+        // partial ref core assuming satisfies core-covered
+        readBases = ref + rightCore + readContext.rightFlankStr();
+        read = buildSamRecord(position, cigar, readBases, readQualities);
+        assertEquals(REF, matcher.determineReadMatch(read, 0));
+
+        // same again but ending at the ref
+        readBases = "ACGTA" + readContext.leftFlankStr() + leftCore + ref;
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+        assertEquals(REF, matcher.determineReadMatch(read, readBases.length() - 1));
+
         // full match
         readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + readContext.rightFlankStr();
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);

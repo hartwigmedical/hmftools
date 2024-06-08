@@ -204,10 +204,16 @@ public class ReadContextMatcher
         int readIndexStart = readVarIndex - refIndex;
         int readIndexEnd = readIndexStart + mContext.RefBases.length - 1;
 
-        int compareLength = mContext.RefBases.length;
+        // allow partial ref core to be compared since, where required, checks have already been made that the core is sufficiently covered
+        if(readIndexStart < 0)
+        {
+            refIndexStart += abs(readIndexStart);
+            readIndexStart = 0;
+        }
 
-        if(readIndexStart < 0 || readIndexEnd >= readBases.length)
-            return false;
+        readIndexEnd = min(readIndexEnd, readBases.length - 1);
+
+        int compareLength = readIndexEnd - readIndexStart + 1;
 
         return matches(
                 mContext.RefBases, readBases, readQuals, refIndexStart, readIndexStart, compareLength,
