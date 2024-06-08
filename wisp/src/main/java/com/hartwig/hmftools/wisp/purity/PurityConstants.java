@@ -11,7 +11,6 @@ public class PurityConstants
     public static final double MAX_REPEAT_COUNT = 3;
 
     public static final int MIN_QUAL_PER_AD = 18;
-    public static final int LOW_QUAL_NOISE_CUTOFF = 25;
 
     public static final double MAX_COPY_NUMBER = 6;
     public static final double CLONAL_COPY_NUMBER_MARGIN = 0.2;

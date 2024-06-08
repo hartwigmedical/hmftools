@@ -283,22 +283,8 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
-            boolean useForTotals = false;
-
-            if(variant.filterReasons().isEmpty())
-            {
-                // only include variants which satisfy the min avg qual check in the sample
-                if(sampleFragData.isLowQual())
-                {
-                    variant.addFilterReason(LOW_QUAL_PER_AD);
-                }
-                else
-                {
-                    useForTotals = true;
-                }
-            }
-
-            if(!useForTotals)
+            // only include unfiltered variants which satisfy the min avg qual check in the sample
+            if(!variant.filterReasons().isEmpty() || sampleFragData.isLowQual())
                 continue;
 
             filteredVariants.add(variant);
@@ -431,6 +417,9 @@ public class SomaticVariants
             sj.add(valueOf(variant.isProbeVariant()));
 
             String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+
+            if(filtersStr.isEmpty() && sampleFragData.isLowQual())
+                filtersStr = LOW_QUAL_PER_AD.toString();
 
             if(filtersStr.isEmpty())
                 filtersStr = PASS;
