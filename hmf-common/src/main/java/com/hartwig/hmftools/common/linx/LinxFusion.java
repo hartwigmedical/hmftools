@@ -20,52 +20,30 @@ import org.immutables.value.Value;
 public abstract class LinxFusion
 {
     public abstract int fivePrimeBreakendId();
-
     public abstract int threePrimeBreakendId();
-
     public abstract String name();
-
     public abstract boolean reported();
-
     public abstract String reportedType();
-
     public abstract String reportableReasons();
-
     public abstract FusionPhasedType phased();
-
     public abstract FusionLikelihoodType likelihood();
-
     public abstract int chainLength();
-
     public abstract int chainLinks();
-
     public abstract boolean chainTerminated();
-
     public abstract String domainsKept();
-
     public abstract String domainsLost();
-
     public abstract int skippedExonsUp();
-
     public abstract int skippedExonsDown();
-
     public abstract int fusedExonUp();
-
     public abstract int fusedExonDown();
 
     // for patient report
     public abstract String geneStart();
-
     public abstract String geneContextStart();
-
     public abstract String geneTranscriptStart();
-
     public abstract String geneEnd();
-
     public abstract String geneContextEnd();
-
     public abstract String geneTranscriptEnd();
-
     public abstract Double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
@@ -102,9 +80,9 @@ public abstract class LinxFusion
 
         List<LinxFusion> fusions = Lists.newArrayList();
 
-        for(int i = 0; i < lines.size(); ++i)
+        for(String line : lines)
         {
-            String[] values = lines.get(i).split(TSV_DELIM);
+            String[] values = line.split(TSV_DELIM);
 
             String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
                     values[fieldsIndexMap.get("reportableReasons")] : "";
