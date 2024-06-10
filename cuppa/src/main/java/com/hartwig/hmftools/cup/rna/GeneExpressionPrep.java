@@ -64,13 +64,13 @@ public class GeneExpressionPrep implements CategoryPrep
 
                 dataItems.add(new DataItem(RNA, ItemType.EXPRESSION, geneName, logTpm, FLOAT_FORMAT_LOG_TPM));
             }
+
+            return dataItems;
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
-            return null;
+            CUP_LOGGER.error("Failed to read RNA sample gene data file({}): {}", filename, e.toString());
+            return null; // No System.exit(1) allows RNA data to be missing for a sample in multi-sample mode
         }
-
-        return dataItems;
     }
 }

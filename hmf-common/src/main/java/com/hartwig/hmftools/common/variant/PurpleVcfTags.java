@@ -26,10 +26,11 @@ public final class PurpleVcfTags
     public static final String PURPLE_CN = "PURPLE_CN";
     public static final String PURPLE_CN_DESC = "Purity adjusted copy number surrounding variant location";
 
-    public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
-    public static final String PURPLE_BIALLELIC_DESC = "The probability the variant is biallelic";
+    public static final String PURPLE_BIALLELIC_PROB = "BIALLELIC_PROB";
+    public static final String PURPLE_BIALLELIC_PROB_DESC = "The probability of this variant being biallelic";
     
-    public static final String PURPLE_BIALLELIC_PROB = "BIALLELIC PROBABILITY";
+    public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
+    public static final String PURPLE_BIALLELIC_DESC = "If the probability this variant is biallelic equals or is greater than 0.50";
 
     public static final String PURPLE_VARIANT_CN = "PURPLE_VCN";
     private static final String PURPLE_VARIANT_CN_DESC = "Purity adjusted variant copy number";
@@ -79,6 +80,7 @@ public final class PurpleVcfTags
         header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_PROB, 1, VCFHeaderLineType.Float, PURPLE_BIALLELIC_PROB_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
     }

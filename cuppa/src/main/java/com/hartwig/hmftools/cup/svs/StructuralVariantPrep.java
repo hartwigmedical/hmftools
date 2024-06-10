@@ -73,8 +73,6 @@ public class StructuralVariantPrep implements CategoryPrep
             {
                 dataItems.add(new DataItem(DNA, ItemType.SV_COUNT, type.toString(), svDataCounts[type.ordinal()]));
             }
-
-            return dataItems;
         }
         catch(Exception e)
         {
@@ -84,8 +82,10 @@ public class StructuralVariantPrep implements CategoryPrep
                     e.toString()
             );
 
-            return null;
+            System.exit(1);
         }
+
+        return dataItems;
     }
 
     public static int[] extractSvCounts(final List<StructuralVariantData> allSVs, final List<LinxCluster> clusterList)

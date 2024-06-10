@@ -131,6 +131,9 @@ This will produce multi TSV files:
 * `cuppa_data.cohort.sample_trait.tsv.gz`
 * `cuppa_data.cohort.snv.tsv.gz`
 
+Alternatively, if `-write_by_category` is not specified, one output file is produced:
+* `cuppa_data.cohort.tsv.gz`
+
 These TSV files have the following format:
 ```
 Source  Category       Key  SAMPLE_1  SAMPLE_2
@@ -172,6 +175,7 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 | `-ref_genome_version` | V37                                 | Valid values: V37 (default), V38                                                                                                              |
 | `-threads`            | 8                                   | Number of threads to use. Each thread processes one sample at a time                                                                          |
 | `-write_by_category`  |                                     | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
+
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
 2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files 
