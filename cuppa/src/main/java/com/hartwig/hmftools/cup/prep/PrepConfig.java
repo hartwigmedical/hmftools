@@ -99,7 +99,7 @@ public class PrepConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
-        WriteByCategory = SampleIds.size() > 1 && configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
+        WriteByCategory = configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
 
         Threads = TaskExecutor.parseThreads(configBuilder);
     }
