@@ -30,9 +30,9 @@ public final class IsofoxDataLoader
         LOGGER.info((" Loaded summary from " + isofoxSummaryCsv));
 
         GeneExpressionDistributionData geneDistributionData = new GeneExpressionDistributionData(isofoxGeneDistributionCsv);
-        if(!geneDistributionData.configuredCancerTypes().contains(isofoxCancerType))
+        if(isofoxCancerType != null && !geneDistributionData.configuredCancerTypes().contains(isofoxCancerType))
         {
-            throw new IllegalStateException("Cancer type does not exist as cohort in gene distribution data: " + isofoxCancerType);
+            throw new IllegalStateException("Cancer type does not exist as cohort in isofox gene distribution data: " + isofoxCancerType);
         }
 
         List<GeneExpression> geneExpressions =
