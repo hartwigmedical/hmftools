@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
@@ -83,16 +84,7 @@ public class PrepConfig
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = new ArrayList<>();
-
-        if(configBuilder.hasValue(SAMPLE))
-        {
-            SampleIds.add(configBuilder.getValue(SAMPLE));
-        }
-        else
-        {
-            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(configBuilder));
-        }
+        SampleIds = parseSampleConfig(configBuilder);
 
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
         LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
@@ -101,7 +93,7 @@ public class PrepConfig
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
         SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR_CFG, SampleDataDir);
 
-        Categories = configCategories(configBuilder);
+        Categories = parseCategories(configBuilder);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
@@ -110,18 +102,6 @@ public class PrepConfig
         WriteByCategory = SampleIds.size() > 1 && configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
 
         Threads = TaskExecutor.parseThreads(configBuilder);
-    }
-
-    public boolean isMultiSample() { return SampleIds.size() > 1; }
-    public boolean isSingleSample() { return SampleIds.size() == 1; }
-
-    @Deprecated
-    public static void addPipelineDirectories(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
-        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -149,6 +129,39 @@ public class PrepConfig
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
+    private static List<String> parseSampleConfig(ConfigBuilder configBuilder)
+    {
+        List<String> sampleIds = new ArrayList<>();
+
+        if(configBuilder.hasValue(SAMPLE))
+        {
+            sampleIds = List.of(configBuilder.getValue(SAMPLE));
+        }
+        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
+        {
+            sampleIds = ConfigUtils.loadSampleIdsFile(configBuilder);
+        }
+        else
+        {
+            CUP_LOGGER.error("Either -{} or -{} must be provided to {} config", SAMPLE, SAMPLE_ID_FILE, CuppaDataPrep.class.getSimpleName());
+            System.exit(1);
+        }
+
+        return sampleIds;
+    }
+
+    public boolean isMultiSample() { return SampleIds.size() > 1; }
+    public boolean isSingleSample() { return SampleIds.size() == 1; }
+
+    @Deprecated
+    public static void addPipelineDirectories(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
+        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
+    }
+
     // Generate input file paths by sample id
     public String getLinxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(LinxDir, sampleId); }
     public String getPurpleDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(PurpleDir, sampleId); }
@@ -169,7 +182,7 @@ public class PrepConfig
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
     public String altSpliceJunctionFile(final String sampleId) { return AltSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
-    public static List<CategoryType> configCategories(final ConfigBuilder configBuilder)
+    public static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
     {
         List<CategoryType> categories = new ArrayList<>();
 
