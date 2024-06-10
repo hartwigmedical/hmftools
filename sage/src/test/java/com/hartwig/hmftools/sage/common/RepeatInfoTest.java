@@ -214,12 +214,28 @@ public class RepeatInfoTest
         repeat2 = new RepeatInfo(0, "ACTACT", 3);
         assertFalse(repeat.isMultipleOf(repeat2));
 
+        // alternative starts for the same repeat
+        repeat = new RepeatInfo(0, "ACT", 4);
+        repeat2 = new RepeatInfo(1, "CTA", 3);
+        RepeatInfo repeat3 = new RepeatInfo(2, "TAC", 3);
+        assertTrue(repeat.isAlternativeStart(repeat2));
+        assertTrue(repeat.isAlternativeStart(repeat3));
+
+        // not if longer or starts outside first repeat's bounds
+        repeat2 = new RepeatInfo(1, "CTA", 5);
+        assertFalse(repeat.isAlternativeStart(repeat2));
+
+        repeat2 = new RepeatInfo(3, "CTA", 3);
+        assertFalse(repeat.isAlternativeStart(repeat2));
+
+        // or different bases
+        repeat2 = new RepeatInfo(1, "CTG", 3);
+        assertFalse(repeat.isAlternativeStart(repeat2));
+
         assertTrue(addIfUnique(repeats, new RepeatInfo(0, "ACT", 3)));
         assertTrue(addIfUnique(repeats, new RepeatInfo(0, "A", 9)));
         assertFalse(addIfUnique(repeats, new RepeatInfo(0, "AA", 2)));
         assertFalse(addIfUnique(repeats, new RepeatInfo(1, "AA", 2)));
-
-
-
+        assertFalse(addIfUnique(repeats, new RepeatInfo(1, "CTA", 3)));
     }
 }

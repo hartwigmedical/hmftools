@@ -58,6 +58,45 @@ public class RepeatInfo
         return true;
     }
 
+    public boolean isAlternativeStart(final RepeatInfo other)
+    {
+        // test if the other repeat is an alternative version starting later with bases in a different order
+        int repeatLength = repeatLength();
+
+        if(repeatLength == 1 || other.repeatLength() != repeatLength)
+            return false;
+
+        if(other.totalLength() > totalLength())
+            return false;
+
+        // must start between the second and last base of the other
+        if(!positionWithin(other.Index, Index, Index + repeatLength - 1))
+            return false;
+
+        // check bases are an alternative cycle of the other
+        for(int s = 1; s < repeatLength; ++s)
+        {
+            boolean allBasesMatch = true;
+
+            for(int i = 0, j = s; i < repeatLength; ++i, ++j)
+            {
+                if(j >= repeatLength)
+                    j = 0;
+
+                if(other.Bases.charAt(i) != Bases.charAt(j))
+                {
+                    allBasesMatch = false;
+                    break;
+                }
+            }
+
+            if(allBasesMatch)
+                return true;
+        }
+
+        return false;
+    }
+
     public String toString() { return format("%s-%d index(%d-%d)", Bases, Count, Index, endIndex()); }
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount, final int minCount)
@@ -142,6 +181,9 @@ public class RepeatInfo
                 return false;
 
             if(newRepeat.isMultipleOf(repeat) || repeat.isMultipleOf(newRepeat))
+                return false;
+
+            if(newRepeat.isAlternativeStart(repeat) || repeat.isAlternativeStart(newRepeat))
                 return false;
         }
 
