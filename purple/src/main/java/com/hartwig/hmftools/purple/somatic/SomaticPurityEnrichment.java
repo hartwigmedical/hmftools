@@ -77,7 +77,7 @@ public class SomaticPurityEnrichment
                 purpleCopyNumber.chromosome(), max(0.001, copyNumber), variant.alleleFrequency(), isGermlineHetDeletion);
 
         double variantCopyNumber = max(0, vaf * copyNumber);
-        
+
         double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
         boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
 
@@ -125,7 +125,7 @@ public class SomaticPurityEnrichment
     {
         PoissonDistribution poissonDist = new PoissonDistribution(alleleReadCount);
 
-        int readCountAtThresholdInteger = (int)floor(readCountAtThreshold);
+        int readCountAtThresholdInteger = (int) floor(readCountAtThreshold);
         double conditionalProbNoWildtypeAssumeLoh = 1 - poissonDist.cumulativeProbability(readCountAtThresholdInteger);
 
         return conditionalProbNoWildtypeAssumeLoh;
@@ -133,7 +133,9 @@ public class SomaticPurityEnrichment
 
     private static double conditionalProbNoWildtypeAssumeNoLoh(double conditionalProbNoWildtypeAssumeLoh, double probabilityLoh)
     {
-        double conditionalProbNoWildtypeAssumeNoLOH = max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh) + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
+        double conditionalProbNoWildtypeAssumeNoLOH =
+                max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh)
+                        + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
 
         if(Double.isNaN(conditionalProbNoWildtypeAssumeNoLOH))
         {
@@ -143,9 +145,11 @@ public class SomaticPurityEnrichment
         return conditionalProbNoWildtypeAssumeNoLOH;
     }
 
-    private static double probabilityNoWildtype(double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh, double conditionalProbNoWildtypeAssumeNoLoh)
+    private static double probabilityNoWildtype(double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh,
+            double conditionalProbNoWildtypeAssumeNoLoh)
     {
-        double probabilityNoWildtype = probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
+        double probabilityNoWildtype =
+                probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
 
         return probabilityNoWildtype;
     }
@@ -169,26 +173,14 @@ public class SomaticPurityEnrichment
 
         // part 3
         double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(readCountAtThreshold, alleleReadCount);
-        double conditionalProbNoWildtypeAssumeNoLoh = conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
+        double conditionalProbNoWildtypeAssumeNoLoh =
+                conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
 
         // Final calculation
-        double probabilityNoWildtype = probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
+        double probabilityNoWildtype =
+                probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
         return probabilityNoWildtype;
     }
-    
-    public static boolean classifyBiallelic(double probabilityNoWildtype)
-    {
-        final boolean classifyBiallelic;
-        
-        if(probabilityNoWildtype >= 0.50)
-        {
-            classifyBiallelic = true;
-        }
-        else
-        {
-            classifyBiallelic = false;
-        }
-        
-        return classifyBiallelic;
-    }
+
+    public static boolean classifyBiallelic(double bialleicProbability) { return bialleicProbability >= 0.5; }
 }

@@ -27,7 +27,7 @@ public final class PurpleVcfTags
     public static final String PURPLE_CN_DESC = "Purity adjusted copy number surrounding variant location";
 
     public static final String PURPLE_BIALLELIC_PROB = "BIALLELIC_PROB";
-    public static final String PURPLE_BIALLELIC_PROB_DESC = "The probability of this variant being biallelic";
+    public static final String PURPLE_BIALLELIC_PROB_DESC = "Biallelic probability";
     
     public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
     public static final String PURPLE_BIALLELIC_DESC = "If the probability this variant is biallelic equals or is greater than 0.50";
