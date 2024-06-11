@@ -24,6 +24,7 @@ import com.hartwig.hmftools.cup.common.SampleResult;
 
 import org.junit.Test;
 
+@Deprecated
 public class CuppaUtilsTest
 {
     public static final String TEST_SAMPLE_001 = "SAMPLE_001";
