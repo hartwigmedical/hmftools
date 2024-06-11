@@ -4,11 +4,11 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
+import static com.hartwig.hmftools.common.linx.LinxFusion.context;
+import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.linx.LinxFusion.context;
-import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
@@ -18,14 +18,14 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.gene.BreakendGeneData;
-import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.CohortFileInterface;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class FusionWriter implements CohortFileInterface
 {
@@ -43,7 +43,7 @@ public class FusionWriter implements CohortFileInterface
             final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         int breakendId = 0;
-        Map<BreakendTransData,Integer> transIdMap = Maps.newHashMap();
+        Map<BreakendTransData, Integer> transIdMap = Maps.newHashMap();
 
         for(final BreakendTransData transcript : transcripts)
         {
@@ -70,7 +70,9 @@ public class FusionWriter implements CohortFileInterface
                     .exonicBasePhase(transcript.Phase)
                     .nextSpliceExonRank(transcript.nextSpliceExonRank())
                     .nextSpliceExonPhase(transcript.Phase)
-                    .nextSpliceDistance(transcript.isUpstream() ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance())
+                    .nextSpliceDistance(transcript.isUpstream()
+                            ? transcript.prevSpliceAcceptorDistance()
+                            : transcript.nextSpliceAcceptorDistance())
                     .totalExonCount(transcript.TransData.exons().size())
                     .chromosome(gene.chromosome())
                     .orientation(gene.orientation())
@@ -106,10 +108,12 @@ public class FusionWriter implements CohortFileInterface
                     .fusedExonDown(geneFusion.getFusedExon(false))
                     .geneStart(geneFusion.geneName(FS_UP))
                     .geneTranscriptStart(geneFusion.upstreamTrans().transName())
-                    .geneContextStart(context(geneFusion.upstreamTrans().regionType(), geneFusion.getFusedExon(true)))
+                    .geneContextStart(context(geneFusion.upstreamTrans()
+                            .regionType(), geneFusion.knownType(), geneFusion.getFusedExon(true)))
                     .geneEnd(geneFusion.geneName(FS_DOWN))
                     .geneTranscriptEnd(geneFusion.downstreamTrans().transName())
-                    .geneContextEnd(context(geneFusion.downstreamTrans().regionType(), geneFusion.getFusedExon(false)))
+                    .geneContextEnd(context(geneFusion.downstreamTrans()
+                            .regionType(), geneFusion.knownType(), geneFusion.getFusedExon(false)))
                     .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
                     .build());
         }
@@ -118,7 +122,9 @@ public class FusionWriter implements CohortFileInterface
     public void writeSampleData(final String sampleId, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         if(mOutputDir == null)
+        {
             return;
+        }
 
         try
         {
@@ -138,7 +144,10 @@ public class FusionWriter implements CohortFileInterface
     private static final String COHORT_WRITER_FUSION = "Fusion";
 
     @Override
-    public String fileType() { return COHORT_WRITER_FUSION; }
+    public String fileType()
+    {
+        return COHORT_WRITER_FUSION;
+    }
 
     @Override
     public BufferedWriter createWriter(final String outputDir)
@@ -188,7 +197,7 @@ public class FusionWriter implements CohortFileInterface
             writer.newLine();
             return writer;
         }
-        catch (final IOException e)
+        catch(final IOException e)
         {
             LNX_LOGGER.error("error writing fusions: {}", e.toString());
             return null;
@@ -241,8 +250,8 @@ public class FusionWriter implements CohortFileInterface
         }
 
         sb.append(String.format(",%s,%s,%f,%d",
-                    fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
-                    fusion.priority(), fusion.id()));
+                fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
+                fusion.priority(), fusion.id()));
 
         String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
 
