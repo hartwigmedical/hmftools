@@ -23,9 +23,9 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
@@ -86,6 +86,8 @@ public class PrepConfig
     {
         SampleIds = parseSampleConfig(configBuilder);
 
+        Categories = parseCategories(configBuilder);
+
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
         LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
@@ -93,7 +95,6 @@ public class PrepConfig
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
         SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR_CFG, SampleDataDir);
 
-        Categories = parseCategories(configBuilder);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
@@ -131,23 +132,15 @@ public class PrepConfig
 
     private static List<String> parseSampleConfig(ConfigBuilder configBuilder)
     {
-        List<String> sampleIds = new ArrayList<>();
-
         if(configBuilder.hasValue(SAMPLE))
-        {
-            sampleIds = List.of(configBuilder.getValue(SAMPLE));
-        }
-        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
-        {
-            sampleIds = ConfigUtils.loadSampleIdsFile(configBuilder);
-        }
-        else
-        {
-            CUP_LOGGER.error("Either -{} or -{} must be provided to {} config", SAMPLE, SAMPLE_ID_FILE, CuppaDataPrep.class.getSimpleName());
-            System.exit(1);
-        }
+            return List.of(configBuilder.getValue(SAMPLE));
 
-        return sampleIds;
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
+            return ConfigUtils.loadSampleIdsFile(configBuilder);
+
+        CUP_LOGGER.error("Either -{} or -{} must be provided to {} config", SAMPLE, SAMPLE_ID_FILE, CuppaDataPrep.class.getSimpleName());
+        System.exit(1);
+        return null;
     }
 
     public boolean isMultiSample() { return SampleIds.size() > 1; }
@@ -182,39 +175,24 @@ public class PrepConfig
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
     public String altSpliceJunctionFile(final String sampleId) { return AltSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
-    public static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
+    private static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
     {
-        List<CategoryType> categories = new ArrayList<>();
+        if(!configBuilder.hasValue(CATEGORIES))
+            return CategoryType.getDnaCategories(); // Default to DNA
 
-        if(configBuilder.hasValue(CATEGORIES))
-        {
-            String configCategories = configBuilder.getValue(CATEGORIES).toUpperCase();
+        String configCategories = configBuilder.getValue(CATEGORIES).toUpperCase();
 
-            if(configCategories.equals(ALL_CATEGORIES))
-            {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CategoryType.COMBINED).forEach(categories::add);
-            }
-            else if(configCategories.equals(DNA_CATEGORIES))
-            {
-                Arrays.stream(CategoryType.values()).filter(CategoryType::isDna).forEach(categories::add);
-            }
-            else if(configCategories.equals(RNA_CATEGORIES))
-            {
-                Arrays.stream(CategoryType.values()).filter(CategoryType::isDna).forEach(categories::add);
-            }
-            else
-            {
-                final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
-                Arrays.stream(categoryStrings).forEach(x -> categories.add(CategoryType.valueOf(x)));
-            }
-        }
-        else
-        {
-            // just DNA by default
-            Arrays.stream(CategoryType.values()).filter(CategoryType::isDna).forEach(categories::add);
-        }
+        if(configCategories.equals(ALL_CATEGORIES))
+            return CategoryType.getAllCategories();
 
-        return categories;
+        if(configCategories.equals(DNA_CATEGORIES))
+            return CategoryType.getDnaCategories();
+
+        if(configCategories.equals(RNA_CATEGORIES))
+            return CategoryType.getRnaCategories();
+
+        final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
+        return Arrays.stream(categoryStrings).map(CategoryType::valueOf).collect(Collectors.toList());
     }
 
     @VisibleForTesting
