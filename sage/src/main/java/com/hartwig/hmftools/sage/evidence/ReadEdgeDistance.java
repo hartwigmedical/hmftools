@@ -43,7 +43,7 @@ public class ReadEdgeDistance
 
         // determine how far from the edge of the read the variant is, ignoring soft-clip bases and realigned reads
         // and for INDELs use the position of the middle base of INDEL
-        // take the lower of the 2 distances for each read, eg 50 and 100 bases, then take 50
+        // take the lowest of the 2 distances for each read, eg 50 and 100 bases, then take 50
 
         int minDistance = NO_READ_EDGE_DISTANCE;
 
@@ -52,8 +52,9 @@ public class ReadEdgeDistance
             int minDistanceFirst = calcDistanceFromReadEdge(mVariantPosition, fragmentData.First);
             int minDistanceSecond = calcDistanceFromReadEdge(mVariantPosition, fragmentData.Second);
 
+            // use the fragment bounds if the variant falls within the overlapping section, otherwise just the read it relates to
             if(minDistanceFirst > NO_READ_EDGE_DISTANCE && minDistanceSecond > NO_READ_EDGE_DISTANCE)
-                minDistance = min(minDistanceFirst, minDistanceSecond);
+                minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
             else if(minDistanceFirst > NO_READ_EDGE_DISTANCE)
                 minDistance = minDistanceFirst;
             else if(minDistanceSecond > NO_READ_EDGE_DISTANCE)
