@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
+@Deprecated
 public class FeaturePrevData
 {
     public final String CancerType;

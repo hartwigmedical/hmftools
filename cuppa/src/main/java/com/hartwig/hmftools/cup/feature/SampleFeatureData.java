@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 
+@Deprecated
 public class SampleFeatureData
 {
     public final String SampleId;

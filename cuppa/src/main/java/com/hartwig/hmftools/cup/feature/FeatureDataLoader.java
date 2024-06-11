@@ -63,6 +63,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jooq.Record;
 import org.jooq.Result;
 
+@Deprecated
 public class FeatureDataLoader
 {
     public static boolean loadFeaturesFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
