@@ -341,7 +341,7 @@ public class ReadContextCounter
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
-            if(!mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit)
+            if(belowQualThreshold(calcBaseQuality))
             {
                 if(rawContext.PositionType != VariantReadPositionType.DELETED)
                 {
@@ -404,6 +404,12 @@ public class ReadContextCounter
 
                 if(realignedType == EXACT)
                 {
+                    if(belowQualThreshold(calcBaseQuality))
+                    {
+                        addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+                        return UNRELATED;
+                    }
+
                     matchType = ReadContextMatch.REALIGNED;
                     registerReadSupport(record, REALIGNED, modifiedQuality);
 
@@ -478,6 +484,11 @@ public class ReadContextCounter
         // REALIGN: realignment did not allow low-qual mismatches or wildcards - is that still a necessary condition?
 
         return mReadContextMatcher.determineReadMatch(record, readIndex);
+    }
+
+    private boolean belowQualThreshold(double calcBaseQuality)
+    {
+        return !mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
     }
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, final double quality)
