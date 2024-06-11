@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 
@@ -50,7 +51,7 @@ public class CombinedSyncData
         mCombinedEffectiveStart = 0;
     }
 
-    public static FragmentSyncOutcome formFragmentRead(final SAMRecord first, final SAMRecord second)
+    public static FragmentSyncOutcome formFragmentRead(final SAMRecord first, final SAMRecord second, final SAMFileHeader samHeader)
     {
         if(!positionsOverlap(first.getAlignmentStart(), first.getAlignmentEnd(), second.getAlignmentStart(), second.getAlignmentEnd()))
         {
@@ -74,15 +75,18 @@ public class CombinedSyncData
             return new FragmentSyncOutcome(BASE_MISMATCH);
         }
 
-        return new FragmentSyncOutcome(combinedSyncData.buildSyncedRead(first, second), COMBINED);
+        return new FragmentSyncOutcome(combinedSyncData.buildSyncedRead(first, second, samHeader), COMBINED);
     }
 
-    private SAMRecord buildSyncedRead(final SAMRecord first, final SAMRecord second)
+    private SAMRecord buildSyncedRead(final SAMRecord first, final SAMRecord second, final SAMFileHeader samHeader)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
-        recordBuilder.setHeader(first.getHeader());
+        if(samHeader != null)
+            recordBuilder.setHeader(samHeader);
+        else
+            recordBuilder.setHeader(first.getHeader());
 
         SAMRecord combinedRecord = recordBuilder.addFrag(
                 first.getReadName(),
@@ -94,7 +98,6 @@ public class CombinedSyncData
 
         combinedRecord.setReadBases(mCombinedBases);
         combinedRecord.setAlignmentStart(mFragmentStart);
-        combinedRecord.setReferenceIndex(first.getReferenceIndex()); // also set ref name, same for mate ref below
 
         combinedRecord.setBaseQualities(mCombinedBaseQualities);
         combinedRecord.setMateAlignmentStart(mFragmentStart);
@@ -414,5 +417,4 @@ public class CombinedSyncData
             return new byte[] { secondBase, (byte)max(BASE_QUAL_MINIMUM, secondQual - firstQual) };
         }
     }
-
 }

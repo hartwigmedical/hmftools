@@ -5,24 +5,35 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP;
 
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class FragmentSync
 {
     private final FragmentSyncReadHandler mReadHandler;
     private final Map<String,SAMRecord> mCachedReads;
+    private final SAMFileHeader mSAMHeader;
 
     private final int[] mSyncCounts;
 
-    public FragmentSync(final FragmentSyncReadHandler readHandler)
+    public FragmentSync(final FragmentSyncReadHandler readHandler, final RefGenomeInterface refGenomeSource)
     {
         mReadHandler = readHandler;
         mCachedReads = Maps.newHashMap();
         mSyncCounts = new int[FragmentSyncType.values().length];
+        mSAMHeader = buildRefSamHeader(refGenomeSource);
     }
 
     public void emptyCachedReads()
@@ -47,7 +58,7 @@ public class FragmentSync
         {
             try
             {
-                FragmentSyncOutcome syncOutcome = CombinedSyncData.formFragmentRead(otherRecord, record);
+                FragmentSyncOutcome syncOutcome = CombinedSyncData.formFragmentRead(otherRecord, record, mSAMHeader);
                 mCachedReads.remove(record.getReadName());
 
                 SAMRecord fragmentRecord = syncOutcome.CombinedRecord;
@@ -130,5 +141,25 @@ public class FragmentSync
         // cache until the paired read arrives
         mCachedReads.put(record.getReadName(), record);
         return true;
+    }
+
+    private SAMFileHeader buildRefSamHeader(final RefGenomeInterface refGenomeInterface)
+    {
+        if(!(refGenomeInterface instanceof RefGenomeSource))
+            return null;
+
+        RefGenomeSource refGenomeSource = (RefGenomeSource)refGenomeInterface;
+        List<SAMSequenceRecord> sequenceRecords = Lists.newArrayList();
+
+        SAMSequenceDictionary refGenomeDict = refGenomeSource.refGenomeFile().getSequenceDictionary();
+        SAMSequenceDictionary dictionary = new SAMSequenceDictionary();
+
+        for(SAMSequenceRecord sequence : refGenomeDict.getSequences())
+        {
+            if(HumanChromosome.contains(sequence.getSequenceName()) || MitochondrialChromosome.contains(sequence.getSequenceName()))
+                dictionary.addSequence(sequence);
+        }
+
+        return new SAMFileHeader(dictionary);
     }
 }

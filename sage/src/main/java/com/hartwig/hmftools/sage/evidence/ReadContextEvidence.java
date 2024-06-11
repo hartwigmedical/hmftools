@@ -60,7 +60,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mRefGenome = refGenome;
         mFactory = new ReadContextCounterFactory(config);
         mQualityRecalibrationMap = qualityRecalibrationMap;
-        mFragmentSync = new FragmentSync(this);
+        mFragmentSync = new FragmentSync(this, refGenome);
 
         mRefSequence = null;
         mReadCounters = null;
