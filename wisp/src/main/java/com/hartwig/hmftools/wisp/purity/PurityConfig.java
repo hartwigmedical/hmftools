@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_QUAL;
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
@@ -67,7 +68,10 @@ public class PurityConfig
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
     public final double GcRatioMin;
+    public final int BqrQualThreshold;
+    public final boolean SkipSubclonalFilter;
     public final boolean SummaryMethodOnlyOutput;
+    public final boolean AllowMissingSamples;
     public final int Threads;
 
     private static final String PATIENT_ID = "patient_id";
@@ -86,6 +90,9 @@ public class PurityConfig
     private static final String WRITE_TYPES = "write_types";
     private static final String SUMMARY_METHOD_ONLY = "summary_method_only";
     private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
+    private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
+    private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
+    private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -130,7 +137,10 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
 
         SummaryMethodOnlyOutput = configBuilder.hasFlag(SUMMARY_METHOD_ONLY);
+        BqrQualThreshold = configBuilder.getInteger(BQR_QUAL_THRESHOLD);
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
+        SkipSubclonalFilter = configBuilder.hasFlag(SKIP_SUBCLONAL_FILTER);
+        AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
 
         WriteTypes = Sets.newHashSet();
 
@@ -263,6 +273,10 @@ public class PurityConfig
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", DEFAULT_NOISE_READS_PER_MILLION);
+
+        configBuilder.addInteger(BQR_QUAL_THRESHOLD, "BQR qual threshold", DEFAULT_BQR_MIN_QUAL);
+        configBuilder.addFlag(SKIP_SUBCLONAL_FILTER, "Skip subclonal filter for somatics");
+        configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,

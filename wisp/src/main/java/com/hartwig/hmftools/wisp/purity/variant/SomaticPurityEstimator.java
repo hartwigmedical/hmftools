@@ -125,7 +125,7 @@ public class SomaticPurityEstimator
 
         ClonalityModel model = null;
 
-        if(VafPeakModel.canUseModel(fragmentTotals))
+        if(VafPeakModel.canUseModel(fragmentTotals, purityCalcData.RawPurityEstimate))
         {
             model = new VafPeakModel(mConfig, mResultsWriter, mSample, variants);
         }

@@ -171,7 +171,10 @@ public class PurityEstimator
             {
                 somaticVariants = new SomaticVariants(mConfig, mResultsWriter, sample);
                 if(!somaticVariants.loadVariants())
-                    System.exit(1);
+                {
+                    if(!mConfig.AllowMissingSamples)
+                        System.exit(1);
+                }
             }
 
             CopyNumberProfile copyNumberProfile = null;

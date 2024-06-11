@@ -113,7 +113,7 @@ public final class SomaticPurityCalcs
 
         double af = currentValue / sampleDepth - noiseRate;
 
-        double lod = 2 * af * (fragmentTotals.weightedVariantCopyNumber() + 2 * af - fragmentTotals.weightedCopyNumber() * af);
+        double lod = 2 * af / (fragmentTotals.weightedVariantCopyNumber() + 2 * af - fragmentTotals.weightedCopyNumber() * af);
 
         return lod;
     }

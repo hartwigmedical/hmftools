@@ -349,8 +349,11 @@ public class SomaticVariants
         if(variant.tier() == VariantTier.LOW_CONFIDENCE)
             filters.add(LOW_CONFIDENCE);
 
-        if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD && variant.variantCopyNumber() < SUBCLONAL_VCN_THRESHOLD)
-            filters.add(SUBCLONAL);
+        if(!mConfig.SkipSubclonalFilter)
+        {
+            if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD && variant.variantCopyNumber() < SUBCLONAL_VCN_THRESHOLD)
+                filters.add(SUBCLONAL);
+        }
 
         // check GC content
         if(sequenceGcRatio != NO_GC_RATIO && mConfig.GcRatioMin > 0 && sequenceGcRatio < mConfig.GcRatioMin)
