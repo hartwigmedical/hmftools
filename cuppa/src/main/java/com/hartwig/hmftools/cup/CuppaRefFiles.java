@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 
+@Deprecated
 public class CuppaRefFiles
 {
     public static final String CUP_REF_FILE_PREFIX = "cup_ref";

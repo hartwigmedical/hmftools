@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup.feature;
 
+@Deprecated
 public class FeaturePrevCounts
 {
     public double PositiveTotal;

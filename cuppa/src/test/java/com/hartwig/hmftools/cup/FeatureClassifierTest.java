@@ -31,6 +31,7 @@ import com.hartwig.hmftools.cup.feature.SampleFeatureData;
 
 import org.junit.Test;
 
+@Deprecated
 public class FeatureClassifierTest
 {
     private static final String FUSION_001 = "FUSION_001";

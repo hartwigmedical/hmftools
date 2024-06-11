@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public final class FeaturesCommon
 {
     public static void convertDriverAmps(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)

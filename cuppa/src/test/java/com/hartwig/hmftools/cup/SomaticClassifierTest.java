@@ -25,6 +25,7 @@ import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 
 import org.junit.Test;
 
+@Deprecated
 public class SomaticClassifierTest
 {
     @Test
