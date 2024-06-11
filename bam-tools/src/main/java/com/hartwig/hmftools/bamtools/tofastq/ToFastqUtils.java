@@ -39,20 +39,16 @@ public class ToFastqUtils
         return samReaderFactory.open(new File(config.BamFile));
     }
 
-    public static List<String> getReadGroupIds(final ToFastqConfig config)
+    public static List<SAMReadGroupRecord> getReadGroups(final ToFastqConfig config)
     {
-        // create from BAM header
-        final SAMFileHeader fileHeader;
         try(SamReader samReader = ToFastqUtils.openSamReader(config))
         {
-            fileHeader = samReader.getFileHeader();
+            return samReader.getFileHeader().getReadGroups();
         }
         catch(IOException e)
         {
             throw new UncheckedIOException(e);
         }
-
-        return fileHeader.getReadGroups().stream().map(SAMReadGroupRecord::getId).collect(Collectors.toList());
     }
 
     public static void mergeFastqs(Stream<String> inFastqPaths, String outFastq, boolean deleteIfEmpty)
