@@ -271,7 +271,7 @@ public class ReadContextCounter
             return MAP_QUAL;
         }
 
-        if(mConfig.Quality.HighDepthMode && isChimericRead(record))
+        if(mConfig.Quality.HighDepthMode && fragmentData == null && isChimericRead(record))
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return CHIMERIC;

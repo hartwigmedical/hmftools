@@ -24,6 +24,7 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 import org.junit.Test;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentSyncTest
@@ -424,5 +425,10 @@ public class FragmentSyncTest
         String readBases = syncOutcome.CombinedRecord.getReadString();
         assertEquals(REF_BASES.substring(10, 40), readBases);
         assertEquals(FragmentSyncType.COMBINED, syncOutcome.SyncType);
+    }
+
+    private static FragmentSyncOutcome formFragmentRead(final SAMRecord first, final SAMRecord second)
+    {
+        return CombinedSyncData.formFragmentRead(first, second, null);
     }
 }
