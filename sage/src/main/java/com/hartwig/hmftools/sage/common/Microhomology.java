@@ -18,7 +18,7 @@ public class Microhomology
 
     public String toString()
     {
-        return format("%s length(%d)", Bases, Length);
+        return format("%s length=%d", Bases, Length);
     }
 
     public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex)
