@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
@@ -333,7 +334,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         if(readCounter.variant().isDelete())
         {
-            return positionsWithin(readCounter.position(), readCounter.maxPositionVsReadStart(), unclippedStart, unclippedEnd);
+            return positionsOverlap(readCounter.position(), readCounter.maxPositionVsReadStart(), unclippedStart, unclippedEnd);
         }
 
         return positionWithin(readCounter.position(), unclippedStart, unclippedEnd);

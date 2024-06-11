@@ -149,8 +149,8 @@ public class MiscEvidenceTest
 
         // a read beyond the delete but still considered
         String readBases4 = REF_BASES_200.substring(47, 48) + REF_BASES_200.substring(52, 80);
-        readCigar = "3S26M";
-        SAMRecord read4 = buildSamRecord(50, readCigar, readBases3, buildDefaultBaseQuals(readBases3.length()));
+        readCigar = "29M"; // could have been soft-clipped or an SNV
+        SAMRecord read4 = buildSamRecord(51, readCigar, readBases4, buildDefaultBaseQuals(readBases4.length()));
 
         tester.TumorSamSlicer.ReadRecords.add(read4);
 
