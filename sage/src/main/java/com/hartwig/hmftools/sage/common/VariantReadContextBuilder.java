@@ -75,7 +75,7 @@ public class VariantReadContextBuilder
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
 
-            homology = Microhomology.findHomology(variant, read, varIndexInRead);
+            homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead);
 
             if(homology != null)
                 readCoreEnd += homology.Length;
@@ -133,12 +133,18 @@ public class VariantReadContextBuilder
         int altIndexLower = readVarIndex;
         int altIndexUpper = determineAltIndexUpper(variant, readVarIndex, homology);
 
-        RepeatInfo maxRepeat = repeatBoundaries != null ? repeatBoundaries.MaxRepeat : null;
-
+        RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;
 
         if(repeatBoundaries != null)
         {
+            if(repeatBoundaries.MaxRepeat != null)
+            {
+                maxRepeat = new RepeatInfo(
+                        repeatBoundaries.MaxRepeat.Index - readContextOffset,
+                        repeatBoundaries.MaxRepeat.Bases, repeatBoundaries.MaxRepeat.Count);
+            }
+
             allRepeats = Lists.newArrayListWithCapacity(repeatBoundaries.AllRepeats.size());
             int readFlankOffset = readFlankStart;
             repeatBoundaries.AllRepeats.forEach(x -> allRepeats.add(new RepeatInfo(

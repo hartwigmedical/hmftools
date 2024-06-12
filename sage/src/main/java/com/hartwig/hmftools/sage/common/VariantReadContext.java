@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
@@ -146,5 +147,26 @@ public class VariantReadContext
                 mVariant, leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
                 CoreIndexStart, VarIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "",
                 AltIndexLower, AltIndexUpper, refBases());
+    }
+
+    @VisibleForTesting
+    public boolean matches(final VariantReadContext other)
+    {
+        if((Homology != null) != (other.Homology != null))
+            return false;
+
+        if(Homology != null && !Homology.Bases.equals(other.Homology.Bases))
+            return false;
+
+        if((MaxRepeat != null) != (other.MaxRepeat != null))
+            return false;
+
+        if(MaxRepeat != null && !MaxRepeat.matches(other.MaxRepeat))
+            return false;
+
+        return VarIndex == other.VarIndex && AlignmentStart == other.AlignmentStart && AlignmentEnd == other.AlignmentEnd
+                && refBases().equals(other.refBases()) && readBases().equals(other.readBases()) && readCigar().equals(other.readCigar())
+                && CorePositionStart == other.CorePositionStart && CorePositionEnd == other.CorePositionEnd
+                && AltIndexLower == other.AltIndexLower && AltIndexUpper == other.AltIndexUpper;
     }
 }

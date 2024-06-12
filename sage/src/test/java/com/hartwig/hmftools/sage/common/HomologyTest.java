@@ -25,7 +25,7 @@ public class HomologyTest
         String readCigar = "16M1I13M";
         SAMRecord read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        Microhomology homology = findHomology(var, read, 16);
+        Microhomology homology = findHomology(var, read.getReadBases(), 16);
 
         assertNotNull(homology);
         assertEquals("T", homology.Bases);
@@ -38,7 +38,7 @@ public class HomologyTest
         readCigar = "16M2I13M";
         read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 16);
+        homology = findHomology(var, read.getReadBases(), 16);
 
         assertNotNull(homology);
         assertEquals("TT", homology.Bases);
@@ -52,7 +52,7 @@ public class HomologyTest
         readCigar = "15M3D11M";
         read = buildSamRecord(50, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 15);
+        homology = findHomology(var, read.getReadBases(), 15);
 
         assertNotNull(homology);
         assertEquals("AAA", homology.Bases);
@@ -65,7 +65,7 @@ public class HomologyTest
         readCigar = "16M3I20M";
         read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 16);
+        homology = findHomology(var, read.getReadBases(), 16);
 
         assertNotNull(homology);
         assertEquals("AAA", homology.Bases);
@@ -80,7 +80,7 @@ public class HomologyTest
         readCigar = "16M5I18M";
         read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 16);
+        homology = findHomology(var, read.getReadBases(), 16);
 
         assertNotNull(homology);
         assertEquals("AACTC", homology.Bases);

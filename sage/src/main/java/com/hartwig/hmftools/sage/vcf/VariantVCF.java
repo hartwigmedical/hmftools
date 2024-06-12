@@ -45,10 +45,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE_DESC;
@@ -58,6 +54,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
@@ -174,8 +172,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, READ_CONTEXT_INDEX_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_LEFT_FLANK_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_RIGHT_FLANK_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_CIGAR, 1, VCFHeaderLineType.String, READ_CONTEXT_CIGAR_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_ALIGNMENT, 2, VCFHeaderLineType.Integer, READ_CONTEXT_ALIGNMENT_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INFO, 1, VCFHeaderLineType.String, READ_CONTEXT_INFO_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_CONTEXT, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_CONTEXT_DESC));
 
