@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -79,7 +81,7 @@ public class FeaturePrep implements CategoryPrep
         }
     }
 
-    public String getDriverCatalogFile(final String sampleId) throws FileNotFoundException
+    public String getDriverCatalogFile(final String sampleId) throws NoSuchFileException
     {
         String path;
 
@@ -92,165 +94,140 @@ public class FeaturePrep implements CategoryPrep
             return path;
 
         CUP_LOGGER.error("sample({}) has no LINX or PURPLE driver catalog file", sampleId);
-        throw new FileNotFoundException();
+        throw new NoSuchFileException(path);
     }
 
-    public void getDriversFromCatalog(String sampleId)
+    public void getDriversFromCatalog(String sampleId) throws IOException
     {
-        try
+        String driverCatalogFile = getDriverCatalogFile(sampleId);
+        final List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFile);
+
+        for(final DriverCatalog driver : drivers)
         {
-            String driverCatalogFile = getDriverCatalogFile(sampleId);
-            final List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFile);
+            if(DriverType.isGermline(driver.driver()))
+                continue;
 
-            for(final DriverCatalog driver : drivers)
+            double likelihood = driver.driverLikelihood();
+
+            String featureName = driver.gene();
+            if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
             {
-                if(DriverType.isGermline(driver.driver()))
-                    continue;
+                featureName += AMP_SUFFIX;
+            } else {
+                featureName += MUTATION_SUFFIX;
+            }
 
-                double likelihood = driver.driverLikelihood();
+            DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
+            addDataItem(dataItem);
+        }
+    }
 
-                String featureName = driver.gene();
-                if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
-                {
-                    featureName += AMP_SUFFIX;
-                } else {
-                    featureName += MUTATION_SUFFIX;
-                }
+    public void getRepeatIndelDrivers(String sampleId) throws IOException
+    {
+        PurityContext purityContext = PurityContextFile.readWithQC(
+                mConfig.purpleQcFile(sampleId),
+                mConfig.purplePurityFile(sampleId)
+        );
 
-                DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
+        boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
+
+        final List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, null);
+        for(SomaticVariant variant : variants)
+        {
+            String gene = variant.Gene;
+
+            // TODO: Look for known hotspot mutations in CupConstants. Potentially rename method
+            // KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variant.Type, variant.Ref, variant.Alt, variant.Position));
+
+            boolean isKnownIndelGene = gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
+            boolean isRepeatIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
+
+            if(isMicrosatelliteStable && isRepeatIndelDriver)
+            {
+                String featureName = gene + INDEL_SUFFIX;
+                DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
                 addDataItem(dataItem);
             }
         }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("sample({}) failed to load driver catalog: {}", sampleId, e.toString());
-            System.exit(1);
-        }
     }
 
-    public void getRepeatIndelDrivers(String sampleId)
+    public void getFusions(String sampleId) throws IOException
     {
-        try
+        final String fusionsFilename = mConfig.linxFusionFile(sampleId);
+        List<LinxFusion> fusions = LinxFusion.read(fusionsFilename);
+
+        for(final LinxFusion fusion : fusions)
         {
-            PurityContext purityContext = PurityContextFile.readWithQC(
-                    mConfig.purpleQcFile(sampleId),
-                    mConfig.purplePurityFile(sampleId)
-            );
+            if(!fusion.reported())
+                continue;
 
-            boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
+            boolean isPromiscuous5 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString());
+            boolean isPromiscuous3 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString());
 
-            final List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, null);
-            for(SomaticVariant variant : variants)
-            {
-                String gene = variant.Gene;
+            final String fusionName;
 
-                // TODO: Look for known hotspot mutations in CupConstants. Potentially rename method
-                // KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variant.Type, variant.Ref, variant.Alt, variant.Position));
+            //TODO: split PROMISCUOUS_BOTH fusions into 2 sepearate DataItem entries?
+            if(isPromiscuous5 || isPromiscuous3){
 
-                boolean isKnownIndelGene = gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
-                boolean isRepeatIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
-
-                if(isMicrosatelliteStable && isRepeatIndelDriver)
-                {
-                    String featureName = gene + INDEL_SUFFIX;
-                    DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
-                    addDataItem(dataItem);
-                }
-            }
-        }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("sample({}) check indels - failed to load purity files from dir({}): {}",
-                    sampleId, mConfig.getPurpleDataDir(sampleId), e.toString());
-            System.exit(1);
-        }
-    }
-
-    public void getFusions(String sampleId)
-    {
-        try
-        {
-            final String fusionsFilename = mConfig.linxFusionFile(sampleId);
-            List<LinxFusion> fusions = LinxFusion.read(fusionsFilename);
-
-            for(final LinxFusion fusion : fusions)
-            {
-                if(!fusion.reported())
+                if(fusion.likelihood() != FusionLikelihoodType.HIGH)
                     continue;
 
-                boolean isPromiscuous5 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString());
-                boolean isPromiscuous3 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString());
+                final String[] genes = fusion.name().split("_");
 
-                final String fusionName;
-
-                //TODO: split PROMISCUOUS_BOTH fusions into 2 sepearate DataItem entries?
-                if(isPromiscuous5 || isPromiscuous3){
-
-                    if(fusion.likelihood() != FusionLikelihoodType.HIGH)
-                        continue;
-
-                    final String[] genes = fusion.name().split("_");
-
-                    fusionName = isPromiscuous5 ?
-                            genes[0] + PROMISCUOUS_5_SUFFIX :
-                            genes[1] + PROMISCUOUS_3_SUFFIX;
-                }
-                else
-                {
-                    fusionName = fusion.name();
-                }
-
-                DataItem dataItem = new DataItem(DNA, ItemType.FUSION, fusionName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
-                addDataItem(dataItem);
+                fusionName = isPromiscuous5 ?
+                        genes[0] + PROMISCUOUS_5_SUFFIX :
+                        genes[1] + PROMISCUOUS_3_SUFFIX;
             }
-        }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("sample({}) failed to load fusions: {}", sampleId, e.toString());
-            System.exit(1);
+            else
+            {
+                fusionName = fusion.name();
+            }
+
+            DataItem dataItem = new DataItem(DNA, ItemType.FUSION, fusionName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
+            addDataItem(dataItem);
         }
     }
 
-    public void getVirusAnnotations(String sampleId)
+    public void getVirusAnnotations(String sampleId) throws IOException
     {
         String viralAnnotationFilename = mConfig.viralAnnotationFile(sampleId);
         final List<AnnotatedVirus> virusAnnotations = new ArrayList<>();
 
-        try
+        AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(AnnotatedVirus::reported).forEach(virusAnnotations::add);
+
+        if(virusAnnotations.size() == 0)
+            return;
+
+        for(AnnotatedVirus annotatedVirus : virusAnnotations)
         {
-            AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(AnnotatedVirus::reported).forEach(virusAnnotations::add);
+            if(!annotatedVirus.reported())
+                continue;
 
-            if(virusAnnotations.size() == 0)
-                return;
+            // `virusDriverLikelihoodType() == UNKNOWN` does not mean that the likelihood is unknown, but that the virus is not a known
+            // carcinogenic virus (i.e. annotatedVirus.reported()==false)
+            double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
+            String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
 
-            for(AnnotatedVirus annotatedVirus : virusAnnotations)
-            {
-                if(!annotatedVirus.reported())
-                    continue;
-
-                // `virusDriverLikelihoodType() == UNKNOWN` does not mean that the likelihood is unknown, but that the virus is not a known
-                // carcinogenic virus (i.e. annotatedVirus.reported()==false)
-                double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
-                String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
-
-                DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
-                addDataItem(dataItem);
-            }
-        }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("Failed to load viral annotations file({}): {}", viralAnnotationFilename, e);
-            System.exit(1);
+            DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
+            addDataItem(dataItem);
         }
     }
 
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
     {
-        getDriversFromCatalog(sampleId);
-        getRepeatIndelDrivers(sampleId);
-        getFusions(sampleId);
-        getVirusAnnotations(sampleId);
+        try {
+            getDriversFromCatalog(sampleId);
+            getRepeatIndelDrivers(sampleId);
+            getFusions(sampleId);
+            getVirusAnnotations(sampleId);
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         return new ArrayList<>(mDataItemsMap.values());
     }

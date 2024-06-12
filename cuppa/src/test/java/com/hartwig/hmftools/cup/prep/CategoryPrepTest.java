@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;

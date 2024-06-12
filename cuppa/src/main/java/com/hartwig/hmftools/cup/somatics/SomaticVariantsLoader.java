@@ -14,8 +14,10 @@ import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TRINUC_CONTEX
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TYPE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,17 +39,12 @@ public class SomaticVariantsLoader
             final PrepConfig config,
             final String sampleId,
             @Nullable final List<VariantType> variantTypes
-    ){
-        if(config.PurpleDir.isEmpty() & config.SomaticVariantsDir.isEmpty())
-        {
-            CUP_LOGGER.error("Config must have either -{} or -{}", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR);
-            System.exit(1);
-        }
-
+    ) throws NoSuchFileException
+    {
         File genericVariantsFile = new File(config.somaticVariantsGenericFile(sampleId));
         File vcfFile = new File(config.purpleSomaticVcfFile(sampleId));
 
-        List<SomaticVariant> variants = null;
+        List<SomaticVariant> variants;
         if(genericVariantsFile.isFile())
         {
             if(vcfFile.isFile())
@@ -63,8 +60,7 @@ public class SomaticVariantsLoader
         }
         else
         {
-            CUP_LOGGER.error("Failed to load somatic variants for sample({})", sampleId);
-            System.exit(1);
+            throw new NoSuchFileException(String.format("%s or %s not provided", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR));
         }
 
         return variants;
