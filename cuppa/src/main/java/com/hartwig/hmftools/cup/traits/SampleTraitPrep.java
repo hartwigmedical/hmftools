@@ -63,13 +63,11 @@ public class SampleTraitPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId,
-                    mConfig.getPurpleDataDir(sampleId),
-                    e.toString()
-            );
-
-            return null;
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
+            System.exit(1);
         }
+
+        return dataItems;
     }
 }

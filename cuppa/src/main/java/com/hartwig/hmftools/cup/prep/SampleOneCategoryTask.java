@@ -70,24 +70,16 @@ public class SampleOneCategoryTask implements Callable
     {
         processSample();
 
-        if(mDataItems == null)
+        if(mConfig.isMultiSample())
         {
-            String errorMessage = String.format("Failed feature extraction category(%s) for sample(%s)", mCategoryPrep.categoryType(), mSampleName);
-
-            if(mConfig.isSingleSample())
+            if(mDataItems == null)
             {
-                CUP_LOGGER.error(errorMessage);
-                System.exit(1);
+                CUP_LOGGER.error("Multi-sample feature matrix will contain nulls for sample({}) category({})", mSampleName, mCategoryPrep.categoryType());
             }
             else
             {
-                CUP_LOGGER.error(errorMessage + ". Output feature matrix will contain nulls for this sample");
+                addDataItemsToMatrix();
             }
-        }
-
-        if(mDataItems != null & mConfig.isMultiSample())
-        {
-            addDataItemsToMatrix();
         }
     }
 

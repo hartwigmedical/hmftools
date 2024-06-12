@@ -15,6 +15,9 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,10 +56,11 @@ public class StructuralVariantPrep implements CategoryPrep
         try
         {
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(
-                    mConfig.purpleSvFile(sampleId),
-                    new AlwaysPassFilter()
-            );
+
+            String purpleSvFile = mConfig.purpleSvFile(sampleId);
+            if(!new File(purpleSvFile).isFile())
+                throw new NoSuchFileException(purpleSvFile);
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(purpleSvFile, new AlwaysPassFilter());
             final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             int svId = 0;
@@ -65,7 +69,10 @@ public class StructuralVariantPrep implements CategoryPrep
                 svDataList.add(convertSvData(var, svId++));
             }
 
-            final List<LinxCluster> clusterList = LinxCluster.read(mConfig.linxClusterFile(sampleId));
+            String linxClusterFile = mConfig.linxClusterFile(sampleId);
+            if(!new File(linxClusterFile).isFile())
+                throw new NoSuchFileException(linxClusterFile);
+            final List<LinxCluster> clusterList = LinxCluster.read(linxClusterFile);
 
             final int[] svDataCounts = extractSvCounts(svDataList, clusterList);
 
@@ -76,12 +83,8 @@ public class StructuralVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to load structural variants from file{}): {}",
-                    sampleId,
-                    mConfig.purpleSvFile(sampleId),
-                    e.toString()
-            );
-
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
             System.exit(1);
         }
 

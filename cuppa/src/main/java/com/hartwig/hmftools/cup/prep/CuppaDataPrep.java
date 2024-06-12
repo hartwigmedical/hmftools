@@ -150,7 +150,8 @@ public class CuppaDataPrep
             }
             catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write features: ", e);
+                CUP_LOGGER.error("Failed to write features:");
+                e.printStackTrace();
                 System.exit(1);
             }
         }
@@ -239,7 +240,8 @@ public class CuppaDataPrep
             }
             catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write multi-sample feature matrix: " + e);
+                CUP_LOGGER.error("Failed to write multi-sample feature matrix:");
+                e.printStackTrace();
                 System.exit(1);
             }
         }

@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
+import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +73,7 @@ public class SomaticVariantPrep implements CategoryPrep
     @Override
     public CategoryType categoryType() { return CategoryType.SNV; }
 
-    private void loadVariants(String sampleId)
+    private void loadVariants(String sampleId) throws NoSuchFileException
     {
         List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, Lists.newArrayList(SNP));
         mVariants.addAll(variants);
@@ -163,7 +165,8 @@ public class SomaticVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to extract somatic variant features: {}", sampleId, e.toString());
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
             System.exit(1);
         }
 
