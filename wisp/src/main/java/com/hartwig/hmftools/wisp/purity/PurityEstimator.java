@@ -197,8 +197,7 @@ public class PurityEstimator
                 SomaticPurityResult somaticPurityResult = somaticVariants != null ?
                         somaticVariants.processSample(sampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
-                AmberLohResult lohResult = amberLohCalcs != null ?
-                        amberLohCalcs.processSample(sampleId, purityContext) : AmberLohResult.INVALID_RESULT;
+                AmberLohResult lohResult = amberLohCalcs != null ? amberLohCalcs.processSample(sampleId) : AmberLohResult.INVALID_RESULT;
 
                 mResultsWriter.writeSampleSummary(sample, sampleId, purityContext, cnPurityResult, somaticPurityResult, lohResult);
             }

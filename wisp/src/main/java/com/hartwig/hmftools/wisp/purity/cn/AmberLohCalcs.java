@@ -52,6 +52,7 @@ public class AmberLohCalcs
     private final BufferedWriter mWriter;
 
     private final Multimap<Chromosome,AmberBAF> mTumorChromosomeBafs;
+    private final Multimap<Chromosome,AmberBAF> mSecondaryTumorChromosomeBafs;
 
     public AmberLohCalcs(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
@@ -61,6 +62,7 @@ public class AmberLohCalcs
 
         mCopyNumbers = Lists.newArrayList();
         mTumorChromosomeBafs = ArrayListMultimap.create();
+        mSecondaryTumorChromosomeBafs = ArrayListMultimap.create();
 
         try
         {
@@ -69,6 +71,14 @@ public class AmberLohCalcs
 
             String tumorAmberFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.getAmberDir(sample.TumorId), mSample.TumorId);
             mTumorChromosomeBafs.putAll(AmberBAFFile.read(tumorAmberFile, true));
+
+            if(sample.AmberExtraTumorId != null)
+            {
+                String secondaryTumorAmberFile = AmberBAFFile.generateAmberFilenameForReading(
+                        mConfig.getAmberDir(sample.AmberExtraTumorId), sample.AmberExtraTumorId);
+
+                mSecondaryTumorChromosomeBafs.putAll(AmberBAFFile.read(secondaryTumorAmberFile, true));
+            }
         }
         catch(Exception e)
         {
@@ -76,7 +86,7 @@ public class AmberLohCalcs
         }
     }
 
-    public AmberLohResult processSample(final String sampleId, final PurityContext purityContext)
+    public AmberLohResult processSample(final String sampleId)
     {
         try
         {
@@ -117,19 +127,25 @@ public class AmberLohCalcs
 
                 Collection<AmberBAF> tumorChrSites = mTumorChromosomeBafs.get(chromosome);
                 Collection<AmberBAF> sampleChrites = sampleChromosomeBafs.get(chromosome);
+                Collection<AmberBAF> secondaryTumorChrSites = mSecondaryTumorChromosomeBafs.get(chromosome);
 
                 totalAmberSites += tumorChrSites.size();
-                totalAmberSites += sampleChrites.size();
+                // totalAmberSites += sampleChrites.size(); // only count the tumor
 
                 for(PurpleCopyNumber copyNumber : entry.getValue())
                 {
                     List<AmberBAF> tumorLohSites = tumorChrSites.stream()
                             .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
 
+                    List<AmberBAF> secondaryTumorLohSites = secondaryTumorChrSites != null ?
+                            secondaryTumorChrSites.stream()
+                                    .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList())
+                            : Collections.emptyList();
+
                     List<AmberBAF> sampleLohSites = sampleChrites.stream()
                             .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
 
-                    RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, sampleLohSites);
+                    RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, secondaryTumorLohSites, sampleLohSites);
 
                     if(regionData == null)
                         continue;
@@ -257,7 +273,8 @@ public class AmberLohCalcs
     }
 
     private RegionData buildCopyNumberRegionData(
-            final PurpleCopyNumber copyNumber, final List<AmberBAF> tumorLohSites, final List<AmberBAF> sampleLohSites)
+            final PurpleCopyNumber copyNumber, final List<AmberBAF> tumorLohSites, final List<AmberBAF> secondaryTumorLohSites,
+            final List<AmberBAF> sampleLohSites)
     {
         // find matching sites and accumulate VAF counts
         if(tumorLohSites.isEmpty() || sampleLohSites.isEmpty())
@@ -266,12 +283,39 @@ public class AmberLohCalcs
         int sampleSiteIndex = 0;
         AmberBAF sampleSite = sampleLohSites.get(sampleSiteIndex);
 
+        int secondaryTumorSiteIndex = 0;
+        boolean hasSecondaryTumor = !secondaryTumorLohSites.isEmpty();
+        AmberBAF secondaryTumorSite = hasSecondaryTumor ? secondaryTumorLohSites.get(sampleSiteIndex) : null;
+
         RegionData regionData = new RegionData(copyNumber);
 
         for(AmberBAF tumorSite : tumorLohSites)
         {
             if(tumorSite.tumorModifiedBAF() <= AMBER_LOH_MIN_TUMOR_BAF)
                 continue;
+
+            if(hasSecondaryTumor)
+            {
+                while(secondaryTumorSite != null && secondaryTumorSite.position() < tumorSite.position())
+                {
+                    ++secondaryTumorSiteIndex;
+
+                    if(secondaryTumorSiteIndex >= secondaryTumorLohSites.size())
+                    {
+                        secondaryTumorSite = null;
+                        break;
+                    }
+
+                    secondaryTumorSite = secondaryTumorLohSites.get(secondaryTumorSiteIndex);
+                }
+
+                if(secondaryTumorSite == null || secondaryTumorSite.position() > tumorSite.position()
+                || secondaryTumorSite.tumorModifiedBAF() <= AMBER_LOH_MIN_TUMOR_BAF)
+                {
+                    // cannot use the tumor site either
+                    continue;
+                }
+            }
 
             while(sampleSite.position() < tumorSite.position())
             {

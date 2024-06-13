@@ -21,7 +21,7 @@ public class AmberLohResult
     public final int TotalFragments;
 
     public static final AmberLohResult INVALID_RESULT = new AmberLohResult(
-            0, 0, 0, 0, 0, 0, 0, 0, 0);
+            0, 0, 0, 0, 0, 0, 0, 1, 0);
 
     public AmberLohResult(
             final int regionCount, final int siteCount, final double estimatedPurity, final double lohPercent,

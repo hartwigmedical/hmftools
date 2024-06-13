@@ -24,18 +24,21 @@ public class SampleData
 {
     public final String PatientId;
     public final String TumorId;
+    public final String AmberExtraTumorId;
     public final List<String> SampleIds;
     public final String VcfTag;
     public final boolean IsPanel;
 
     public SampleData(
-            final String patientId, final String tumorId, final List<String> sampleIds, final String vcfTag, final boolean isPanel)
+            final String patientId, final String tumorId, final List<String> sampleIds, final String vcfTag, final boolean isPanel,
+            final String amberExtraTumorId)
     {
         PatientId = patientId;
         TumorId = tumorId;
         SampleIds = sampleIds;
         VcfTag = vcfTag;
         IsPanel = isPanel;
+        AmberExtraTumorId = amberExtraTumorId;
     }
 
     public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
@@ -69,6 +72,7 @@ public class SampleData
             int sampleIdsIndex = fieldsIndexMap.get("SampleIds");
             Integer vcfIndex = fieldsIndexMap.get("VcfTag");
             Integer isPanelIndex = fieldsIndexMap.get("IsPanel");
+            Integer amberExtraTumorIdIndex = fieldsIndexMap.get("AmberExtraTumorId");
 
             for(String line : fileContents)
             {
@@ -83,9 +87,10 @@ public class SampleData
 
                 String patientId = values[patientIndex];
                 String tumorId = values[tumorIndex];
+                String amberExtraTumorId = amberExtraTumorIdIndex != null ? values[amberExtraTumorIdIndex] : null;
                 List<String> sampleIds = sampleIdsFromStr(values[sampleIdsIndex]);
 
-                samples.add(new SampleData(patientId, tumorId, sampleIds, vcfTag, isPanel));
+                samples.add(new SampleData(patientId, tumorId, sampleIds, vcfTag, isPanel, amberExtraTumorId));
             }
         }
         catch (IOException e)
