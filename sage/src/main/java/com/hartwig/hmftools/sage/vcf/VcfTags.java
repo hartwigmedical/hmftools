@@ -18,6 +18,9 @@ public final class VcfTags
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
+    public static final String READ_CONTEXT_UPDATED = "RC_UPDATED";
+    public static final String READ_CONTEXT_UPDATED_DESC = "Read context was updated from an earlier Sage version";
+
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";

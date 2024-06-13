@@ -45,23 +45,17 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
@@ -168,10 +162,6 @@ public class VariantVCF implements AutoCloseable
 
         // info fields
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_CORE, 1, VCFHeaderLineType.String, READ_CONTEXT_CORE_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, READ_CONTEXT_INDEX_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_LEFT_FLANK_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_RIGHT_FLANK_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INFO, 1, VCFHeaderLineType.String, READ_CONTEXT_INFO_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_CONTEXT, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_CONTEXT_DESC));
@@ -269,6 +259,11 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+        }
+
+        if(!header.hasInfoLine(READ_CONTEXT_UPDATED))
+        {
+            header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_UPDATED, 1, VCFHeaderLineType.Flag, READ_CONTEXT_UPDATED_DESC));
         }
     }
 

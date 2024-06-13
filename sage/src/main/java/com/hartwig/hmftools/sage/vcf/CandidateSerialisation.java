@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
 
 import java.util.List;
 
@@ -100,15 +101,16 @@ public final class CandidateSerialisation
         VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, LOW_CONFIDENCE.toString()));
 
         ReadContextVcfInfo readContextVcfInfo = null;
+        boolean buildFromOldTags = !context.hasAttribute(READ_CONTEXT_INFO);
 
-        if(context.hasAttribute(READ_CONTEXT_INFO))
-        {
-            readContextVcfInfo = ReadContextVcfInfo.fromVcfTag(context.getAttributeAsString(READ_CONTEXT_INFO, ""));
-        }
-        else
+        if(buildFromOldTags)
         {
             // support for versions 3.0 -> 3.4
             readContextVcfInfo = buildReadContextFromOldVcfTags(variant, context, refSequence);
+        }
+        else
+        {
+            readContextVcfInfo = ReadContextVcfInfo.fromVcfTag(context.getAttributeAsString(READ_CONTEXT_INFO, ""));
         }
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
@@ -122,6 +124,19 @@ public final class CandidateSerialisation
 
         if(readContext == null)
             return null;
+
+        // TEMP: tracking of changes
+        if(buildFromOldTags)
+        {
+            // old read base length
+            String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
+            String core = context.getAttributeAsString(READ_CONTEXT_CORE, Strings.EMPTY);
+            String rightFlank = context.getAttributeAsString(READ_CONTEXT_RIGHT_FLANK, Strings.EMPTY);
+            int oldReadBaseLength = leftFlank.length() + core.length() + rightFlank.length();
+
+            if(readContext.totalLength() != oldReadBaseLength)
+                context.getCommonInfo().putAttribute(READ_CONTEXT_UPDATED, true);
+        }
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
@@ -145,7 +160,7 @@ public final class CandidateSerialisation
         int readBaseLength = leftFlank.length() + core.length() + rightFlank.length();
 
         int alignmentStart = variant.Position - varReadIndex;
-        int alignmentEnd = alignmentStart + readBaseLength - 1 + variant.indelLength();
+        int alignmentEnd = alignmentStart + readBaseLength - 1 - variant.indelLength();
 
         // build a buffer around the flanks to allow for any need to expand the core for repeats and homology
         int refBaseBuffer = PRE_v3_5_FLANK_EXTENSION_LENGTH;

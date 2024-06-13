@@ -148,7 +148,7 @@ public class SageAppendApplication
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
-        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
+        VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
 
         if(existingVariants.isEmpty())
         {
