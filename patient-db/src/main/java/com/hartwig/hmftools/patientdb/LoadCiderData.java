@@ -27,11 +27,13 @@ import org.jetbrains.annotations.NotNull;
 public class LoadCiderData
 {
     private static final String CIDER_DIR = "cider";
+    private static final String DB_SAMPLE = "db_sample";
 
     public static void main(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(DB_SAMPLE, "ID of the sample in the database (optional). Defaults to the sample ID.");
         configBuilder.addConfigItem(CIDER_DIR, true, "Cider output directory");
         addDatabaseCmdLineArgs(configBuilder, true);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -48,7 +50,7 @@ public class LoadCiderData
         try (DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
             String sampleId = configBuilder.getValue(SAMPLE);
-
+            String dbSampleId = configBuilder.hasValue(DB_SAMPLE) ? configBuilder.getValue(DB_SAMPLE) : sampleId;
             String ciderDir = checkAddDirSeparator(configBuilder.getValue(CIDER_DIR));
 
             if(!Files.exists(Paths.get(ciderDir)))
@@ -57,11 +59,11 @@ public class LoadCiderData
                 System.exit(1);
             }
 
-            LOGGER.info("loading sample({}) Cider data from {}", sampleId, ciderDir);
+            LOGGER.info("loading sample({}) dbSample({}) Cider data from {}", sampleId, dbSampleId, ciderDir);
 
             final String sample = sampleId;
 
-            dbAccess.context().transaction(tr -> loadCiderData(sample, dbAccess, ciderDir));
+            dbAccess.context().transaction(tr -> loadCiderData(dbSampleId, sample, dbAccess, ciderDir));
 
             LOGGER.info("Cider data loading complete");
         }
@@ -72,17 +74,16 @@ public class LoadCiderData
         }
     }
 
-    private static void loadCiderData(
-            final String sampleId, final DatabaseAccess dbAccess, final String ciderDir)
+    private static void loadCiderData(final String dbSampleId, final String sampleId, final DatabaseAccess dbAccess, final String ciderDir)
     {
         // filter only partial and pass sequences
         List<Cdr3Sequence> cdr3Sequences = Cdr3SequenceFile.read(Cdr3SequenceFile.generateFilename(ciderDir, sampleId))
                 .stream().filter(seq -> seq.filter().equals("PASS") || seq.filter().equals("PARTIAL"))
                 .collect(Collectors.toList());
 
-        dbAccess.writeCdr3Sequences(sampleId, cdr3Sequences);
+        dbAccess.writeCdr3Sequences(dbSampleId, cdr3Sequences);
 
         List<Cdr3LocusSummary> locusSummaries = Cdr3LocusSummaryFile.read(Cdr3LocusSummaryFile.generateFilename(ciderDir, sampleId));
-        dbAccess.writeCdr3LocusSummaries(sampleId, locusSummaries);
+        dbAccess.writeCdr3LocusSummaries(dbSampleId, locusSummaries);
     }
 }
