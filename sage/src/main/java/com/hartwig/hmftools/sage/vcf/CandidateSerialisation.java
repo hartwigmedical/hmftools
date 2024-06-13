@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
@@ -96,7 +97,7 @@ public final class CandidateSerialisation
                 context.getContig(), context.getStart(),
                 context.getReference().getBaseString(), context.getAlternateAllele(0).getBaseString());
 
-        VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
+        VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, LOW_CONFIDENCE.toString()));
 
         ReadContextVcfInfo readContextVcfInfo = null;
 
@@ -106,7 +107,8 @@ public final class CandidateSerialisation
         }
         else
         {
-            readContextVcfInfo = buildReadContextVcfInfo(variant, context, refSequence);
+            // support for versions 3.0 -> 3.4
+            readContextVcfInfo = buildReadContextFromOldVcfTags(variant, context, refSequence);
         }
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
@@ -125,7 +127,7 @@ public final class CandidateSerialisation
     }
 
     @VisibleForTesting
-    public static ReadContextVcfInfo buildReadContextVcfInfo(
+    public static ReadContextVcfInfo buildReadContextFromOldVcfTags(
             final SimpleVariant variant, final VariantContext context, final RefSequence refSequence)
     {
         String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);

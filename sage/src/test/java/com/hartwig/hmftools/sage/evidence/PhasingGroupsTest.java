@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
@@ -25,6 +25,9 @@ import com.hartwig.hmftools.sage.common.VariantUtils;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.phase.PhasedVariantGroup;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
 
 import org.junit.Test;
 

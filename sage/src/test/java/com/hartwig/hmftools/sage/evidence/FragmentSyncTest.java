@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sync;
+package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
@@ -21,7 +21,12 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.sync.CombinedSyncData;
+import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.sync.FragmentSyncOutcome;
+import com.hartwig.hmftools.sage.sync.FragmentSyncType;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -266,7 +271,7 @@ public class FragmentSyncTest
         second.setReadNegativeStrandFlag(true);
 
         FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
-        assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
+        Assert.assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // an inversion
         first = createSamRecord(
