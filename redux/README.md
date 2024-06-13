@@ -216,7 +216,7 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 
 **Consensus Fragment**
 - **DUAL strand consensus ref preference** - For DUAL strand consensus a qual 11 ref on one strand can cause a qual 37 alt on the other to be set to consensus ref.  This may be sub-optimal.
-- **Max QUAL not always representative** - Sometimes we may see n fragments collaped with n-1 having base qual 11 and the nth fragment having base qual 37.  The low median qual indicates a potential issue, but we take the max qual right now.  This can lead to over confident DUPLEX calls
+- **Max QUAL not always representative** - Sometimes we may see n fragments collaped with n-1 having base qual 11 and the nth fragment having base qual 37.  The low median qual indicates a potential issue, but we take the max qual right now.  This can lead to over confident DUPLEX calls. Even if we took the median instead, if one strand has just a single read with high base qual, the final consensus will have high base qual.
 
 **Problematic regions definitions**
 - REDUX should trinculeotide repeats of at least 30 length and all dinculeotide / single base repeats of  of 20-30 bases to the problematic regions file. 
