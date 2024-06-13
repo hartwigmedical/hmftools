@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 
+import static htsjdk.samtools.CigarOperator.N;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -177,11 +179,11 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         Collections.sort(gapDistances, Collections.reverseOrder());
 
-        int gapCount = gapDistances.size();
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
 
         /*
+        int gapCount = gapDistances.size();
         int medianGap = gapDistances.get(gapCount / 2);
 
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",

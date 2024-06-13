@@ -145,7 +145,9 @@ public class ReadContextMatcher
         return 1 + (segmentLength / CORE_LOW_QUAL_MISMATCH_FACTOR);
     }
 
-    public boolean coversVariant(final SAMRecord record, final int readVarIndex)
+    public boolean coversVariant(final SAMRecord record, final int readVarIndex) { return coversVariant(record.getReadBases(), readVarIndex); }
+
+    public boolean coversVariant(final byte[] readBases, final int readVarIndex)
     {
         if(readVarIndex < 0)
             return false;
@@ -154,7 +156,7 @@ public class ReadContextMatcher
         int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarIndex;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
-        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < record.getReadBases().length;
+        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < readBases.length;
     }
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)

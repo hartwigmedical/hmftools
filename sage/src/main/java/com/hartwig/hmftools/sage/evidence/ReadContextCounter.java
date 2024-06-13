@@ -37,9 +37,13 @@ import static com.hartwig.hmftools.sage.evidence.Realignment.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDel;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realignedReadIndexPosition;
+import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
+
+import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
 
@@ -311,7 +315,9 @@ public class ReadContextCounter
 
         int readVarIndex = rawContext.ReadVariantIndex;
 
-        boolean coreCovered = mReadContextMatcher.coversVariant(record, readVarIndex);
+        SplitReadSegment splitReadSegment = record.getCigar().containsOperator(N) ? formSegment(record, mVariant.Position, readVarIndex) : null;
+
+        boolean coreCovered = coversVariant(record, readVarIndex, splitReadSegment);
 
         if(!coreCovered && !checkRealigned)
         {
@@ -343,9 +349,9 @@ public class ReadContextCounter
 
             if(belowQualThreshold(calcBaseQuality))
             {
-                if(rawContext.PositionType != VariantReadPositionType.DELETED)
+                if(rawContext.PositionType != DELETED)
                 {
-                    matchType = determineReadContextMatch(record, readVarIndex, true);
+                    matchType = determineReadContextMatch(record, readVarIndex, splitReadSegment);
 
                     if(matchType.SupportsAlt)
                         countAltSupportMetrics(record, fragmentData);
@@ -360,9 +366,8 @@ public class ReadContextCounter
 
             modifiedQuality = qualityScores.ModifiedQuality;
 
-            // Check if FULL, PARTIAL, OR CORE
-            matchType = rawContext.PositionType != VariantReadPositionType.DELETED ?
-                    determineReadContextMatch(record, readVarIndex, true) : NONE;
+            // check for alt support (full, partial core or core)
+            matchType = rawContext.PositionType != DELETED ? determineReadContextMatch(record, readVarIndex, splitReadSegment) : NONE;
 
             if(matchType.SupportsAlt)
             {
@@ -390,7 +395,7 @@ public class ReadContextCounter
             if(realignedReadIndex == null)
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
 
-            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex, realignedReadIndex);
+            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
 
             if(realignedType != RealignedType.NONE)
             {
@@ -462,26 +467,21 @@ public class ReadContextCounter
         return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }
 
-    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
+    private boolean coversVariant(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
-        // CLEAN-UP: fix this for RNA
-        // better approaches would be to have the read matcher stop checking if it is in a N-section,
-        // or to avoid affecting all DNA samples, make a new SAMRecord with the Ns filled out sufficiently
+        if(splitReadSegment != null)
+            return mReadContextMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadVarIndex);
 
-        /*
-        ReadIndexBases readIndexBases;
-        if(record.getCigar().containsOperator(CigarOperator.N))
+        return mReadContextMatcher.coversVariant(record.getReadBases(), readIndex);
+    }
+
+    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
+    {
+        if(splitReadSegment != null)
         {
-            readIndexBases = SplitReadUtils.expandSplitRead(readIndex, record);
+            return mReadContextMatcher.determineReadMatch(
+                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false);
         }
-
-        final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                readIndexBases, record.getBaseQualities(),
-                allowCoreVariation ? mAllowWildcardMatchInCore : false,
-                allowCoreVariation ? mMaxCoreMismatches : 0);
-        */
-
-        // REALIGN: realignment did not allow low-qual mismatches or wildcards - is that still a necessary condition?
 
         return mReadContextMatcher.determineReadMatch(record, readIndex);
     }

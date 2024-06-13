@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.sage.common.ReadCigarInfo.getReadIndexFromPosition;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 
@@ -19,17 +20,32 @@ public class Realignment
 {
     public static RealignedType checkRealignment(
             final VariantReadContext readContext, final ReadContextMatcher readContextMatcher, final SAMRecord record,
-            final int readIndex, final int realignedReadIndex)
+            final int readIndex, int realignedReadIndex, final SplitReadSegment splitReadSegment)
     {
         // the read index corresponding to the ref position at the end of the core
         if(readIndex == realignedReadIndex)
             return RealignedType.NONE;
 
-        if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
-            return RealignedType.NONE;
+        ReadContextMatch match = NONE;
 
-        ReadContextMatch match = readContextMatcher.determineReadMatch(
-                record.getReadBases(), record.getBaseQualities(), realignedReadIndex, true);
+        if(splitReadSegment != null)
+        {
+            realignedReadIndex -= splitReadSegment.SegmentIndexStart;
+
+            if(realignedReadIndex < 0 || realignedReadIndex >= splitReadSegment.length())
+                return RealignedType.NONE;
+
+            match = readContextMatcher.determineReadMatch(
+                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, realignedReadIndex, true);
+        }
+        else
+        {
+            if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
+                return RealignedType.NONE;
+
+            match = readContextMatcher.determineReadMatch(
+                    record.getReadBases(), record.getBaseQualities(), realignedReadIndex, true);
+        }
 
         if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
             return RealignedType.EXACT;

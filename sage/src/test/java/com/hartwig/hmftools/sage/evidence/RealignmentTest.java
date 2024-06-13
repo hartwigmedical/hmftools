@@ -193,9 +193,11 @@ public class RealignmentTest
 
         realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
         matcher = new ReadContextMatcher(readContext);
-        RealignedType realignedType = Realignment.checkRealignment(readContext, matcher, realignedRead,  16, realignedReadIndex);
+        RealignedType realignedType = Realignment.checkRealignment(
+                readContext, matcher, realignedRead,  16, realignedReadIndex, null);
+
         // works if realignedReadIndex is 6 rather than 10, since the 1xTATT lengthened jitter causes the realignedIndex to be off
-        // assertEquals(RealignedType.LENGTHENED, realignedType); // TODO
+        assertEquals(RealignedType.LENGTHENED, realignedType);
 
 
         refBases = REF_BASE_START
