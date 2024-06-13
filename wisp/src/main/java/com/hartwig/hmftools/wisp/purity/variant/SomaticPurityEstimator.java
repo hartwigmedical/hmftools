@@ -125,7 +125,7 @@ public class SomaticPurityEstimator
 
         ClonalityModel model = null;
 
-        if(VafPeakModel.canUseModel(fragmentTotals, purityCalcData.RawPurityEstimate))
+        if(VafPeakModel.canUseModel(fragmentTotals, purityCalcData))
         {
             model = new VafPeakModel(mConfig, mResultsWriter, mSample, variants);
         }
@@ -136,7 +136,9 @@ public class SomaticPurityEstimator
             List<SomaticVariant> lowCountFilteredVariants = filterVariants(sampleId, fragmentTotals, variants, medianVcn);
 
             if(LowCountModel.canUseModel(sampleId, fragmentTotals, lowCountFilteredVariants))
+            {
                 model = new LowCountModel(mConfig, mResultsWriter, mSample, lowCountFilteredVariants);
+            }
         }
 
         if(model != null)

@@ -72,6 +72,7 @@ public class PurityConfig
     public final boolean SkipSubclonalFilter;
     public final boolean SummaryMethodOnlyOutput;
     public final boolean AllowMissingSamples;
+    public final boolean DisableDualFragments;
     public final int Threads;
 
     private static final String PATIENT_ID = "patient_id";
@@ -93,6 +94,7 @@ public class PurityConfig
     private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
     private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
     private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
+    private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -141,6 +143,7 @@ public class PurityConfig
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
         SkipSubclonalFilter = configBuilder.hasFlag(SKIP_SUBCLONAL_FILTER);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
+        DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
 
         WriteTypes = Sets.newHashSet();
 
@@ -276,13 +279,14 @@ public class PurityConfig
 
         configBuilder.addInteger(BQR_QUAL_THRESHOLD, "BQR qual threshold", DEFAULT_BQR_MIN_QUAL);
         configBuilder.addFlag(SKIP_SUBCLONAL_FILTER, "Skip subclonal filter for somatics");
+        configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
         configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
                 "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
-        configBuilder.addRequiredDecimal(GC_RATIO_MIN,"GC ratio minimum permitted");
+        configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted, recommend 0.4 for panel samples", 0);
 
         configBuilder.addFlag(SUMMARY_METHOD_ONLY, "Only write summary data for configured purity methods");
         configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");

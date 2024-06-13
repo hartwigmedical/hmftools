@@ -259,6 +259,15 @@ public class SomaticVariants
                 // override basic AD and DP if UMI counts are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
+
+                if(mConfig.DisableDualFragments) // convert to single (ie fragments withi duplicate evidence)
+                {
+                    umiTypeCounts.AlleleSingle += umiTypeCounts.AlleleDual;
+                    umiTypeCounts.AlleleDual = 0;
+
+                    umiTypeCounts.TotalSingle += umiTypeCounts.TotalDual;
+                    umiTypeCounts.TotalDual = 0;
+                }
             }
             else
             {
