@@ -26,11 +26,13 @@ import org.jetbrains.annotations.Nullable;
 public class LoadTealData
 {
     private static final String TEAL_DIR = "teal";
+    private static final String DB_SAMPLE = "db_sample";
 
     public static void main(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(DB_SAMPLE, "ID of the sample in the database (optional). Defaults to the sample ID.");
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addConfigItem(TEAL_DIR, true, "Teal output directory");
         addDatabaseCmdLineArgs(configBuilder, true);
@@ -48,6 +50,7 @@ public class LoadTealData
         try (DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
             String sampleId = configBuilder.getValue(SAMPLE);
+            String dbSampleId = configBuilder.hasValue(DB_SAMPLE) ? configBuilder.getValue(DB_SAMPLE) : sampleId;
             String referenceId = configBuilder.getValue(REFERENCE);
             String tealDir = checkAddDirSeparator(configBuilder.getValue(TEAL_DIR));
 
@@ -57,9 +60,9 @@ public class LoadTealData
                 System.exit(1);
             }
 
-            LOGGER.info("loading sample({}) Teal data from {}", sampleId, tealDir);
+            LOGGER.info("loading sample({}) dbSample({}) Teal data from {}", sampleId, dbSampleId, tealDir);
 
-            dbAccess.context().transaction(tr -> loadTealData(sampleId, referenceId, dbAccess, tealDir));
+            dbAccess.context().transaction(tr -> loadTealData(dbSampleId, sampleId, referenceId, dbAccess, tealDir));
 
             LOGGER.info("Teal data loading complete");
         }
@@ -70,8 +73,8 @@ public class LoadTealData
         }
     }
 
-    private static void loadTealData(
-            String sampleId, @Nullable String referenceId, final DatabaseAccess dbAccess, final String tealDir)
+    private static void loadTealData(String dbSampleId, String sampleId, @Nullable String referenceId, final DatabaseAccess dbAccess,
+            final String tealDir)
     {
         @Nullable TelomereLength germlineTelomereLength = null;
         if(referenceId != null)
@@ -79,6 +82,6 @@ public class LoadTealData
             germlineTelomereLength = TelomereLengthFile.read(TelomereLengthFile.generateFilename(tealDir, referenceId));
         }
         TelomereLength somaticTelomereLength = TelomereLengthFile.read(TelomereLengthFile.generateFilename(tealDir, sampleId));
-        dbAccess.writeTelomereLength(sampleId, germlineTelomereLength, somaticTelomereLength);
+        dbAccess.writeTelomereLength(dbSampleId, germlineTelomereLength, somaticTelomereLength);
     }
 }
