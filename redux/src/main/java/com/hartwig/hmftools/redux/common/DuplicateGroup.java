@@ -359,13 +359,12 @@ public class DuplicateGroup
                 // set consensus read attributes
                 int firstInPairCount = (int)readGroup.stream().filter(x -> x.getFirstOfPairFlag()).count();
                 int readCount = readGroup.size();
-                boolean isDualStrand = mDualStrand || (firstInPairCount > 0 && firstInPairCount < readCount);
                 boolean isPrimaryGroup = (i == ReadType.PRIMARY.ordinal() || i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal());
 
                 if(!isPrimaryGroup)
                     firstInPairCount = readCount - firstInPairCount; // adjusted so both reads report the same ratio
 
-                UmiReadType umiReadType = isDualStrand ? DUAL : SINGLE;
+                UmiReadType umiReadType = mDualStrand ? DUAL : SINGLE;
 
                 addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
 
