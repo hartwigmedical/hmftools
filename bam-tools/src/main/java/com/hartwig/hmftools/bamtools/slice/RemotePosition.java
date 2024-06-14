@@ -26,16 +26,6 @@ public class RemotePosition implements Comparable<RemotePosition>
         return Position < other.Position ? -1 : 1;
     }
 
-    public boolean positionsMatch(final RemotePosition other)
-    {
-        return Chromosome.equals(other.Chromosome) && Position == other.Position;
-    }
-
-    public boolean positionsMatch(final SAMRecord read)
-    {
-        return Chromosome.equals(read.getReferenceName()) && Position == read.getAlignmentStart();
-    }
-
     public String toString()
     {
         return format("%s:%d %s", Chromosome, Position, ReadId);
