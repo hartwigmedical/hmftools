@@ -2,6 +2,8 @@ package com.hartwig.hmftools.peach;
 
 import static com.hartwig.hmftools.peach.TestUtils.getTestResourcePath;
 import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createDefaultTestHaplotypePanel;
+import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createDpydTestHaplotypePanel;
+import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createUgt1a1TestHaplotypePanel;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -19,10 +21,14 @@ import com.hartwig.hmftools.peach.panel.GeneHaplotypePanel;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -578,6 +584,91 @@ public class PeachAlgoTest
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
+    }
+
+    @Test
+    public void testSimpleHomozygousDpydHaplotypeCombinations()
+    {
+        testAllSimpleHomozygousHaplotypeCombinations("DPYD", createDpydTestHaplotypePanel());
+    }
+
+    @Test
+    public void testSimpleHeterozygousDpydHaplotypeCombinations()
+    {
+        testAllSimpleHeterozygousHaplotypeCombinations("DPYD", createDpydTestHaplotypePanel());
+    }
+
+    @Test
+    public void testSimpleHomozygousUgt1a1HaplotypeCombinations()
+    {
+        testAllSimpleHomozygousHaplotypeCombinations("UGT1A1", createUgt1a1TestHaplotypePanel());
+    }
+
+    @Test
+    public void testSimpleHeterozygousUgt1a1HaplotypeCombinations()
+    {
+        testAllSimpleHeterozygousHaplotypeCombinations("UGT1A1", createUgt1a1TestHaplotypePanel());
+    }
+
+    private static void testAllSimpleHomozygousHaplotypeCombinations(String gene, HaplotypePanel panel)
+    {
+        Map<String, List<String>> haplotypeNameToEventIds = panel.getNonDefaultHaplotypes(gene)
+                .stream()
+                .collect(Collectors.toMap(NonDefaultHaplotype::getName, PeachAlgoTest::getEventIds));
+        String defaultHaplotypeName = panel.getDefaultHaplotype(gene).getName();
+        haplotypeNameToEventIds.put(defaultHaplotypeName, Collections.emptyList());
+
+        List<String> haplotypeNames = haplotypeNameToEventIds.keySet().stream().sorted().collect(Collectors.toList());
+        for(String haplotypeName : haplotypeNames)
+        {
+            List<String> relevantEventIds = haplotypeNameToEventIds.get(haplotypeName);
+            Map<String, Integer> eventIdToCount = relevantEventIds.stream().collect(Collectors.toMap(e -> e, e -> 2));
+
+            Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(panel, eventIdToCount);
+            HaplotypeCombination expectedBestHaplotypeCombination = new HaplotypeCombination(Map.of(haplotypeName, 2));
+
+            assertEquals(1, geneToHaplotypeAnalysis.size());
+            assertTrue(geneToHaplotypeAnalysis.containsKey(gene));
+            assertEquals(expectedBestHaplotypeCombination, geneToHaplotypeAnalysis.get(gene).getBestHaplotypeCombination());
+        }
+    }
+
+    private static void testAllSimpleHeterozygousHaplotypeCombinations(String gene, HaplotypePanel panel)
+    {
+        Map<String, List<String>> haplotypeNameToEventIds = panel.getNonDefaultHaplotypes(gene)
+                .stream()
+                .collect(Collectors.toMap(NonDefaultHaplotype::getName, PeachAlgoTest::getEventIds));
+        String defaultHaplotypeName = panel.getDefaultHaplotype(gene).getName();
+        haplotypeNameToEventIds.put(defaultHaplotypeName, Collections.emptyList());
+
+        List<String> haplotypeNames = haplotypeNameToEventIds.keySet().stream().sorted().collect(Collectors.toList());
+        for(int i = 0; i < haplotypeNames.size(); i++)
+        {
+            for(int j = i + 1; j < haplotypeNames.size(); j++)
+            {
+                String firstHaplotypeName = haplotypeNames.get(i);
+                String secondHaplotypeName = haplotypeNames.get(j);
+
+                Map<String, Integer> eventIdToCount = Stream.of(firstHaplotypeName, secondHaplotypeName)
+                        .map(haplotypeNameToEventIds::get)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
+                Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(panel, eventIdToCount);
+
+                HaplotypeCombination expectedBestHaplotypeCombination =
+                        new HaplotypeCombination(Map.of(firstHaplotypeName, 1, secondHaplotypeName, 1));
+
+                assertEquals(1, geneToHaplotypeAnalysis.size());
+                assertTrue(geneToHaplotypeAnalysis.containsKey(gene));
+                assertEquals(expectedBestHaplotypeCombination, geneToHaplotypeAnalysis.get(gene).getBestHaplotypeCombination());
+            }
+        }
+    }
+
+    @NotNull
+    private static List<String> getEventIds(final NonDefaultHaplotype h)
+    {
+        return h.events.stream().map(HaplotypeEvent::id).collect(Collectors.toList());
     }
 
     @NotNull
