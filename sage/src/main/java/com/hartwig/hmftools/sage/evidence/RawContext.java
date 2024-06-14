@@ -128,9 +128,6 @@ public class RawContext
     private static RawContext handleRightSoftClip(
             final SimpleVariant variant, final SAMRecord record, final CigarElement element, int refPosition)
     {
-        if(!variant.isInsert())
-            return null;
-
         int unclippedEnd = refPosition + element.getLength() - 1;
 
         if(variant.Position > unclippedEnd)
@@ -146,6 +143,7 @@ public class RawContext
 
         int variantPosDiff = variant.Position - record.getAlignmentEnd();
         int variantReadIndex = scStartIndex + variantPosDiff - 1;
+
         return new RawContext(variantReadIndex, SOFT_CLIP);
     }
 

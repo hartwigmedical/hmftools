@@ -407,14 +407,14 @@ public class ReadContextCounter
 
                 modifiedQuality = qualityScores.ModifiedQuality;
 
+                if(belowQualThreshold(calcBaseQuality))
+                {
+                    addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+                    return UNRELATED;
+                }
+
                 if(realignedType == EXACT)
                 {
-                    if(belowQualThreshold(calcBaseQuality))
-                    {
-                        addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
-                        return UNRELATED;
-                    }
-
                     matchType = ReadContextMatch.REALIGNED;
                     registerReadSupport(record, REALIGNED, modifiedQuality);
 
