@@ -3,10 +3,10 @@ package com.hartwig.hmftools.bamtools.metrics;
 public enum FlagStatType
 {
     TOTAL,
-    PRIMARY,
+    PRIMARY, // not a supplementary or secondary read
     SECONDARY,
     SUPPLEMENTARY,
-    DUPLICATE,
+    DUPLICATE, // includes supplementaries
     PRIMARY_DUPLICATE,
     MAPPED,
     PRIMARY_MAPPED,

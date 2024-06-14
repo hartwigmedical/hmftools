@@ -35,6 +35,7 @@ public class MetricsTest
         BamReader bamReader = new BamReader(new ChrBaseRegion(
                 CHR_1, 1, 1000), mConfig, null, null, combinedStats);
 
+        // a primary, non-consensus
         SAMRecord read = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
@@ -42,7 +43,6 @@ public class MetricsTest
         bamReader.processRead(read);
 
         // 2x duplicates and consensus
-
         read = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);

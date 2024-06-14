@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.common;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
@@ -10,11 +10,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadGroup
 {
+    public final boolean IsConsensus;
     private final List<SAMRecord> mReads;
     private boolean mAllReadsPresent;
 
-    public ReadGroup(final SAMRecord read)
+    public ReadGroup(final SAMRecord read, boolean isConsensus)
     {
+        IsConsensus = isConsensus;
         mReads = Lists.newArrayListWithCapacity(2);
         addRead(read);
         mAllReadsPresent = false;

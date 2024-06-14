@@ -35,7 +35,7 @@ public class BaseCoverage
         mUnmappableRegions = unmappableRegions;
     }
 
-    public void processRead(final SAMRecord read, final List<int[]> mateBaseCoords)
+    public void processRead(final SAMRecord read, final List<int[]> mateBaseCoords, boolean isConsensusRead)
     {
         // some filters exclude all matched bases
         int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
@@ -52,6 +52,12 @@ public class BaseCoverage
         {
             mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] += alignedBases;
             return;
+        }
+        else
+        {
+            // lower duplicate data to account for additionally marked duplicate - see previous comments in BamReader
+            if(isConsensusRead)
+                mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] -= alignedBases;
         }
 
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())

@@ -40,9 +40,13 @@ public class FragmentLengths
 
     private boolean isCandidateRecord(final SAMRecord read)
     {
-        boolean isPaired = read.getReadPairedFlag();
+        if(read.getDuplicateReadFlag())
+            return false;
 
-        if(isPaired)
+        if(read.isSecondaryOrSupplementary())
+            return false;
+
+        if(read.getReadPairedFlag())
         {
             if(read.getSecondOfPairFlag())
                 return false;
@@ -52,12 +56,6 @@ public class FragmentLengths
                 return false;
 
             if(mateNegativeStrand(read) == read.getReadNegativeStrandFlag())
-                return false;
-
-            if(read.getDuplicateReadFlag())
-                return false;
-
-            if(read.isSecondaryOrSupplementary())
                 return false;
         }
 

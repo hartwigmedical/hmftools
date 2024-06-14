@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
@@ -8,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -44,7 +46,7 @@ public class CoverageTest
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         int readLength = read.getReadLength();
 
@@ -54,7 +56,7 @@ public class CoverageTest
                 false, false, null);
         read.setMappingQuality(mConfig.MapQualityThreshold - 1);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         // unmapped
         read = SamRecordTestUtils.createSamRecord(
@@ -62,15 +64,24 @@ public class CoverageTest
                 false, false, null);
         read.setMateUnmappedFlag(true);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
-        // duplicate
+        // duplicate x 2 and a consensus read
         read = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
         read.setDuplicateReadFlag(true);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
+        baseCoverage.processRead(read, null, false);
+
+        // consensus
+        read = SamRecordTestUtils.createSamRecord(
+                mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
+                false, false, null);
+        addConsensusReadAttribute(read, 2, 1, UmiReadType.SINGLE);
+
+        baseCoverage.processRead(read, null, false);
 
         // low base qual
         read = SamRecordTestUtils.createSamRecord(
@@ -82,13 +93,13 @@ public class CoverageTest
             read.getBaseQualities()[i] = (byte) (mConfig.BaseQualityThreshold - 1);
         }
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         CoverageMetrics metrics = baseCoverage.createMetrics();
 
-        assertEquals(readLength, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()]);
-        assertEquals(readLength, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
+        assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
 
         baseCoverage.clear();
@@ -111,9 +122,9 @@ public class CoverageTest
 
         for(int i = 0; i < 10; ++i)
         {
-            baseCoverage.processRead(read1, null);
-            baseCoverage.processRead(read2, null);
-            baseCoverage.processRead(read3, null);
+            baseCoverage.processRead(read1, null, false);
+            baseCoverage.processRead(read2, null, false);
+            baseCoverage.processRead(read3, null, false);
         }
 
         metrics = baseCoverage.createMetrics();
