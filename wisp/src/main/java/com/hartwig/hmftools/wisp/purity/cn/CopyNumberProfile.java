@@ -74,12 +74,14 @@ public class CopyNumberProfile
         }
     }
 
+    public boolean hasValidData() { return !mCopyNumbers.isEmpty(); }
+
     public CnPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
         mCopyNumberGcRatios.clear();
 
         if(purityContext == null || mCopyNumbers.isEmpty())
-            return CnPurityResult.INVALID_RESULT;
+            return null;
 
         try
         {
@@ -88,8 +90,7 @@ public class CopyNumberProfile
             if(!Files.exists(Paths.get(cobaltFilename)))
             {
                 CT_LOGGER.warn("sample({}) missing Cobalt sample GC ratios file: {}", sampleId, cobaltFilename);
-                return CnPurityResult.INVALID_RESULT;
-
+                return null;
             }
 
             Map<Chromosome,List<CobaltRatio>> cobaltRatios = CobaltRatioFile.readWithGender(cobaltFilename, null, true);
@@ -172,7 +173,7 @@ public class CopyNumberProfile
         {
             CT_LOGGER.error("sample({}) failed to load Purple and Cobalt copy-number data: {}", sampleId, e.toString());
             e.printStackTrace();
-            return CnPurityResult.INVALID_RESULT;
+            return null;
         }
     }
 

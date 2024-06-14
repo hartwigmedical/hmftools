@@ -16,11 +16,9 @@ import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
 import com.hartwig.hmftools.patientdb.amber.AmberSample;
-import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
 import com.hartwig.hmftools.patientdb.amber.ImmutableAmberPatient;
 import com.hartwig.hmftools.patientdb.amber.ImmutableAmberSample;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep3;
 import org.jooq.InsertValuesStep4;
@@ -121,7 +119,7 @@ class AmberDAO
                 AMBERANONYMOUS.DELETED);
         for(AmberAnonymous amberPatient : patients)
         {
-            inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId(), amberPatient.deleted());
+            inserter.values(timestamp, amberPatient.SampleId, amberPatient.HmfSampleId, amberPatient.Deleted);
         }
         inserter.execute();
     }
@@ -133,11 +131,10 @@ class AmberDAO
 
         for(Record record : queryResult)
         {
-            result.add(ImmutableAmberAnonymous.builder()
-                    .sampleId(record.get(AMBERANONYMOUS.SAMPLEID))
-                    .hmfSampleId(record.get(AMBERANONYMOUS.HMFSAMPLEID))
-                    .deleted(record.get(AMBERANONYMOUS.DELETED) != 0)
-                    .build());
+            result.add(new AmberAnonymous(
+                    record.get(AMBERANONYMOUS.SAMPLEID),
+                    record.get(AMBERANONYMOUS.HMFSAMPLEID),
+                    record.get(AMBERANONYMOUS.DELETED) != 0));
         }
 
         return result;

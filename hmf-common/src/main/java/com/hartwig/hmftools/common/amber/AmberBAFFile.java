@@ -77,14 +77,9 @@ public final class AmberBAFFile
 
                 double tumorBAF = hasTumor ? Double.parseDouble(values[tumorBafIndex]) : 0.5;
 
-                AmberBAF amberBAF = ImmutableAmberBAF.builder()
-                        .chromosome(chromosome)
-                        .position(Integer.parseInt(values[posIndex]))
-                        .tumorBAF(tumorBAF)
-                        .tumorDepth(Integer.parseInt(values[tumorDepthIndex]))
-                        .normalBAF(Double.parseDouble(values[normBafIndex]))
-                        .normalDepth(Integer.parseInt(values[normDepthIndex]))
-                        .build();
+                AmberBAF amberBAF = new AmberBAF(
+                        chromosome, Integer.parseInt(values[posIndex]), tumorBAF, Integer.parseInt(values[tumorDepthIndex]),
+                        Double.parseDouble(values[normBafIndex]), Integer.parseInt(values[normDepthIndex]));
 
                 chrBafMap.put(HumanChromosome.fromString(chromosome), amberBAF);
             }
@@ -128,8 +123,8 @@ public final class AmberBAFFile
 
     private static String toString(final AmberBAF baf)
     {
-        return new StringJoiner(TSV_DELIM).add(baf.chromosome())
-                .add(String.valueOf(baf.position()))
+        return new StringJoiner(TSV_DELIM).add(baf.Chromosome)
+                .add(String.valueOf(baf.Position))
                 .add(FORMAT.format(baf.tumorBAF()))
                 .add(FORMAT.format(baf.tumorModifiedBAF()))
                 .add(String.valueOf(baf.tumorDepth()))

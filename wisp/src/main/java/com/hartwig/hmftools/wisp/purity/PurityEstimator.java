@@ -181,12 +181,28 @@ public class PurityEstimator
             if(!sample.IsPanel && mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
             {
                 copyNumberProfile = new CopyNumberProfile(mConfig, mResultsWriter, sample);
+
+                if(!copyNumberProfile.hasValidData())
+                {
+                    if(!mConfig.AllowMissingSamples)
+                        System.exit(1);
+
+                    CT_LOGGER.warn("sample({}) has missing Cobalt data", sample);
+                }
             }
 
             AmberLohCalcs amberLohCalcs = null;
             if(!sample.IsPanel && mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
             {
                 amberLohCalcs = new AmberLohCalcs(mConfig, mResultsWriter, sample);
+
+                if(!amberLohCalcs.hasValidData())
+                {
+                    if(!mConfig.AllowMissingSamples)
+                        System.exit(1);
+
+                    CT_LOGGER.warn("sample({}) has missing Amber data", sample);
+                }
             }
 
             for(String sampleId : sample.SampleIds)
@@ -198,6 +214,18 @@ public class PurityEstimator
                         somaticVariants.processSample(sampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
                 AmberLohResult lohResult = amberLohCalcs != null ? amberLohCalcs.processSample(sampleId) : AmberLohResult.INVALID_RESULT;
+
+                if(cnPurityResult == null || somaticPurityResult == null || lohResult == null)
+                {
+                    if(!mConfig.AllowMissingSamples)
+                    {
+                        System.exit(1);
+                    }
+                    else
+                    {
+                        CT_LOGGER.warn("sample({}) has missing data", sample);
+                    }
+                }
 
                 mResultsWriter.writeSampleSummary(sample, sampleId, purityContext, cnPurityResult, somaticPurityResult, lohResult);
             }

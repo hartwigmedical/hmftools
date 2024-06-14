@@ -86,6 +86,8 @@ public class AmberLohCalcs
         }
     }
 
+    public boolean hasValidData() { return !mCopyNumbers.isEmpty() && !mTumorChromosomeBafs.isEmpty(); }
+
     public AmberLohResult processSample(final String sampleId)
     {
         try
@@ -135,15 +137,15 @@ public class AmberLohCalcs
                 for(PurpleCopyNumber copyNumber : entry.getValue())
                 {
                     List<AmberBAF> tumorLohSites = tumorChrSites.stream()
-                            .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
+                            .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
 
                     List<AmberBAF> secondaryTumorLohSites = secondaryTumorChrSites != null ?
                             secondaryTumorChrSites.stream()
-                                    .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList())
+                                    .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList())
                             : Collections.emptyList();
 
                     List<AmberBAF> sampleLohSites = sampleChrites.stream()
-                            .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
+                            .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
 
                     RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, secondaryTumorLohSites, sampleLohSites);
 
@@ -296,7 +298,7 @@ public class AmberLohCalcs
 
             if(hasSecondaryTumor)
             {
-                while(secondaryTumorSite != null && secondaryTumorSite.position() < tumorSite.position())
+                while(secondaryTumorSite != null && secondaryTumorSite.Position < tumorSite.Position)
                 {
                     ++secondaryTumorSiteIndex;
 
@@ -309,7 +311,7 @@ public class AmberLohCalcs
                     secondaryTumorSite = secondaryTumorLohSites.get(secondaryTumorSiteIndex);
                 }
 
-                if(secondaryTumorSite == null || secondaryTumorSite.position() > tumorSite.position()
+                if(secondaryTumorSite == null || secondaryTumorSite.Position > tumorSite.Position
                 || secondaryTumorSite.tumorModifiedBAF() <= AMBER_LOH_MIN_TUMOR_BAF)
                 {
                     // cannot use the tumor site either
@@ -317,7 +319,7 @@ public class AmberLohCalcs
                 }
             }
 
-            while(sampleSite.position() < tumorSite.position())
+            while(sampleSite.Position < tumorSite.Position)
             {
                 ++sampleSiteIndex;
 
@@ -333,10 +335,10 @@ public class AmberLohCalcs
             if(sampleSite == null)
                 break;
 
-            if(sampleSite.position() > tumorSite.position())
+            if(sampleSite.Position > tumorSite.Position)
                 continue;
 
-            if(sampleSite.position() == tumorSite.position())
+            if(sampleSite.Position == tumorSite.Position)
             {
                 regionData.Sites.add(
                         new SiteData(tumorSite.tumorBAF(), sampleSite.tumorBAF(), tumorSite.tumorDepth(), sampleSite.tumorDepth()));
