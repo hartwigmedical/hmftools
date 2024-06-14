@@ -83,7 +83,7 @@
         <patient-db.version>5.35</patient-db.version>
         <pave.version>1.6</pave.version>
         <purple.version>4.1</purple.version>
-        <sage.version>3.5</sage.version>
+        <sage.version>3.4.5</sage.version>
         <sigs.version>1.2.1</sigs.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.2.2</teal.version>
