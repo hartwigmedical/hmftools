@@ -373,8 +373,8 @@ public class FragmentSyncTest
         syncOutcome = formFragmentRead(first, second);
         assertEquals(fragLength, syncOutcome.CombinedRecord.getInferredInsertSize());
         assertEquals(11, syncOutcome.CombinedRecord.getAlignmentStart());
-        assertEquals(44, syncOutcome.CombinedRecord.getAlignmentEnd());
-        assertEquals("2S34M", syncOutcome.CombinedRecord.getCigarString());
+        assertEquals(42, syncOutcome.CombinedRecord.getAlignmentEnd());
+        assertEquals("2S32M2S", syncOutcome.CombinedRecord.getCigarString());
         assertEquals(36, syncOutcome.CombinedRecord.getBaseQualities().length);
 
         readBases = syncOutcome.CombinedRecord.getReadString();

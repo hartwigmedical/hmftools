@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
@@ -32,6 +33,7 @@ public class CombinedSyncData
 {
     // workings and components of the fragment creation
     private int mFragmentStart;
+    private int mFragmentEnd;
     private int mCombinedEffectiveStart;
     private int mFirstEffectivePosStart;
     private int mSecondEffectivePosStart;
@@ -46,6 +48,7 @@ public class CombinedSyncData
         mCombinedBases = null;
         mCombinedBaseQualities = null;
         mFragmentStart = 0;
+        mFragmentEnd = 0;
         mFirstEffectivePosStart = 0;
         mSecondEffectivePosStart = 0;
         mCombinedEffectiveStart = 0;
@@ -141,6 +144,7 @@ public class CombinedSyncData
         if(!first.getReadNegativeStrandFlag())
         {
             mFragmentStart = firstPosStart;
+            mFragmentEnd = secondPosEnd;
 
             mCombinedEffectiveStart = mFirstEffectivePosStart;
             combinedEffectiveEnd = secondEffectivePosEnd;
@@ -148,6 +152,7 @@ public class CombinedSyncData
         else
         {
             mFragmentStart = secondPosStart;
+            mFragmentEnd = firstPosEnd;
 
             mCombinedEffectiveStart = mSecondEffectivePosStart;
             combinedEffectiveEnd = firstEffectivePosEnd;
@@ -216,8 +221,11 @@ public class CombinedSyncData
                         if(!ignoreCigarOperatorMismatch(firstOperator, secondOperator))
                             return false; // a mismatch
 
-                        // always favour an aligned element
-                        newOperator = M;
+                        // always favour an aligned element if it is within the permitted 5' aligned region
+                        if(positionWithin(currentPos, mFragmentStart, mFragmentEnd))
+                            newOperator = M;
+                        else
+                            newOperator = S;
                     }
                     else
                     {
