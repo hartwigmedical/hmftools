@@ -72,7 +72,7 @@ public class MetricsConfig
 
     // metrics capture config
     public final boolean ExcludeZeroCoverage;
-    public final boolean WriteOldStyle;
+    public final boolean WriteOffTarget;
     public final int HighFragmentOverlapThreshold;
 
     public final String OutputDir;
@@ -94,7 +94,9 @@ public class MetricsConfig
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
     private static final String ONLY_TARGET = "only_target";
+
     private static final String OFF_TARGET_FRAG_OVERLAP_THRESHOLD = "off_target_frag_overlap_threshold";
+    private static final String WRITE_OFF_TARGET = "write_off_target";
 
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
@@ -136,7 +138,7 @@ public class MetricsConfig
         BaseQualityThreshold = configBuilder.getInteger(BASE_QUAL_THRESHOLD);
         MaxCoverage = configBuilder.getInteger(MAX_COVERAGE);
         ExcludeZeroCoverage = configBuilder.hasFlag(EXCLUDE_ZERO_COVERAGE);
-        WriteOldStyle = configBuilder.hasFlag(WRITE_OLD_STYLE);
+        WriteOffTarget = configBuilder.hasFlag(WRITE_OFF_TARGET);
         HighFragmentOverlapThreshold = configBuilder.getInteger(OFF_TARGET_FRAG_OVERLAP_THRESHOLD);
 
         TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
@@ -220,7 +222,7 @@ public class MetricsConfig
                 "Write regions of high off-target fragment overlap if pile-up above threshold (0=disabled)", 0);
 
         configBuilder.addFlag(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
-        configBuilder.addFlag(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
+        configBuilder.addFlag(WRITE_OFF_TARGET, "Write off-target data");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
 
@@ -247,7 +249,7 @@ public class MetricsConfig
         HighFragmentOverlapThreshold = 0;
         MaxCoverage = maxCoveage;
         ExcludeZeroCoverage = false;
-        WriteOldStyle = false;
+        WriteOffTarget = false;
 
         SpecificChrRegions = new SpecificRegions();
         LogReadIds = Collections.emptyList();
