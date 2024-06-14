@@ -10,13 +10,9 @@ public final class VcfTags
 
     // v3.4 and earlier
     public static final String READ_CONTEXT_CORE = "RC";
-    public static final String READ_CONTEXT_CORE_DESC = "Read context core";
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
-    public static final String READ_CONTEXT_LEFT_FLANK_DESC = "Read context left flank";
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
-    public static final String READ_CONTEXT_RIGHT_FLANK_DESC = "Read context right flank";
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
-    public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
     public static final String READ_CONTEXT_UPDATED = "RC_UPDATED";
     public static final String READ_CONTEXT_UPDATED_DESC = "Read context was updated from an earlier Sage version";
