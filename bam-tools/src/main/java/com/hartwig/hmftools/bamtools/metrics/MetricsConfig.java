@@ -92,7 +92,6 @@ public class MetricsConfig
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
-    private static final String WRITE_OLD_STYLE = "write_old_style";
     private static final String ONLY_TARGET = "only_target";
 
     private static final String OFF_TARGET_FRAG_OVERLAP_THRESHOLD = "off_target_frag_overlap_threshold";

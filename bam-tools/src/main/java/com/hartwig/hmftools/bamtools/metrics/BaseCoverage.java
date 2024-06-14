@@ -130,7 +130,7 @@ public class BaseCoverage
 
             boolean exceedsCoverage = mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
 
-            boolean passFilters = !lowBaseQual && !exceedsCoverage && !overlapped;
+            boolean passFilters = !lowBaseQual && !exceedsCoverage;
 
             if(passFilters)
             {

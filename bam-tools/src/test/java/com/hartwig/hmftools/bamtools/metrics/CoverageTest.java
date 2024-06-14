@@ -162,13 +162,18 @@ public class CoverageTest
         BaseCoverage baseCoverage = bamReader.baseCoverage();
         CoverageMetrics metrics = baseCoverage.createMetrics();
 
-        assertEquals(15, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(20, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
 
         assertTrue(bamReader.readGroupMap().isEmpty());
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if(i >= 24 && i <= 28)
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else if(i >= 19 && i <= 33)
+                assertTrue(baseCoverage.baseDepth()[i] == 1);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] == 0);
         }
 
         // a more complicate example for overlapping alignments..
@@ -180,11 +185,11 @@ public class CoverageTest
 
         String readCigar1 = "5S10M10D10M5I10M5S";
         String mateCigar1 = "5S10M5I10M10N10M5S";
-        String suppaCigar1 = "5S10M10N10M5S";
+        String suppCigar1 = "5S10M10N10M5S";
 
         read1 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 10, testBases.substring(0, 45), readCigar1, CHR_1, 30,
-                false, false, new SupplementaryReadData(CHR_1, 40, SUPP_POS_STRAND, suppaCigar1, 60));
+                false, false, new SupplementaryReadData(CHR_1, 40, SUPP_POS_STRAND, suppCigar1, 60));
 
         bamReader.processRead(read1);
 
@@ -196,14 +201,19 @@ public class CoverageTest
         bamReader.processRead(mate1);
 
         SAMRecord supp1 = SamRecordTestUtils.createSamRecord(
-                read1.getReadName(), CHR_1, 40, testBases.substring(0, 45), suppaCigar1, CHR_1, 30,
+                read1.getReadName(), CHR_1, 40, testBases.substring(0, 45), suppCigar1, CHR_1, 30,
                 false, true, new SupplementaryReadData(CHR_1, 10, SUPP_POS_STRAND, readCigar1, 60));
 
         bamReader.processRead(supp1);
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if((i >= 29 && i <= 38) || (i >= 59 && i <= 68))
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else if(i >= 39 && i <= 48)
+                assertTrue(baseCoverage.baseDepth()[i] == 3);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] <= 1);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());
@@ -233,7 +243,10 @@ public class CoverageTest
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if(i >= 19 && i <= 28)
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] <= 1);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());

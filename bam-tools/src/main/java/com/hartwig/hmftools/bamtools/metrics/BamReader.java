@@ -123,7 +123,7 @@ public class BamReader
     {
         int readStart = read.getAlignmentStart();
 
-        if(!mRegion.containsPosition(readStart))
+        if(!mRegion.containsPosition(readStart) && !mConfig.OnlyTargetRegions)
             return;
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
