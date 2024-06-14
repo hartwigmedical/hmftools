@@ -15,7 +15,7 @@ public class ReadContextVcfInfo
     public final String RightFlank;
     public final String Cigar;
 
-    public static final String ITEM_DELIM = ",";
+    public static final String ITEM_DELIM = "-";
 
     public ReadContextVcfInfo(
             final int alignmentStart, final int varIndex, final String leftFlank, final String core,
