@@ -41,23 +41,19 @@ public class SampleTraitPrep implements CategoryPrep
         {
             final PurityContext purityContext = PurityContextFile.readWithQC(
                     mConfig.purpleQcFile(sampleId),
-                    mConfig.purplePurityFile(sampleId)
-            );
+                    mConfig.purplePurityFile(sampleId));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(),
-                    purityContext.gender() == Gender.MALE
-            ));
+                    purityContext.gender() == Gender.MALE));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(),
-                    purityContext.microsatelliteIndelsPerMb(), FLOAT_FORMAT_MS_INDELS_TMB
-            ));
+                    purityContext.microsatelliteIndelsPerMb(), FLOAT_FORMAT_MS_INDELS_TMB));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(),
-                    purityContext.wholeGenomeDuplication()
-            ));
+                    purityContext.wholeGenomeDuplication()));
 
             return dataItems;
         }

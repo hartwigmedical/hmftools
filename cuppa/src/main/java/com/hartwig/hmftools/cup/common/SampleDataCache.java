@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.cup.common;
 
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 
 import java.io.File;
@@ -17,7 +14,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 @Deprecated
 public class SampleDataCache
@@ -30,7 +26,6 @@ public class SampleDataCache
     public final Map<String,String> RefSampleCancerTypeMap; // map of ref sample to cancer type
     public final List<SampleData> RefSampleDataList; // includes type 'Other' if in ref data
     public final Map<String,Integer> RefSampleRnaReadLength;
-    public final Map<String,SampleTraitsData> SampleTraitsData;
 
     public final Map<String,String> RefCancerMappings; // subtypes to parent types
 
@@ -45,7 +40,6 @@ public class SampleDataCache
         RefSampleCancerTypeMap = Maps.newHashMap();
         RefSampleDataList = Lists.newArrayList();
         RefSampleRnaReadLength = Maps.newHashMap();
-        SampleTraitsData = Maps.newHashMap();
         RefCancerMappings = Maps.newHashMap();
 
         SpecificSample = null;
@@ -220,5 +214,4 @@ public class SampleDataCache
             mIsValid = false;
         }
     }
-
 }

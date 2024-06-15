@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.cup.utils;
 
 import static java.lang.String.format;
 
@@ -25,8 +25,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.ResultType;
+import com.hartwig.hmftools.cup.common.SampleData;
 
-@Deprecated
 public class SampleResult
 {
     public final String SampleId;
@@ -47,20 +47,6 @@ public class SampleResult
         Result = resultType;
         Value = value;
         CancerTypeValues = cancerTypeValues;
-    }
-
-    public static boolean checkIsValidCancerType(final SampleData sample, final String refCancerType, final Map<String,Double> cancerDataMap)
-    {
-        if(sample.isCandidateCancerType(refCancerType))
-            return true;
-
-        cancerDataMap.put(refCancerType, 0.0);
-        return false;
-    }
-
-    public CuppaDataFile toCuppaData()
-    {
-        return new CuppaDataFile(Category, Result, DataType, Value, CancerTypeValues);
     }
 
     public String toString()

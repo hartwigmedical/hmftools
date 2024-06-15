@@ -66,8 +66,7 @@ public class SomaticVariantPrep implements CategoryPrep
                 GEN_POS_BUCKET_SIZE,
                 GEN_POS_MAX_SAMPLE_COUNT,
                 buildStandardChromosomeLengths(mConfig.RefGenVersion),
-                false
-        );
+                false);
     }
 
     @Override

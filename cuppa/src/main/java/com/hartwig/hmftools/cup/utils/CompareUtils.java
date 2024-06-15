@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.cup.common.SampleResult;
 
 public final class CompareUtils
 {

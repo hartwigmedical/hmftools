@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.ref;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -15,8 +16,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
-import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
-import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
+import static com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep.FLD_POS_END;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,10 +34,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 @Deprecated

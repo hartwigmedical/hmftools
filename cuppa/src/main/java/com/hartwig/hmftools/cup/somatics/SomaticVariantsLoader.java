@@ -36,10 +36,7 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 public class SomaticVariantsLoader
 {
     public static List<SomaticVariant> loadFromConfig(
-            final PrepConfig config,
-            final String sampleId,
-            @Nullable final List<VariantType> variantTypes
-    ) throws NoSuchFileException
+            final PrepConfig config, final String sampleId, @Nullable final List<VariantType> variantTypes) throws NoSuchFileException
     {
         File genericVariantsFile = new File(config.somaticVariantsGenericFile(sampleId));
         File vcfFile = new File(config.purpleSomaticVcfFile(sampleId));
@@ -66,10 +63,8 @@ public class SomaticVariantsLoader
         return variants;
     }
 
-    private static List<SomaticVariant> loadFromVcf(
-            final String vcfFile,
-            @Nullable final List<VariantType> variantTypes
-    ){
+    private static List<SomaticVariant> loadFromVcf(final String vcfFile, @Nullable final List<VariantType> variantTypes)
+    {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
@@ -97,10 +92,8 @@ public class SomaticVariantsLoader
         return variants;
     }
 
-    private static List<SomaticVariant> loadFromGenericFile(
-            final String filename,
-            @Nullable final List<VariantType> variantTypes
-    ){
+    private static List<SomaticVariant> loadFromGenericFile(final String filename, @Nullable final List<VariantType> variantTypes)
+    {
         List<SomaticVariant> variants = new ArrayList<>();
 
         if(filename == null || filename.isEmpty())
