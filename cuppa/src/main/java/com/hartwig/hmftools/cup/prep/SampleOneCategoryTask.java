@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,8 +22,8 @@ public class SampleOneCategoryTask implements Callable
             final int sampleIndex,
             final PrepConfig prepConfig,
             final CategoryPrep categoryPrep,
-            @Nullable ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix
-    ){
+            @Nullable ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix)
+    {
         mConfig = prepConfig;
         mCategoryPrep = categoryPrep;
         mSampleIndex = sampleIndex;
@@ -45,7 +44,9 @@ public class SampleOneCategoryTask implements Callable
         int totalSamples = mConfig.SampleIds.size();
 
         if(mConfig.isMultiSample() & (totalSamples < 10 || sampleNum % 100 == 0))
+        {
             CUP_LOGGER.info("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
+        }
 
         mDataItems = mCategoryPrep.extractSampleData(mSampleName);
     }
@@ -74,7 +75,8 @@ public class SampleOneCategoryTask implements Callable
         {
             if(mDataItems == null)
             {
-                CUP_LOGGER.error("Multi-sample feature matrix will contain nulls for sample({}) category({})", mSampleName, mCategoryPrep.categoryType());
+                CUP_LOGGER.error("multi-sample feature matrix will contain nulls for sample({}) category({})",
+                        mSampleName, mCategoryPrep.categoryType());
             }
             else
             {

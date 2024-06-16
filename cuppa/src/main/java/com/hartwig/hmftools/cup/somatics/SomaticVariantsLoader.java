@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.ref.RefDataConfig.SOMATIC_VARIANTS_DIR;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_CHR;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_GENE;
@@ -14,7 +13,6 @@ import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TRINUC_CONTEX
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TYPE;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -35,6 +33,8 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public class SomaticVariantsLoader
 {
+    public static final String SOMATIC_VARIANTS_DIR = "somatic_variants_dir";
+
     public static List<SomaticVariant> loadFromConfig(
             final PrepConfig config, final String sampleId, @Nullable final List<VariantType> variantTypes) throws NoSuchFileException
     {

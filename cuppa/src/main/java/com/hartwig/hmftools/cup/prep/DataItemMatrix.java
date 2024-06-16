@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Arrays;

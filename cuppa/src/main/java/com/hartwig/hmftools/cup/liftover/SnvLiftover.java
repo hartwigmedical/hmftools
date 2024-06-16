@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -22,9 +22,6 @@ public class SnvLiftover
     private final LiftoverConfig mConfig;
     private final List<String> mSampleIds;
     private final int mThreads;
-
-    @Deprecated
-    public static final String LIFTOVER_FILE = ".snv_liftover.csv";
 
     public SnvLiftover(final ConfigBuilder configBuilder)
     {

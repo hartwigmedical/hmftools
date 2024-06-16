@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cup.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
@@ -126,9 +125,6 @@ public class CuppaDataFile
 
             CategoryType category = CategoryType.valueOf(categoryStr);;
             ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
-
-            if(category == COMBINED)
-                resultType = ResultType.CLASSIFIER;
 
             String value = values[valueIndex];
             String refCancerType = values[refCancerTypeIndex];

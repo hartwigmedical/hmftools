@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.utils;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;

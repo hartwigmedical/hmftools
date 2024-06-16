@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.cup;
+package com.hartwig.hmftools.cup.utils;
 
 import com.hartwig.hmftools.common.utils.file.CommonFields;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CuppaConfig
+public class CuppaConstants
 {
     public static final String REF_DATA_DIR = "ref_data_dir";
 
@@ -16,7 +16,7 @@ public class CuppaConfig
     public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     public static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
 
-    public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
+    public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConstants.class);
 
     // file fields
     public static final String FLD_SAMPLE_ID = CommonFields.FLD_SAMPLE_ID;

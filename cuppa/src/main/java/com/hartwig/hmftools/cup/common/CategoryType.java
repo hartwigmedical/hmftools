@@ -10,22 +10,7 @@ public enum CategoryType
     SAMPLE_TRAIT,
     FEATURE,
     GENE_EXP,
-    ALT_SJ,
-
-    @Deprecated
-    COMBINED;
-
-    @Deprecated
-    public static boolean isDna(final CategoryType type)
-    {
-        return type == SNV || type == SV || type == SAMPLE_TRAIT || type == FEATURE;
-    }
-
-    @Deprecated
-    public static boolean isRna(final CategoryType type)
-    {
-        return type == GENE_EXP || type == ALT_SJ;
-    }
+    ALT_SJ;
 
     public static List<CategoryType> getDnaCategories()
     {

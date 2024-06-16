@@ -8,13 +8,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.ref.AnonymiseConfig.REF_FILE_ALT_SJ_SAMPLE;
+import static com.hartwig.hmftools.cup.ref.AnonymiseConfig.REF_FILE_GENE_EXP_SAMPLE;
+import static com.hartwig.hmftools.cup.ref.AnonymiseConfig.REF_FILE_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.ref.AnonymiseConfig.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
+import static com.hartwig.hmftools.cup.ref.AnonymiseConfig.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep.FLD_POS_END;
 
@@ -31,8 +31,6 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.cup.common.SampleData;
-import com.hartwig.hmftools.cup.common.SampleDataCache;
 
 import org.jetbrains.annotations.NotNull;
 

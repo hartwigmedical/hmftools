@@ -4,18 +4,12 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_DATA_DIR;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_ALT_SJ_SAMPLE_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_GENE_EXP_SAMPLE_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_DATA_DIR;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_RNA_ALT_SJ_SAMPLE_FILE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_RNA_GENE_EXP_SAMPLE_FILE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_SNV_COUNTS_FILE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.REF_SNV_SAMPLE_POS_FREQ_FILE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,6 +28,21 @@ public class AnonymiseConfig
     public final String RefSnvCountsFile;
     public final String RefGeneExpSampleFile;
     public final String RefAltSjSampleFile;
+
+    // old ref file config items
+    public static final String CUP_REF_FILE_PREFIX = "cup_ref";
+
+    private static String formatRefFilename(final String fileType)
+    {
+        return String.format("%s_%s.csv", CUP_REF_FILE_PREFIX, fileType);
+    }
+
+    public static final String REF_FILE_SAMPLE_DATA = formatRefFilename("sample_data");
+    public static final String REF_FILE_SNV_COUNTS = formatRefFilename("snv_counts");
+    public static final String REF_FILE_SAMPLE_POS_FREQ_COUNTS = formatRefFilename("sample_pos_freq_counts");
+    public static final String REF_FILE_GENE_EXP_SAMPLE = formatRefFilename("gene_exp_sample");
+    public static final String REF_FILE_ALT_SJ_SAMPLE = formatRefFilename("alt_sj_sample");
+
 
     public AnonymiseConfig(final ConfigBuilder configBuilder)
     {

@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -146,15 +145,6 @@ public class PrepConfig
     public boolean isMultiSample() { return SampleIds.size() > 1; }
     public boolean isSingleSample() { return SampleIds.size() == 1; }
 
-    @Deprecated
-    public static void addPipelineDirectories(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
-        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
-    }
-
     // Generate input file paths by sample id
     public String getLinxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(LinxDir, sampleId); }
     public String getPurpleDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(PurpleDir, sampleId); }
@@ -193,39 +183,5 @@ public class PrepConfig
 
         final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
         return Arrays.stream(categoryStrings).map(CategoryType::valueOf).collect(Collectors.toList());
-    }
-
-    @VisibleForTesting
-    PrepConfig(
-            final List<String> sampleIds,
-            final List<CategoryType> categories,
-            final RefGenomeVersion refGenVersion,
-            final String outputDir,
-            final String outputId,
-            final int threads,
-            final boolean writeByCategory,
-            final String sampleDataDir,
-            final String linxDir,
-            final String purpleDir,
-            final String virusDir,
-            final String isofoxDir,
-            final String somaticVariantsDir,
-            final String altSpliceJunctionSites
-    )
-    {
-        SampleIds = sampleIds;
-        Categories = categories;
-        RefGenVersion = refGenVersion;
-        OutputDir = outputDir;
-        OutputId = outputId;
-        Threads = threads;
-        WriteByCategory = writeByCategory;
-        SampleDataDir = sampleDataDir;
-        LinxDir = linxDir;
-        PurpleDir = purpleDir;
-        VirusDir = virusDir;
-        IsofoxDir = isofoxDir;
-        SomaticVariantsDir = somaticVariantsDir;
-        AltSpliceJunctionSites = altSpliceJunctionSites;
     }
 }

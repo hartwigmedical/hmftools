@@ -1,19 +1,20 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.cup.ref;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
-import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_SUBTYPE;
-import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.FLD_RNA_READ_LENGTH;
-import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CANCER_SUBTYPE_OTHER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.FLD_CANCER_SUBTYPE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.FLD_CANCER_TYPE;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.FLD_RNA_READ_LENGTH;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 
 import java.util.Map;
 
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.cup.common.CupConstants;
 
 @Deprecated
 public class SampleData

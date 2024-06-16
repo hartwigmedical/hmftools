@@ -9,9 +9,8 @@ import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_REF_VALUE;
 import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_RESULT_TYPE;
 import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_VALUE;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENDER;
 
 import java.io.BufferedReader;
@@ -91,10 +90,7 @@ public class SampleResult
                 ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
                 CategoryType category = CategoryType.valueOf(categoryStr);
 
-                if(category == COMBINED)
-                    resultType = ResultType.CLASSIFIER;
-
-                if(resultType != ResultType.CLASSIFIER && category != COMBINED)
+                if(resultType != ResultType.CLASSIFIER)
                     continue;
 
                 String value = values[valueIndex];
