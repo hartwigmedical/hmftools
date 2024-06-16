@@ -130,15 +130,15 @@ public class SvVisualiser implements AutoCloseable
         VIS_LOGGER.info("Linx Visualiser complete");
     }
 
-    private void submitChromosome(@NotNull final List<String> chromosomes)
+    private void submitChromosome(final List<String> chromosomes)
     {
         if(chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
-            VIS_LOGGER.warn("Invalid chromosomes: {}", chromosomes.toString());
+            VIS_LOGGER.warn("invalid chromosomes: {}", chromosomes.toString());
             return;
         }
 
-        final String chromosomesStr = chromosomes.size() >= 24
+        final String chromosomesStr = chromosomes.size() >= HumanChromosome.values().length
                 ? "All"
                 : chromosomes.stream().map(RefGenomeFunctions::stripChrPrefix).collect(Collectors.joining("-"));
 
@@ -157,7 +157,14 @@ public class SvVisualiser implements AutoCloseable
         final List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
         if(chromosomeLinks.isEmpty())
         {
-            VIS_LOGGER.warn("Chromosomes {} not present in file", chromosomesStr);
+            VIS_LOGGER.warn("chromosomes({}) not present in file", chromosomesStr);
+            return;
+        }
+
+        if(mCircosConfig.exceedsMaxPlotSvCount(chromosomeLinks.size()))
+        {
+            VIS_LOGGER.warn("chromosomes({}) svCount({}) exceeds limit({})",
+                    chromosomesStr, chromosomeLinks.size(), mCircosConfig.MaxPlotSvCount);
             return;
         }
 
@@ -194,6 +201,15 @@ public class SvVisualiser implements AutoCloseable
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
 
+        String clusterIdsStr = clusterIds.stream().map(x -> String.valueOf(x)).collect(Collectors.joining("-"));
+
+        if(mCircosConfig.exceedsMaxPlotSvCount(clusterSvs.size()))
+        {
+            VIS_LOGGER.warn("clusterIds({}) svCount({}) exceeds limit({})",
+                    clusterIdsStr, clusterSvs.size(), mCircosConfig.MaxPlotSvCount);
+            return;
+        }
+
         final List<VisSegment> clusterSegments = mSampleData.Segments.stream()
                 .filter(x -> clusterIds.contains(x.ClusterId))
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
@@ -201,10 +217,6 @@ public class SvVisualiser implements AutoCloseable
 
         final List<VisGeneExon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
-
-        StringJoiner clustersSj = new StringJoiner("-");
-        clusterIds.forEach(x -> clustersSj.add(String.valueOf(x)));
-        String clusterIdsStr = clustersSj.toString();
 
         if(clusterSvs.isEmpty())
         {
