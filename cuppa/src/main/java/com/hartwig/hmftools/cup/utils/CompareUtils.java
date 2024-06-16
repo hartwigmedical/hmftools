@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-
 public final class CompareUtils
 {
     public static boolean resultsMatch(final SampleResult first, final SampleResult second)

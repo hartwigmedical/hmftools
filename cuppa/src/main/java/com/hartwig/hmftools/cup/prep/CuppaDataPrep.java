@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;

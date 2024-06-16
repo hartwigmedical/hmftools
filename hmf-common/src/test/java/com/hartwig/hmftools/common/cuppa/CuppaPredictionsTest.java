@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.common.cuppa2;
+package com.hartwig.hmftools.common.cuppa;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.io.Resources;
+
 import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;

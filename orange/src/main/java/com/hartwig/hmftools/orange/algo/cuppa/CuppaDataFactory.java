@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.cuppa2.Categories;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa.Categories;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;

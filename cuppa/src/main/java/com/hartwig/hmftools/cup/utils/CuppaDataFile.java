@@ -1,22 +1,13 @@
-package com.hartwig.hmftools.common.cuppa;
+package com.hartwig.hmftools.cup.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -25,6 +16,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.ResultType;
 
 public class CuppaDataFile
 {

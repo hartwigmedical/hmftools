@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cuppa;
+package com.hartwig.hmftools.cup.common;
 
 public enum SvDataType
 {

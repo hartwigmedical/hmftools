@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.prep;
 
-import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.cup.common.CategoryType;
 
 public enum DataSource
 {

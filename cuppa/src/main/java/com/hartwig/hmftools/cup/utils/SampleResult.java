@@ -2,17 +2,17 @@ package com.hartwig.hmftools.cup.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_CATEGORY;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_DATA_TYPE;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_CANCER_TYPE;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_VALUE;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_RESULT_TYPE;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_VALUE;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_CATEGORY;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_DATA_TYPE;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_REF_CANCER_TYPE;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_REF_VALUE;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_RESULT_TYPE;
+import static com.hartwig.hmftools.cup.utils.CuppaDataFile.FLD_VALUE;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENDER;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENDER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -22,10 +22,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.ResultType;
-import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.ResultType;
 
 public class SampleResult
 {

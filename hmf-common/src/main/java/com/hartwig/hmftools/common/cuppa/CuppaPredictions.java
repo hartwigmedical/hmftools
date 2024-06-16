@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cuppa2;
+package com.hartwig.hmftools.common.cuppa;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

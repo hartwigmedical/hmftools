@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.cuppa;
+package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_COMBINED;
-import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_DNA_COMBINED;
-import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_RNA_COMBINED;
+import static com.hartwig.hmftools.cup.common.DataTypes.DATA_TYPE_COMBINED;
+import static com.hartwig.hmftools.cup.common.DataTypes.DATA_TYPE_DNA_COMBINED;
+import static com.hartwig.hmftools.cup.common.DataTypes.DATA_TYPE_RNA_COMBINED;
 
 public enum ClassifierType
 {

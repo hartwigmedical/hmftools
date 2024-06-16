@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cuppa2;
+package com.hartwig.hmftools.common.cuppa;
 
 public class Categories
 {

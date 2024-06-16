@@ -2,12 +2,11 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
-import com.hartwig.hmftools.common.cuppa2.Categories;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa.Categories;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaRecord;
 
 import org.jetbrains.annotations.NotNull;

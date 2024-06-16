@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.common.cuppa2;
-
-import org.jetbrains.annotations.NotNull;
+package com.hartwig.hmftools.common.cuppa;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +28,13 @@ public class CuppaPredictionEntry
     public final int RankGroup;
 
     public CuppaPredictionEntry(
-            @NotNull final String sampleId,
-            @NotNull final Categories.DataType dataType,
-            @NotNull final Categories.ClfGroup clfGroup,
-            @NotNull final Categories.ClfName clfName,
+            final String sampleId,
+            final Categories.DataType dataType,
+            final Categories.ClfGroup clfGroup,
+            final Categories.ClfName clfName,
             final String featName,
             final double featValue,
-            @NotNull final String cancerType,
+            final String cancerType,
             final double dataValue,
             final int rank,
             final int rankGroup
