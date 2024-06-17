@@ -4,9 +4,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
 import java.time.LocalDateTime;
 
-import com.hartwig.hmftools.common.cuppa.Categories;
+import com.hartwig.hmftools.common.cuppa.ClfName;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa.DataType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaRecord;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,9 +43,9 @@ public class CuppaDAO
         return value;
     }
 
-    private static String parseClfName(Categories.ClfName category)
+    private static String parseClfName(ClfName category)
     {
-        if(category.equals(Categories.ClfName.NONE))
+        if(category.equals(ClfName.NONE))
         {
             return null;
         }
@@ -74,7 +75,7 @@ public class CuppaDAO
         LocalDateTime timestamp = LocalDateTime.now();
 
         CuppaPredictions cuppaPredictionsSorted = cuppaPredictions
-                .subsetByDataType(Categories.DataType.PROB)
+                .subsetByDataType(DataType.PROB)
                 .getTopPredictions(topNProbs)
                 .sortByRank();
 

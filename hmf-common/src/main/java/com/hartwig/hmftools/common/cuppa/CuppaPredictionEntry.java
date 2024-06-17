@@ -17,9 +17,9 @@ public class CuppaPredictionEntry
     public static final String FLD_RANK_GROUP = "rank_group";
 
     public final String SampleId;
-    public final Categories.DataType DataType;
-    public final Categories.ClfGroup ClfGroup;
-    public final Categories.ClfName ClfName;
+    public final DataType DataType;
+    public final ClfGroup ClfGroup;
+    public final ClfName ClfName;
     public final String FeatName;
     public final double FeatValue;
     public final String CancerType;
@@ -29,9 +29,9 @@ public class CuppaPredictionEntry
 
     public CuppaPredictionEntry(
             final String sampleId,
-            final Categories.DataType dataType,
-            final Categories.ClfGroup clfGroup,
-            final Categories.ClfName clfName,
+            final DataType dataType,
+            final ClfGroup clfGroup,
+            final ClfName clfName,
             final String featName,
             final double featValue,
             final String cancerType,

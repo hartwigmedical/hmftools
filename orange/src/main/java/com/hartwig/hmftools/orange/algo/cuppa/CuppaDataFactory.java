@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.cuppa.Categories;
+import com.hartwig.hmftools.common.cuppa.ClfName;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa.DataType;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
@@ -55,7 +56,7 @@ public final class CuppaDataFactory
     private static List<CuppaPrediction> extractSortedProbabilities(@NotNull CuppaPredictions cuppaPredictions)
     {
         CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
-                .subsetByDataType(Categories.DataType.PROB)
+                .subsetByDataType(DataType.PROB)
                 .sortByRank();
 
         List<CuppaPrediction> cuppaPredictionsOrangeFormat = new ArrayList<>();
@@ -63,7 +64,7 @@ public final class CuppaDataFactory
         {
             CuppaPredictions probabilitiesOneCancerType = probabilitiesAllClassifiers.subsetByCancerType(cancerType);
 
-            Map<Categories.ClfName, Double> probabilitiesByClassifier = new HashMap<>();
+            Map<ClfName, Double> probabilitiesByClassifier = new HashMap<>();
             for(int i = 0; i < probabilitiesOneCancerType.size(); i++)
             {
                 probabilitiesByClassifier.put(
@@ -75,11 +76,11 @@ public final class CuppaDataFactory
             CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
                     .cancerType(cancerType)
                     .likelihood(probabilitiesByClassifier.get(probabilitiesAllClassifiers.MainCombinedClfName))
-                    .genomicPositionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GEN_POS))
-                    .snvPairwiseClassifier(probabilitiesByClassifier.get(Categories.ClfName.SNV96))
-                    .featureClassifier(probabilitiesByClassifier.get(Categories.ClfName.EVENT))
-                    .expressionPairwiseClassifier(probabilitiesByClassifier.get(Categories.ClfName.GENE_EXP))
-                    .altSjCohortClassifier(probabilitiesByClassifier.get(Categories.ClfName.ALT_SJ))
+                    .genomicPositionClassifier(probabilitiesByClassifier.get(ClfName.GEN_POS))
+                    .snvPairwiseClassifier(probabilitiesByClassifier.get(ClfName.SNV96))
+                    .featureClassifier(probabilitiesByClassifier.get(ClfName.EVENT))
+                    .expressionPairwiseClassifier(probabilitiesByClassifier.get(ClfName.GENE_EXP))
+                    .altSjCohortClassifier(probabilitiesByClassifier.get(ClfName.ALT_SJ))
                     .build();
 
             cuppaPredictionsOrangeFormat.add(prediction);
@@ -93,7 +94,7 @@ public final class CuppaDataFactory
         // Feature values are replicated for each cancer type because the `cuppaPredictions` table is in long form.
         // Use `.findFirst()` to get a single value
         CuppaPredictionEntry predictionEntry = cuppaPredictions.PredictionEntries.stream()
-                .filter(o -> o.DataType == Categories.DataType.FEAT_CONTRIB & o.FeatName.equals(featureName))
+                .filter(o -> o.DataType == DataType.FEAT_CONTRIB & o.FeatName.equals(featureName))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Input CuppaPredictions is empty"));
 

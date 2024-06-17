@@ -17,9 +17,9 @@ public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
     public final List<String> CancerTypes;
-    public final List<Categories.ClfName> ClfNames;
-    public final List<Categories.DataType> DataTypes;
-    public final Categories.ClfName MainCombinedClfName;
+    public final List<ClfName> ClfNames;
+    public final List<DataType> DataTypes;
+    public final ClfName MainCombinedClfName;
 
     public CuppaPredictions(final @NotNull List<CuppaPredictionEntry> predictionEntries)
     {
@@ -34,7 +34,7 @@ public class CuppaPredictions
         ClfNames = PredictionEntries.stream().map(o -> o.ClfName).distinct().collect(Collectors.toList());
         DataTypes = PredictionEntries.stream().map(o -> o.DataType).distinct().collect(Collectors.toList());
 
-        MainCombinedClfName = hasRnaPredictions() ? Categories.ClfName.COMBINED : Categories.ClfName.DNA_COMBINED;
+        MainCombinedClfName = hasRnaPredictions() ? ClfName.COMBINED : ClfName.DNA_COMBINED;
     }
 
     private static double parseDouble(String string)
@@ -91,8 +91,8 @@ public class CuppaPredictions
             String[] rowValues = line.split(delimiter, -1);
 
             String dataTypeStr = parseStringWithEmpty(rowValues[dataTypeIndex]).toUpperCase();
-            Categories.DataType dataType = Categories.DataType.valueOf(dataTypeStr);
-            if(!Categories.DataType.isSampleLevelDataType(dataType))
+            DataType dataType = DataType.valueOf(dataTypeStr);
+            if(!DataType.isSampleLevelDataType(dataType))
             {
                 continue;
             }
@@ -100,12 +100,12 @@ public class CuppaPredictions
             String sampleId = rowValues[sampleIdIndex];
 
             String clfGroupStr = parseStringWithEmpty(rowValues[clfGroupIndex]).toUpperCase();
-            Categories.ClfGroup clfGroup = Categories.ClfGroup.valueOf(clfGroupStr);
+            ClfGroup clfGroup = ClfGroup.valueOf(clfGroupStr);
 
             String clfNameStr;
             clfNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
-            clfNameStr = Categories.ClfName.convertAliasToName(clfNameStr);
-            Categories.ClfName clfName = Categories.ClfName.valueOf(clfNameStr);
+            clfNameStr = ClfName.convertAliasToName(clfNameStr);
+            ClfName clfName = ClfName.valueOf(clfNameStr);
 
             String featName = parseStringWithEmpty(rowValues[featNameIndex]);
             double featValue = parseDouble(rowValues[featValueIndex]);
@@ -176,12 +176,12 @@ public class CuppaPredictions
     {
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(!cuppaPrediction.DataType.equals(Categories.DataType.PROB))
+            if(!cuppaPrediction.DataType.equals(DataType.PROB))
             {
                 continue;
             }
 
-            if(cuppaPrediction.ClfName.equals(Categories.ClfName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue))
+            if(cuppaPrediction.ClfName.equals(ClfName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue))
             {
                 return true;
             }
@@ -190,7 +190,7 @@ public class CuppaPredictions
         return false;
     }
 
-    public CuppaPredictions subsetByDataType(Categories.DataType dataType)
+    public CuppaPredictions subsetByDataType(DataType dataType)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
                 .filter(o -> o.DataType == dataType)
@@ -199,7 +199,7 @@ public class CuppaPredictions
         return new CuppaPredictions(entries);
     }
 
-    public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
+    public CuppaPredictions subsetByClfName(ClfName clfName)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
                 .filter(o -> o.ClfName == clfName)
