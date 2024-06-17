@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.cli;
 
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import java.io.File;
 import java.nio.file.Files;

@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.RNA;
 import static com.hartwig.hmftools.cup.prep.PrepConfig.REF_ALT_SJ_SITES;
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.FALSE_ONLY;

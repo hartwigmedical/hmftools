@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;

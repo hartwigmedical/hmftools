@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 

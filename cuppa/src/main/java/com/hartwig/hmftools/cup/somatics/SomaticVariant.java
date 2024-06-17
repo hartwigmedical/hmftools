@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
 
 import java.util.StringJoiner;
 
@@ -85,7 +85,7 @@ public class SomaticVariant
 
     public static String csvHeader()
     {
-        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        StringJoiner sj = new StringJoiner(CSV_DELIM);
         sj.add(FLD_CHR);
         sj.add(FLD_POSITION);
         sj.add(FLD_REF);

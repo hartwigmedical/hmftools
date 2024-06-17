@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.utils.CuppaConstants.DATA_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_CHR;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_GENE;
@@ -105,7 +105,7 @@ public class SomaticVariantsLoader
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(header, DATA_DELIM);
+            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(header, CSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHR);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
@@ -118,7 +118,7 @@ public class SomaticVariantsLoader
 
             for(final String line : lines)
             {
-                final String[] values = line.split(DATA_DELIM);
+                final String[] values = line.split(CSV_DELIM);
                 SomaticVariant variant = new SomaticVariant(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex],
                         VariantType.valueOf(values[typeIndex]), values[geneIndex], values[tnIndex], Integer.parseInt(values[rcIndex]));
