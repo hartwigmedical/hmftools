@@ -37,8 +37,13 @@ import static com.hartwig.hmftools.sage.evidence.Realignment.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDel;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realignedReadIndexPosition;
+import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
+
+import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
 
@@ -57,7 +62,9 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
+import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.vis.VariantVis;
@@ -211,6 +218,7 @@ public class ReadContextCounter
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }
+    public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
     public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
@@ -267,7 +275,7 @@ public class ReadContextCounter
             return MAP_QUAL;
         }
 
-        if(mConfig.Quality.HighDepthMode && isChimericRead(record))
+        if(mConfig.Quality.HighDepthMode && fragmentData == null && isChimericRead(record))
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return CHIMERIC;
@@ -307,7 +315,9 @@ public class ReadContextCounter
 
         int readVarIndex = rawContext.ReadVariantIndex;
 
-        boolean coreCovered = mReadContextMatcher.coversVariant(record, readVarIndex);
+        SplitReadSegment splitReadSegment = record.getCigar().containsOperator(N) ? formSegment(record, mVariant.Position, readVarIndex) : null;
+
+        boolean coreCovered = coversVariant(record, readVarIndex, splitReadSegment);
 
         if(!coreCovered && !checkRealigned)
         {
@@ -329,19 +339,19 @@ public class ReadContextCounter
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
         ReadContextMatch matchType = NONE;
-        double rawBaseQuality = 0;
+        double calcBaseQuality = 0;
         double modifiedQuality = 0;
         QualityCalculator.QualityScores qualityScores = null;
 
         if(coreCovered)
         {
-            rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readVarIndex, record);
+            calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
-            if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
+            if(belowQualThreshold(calcBaseQuality))
             {
-                if(rawContext.PositionType != VariantReadPositionType.DELETED)
+                if(rawContext.PositionType != DELETED)
                 {
-                    matchType = determineReadContextMatch(record, readVarIndex, true);
+                    matchType = determineReadContextMatch(record, readVarIndex, splitReadSegment);
 
                     if(matchType.SupportsAlt)
                         countAltSupportMetrics(record, fragmentData);
@@ -352,13 +362,12 @@ public class ReadContextCounter
             }
 
             qualityScores = mQualityCalculator.calculateQualityScores(
-                    this, readVarIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
             modifiedQuality = qualityScores.ModifiedQuality;
 
-            // Check if FULL, PARTIAL, OR CORE
-            matchType = rawContext.PositionType != VariantReadPositionType.DELETED ?
-                    determineReadContextMatch(record, readVarIndex, true) : NONE;
+            // check for alt support (full, partial core or core)
+            matchType = rawContext.PositionType != DELETED ? determineReadContextMatch(record, readVarIndex, splitReadSegment) : NONE;
 
             if(matchType.SupportsAlt)
             {
@@ -386,17 +395,23 @@ public class ReadContextCounter
             if(realignedReadIndex == null)
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
 
-            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex, realignedReadIndex);
+            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
 
             if(realignedType != RealignedType.NONE)
             {
                 // recompute qual off this realigned index
-                rawBaseQuality = mQualityCalculator.rawBaseQuality(this, realignedReadIndex, record);
+                calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, realignedReadIndex, record);
 
                 qualityScores = mQualityCalculator.calculateQualityScores(
-                        this, realignedReadIndex, record, adjustedNumOfEvents, rawBaseQuality);
+                        this, realignedReadIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
                 modifiedQuality = qualityScores.ModifiedQuality;
+
+                if(belowQualThreshold(calcBaseQuality))
+                {
+                    addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+                    return UNRELATED;
+                }
 
                 if(realignedType == EXACT)
                 {
@@ -452,28 +467,28 @@ public class ReadContextCounter
         return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }
 
-    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
+    private boolean coversVariant(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
-        // CLEAN-UP: fix this for RNA
-        // better approaches would be to have the read matcher stop checking if it is in a N-section,
-        // or to avoid affecting all DNA samples, make a new SAMRecord with the Ns filled out sufficiently
+        if(splitReadSegment != null)
+            return mReadContextMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadVarIndex);
 
-        /*
-        ReadIndexBases readIndexBases;
-        if(record.getCigar().containsOperator(CigarOperator.N))
+        return mReadContextMatcher.coversVariant(record.getReadBases(), readIndex);
+    }
+
+    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
+    {
+        if(splitReadSegment != null)
         {
-            readIndexBases = SplitReadUtils.expandSplitRead(readIndex, record);
+            return mReadContextMatcher.determineReadMatch(
+                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false);
         }
 
-        final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                readIndexBases, record.getBaseQualities(),
-                allowCoreVariation ? mAllowWildcardMatchInCore : false,
-                allowCoreVariation ? mMaxCoreMismatches : 0);
-        */
-
-        // REALIGN: realignment did not allow low-qual mismatches or wildcards - is that still a necessary condition?
-
         return mReadContextMatcher.determineReadMatch(record, readIndex);
+    }
+
+    private boolean belowQualThreshold(double calcBaseQuality)
+    {
+        return !mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
     }
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, final double quality)

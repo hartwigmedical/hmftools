@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.averageCoreQuality;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -92,6 +93,16 @@ public class ReadContextMatchingTest
         SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
         assertEquals(REF, matcher.determineReadMatch(read, readVarIndex));
+
+        // partial ref core assuming satisfies core-covered
+        readBases = ref + rightCore + readContext.rightFlankStr();
+        read = buildSamRecord(position, cigar, readBases, readQualities);
+        assertEquals(REF, matcher.determineReadMatch(read, 0));
+
+        // same again but ending at the ref
+        readBases = "ACGTA" + readContext.leftFlankStr() + leftCore + ref;
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+        assertEquals(REF, matcher.determineReadMatch(read, readBases.length() - 1));
 
         // full match
         readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + readContext.rightFlankStr();
@@ -258,7 +269,7 @@ public class ReadContextMatchingTest
 
         SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        double average = matcher.averageCoreQuality(read, readVarIndex);
+        double average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(14, average, 0.01);
 
         // now with partial cores
@@ -271,7 +282,7 @@ public class ReadContextMatchingTest
 
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        average = matcher.averageCoreQuality(read, readVarIndex);
+        average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(13, average, 0.01);
 
         // partial on the left
@@ -285,7 +296,7 @@ public class ReadContextMatchingTest
         readVarIndex = 0;
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        average = matcher.averageCoreQuality(read, readVarIndex);
+        average = averageCoreQuality(readContext, read, readVarIndex);
         assertEquals(11, average, 0.01);
     }
 }

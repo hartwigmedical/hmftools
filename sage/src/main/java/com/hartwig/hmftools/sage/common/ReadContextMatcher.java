@@ -145,7 +145,9 @@ public class ReadContextMatcher
         return 1 + (segmentLength / CORE_LOW_QUAL_MISMATCH_FACTOR);
     }
 
-    public boolean coversVariant(final SAMRecord record, final int readVarIndex)
+    public boolean coversVariant(final SAMRecord record, final int readVarIndex) { return coversVariant(record.getReadBases(), readVarIndex); }
+
+    public boolean coversVariant(final byte[] readBases, final int readVarIndex)
     {
         if(readVarIndex < 0)
             return false;
@@ -154,7 +156,7 @@ public class ReadContextMatcher
         int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarIndex;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
-        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < record.getReadBases().length;
+        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < readBases.length;
     }
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
@@ -204,10 +206,16 @@ public class ReadContextMatcher
         int readIndexStart = readVarIndex - refIndex;
         int readIndexEnd = readIndexStart + mContext.RefBases.length - 1;
 
-        int compareLength = mContext.RefBases.length;
+        // allow partial ref core to be compared since, where required, checks have already been made that the core is sufficiently covered
+        if(readIndexStart < 0)
+        {
+            refIndexStart += abs(readIndexStart);
+            readIndexStart = 0;
+        }
 
-        if(readIndexStart < 0 || readIndexEnd >= readBases.length)
-            return false;
+        readIndexEnd = min(readIndexEnd, readBases.length - 1);
+
+        int compareLength = readIndexEnd - readIndexStart + 1;
 
         return matches(
                 mContext.RefBases, readBases, readQuals, refIndexStart, readIndexStart, compareLength,
@@ -373,25 +381,5 @@ public class ReadContextMatcher
         // compare the core and flanks for the 2 contexts, not allowing for mismatches
         ReadContextMatcher matcher = new ReadContextMatcher(first, false);
         return matcher.determineReadMatch(second.ReadBases, null, second.VarIndex, true);
-    }
-
-    public double averageCoreQuality(final SAMRecord record, final int readVarIndex)
-    {
-        int readIndexStart = max(readVarIndex - mContext.leftCoreLength(), 0);
-        int readIndexEnd = min(readVarIndex + mContext.rightCoreLength(), record.getReadBases().length - 1);
-
-        int baseLength = readIndexEnd - readIndexStart + 1;
-
-        if(baseLength <= 0)
-            return 0;
-
-        double quality = 0;
-
-        for(int i = readIndexStart; i <= readIndexEnd; i++)
-        {
-            quality += record.getBaseQualities()[i];
-        }
-
-        return (int)round(quality / baseLength);
     }
 }

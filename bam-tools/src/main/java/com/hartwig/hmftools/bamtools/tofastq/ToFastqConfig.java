@@ -124,7 +124,8 @@ public class ToFastqConfig
 
         configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
 
-        configBuilder.addConfigItem(FILE_SPLIT_MODE, "File split mode, NONE, READ_GROUP (default), THREAD");
+        configBuilder.addConfigItem(FILE_SPLIT_MODE, false, "File split mode, NONE, READ_GROUP (default), THREAD",
+                FileSplitMode.READ_GROUP.name());
         configBuilder.addInteger(PARTITION_SIZE, "Partition split size", DEFAULT_PARTITION_SIZE);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
 

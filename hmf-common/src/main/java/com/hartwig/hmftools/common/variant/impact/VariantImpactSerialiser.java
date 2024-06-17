@@ -44,7 +44,7 @@ public final class VariantImpactSerialiser
     public static List<String> toVcfData(final VariantImpact impact)
     {
         return Lists.newArrayList(
-                impact.CanonicalGeneName,
+                impact.GeneName,
                 impact.CanonicalTranscript,
                 impact.CanonicalEffect,
                 String.valueOf(impact.CanonicalCodingEffect),
@@ -71,7 +71,7 @@ public final class VariantImpactSerialiser
         }
 
         int index = 0;
-        String canonicalGeneName = impactValues.get(index++);
+        String geneName = impactValues.get(index++);
         String canonicalTranscript = impactValues.get(index++);
         String canonicalEffect = impactValues.get(index++);
         CodingEffect canonicalCodingEffect = CodingEffect.valueOf(impactValues.get(index++));
@@ -86,7 +86,7 @@ public final class VariantImpactSerialiser
         int genesAffected = Integer.parseInt(impactValues.get(index++));
 
         return new VariantImpact(
-                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                geneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
 }

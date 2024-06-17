@@ -38,21 +38,32 @@ public class FlagStats
         mTypeStats.get(type.ordinal()).decrement(passes);
     }
 
-    public void processRead(final SAMRecord read)
+    public void processRead(final SAMRecord read, boolean isConsensusRead)
     {
-        final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
-        final boolean isSecondary = read.isSecondaryAlignment();
-        final boolean isSupp = read.getSupplementaryAlignmentFlag();
-        final boolean isDuplicate = read.getDuplicateReadFlag();
-        final boolean isMapped = !read.getReadUnmappedFlag();
-        final boolean isPaired = read.getReadPairedFlag();
-        final boolean isProperPair = read.getProperPairFlag();
+        boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
+        boolean isSupplementary = read.getSupplementaryAlignmentFlag();
+        boolean isSecondary = read.getSupplementaryAlignmentFlag();
+
+        if(isConsensusRead)
+        {
+            // consensus reads decrement the extra duplicate read as previously explained in BamReader, but
+            // being extra reads they do not contribute to supplementary, mapped or other counts
+            decrement(FlagStatType.DUPLICATE, passesQC);
+
+            if(!isSupplementary && !isSecondary)
+                decrement(FlagStatType.PRIMARY_DUPLICATE, passesQC);
+
+            return;
+        }
 
         increment(FlagStatType.TOTAL, passesQC);
 
+        boolean isDuplicate = read.getDuplicateReadFlag();
+        boolean isMapped = !read.getReadUnmappedFlag();
+
         if(isDuplicate)
         {
-            increment(FlagStatType.DUPLICATE, passesQC);
+            increment(FlagStatType.DUPLICATE, passesQC); // duplicate of either primary or supplementary
         }
 
         if(isMapped)
@@ -60,13 +71,13 @@ public class FlagStats
             increment(FlagStatType.MAPPED, passesQC);
         }
 
-        if(isSecondary)
+        if(read.isSecondaryAlignment())
         {
             increment(FlagStatType.SECONDARY, passesQC);
             return;
         }
 
-        if(isSupp)
+        if(isSupplementary)
         {
             increment(FlagStatType.SUPPLEMENTARY, passesQC);
             return;
@@ -84,10 +95,9 @@ public class FlagStats
             increment(FlagStatType.PRIMARY_MAPPED, passesQC);
         }
 
-        if(!isPaired)
+        if(!read.getReadPairedFlag())
             return;
 
-        // It is a paired primary read.
         increment(FlagStatType.PAIRED, passesQC);
 
         if(read.getFirstOfPairFlag())
@@ -103,8 +113,7 @@ public class FlagStats
         if(!isMapped)
             return;
 
-        // It is a mapped paired primary read.
-        if(isProperPair)
+        if(read.getProperPairFlag())
         {
             increment(FlagStatType.PROPERLY_PAIRED, passesQC);
         }
@@ -115,31 +124,16 @@ public class FlagStats
             return;
         }
 
-        // It is a mapped paired primary read with a mapped mate.
         increment(FlagStatType.PAIR_MAPPED, passesQC);
 
-        if(read.getReferenceName().equals(read.getMateReferenceName()))
-            return;
-
-        // It is a mapped paired primary read with a mapped mate toa different chromosome.
-        increment(FlagStatType.INTER_CHR_PAIR_MAPPED, passesQC);
-
-        if(read.getMappingQuality() >= MAP_QUAL_THRESHOLD)
+        if(!read.getReferenceName().equals(read.getMateReferenceName()))
         {
-            increment(FlagStatType.INTER_CHR_PAIR_MAP_QUAL_GE5, passesQC);
-        }
-    }
+            increment(FlagStatType.INTER_CHR_PAIR_MAPPED, passesQC);
 
-    public void registerConsensusRead(final SAMRecord read)
-    {
-        final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
-        final boolean isSupp = read.getSupplementaryAlignmentFlag();
-
-        decrement(FlagStatType.DUPLICATE, passesQC);
-
-        if(!isSupp)
-        {
-            decrement(FlagStatType.PRIMARY_DUPLICATE, passesQC);
+            if(read.getMappingQuality() >= MAP_QUAL_THRESHOLD)
+            {
+                increment(FlagStatType.INTER_CHR_PAIR_MAP_QUAL_GE5, passesQC);
+            }
         }
     }
 

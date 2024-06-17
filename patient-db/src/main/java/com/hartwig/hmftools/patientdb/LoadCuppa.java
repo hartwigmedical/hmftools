@@ -10,20 +10,17 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadCuppa
 {
-    private static final String CUPPA_RESULTS_CSV = "cuppa_results_csv";
+    private static final String CUPPA_VIS_DATA_TSV = "cuppa_vis_data_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
@@ -31,31 +28,28 @@ public class LoadCuppa
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addPath(CUPPA_RESULTS_CSV, true, "Path to the *.cup.data.csv file");
+        configBuilder.addPath(CUPPA_VIS_DATA_TSV, true, "Path to the Cuppa vis data file");
 
         configBuilder.checkAndParseCommandLine(args);
 
         String sample = configBuilder.getValue(SAMPLE);
-        String cuppaResultsCsv = configBuilder.getValue(CUPPA_RESULTS_CSV);
+        String cuppaVisDataTsv = configBuilder.getValue(CUPPA_VIS_DATA_TSV);
 
-        try(DatabaseAccess dbWriter = databaseAccess(configBuilder))
+        try (DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
-            LOGGER.info("Loading CUPPA from {}", new File(cuppaResultsCsv).getParent());
-            List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultsCsv);
-            LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultsCsv);
+            LOGGER.info("loading Cuppa from {}", new File(cuppaVisDataTsv).getParent());
+            CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
+            LOGGER.info("loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
-            List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
-            CuppaPrediction best = predictions.get(0);
-            LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+            int TOP_N_PROBS = 3;
+            LOGGER.info("writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
 
-            LOGGER.info("Writing CUPPA into database for {}", sample);
-            dbWriter.writeCuppa(sample, best.cancerType(), best.likelihood());
-
+            dbWriter.writeCuppa(sample, cuppaPredictions, TOP_N_PROBS);
             LOGGER.info("Complete");
         }
         catch(Exception e)
         {
-            LOGGER.error("Failed to load CUPPA", e);
+            LOGGER.error("failed to load Cuppa data", e);
             System.exit(1);
         }
     }

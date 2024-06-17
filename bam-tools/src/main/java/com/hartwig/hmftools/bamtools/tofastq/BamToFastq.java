@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 
@@ -193,17 +194,18 @@ public class BamToFastq
             case READ_GROUP:
             {
                 BT_LOGGER.info("start merging fastqs by read groups");
-                for(String readGroupId : ToFastqUtils.getReadGroupIds(mConfig))
+                for(SAMReadGroupRecord readGroup : ToFastqUtils.getReadGroups(mConfig))
                 {
-                    String filePrefix = mConfig.formFilePrefix("", readGroupId, false);
+                    // we need to store all the read group details in the file name, but use space instead of tab
+                    String filePrefix = mConfig.OutputDir + readGroup.getSAMString().replace('\t', ' ');
                     String r1Fastq = formFilename(filePrefix, R1);
                     String r2Fastq = formFilename(filePrefix, R2);
                     String unpairedFastq = formFilename(filePrefix, UNPAIRED);
 
-                    BT_LOGGER.info("RG({}) R1 fastq({}) R2 fastq({})", readGroupId, r1Fastq, r2Fastq);
+                    BT_LOGGER.info("RG({}) R1 fastq({}) R2 fastq({})", readGroup.getId(), r1Fastq, r2Fastq);
 
                     // gather all the fastq writers
-                    List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(o -> o.getReadGroupFastqWriter(readGroupId))
+                    List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(o -> o.getReadGroupFastqWriter(readGroup.getId()))
                             .collect(Collectors.toList());
 
                     tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqR1), r1Fastq, false));

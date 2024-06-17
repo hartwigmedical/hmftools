@@ -7,22 +7,22 @@ import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosome
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
@@ -62,16 +62,14 @@ public class SomaticVariantPrep implements CategoryPrep
         mPosFrequencies = new PositionFrequencies(
                 mConfig.RefGenVersion,
                 GEN_POS_BUCKET_SIZE,
-                GEN_POS_MAX_SAMPLE_COUNT,
                 buildStandardChromosomeLengths(mConfig.RefGenVersion),
-                false
-        );
+                false);
     }
 
     @Override
     public CategoryType categoryType() { return CategoryType.SNV; }
 
-    private void loadVariants(String sampleId)
+    private void loadVariants(String sampleId) throws NoSuchFileException
     {
         List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, Lists.newArrayList(SNP));
         mVariants.addAll(variants);
@@ -163,7 +161,8 @@ public class SomaticVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to extract somatic variant features: {}", sampleId, e.toString());
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
             System.exit(1);
         }
 

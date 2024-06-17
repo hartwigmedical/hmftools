@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
@@ -8,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -44,7 +46,7 @@ public class CoverageTest
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         int readLength = read.getReadLength();
 
@@ -54,7 +56,7 @@ public class CoverageTest
                 false, false, null);
         read.setMappingQuality(mConfig.MapQualityThreshold - 1);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         // unmapped
         read = SamRecordTestUtils.createSamRecord(
@@ -62,15 +64,24 @@ public class CoverageTest
                 false, false, null);
         read.setMateUnmappedFlag(true);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
-        // duplicate
+        // duplicate x 2 and a consensus read
         read = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
         read.setDuplicateReadFlag(true);
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
+        baseCoverage.processRead(read, null, false);
+
+        // consensus
+        read = SamRecordTestUtils.createSamRecord(
+                mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
+                false, false, null);
+        addConsensusReadAttribute(read, 2, 1, UmiReadType.SINGLE);
+
+        baseCoverage.processRead(read, null, false);
 
         // low base qual
         read = SamRecordTestUtils.createSamRecord(
@@ -82,13 +93,13 @@ public class CoverageTest
             read.getBaseQualities()[i] = (byte) (mConfig.BaseQualityThreshold - 1);
         }
 
-        baseCoverage.processRead(read, null);
+        baseCoverage.processRead(read, null, false);
 
         CoverageMetrics metrics = baseCoverage.createMetrics();
 
-        assertEquals(readLength, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()]);
-        assertEquals(readLength, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
+        assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
 
         baseCoverage.clear();
@@ -111,9 +122,9 @@ public class CoverageTest
 
         for(int i = 0; i < 10; ++i)
         {
-            baseCoverage.processRead(read1, null);
-            baseCoverage.processRead(read2, null);
-            baseCoverage.processRead(read3, null);
+            baseCoverage.processRead(read1, null, false);
+            baseCoverage.processRead(read2, null, false);
+            baseCoverage.processRead(read3, null, false);
         }
 
         metrics = baseCoverage.createMetrics();
@@ -151,13 +162,18 @@ public class CoverageTest
         BaseCoverage baseCoverage = bamReader.baseCoverage();
         CoverageMetrics metrics = baseCoverage.createMetrics();
 
-        assertEquals(15, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(20, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
 
         assertTrue(bamReader.readGroupMap().isEmpty());
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if(i >= 24 && i <= 28)
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else if(i >= 19 && i <= 33)
+                assertTrue(baseCoverage.baseDepth()[i] == 1);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] == 0);
         }
 
         // a more complicate example for overlapping alignments..
@@ -169,11 +185,11 @@ public class CoverageTest
 
         String readCigar1 = "5S10M10D10M5I10M5S";
         String mateCigar1 = "5S10M5I10M10N10M5S";
-        String suppaCigar1 = "5S10M10N10M5S";
+        String suppCigar1 = "5S10M10N10M5S";
 
         read1 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 10, testBases.substring(0, 45), readCigar1, CHR_1, 30,
-                false, false, new SupplementaryReadData(CHR_1, 40, SUPP_POS_STRAND, suppaCigar1, 60));
+                false, false, new SupplementaryReadData(CHR_1, 40, SUPP_POS_STRAND, suppCigar1, 60));
 
         bamReader.processRead(read1);
 
@@ -185,14 +201,19 @@ public class CoverageTest
         bamReader.processRead(mate1);
 
         SAMRecord supp1 = SamRecordTestUtils.createSamRecord(
-                read1.getReadName(), CHR_1, 40, testBases.substring(0, 45), suppaCigar1, CHR_1, 30,
+                read1.getReadName(), CHR_1, 40, testBases.substring(0, 45), suppCigar1, CHR_1, 30,
                 false, true, new SupplementaryReadData(CHR_1, 10, SUPP_POS_STRAND, readCigar1, 60));
 
         bamReader.processRead(supp1);
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if((i >= 29 && i <= 38) || (i >= 59 && i <= 68))
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else if(i >= 39 && i <= 48)
+                assertTrue(baseCoverage.baseDepth()[i] == 3);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] <= 1);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());
@@ -222,7 +243,10 @@ public class CoverageTest
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+            if(i >= 19 && i <= 28)
+                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            else
+                assertTrue(baseCoverage.baseDepth()[i] <= 1);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());

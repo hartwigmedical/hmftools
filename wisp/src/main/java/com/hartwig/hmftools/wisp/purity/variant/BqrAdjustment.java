@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_QUAL;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -37,6 +36,8 @@ public class BqrAdjustment
     }
 
     private static final byte NO_KEY_VALUE = 1;
+
+    public boolean hasValidData() { return !mBqrContextData.isEmpty(); }
 
     public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
     {
@@ -111,7 +112,7 @@ public class BqrAdjustment
         {
             BqrKey key = bqrRecord.Key;
 
-            if(bqrRecord.Key.Quality <= BQR_MIN_QUAL)
+            if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 
             if(bqrRecord.Key.ReadType == BqrReadType.DUAL)

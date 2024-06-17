@@ -135,12 +135,12 @@ public class NeoSampleTask implements Callable
 
                 VariantImpact variantImpact = variant.variantImpact();
 
-                if(!variantImpact.CanonicalGeneName.isEmpty())
+                if(!variantImpact.GeneName.isEmpty())
                 {
-                    if(mGeneTransCache.getGeneDataByName(variantImpact.CanonicalGeneName) != null && isRelevantMutation(variantImpact))
+                    if(mGeneTransCache.getGeneDataByName(variantImpact.GeneName) != null && isRelevantMutation(variantImpact))
                     {
                         worstCodingEffect = variantImpact.WorstCodingEffect;
-                        geneName = variantImpact.CanonicalGeneName;
+                        geneName = variantImpact.GeneName;
                         hasValidGeneImpact = true;
                     }
                 }

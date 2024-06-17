@@ -8,11 +8,11 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.RNA;
+import static com.hartwig.hmftools.cup.prep.PrepConfig.REF_ALT_SJ_SITES;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -92,17 +92,17 @@ public class AltSpliceJunctionPrep implements CategoryPrep
 
             if(dataItems.isEmpty())
             {
-                CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} selected", sampleId, mRefAsjIndexMap.size());
+                CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} provided in configItem(-{})", sampleId, mRefAsjIndexMap.size(), REF_ALT_SJ_SITES);
             }
-
-            return dataItems;
-
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to load sample alt-SJ file({}): {}", filename, e.toString());
-            return null; // No System.exit(1) allows RNA data to be missing for a sample in multi-sample mode
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
+            System.exit(1);
         }
+
+        return dataItems;
     }
 
     public static final String FLD_POS_START = "PosStart";
@@ -137,9 +137,9 @@ public class AltSpliceJunctionPrep implements CategoryPrep
                 line = fileReader.readLine();
             }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            CUP_LOGGER.error("failed to read selected alt-SJs from file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("Failed to read {} file({}): {}", REF_ALT_SJ_SITES, filename, e.toString());
             System.exit(1);
         }
 

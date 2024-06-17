@@ -207,6 +207,7 @@ public class SomaticVariants
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
+        boolean hasSyntheticTumor = mConfig.hasSyntheticTumor();
         double sequenceGcRatio = NO_GC_RATIO;
 
         if(mConfig.RefGenome != null && mSample.IsPanel)
@@ -227,7 +228,7 @@ public class SomaticVariants
 
             if(somaticVariant == null)
             {
-                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons);
+                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons, hasSyntheticTumor);
 
                 somaticVariant.setSequenceGcRatio(sequenceGcRatio);
                 mVariants.add(somaticVariant);
@@ -258,6 +259,15 @@ public class SomaticVariants
                 // override basic AD and DP if UMI counts are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
+
+                if(mConfig.DisableDualFragments) // convert to single (ie fragments withi duplicate evidence)
+                {
+                    umiTypeCounts.AlleleSingle += umiTypeCounts.AlleleDual;
+                    umiTypeCounts.AlleleDual = 0;
+
+                    umiTypeCounts.TotalSingle += umiTypeCounts.TotalDual;
+                    umiTypeCounts.TotalDual = 0;
+                }
             }
             else
             {
@@ -282,22 +292,8 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
-            boolean useForTotals = false;
-
-            if(variant.filterReasons().isEmpty())
-            {
-                // only include variants which satisfy the min avg qual check in the sample
-                if(sampleFragData.isLowQual())
-                {
-                    variant.addFilterReason(LOW_QUAL_PER_AD);
-                }
-                else
-                {
-                    useForTotals = true;
-                }
-            }
-
-            if(!useForTotals)
+            // only include unfiltered variants which satisfy the min avg qual check in the sample
+            if(!variant.filterReasons().isEmpty() || sampleFragData.isLowQual())
                 continue;
 
             filteredVariants.add(variant);
@@ -362,8 +358,11 @@ public class SomaticVariants
         if(variant.tier() == VariantTier.LOW_CONFIDENCE)
             filters.add(LOW_CONFIDENCE);
 
-        if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD && variant.variantCopyNumber() < SUBCLONAL_VCN_THRESHOLD)
-            filters.add(SUBCLONAL);
+        if(!mConfig.SkipSubclonalFilter)
+        {
+            if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD && variant.variantCopyNumber() < SUBCLONAL_VCN_THRESHOLD)
+                filters.add(SUBCLONAL);
+        }
 
         // check GC content
         if(sequenceGcRatio != NO_GC_RATIO && mConfig.GcRatioMin > 0 && sequenceGcRatio < mConfig.GcRatioMin)
@@ -430,6 +429,9 @@ public class SomaticVariants
             sj.add(valueOf(variant.isProbeVariant()));
 
             String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+
+            if(filtersStr.isEmpty() && sampleFragData.isLowQual())
+                filtersStr = LOW_QUAL_PER_AD.toString();
 
             if(filtersStr.isEmpty())
                 filtersStr = PASS;

@@ -273,13 +273,13 @@ public class SampleComparisonTask implements Callable
         if(!variant.getImpacts().containsKey(refVariant.Gene))
         {
             PV_LOGGER.trace("sample({}) var({}) diff gene and canonical coding: pave({} : {}) snpEff({} : {})",
-                    sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
+                    sampleId, variant.toString(), variantImpact.GeneName, variantImpact.CanonicalCodingEffect,
                     refVariant.Gene, refVariant.CanonicalCodingEffect);
             return;
         }
 
         PV_LOGGER.trace("sample({}) var({}) diff canonical coding: pave({} : {}) snpEff({} : {})",
-                sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
+                sampleId, variant.toString(), variantImpact.GeneName, variantImpact.CanonicalCodingEffect,
                 refVariant.Gene, refVariant.CanonicalCodingEffect);
     }
 }

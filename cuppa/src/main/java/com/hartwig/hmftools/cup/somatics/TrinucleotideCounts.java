@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import java.util.List;
 import java.util.Map;

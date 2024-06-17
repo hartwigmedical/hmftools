@@ -112,33 +112,12 @@ public class RegionSlicer
         public int compareTo(final RemotePositions other)
         {
             if(!Chromosome.equals(other.Chromosome))
-            {
-                // favour chromosome 2 first so that any slicing of the high-depth poly-G region is done first
-                // should not be required for unmapped BAMs
-                if(isChromosome2())
-                    return -1;
-                else if(other.isChromosome2())
-                    return -1;
-
-                return lowerChromosome(Chromosome, other.Chromosome) ? -1 : 1;
-            }
+                return Chromosome.compareTo(other.Chromosome);
 
             if(Positions.size() != other.Positions.size())
                 return Positions.size() > other.Positions.size() ? -1 : 1;
 
             return 0;
-        }
-
-        public boolean isChromosome2()
-        {
-            try
-            {
-                return HumanChromosome._2.matches(Chromosome);
-            }
-            catch(Exception e)
-            {
-                return false;
-            }
         }
     }
 

@@ -18,10 +18,10 @@ public class Microhomology
 
     public String toString()
     {
-        return format("%s length(%d)", Bases, Length);
+        return format("%s length=%d", Bases, Length);
     }
 
-    public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex)
+    public static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)
     {
         if(!variant.isIndel())
             return null;
@@ -30,8 +30,6 @@ public class Microhomology
 
         StringBuilder homology = null;
         String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
-
-        final byte[] readBases = read.getReadBases();
 
         // start looking in the read in the first base after the variant
         int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
@@ -89,5 +87,4 @@ public class Microhomology
 
         return new Microhomology(homologyBases, homologyLength);
     }
-
 }

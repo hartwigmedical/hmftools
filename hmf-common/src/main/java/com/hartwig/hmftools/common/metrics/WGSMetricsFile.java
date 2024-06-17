@@ -29,8 +29,6 @@ public final class WGSMetricsFile
     public static final String PCT_EXC_OVERLAP_COLUMN = "PCT_EXC_OVERLAP";
     public static final String PCT_EXC_CAPPED_COLUMN = "PCT_EXC_CAPPED";
     public static final String PCT_EXC_TOTAL_COLUMN = "PCT_EXC_TOTAL";
-    public static final String HET_SNP_SENSITIVITY_COLUMN = "HET_SNP_SENSITIVITY";
-    public static final String HET_SNP_Q_COLUMN = "HET_SNP_Q";
 
     private static final String COVERAGE_1X_COLUMN = "PCT_1X";
     private static final String COVERAGE_10X_COLUMN = "PCT_10X";

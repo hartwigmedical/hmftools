@@ -487,11 +487,28 @@ public class OrangeAlgo
             return null;
         }
 
-        String isofoxCancerType = cohortMapper.cancerTypeForSample(createSample(config));
-        if(isofoxCancerType == null)
+        String orangeCancerType = cohortMapper.cancerTypeForSample(createSample(config));
+        if(orangeCancerType == null)
         {
-            LOGGER.warn("Could not resolve isofox cancer type for {}", config.tumorSampleId());
+            LOGGER.warn("Could not resolve ORANGE cancer type for {}", config.tumorSampleId());
             return null;
+        }
+
+        String isofoxCancerType;
+        // TODO (KD): Replace with unified cohort mapping code (see also ACTIN-1010)
+        if(orangeCancerType.equals("Ovary/Fallopian tube"))
+        {
+            isofoxCancerType = "Ovary";
+            LOGGER.debug("Converted orange cancer type '{}' to isofox cancer type '{}'", orangeCancerType, isofoxCancerType);
+        }
+        else if(orangeCancerType.equals("Unknown"))
+        {
+            isofoxCancerType = null;
+            LOGGER.debug("Converted orange cancer type '{}' to null isofox cancer type", orangeCancerType);
+        }
+        else
+        {
+            isofoxCancerType = orangeCancerType;
         }
 
         return IsofoxDataLoader.load(isofoxCancerType,

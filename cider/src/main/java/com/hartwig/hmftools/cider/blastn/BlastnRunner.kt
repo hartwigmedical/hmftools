@@ -7,10 +7,11 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedRead
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter
 import org.apache.commons.csv.CSVFormat
 import org.apache.logging.log4j.LogManager
-import java.io.BufferedWriter
-import java.io.File
+import java.io.*
 import java.time.Duration
 import java.time.Instant
+import java.util.zip.GZIPOutputStream
+
 
 // run blast and process results
 object BlastnRunner
@@ -72,9 +73,9 @@ object BlastnRunner
             "-query", fastaFile)
 
         // create output file
-        val outputFileCsv = File("$outputDir/$sampleId.blastn.csv")
+        val outputFileCsv = File("$outputDir/$sampleId.blastn.csv.gz")
 
-        sLogger.info("running blastn on sample {}, {} sequences", sampleId, vdjSequences.size)
+        sLogger.info("running blastn on sample {}, {} sequences, output: {}", sampleId, vdjSequences.size, outputFileCsv)
 
         /*
         val outputFile = File("$outputDir/$sampleId.blastn.out")
@@ -91,12 +92,16 @@ object BlastnRunner
         command.add("-outfmt")
         command.add("6 " + BlastColumns.values().joinToString(" "))
 
-        val processBuilder = ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(outputFileCsv)
+        val processBuilder = ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT)
         processBuilder.environment()["BLASTDB"] = blastDb
 
         sLogger.info("{}", processBuilder.command().joinToString(" "))
 
-        val result = processBuilder.start().waitFor()
+        val process = processBuilder.start()
+
+        GZIPOutputStream(FileOutputStream(outputFileCsv)).use { s -> process.inputStream.transferTo(s) }
+
+        val result = process.waitFor()
         if (result != 0)
         {
             sLogger.fatal("Error executing blastn")

@@ -13,11 +13,8 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.pave.impact.CodingContext;
 import com.hartwig.hmftools.pave.GeneDataCache;
-import com.hartwig.hmftools.pave.impact.ProteinContext;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 public class ComparisonWriter
 {
@@ -116,7 +113,7 @@ public class ComparisonWriter
 
             String diffsStr = diffs.stream().collect(Collectors.joining(";"));
 
-            sj.add(variantImpact.CanonicalGeneName).add(String.valueOf(isDriverGene)).add(diffsStr);
+            sj.add(variantImpact.GeneName).add(String.valueOf(isDriverGene)).add(diffsStr);
 
             sj.add(String.valueOf(refVariant.Reported)).add(String.valueOf(variant.reported()));
             sj.add(refVariant.CanonicalEffect).add(variantImpact.CanonicalEffect);

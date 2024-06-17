@@ -78,7 +78,7 @@ public class SomaticVariantCache
 
             if(mConfig.FilterSomaticsOnGene)
             {
-                if(variant.variantImpact() == null || variant.variantImpact().CanonicalGeneName.isEmpty())
+                if(variant.variantImpact() == null || variant.variantImpact().GeneName.isEmpty())
                     continue;
             }
 

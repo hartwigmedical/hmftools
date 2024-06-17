@@ -4,14 +4,14 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -22,9 +22,6 @@ public class SnvLiftover
     private final LiftoverConfig mConfig;
     private final List<String> mSampleIds;
     private final int mThreads;
-
-    @Deprecated
-    public static final String LIFTOVER_FILE = ".snv_liftover.csv";
 
     public SnvLiftover(final ConfigBuilder configBuilder)
     {
@@ -56,7 +53,7 @@ public class SnvLiftover
         for(String sampleId : mSampleIds)
         {
             String purpleDir = mConfig.SampleVcfDir.replaceAll("\\*", sampleId);
-            String vcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
+            String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
             VcfPositionConverter vcfTask = new VcfPositionConverter(sampleId, vcfFile, mConfig);
             sampleTasks.add(vcfTask);
         }

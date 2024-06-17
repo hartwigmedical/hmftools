@@ -4,23 +4,18 @@ public final class VcfTags
 {
     public static final String VERSION_META_DATA = "sageVersion";
 
+    // v3.5 onwards
+    public static final String READ_CONTEXT_INFO = "RC_INFO";
+    public static final String READ_CONTEXT_INFO_DESC = "Read context information";
+
+    // v3.4 and earlier
     public static final String READ_CONTEXT_CORE = "RC";
-    public static final String READ_CONTEXT_CORE_DESC = "Read context core";
-
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
-    public static final String READ_CONTEXT_LEFT_FLANK_DESC = "Read context left flank";
-
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
-    public static final String READ_CONTEXT_RIGHT_FLANK_DESC = "Read context right flank";
-
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
-    public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
-    public static final String READ_CONTEXT_CIGAR = "RC_CIGAR";
-    public static final String READ_CONTEXT_CIGAR_DESC = "Read context CIGAR of the variant";
-
-    public static final String READ_CONTEXT_ALIGNMENT = "RC_ALIGNMENT";
-    public static final String READ_CONTEXT_ALIGNMENT_DESC = "Read context alignment of the variant";
+    public static final String READ_CONTEXT_UPDATED = "RC_UPDATED";
+    public static final String READ_CONTEXT_UPDATED_DESC = "Read context was updated from an earlier Sage version";
 
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";

@@ -1,20 +1,16 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-
-import org.jooq.Record;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -78,7 +74,7 @@ public class SomaticVariant
         if(variantContext.hasAttribute(VAR_IMPACT))
         {
             VariantImpact impact = fromVariantContext(variantContext);
-            gene = impact.CanonicalGeneName;
+            gene = impact.GeneName;
         }
 
         return new SomaticVariant(
@@ -87,22 +83,9 @@ public class SomaticVariant
                 variantContext.getAttributeAsInt(REPEAT_COUNT, 0));
     }
 
-    public static SomaticVariant fromRecord(final Record record)
-    {
-        return new SomaticVariant(
-                record.getValue(Tables.SOMATICVARIANT.CHROMOSOME),
-                record.getValue(Tables.SOMATICVARIANT.POSITION),
-                record.getValue(Tables.SOMATICVARIANT.REF),
-                record.getValue(Tables.SOMATICVARIANT.ALT),
-                VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
-                record.getValue(Tables.SOMATICVARIANT.GENE),
-                record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT),
-                0); // features makes its own DB call for specific INDELs so isn't retrieved here
-    }
-
     public static String csvHeader()
     {
-        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        StringJoiner sj = new StringJoiner(CSV_DELIM);
         sj.add(FLD_CHR);
         sj.add(FLD_POSITION);
         sj.add(FLD_REF);

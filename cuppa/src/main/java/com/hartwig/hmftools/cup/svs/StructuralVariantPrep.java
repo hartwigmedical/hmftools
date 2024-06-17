@@ -1,26 +1,27 @@
 package com.hartwig.hmftools.cup.svs;
 
-import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.LINE;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.MAX_COMPLEX_SIZE;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DEL_20KB_1MB;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_100KB_5MB;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_32B_200B;
-import static com.hartwig.hmftools.common.cuppa.SvDataType.TELOMERIC_SGL;
+import static com.hartwig.hmftools.cup.prep.CategoryType.SV;
+import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
+import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_100KB_5MB;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
+import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
+import java.io.File;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.cuppa.SvDataType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
@@ -53,10 +54,11 @@ public class StructuralVariantPrep implements CategoryPrep
         try
         {
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(
-                    mConfig.purpleSvFile(sampleId),
-                    new AlwaysPassFilter()
-            );
+
+            String purpleSvFile = mConfig.purpleSvFile(sampleId);
+            if(!new File(purpleSvFile).isFile())
+                throw new NoSuchFileException(purpleSvFile);
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(purpleSvFile, new AlwaysPassFilter());
             final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             int svId = 0;
@@ -65,7 +67,10 @@ public class StructuralVariantPrep implements CategoryPrep
                 svDataList.add(convertSvData(var, svId++));
             }
 
-            final List<LinxCluster> clusterList = LinxCluster.read(mConfig.linxClusterFile(sampleId));
+            String linxClusterFile = mConfig.linxClusterFile(sampleId);
+            if(!new File(linxClusterFile).isFile())
+                throw new NoSuchFileException(linxClusterFile);
+            final List<LinxCluster> clusterList = LinxCluster.read(linxClusterFile);
 
             final int[] svDataCounts = extractSvCounts(svDataList, clusterList);
 
@@ -76,12 +81,8 @@ public class StructuralVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to load structural variants from file{}): {}",
-                    sampleId,
-                    mConfig.purpleSvFile(sampleId),
-                    e.toString()
-            );
-
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
+            e.printStackTrace();
             System.exit(1);
         }
 

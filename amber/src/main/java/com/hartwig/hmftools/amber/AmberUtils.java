@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class AmberUtils
@@ -53,26 +51,15 @@ public class AmberUtils
         int normalAltCount = tumor.NormalAltSupport;
         double normalBaf = normalAltCount / (double) (normalAltCount + tumor.NormalRefSupport);
 
-        return ImmutableAmberBAF.builder()
-                .from(tumor)
-                .normalDepth(tumor.NormalReadDepth)
-                .tumorDepth(tumor.TumorEvidence.ReadDepth)
-                .normalBAF(normalBaf)
-                .tumorBAF(tumorBaf)
-                .build();
+        return new AmberBAF(tumor.chromosome(), tumor.position(), tumorBaf, tumor.TumorEvidence.ReadDepth, normalBaf, tumor.NormalReadDepth);
     }
 
     public static AmberBAF fromBaseDepth(final PositionEvidence baseDepth)
     {
         int normalAltCount = baseDepth.AltSupport;
         double normalBaf = normalAltCount / (double) (normalAltCount + baseDepth.RefSupport);
-        return ImmutableAmberBAF.builder()
-                .from(baseDepth)
-                .normalDepth(baseDepth.ReadDepth)
-                .tumorDepth(-1)
-                .normalBAF(normalBaf)
-                .tumorBAF(-1)
-                .build();
+
+        return new AmberBAF(baseDepth.Chromosome, baseDepth.Position, -1, -1, normalBaf, baseDepth.ReadDepth);
     }
 
     public static AmberSite depthAsSite(final PositionEvidence baseDepth)

@@ -2,12 +2,9 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -39,7 +36,9 @@ public class SomaticVariant
     private double mSequenceGcRatio;
     private boolean mIsProbeVariant;
 
-    public SomaticVariant(final VariantContextDecorator variantDecorator, final double subclonalPerc, final List<FilterReason> filterReasons)
+    public SomaticVariant(
+            final VariantContextDecorator variantDecorator, final double subclonalPerc, final List<FilterReason> filterReasons,
+            boolean hasSyntheticTumor)
     {
         Chromosome = variantDecorator.chromosome();
         Position = variantDecorator.position();
@@ -47,8 +46,8 @@ public class SomaticVariant
         Alt = variantDecorator.alt();
         Type = variantDecorator.type();
         SubclonalPerc = subclonalPerc;
-        CopyNumber = variantDecorator.adjustedCopyNumber();
-        VariantCopyNumber = variantDecorator.variantCopyNumber();
+        CopyNumber = !hasSyntheticTumor ? variantDecorator.adjustedCopyNumber() : 2;
+        VariantCopyNumber = !hasSyntheticTumor ? variantDecorator.variantCopyNumber() : 1;
         Tier = variantDecorator.tier();
         Reported = variantDecorator.reported();
         RepeatCount = variantDecorator.repeatCount();
@@ -56,7 +55,7 @@ public class SomaticVariant
         TriNucContext = variantDecorator.trinucleotideContext();
         Mappability = variantDecorator.mappability();
         VariantImpact variantImpact = variantDecorator.variantImpact();
-        CanonicalGeneName = variantImpact.CanonicalGeneName;
+        CanonicalGeneName = variantImpact.GeneName;
         CanonicalCodingEffect = variantImpact.CanonicalCodingEffect.toString();
 
         Samples = Lists.newArrayList();

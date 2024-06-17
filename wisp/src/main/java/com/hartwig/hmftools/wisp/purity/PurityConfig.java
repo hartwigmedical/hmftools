@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_QUAL;
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
@@ -67,11 +68,16 @@ public class PurityConfig
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
     public final double GcRatioMin;
+    public final int BqrQualThreshold;
+    public final boolean SkipSubclonalFilter;
     public final boolean SummaryMethodOnlyOutput;
+    public final boolean AllowMissingSamples;
+    public final boolean DisableDualFragments;
     public final int Threads;
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
+    private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
     private static final String SAMPLES = "samples";
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
@@ -86,6 +92,10 @@ public class PurityConfig
     private static final String WRITE_TYPES = "write_types";
     private static final String SUMMARY_METHOD_ONLY = "summary_method_only";
     private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
+    private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
+    private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
+    private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
+    private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -130,7 +140,11 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
 
         SummaryMethodOnlyOutput = configBuilder.hasFlag(SUMMARY_METHOD_ONLY);
+        BqrQualThreshold = configBuilder.getInteger(BQR_QUAL_THRESHOLD);
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
+        SkipSubclonalFilter = configBuilder.hasFlag(SKIP_SUBCLONAL_FILTER);
+        AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
+        DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
 
         WriteTypes = Sets.newHashSet();
 
@@ -198,7 +212,9 @@ public class PurityConfig
             Samples.add(new SampleData(
                     configBuilder.getValue(PATIENT_ID),
                     configBuilder.getValue(TUMOR_ID),
-                    sampleIdsFromStr(configBuilder.getValue(SAMPLES)), "", GcRatioMin > 0));
+                    sampleIdsFromStr(configBuilder.getValue(SAMPLES)),
+                    "", GcRatioMin > 0,
+                    configBuilder.getValue(AMBER_EXTRA_TUMOR_ID)));
         }
 
         CT_LOGGER.info("loaded {} patients and {} samples",
@@ -236,7 +252,8 @@ public class PurityConfig
     {
         configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,SampleIds");
         configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
-        configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor sample ID");
+        configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor ID");
+        configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 
         configBuilder.addConfigItem(
@@ -264,11 +281,16 @@ public class PurityConfig
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", DEFAULT_NOISE_READS_PER_MILLION);
 
+        configBuilder.addInteger(BQR_QUAL_THRESHOLD, "BQR qual threshold", DEFAULT_BQR_MIN_QUAL);
+        configBuilder.addFlag(SKIP_SUBCLONAL_FILTER, "Skip subclonal filter for somatics");
+        configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
+        configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
+
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
                 "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
-        configBuilder.addRequiredDecimal(GC_RATIO_MIN,"GC ratio minimum permitted");
+        configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted, recommend 0.4 for panel samples", 0);
 
         configBuilder.addFlag(SUMMARY_METHOD_ONLY, "Only write summary data for configured purity methods");
         configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");

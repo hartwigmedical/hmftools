@@ -108,7 +108,7 @@ public class SomaticMutation extends Variant
     @Override
     public String gene()
     {
-        return mVariantDecorator.variantImpact().CanonicalGeneName;
+        return mVariantDecorator.variantImpact().GeneName;
     }
 
     @Override

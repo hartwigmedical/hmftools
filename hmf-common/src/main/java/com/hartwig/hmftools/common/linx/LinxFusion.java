@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 import org.immutables.value.Value;
@@ -75,13 +76,13 @@ public abstract class LinxFusion
         final String header = lines.get(0);
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<LinxFusion> fusions = Lists.newArrayList();
 
-        for(int i = 0; i < lines.size(); ++i)
+        for(String line : lines)
         {
-            String[] values = lines.get(i).split(TSV_DELIM);
+            String[] values = line.split(TSV_DELIM);
 
             String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
                     values[fieldsIndexMap.get("reportableReasons")] : "";
@@ -178,9 +179,9 @@ public abstract class LinxFusion
                 .toString();
     }
 
-    public static String context(final TranscriptRegionType regionType, int fusedExon)
+    public static String context(final TranscriptRegionType regionType, final KnownFusionType knownType, int fusedExon)
     {
-        switch (regionType)
+        switch(regionType)
         {
             case UPSTREAM:
                 return "Promoter Region";
@@ -191,9 +192,20 @@ public abstract class LinxFusion
             case EXONIC:
             case INTRONIC:
                 return String.format("Exon %d", fusedExon);
+            case UNKNOWN:
+            {
+                if(knownType == KnownFusionType.PROMISCUOUS_ENHANCER_TARGET)
+                {
+                    return "Unknown";
+                }
+                else
+                {
+                    return String.format("ERROR: %s", regionType);
+                }
+            }
         }
 
-        return String.format("ERROR: %s", regionType);
+        throw new IllegalStateException("TranscriptRegionType not supported in determination of fusion context: " + regionType);
     }
 
     public static double fusionJcn(double downstreamJcn, double upstreamJcn)

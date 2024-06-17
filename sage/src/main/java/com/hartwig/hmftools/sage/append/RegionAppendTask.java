@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.sage.append;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.vcf.CandidateSerialisation.PRE_v3_5_FLANK_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
 import java.util.Collections;
@@ -15,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
@@ -77,8 +80,24 @@ public class RegionAppendTask implements Callable
     {
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
+        ChrBaseRegion extendedRegion = new ChrBaseRegion(
+                mRegion.Chromosome,
+                max(1, mRegion.start() - PRE_v3_5_FLANK_EXTENSION_LENGTH),
+                mRegion.end() + PRE_v3_5_FLANK_EXTENSION_LENGTH);
+
+        RefSequence refSequence = new RefSequence(extendedRegion, mRefGenome);
+
         List<Candidate> candidates = mOriginalVariants.stream()
-                .map(x -> CandidateSerialisation.toCandidate(x, mRefGenome)).collect(Collectors.toList());
+                .map(x -> CandidateSerialisation.toCandidate(x, refSequence))
+                .filter(x -> x != null)
+                .collect(Collectors.toList());
+
+        if(candidates.size() < mOriginalVariants.size())
+        {
+            SG_LOGGER.error("region({}) failed to recreate variant context for {} variants",
+                    mRegion, mOriginalVariants.size() - candidates.size());
+            System.exit(1);
+        }
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
                 (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);

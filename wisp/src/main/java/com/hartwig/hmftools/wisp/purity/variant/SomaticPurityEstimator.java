@@ -87,6 +87,9 @@ public class SomaticPurityEstimator
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
         if(!mConfig.SkipBqr)
         {
+            if(!mBqrAdjustment.hasValidData())
+                return INVALID_RESULT;
+
             for(int threshold : SNV_QUAL_THRESHOLDS)
             {
                 calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
@@ -122,7 +125,7 @@ public class SomaticPurityEstimator
 
         ClonalityModel model = null;
 
-        if(VafPeakModel.canUseModel(fragmentTotals))
+        if(VafPeakModel.canUseModel(fragmentTotals, purityCalcData))
         {
             model = new VafPeakModel(mConfig, mResultsWriter, mSample, variants);
         }
@@ -133,7 +136,9 @@ public class SomaticPurityEstimator
             List<SomaticVariant> lowCountFilteredVariants = filterVariants(sampleId, fragmentTotals, variants, medianVcn);
 
             if(LowCountModel.canUseModel(sampleId, fragmentTotals, lowCountFilteredVariants))
+            {
                 model = new LowCountModel(mConfig, mResultsWriter, mSample, lowCountFilteredVariants);
+            }
         }
 
         if(model != null)

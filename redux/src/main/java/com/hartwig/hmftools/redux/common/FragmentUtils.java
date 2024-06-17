@@ -154,10 +154,4 @@ public class FragmentUtils
                 read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
-
-    public static boolean overlapsExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord read)
-    {
-        return excludedRegion != null
-                && positionsOverlap(excludedRegion.start(), excludedRegion.end(), read.getAlignmentStart(), read.getAlignmentEnd());
-    }
 }

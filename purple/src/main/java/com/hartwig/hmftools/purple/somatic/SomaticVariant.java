@@ -58,7 +58,7 @@ public class SomaticVariant implements GenomePosition
 
     public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
     public boolean biallelic() { return mDecorator.biallelic(); }
-    public String gene() { return mDecorator.variantImpact().CanonicalGeneName; }
+    public String gene() { return mDecorator.variantImpact().GeneName; }
 
     public boolean hasTumorAlleleDepth() { return mTumorAllelicDepth != null; }
     public AllelicDepth tumorAlleleDepth() { return mTumorAllelicDepth; }

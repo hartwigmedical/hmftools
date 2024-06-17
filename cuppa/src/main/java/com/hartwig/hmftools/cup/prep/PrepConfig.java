@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -18,21 +17,17 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
-import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -41,7 +36,9 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
@@ -68,7 +65,11 @@ public class PrepConfig
     public final boolean WriteByCategory;
     public final int Threads;
 
+    public static final String CATEGORIES = "categories";
     public static final String CATEGORIES_DESC = "Categories to build ref data for";
+    public static final String ALL_CATEGORIES = "ALL";
+    public static final String DNA_CATEGORIES = "DNA";
+    public static final String RNA_CATEGORIES = "RNA";
 
     public static final String REF_ALT_SJ_SITES = "ref_alt_sj_sites";
     public static final String REF_ALT_SJ_SITES_DESC = "RNA required alternative splice junction sites";
@@ -78,18 +79,13 @@ public class PrepConfig
 
     public static final String THREADS_DESC = "Number of threads to use in multi sample mode";
 
+    public static final String SUBSET_DELIM = ";";
+
     public PrepConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = new ArrayList<>();
+        SampleIds = parseSampleConfig(configBuilder);
 
-        if(configBuilder.hasValue(SAMPLE))
-        {
-            SampleIds.add(configBuilder.getValue(SAMPLE));
-        }
-        else
-        {
-            SampleIds.addAll(loadSampleIdsFile(configBuilder));
-        }
+        Categories = parseCategories(configBuilder);
 
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
         LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
@@ -98,27 +94,14 @@ public class PrepConfig
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
         SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR_CFG, SampleDataDir);
 
-        Categories = configCategories(configBuilder);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
-        WriteByCategory = SampleIds.size() > 1 && configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
+        WriteByCategory = configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
 
-        Threads = parseThreads(configBuilder);
-    }
-
-    public boolean isMultiSample() { return SampleIds.size() > 1; }
-    public boolean isSingleSample() { return SampleIds.size() == 1; }
-
-    @Deprecated
-    public static void addPipelineDirectories(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
-        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
+        Threads = TaskExecutor.parseThreads(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -143,15 +126,31 @@ public class PrepConfig
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, WRITE_FILE_BY_CATEGORY_DESC);
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
 
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
     }
 
+    private static List<String> parseSampleConfig(ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(SAMPLE))
+            return List.of(configBuilder.getValue(SAMPLE));
+
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
+            return ConfigUtils.loadSampleIdsFile(configBuilder);
+
+        CUP_LOGGER.error("Either -{} or -{} must be provided to {} config", SAMPLE, SAMPLE_ID_FILE, CuppaDataPrep.class.getSimpleName());
+        System.exit(1);
+        return null;
+    }
+
+    public boolean isMultiSample() { return SampleIds.size() > 1; }
+    public boolean isSingleSample() { return SampleIds.size() == 1; }
+
     // Generate input file paths by sample id
-    public String getLinxDataDir(final String sampleId) { return convertWildcardSamplePath(LinxDir, sampleId); }
-    public String getPurpleDataDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
-    public String getVirusDataDir(final String sampleId) { return convertWildcardSamplePath(VirusDir, sampleId); }
-    public String getIsofoxDataDir(final String sampleId) { return convertWildcardSamplePath(IsofoxDir, sampleId); }
-    public String getSomaticVariantsDir(final String sampleId) { return convertWildcardSamplePath(SomaticVariantsDir, sampleId); }
+    public String getLinxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(LinxDir, sampleId); }
+    public String getPurpleDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(PurpleDir, sampleId); }
+    public String getVirusDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(VirusDir, sampleId); }
+    public String getIsofoxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(IsofoxDir, sampleId); }
+    public String getSomaticVariantsDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(SomaticVariantsDir, sampleId); }
 
     public String purpleSomaticVcfFile(final String sampleId) { return PurpleCommon.purpleSomaticVcfFile(getPurpleDataDir(sampleId), sampleId); }
     public String somaticVariantsGenericFile(final String sampleId) { return SomaticVariant.generateFilename(getSomaticVariantsDir(sampleId), sampleId); }
@@ -166,8 +165,28 @@ public class PrepConfig
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
     public String altSpliceJunctionFile(final String sampleId) { return AltSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
+    private static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(CATEGORIES))
+            return CategoryType.getDnaCategories(); // Default to DNA
+
+        String configCategories = configBuilder.getValue(CATEGORIES).toUpperCase();
+
+        if(configCategories.equals(ALL_CATEGORIES))
+            return CategoryType.getAllCategories();
+
+        if(configCategories.equals(DNA_CATEGORIES))
+            return CategoryType.getDnaCategories();
+
+        if(configCategories.equals(RNA_CATEGORIES))
+            return CategoryType.getRnaCategories();
+
+        final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
+        return Arrays.stream(categoryStrings).map(CategoryType::valueOf).collect(Collectors.toList());
+    }
+
     @VisibleForTesting
-    PrepConfig(
+    public PrepConfig(
             final List<String> sampleIds,
             final List<CategoryType> categories,
             final RefGenomeVersion refGenVersion,

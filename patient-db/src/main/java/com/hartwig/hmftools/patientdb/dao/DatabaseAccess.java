@@ -11,7 +11,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
-import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -562,12 +561,7 @@ public class DatabaseAccess implements AutoCloseable
         peachDAO.writePeach(sample, peachGenotypes);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood)
-    {
-        cuppaDAO.writeCuppa(sample, cancerType, likelihood);
-    }
-
-    public void writeCuppa2(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
+    public void writeCuppa(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
         cuppaDAO.writeCuppa2(sample, cuppaPredictions, topNProbs);
     }
 

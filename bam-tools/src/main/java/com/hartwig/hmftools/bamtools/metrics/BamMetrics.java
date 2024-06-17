@@ -70,7 +70,18 @@ public class BamMetrics
         {
             for(Map.Entry<String,List<BaseRegion>> entry : mConfig.TargetRegions.entrySet())
             {
-                entry.getValue().forEach(x -> allRegions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
+                String chromosome = entry.getKey();
+
+                if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
+                    continue;
+
+                List<BaseRegion> regions = entry.getValue();
+
+                for(BaseRegion region : regions)
+                {
+                    if(mConfig.SpecificChrRegions.includeRegion(region.start(), region.end()))
+                        allRegions.add(new ChrBaseRegion(chromosome, region.start(), region.end()));
+                }
             }
 
             Collections.sort(allRegions);

@@ -61,19 +61,6 @@ public class SomaticSigs
         mLeastSquaresFitter = mSignatures != null ? new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols) : null;
     }
 
-    public boolean hasValidData() { return mSignatures != null && !mSignatureNames.isEmpty(); }
-
-    public static final String signatureDisplayName(final String sigName)
-    {
-        final String displayName = REPORTABLE_SIGS.get(sigName);
-        return displayName != null ? displayName : "UNKNOWN";
-    }
-
-    public static String convertSignatureName(final String sigName)
-    {
-        return sigName.replaceAll("Signature.", "Sig");
-    }
-
     public String getSigName(int index) { return index < mSignatureNames.size() ? mSignatureNames.get(index) : ""; }
 
     public final double[] fitSampleCounts(final double[] sampleCounts)

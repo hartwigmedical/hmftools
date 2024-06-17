@@ -128,7 +128,7 @@ public class SageAppendApplication
             {
                 VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variant);
 
-                if(variantImpact == null || variantImpact.CanonicalGeneName.isEmpty())
+                if(variantImpact == null || variantImpact.GeneName.isEmpty())
                     continue;
             }
 
@@ -148,7 +148,7 @@ public class SageAppendApplication
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
-        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
+        VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
 
         if(existingVariants.isEmpty())
         {

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static java.lang.String.format;
@@ -258,7 +257,7 @@ public class SomaticVariantData implements ComparableItem
 
         return new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
-                variantImpact.CanonicalGeneName,
+                variantImpact.GeneName,
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
                 Hotspot.fromVariant(context),
                 VariantTier.fromContext(context),

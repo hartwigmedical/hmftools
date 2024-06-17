@@ -33,7 +33,7 @@ public class ReportablePredicate
     public boolean isReportable(final VariantImpact variantImpact, final VariantType type, int repeatCount, boolean isHotspot)
     {
         if(isReportable(
-            variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+            variantImpact.GeneName, type, repeatCount, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
         {
             return true;
         }
@@ -44,7 +44,7 @@ public class ReportablePredicate
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
 
         return altTransEffects.stream().anyMatch(x ->
-                isReportable(variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, x.Effect, x.Effects));
+                isReportable(variantImpact.GeneName, type, repeatCount, isHotspot, x.Effect, x.Effects));
     }
 
     public boolean isReportable(

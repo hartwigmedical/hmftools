@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 
 public class FastqWriterCache implements AutoCloseable
@@ -45,10 +46,10 @@ public class FastqWriterCache implements AutoCloseable
 
     private void createReadGroupWriters()
     {
-        for(String readGroupId : ToFastqUtils.getReadGroupIds(mConfig))
+        for(SAMReadGroupRecord readGroup : ToFastqUtils.getReadGroups(mConfig))
         {
-            FastqWriter fastqWriter = new FastqWriter(mConfig.formFilePrefix(mThreadId, readGroupId, false));
-            mReadGroupWriters.put(readGroupId, fastqWriter);
+            FastqWriter fastqWriter = new FastqWriter(mConfig.formFilePrefix(mThreadId, readGroup.getId(), false));
+            mReadGroupWriters.put(readGroup.getId(), fastqWriter);
         }
     }
 

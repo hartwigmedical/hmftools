@@ -78,8 +78,11 @@ public class SampleFragmentLengths
                 fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
             }
 
-            CT_LOGGER.debug("patient({}) loaded {} fragment entries from {} files",
-                    mSample.PatientId, fragmentLengths.size(), index / 3);
+            if(!fragmentLengths.isEmpty())
+            {
+                CT_LOGGER.debug("patient({}) loaded {} fragment entries from {} files",
+                        mSample.PatientId, fragmentLengths.size(), index / 3);
+            }
         }
 
         return fragmentLengths;

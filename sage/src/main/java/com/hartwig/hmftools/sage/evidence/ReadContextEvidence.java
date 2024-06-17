@@ -6,10 +6,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
+
+import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +68,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mFactory = new ReadContextCounterFactory(config);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
-        mFragmentSync = new FragmentSync(this);
+        mFragmentSync = new FragmentSync(this, refGenome);
 
         mRefSequence = null;
         mReadCounters = null;
@@ -176,11 +179,11 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         Collections.sort(gapDistances, Collections.reverseOrder());
 
-        int gapCount = gapDistances.size();
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
 
         /*
+        int gapCount = gapDistances.size();
         int medianGap = gapDistances.get(gapCount / 2);
 
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
@@ -333,7 +336,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         if(readCounter.variant().isDelete())
         {
-            return positionsWithin(readCounter.position(), readCounter.maxPositionVsReadStart(), unclippedStart, unclippedEnd);
+            return positionsOverlap(readCounter.position(), readCounter.maxPositionVsReadStart(), unclippedStart, unclippedEnd);
         }
 
         return positionWithin(readCounter.position(), unclippedStart, unclippedEnd);

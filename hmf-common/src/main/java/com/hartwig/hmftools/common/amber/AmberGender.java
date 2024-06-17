@@ -31,7 +31,7 @@ public final class AmberGender
             totalPoints += entry.getValue().size();
 
             if(entry.getKey() == HumanChromosome._X)
-                inclusionPoints = entry.getValue().stream().filter(x -> inclusionRegion.containsPosition(x.position())).count();
+                inclusionPoints = entry.getValue().stream().filter(x -> inclusionRegion.containsPosition(x.Position)).count();
         }
 
         double inclusionPerc = inclusionPoints / (double)totalPoints;

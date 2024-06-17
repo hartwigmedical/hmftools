@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
 
 public class SampleData
 {
@@ -42,13 +41,13 @@ public class SampleData
 
     public static SampleData fromAmberAnonymous(final AmberAnonymous amberAnonymous)
     {
-        String hmfSampleId = amberAnonymous.hmfSampleId();
+        String hmfSampleId = amberAnonymous.HmfSampleId;
 
         int sampleIndex = Integer.valueOf(hmfSampleId.charAt(hmfSampleId.length() - 1)) - 64;
         String patientIdStr = hmfSampleId.substring(PREFIX.length(), hmfSampleId.length() - 1);
         int patientId = Integer.parseInt(patientIdStr);
 
-        return new SampleData(patientId, sampleIndex, amberAnonymous.sampleId(), "", amberAnonymous.deleted());
+        return new SampleData(patientId, sampleIndex, amberAnonymous.SampleId, "", amberAnonymous.Deleted);
     }
 
     public String toString()
@@ -86,11 +85,7 @@ public class SampleData
 
     public AmberAnonymous toAmberAnonymous()
     {
-        return ImmutableAmberAnonymous.builder()
-                .hmfSampleId(hmfSampleId())
-                .sampleId(SampleId)
-                .deleted(Deleted)
-                .build();
+        return new AmberAnonymous(hmfSampleId(), SampleId, Deleted);
     }
 
     public static String header()

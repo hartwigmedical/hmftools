@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bamtools.common.ReadGroup;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -114,6 +113,7 @@ public class BamReader
         }
 
         CoverageMetrics metrics = mBaseCoverage.createMetrics();
+
         mCombinedStats.addStats(
                 metrics, mFragmentLengths, mReadCounts, mFlagStats,
                 mOffTargetFragments != null ? mOffTargetFragments.fragmentOverlapCounts() : Collections.EMPTY_MAP, mPerfCounter);
@@ -123,50 +123,51 @@ public class BamReader
     {
         int readStart = read.getAlignmentStart();
 
-        if(!mRegion.containsPosition(readStart))
+        if(!mRegion.containsPosition(readStart) && !mConfig.OnlyTargetRegions)
             return;
-
-        // extract mate alignment since used by a few components
-        int readMateEnd = read.getReadPairedFlag() ? SamRecordUtils.getMateAlignmentEnd(read) : NO_POSITION;
-
-        boolean isDualStrand = false;
-
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-        {
-            isDualStrand = isDualStrand(read);
-
-            // lower the duplicate count to reflect the use of consensus reads
-            --mReadCounts.Duplicates;
-
-            mFlagStats.registerConsensusRead(read);
-
-            if(isDualStrand)
-                ++mReadCounts.DualStrand;
-
-            checkTargetRegions(read, true, isDualStrand, readMateEnd);
-            return;
-        }
-
-        ++mReadCounts.Total;
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
         {
             BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
         }
 
-        mFlagStats.processRead(read);
+        // extract mate alignment since used by a few components
+        int readMateEnd = read.getReadPairedFlag() ? SamRecordUtils.getMateAlignmentEnd(read) : NO_POSITION;
+
+        boolean isDualStrand = false;
+
+        boolean isConsensusRead = read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        if(isConsensusRead)
+        {
+            isDualStrand = extractUmiType(read) == DUAL;
+
+            // lower the duplicate count to reflect the use of consensus reads - since 2 duplicates would usually result in one being
+            // marked as primary and the other as duplicate, whereas now both are duplicates plus a new consensus read are expected
+            --mReadCounts.Duplicates;
+
+            if(isDualStrand)
+                ++mReadCounts.DualStrand;
+        }
+        else
+        {
+            ++mReadCounts.Total;
+
+            if(read.getDuplicateReadFlag())
+                ++mReadCounts.Duplicates;
+        }
+
+        mFlagStats.processRead(read, isConsensusRead);
+
+        mFragmentLengths.processRead(read);
+
+        checkTargetRegions(read, isConsensusRead, isDualStrand, readMateEnd);
 
         if(read.isSecondaryAlignment())
             return;
 
-        checkTargetRegions(read, false, isDualStrand, readMateEnd);
-
-        if(read.getDuplicateReadFlag())
-            ++mReadCounts.Duplicates;
-
-        mFragmentLengths.processRead(read);
-
-        // cache if the mate read overlaps
+        // finally handle base coverage (aka depth) - for this any overlaps between reads (including supplementaries) are only counted
+        // once and so reads are temporarily cached until their mate is available, and then they can be analysed together
         ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
 
         if(readGroup != null)
@@ -184,21 +185,13 @@ public class BamReader
 
         if(readHasOverlaps(read))
         {
-            readGroup = new ReadGroup(read);
+            readGroup = new ReadGroup(read, isConsensusRead);
             mReadGroupMap.put(readGroup.id(), readGroup);
             return;
         }
 
         // process this non-overlapping read immediately without caching
-        mBaseCoverage.processRead(read, null);
-    }
-
-    private static boolean isDualStrand(final SAMRecord read)
-    {
-        if(read.getDuplicateReadFlag())
-            return false;
-
-        return extractUmiType(read) == DUAL;
+        mBaseCoverage.processRead(read, null, isConsensusRead);
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand, int readMateEnd)
@@ -302,7 +295,7 @@ public class BamReader
     {
         if(readGroup.size() == 1)
         {
-            mBaseCoverage.processRead(readGroup.reads().get(0), null);
+            mBaseCoverage.processRead(readGroup.reads().get(0), null, readGroup.IsConsensus);
             return;
         }
 
@@ -330,7 +323,7 @@ public class BamReader
 
         if(!hasOverlaps)
         {
-            readGroup.reads().forEach(x -> mBaseCoverage.processRead(x, null));
+            readGroup.reads().forEach(x -> mBaseCoverage.processRead(x, null, readGroup.IsConsensus));
             return;
         }
 
@@ -342,11 +335,11 @@ public class BamReader
 
             if(i == 0)
             {
-                mBaseCoverage.processRead(read, null);
+                mBaseCoverage.processRead(read, null, readGroup.IsConsensus);
             }
             else
             {
-                mBaseCoverage.processRead(read, combinedAlignedBaseCoords);
+                mBaseCoverage.processRead(read, combinedAlignedBaseCoords, readGroup.IsConsensus);
             }
 
             if(i < readGroup.reads().size() - 1)

@@ -1,19 +1,15 @@
 package com.hartwig.hmftools.common.amber;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberAnonymous
+public class AmberAnonymous
 {
-    @NotNull
-    String sampleId();
+    public final String SampleId;
+    public final String HmfSampleId;
+    public final boolean Deleted;
 
-    @NotNull
-    String hmfSampleId();
-
-    boolean deleted();
-
+    public AmberAnonymous(final String sampleId, final String hmfSampleId, final boolean deleted)
+    {
+        SampleId = sampleId;
+        HmfSampleId = hmfSampleId;
+        Deleted = deleted;
+    }
 }

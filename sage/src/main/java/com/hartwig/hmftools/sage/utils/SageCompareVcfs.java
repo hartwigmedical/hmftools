@@ -45,6 +45,7 @@ import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
@@ -53,6 +54,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -300,9 +302,7 @@ public class SageCompareVcfs
 
         // compare each field in turn
         compareField(origVar, newVar, QUAL, origVar.qual(), newVar.qual());
-        compareAttributeField(origVar, newVar, READ_CONTEXT_CORE, FieldType.STRING);
-        compareAttributeField(origVar, newVar, READ_CONTEXT_LEFT_FLANK, FieldType.STRING);
-        compareAttributeField(origVar, newVar, READ_CONTEXT_RIGHT_FLANK, FieldType.STRING);
+        compareReadBases(origVar, newVar);
         compareAttributeField(origVar, newVar, READ_CONTEXT_JITTER, FieldType.STRING); // will still work for int arrays but could change
         compareAttributeField(origVar, newVar, READ_CONTEXT_MICROHOMOLOGY, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_REPEAT_SEQUENCE, FieldType.STRING);
@@ -385,6 +385,28 @@ public class SageCompareVcfs
             double origValue = origVar.context().getAttributeAsDouble(vcfTag, 0);
             double newValue = origVar.context().getAttributeAsDouble(vcfTag, 0);
             compareField(origVar, newVar, vcfTag, origValue, newValue);
+        }
+    }
+
+    private void compareReadBases(final VariantData origVar, final VariantData newVar)
+    {
+        String oldReadBases = extraReadBases(origVar);
+        String newReadBases = extraReadBases(newVar);
+
+        compareField(origVar, newVar, READ_CONTEXT_INFO, oldReadBases, newReadBases);
+    }
+
+    private static String extraReadBases(final VariantData var)
+    {
+        if(var.context().hasAttribute(READ_CONTEXT_INFO))
+        {
+            return ReadContextVcfInfo.fromVcfTag(var.context().getAttributeAsString(READ_CONTEXT_INFO, "")).readBases();
+        }
+        else
+        {
+            return var.context().getAttributeAsString(READ_CONTEXT_LEFT_FLANK, "")
+                    + var.context().getAttributeAsString(READ_CONTEXT_CORE, "")
+                    + var.context().getAttributeAsString(READ_CONTEXT_RIGHT_FLANK, "");
         }
     }
 

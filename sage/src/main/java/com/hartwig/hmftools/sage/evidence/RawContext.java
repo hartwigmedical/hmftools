@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SKIPPED
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SOFT_CLIP;
 
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.SplitReadUtils;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -129,9 +128,6 @@ public class RawContext
     private static RawContext handleRightSoftClip(
             final SimpleVariant variant, final SAMRecord record, final CigarElement element, int refPosition)
     {
-        if(!variant.isInsert())
-            return null;
-
         int unclippedEnd = refPosition + element.getLength() - 1;
 
         if(variant.Position > unclippedEnd)
@@ -147,6 +143,7 @@ public class RawContext
 
         int variantPosDiff = variant.Position - record.getAlignmentEnd();
         int variantReadIndex = scStartIndex + variantPosDiff - 1;
+
         return new RawContext(variantReadIndex, SOFT_CLIP);
     }
 
@@ -193,16 +190,13 @@ public class RawContext
     private static RawContext handleSkippedReference(
             final SimpleVariant variant, final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
-        if(element.getLength() > SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS)
+        int refPositionEnd = refPosition + element.getLength();
+        if(refPositionEnd >= variant.Position)
         {
-            int refPositionEnd = refPosition + element.getLength();
-            if(refPositionEnd >= variant.Position)
-            {
-                return new RawContext(readIndex, SKIPPED);
-            }
+            return new RawContext(readIndex, SKIPPED);
         }
 
-        return handleDelete(variant, element, readIndex, refPosition);
+        return null;
     }
 
     public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)

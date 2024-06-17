@@ -50,15 +50,21 @@ public class VafPeakModel extends ClonalityModel
         super(config, resultsWriter, sample,  variants);
     }
 
-    public static boolean canUseModel(final FragmentTotals fragmentTotals)
+    public static boolean canUseModel(final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
+        if(purityCalcData.RawPurityEstimate < purityCalcData.LodPurityEstimate)
+            return false;
+
         if(fragmentTotals.sampleTwoPlusCount() < SOMATIC_PEAK_MIN_FRAG_VARIANTS)
             return false;
 
-        if(fragmentTotals.sampleTwoPlusCount() <= fragmentTotals.sampleOneFragmentCount())
+        if(fragmentTotals.weightedSampleDepth() < SOMATIC_PEAK_MIN_AVG_DEPTH)
             return false;
 
-        return fragmentTotals.weightedSampleDepth() > SOMATIC_PEAK_MIN_AVG_DEPTH;
+        if(fragmentTotals.sampleTwoPlusCount() > fragmentTotals.sampleOneFragmentCount() * 3)
+            return true;
+
+        return purityCalcData.RawPurityEstimate > 0.01 && fragmentTotals.sampleTwoPlusCount() > fragmentTotals.sampleOneFragmentCount();
     }
 
     @Override

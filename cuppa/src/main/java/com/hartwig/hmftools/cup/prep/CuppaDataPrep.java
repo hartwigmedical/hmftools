@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.prep.DataItem.FLD_CATEGORY;
 import static com.hartwig.hmftools.cup.prep.DataItem.FLD_KEY;
@@ -21,10 +21,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.cup.feature.FeaturePrep;
+import com.hartwig.hmftools.cup.drivers.DriverPrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
 import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
 import com.hartwig.hmftools.cup.somatics.SomaticVariantPrep;
@@ -66,8 +65,8 @@ public class CuppaDataPrep
             case SAMPLE_TRAIT:
                 return new SampleTraitPrep(mConfig);
 
-            case FEATURE:
-                return new FeaturePrep(mConfig);
+            case DRIVER:
+                return new DriverPrep(mConfig);
 
             case ALT_SJ:
                 return new AltSpliceJunctionPrep(mConfig);
@@ -150,7 +149,8 @@ public class CuppaDataPrep
             }
             catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write features: ", e);
+                CUP_LOGGER.error("Failed to write features:");
+                e.printStackTrace();
                 System.exit(1);
             }
         }
@@ -239,7 +239,8 @@ public class CuppaDataPrep
             }
             catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write multi-sample feature matrix: " + e);
+                CUP_LOGGER.error("Failed to write multi-sample feature matrix:");
+                e.printStackTrace();
                 System.exit(1);
             }
         }

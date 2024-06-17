@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.ref.RefDataConfig.SOMATIC_VARIANTS_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_CHR;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_GENE;
@@ -16,6 +15,7 @@ import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TYPE;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,21 +33,15 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public class SomaticVariantsLoader
 {
-    public static List<SomaticVariant> loadFromConfig(
-            final PrepConfig config,
-            final String sampleId,
-            @Nullable final List<VariantType> variantTypes
-    ){
-        if(config.PurpleDir.isEmpty() & config.SomaticVariantsDir.isEmpty())
-        {
-            CUP_LOGGER.error("Config must have either -{} or -{}", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR);
-            System.exit(1);
-        }
+    public static final String SOMATIC_VARIANTS_DIR = "somatic_variants_dir";
 
+    public static List<SomaticVariant> loadFromConfig(
+            final PrepConfig config, final String sampleId, @Nullable final List<VariantType> variantTypes) throws NoSuchFileException
+    {
         File genericVariantsFile = new File(config.somaticVariantsGenericFile(sampleId));
         File vcfFile = new File(config.purpleSomaticVcfFile(sampleId));
 
-        List<SomaticVariant> variants = null;
+        List<SomaticVariant> variants;
         if(genericVariantsFile.isFile())
         {
             if(vcfFile.isFile())
@@ -63,17 +57,14 @@ public class SomaticVariantsLoader
         }
         else
         {
-            CUP_LOGGER.error("Failed to load somatic variants for sample({})", sampleId);
-            System.exit(1);
+            throw new NoSuchFileException(String.format("%s or %s not provided", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR));
         }
 
         return variants;
     }
 
-    private static List<SomaticVariant> loadFromVcf(
-            final String vcfFile,
-            @Nullable final List<VariantType> variantTypes
-    ){
+    private static List<SomaticVariant> loadFromVcf(final String vcfFile, @Nullable final List<VariantType> variantTypes)
+    {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
@@ -101,10 +92,8 @@ public class SomaticVariantsLoader
         return variants;
     }
 
-    private static List<SomaticVariant> loadFromGenericFile(
-            final String filename,
-            @Nullable final List<VariantType> variantTypes
-    ){
+    private static List<SomaticVariant> loadFromGenericFile(final String filename, @Nullable final List<VariantType> variantTypes)
+    {
         List<SomaticVariant> variants = new ArrayList<>();
 
         if(filename == null || filename.isEmpty())
@@ -116,7 +105,7 @@ public class SomaticVariantsLoader
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(header, DATA_DELIM);
+            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(header, CSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHR);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
@@ -129,7 +118,7 @@ public class SomaticVariantsLoader
 
             for(final String line : lines)
             {
-                final String[] values = line.split(DATA_DELIM);
+                final String[] values = line.split(CSV_DELIM);
                 SomaticVariant variant = new SomaticVariant(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex],
                         VariantType.valueOf(values[typeIndex]), values[geneIndex], values[tnIndex], Integer.parseInt(values[rcIndex]));
