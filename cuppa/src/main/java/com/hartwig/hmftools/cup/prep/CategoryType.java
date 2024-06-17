@@ -7,13 +7,13 @@ public enum CategoryType
     SNV,
     SV,
     SAMPLE_TRAIT,
-    FEATURE,
+    DRIVER,
     GENE_EXP,
     ALT_SJ;
 
     public static List<CategoryType> getDnaCategories()
     {
-        return List.of(SNV, SV, SAMPLE_TRAIT, FEATURE);
+        return List.of(SNV, SV, SAMPLE_TRAIT, DRIVER);
     }
 
     public static List<CategoryType> getRnaCategories()
@@ -23,6 +23,6 @@ public enum CategoryType
 
     public static List<CategoryType> getAllCategories()
     {
-        return List.of(SNV, SV, SAMPLE_TRAIT, FEATURE, GENE_EXP, ALT_SJ);
+        return List.of(SNV, SV, SAMPLE_TRAIT, DRIVER, GENE_EXP, ALT_SJ);
     }
 }

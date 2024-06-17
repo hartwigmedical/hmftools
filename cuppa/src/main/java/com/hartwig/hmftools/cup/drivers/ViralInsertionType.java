@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.feature;
+package com.hartwig.hmftools.cup.drivers;
 
 public enum ViralInsertionType
 {
