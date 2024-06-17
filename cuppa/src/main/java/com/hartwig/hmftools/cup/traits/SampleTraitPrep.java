@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;

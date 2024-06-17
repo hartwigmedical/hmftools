@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.cup.prep;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.svs;
 
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.prep.CategoryType.SV;
 import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
