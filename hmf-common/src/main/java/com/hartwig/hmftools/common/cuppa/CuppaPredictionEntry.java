@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.cuppa;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CuppaPredictionEntry
@@ -52,48 +51,43 @@ public class CuppaPredictionEntry
         RankGroup = rankGroup;
     }
 
-    public List<Object> getFieldNames()
+    public List<String> getFieldNames()
     {
-
-        List<Object> fields = new ArrayList<>();
-
-        fields.add(FLD_SAMPLE_ID);
-        fields.add(FLD_DATA_TYPE);
-        fields.add(FLD_CLASSIFIER_GROUP);
-        fields.add(FLD_CLASSIFIER_NAME);
-        fields.add(FLD_FEATURE_NAME);
-        fields.add(FLD_FEATURE_VALUE);
-        fields.add(FLD_CANCER_TYPE);
-        fields.add(FLD_DATA_VALUE);
-        fields.add(FLD_RANK);
-        fields.add(FLD_RANK_GROUP);
-
-        return fields;
+        return List.of(
+                FLD_SAMPLE_ID,
+                FLD_DATA_TYPE,
+                FLD_CLASSIFIER_GROUP,
+                FLD_CLASSIFIER_NAME,
+                FLD_FEATURE_NAME,
+                FLD_FEATURE_VALUE,
+                FLD_CANCER_TYPE,
+                FLD_DATA_VALUE,
+                FLD_RANK,
+                FLD_RANK_GROUP
+        );
     }
 
     public List<Object> getValues()
     {
-        List<Object> values = new ArrayList<>();
-
-        values.add(SampleId);
-        values.add(DataType);
-        values.add(ClassifierGroup);
-        values.add(ClassifierName);
-        values.add(FeatureName);
-        values.add(FeatureValue);
-        values.add(CancerType);
-        values.add(DataValue);
-        values.add(Rank);
-        values.add(RankGroup);
-
-        return values;
+        return List.of(
+                SampleId,
+                DataType,
+                ClassifierGroup,
+                ClassifierName,
+                FeatureName,
+                FeatureValue,
+                CancerType,
+                DataValue,
+                Rank,
+                RankGroup
+        );
     }
 
     public String toString()
     {
         StringBuilder stringBuilder = new StringBuilder();
 
-        List<Object> fields = getFieldNames();
+        List<String> fields = getFieldNames();
         List<Object> values = getValues();
 
         for(int i = 0; i < fields.size(); i++)
