@@ -57,17 +57,6 @@ public final class VectorUtils
         }
     }
 
-    public static boolean equalVector(double[] vec1, double[] vec2)
-    {
-        for(int i = 0; i < vec1.length; ++i)
-        {
-            if(!doublesEqual(vec1[i], vec2[i]))
-                return false;
-        }
-
-        return true;
-    }
-
     public static void vectorMultiply(double[] vec, double value)
     {
         for(int i = 0; i < vec.length; ++i)

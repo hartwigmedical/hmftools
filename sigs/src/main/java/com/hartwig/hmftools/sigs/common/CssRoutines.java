@@ -4,8 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.Arrays.equalArray;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.utils.VectorUtils.equalVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 import java.util.List;
@@ -89,7 +89,7 @@ public class CssRoutines
 
             double[] data1 = matrix1.getCol(i);
 
-            if(skipAllZeros && equalVector(data1, emptyData))
+            if(skipAllZeros && equalArray(data1, emptyData))
                 continue;
 
             int j = 0;
@@ -101,7 +101,7 @@ public class CssRoutines
 
                 double[] data2 = matrix2.getCol(j);
 
-                if(skipAllZeros && equalVector(data2, emptyData))
+                if(skipAllZeros && equalArray(data2, emptyData))
                     continue;
 
                 double css = calcCosineSim(data1, data2, skipZeroEntries);

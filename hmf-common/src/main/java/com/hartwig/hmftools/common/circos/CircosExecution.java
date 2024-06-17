@@ -42,7 +42,7 @@ public class CircosExecution
             "-outputfile",
             outputFile);
 
-        LOGGER.info(String.format("Generating " + outputFile + " via command: %s", String.join(" ", command)));
+        LOGGER.info(String.format("generating " + outputFile + " via command: %s", String.join(" ", command)));
 
         // must redirect error stream to stdout, as circos print some errors to stdout
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();

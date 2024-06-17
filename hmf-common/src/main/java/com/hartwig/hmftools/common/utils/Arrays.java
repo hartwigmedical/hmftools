@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.utils;
 
 import static java.lang.System.arraycopy;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
 public final class Arrays
@@ -64,6 +66,38 @@ public final class Arrays
         return combined;
     }
 
+    public static boolean equalArray(double[] array1, double[] array2)
+    {
+        for(int i = 0; i < array1.length; ++i)
+        {
+            if(!doublesEqual(array1[i], array2[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    public static boolean equalArray(byte[] array1, byte[] array2)
+    {
+        for(int i = 0; i < array1.length; ++i)
+        {
+            if(array1[i] != array2[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    public static boolean equalArray(int[] array1, int[] array2)
+    {
+        for(int i = 0; i < array1.length; ++i)
+        {
+            if(array1[i] != array2[i])
+                return false;
+        }
+
+        return true;
+    }
     public static void initialise(final byte[] array, final byte value)
     {
         for(int i = 0; i < array.length; ++i)
