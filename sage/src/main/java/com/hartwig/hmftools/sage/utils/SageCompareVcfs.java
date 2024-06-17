@@ -390,13 +390,13 @@ public class SageCompareVcfs
 
     private void compareReadBases(final VariantData origVar, final VariantData newVar)
     {
-        String oldReadBases = extraReadBases(origVar);
-        String newReadBases = extraReadBases(newVar);
+        String oldReadBases = extractReadBases(origVar);
+        String newReadBases = extractReadBases(newVar);
 
         compareField(origVar, newVar, READ_CONTEXT_INFO, oldReadBases, newReadBases);
     }
 
-    private static String extraReadBases(final VariantData var)
+    private static String extractReadBases(final VariantData var)
     {
         if(var.context().hasAttribute(READ_CONTEXT_INFO))
         {
