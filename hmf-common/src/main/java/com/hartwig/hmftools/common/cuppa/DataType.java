@@ -11,10 +11,6 @@ public enum DataType
 
     public static boolean isSampleLevelDataType(DataType dataType)
     {
-        if(dataType.equals(PROB) | dataType.equals(FEAT_CONTRIB) | dataType.equals(SIG_QUANTILE))
-        {
-            return true;
-        }
-        return false;
+        return dataType.equals(PROB) || dataType.equals(FEAT_CONTRIB) || dataType.equals(SIG_QUANTILE);
     }
 }
