@@ -7,10 +7,10 @@ public class CuppaPredictionEntry
 {
     protected static final String FLD_SAMPLE_ID = "sample_id";
     public static final String FLD_DATA_TYPE = "data_type";
-    public static final String FLD_CLF_GROUP = "clf_group"; // Potentially unused
-    public static final String FLD_CLF_NAME = "clf_name";
-    public static final String FLD_FEAT_NAME = "feat_name";
-    public static final String FLD_FEAT_VALUE = "feat_value";
+    public static final String FLD_CLASSIFIER_GROUP = "clf_group"; // Potentially unused
+    public static final String FLD_CLASSIFIER_NAME = "clf_name";
+    public static final String FLD_FEATURE_NAME = "feat_name";
+    public static final String FLD_FEATURE_VALUE = "feat_value";
     protected static final String FLD_CANCER_TYPE = "cancer_type";
     public static final String FLD_DATA_VALUE = "data_value";
     public static final String FLD_RANK = "rank";
@@ -18,10 +18,10 @@ public class CuppaPredictionEntry
 
     public final String SampleId;
     public final DataType DataType;
-    public final ClfGroup ClfGroup;
-    public final ClfName ClfName;
-    public final String FeatName;
-    public final double FeatValue;
+    public final ClassifierGroup ClassifierGroup;
+    public final ClassifierName ClassifierName;
+    public final String FeatureName;
+    public final double FeatureValue;
     public final String CancerType;
     public final double DataValue;
     public final int Rank;
@@ -30,10 +30,10 @@ public class CuppaPredictionEntry
     public CuppaPredictionEntry(
             final String sampleId,
             final DataType dataType,
-            final ClfGroup clfGroup,
-            final ClfName clfName,
-            final String featName,
-            final double featValue,
+            final ClassifierGroup classifierGroup,
+            final ClassifierName classifierName,
+            final String featureName,
+            final double featureValue,
             final String cancerType,
             final double dataValue,
             final int rank,
@@ -42,10 +42,10 @@ public class CuppaPredictionEntry
     {
         SampleId = sampleId;
         DataType = dataType;
-        ClfGroup = clfGroup;
-        ClfName = clfName;
-        FeatName = featName;
-        FeatValue = featValue;
+        ClassifierGroup = classifierGroup;
+        ClassifierName = classifierName;
+        FeatureName = featureName;
+        FeatureValue = featureValue;
         CancerType = cancerType;
         DataValue = dataValue;
         Rank = rank;
@@ -59,10 +59,10 @@ public class CuppaPredictionEntry
 
         fields.add(FLD_SAMPLE_ID);
         fields.add(FLD_DATA_TYPE);
-        fields.add(FLD_CLF_GROUP);
-        fields.add(FLD_CLF_NAME);
-        fields.add(FLD_FEAT_NAME);
-        fields.add(FLD_FEAT_VALUE);
+        fields.add(FLD_CLASSIFIER_GROUP);
+        fields.add(FLD_CLASSIFIER_NAME);
+        fields.add(FLD_FEATURE_NAME);
+        fields.add(FLD_FEATURE_VALUE);
         fields.add(FLD_CANCER_TYPE);
         fields.add(FLD_DATA_VALUE);
         fields.add(FLD_RANK);
@@ -77,10 +77,10 @@ public class CuppaPredictionEntry
 
         values.add(SampleId);
         values.add(DataType);
-        values.add(ClfGroup);
-        values.add(ClfName);
-        values.add(FeatName);
-        values.add(FeatValue);
+        values.add(ClassifierGroup);
+        values.add(ClassifierName);
+        values.add(FeatureName);
+        values.add(FeatureValue);
         values.add(CancerType);
         values.add(DataValue);
         values.add(Rank);

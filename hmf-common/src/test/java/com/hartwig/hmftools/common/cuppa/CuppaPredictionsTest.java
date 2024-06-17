@@ -26,16 +26,16 @@ public class CuppaPredictionsTest
     public void subsetByClfNameReturnsOneClfName()
     {
         List<CuppaPredictionEntry> predictionEntries = cuppaPredictions
-                .subsetByClfName(ClfName.DNA_COMBINED)
+                .subsetByClfName(ClassifierName.DNA_COMBINED)
                 .PredictionEntries;
 
-        List<ClfName> clfNames = predictionEntries.stream()
-                .map(o -> o.ClfName)
+        List<ClassifierName> classifierNames = predictionEntries.stream()
+                .map(o -> o.ClassifierName)
                 .distinct()
                 .collect(Collectors.toList());
 
-        assert clfNames.size() == 1;
-        assert clfNames.get(0).equals(ClfName.DNA_COMBINED);
+        assert classifierNames.size() == 1;
+        assert classifierNames.get(0).equals(ClassifierName.DNA_COMBINED);
     }
 
     @Test

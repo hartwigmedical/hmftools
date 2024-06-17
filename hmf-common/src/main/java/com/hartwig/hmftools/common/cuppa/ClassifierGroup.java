@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.cuppa;
 
-public enum ClfGroup
+public enum ClassifierGroup
 {
     COMBINED,
     DNA,

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.cuppa;
 
-public enum ClfName
+public enum ClassifierName
 {
     COMBINED,
 

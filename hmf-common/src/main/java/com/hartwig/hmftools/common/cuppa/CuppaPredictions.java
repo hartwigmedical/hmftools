@@ -17,9 +17,9 @@ public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
     public final List<String> CancerTypes;
-    public final List<ClfName> ClfNames;
+    public final List<ClassifierName> ClassifierNames;
     public final List<DataType> DataTypes;
-    public final ClfName MainCombinedClfName;
+    public final ClassifierName MainCombinedClassifierName;
 
     public CuppaPredictions(final @NotNull List<CuppaPredictionEntry> predictionEntries)
     {
@@ -31,10 +31,10 @@ public class CuppaPredictions
         PredictionEntries = predictionEntries;
 
         CancerTypes = PredictionEntries.stream().map(o -> o.CancerType).distinct().collect(Collectors.toList());
-        ClfNames = PredictionEntries.stream().map(o -> o.ClfName).distinct().collect(Collectors.toList());
+        ClassifierNames = PredictionEntries.stream().map(o -> o.ClassifierName).distinct().collect(Collectors.toList());
         DataTypes = PredictionEntries.stream().map(o -> o.DataType).distinct().collect(Collectors.toList());
 
-        MainCombinedClfName = hasRnaPredictions() ? ClfName.COMBINED : ClfName.DNA_COMBINED;
+        MainCombinedClassifierName = hasRnaPredictions() ? ClassifierName.COMBINED : ClassifierName.DNA_COMBINED;
     }
 
     private static double parseDouble(String string)
@@ -76,10 +76,10 @@ public class CuppaPredictions
         final Map<String, Integer> fieldsMap = createFieldsIndexMap(line, delimiter);
         int sampleIdIndex = fieldsMap.get(CuppaPredictionEntry.FLD_SAMPLE_ID);
         int dataTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_TYPE);
-        int clfGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_GROUP);
-        int clfNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_NAME);
-        int featNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_NAME);
-        int featValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_VALUE);
+        int clfGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLASSIFIER_GROUP);
+        int clfNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLASSIFIER_NAME);
+        int featNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEATURE_NAME);
+        int featValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEATURE_VALUE);
         int cancerTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CANCER_TYPE);
         int dataValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_VALUE);
         int rankIndex = fieldsMap.get(CuppaPredictionEntry.FLD_RANK);
@@ -99,13 +99,13 @@ public class CuppaPredictions
 
             String sampleId = rowValues[sampleIdIndex];
 
-            String clfGroupStr = parseStringWithEmpty(rowValues[clfGroupIndex]).toUpperCase();
-            ClfGroup clfGroup = ClfGroup.valueOf(clfGroupStr);
+            String classifierGroupStr = parseStringWithEmpty(rowValues[clfGroupIndex]).toUpperCase();
+            ClassifierGroup classifierGroup = ClassifierGroup.valueOf(classifierGroupStr);
 
-            String clfNameStr;
-            clfNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
-            clfNameStr = ClfName.convertAliasToName(clfNameStr);
-            ClfName clfName = ClfName.valueOf(clfNameStr);
+            String classifierNameStr;
+            classifierNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
+            classifierNameStr = ClassifierName.convertAliasToName(classifierNameStr);
+            ClassifierName classifierName = ClassifierName.valueOf(classifierNameStr);
 
             String featName = parseStringWithEmpty(rowValues[featNameIndex]);
             double featValue = parseDouble(rowValues[featValueIndex]);
@@ -115,7 +115,7 @@ public class CuppaPredictions
             int rankGroup = Integer.parseInt(rowValues[rankGroupIndex]);
 
             CuppaPredictionEntry cuppaPrediction = new CuppaPredictionEntry(
-                    sampleId, dataType, clfGroup, clfName,
+                    sampleId, dataType, classifierGroup, classifierName,
                     featName, featValue, cancerType, dataValue,
                     rank, rankGroup
             );
@@ -181,7 +181,7 @@ public class CuppaPredictions
                 continue;
             }
 
-            if(cuppaPrediction.ClfName.equals(ClfName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue))
+            if(cuppaPrediction.ClassifierName.equals(ClassifierName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue))
             {
                 return true;
             }
@@ -199,10 +199,10 @@ public class CuppaPredictions
         return new CuppaPredictions(entries);
     }
 
-    public CuppaPredictions subsetByClfName(ClfName clfName)
+    public CuppaPredictions subsetByClfName(ClassifierName classifierName)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.ClfName == clfName)
+                .filter(o -> o.ClassifierName == classifierName)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
