@@ -336,9 +336,9 @@ public class ObservedRegionFactory
         @Override
         public void accept(final AmberBAF baf)
         {
-            if(mCobaltChromosomes.hasChromosome(baf.chromosome()))
+            if(mCobaltChromosomes.hasChromosome(baf.Chromosome))
             {
-                CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(baf.chromosome());
+                CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(baf.Chromosome);
                 if(cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF()))
                 {
                     mCount++;

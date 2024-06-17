@@ -136,7 +136,7 @@ public class CircosCharts
 
     private void writeBafs(final List<AmberBAF> bafs) throws IOException
     {
-        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafs, AmberBAF::tumorBAF);
+        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafs, x -> x.TumorBAF);
     }
 
     private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException
