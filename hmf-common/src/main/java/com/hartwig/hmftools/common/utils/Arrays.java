@@ -68,6 +68,9 @@ public final class Arrays
 
     public static boolean equalArray(double[] array1, double[] array2)
     {
+        if(array1.length != array2.length)
+            return false;
+
         for(int i = 0; i < array1.length; ++i)
         {
             if(!doublesEqual(array1[i], array2[i]))
@@ -79,6 +82,9 @@ public final class Arrays
 
     public static boolean equalArray(byte[] array1, byte[] array2)
     {
+        if(array1.length != array2.length)
+            return false;
+
         for(int i = 0; i < array1.length; ++i)
         {
             if(array1[i] != array2[i])
@@ -90,6 +96,9 @@ public final class Arrays
 
     public static boolean equalArray(int[] array1, int[] array2)
     {
+        if(array1.length != array2.length)
+            return false;
+
         for(int i = 0; i < array1.length; ++i)
         {
             if(array1[i] != array2[i])

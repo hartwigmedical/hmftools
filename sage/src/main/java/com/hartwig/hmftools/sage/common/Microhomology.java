@@ -1,7 +1,13 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.Arrays.equalArray;
+
+import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -19,6 +25,54 @@ public class Microhomology
     public String toString()
     {
         return format("%s length=%d", Bases, Length);
+    }
+
+    public static int findLeftHomologyShift(
+            final SimpleVariant variant, final RefSequence refSequence, final byte[] readBases, int varReadIndex)
+    {
+        if(!variant.isIndel())
+            return 0;
+
+        int leftAlignmentOffset = 0;
+
+        int indelLength = abs(variant.indelLength());
+
+        if(variant.isInsert())
+        {
+            byte[] originalBases = Arrays.subsetArray(variant.alt().getBytes(), 1, indelLength);
+            int currentReadIndex = varReadIndex - 1;
+
+            while(currentReadIndex >= 0)
+            {
+                byte[] newBases = Arrays.subsetArray(readBases, currentReadIndex + 1, currentReadIndex + indelLength);
+
+                if(!equalArray(newBases, originalBases))
+                    break;
+
+                ++leftAlignmentOffset;
+                --currentReadIndex;
+            }
+
+        }
+        else
+        {
+            int newAltStart = variant.Position;
+
+            byte[] originalBases = Arrays.subsetArray(variant.ref().getBytes(), 1, indelLength);
+
+            while(newAltStart >= refSequence.Start)
+            {
+                byte[] newBases = refSequence.baseRange(newAltStart, newAltStart + indelLength - 1);
+
+                if(!equalArray(newBases, originalBases))
+                    break;
+
+                ++leftAlignmentOffset;
+                --newAltStart;
+            }
+        }
+
+        return leftAlignmentOffset;
     }
 
     public static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)

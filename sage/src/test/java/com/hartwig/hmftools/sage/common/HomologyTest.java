@@ -2,7 +2,9 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
+import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
@@ -15,6 +17,29 @@ import htsjdk.samtools.SAMRecord;
 
 public class HomologyTest
 {
+    @Test
+    public void testHomologyLeftAlignment()
+    {
+        //            60        70
+        //            01234567890123
+        // ref bases: CTCGGAAAAAAAAC
+
+        // insert scenario:
+        SimpleVariant var = createSimpleVariant(70, "A", "AAAAA");
+
+        String readBases = REF_BASES_200.substring(60, 70) + "AAAAA" + REF_BASES_200.substring(71, 80);
+        int leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), 10);
+        assertEquals(6, leftHomShift);
+
+        // del scenario
+        var = createSimpleVariant(68, "AAAAA", "A");
+
+        readBases = REF_BASES_200.substring(60, 69) + REF_BASES_200.substring(73, 80);
+        leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), 8);
+        assertEquals(4, leftHomShift);
+
+    }
+
     @Test
     public void testHomology()
     {

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERL
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -450,6 +452,33 @@ public class RefContextConsumer
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
+
+        if(variant.isIndel())
+        {
+            int leftHomologyShift = findLeftHomologyShift(variant, mRefSequence, record.getReadBases(), readIndex);
+
+            if(leftHomologyShift > 0)
+            {
+                readIndex -= leftHomologyShift;
+                refPosition -= leftHomologyShift;
+                String newAltBases, newRefBases;
+
+                if(variant.isInsert())
+                {
+                    newRefBases = mRefSequence.positionBases(refPosition, refPosition);
+                    newAltBases = newRefBases + new String(Arrays.subsetArray(
+                            record.getReadBases(), readIndex + 1, readIndex + variant.altLength()));
+                }
+                else
+                {
+                    newRefBases = mRefSequence.positionBases(refPosition, refPosition + variant.refLength() - 1);
+                    newAltBases = newRefBases.substring(0, 1);
+                }
+
+                variant = new SimpleVariant(record.getContig(), refPosition, newRefBases, newAltBases);
+            }
+        }
+
         VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
 
         if(readContext == null)
