@@ -36,7 +36,7 @@ public class DataItem implements Comparable<DataItem>
     }
 
     @VisibleForTesting
-    DataItem(final DataSource source, final ItemType type, final String key, final String stringValue)
+    public DataItem(final DataSource source, final ItemType type, final String key, final String stringValue)
     {
         Index = new Index(source, type, key);
         Value = stringValue;

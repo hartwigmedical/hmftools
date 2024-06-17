@@ -10,9 +10,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.cup.feature.KnownMutation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class CupConstants
 {
     public static final String APP_NAME = "Cuppa";
+
+    public static final Logger CUP_LOGGER = LogManager.getLogger(CupConstants.class);
 
     public static final int GEN_POS_BUCKET_SIZE = 500000;
     public static final int GEN_POS_MAX_SAMPLE_COUNT = 20000;

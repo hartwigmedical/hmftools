@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -183,5 +184,39 @@ public class PrepConfig
 
         final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
         return Arrays.stream(categoryStrings).map(CategoryType::valueOf).collect(Collectors.toList());
+    }
+
+    @VisibleForTesting
+    public PrepConfig(
+            final List<String> sampleIds,
+            final List<CategoryType> categories,
+            final RefGenomeVersion refGenVersion,
+            final String outputDir,
+            final String outputId,
+            final int threads,
+            final boolean writeByCategory,
+            final String sampleDataDir,
+            final String linxDir,
+            final String purpleDir,
+            final String virusDir,
+            final String isofoxDir,
+            final String somaticVariantsDir,
+            final String altSpliceJunctionSites
+    )
+    {
+        SampleIds = sampleIds;
+        Categories = categories;
+        RefGenVersion = refGenVersion;
+        OutputDir = outputDir;
+        OutputId = outputId;
+        Threads = threads;
+        WriteByCategory = writeByCategory;
+        SampleDataDir = sampleDataDir;
+        LinxDir = linxDir;
+        PurpleDir = purpleDir;
+        VirusDir = virusDir;
+        IsofoxDir = isofoxDir;
+        SomaticVariantsDir = somaticVariantsDir;
+        AltSpliceJunctionSites = altSpliceJunctionSites;
     }
 }
