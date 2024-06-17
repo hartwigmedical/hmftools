@@ -86,6 +86,41 @@ public class JitterTest
 
         assertTrue(hasJitterMatchType(
                 repeat, readContext, 15, readBases.getBytes(), readQuals, LENGTHENED, false, false));
+
+
+        // test 5: low-qual base mismatches are permitted outside the core and within the core in specific locations
+
+        String readMismatches = "G" + readBases.substring(1, 22) + "G" + readBases.substring(23);
+        readQuals[0] = 11;
+        readQuals[22] = 11;
+
+        assertTrue(hasJitterMatchType(
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+
+        // 1 mismatch is permitted in the core outside the critical range
+        readQuals = buildDefaultBaseQuals(variantReadBases.length());
+        readMismatches = readBases.substring(0, 12) + "T" + readBases.substring(13);
+        readQuals[12] = 11;
+
+        assertTrue(hasJitterMatchType(
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+
+        // 2 mismatches are not permitted
+        readQuals = buildDefaultBaseQuals(variantReadBases.length());
+        readMismatches = readBases.substring(0, 12) + "TT" + readBases.substring(14);
+        readQuals[12] = 11;
+        readQuals[13] = 11;
+
+        assertFalse(hasJitterMatchType(
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+
+        // and not within the critical range
+        readQuals = buildDefaultBaseQuals(variantReadBases.length());
+        readMismatches = readBases.substring(0, 15) + "T" + readBases.substring(16);
+        readQuals[15] = 11;
+
+        assertFalse(hasJitterMatchType(
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
     }
 
     @Test

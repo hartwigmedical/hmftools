@@ -91,6 +91,7 @@ public enum JitterMatch
         boolean altAdjusted = false;
 
         int altMatchCount = 0;
+        int permittedLowQualMismatches = 1;
 
         for(; readIndex <= flankReadIndexEnd; ++readIndex, ++readContextIndex)
         {
@@ -155,21 +156,36 @@ public enum JitterMatch
                 readContextBase = (byte)repeat.Bases.charAt(repeatBaseIndex);
             }
 
-            if(readBases[readIndex] != readContextBase)
+            if(readBases[readIndex] == readContextBase)
+                continue;
+
+            boolean differencePermitted = false;
+
+            if(readQuals[readIndex] < MATCHING_BASE_QUALITY)
             {
-                // mismatch cannot be in the core
                 if(readContextIndex >= readContext.CoreIndexStart && readContextIndex <= readContext.CoreIndexEnd)
                 {
-                    allMatched = false;
-                    break;
+                    // allow one mismatch in the core, but only outside a specific range from the variant index
+                    if(permittedLowQualMismatches > 0)
+                    {
+                        if(readContextIndex < readContext.VarIndex || readContextIndex > readContext.AltIndexUpper)
+                        {
+                            --permittedLowQualMismatches;
+                            differencePermitted = true;
+                        }
+                    }
                 }
-
-                // and must be low-qual
-                if(readQuals[readIndex] >= MATCHING_BASE_QUALITY)
+                else
                 {
-                    allMatched = false;
-                    break;
+                    // low-qual outside the core is permitted
+                    differencePermitted = true;
                 }
+            }
+
+            if(!differencePermitted)
+            {
+                allMatched = false;
+                break;
             }
         }
 
