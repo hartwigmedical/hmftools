@@ -14,17 +14,4 @@ public enum ClassifierName
     ALT_SJ,
 
     NONE;
-
-    public static String convertAliasToName(String string)
-    {
-        string = string.toUpperCase();
-
-        if(string.equals("RMD"))
-        {
-            return "GEN_POS";
-        }
-
-        return string;
-    }
-
 }

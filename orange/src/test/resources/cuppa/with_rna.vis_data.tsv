@@ -119,46 +119,46 @@ tumor_sample	prob	rna	rna_combined			Skin: Melanoma	0.9693	1	2
 tumor_sample	prob	rna	rna_combined			Skin: Other	0.0115174	38	2
 tumor_sample	prob	rna	rna_combined			Thyroid gland	0.0403814	39	2
 tumor_sample	prob	rna	rna_combined			Urothelial tract	1.345e-05	40	2
-tumor_sample	prob	dna	rmd			Anogenital	7.546e-05	37	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Cartilaginous neoplasm	0.030905	2	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: GIST	0.0449104	3	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Leiomyosarcoma	0.0178173	4	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Liposarcoma	0.0371883	5	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Osteosarcoma	0.0042112	6	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Undiff. sarcoma	0.0382436	7	3
-tumor_sample	prob	dna	rmd			Bone/Soft tissue: Other	0.0434542	8	3
-tumor_sample	prob	dna	rmd			Breast: Triple negative	0.0027172	9	3
-tumor_sample	prob	dna	rmd			Breast: Other	0.0201139	10	3
-tumor_sample	prob	dna	rmd			CNS: Glioma	0.0162418	11	3
-tumor_sample	prob	dna	rmd			CNS: Medulloblastoma	0.0083211	12	3
-tumor_sample	prob	dna	rmd			CNS: Pilocytic astrocytoma	0.0016989	13	3
-tumor_sample	prob	dna	rmd			Colorectum/Small intestine/Appendix	0.0393093	14	3
-tumor_sample	prob	dna	rmd			Esophagus/Stomach	0.0468341	15	3
-tumor_sample	prob	dna	rmd			Gynecologic: Endometrium	0.041431	16	3
-tumor_sample	prob	dna	rmd			Gynecologic: Ovary/Fallopian tube	0.0268523	17	3
-tumor_sample	prob	dna	rmd			HPB: Bile duct/Gallbladder	0.0186433	18	3
-tumor_sample	prob	dna	rmd			HPB: Liver	0.0309179	19	3
-tumor_sample	prob	dna	rmd			HPB: Pancreas	0.0146895	20	3
-tumor_sample	prob	dna	rmd			Head and neck: Adenoid cystic	0.0402053	21	3
-tumor_sample	prob	dna	rmd			Head and neck: Salivary gland	0.0239676	22	3
-tumor_sample	prob	dna	rmd			Head and neck: Other	0.0138205	23	3
-tumor_sample	prob	dna	rmd			Kidney: Chromophobe	0.0448953	24	3
-tumor_sample	prob	dna	rmd			Kidney: Other	0.0070073	25	3
-tumor_sample	prob	dna	rmd			Lung: Non-small cell: LUAD	0.0178143	26	3
-tumor_sample	prob	dna	rmd			Lung: Non-small cell: LUSC	0.017129	27	3
-tumor_sample	prob	dna	rmd			Lung: Small cell	0.0466278	28	3
-tumor_sample	prob	dna	rmd			Lymphoid tissue	0.0344043	29	3
-tumor_sample	prob	dna	rmd			Mesothelium	0.0023766	30	3
-tumor_sample	prob	dna	rmd			Myeloid: Acute myeloid leukemia	0.013422	31	3
-tumor_sample	prob	dna	rmd			Myeloid: Myeloproliferative neoplasm	0.0291542	32	3
-tumor_sample	prob	dna	rmd			NET: Colorectum/Small intestine	0.0085092	33	3
-tumor_sample	prob	dna	rmd			NET: Lung	0.0020566	34	3
-tumor_sample	prob	dna	rmd			NET: Pancreas	0.0436045	35	3
-tumor_sample	prob	dna	rmd			Prostate	0.0229236	36	3
-tumor_sample	prob	dna	rmd			Skin: Melanoma	0.9643	1	3
-tumor_sample	prob	dna	rmd			Skin: Other	0.0309102	38	3
-tumor_sample	prob	dna	rmd			Thyroid gland	0.0342181	39	3
-tumor_sample	prob	dna	rmd			Urothelial tract	0.0145395	40	3
+tumor_sample	prob	dna	gen_pos			Anogenital	7.546e-05	37	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Cartilaginous neoplasm	0.030905	2	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: GIST	0.0449104	3	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Leiomyosarcoma	0.0178173	4	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Liposarcoma	0.0371883	5	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Osteosarcoma	0.0042112	6	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Undiff. sarcoma	0.0382436	7	3
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Other	0.0434542	8	3
+tumor_sample	prob	dna	gen_pos			Breast: Triple negative	0.0027172	9	3
+tumor_sample	prob	dna	gen_pos			Breast: Other	0.0201139	10	3
+tumor_sample	prob	dna	gen_pos			CNS: Glioma	0.0162418	11	3
+tumor_sample	prob	dna	gen_pos			CNS: Medulloblastoma	0.0083211	12	3
+tumor_sample	prob	dna	gen_pos			CNS: Pilocytic astrocytoma	0.0016989	13	3
+tumor_sample	prob	dna	gen_pos			Colorectum/Small intestine/Appendix	0.0393093	14	3
+tumor_sample	prob	dna	gen_pos			Esophagus/Stomach	0.0468341	15	3
+tumor_sample	prob	dna	gen_pos			Gynecologic: Endometrium	0.041431	16	3
+tumor_sample	prob	dna	gen_pos			Gynecologic: Ovary/Fallopian tube	0.0268523	17	3
+tumor_sample	prob	dna	gen_pos			HPB: Bile duct/Gallbladder	0.0186433	18	3
+tumor_sample	prob	dna	gen_pos			HPB: Liver	0.0309179	19	3
+tumor_sample	prob	dna	gen_pos			HPB: Pancreas	0.0146895	20	3
+tumor_sample	prob	dna	gen_pos			Head and neck: Adenoid cystic	0.0402053	21	3
+tumor_sample	prob	dna	gen_pos			Head and neck: Salivary gland	0.0239676	22	3
+tumor_sample	prob	dna	gen_pos			Head and neck: Other	0.0138205	23	3
+tumor_sample	prob	dna	gen_pos			Kidney: Chromophobe	0.0448953	24	3
+tumor_sample	prob	dna	gen_pos			Kidney: Other	0.0070073	25	3
+tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUAD	0.0178143	26	3
+tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUSC	0.017129	27	3
+tumor_sample	prob	dna	gen_pos			Lung: Small cell	0.0466278	28	3
+tumor_sample	prob	dna	gen_pos			Lymphoid tissue	0.0344043	29	3
+tumor_sample	prob	dna	gen_pos			Mesothelium	0.0023766	30	3
+tumor_sample	prob	dna	gen_pos			Myeloid: Acute myeloid leukemia	0.013422	31	3
+tumor_sample	prob	dna	gen_pos			Myeloid: Myeloproliferative neoplasm	0.0291542	32	3
+tumor_sample	prob	dna	gen_pos			NET: Colorectum/Small intestine	0.0085092	33	3
+tumor_sample	prob	dna	gen_pos			NET: Lung	0.0020566	34	3
+tumor_sample	prob	dna	gen_pos			NET: Pancreas	0.0436045	35	3
+tumor_sample	prob	dna	gen_pos			Prostate	0.0229236	36	3
+tumor_sample	prob	dna	gen_pos			Skin: Melanoma	0.9643	1	3
+tumor_sample	prob	dna	gen_pos			Skin: Other	0.0309102	38	3
+tumor_sample	prob	dna	gen_pos			Thyroid gland	0.0342181	39	3
+tumor_sample	prob	dna	gen_pos			Urothelial tract	0.0145395	40	3
 tumor_sample	prob	dna	snv96			Anogenital	0.0004679	37	4
 tumor_sample	prob	dna	snv96			Bone/Soft tissue: Cartilaginous neoplasm	0.0004679	2	4
 tumor_sample	prob	dna	snv96			Bone/Soft tissue: GIST	0.0004679	3	4

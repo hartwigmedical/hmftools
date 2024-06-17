@@ -102,9 +102,7 @@ public class CuppaPredictions
             String classifierGroupStr = parseStringWithEmpty(rowValues[clfGroupIndex]).toUpperCase();
             ClassifierGroup classifierGroup = ClassifierGroup.valueOf(classifierGroupStr);
 
-            String classifierNameStr;
-            classifierNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
-            classifierNameStr = ClassifierName.convertAliasToName(classifierNameStr);
+            String classifierNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
             ClassifierName classifierName = ClassifierName.valueOf(classifierNameStr);
 
             String featName = parseStringWithEmpty(rowValues[featNameIndex]);
