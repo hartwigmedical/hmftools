@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
@@ -63,7 +62,6 @@ public class SomaticVariantPrep implements CategoryPrep
         mPosFrequencies = new PositionFrequencies(
                 mConfig.RefGenVersion,
                 GEN_POS_BUCKET_SIZE,
-                GEN_POS_MAX_SAMPLE_COUNT,
                 buildStandardChromosomeLengths(mConfig.RefGenVersion),
                 false);
     }

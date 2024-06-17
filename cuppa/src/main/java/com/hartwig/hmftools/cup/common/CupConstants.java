@@ -14,7 +14,6 @@ public class CupConstants
     public static final Logger CUP_LOGGER = LogManager.getLogger(CupConstants.class);
 
     public static final int GEN_POS_BUCKET_SIZE = 500000;
-    public static final int GEN_POS_MAX_SAMPLE_COUNT = 20000;
 
     public static final List<String> AID_APOBEC_TRINUCLEOTIDE_CONTEXTS = Lists.newArrayList(
             "C>T_TCA", "C>T_TCC", "C>T_TCG", "C>T_TCT", "C>G_TCA", "C>G_TCC", "C>G_TCG", "C>G_TCT");

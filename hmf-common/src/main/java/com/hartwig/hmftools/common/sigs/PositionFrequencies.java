@@ -26,25 +26,22 @@ public class PositionFrequencies
     // position mapping
     private final Map<String,Integer> mChromosomePosIndex;
     private int mPositionCacheSize;
-    private int mMaxSampleCount;
     private final int[] mCounts;
     private final boolean mBuildMap;
 
     public static final int DEFAULT_POS_FREQ_BUCKET_SIZE = 500000;
-    public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
-    public PositionFrequencies(final RefGenomeVersion refGenomeVersion, final int bucketSize, final int maxSampleCount)
+    public PositionFrequencies(final RefGenomeVersion refGenomeVersion, final int bucketSize)
     {
-        this(refGenomeVersion, bucketSize, maxSampleCount, buildStandardChromosomeLengths(refGenomeVersion), false);
+        this(refGenomeVersion, bucketSize, buildStandardChromosomeLengths(refGenomeVersion), false);
     }
 
     public PositionFrequencies(
-            final RefGenomeVersion refGenomeVersion, final int bucketSize, final int maxSampleCount,
+            final RefGenomeVersion refGenomeVersion, final int bucketSize,
             final Map<String,Integer> chromosomeLengths, boolean buildMap)
     {
         mRefGenomeVersion = refGenomeVersion;
         mBucketSize = bucketSize;
-        mMaxSampleCount = maxSampleCount;
 
         mChromosomePosIndex = Maps.newHashMap();
 
@@ -58,7 +55,6 @@ public class PositionFrequencies
 
     public int getBucketSize() { return mBucketSize; }
     public int getBucketCount() { return mPositionCacheSize; }
-    public int getMaxSampleCount() { return mMaxSampleCount; }
     public final int[] getCounts() { return mCounts; }
     public Map<String,Integer> chromosomePosIndex() { return mChromosomePosIndex; }
 
