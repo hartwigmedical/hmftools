@@ -111,9 +111,6 @@ public class RawContext
         if(variant.Position >= record.getAlignmentStart())
             return null;
 
-        if(ignoreSoftClipAdapter(record))
-            return null;
-
         if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
             return null;
 
@@ -131,9 +128,6 @@ public class RawContext
         int unclippedEnd = refPosition + element.getLength() - 1;
 
         if(variant.Position > unclippedEnd)
-            return null;
-
-        if(ignoreSoftClipAdapter(record))
             return null;
 
         int scStartIndex = record.getBaseQualities().length - element.getLength();

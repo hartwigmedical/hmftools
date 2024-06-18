@@ -143,6 +143,7 @@ public class CombinedSyncData
         // for short fragments, less than standard read length, cap fragment boundaries from the five-prime read
         if(!first.getReadNegativeStrandFlag())
         {
+            // first is the 5' read at the start, second is 5' from the right/end
             mFragmentStart = firstPosStart;
             mFragmentEnd = secondPosEnd;
 
@@ -158,13 +159,13 @@ public class CombinedSyncData
             combinedEffectiveEnd = firstEffectivePosEnd;
         }
 
-        // now walk through the 2 cigars, building a combined one and checking for any incompatibilities
         // skip past any bases prior to the fragment effective start
         if(mFirstEffectivePosStart < mCombinedEffectiveStart)
             firstCigar.moveToPosition(mFirstEffectivePosStart, mCombinedEffectiveStart);
         else if(mSecondEffectivePosStart < mCombinedEffectiveStart)
             secondCigar.moveToPosition(mSecondEffectivePosStart, mCombinedEffectiveStart);
 
+        // now walk through the 2 cigars, building a combined one and checking for any incompatibilities
         int combinedCigarElementLength = 0;
         CigarOperator combinedCigarOperator = null;
 
