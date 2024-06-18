@@ -26,23 +26,23 @@ public class CuppaPredictionsTest
     public void subsetByClfNameReturnsOneClfName()
     {
         List<CuppaPredictionEntry> predictionEntries = cuppaPredictions
-                .subsetByClfName(Categories.ClfName.DNA_COMBINED)
+                .subsetByClfName(ClassifierName.DNA_COMBINED)
                 .PredictionEntries;
 
-        List<Categories.ClfName> clfNames = predictionEntries.stream()
-                .map(o -> o.ClfName)
+        List<ClassifierName> classifierNames = predictionEntries.stream()
+                .map(o -> o.ClassifierName)
                 .distinct()
                 .collect(Collectors.toList());
 
-        assert clfNames.size() == 1;
-        assert clfNames.get(0).equals(Categories.ClfName.DNA_COMBINED);
+        assert classifierNames.size() == 1;
+        assert classifierNames.get(0).equals(ClassifierName.DNA_COMBINED);
     }
 
     @Test
     public void subsetByCancerTypeReturnsOneCancerType()
     {
         List<CuppaPredictionEntry> predictionEntries = cuppaPredictions
-                .subsetByDataType(Categories.DataType.PROB)
+                .subsetByDataType(DataType.PROB)
                 .subsetByCancerType("Breast: Triple negative")
                 .PredictionEntries;
 

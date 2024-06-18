@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.DataItemMatrix;

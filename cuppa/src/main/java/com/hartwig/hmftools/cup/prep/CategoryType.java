@@ -1,6 +1,5 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.cup.prep;
 
-import java.util.Arrays;
 import java.util.List;
 
 public enum CategoryType
@@ -8,22 +7,22 @@ public enum CategoryType
     SNV,
     SV,
     SAMPLE_TRAIT,
-    FEATURE,
+    DRIVER,
     GENE_EXP,
     ALT_SJ;
 
     public static List<CategoryType> getDnaCategories()
     {
-        return Arrays.asList(SNV, SV, SAMPLE_TRAIT, FEATURE);
+        return List.of(SNV, SV, SAMPLE_TRAIT, DRIVER);
     }
 
     public static List<CategoryType> getRnaCategories()
     {
-        return Arrays.asList(GENE_EXP, ALT_SJ);
+        return List.of(GENE_EXP, ALT_SJ);
     }
 
     public static List<CategoryType> getAllCategories()
     {
-        return Arrays.asList(SNV, SV, SAMPLE_TRAIT, FEATURE, GENE_EXP, ALT_SJ);
+        return List.of(SNV, SV, SAMPLE_TRAIT, DRIVER, GENE_EXP, ALT_SJ);
     }
 }

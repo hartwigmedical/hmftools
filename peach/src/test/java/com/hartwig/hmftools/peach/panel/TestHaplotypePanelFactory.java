@@ -25,6 +25,26 @@ public class TestHaplotypePanelFactory
     }
 
     @NotNull
+    public static HaplotypePanel createDpydTestHaplotypePanel()
+    {
+        GeneHaplotypePanel dpydGeneHaplotypePanel = createDpydGeneHaplotypePanel();
+        Map<String, GeneHaplotypePanel> geneToHaplotypePanel = Map.of(
+                "DPYD", dpydGeneHaplotypePanel
+        );
+        return new HaplotypePanel(geneToHaplotypePanel);
+    }
+
+    @NotNull
+    public static HaplotypePanel createUgt1a1TestHaplotypePanel()
+    {
+        GeneHaplotypePanel ugt1a1GeneHaplotypePanel = createUgt1a1GeneHaplotypePanel();
+        Map<String, GeneHaplotypePanel> geneToHaplotypePanel = Map.of(
+                "UGT1A1", ugt1a1GeneHaplotypePanel
+        );
+        return new HaplotypePanel(geneToHaplotypePanel);
+    }
+
+    @NotNull
     private static GeneHaplotypePanel createDpydGeneHaplotypePanel()
     {
         DefaultHaplotype dpydDefaultHaplotype = new DefaultHaplotype("*9A", false, ImmutableList.of());

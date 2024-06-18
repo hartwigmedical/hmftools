@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.cup.feature;
+package com.hartwig.hmftools.cup.drivers;
 
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.prep.CategoryType.DRIVER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -33,8 +33,7 @@ import com.hartwig.hmftools.cup.prep.PrepConfig;
 import com.hartwig.hmftools.cup.somatics.SomaticVariantsLoader;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
-//TODO: Rename this to DriverEventPrep
-public class FeaturePrep implements CategoryPrep
+public class DriverPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
@@ -55,13 +54,13 @@ public class FeaturePrep implements CategoryPrep
     private static final String INDEL_SFTPB = "SFTPB";
     private static final String INDEL_SLC34A2 = "SLC34A2";
 
-    public FeaturePrep(final PrepConfig config)
+    public DriverPrep(final PrepConfig config)
     {
         mConfig = config;
     }
 
     @Override
-    public CategoryType categoryType() { return FEATURE; }
+    public CategoryType categoryType() { return DRIVER; }
 
     private void addDataItem(DataItem dataItem)
     {
@@ -96,7 +95,7 @@ public class FeaturePrep implements CategoryPrep
         throw new NoSuchFileException(path);
     }
 
-    public void getDriversFromCatalog(String sampleId) throws IOException
+    public void getDriverMutationsFromCatalog(String sampleId) throws IOException
     {
         String driverCatalogFile = getDriverCatalogFile(sampleId);
         final List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFile);
@@ -216,7 +215,7 @@ public class FeaturePrep implements CategoryPrep
     public List<DataItem> extractSampleData(final String sampleId)
     {
         try {
-            getDriversFromCatalog(sampleId);
+            getDriverMutationsFromCatalog(sampleId);
             getRepeatIndelDrivers(sampleId);
             getFusions(sampleId);
             getVirusAnnotations(sampleId);

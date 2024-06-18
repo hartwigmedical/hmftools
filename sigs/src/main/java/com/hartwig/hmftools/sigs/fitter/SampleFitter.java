@@ -359,10 +359,6 @@ public class SampleFitter
 
         configBuilder.addInteger(POSITION_BUCKET_SIZE, "Position bucket size", 0);
 
-        configBuilder.addInteger(
-                MAX_SAMPLE_COUNT, "Max sample SNV count for position frequencies",
-                PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT);
-
         configBuilder.addDecimal(MIN_ALLOC_PERC, "Min signature allocation as percentage", DEFAULT_MIN_ALLOCATION_PERC);
         configBuilder.addDecimal(MIN_ALLOC, "Min signature allocation", DEFAULT_MIN_ALLOCATION);
         configBuilder.addFlag(WRITE_POS_COORDS, "Include coordinates with pos-frequency counts");

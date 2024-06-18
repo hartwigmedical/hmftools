@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cup.svs;
 
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.SvDataType.LINE;
-import static com.hartwig.hmftools.cup.common.SvDataType.MAX_COMPLEX_SIZE;
-import static com.hartwig.hmftools.cup.common.SvDataType.SIMPLE_DEL_20KB_1MB;
-import static com.hartwig.hmftools.cup.common.SvDataType.SIMPLE_DUP_100KB_5MB;
-import static com.hartwig.hmftools.cup.common.SvDataType.SIMPLE_DUP_32B_200B;
-import static com.hartwig.hmftools.cup.common.SvDataType.TELOMERIC_SGL;
+import static com.hartwig.hmftools.cup.prep.CategoryType.SV;
+import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
+import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_100KB_5MB;
+import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
+import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.SvDataType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;

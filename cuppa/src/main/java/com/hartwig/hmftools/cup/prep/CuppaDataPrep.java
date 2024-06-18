@@ -21,10 +21,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.cup.feature.FeaturePrep;
+import com.hartwig.hmftools.cup.drivers.DriverPrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
 import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
 import com.hartwig.hmftools.cup.somatics.SomaticVariantPrep;
@@ -66,8 +65,8 @@ public class CuppaDataPrep
             case SAMPLE_TRAIT:
                 return new SampleTraitPrep(mConfig);
 
-            case FEATURE:
-                return new FeaturePrep(mConfig);
+            case DRIVER:
+                return new DriverPrep(mConfig);
 
             case ALT_SJ:
                 return new AltSpliceJunctionPrep(mConfig);

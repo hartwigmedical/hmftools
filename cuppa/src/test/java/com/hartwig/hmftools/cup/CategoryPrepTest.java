@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.feature.FeaturePrep;
+import com.hartwig.hmftools.cup.prep.CategoryType;
+import com.hartwig.hmftools.cup.drivers.DriverPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.DataSource;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -127,7 +127,7 @@ public class CategoryPrepTest
     @Test
     public void canExtractEventFeatures()
     {
-        FeaturePrep prep = new FeaturePrep(prepConfig);
+        DriverPrep prep = new DriverPrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
         assertEquals(8, dataItems.size());

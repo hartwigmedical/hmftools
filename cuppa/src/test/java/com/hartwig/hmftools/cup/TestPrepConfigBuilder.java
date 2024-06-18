@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 public class TestPrepConfigBuilder
