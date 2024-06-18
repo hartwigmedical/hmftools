@@ -97,8 +97,6 @@ public class ReadContextMatcher
     private static int determineIndelLowQualUpperIndex(final VariantReadContext readContext)
     {
         // find the first base of difference (ref vs alt) up from the variant's position, and cap at the core indices
-        final SimpleVariant variant = readContext.variant();
-
         int refIndex = readContext.variantRefIndex();
         int readIndex = readContext.VarIndex;
 
@@ -108,9 +106,7 @@ public class ReadContextMatcher
                 break;
         }
 
-        int upperRefIndex = variant.isInsert() ? readContext.VarIndex + variant.altLength() : readContext.VarIndex + 1;
-
-        return max(min(readIndex, readContext.CoreIndexEnd), upperRefIndex);
+        return min(readIndex, readContext.CoreIndexEnd);
     }
 
     private int calcMaxLowQualCoreMismatches()
