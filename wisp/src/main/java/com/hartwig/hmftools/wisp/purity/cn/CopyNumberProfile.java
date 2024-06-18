@@ -131,7 +131,7 @@ public class CopyNumberProfile
             double fitPurityHigh = fitResultHigh.EstimatedPurity;
             double fitPurityLow = fitResultLow.EstimatedPurity;
 
-            CT_LOGGER.info(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
+            CT_LOGGER.debug(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
                     sampleId, samplePloidy, mCopyNumberGcRatios.size(), fitResult.EstimatedPurity));
 
             // calculate a median GC Ratio count and clonal percentage

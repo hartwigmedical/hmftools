@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.WriteType.LOH_DATA;
 import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_DATA;
-import static com.hartwig.hmftools.wisp.purity.cn.AmberLohCalcs.initialiseAmberLohWriter;
+import static com.hartwig.hmftools.wisp.purity.loh.AmberLohCalcs.initialiseAmberLohWriter;
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnPlotCalcWriter;
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnRatioWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.SampleFragmentLengths.initialiseFragmentLengthWriter;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.wisp.purity.cn.AmberLohResult;
+import com.hartwig.hmftools.wisp.purity.loh.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 
@@ -96,13 +96,13 @@ public class ResultsWriter
 
             sj.add("TumorPurity").add("TumorPloidy");
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
+            if(mConfig.writePurityMethodData(PurityMethod.SOMATIC_VARIANT))
                 sj.add(SomaticPurityResult.header());
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
+            if(mConfig.writePurityMethodData(PurityMethod.AMBER_LOH))
                 sj.add(AmberLohResult.header());
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
+            if(mConfig.writePurityMethodData(PurityMethod.COPY_NUMBER))
                 sj.add(CnPurityResult.header());
 
             writer.write(sj.toString());
@@ -129,13 +129,13 @@ public class ResultsWriter
             sj.add(format("%.2f", purityContext.bestFit().purity()));
             sj.add(format("%.2f", purityContext.bestFit().ploidy()));
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
+            if(mConfig.writePurityMethodData(PurityMethod.SOMATIC_VARIANT))
                 sj.add(format("%s", somaticPurityResult.toTsv()));
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
+            if(mConfig.writePurityMethodData(PurityMethod.AMBER_LOH))
                 sj.add(format("%s", amberLohResult.toTsv()));
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
+            if(mConfig.writePurityMethodData(PurityMethod.COPY_NUMBER))
                 sj.add(format("%s", cnPurityResult.toTsv()));
 
             mSampleSummaryWriter.write(sj.toString());

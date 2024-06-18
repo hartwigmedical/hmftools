@@ -70,7 +70,7 @@ public class PurityConfig
     public final double GcRatioMin;
     public final int BqrQualThreshold;
     public final boolean SkipSubclonalFilter;
-    public final boolean SummaryMethodOnlyOutput;
+    public final boolean WriteAllSummaryMethods;
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
     public final int Threads;
@@ -90,7 +90,7 @@ public class PurityConfig
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
     private static final String WRITE_TYPES = "write_types";
-    private static final String SUMMARY_METHOD_ONLY = "summary_method_only";
+    private static final String WRITE_ALL_SUMMARY_METHODS = "write_all_summary_methods";
     private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
     private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
     private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
@@ -139,7 +139,6 @@ public class PurityConfig
         NoiseReadsPerMillion = configBuilder.getDecimal(NOISE_READS_PER_MILLION);
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
 
-        SummaryMethodOnlyOutput = configBuilder.hasFlag(SUMMARY_METHOD_ONLY);
         BqrQualThreshold = configBuilder.getInteger(BQR_QUAL_THRESHOLD);
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
         SkipSubclonalFilter = configBuilder.hasFlag(SKIP_SUBCLONAL_FILTER);
@@ -157,6 +156,8 @@ public class PurityConfig
             else
                 Arrays.stream(writeTypes.split(ITEM_DELIM, -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
         }
+
+        WriteAllSummaryMethods = configBuilder.hasFlag(WRITE_ALL_SUMMARY_METHODS);
 
         if(PurityMethods.contains(PurityMethod.AMBER_LOH) && AmberDir == null)
         {
@@ -195,6 +196,8 @@ public class PurityConfig
     {
         return (useDual ? NoiseReadsPerMillionDualStrand : NoiseReadsPerMillion) / 1_000_000d;
     }
+
+    public boolean writePurityMethodData(final PurityMethod method) { return WriteTypes.contains(method) || WriteAllSummaryMethods; }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
@@ -292,7 +295,7 @@ public class PurityConfig
 
         configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted, recommend 0.4 for panel samples", 0);
 
-        configBuilder.addFlag(SUMMARY_METHOD_ONLY, "Only write summary data for configured purity methods");
+        configBuilder.addFlag(WRITE_ALL_SUMMARY_METHODS, "Write empty summary data for non-configured purity methods");
         configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");
 
         addOutputOptions(configBuilder);

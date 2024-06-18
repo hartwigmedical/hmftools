@@ -42,6 +42,12 @@ if('SampleId' %in% colnames(sampleSummary))
     variantImpliedTFs = variantImpliedTFs %>% filter(SampleId==sampleId)
 }
 
+if('PatientId' %in% colnames(sampleSummary))
+{
+    sampleSummary = sampleSummary %>% filter(PatientId==patientId)
+    variantImpliedTFs = variantImpliedTFs %>% filter(PatientId==patientId)
+}
+
 clonalMethod=sampleSummary$ClonalMethod
 
 format_purity<-function(purity)

@@ -92,7 +92,10 @@ public class SomaticPurityEstimator
 
             for(int threshold : SNV_QUAL_THRESHOLDS)
             {
-                calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
+                FragmentTotals bqrThresholdFragTotals = calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
+
+                if(bqrThresholdFragTotals != null)
+                    fragmentTotals = bqrThresholdFragTotals;
             }
 
             noiseRate = purityCalcData.ErrorRate;
@@ -106,9 +109,7 @@ public class SomaticPurityEstimator
         }
 
         if(purityCalcData.RawPurityEstimate < 0)
-        {
             purityCalcData.RawPurityEstimate = fragmentTotals.rawSampleVaf();
-        }
 
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
@@ -122,6 +123,12 @@ public class SomaticPurityEstimator
         double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
         double sampleAdjVafHigh = highProbAlleleCount / fragmentTotals.sampleDepthTotal();
         purityCalcData.PurityRangeHigh = estimatedPurity(sampleAdjVafHigh, noiseRate, fragmentTotals);
+
+        if(purityCalcData.PurityRangeHigh < 0)
+            purityCalcData.PurityRangeHigh = fragmentTotals.rawSampleVaf();
+
+        if(purityCalcData.PurityRangeLow < 0)
+            purityCalcData.PurityRangeLow = fragmentTotals.rawSampleVaf();
 
         ClonalityModel model = null;
 
@@ -147,6 +154,9 @@ public class SomaticPurityEstimator
 
             if(isRecomputed(purityCalcData.Clonality.Method))
             {
+                double lowRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeLow / purityCalcData.PurityEstimate : 1;
+                double highRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeHigh / purityCalcData.PurityEstimate : 1;
+
                 if(convertVafToPurity(purityCalcData.Clonality.Method))
                 {
                     purityCalcData.PurityEstimate = estimatedPurity(purityCalcData.Clonality.Vaf, noiseRate, fragmentTotals);
@@ -159,6 +169,9 @@ public class SomaticPurityEstimator
                     purityCalcData.PurityRangeLow = purityCalcData.Clonality.VafLow;
                     purityCalcData.PurityRangeHigh = purityCalcData.Clonality.VafHigh;
                 }
+
+                purityCalcData.PurityRangeLow *= lowRatio;
+                purityCalcData.PurityRangeHigh *= highRatio;
             }
         }
 
@@ -177,13 +190,13 @@ public class SomaticPurityEstimator
         return mBqrAdjustment.calcErrorRate(variant.TriNucContext, variant.Alt);
     }
 
-    private void calculateThresholdValues(
+    private FragmentTotals calculateThresholdValues(
             final String sampleId, final PurityCalcData purityCalcData, final List<SomaticVariant> variants, int qualThreshold)
     {
         List<BqrContextData> filteredBqrData = mBqrAdjustment.getThresholdBqrData(qualThreshold);
 
         if(filteredBqrData.isEmpty())
-            return;
+            return null;
 
         double rawBqrErrorRate = BqrAdjustment.calcErrorRate(filteredBqrData);
 
@@ -211,7 +224,7 @@ public class SomaticPurityEstimator
         }
 
         if(fragmentTotals.sampleDepthTotal() == 0)
-            return;
+            return null;
 
         double bqrErrorRate = depthWeightedErrorRate / fragmentTotals.sampleDepthTotal();
 
@@ -238,7 +251,10 @@ public class SomaticPurityEstimator
             purityCalcData.ErrorRate = bqrErrorRate;
             purityCalcData.RawBqrErrorRate = rawBqrErrorRate;
             purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), bqrErrorRate, fragmentTotals);
+            return fragmentTotals;
         }
+
+        return null;
     }
 
     private static double medianVcn(final List<SomaticVariant> variants)

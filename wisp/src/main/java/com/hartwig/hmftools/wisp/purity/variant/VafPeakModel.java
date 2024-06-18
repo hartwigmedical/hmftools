@@ -165,12 +165,12 @@ public class VafPeakModel extends ClonalityModel
 
         double densityBandwidth = max(nthImpliedTf * 0.125, 5 / weightedSampleDepth);
 
-        densityBandwidth *= multiplier;
-
         densityBandwidth = max(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MIN);
         densityBandwidth = min(densityBandwidth, rawEstimatedPurity * SOMATIC_PEAK_BANDWIDTH_MAX);
 
         densityBandwidth = min(densityBandwidth, SOMATIC_PEAK_BANDWIDTH_ABS_MIN);
+
+        densityBandwidth *= multiplier;
 
         return densityBandwidth;
     }

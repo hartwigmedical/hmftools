@@ -49,7 +49,6 @@ public class CnPurityResult
         sj.add("CopyNumberPurityHigh");
         sj.add("AnueploidyScore");
         sj.add("ClonalPercent");
-        sj.add("CnFitResidualsPerc");
         return sj.toString();
     }
 
@@ -61,7 +60,6 @@ public class CnPurityResult
         sj.add(formatPurityValue(EstimatedPurityHigh));
         sj.add(format("%.4f", AnueploidyScore));
         sj.add(format("%.3f", ClonalPercent));
-        sj.add(format("%.4f", Residuals));
 
         return sj.toString();
     }

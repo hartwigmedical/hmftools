@@ -7,6 +7,8 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOD_MAX_ITERATIONS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOD_MIN_PROB_DIFF_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -39,9 +41,6 @@ public final class SomaticPurityCalcs
         return probability;
     }
 
-    private static final int MAX_ITERATIONS = 20;
-    private static final double MIN_PROB_DIFF_PERC = 0.001;
-
     public static double calcLimitOfDetection(final FragmentTotals fragmentTotals, final double noiseRate)
     {
         // first find the AF matches a specified limit of detection probability
@@ -66,11 +65,11 @@ public final class SomaticPurityCalcs
         double lastProbUpperValue = 1.0;
         double lastProbLowerValue = 0;
 
-        while(iterations < MAX_ITERATIONS)
+        while(iterations < LOD_MAX_ITERATIONS)
         {
             probDiff = abs(requiredProb - currentProb) / requiredProb;
 
-            if(probDiff <= MIN_PROB_DIFF_PERC)
+            if(probDiff <= LOD_MIN_PROB_DIFF_PERC)
             {
                 if(currentProb < requiredProb)
                     ++currentValue;
@@ -105,7 +104,7 @@ public final class SomaticPurityCalcs
             ++iterations;
         }
 
-        if(iterations >= MAX_ITERATIONS)
+        if(iterations >= LOD_MAX_ITERATIONS)
         {
             CT_LOGGER.warn(format("max iterations reached: value(%.4f) test(%d) prob(%.4f diff=%.4f)",
                     expectedNoiseFrags, currentValue, currentProb, probDiff));
