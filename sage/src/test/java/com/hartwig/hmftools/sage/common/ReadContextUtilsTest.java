@@ -178,11 +178,4 @@ public class ReadContextUtilsTest
         assertEquals(3, readCigarInfo.FlankIndexStart);
         assertEquals(46, readCigarInfo.FlankIndexEnd);
     }
-
-    @Test
-    public void testDetermineAltIndexRanges()
-    {
-
-
-    }
 }

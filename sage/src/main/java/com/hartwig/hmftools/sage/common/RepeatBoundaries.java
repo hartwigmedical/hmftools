@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
@@ -36,9 +37,6 @@ public class RepeatBoundaries
     public static RepeatBoundaries findRepeatBoundaries(
             final byte[] bases, final int requiredIndexStart, final int requiredIndexEnd, final int maxLength, final int minCount)
     {
-        RepeatInfo maxRepeat = null;
-        RepeatInfo secondRepeat = null;
-
         int searchIndexStart = max(0, requiredIndexStart - REPEAT_SEARCH_LENGTH);
 
         int index = searchIndexStart;
@@ -67,45 +65,48 @@ public class RepeatBoundaries
                     continue;
 
                 if(allRepeats == null)
-                    allRepeats = Lists.newArrayList(repeat);
-                else if(!addIfUnique(allRepeats, repeat))
-                    continue;
-
-                if(maxRepeat == null)
                 {
-                    maxRepeat = repeat;
+                    allRepeats = Lists.newArrayList(repeat);
                 }
                 else
                 {
-                    // keep the second longest if the max doesn't full cover the starting start & end indez
-                    if(repeat.totalLength() > maxRepeat.totalLength())
-                    {
-                        if(repeat.Index > requiredIndexStart && maxRepeat.Index <= requiredIndexStart)
-                        {
-                            secondRepeat = maxRepeat;
-                        }
-
-                        maxRepeat = repeat;
-                    }
-                    else if(maxRepeat.endIndex() < requiredIndexEnd && repeat.endIndex() >= requiredIndexEnd)
-                    {
-                        if(secondRepeat == null || repeat.totalLength() > secondRepeat.totalLength())
-                        {
-                            secondRepeat = repeat;
-                        }
-                    }
+                    addIfUnique(allRepeats, repeat);
                 }
             }
 
             ++index;
         }
 
-        if(maxRepeat == null)
+        if(allRepeats == null)
             return null;
 
-        // look for partial extensions of repeats up and down
-        RepeatInfo lowerRepeat = secondRepeat != null && secondRepeat.Index < maxRepeat.Index ? secondRepeat : maxRepeat;
-        RepeatInfo upperRepeat = secondRepeat != null && secondRepeat.endIndex() > maxRepeat.endIndex() ? secondRepeat : maxRepeat;
+        RepeatInfo lowerRepeat = null;
+        RepeatInfo upperRepeat = null;
+        RepeatInfo maxRepeat = null;
+
+        for(RepeatInfo repeat : allRepeats)
+        {
+            if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
+                maxRepeat = repeat;
+
+            if(positionWithin(requiredIndexStart, repeat.Index, repeat.endIndex()))
+            {
+                if(lowerRepeat == null || repeat.Index < lowerRepeat.Index)
+                    lowerRepeat = repeat;
+            }
+
+            if(positionWithin(requiredIndexEnd, repeat.Index, repeat.endIndex()))
+            {
+                if(upperRepeat == null || repeat.endIndex() > upperRepeat.endIndex())
+                    upperRepeat = repeat;
+            }
+        }
+
+        if(lowerRepeat == null)
+            lowerRepeat = maxRepeat;
+
+        if(upperRepeat == null)
+            upperRepeat = maxRepeat;
 
         int lowerRepeatIndex = findPostRepeatIndex(lowerRepeat, bases, true);
         int upperRepeatIndex = findPostRepeatIndex(upperRepeat, bases, false);

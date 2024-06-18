@@ -187,6 +187,26 @@ public class RepeatInfoTest
         assertEquals(3, repeatBoundaries.MaxRepeat.Count);
         assertEquals(1, repeatBoundaries.LowerIndex);
         assertEquals(37, repeatBoundaries.UpperIndex);
+
+        // test 4: 3 repeats, the inner one the longest but requiring use of the outer 2
+
+        //                     10        20        30
+        //           0123456789012345678901234567890123456789
+        readBases = "ACTGAAAAAAAACAAAAAAAAAAACTATATATATATTACT";
+
+        readCoreStart = 11;
+        readCoreEnd = 25;
+
+        repeatBoundaries = findRepeatBoundaries(
+                readBases.getBytes(), readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+
+        assertNotNull(repeatBoundaries);
+        assertEquals("A", repeatBoundaries.MaxRepeat.Bases);
+        assertEquals(11, repeatBoundaries.MaxRepeat.Count);
+        assertEquals(3, repeatBoundaries.AllRepeats.size());
+        assertEquals(3, repeatBoundaries.LowerIndex);
+        assertEquals(36, repeatBoundaries.UpperIndex);
+
     }
 
     @Test
