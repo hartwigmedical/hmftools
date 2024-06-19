@@ -467,7 +467,7 @@ public class RefContextConsumer
                 {
                     newRefBases = mRefSequence.positionBases(refPosition, refPosition);
                     newAltBases = newRefBases + new String(Arrays.subsetArray(
-                            record.getReadBases(), readIndex + 1, readIndex + variant.altLength()));
+                            record.getReadBases(), readIndex + 1, readIndex + variant.altLength() - 1));
                 }
                 else
                 {

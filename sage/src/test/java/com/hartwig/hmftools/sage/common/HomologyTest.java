@@ -37,7 +37,29 @@ public class HomologyTest
         readBases = REF_BASES_200.substring(60, 69) + REF_BASES_200.substring(73, 80);
         leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), 8);
         assertEquals(4, leftHomShift);
+    }
 
+    public void testDinucleotideHomologyLeftAlignment()
+    {
+        String REF_BASES = "CTGTCTGTGACTCGGATATATATATATATATCCCCTTGCGCTTCCCAGGT";
+        RefSequence REF_SEQUENCE = new RefSequence(0, REF_BASES.getBytes());
+        //            10        20        30
+        //            012345678901234567890123
+        // ref bases: CTCGGATATATATATATATATCCC
+
+        // insert scenario:
+        SimpleVariant var = createSimpleVariant(30, "T", "TATAT");
+
+        String readBases = REF_BASES.substring(10, 30) + "TATAT" + REF_BASES.substring(31, 40);
+        int leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE, readBases.getBytes(), 20);
+        //        assertEquals(16, leftHomShift);
+
+        // del scenario
+        var = createSimpleVariant(26, "TATAT", "T");
+
+        readBases = REF_BASES.substring(10, 27) + REF_BASES.substring(31, 40);
+        leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE, readBases.getBytes(), 16);
+        //        assertEquals(12, leftHomShift);
     }
 
     @Test

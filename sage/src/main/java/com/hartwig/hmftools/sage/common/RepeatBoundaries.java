@@ -86,7 +86,7 @@ public class RepeatBoundaries
 
         for(RepeatInfo repeat : allRepeats)
         {
-            if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
+            if(maxRepeat == null || repeat.Count > maxRepeat.Count)
                 maxRepeat = repeat;
 
             if(positionWithin(requiredIndexStart, repeat.Index, repeat.endIndex()))

@@ -183,8 +183,8 @@ public class RepeatInfoTest
                 readBases.getBytes(), readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
 
         assertNotNull(repeatBoundaries);
-        assertEquals("GGGGC", repeatBoundaries.MaxRepeat.Bases);
-        assertEquals(3, repeatBoundaries.MaxRepeat.Count);
+        assertEquals("G", repeatBoundaries.MaxRepeat.Bases);
+        assertEquals(4, repeatBoundaries.MaxRepeat.Count);
         assertEquals(1, repeatBoundaries.LowerIndex);
         assertEquals(37, repeatBoundaries.UpperIndex);
 
