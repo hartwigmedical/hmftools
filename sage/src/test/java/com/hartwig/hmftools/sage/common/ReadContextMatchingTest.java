@@ -154,7 +154,6 @@ public class ReadContextMatchingTest
     public void testIndelMatches()
     {
         // basic del ref match
-
         int position = 50;
         SimpleVariant var = createSimpleVariant(
                 position, REF_BASES_200.substring(position, position + 5), REF_BASES_200.substring(position, position + 1));
@@ -167,14 +166,59 @@ public class ReadContextMatchingTest
 
         VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
 
-        // assertEquals(10, readContext.RefBases.length);
-
         ReadContextMatcher matcher = new ReadContextMatcher(readContext);
 
         String refBases = REF_BASES_200.substring(30, 70);
         SAMRecord refRead = buildSamRecord(30, "40M", refBases);
 
         assertEquals(REF, matcher.determineReadMatch(refRead, 20));
+    }
+
+    @Test
+    public void testIndelHomologyMatches()
+    {
+        int position = 64;
+        String ref = REF_BASES_200.substring(position, position + 1);
+        SimpleVariant var = createSimpleVariant(position, ref, ref + "AAAA");
+
+        String readBases = REF_BASES_200.substring(40, position + 1) + "AAAA" + REF_BASES_200.substring(position + 1, 90);
+        String readCigar = "25M4I25M";
+        SAMRecord read = buildSamRecord(40, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(var, read, 24, REF_SEQUENCE_200);
+
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        assertEquals(FULL, matcher.determineReadMatch(read, 24));
+
+        // values: [20, 23, 24, 11, 12, 15]
+        // now with a read with low-qual mismatches in non-permitted locations
+
+        readBases = REF_BASES_200.substring(40, position + 1) + "ACAA" + REF_BASES_200.substring(position + 1, 90);
+        readCigar = "25M4I25M";
+        read = buildSamRecord(40, readCigar, readBases);
+        read.getBaseQualities()[26] = 11;
+
+        assertEquals(FULL, matcher.determineReadMatch(read, 24));
+
+        readBases = REF_BASES_200.substring(40, position + 1) + "AAAC" + REF_BASES_200.substring(position + 1, 90);
+        readCigar = "25M4I25M";
+        read = buildSamRecord(40, readCigar, readBases);
+        read.getBaseQualities()[28] = 11;
+
+        assertEquals(NONE, matcher.determineReadMatch(read, 24));
+
+        // 1:64 G>GAAAA read(TCTGTGACTC-GGAAAAAAAAAAAACT-CCCTGACCCC 12M4I20M) pos(53-84) index(10-11-25) repeat(A-12 index(12-23)) homology(AAAA length=8) alt(11-24) ref(GGAAAAAAAACT)
+        readBases = REF_BASES_200.substring(40, position + 1) + "AAAA" + REF_BASES_200.substring(position + 1, position + 8)
+                + "T" + REF_BASES_200.substring(position + 9, 90);
+
+        readCigar = "25M4I25M";
+        read = buildSamRecord(40, readCigar, readBases);
+        read.getBaseQualities()[36] = 11;
+
+        assertEquals(NONE, matcher.determineReadMatch(read, 24));
     }
 
     @Test

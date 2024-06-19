@@ -283,12 +283,6 @@ public class ReadContextCounter
 
         RawContext rawContext = RawContext.createFromRead(mVariant, record);
 
-        if(mConfig.Quality.HighDepthMode && rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
-        {
-            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
-            return SOFT_CLIP;
-        }
-
         if(rawContext.PositionType == VariantReadPositionType.LOW_QUAL)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);

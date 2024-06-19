@@ -14,6 +14,12 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Sets;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -36,26 +42,30 @@ public class ReadContextMatcher
 
     private class LowQualExclusion
     {
-        public final int IndexLower;
-        public final int IndexUpper;
+        public final List<Integer> Indices;
         public final boolean IsRange;
 
-        public LowQualExclusion(final int indexLower, final int indexUpper, final boolean isRange)
+        public LowQualExclusion(final int indexLower, final int indexUpper)
         {
-            IndexLower = indexLower;
-            IndexUpper = indexUpper;
-            IsRange = isRange;
+            Indices = List.of(indexLower, indexUpper);
+            IsRange = true;
+        }
+
+        public LowQualExclusion(final List<Integer> indices)
+        {
+            Indices = indices;
+            IsRange = false;
         }
 
         public boolean coversIndex(int index)
         {
             if(IsRange)
-                return index >= IndexLower && index <= IndexUpper;
+                return index >= Indices.get(0) && index <= Indices.get(1);
             else
-                return index == IndexLower || index == IndexUpper;
+                return Indices.contains(index);
         }
 
-        public String toString() { return format("%d-%d %s", IndexLower, IndexUpper, IsRange ? "range" : "values"); }
+        public String toString() { return format("%s: %s", IsRange ? "range" : "values", Indices); }
     }
 
     public ReadContextMatcher(final VariantReadContext variantReadContext, boolean allowMismatches)
@@ -67,21 +77,33 @@ public class ReadContextMatcher
 
         if(mContext.variant().isIndel())
         {
+            Set<Integer> excludedBases = Sets.newHashSet();
             int altIndexLower = determineIndelLowQualLowerIndex(variantReadContext);
-            int altIndexUpper = determineIndelLowQualUpperIndex(variantReadContext);
+            int altIndexUpper = determineIndelLowQualRefReadDiffIndex(variantReadContext);
+            excludedBases.add(altIndexLower);
+            excludedBases.add(altIndexUpper);
 
-            mLowQualExclusionRead = new LowQualExclusion(altIndexLower, altIndexUpper, false);
+            if(mContext.Homology != null)
+            {
+                excludedBases.add(mContext.VarIndex);
+                excludedBases.add(mContext.VarIndex + 1);
+                excludedBases.add(mContext.AltIndexUpper - 1);
+                excludedBases.add(mContext.AltIndexUpper);
+            }
+
+            mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
+
             int refIndexDiff = mContext.leftFlankLength();
-            mLowQualExclusionRef = new LowQualExclusion(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff, false);
+            mLowQualExclusionRef = new LowQualExclusion(List.of(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff));
         }
         else
         {
             // just the alt bases themselves - for both ref and read
             int altRange = mContext.variant().altLength() - 1;
-            mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange, true);
+            mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
 
             int refIndex = mContext.leftCoreLength();
-            mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange, true);
+            mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);
         }
     }
 
@@ -94,7 +116,7 @@ public class ReadContextMatcher
         return readContext.VarIndex + readContext.variant().indelLength();
     }
 
-    private static int determineIndelLowQualUpperIndex(final VariantReadContext readContext)
+    private static int determineIndelLowQualRefReadDiffIndex(final VariantReadContext readContext)
     {
         // find the first base of difference (ref vs alt) up from the variant's position, and cap at the core indices
         int refIndex = readContext.variantRefIndex();
@@ -115,10 +137,11 @@ public class ReadContextMatcher
 
         if(mContext.MaxRepeat != null)
         {
-            // determine how many times the repeat bases are in the core
+            // determine how many times the repeat bases are in the core, starting from the repeat itself
             int coreRepeatCount = 0;
             String coreStr = mContext.coreStr();
-            int repeatIndex = coreStr.indexOf(mContext.MaxRepeat.Bases);
+            int repeatIndexStart = mContext.MaxRepeat.Index - mContext.leftFlankLength();
+            int repeatIndex = coreStr.indexOf(mContext.MaxRepeat.Bases, repeatIndexStart);
 
             while(repeatIndex >= 0)
             {
