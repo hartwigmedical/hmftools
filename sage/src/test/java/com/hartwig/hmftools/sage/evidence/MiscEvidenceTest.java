@@ -88,6 +88,37 @@ public class MiscEvidenceTest
     }
 
     @Test
+    public void testLowQualSoftClip()
+    {
+        int position = 100;
+
+        VariantReadContext readContext = createReadContext(position, "A", "T");
+
+        ReadContextCounter readContextCounter = createReadCounter(0, readContext);
+
+        String altReadBases = readContext.readBases() + REF_BASES_200.substring(0, 20);
+        String readCigar = "15S20M";
+        int readVarIndex = readContext.VarIndex;
+        int readPosStart = position - readVarIndex + 15; // for the soft-clip
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+
+        readContextCounter.processRead(altRead, 1, null);
+
+        assertEquals(1, readContextCounter.readCounts().Full);
+
+        // again but with too many low-qual soft-clip bases
+        for(int i = 0; i < 10; ++i)
+        {
+            altRead.getBaseQualities()[i] = 11;
+        }
+
+        ReadMatchType readMatchType = readContextCounter.processRead(altRead, 1, null);
+        assertEquals(readMatchType, ReadMatchType.SOFT_CLIP);
+        assertEquals(1, readContextCounter.readCounts().Full);
+    }
+
+    @Test
     public void testMnvBaseQuality()
     {
         int position = 100;

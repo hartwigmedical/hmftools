@@ -6,5 +6,6 @@ public enum VariantReadPositionType
     SOFT_CLIP,
     SKIPPED,
     DELETED,
+    LOW_QUAL,
     NONE;
 }

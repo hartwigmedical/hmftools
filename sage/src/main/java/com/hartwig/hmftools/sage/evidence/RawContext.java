@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUA
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.ALIGNED;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.LOW_QUAL;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SKIPPED;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SOFT_CLIP;
 
@@ -42,7 +43,6 @@ public class RawContext
 
         int readIndex = 0;
         int refBase = record.getAlignmentStart();
-        boolean isInsert = variant.isInsert();
         RawContext rawContext = null;
 
         for(int i = 0; i < cigar.numCigarElements(); i++)
@@ -111,13 +111,13 @@ public class RawContext
         if(variant.Position >= record.getAlignmentStart())
             return null;
 
-        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
-            return null;
-
         // set read index assuming a REF match, not a variant match
         // eg if soft-clip length = 10 (index 0-9), variant position is 96 vs start of 100, pos diff = 4, then read index = 10 - 4 = 6
         int variantPosDiff = record.getAlignmentStart() - variant.Position;
         int readIndex = element.getLength() - variantPosDiff;
+
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
+            return new RawContext(readIndex, LOW_QUAL);
 
         return new RawContext(readIndex, SOFT_CLIP);
     }
@@ -132,11 +132,11 @@ public class RawContext
 
         int scStartIndex = record.getBaseQualities().length - element.getLength();
 
-        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), scStartIndex, element.getLength()))
-            return null;
-
         int variantPosDiff = variant.Position - record.getAlignmentEnd();
         int variantReadIndex = scStartIndex + variantPosDiff - 1;
+
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), scStartIndex, element.getLength()))
+            return new RawContext(variantReadIndex, LOW_QUAL);
 
         return new RawContext(variantReadIndex, SOFT_CLIP);
     }

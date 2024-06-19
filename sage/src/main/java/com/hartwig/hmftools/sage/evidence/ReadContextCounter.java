@@ -289,12 +289,18 @@ public class ReadContextCounter
             return SOFT_CLIP;
         }
 
+        if(rawContext.PositionType == VariantReadPositionType.LOW_QUAL)
+        {
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+            return SOFT_CLIP;
+        }
+
         boolean checkRealigned = false;
         Integer realignedReadIndex = null;
 
         if(rawContext.ReadVariantIndex < 0)
         {
-            if(considerRealignedDel(record, mMaxPositionVsReadStart))
+            if(mVariant.isDelete() && considerRealignedDel(record, mMaxPositionVsReadStart))
             {
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
                 checkRealigned = realignedReadIndex != INVALID_INDEX;
