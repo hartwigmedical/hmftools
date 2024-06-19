@@ -223,31 +223,4 @@ public class ReadCigarInfo
 
         return new ReadCigarInfo(cigar, flankPosStart, flankPosEnd, corePosStart, corePosEnd, finalIndexStart, finalIndexEnd);
     }
-
-    public static final int INVALID_INDEX = -1;
-
-    public static int getReadIndexFromPosition(final int alignmentStart, final List<CigarElement> cigarElements, int position)
-    {
-        int refPosition = alignmentStart;
-        int index = 0;
-
-        for(CigarElement element : cigarElements)
-        {
-            if(element.getOperator().consumesReferenceBases() && refPosition + element.getLength() >= position)
-            {
-                if(element.getOperator().consumesReadBases())
-                    index += position - refPosition;
-
-                return index;
-            }
-
-            if(element.getOperator().consumesReferenceBases())
-                refPosition += element.getLength();
-
-            if(element.getOperator().consumesReadBases())
-                index += element.getLength();
-        }
-
-        return INVALID_INDEX;
-    }
 }

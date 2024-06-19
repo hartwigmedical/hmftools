@@ -2,7 +2,11 @@ package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
@@ -104,12 +108,12 @@ public final class CigarUtils
 
     public static boolean leftSoftClipped(final Cigar cigar)
     {
-        return cigar.getCigarElements().get(0).getOperator() == CigarOperator.S;
+        return cigar.getCigarElements().get(0).getOperator() == S;
     }
 
     public static boolean rightSoftClipped(final Cigar cigar)
     {
-        return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
+        return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == S;
     }
 
     public static int leftSoftClipLength(final SAMRecord record) { return leftSoftClipLength(record.getCigar()); }
@@ -119,18 +123,18 @@ public final class CigarUtils
     public static int leftSoftClipLength(final Cigar cigar)
     {
         CigarElement firstElement = cigar.getFirstCigarElement();
-        return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
+        return (firstElement != null && firstElement.getOperator() == S) ? firstElement.getLength() : 0;
     }
 
     public static int leftSoftClipLength(final List<CigarElement> elements)
     {
-        return elements.get(0).getOperator() == CigarOperator.S ? elements.get(0).getLength() : 0;
+        return elements.get(0).getOperator() == S ? elements.get(0).getLength() : 0;
     }
 
     public static int rightSoftClipLength(final Cigar cigar)
     {
         CigarElement lastElement = cigar.getLastCigarElement();
-        return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
+        return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
     }
 
     @Nullable
@@ -210,5 +214,101 @@ public final class CigarUtils
         return cigarElements.stream()
                 .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
                 .mapToInt(x -> x.getLength()).max().orElse(0);
+    }
+
+    public static int getReadIndexFromPosition(final int alignmentStart, final List<CigarElement> cigarElements, int position)
+    {
+        return getReadIndexFromPosition(alignmentStart, cigarElements, position, false, false);
+    }
+
+    public static int getReadIndexFromPosition(
+            final int alignmentStart, final List<CigarElement> cigarElements, int position, boolean lastIfGapped, boolean inferFromSoftClip)
+    {
+        if(position < alignmentStart && !inferFromSoftClip)
+            return INVALID_READ_INDEX;
+
+        int refPosition = alignmentStart;
+        int index = 0;
+
+        for(CigarElement element : cigarElements)
+        {
+            if(element.getOperator() == S && refPosition == alignmentStart && inferFromSoftClip)
+                refPosition -= element.getLength();
+
+            boolean consumesRefBases = element.getOperator().consumesReferenceBases() || (element.getOperator() == S && inferFromSoftClip);
+
+            if(consumesRefBases && refPosition + element.getLength() - 1 >= position)
+            {
+                if(element.getOperator().consumesReadBases())
+                {
+                    index += position - refPosition;
+                }
+                else
+                {
+                    if(lastIfGapped)
+                        --index;
+                    else
+                        return INVALID_READ_INDEX;
+                }
+
+                return index;
+            }
+
+            if(consumesRefBases)
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        return INVALID_READ_INDEX;
+    }
+
+    public static int getPositionFromReadIndex(final int alignmentStart, final List<CigarElement> cigarElements, int readIndex)
+    {
+        return getPositionFromReadIndex(alignmentStart, cigarElements, readIndex, false, false);
+    }
+
+    public static int getPositionFromReadIndex(
+            final int alignmentStart, final List<CigarElement> cigarElements, int readIndex, boolean lastIfInserted, boolean inferFromSoftClip)
+    {
+        if(readIndex < 0)
+            return NO_POSITION;
+
+        int refPosition = alignmentStart;
+        int index = 0;
+
+        for(CigarElement element : cigarElements)
+        {
+            if(element.getOperator() == S && refPosition == alignmentStart && inferFromSoftClip)
+                refPosition -= element.getLength();
+
+            boolean consumesRefBases = element.getOperator().consumesReferenceBases() || (element.getOperator() == S && inferFromSoftClip);
+
+            if(element.getOperator().consumesReadBases() && index + element.getLength() - 1 >= readIndex)
+            {
+                if(consumesRefBases)
+                {
+                    refPosition += readIndex - index;
+                }
+                else
+                {
+                    if(lastIfInserted)
+                        --refPosition;
+                    else
+                        return NO_POSITION;
+                }
+
+                return refPosition;
+            }
+
+            if(consumesRefBases)
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        return NO_POSITION;
     }
 }

@@ -1,11 +1,21 @@
 package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import junit.framework.TestCase;
@@ -63,5 +73,106 @@ public class CigarUtilsTest
         record.setCigarString("10H85M7H");
         TestCase.assertEquals(0, CigarUtils.leftSoftClipLength(record));
         TestCase.assertEquals(0, CigarUtils.rightSoftClipLength(record));
+    }
+
+    @Test
+    public void testReadIndexFromPosition()
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList();
+
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+
+        int readIndex = getReadIndexFromPosition(100, cigarElements, 100);
+        assertEquals(0, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 119);
+        assertEquals(19, readIndex);
+
+        // outisde the bounds
+        readIndex = getReadIndexFromPosition(100, cigarElements, 120);
+        assertEquals(INVALID_READ_INDEX, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 99);
+        assertEquals(INVALID_READ_INDEX, readIndex);
+
+        // within a delete
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+        cigarElements.add(new CigarElement(10, CigarOperator.D));
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 125, false, false);
+        assertEquals(INVALID_READ_INDEX, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 125, true, false);
+        assertEquals(19, readIndex);
+
+        // within soft-clips
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+        cigarElements.add(new CigarElement(10, CigarOperator.S));
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 95, false, false);
+        assertEquals(INVALID_READ_INDEX, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 95, false, true);
+        assertEquals(5, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 125, false, false);
+        assertEquals(INVALID_READ_INDEX, readIndex);
+
+        readIndex = getReadIndexFromPosition(100, cigarElements, 125, false, true);
+        assertEquals(35, readIndex);
+    }
+
+    @Test
+    public void testPositionFromReadIndex()
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList();
+
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+
+        int readIndex = getPositionFromReadIndex(100, cigarElements, 0);
+        assertEquals(100, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 19);
+        assertEquals(119, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, -1);
+        assertEquals(NO_POSITION, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 20);
+        assertEquals(NO_POSITION, readIndex);
+
+        // within a insert
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+        cigarElements.add(new CigarElement(10, CigarOperator.I));
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 25);
+        assertEquals(NO_POSITION, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 25, true, false);
+        assertEquals(119, readIndex);
+
+        // within soft-clips
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(20, CigarOperator.M));
+        cigarElements.add(new CigarElement(10, CigarOperator.S));
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 5);
+        assertEquals(NO_POSITION, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 35);
+        assertEquals(NO_POSITION, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 5, false, true);
+        assertEquals(95, readIndex);
+
+        readIndex = getPositionFromReadIndex(100, cigarElements, 35, false, true);
+        assertEquals(125, readIndex);
     }
 }

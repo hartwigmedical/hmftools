@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -460,22 +462,28 @@ public class RefContextConsumer
             if(leftHomologyShift > 0)
             {
                 readIndex -= leftHomologyShift;
-                refPosition -= leftHomologyShift;
-                String newAltBases, newRefBases;
 
-                if(variant.isInsert())
-                {
-                    newRefBases = mRefSequence.positionBases(refPosition, refPosition);
-                    newAltBases = newRefBases + new String(Arrays.subsetArray(
-                            record.getReadBases(), readIndex + 1, readIndex + variant.altLength() - 1));
-                }
-                else
-                {
-                    newRefBases = mRefSequence.positionBases(refPosition, refPosition + variant.refLength() - 1);
-                    newAltBases = newRefBases.substring(0, 1);
-                }
+                // recompute the new reference position, taking into consideration indels in the read
+                refPosition = getPositionFromReadIndex(record.getAlignmentStart(), record.getCigar().getCigarElements(), readIndex);
 
-                variant = new SimpleVariant(record.getContig(), refPosition, newRefBases, newAltBases);
+                if(refPosition != NO_POSITION)
+                {
+                    String newAltBases, newRefBases;
+
+                    if(variant.isInsert())
+                    {
+                        newRefBases = mRefSequence.positionBases(refPosition, refPosition);
+                        newAltBases = newRefBases + new String(Arrays.subsetArray(
+                                record.getReadBases(), readIndex + 1, readIndex + variant.altLength() - 1));
+                    }
+                    else
+                    {
+                        newRefBases = mRefSequence.positionBases(refPosition, refPosition + variant.refLength() - 1);
+                        newAltBases = newRefBases.substring(0, 1);
+                    }
+
+                    variant = new SimpleVariant(record.getContig(), refPosition, newRefBases, newAltBases);
+                }
             }
         }
 

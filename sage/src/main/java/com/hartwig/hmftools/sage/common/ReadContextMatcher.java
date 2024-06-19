@@ -75,35 +75,43 @@ public class ReadContextMatcher
         mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualCoreMismatches() : 0;
         mAllowWildcardMatchInCore = allowMismatches ? mContext.variant().isSNV() && !mContext.hasHomology() : false;
 
-        if(mContext.variant().isIndel())
+        if(allowMismatches)
         {
-            Set<Integer> excludedBases = Sets.newHashSet();
-            int altIndexLower = determineIndelLowQualLowerIndex(variantReadContext);
-            int altIndexUpper = determineIndelLowQualRefReadDiffIndex(variantReadContext);
-            excludedBases.add(altIndexLower);
-            excludedBases.add(altIndexUpper);
-
-            if(mContext.Homology != null)
+            if(mContext.variant().isIndel())
             {
-                excludedBases.add(mContext.VarIndex);
-                excludedBases.add(mContext.VarIndex + 1);
-                excludedBases.add(mContext.AltIndexUpper - 1);
-                excludedBases.add(mContext.AltIndexUpper);
+                Set<Integer> excludedBases = Sets.newHashSet();
+                int altIndexLower = determineIndelLowQualLowerIndex(variantReadContext);
+                int altIndexUpper = determineIndelLowQualRefReadDiffIndex(variantReadContext);
+                excludedBases.add(altIndexLower);
+                excludedBases.add(altIndexUpper);
+
+                if(mContext.Homology != null)
+                {
+                    excludedBases.add(mContext.VarIndex);
+                    excludedBases.add(mContext.VarIndex + 1);
+                    excludedBases.add(mContext.AltIndexUpper - 1);
+                    excludedBases.add(mContext.AltIndexUpper);
+                }
+
+                mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
+
+                int refIndexDiff = mContext.leftFlankLength();
+                mLowQualExclusionRef = new LowQualExclusion(List.of(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff));
             }
+            else
+            {
+                // just the alt bases themselves - for both ref and read
+                int altRange = mContext.variant().altLength() - 1;
+                mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
 
-            mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
-
-            int refIndexDiff = mContext.leftFlankLength();
-            mLowQualExclusionRef = new LowQualExclusion(List.of(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff));
+                int refIndex = mContext.leftCoreLength();
+                mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);
+            }
         }
         else
         {
-            // just the alt bases themselves - for both ref and read
-            int altRange = mContext.variant().altLength() - 1;
-            mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
-
-            int refIndex = mContext.leftCoreLength();
-            mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);
+            mLowQualExclusionRead = null;
+            mLowQualExclusionRef = null;
         }
     }
 
@@ -393,12 +401,5 @@ public class ReadContextMatcher
         }
 
         return BaseMatchType.MATCH;
-    }
-
-    public static ReadContextMatch compareReadContexts(final VariantReadContext first, final VariantReadContext second)
-    {
-        // compare the core and flanks for the 2 contexts, not allowing for mismatches
-        ReadContextMatcher matcher = new ReadContextMatcher(first, false);
-        return matcher.determineReadMatch(second.ReadBases, null, second.VarIndex, true);
     }
 }

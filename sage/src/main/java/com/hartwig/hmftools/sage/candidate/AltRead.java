@@ -51,5 +51,6 @@ public class AltRead
         mRefContext.processAltRead(Ref, Alt, BaseQuality, NumberOfEvents, mReadContext);
     }
 
-    public String toString() { return String.format("%d: %s>%s", position(), Ref, Alt); }
+    public String toString() { return String.format("%d: %s>%s",
+            mReadContext != null ? mReadContext.variant().Position : -1, Ref, Alt); }
 }

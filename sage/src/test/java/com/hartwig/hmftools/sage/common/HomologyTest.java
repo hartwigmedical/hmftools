@@ -1,19 +1,32 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.AltRead;
+import com.hartwig.hmftools.sage.candidate.RefContextCache;
+import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
+
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
+import junit.framework.TestCase;
 
 public class HomologyTest
 {
@@ -80,8 +93,8 @@ public class HomologyTest
 
         // a duplication later on
         refBases = "CTGTCTGTGACAAACCCGGGAAACCCGGGTCGGATCCCGGTAGGTAT";
-        //          0         10        20        30
-        //          0123456789012345678901234567890123456789
+        //          0         10        20        30        40
+        //          01234567890123456789012345678901234567890123456789
         refSequence = new RefSequence(0, refBases.getBytes());
         var = createSimpleVariant(28, "G", "G" + insertedBases);
 
@@ -89,6 +102,66 @@ public class HomologyTest
 
         leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 18);
         assertEquals(18, leftHomShift);
+    }
+
+    @Test
+    public void testHomologyLeftAlignmentCandidate()
+    {
+        // test left-aligning a candidate variant found in a right soft-clip
+        // the soft-clip must be long enough to have the duplicated section and 12-bases of matching ref
+
+        String refBases = "CTGTCTGTGACACGTTGCAGTCGGATCCCGGTAGGTATTGTGACAAACCGTAGCTTGACCAG";
+        //                 0         10        20        30        40        50        60
+        //                 01234567890123456789012345678901234567890123456789012345678901
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        // up to and including the ref base are duplicated
+        int varPosition = 30;
+        int dupLength = 10;
+        String duplicatedBases = refBases.substring(varPosition - dupLength + 1, varPosition + 1);
+
+        String softClipBases = duplicatedBases + refBases.substring(31, 46); // then continues in the ref sequence
+
+        int readStart = 5;
+        String refAlignedBases = refBases.substring(readStart, varPosition + 1);
+        String readBases = refAlignedBases + softClipBases;
+
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 0, 200);
+        RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+
+        String cigar = buildCigarString(refAlignedBases.length(), 0, softClipBases.length());
+
+        SAMRecord read = buildSamRecord(readStart, cigar, readBases);
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read);
+
+        List<AltContext> altContexts = refContextCache.altContexts();
+        TestCase.assertEquals(1, altContexts.size());
+
+        AltContext altContext = altContexts.get(0);
+        VariantReadContext readContext = altContext.readContext();
+        assertEquals(20, readContext.variant().Position);
+
+        // again but this time with an indel in the read bases to confuse where the implied ref position is
+        int delPosition = 20;
+        readBases = refAlignedBases.substring(0, delPosition) + refAlignedBases.substring(delPosition + 2) + softClipBases;
+
+        cigar = "20M2D4M25S";
+        read = buildSamRecord(readStart, cigar, readBases);
+
+        refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
+        refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read);
+
+        altContexts = refContextCache.altContexts();
+        TestCase.assertEquals(2, altContexts.size());
+
+        altContext = altContexts.stream().filter(x -> x.position() == 30).findFirst().orElse(null);
+        assertNotNull(altContext);
+        // readContext = altContext.readContext();
+        // assertEquals(20, readContext.variant().Position);
     }
 
     @Test

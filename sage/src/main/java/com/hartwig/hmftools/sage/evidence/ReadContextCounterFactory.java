@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -33,9 +36,19 @@ public class ReadContextCounterFactory
             if(qualityCalculator.ultimaEnabled())
                 candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant()));
 
-            readCounters.add(new ReadContextCounter(
-                    readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
-                    config, qualityCalculator, sampleId));
+            try
+            {
+                readCounters.add(new ReadContextCounter(
+                        readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
+                        config, qualityCalculator, sampleId));
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("var({}) error building counter from readContext: {}",
+                        candidate.readContext().variant(), candidate.readContext());
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
 
         return readCounters;

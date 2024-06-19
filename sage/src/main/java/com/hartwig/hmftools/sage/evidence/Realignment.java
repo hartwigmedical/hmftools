@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.sage.common.ReadCigarInfo.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
@@ -74,20 +70,12 @@ public class Realignment
     {
         int variantCoreEndPosition = readContext.CorePositionEnd;
 
-        if(variantCoreEndPosition < record.getAlignmentStart() || variantCoreEndPosition > record.getAlignmentEnd())
-            return INVALID_INDEX;
+        int coreEndReadIndex = getReadIndexFromPosition(
+                record.getAlignmentStart(), record.getCigar().getCigarElements(), variantCoreEndPosition,
+                false, true);
 
-        int coreEndReadIndex;
-        if(variantCoreEndPosition <= record.getAlignmentStart())
-        {
-            int leftClipLength = CigarUtils.leftSoftClipLength(record);
-            coreEndReadIndex = leftClipLength - (record.getAlignmentStart() - variantCoreEndPosition);
-        }
-        else
-        {
-            coreEndReadIndex = getReadIndexFromPosition(
-                    record.getAlignmentStart(), record.getCigar().getCigarElements(), variantCoreEndPosition);
-        }
+        if(coreEndReadIndex == INVALID_READ_INDEX)
+            return INVALID_INDEX;
 
         // convert back to the variant's index location
         int adjustedReadIndex = coreEndReadIndex - readContext.rightCoreLength();

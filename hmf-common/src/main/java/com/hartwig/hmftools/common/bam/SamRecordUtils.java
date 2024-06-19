@@ -44,6 +44,7 @@ public final class SamRecordUtils
     public static final String NO_CIGAR = "*";
     public static final int NO_CHROMOSOME_INDEX = -1;
     public static final int NO_POSITION = 0;
+    public static final int INVALID_READ_INDEX = -1;
 
     private static final int PHRED_OFFSET = 33;
 
