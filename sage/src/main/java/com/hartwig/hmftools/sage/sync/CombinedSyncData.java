@@ -283,8 +283,6 @@ public class CombinedSyncData
         final byte[] secondBases = second.getReadBases();
         final int secondLength = second.getReadLength();
 
-        // int baseMismatches = 0;
-
         CigarState combinedCigar = new CigarState(mCombinedCigar);
         int currentPosition = mCombinedEffectiveStart;
 
@@ -305,11 +303,6 @@ public class CombinedSyncData
                     }
                     else
                     {
-                        // no base-mismatch logic applied anymore, instead allow qual calc model to handle differences
-                        // ++baseMismatches;
-                        // if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
-                        //    return false;
-
                         byte[] baseAndQual = getCombinedBaseAndQual(
                                 firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
                                 secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
