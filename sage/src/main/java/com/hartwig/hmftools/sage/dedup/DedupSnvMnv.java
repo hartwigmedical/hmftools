@@ -50,7 +50,7 @@ public final class DedupSnvMnv
                 ++nextIndex;
             }
 
-            index = nextIndex;
+            ++index;
         }
     }
 
