@@ -48,7 +48,12 @@ if('PatientId' %in% colnames(sampleSummary))
     variantImpliedTFs = variantImpliedTFs %>% filter(PatientId==patientId)
 }
 
-clonalMethod=sampleSummary$ClonalMethod
+clonalMethod = 'NONE'
+
+if(nrow(sampleSummary) == 1)
+{
+    clonalMethod=sampleSummary$ClonalMethod
+}
 
 format_purity<-function(purity)
 {
@@ -65,7 +70,7 @@ if(nrow(sampleSummary) == 1 & nrow(variantImpliedTFs) > 0 & clonalMethod != 'NON
     # filtering and plotting threshold
     minVariantCount = 3
 
-    rawSomaticPurity = sampleSummary$RawSomaticPurity
+    rawSomaticPurity = sampleSummary$RawSNVPurity
     maxImpliedTF = max(variantImpliedTFs$ImpliedTF)
     impliedTfBucket = pmin(0.01,maxImpliedTF/100)
 

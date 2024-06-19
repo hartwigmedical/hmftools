@@ -112,6 +112,8 @@ public class PurityEstimator
 
         if(requirePlots)
         {
+            CT_LOGGER.debug("generating plots");
+
             if(plotTasks.size() > 1)
             {
                 final List<Callable> callableList = plotTasks.stream().collect(Collectors.toList());

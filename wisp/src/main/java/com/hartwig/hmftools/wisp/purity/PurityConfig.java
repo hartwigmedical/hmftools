@@ -197,7 +197,10 @@ public class PurityConfig
         return (useDual ? NoiseReadsPerMillionDualStrand : NoiseReadsPerMillion) / 1_000_000d;
     }
 
-    public boolean writePurityMethodData(final PurityMethod method) { return WriteTypes.contains(method) || WriteAllSummaryMethods; }
+    public boolean writePurityMethodData(final PurityMethod method)
+    {
+        return PurityMethods.contains(method) || WriteAllSummaryMethods;
+    }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {

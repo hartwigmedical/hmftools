@@ -65,9 +65,6 @@ public class ResultsWriter
 
         if(config.multipleSamples())
             sj.add("SampleId");
-
-        if(config.hasBatchControls())
-            sj.add("BatchControl");
     }
 
     public static void addCommonFields(final StringJoiner sj, final PurityConfig config, final SampleData sampleData, final String sampleId)
@@ -77,9 +74,6 @@ public class ResultsWriter
 
         if(config.multipleSamples())
             sj.add(sampleId);
-
-        if(config.hasBatchControls())
-            sj.add(String.valueOf(sampleData.isBatchControl()));
     }
 
     private BufferedWriter initialiseWriter()
