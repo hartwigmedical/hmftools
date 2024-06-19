@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -184,7 +185,6 @@ public class BaseBuilder
             return new byte[] { firstBaseAndQual[0], qual };
         }
 
-        // logDualStrandWithMismatch(reads);
         mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
 
         byte refBase = mRefGenome.getBaseString(chromosome, position, position).getBytes()[0];
@@ -306,6 +306,20 @@ public class BaseBuilder
             }
         }
 
+        // collect base quals matching the selected base to find the median
+        List<Integer> selectBaseQuals = Lists.newArrayList();
+
+        for(int i = 0; i < locationBases.length; ++i)
+        {
+            if(locationBases[i] == maxBase)
+                selectBaseQuals.add((int)locationQuals[i]);
+        }
+
+        Collections.sort(selectBaseQuals);
+
+        int medianBaseQualIndex = selectBaseQuals.size() / 2;
+        int medianBaseQual = selectBaseQuals.get(medianBaseQualIndex);
+
         int differingQual = 0;
 
         for(int i = 0; i < distinctBases.size(); ++i)
@@ -314,7 +328,7 @@ public class BaseBuilder
                 differingQual += qualTotals.get(i);
         }
 
-        double calcQual = (double)maxQual * max(BASE_QUAL_MINIMUM, maxQualTotal - differingQual) / maxQualTotal;
+        double calcQual = (double)medianBaseQual * max(BASE_QUAL_MINIMUM, maxQualTotal - differingQual) / maxQualTotal;
 
         return new byte[] { maxBase, (byte)round(calcQual) };
     }
