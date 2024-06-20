@@ -6,9 +6,11 @@ import static com.hartwig.hmftools.compar.common.Category.CUPPA;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -17,16 +19,15 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class CuppaData implements ComparableItem
 {
-    public final ClassifierData ClassifierResult;
-    private final String mKey;
+    public final CuppaPredictionEntry PredictionEntry;
 
-    protected static final String FLD_TOP_CANCER_TYPE = "TopCancerType";
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
+    protected static final String FLD_CLASSIFIER_NAME = "classifier_name";
+    protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
+    protected static final String FLD_PROBABILITY = "probability";
 
-    public CuppaData(final ClassifierData result)
+    public CuppaData(final CuppaPredictionEntry predictionEntry)
     {
-        ClassifierResult = result;
-        mKey = result.DataType;
+        PredictionEntry = predictionEntry;
     }
 
     @Override
@@ -35,15 +36,16 @@ public class CuppaData implements ComparableItem
     @Override
     public String key()
     {
-        return mKey;
+        return "";
     }
 
     @Override
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("%s", ClassifierResult.TopRefCancerType));
-        values.add(format("%.3f", ClassifierResult.TopRefCancerValue));
+        values.add(format("%s", PredictionEntry.CancerType));
+        values.add(format("%.3f", PredictionEntry.DataValue));
+        values.add(format("%s", PredictionEntry.ClassifierName));
         return values;
     }
 
@@ -53,8 +55,9 @@ public class CuppaData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final CuppaData otherCuppaData = (CuppaData)other;
-        return otherCuppaData.ClassifierResult.DataType.equals(ClassifierResult.DataType);
+        final CuppaData otherCuppaData = (CuppaData) other;
+        return otherCuppaData.PredictionEntry.DataType.equals(PredictionEntry.DataType) &
+                otherCuppaData.PredictionEntry.ClassifierName.equals(PredictionEntry.ClassifierName);
     }
 
     @Override
@@ -64,10 +67,9 @@ public class CuppaData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(
-                diffs, FLD_TOP_CANCER_TYPE, ClassifierResult.TopRefCancerType, otherCuppaData.ClassifierResult.TopRefCancerType);
-
-        checkDiff(diffs, FLD_LIKELIHOOD, ClassifierResult.TopRefCancerValue, otherCuppaData.ClassifierResult.TopRefCancerValue, thresholds);
+        checkDiff(diffs, FLD_TOP_CANCER_TYPE, PredictionEntry.CancerType, otherCuppaData.PredictionEntry.CancerType);
+        checkDiff(diffs, FLD_PROBABILITY, PredictionEntry.DataValue, otherCuppaData.PredictionEntry.DataValue, thresholds);
+        checkDiff(diffs, FLD_CLASSIFIER_NAME, PredictionEntry.ClassifierName.toString(), otherCuppaData.PredictionEntry.ClassifierName.toString());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
@@ -75,6 +77,6 @@ public class CuppaData implements ComparableItem
     public String toString()
     {
         return format("type(%s) top(cancer=%s value=%.3f)",
-            ClassifierResult.DataType, ClassifierResult.TopRefCancerType, ClassifierResult.TopRefCancerValue);
+            PredictionEntry.DataType, PredictionEntry.CancerType, PredictionEntry.DataValue);
     }
 }
