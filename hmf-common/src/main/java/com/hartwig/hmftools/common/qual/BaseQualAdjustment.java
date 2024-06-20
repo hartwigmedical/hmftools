@@ -37,7 +37,7 @@ public class BaseQualAdjustment
 
     public static double phredQualToProbability(byte quality)
     {
-        return pow(10, -quality/10);
+        return pow(10, -quality / 10.0);
     }
 
     public static byte probabilityToPhredQualInt(double probability)
