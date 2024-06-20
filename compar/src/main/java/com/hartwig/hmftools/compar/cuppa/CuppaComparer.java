@@ -1,14 +1,19 @@
 package com.hartwig.hmftools.compar.cuppa;
 
-import static com.hartwig.hmftools.compar.common.Category.CUPPA;
+import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.common.Category.CUPPA;
+import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_CLASSIFIER_NAME;
+import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
 import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
+import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -34,7 +39,7 @@ public class CuppaComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_LIKELIHOOD, 0.1, 0);
+        thresholds.addFieldThreshold(FLD_PROBABILITY, 0.1, 0);
     }
 
     @Override
@@ -46,7 +51,7 @@ public class CuppaComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_LIKELIHOOD);
+        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY, FLD_CLASSIFIER_NAME);
     }
 
     @Override
@@ -59,25 +64,20 @@ public class CuppaComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = Lists.newArrayList();
+        final List<ComparableItem> comparableItems = new ArrayList<>();
 
-        /* TODO - use new file and types
         try
         {
-            List<CuppaDataFile> cuppaDataList = CuppaDataFile.read(CuppaDataFile.generateFilename(fileSources.Cuppa, sampleId));
+            String visDataPath = CuppaPredictions.generateVisDataTsvFilename(fileSources.Cuppa, sampleId);
 
-            for(CuppaDataFile cuppaData : cuppaDataList)
+            CuppaPredictions topProbabilities = CuppaPredictions
+                    .fromTsv(visDataPath)
+                    .subsetByDataType(PROB)
+                    .getTopPredictions(1);
+
+            for(CuppaPredictionEntry predictionEntry : topProbabilities.PredictionEntries)
             {
-                if(cuppaData.Result != ResultType.CLASSIFIER || cuppaData.DataType.equals(GENDER.toString()))
-                    continue;
-
-                if(cuppaData.CancerTypeValues.isEmpty())
-                    continue;
-
-                List<String> rankedCancerTypes = getRankedCancerTypes(cuppaData.CancerTypeValues);
-                String topRefCancerType = rankedCancerTypes.get(0);
-                double topCancerValue = cuppaData.CancerTypeValues.get(topRefCancerType);
-                comparableItems.add(new CuppaData(new ClassifierData(cuppaData.DataType, topRefCancerType, topCancerValue)));
+                comparableItems.add(new CuppaData(predictionEntry));
             }
         }
         catch(IOException e)
@@ -85,7 +85,6 @@ public class CuppaComparer implements ItemComparer
             CMP_LOGGER.warn("sample({}) failed to load Cuppa data: {}", sampleId, e.toString());
             return null;
         }
-        */
 
         return comparableItems;
     }
