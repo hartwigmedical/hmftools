@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.write;
+package com.hartwig.hmftools.redux.utils;
 
 import static java.lang.String.format;
 

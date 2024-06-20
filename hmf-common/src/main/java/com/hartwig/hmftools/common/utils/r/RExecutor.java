@@ -72,7 +72,7 @@ public final class RExecutor
         if(result != 0)
         {
             System.err.print(new String(process.getErrorStream().readAllBytes()));
-            LOGGER.fatal("Error executing R script.");
+            LOGGER.fatal("error executing R script");
         }
 
         return result;

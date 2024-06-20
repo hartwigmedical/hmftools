@@ -62,5 +62,4 @@ public final class UmiUtils
                 return 0;
         }
     }
-
 }

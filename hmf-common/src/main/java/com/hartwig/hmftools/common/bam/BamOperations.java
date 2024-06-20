@@ -117,14 +117,18 @@ public final class BamOperations
 
         try
         {
-            int result = new ProcessBuilder(command)
+            Process process = new ProcessBuilder(command)
                     .redirectOutput(new File(redirectOutputFile))
                     .redirectError(new File(redirectErrFile))
-                    .start().waitFor();
+                    .start();
+
+            int result = process.waitFor();
 
             if(result != 0)
             {
                 SAM_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
+                logErrorFile(redirectErrFile);
+                // System.err.print(new String(process.getErrorStream().readAllBytes()));
                 return false;
             }
 
@@ -144,5 +148,22 @@ public final class BamOperations
     private static String commandToStr(final String[] command)
     {
         return Arrays.stream(command).collect(Collectors.joining(" "));
+    }
+
+    private static void logErrorFile(final String errorFile)
+    {
+        try
+        {
+            SAM_LOGGER.error("error file({}) contents", errorFile);
+
+            for(String line : Files.readAllLines(Paths.get(errorFile)))
+            {
+                SAM_LOGGER.error("{}", line);
+            }
+        }
+        catch(Exception e)
+        {
+            SAM_LOGGER.error("cannot read  error file: {}", e.toString());
+        }
     }
 }

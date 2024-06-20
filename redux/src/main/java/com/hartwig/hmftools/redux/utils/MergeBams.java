@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.redux.write.BamMerger;
 
 import org.jetbrains.annotations.NotNull;
 
