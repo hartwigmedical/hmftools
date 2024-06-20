@@ -245,7 +245,7 @@ public class BaseQualityRecalibration
             }
             else
             {
-                recalibratedQual = calcRecalibratedQual(key, 1, refCountMap, triNucMap);
+                recalibratedQual = calcRecalibratedQual(key, entry.getValue(), refCountMap, triNucMap);
             }
 
             result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));

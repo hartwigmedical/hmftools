@@ -202,7 +202,7 @@ public class BaseQualityRecalibrationTest
         assertEquals(16, bqrRecords.size());
 
         BqrRecord rec1 = bqrRecords.stream().filter(x -> x.Key.equals(cAltKey)).findFirst().orElse(null);
-        assertEquals(35.2, rec1.RecalibratedQuality, 0.1);
+        assertEquals(25.2, rec1.RecalibratedQuality, 0.1);
 
         BqrKey aAltKey = new BqrKey(aBase, gBase, triNucContext1, qualHigh, BqrReadType.NONE);
         BqrRecord rec2 = bqrRecords.stream().filter(x -> x.Key.equals(aAltKey)).findFirst().orElse(null);
