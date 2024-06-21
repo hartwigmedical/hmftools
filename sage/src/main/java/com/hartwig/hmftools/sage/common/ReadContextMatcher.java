@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_MNV;
 
 import java.util.List;
 import java.util.Set;
@@ -199,7 +200,9 @@ public class ReadContextMatcher
         ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
 
         if(coreMatch == NONE)
-            return NONE;
+        {
+            return isPartialMnvMatch(readBases, readVarIndex) ? PARTIAL_MNV : NONE;
+        }
 
         BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readVarIndex, true);
         BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readVarIndex, false);
@@ -290,6 +293,24 @@ public class ReadContextMatcher
                 return NONE;
             }
         }
+    }
+
+    private boolean isPartialMnvMatch(final byte[] readBases, final int readVarIndex)
+    {
+        if(!mContext.variant().isMNV())
+            return false;
+
+        for(int i = 0 ; i < mContext.variant().refLength(); ++i)
+        {
+            byte refBase = (byte)mContext.variant().ref().charAt(i);
+            byte altBase = (byte)mContext.variant().alt().charAt(i);
+            byte readBase = readBases[readVarIndex + i];
+
+            if(refBase != altBase && readBase == altBase)
+                return true;
+        }
+
+        return false;
     }
 
     private enum BaseMatchType

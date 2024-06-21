@@ -94,6 +94,7 @@ public class ReadContextCounter
     // counts and quals by support type
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
+    private int mPartialMnvCount; // count of SNV matches within an MNV where Core match failed
 
     private final StrandBiasData mAltFragmentStrandBias;
     private final StrandBiasData mRefFragmentStrandBias;
@@ -142,6 +143,7 @@ public class ReadContextCounter
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
+        mPartialMnvCount = 0;
 
         mJitterData = new JitterData();
 
@@ -183,6 +185,7 @@ public class ReadContextCounter
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
+    public int partialMnvSupport() { return mPartialMnvCount; }
 
     public int depth() { return mCounts.Total; }
 
@@ -457,6 +460,10 @@ public class ReadContextCounter
             mRefReadStrandBias.registerRead(record, fragmentData, this);
 
             mReadEdgeDistance.update(record, fragmentData, false);
+        }
+        else if(matchType == ReadContextMatch.PARTIAL_MNV)
+        {
+            ++mPartialMnvCount;
         }
 
         registerReadSupport(record, readSupport, modifiedQuality);

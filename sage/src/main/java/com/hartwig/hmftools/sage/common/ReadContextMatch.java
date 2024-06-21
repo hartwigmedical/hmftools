@@ -9,7 +9,8 @@ public enum ReadContextMatch
     PARTIAL_CORE(false, true, true), // matches part of core and all of one flank
     FULL(false, true, true), // matches core and both flanks entirely
     REALIGNED(false, true, true),
-    REF(true, false, false); // matches the ref at least for the core
+    REF(true, false, false), // matches the ref at least for the core
+    PARTIAL_MNV(false, false, false); // matches one SNV base only in an MNV
 
     public final boolean SupportsAlt;
     public final boolean SupportsRef;
