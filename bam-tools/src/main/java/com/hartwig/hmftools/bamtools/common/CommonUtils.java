@@ -30,9 +30,6 @@ public final class CommonUtils
     public static final String REGIONS_FILE = "regions_file";
     public static final String READ_LENGTH = "read_length";
 
-    public static final String BAM_FILE_TYPE = "bam";
-    public static final String FLAGSTAT_FILE_TYPE = "flagstat";
-
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
     public static boolean loadSpecificRegionsConfig(

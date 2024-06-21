@@ -15,6 +15,7 @@ public final class BamOperations
 {
     private static final String INDEX_COMMAND = "index";
     private static final String MERGE_COMMAND = "merge";
+    private static final String CONCATENATE_COMMAND = "cat";
     private static final String SORT_COMMAND = "sort";
 
     public static boolean mergeBams(
@@ -29,6 +30,41 @@ public final class BamOperations
 
         addThreadsArg(toolName, commandArgs, threads);
         commandArgs.add(outputBam);
+
+        for(String threadBam : inputBams)
+        {
+            commandArgs.add(threadBam);
+        }
+
+        if(!executeCommand(commandArgs, outputBam))
+            return false;
+
+        SAM_LOGGER.debug("merge complete");
+        return true;
+    }
+
+    public static boolean concatenateBams(
+            final BamToolName toolName, final String toolPath, final String outputBam, final List<String> inputBams, final int threads)
+    {
+        if(toolName != BamToolName.SAMTOOLS)
+        {
+            SAM_LOGGER.error("{} concatenation no supported", toolName);
+            return false;
+        }
+
+        SAM_LOGGER.debug("concatenating {} bams", inputBams.size());
+
+        List<String> commandArgs = Lists.newArrayList();
+
+        commandArgs.add(toolPath);
+        commandArgs.add(CONCATENATE_COMMAND);
+
+        addThreadsArg(toolName, commandArgs, threads);
+
+        commandArgs.add("-o");
+        commandArgs.add(outputBam);
+
+        commandArgs.add("--no-PG");
 
         for(String threadBam : inputBams)
         {
