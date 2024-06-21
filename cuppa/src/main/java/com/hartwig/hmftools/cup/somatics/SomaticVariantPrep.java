@@ -80,12 +80,12 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void getGenomicPositionCounts()
     {
-        // could add bucket size and max counts as config
         PositionFrequencies posFrequencies = new PositionFrequencies(
                 mConfig.RefGenVersion,
                 GEN_POS_BUCKET_SIZE,
                 PositionFrequencies.buildStandardChromosomeLengths(mConfig.RefGenVersion),
-                false);
+                false
+        );
 
         // build genomic position counts
         AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
@@ -93,9 +93,19 @@ public class SomaticVariantPrep implements CategoryPrep
 
         final int[] genPosCount = posFrequencies.getCounts();
 
+        String chromosomeY = mConfig.RefGenVersion.versionedChromosome("chrY");
+
         for(int b = 0; b < posFrequencies.getBucketCount(); ++b)
         {
             final String chromosome = PositionFrequencies.getChromosomeFromIndex(mConfig.RefGenVersion, posFrequencies.chromosomePosIndex(), b);
+
+            if(chromosome.equals(chromosomeY))
+            {
+                // gen_pos frequencies (i.e. SNV counts) of chromosome Y correlate directly with sex, but this is already covered by the
+                // 'trait.is_male' feature. Ignore chromosome Y to prevent duplicating features.
+                continue;
+            }
+
             int position = PositionFrequencies.getPositionFromIndex(posFrequencies.chromosomePosIndex(), chromosome, b, posFrequencies.getBucketSize());
             String keyName = format("%s_%d", chromosome, position);
 
