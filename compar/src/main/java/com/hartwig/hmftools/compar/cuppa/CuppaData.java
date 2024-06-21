@@ -36,7 +36,7 @@ public class CuppaData implements ComparableItem
     @Override
     public String key()
     {
-        return "";
+        return String.format("%s;%s", PredictionEntry.DataType, PredictionEntry.ClassifierName);
     }
 
     @Override
@@ -45,7 +45,6 @@ public class CuppaData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(format("%s", PredictionEntry.CancerType));
         values.add(format("%.3f", PredictionEntry.DataValue));
-        values.add(format("%s", PredictionEntry.ClassifierName));
         return values;
     }
 
@@ -56,6 +55,9 @@ public class CuppaData implements ComparableItem
     public boolean matches(final ComparableItem other)
     {
         final CuppaData otherCuppaData = (CuppaData) other;
+
+        // Match by DataType in case we want to compare other DataTypes (e.g. 'feat_contrib' and 'sig_quantile') in the future
+        // Currently only support 'prob' DataType
         return otherCuppaData.PredictionEntry.DataType.equals(PredictionEntry.DataType) &
                 otherCuppaData.PredictionEntry.ClassifierName.equals(PredictionEntry.ClassifierName);
     }
@@ -69,7 +71,6 @@ public class CuppaData implements ComparableItem
 
         checkDiff(diffs, FLD_TOP_CANCER_TYPE, PredictionEntry.CancerType, otherCuppaData.PredictionEntry.CancerType);
         checkDiff(diffs, FLD_PROBABILITY, PredictionEntry.DataValue, otherCuppaData.PredictionEntry.DataValue, thresholds);
-        checkDiff(diffs, FLD_CLASSIFIER_NAME, PredictionEntry.ClassifierName.toString(), otherCuppaData.PredictionEntry.ClassifierName.toString());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
