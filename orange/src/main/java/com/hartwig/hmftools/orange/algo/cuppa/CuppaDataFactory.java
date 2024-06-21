@@ -29,7 +29,7 @@ public final class CuppaDataFactory
     @NotNull
     private static CuppaData createFromPredictions(@NotNull CuppaPredictions cuppaPredictions) throws Exception
     {
-        List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
+        List<CuppaPrediction> predictions = convertCuppaPredictions(cuppaPredictions);
 
         if(predictions.isEmpty())
         {
@@ -53,13 +53,11 @@ public final class CuppaDataFactory
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractSortedProbabilities(@NotNull CuppaPredictions cuppaPredictions)
+    private static List<CuppaPrediction> convertCuppaPredictions(@NotNull CuppaPredictions cuppaPredictions)
     {
-        CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
-                .subsetByDataType(DataType.PROB)
-                .sortByRank();
+        CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions.subsetByDataType(DataType.PROB).sortByRank();
 
-        List<CuppaPrediction> cuppaPredictionsOrangeFormat = new ArrayList<>();
+        List<CuppaPrediction> convertedCuppaPredictions = new ArrayList<>();
         for(String cancerType : probabilitiesAllClassifiers.CancerTypes)
         {
             CuppaPredictions probabilitiesOneCancerType = probabilitiesAllClassifiers.subsetByCancerType(cancerType);
@@ -67,13 +65,11 @@ public final class CuppaDataFactory
             Map<ClassifierName, Double> probabilitiesByClassifier = new HashMap<>();
             for(int i = 0; i < probabilitiesOneCancerType.size(); i++)
             {
-                probabilitiesByClassifier.put(
-                        probabilitiesOneCancerType.get(i).ClassifierName,
-                        probabilitiesOneCancerType.get(i).DataValue
-                );
+                probabilitiesByClassifier.put(probabilitiesOneCancerType.get(i).ClassifierName,
+                        probabilitiesOneCancerType.get(i).DataValue);
             }
 
-            CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
+            CuppaPrediction convertedPrediction = ImmutableCuppaPrediction.builder()
                     .cancerType(cancerType)
                     .likelihood(probabilitiesByClassifier.get(probabilitiesAllClassifiers.MainCombinedClassifierName))
                     .genomicPositionClassifier(probabilitiesByClassifier.get(ClassifierName.GEN_POS))
@@ -83,9 +79,13 @@ public final class CuppaDataFactory
                     .altSjCohortClassifier(probabilitiesByClassifier.get(ClassifierName.ALT_SJ))
                     .build();
 
-            cuppaPredictionsOrangeFormat.add(prediction);
+            // If a classifier has no data for a specific cancer type we should remove it completely, see ACTIN-1057
+            if(!Double.isNaN(convertedPrediction.likelihood()))
+            {
+                convertedCuppaPredictions.add(convertedPrediction);
+            }
         }
-        return cuppaPredictionsOrangeFormat;
+        return convertedCuppaPredictions;
     }
 
     @VisibleForTesting
