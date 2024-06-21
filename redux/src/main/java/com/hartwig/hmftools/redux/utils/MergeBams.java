@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.redux.utils;
 
+import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -10,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -30,7 +34,10 @@ public class MergeBams
 
         String refGenome = configBuilder.getValue(REF_GENOME);
 
-        mBamMerger = new BamMerger(outputBam, inputBams, refGenome);
+        String bamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+
+        int threads = parseThreads(configBuilder);
+        mBamMerger = new BamMerger(outputBam, inputBams, refGenome, bamToolPath, threads);
      }
 
     public void run()
@@ -52,6 +59,8 @@ public class MergeBams
         configBuilder.addConfigItem(OUTPUT_BAM, true, "Output BAM filename");
 
         RefGenomeSource.addRefGenomeFile(configBuilder, true);
+        BamToolName.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
