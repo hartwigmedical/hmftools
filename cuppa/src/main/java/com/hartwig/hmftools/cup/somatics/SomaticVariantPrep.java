@@ -2,26 +2,22 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.buildStandardChromosomeLengths;
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
-import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
-import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
@@ -39,31 +35,12 @@ public class SomaticVariantPrep implements CategoryPrep
     private final List<SomaticVariant> mVariants = new ArrayList<>();
     private final List<DataItem> mDataItems = new ArrayList<>();
 
-    private final Map<String,Integer> mTriNucBucketNameMap;
-    private final List<String> mSnv96BucketNames;
     private double[] mTriNucCounts;
     private int mTotalSnvCount = 0;
-
-    private final SomaticSigs mSomaticSigs;
-
-    private final PositionFrequencies mPosFrequencies;
 
     public SomaticVariantPrep(final PrepConfig config)
     {
         mConfig = config;
-
-        mTriNucBucketNameMap = Maps.newHashMap();
-        mSnv96BucketNames = Lists.newArrayList();
-        populateBucketMap(mTriNucBucketNameMap, mSnv96BucketNames);
-
-        mSomaticSigs = new SomaticSigs(null);
-
-        // could add bucket size and max counts as config
-        mPosFrequencies = new PositionFrequencies(
-                mConfig.RefGenVersion,
-                GEN_POS_BUCKET_SIZE,
-                buildStandardChromosomeLengths(mConfig.RefGenVersion),
-                false);
     }
 
     @Override
@@ -78,11 +55,14 @@ public class SomaticVariantPrep implements CategoryPrep
     private void getTrinucleotideCounts()
     {
         // build the 96 trinucleotide context counts
-        mTriNucCounts = extractTrinucleotideCounts(mVariants, mTriNucBucketNameMap);
+        Map<String,Integer> triNucBucketNameMap = new HashMap<>();
+        List<String> snv96BucketNames = new ArrayList<>();
+        SnvSigUtils.populateBucketMap(triNucBucketNameMap, snv96BucketNames);
+        mTriNucCounts = TrinucleotideCounts.extractTrinucleotideCounts(mVariants, triNucBucketNameMap);
 
-        for(int b = 0; b < mSnv96BucketNames.size(); ++b)
+        for(int b = 0; b < snv96BucketNames.size(); ++b)
         {
-            String bucketName = mSnv96BucketNames.get(b);
+            String bucketName = snv96BucketNames.get(b);
             int count = (int) mTriNucCounts[b];
 
             mTotalSnvCount += count;
@@ -100,16 +80,23 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void getGenomicPositionCounts()
     {
+        // could add bucket size and max counts as config
+        PositionFrequencies posFrequencies = new PositionFrequencies(
+                mConfig.RefGenVersion,
+                GEN_POS_BUCKET_SIZE,
+                PositionFrequencies.buildStandardChromosomeLengths(mConfig.RefGenVersion),
+                false);
+
         // build genomic position counts
         AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
-        extractPositionFrequencyCounts(mVariants, mPosFrequencies, aidApobecStatus);
+        GenomicPositions.extractPositionFrequencyCounts(mVariants, posFrequencies, aidApobecStatus);
 
-        final int[] genPosCount = mPosFrequencies.getCounts();
+        final int[] genPosCount = posFrequencies.getCounts();
 
-        for(int b = 0; b < mPosFrequencies.getBucketCount(); ++b)
+        for(int b = 0; b < posFrequencies.getBucketCount(); ++b)
         {
-            final String chromosome = getChromosomeFromIndex(mConfig.RefGenVersion, mPosFrequencies.chromosomePosIndex(), b);
-            int position = getPositionFromIndex(mPosFrequencies.chromosomePosIndex(), chromosome, b, mPosFrequencies.getBucketSize());
+            final String chromosome = PositionFrequencies.getChromosomeFromIndex(mConfig.RefGenVersion, posFrequencies.chromosomePosIndex(), b);
+            int position = PositionFrequencies.getPositionFromIndex(posFrequencies.chromosomePosIndex(), chromosome, b, posFrequencies.getBucketSize());
             String keyName = format("%s_%d", chromosome, position);
 
             DataItem dataItem = new DataItem(DNA, ItemType.GEN_POS, keyName, genPosCount[b]);
@@ -119,17 +106,19 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void getSignatureAllocations()
     {
-        final double[] sigAllocations = mSomaticSigs.fitSampleCounts(mTriNucCounts);
+        SomaticSigs somaticSigs = new SomaticSigs(null);
+
+        final double[] sigAllocations = somaticSigs.fitSampleCounts(mTriNucCounts);
 
         Map<String,Double> reportedAllocations = Maps.newHashMap();
 
         for(int i = 0; i < sigAllocations.length; ++i)
         {
-            final String sigName = mSomaticSigs.getSigName(i);
+            final String sigName = somaticSigs.getSigName(i);
             reportedAllocations.put(sigName, sigAllocations[i]);
         }
 
-        for(Map.Entry<String,String> entry :SomaticSigs.REPORTABLE_SIGS.entrySet())
+        for(Map.Entry<String,String> entry : SomaticSigs.REPORTABLE_SIGS.entrySet())
         {
             String sigName = entry.getKey();
             double sigAllocation = reportedAllocations.get(sigName);
