@@ -42,12 +42,15 @@ public class PaveConfig
     public final String OutputVcfFile;
 
     public final boolean WriteTranscriptFile;
-    public final boolean WriteDiffs;
     public final boolean OnlyCanonical;
     public final boolean ReadPassOnly;
     public final boolean WritePassOnly;
+
+
+    // PON related threholds
+    // public final double mPonFilterThreshold;
+
     public final boolean SetReportable;
-    public final boolean ForcePathogenicPass;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int Threads;
 
@@ -62,10 +65,8 @@ public class PaveConfig
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String READ_PASS_ONLY = "read_pass_only";
     private static final String WRITE_PASS_ONLY = "write_pass_only";
-    private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String SET_REPORTABLE = "set_reportable";
-    private static final String FORCE_PATHOGENIC_PASS = "force_pathogenic_pass";
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
 
@@ -79,12 +80,10 @@ public class PaveConfig
         OutputVcfFile = configBuilder.getValue(OUTPUT_VCF_FILE);
 
         WriteTranscriptFile = SampleId != null && configBuilder.hasFlag(WRITE_TRANSCRIPT_DATA);
-        WriteDiffs = configBuilder.hasFlag(WRITE_DIFFS);
         OnlyCanonical = configBuilder.hasFlag(ONLY_CANONCIAL);
         ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
-        ForcePathogenicPass = configBuilder.hasFlag(FORCE_PATHOGENIC_PASS);
         Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
@@ -120,7 +119,7 @@ public class PaveConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(VCF_FILE, true, "VCF input file");
         configBuilder.addConfigItem(
                 OUTPUT_VCF_FILE, false, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
@@ -132,13 +131,11 @@ public class PaveConfig
         configBuilder.addPath(PON_ARTEFACTS_FILE, false, "PON artefacts to filter");
         configBuilder.addConfigItem(PON_FILTERS, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
-        configBuilder.addFlag(WRITE_DIFFS, "Only write transcript diffs to CSV file");
         configBuilder.addFlag(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
         configBuilder.addFlag(ONLY_CANONCIAL, "Only check canonical transcripts");
         configBuilder.addFlag(READ_PASS_ONLY, "Filter incoming variants to PASS only");
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
-        configBuilder.addFlag(FORCE_PATHOGENIC_PASS, "Disable PON-filtering for variants pathogenic or likely_pathogenic in ClinVar. Does nothing when no ClinVar VCF is provided.");
 
         GnomadAnnotation.addConfig(configBuilder);
         Mappability.addConfig(configBuilder);

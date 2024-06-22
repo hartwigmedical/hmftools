@@ -132,5 +132,4 @@ public final class ImpactTestUtils
 
         return base;
     }
-
 }

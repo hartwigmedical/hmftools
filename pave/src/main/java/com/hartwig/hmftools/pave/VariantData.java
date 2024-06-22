@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
@@ -11,6 +12,8 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
+
+import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,8 @@ import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.apache.logging.log4j.util.Strings;
 
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantData
@@ -163,7 +168,6 @@ public class VariantData
         String ref = variantContext.getReference().getBaseString();
 
         // only support the first of multiple alts (as can be the case for Strelka)
-        // String alt = variantContext.getAlternateAlleles().get(0)stream().map(Allele::toString).collect(Collectors.joining(","));
         String alt = !variantContext.getAlternateAlleles().isEmpty() ? variantContext.getAlternateAlleles().get(0).toString() : ref;
 
         if(alt.equals("*") || alt.equals("N")) // unhandled for now
@@ -325,11 +329,18 @@ public class VariantData
         return VariantTier.fromContext(mVariantContext);
     }
 
+    public double sampleVaf(final String sampleId)
+    {
+        Genotype sampleGenotype = mVariantContext.getGenotype(sampleId);
+        return sampleGenotype != null ? getGenotypeAttributeAsDouble(sampleGenotype, ALLELE_FREQUENCY_KEY, 0) : 0;
+    }
+
     public Set<String> filters() { return mFilters; }
     public void addFilter(final String filter) { mFilters.add(filter); }
 
     public int ponSampleCount() { return mPonSampleCount; }
     public int ponMaxReadCount() { return mPonMaxReadCount; }
+
     public void setPonFrequency(int sampleCount, int maxReadCount)
     {
         mPonSampleCount = sampleCount;
@@ -406,5 +417,4 @@ public class VariantData
 
         return sj.toString();
     }
-
 }

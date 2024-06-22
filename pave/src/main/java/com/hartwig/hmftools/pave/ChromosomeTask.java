@@ -1,27 +1,43 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_READ_COUNT_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
+import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.PON_GNOMAD_FILTER;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_FILTER;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.VcfWriter.buildVariant;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 
+import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
 import com.hartwig.hmftools.pave.annotation.GnomadChrCache;
 import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.PonChrCache;
+import com.hartwig.hmftools.pave.annotation.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.impact.VariantImpactBuilder;
@@ -199,16 +215,84 @@ public class ChromosomeTask implements Callable
 
         mReferenceData.BlacklistedVariants.annotateVariant(variant);
 
-        boolean forcePass = mConfig.ForcePathogenicPass && PathogenicSummaryFactory.fromContext(variant.context()).Status.isPathogenic();
-
         if(mGnomadCache != null)
-            mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache, forcePass);
+            mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache);
 
         if(mStandardPon != null)
-            mReferenceData.StandardPon.annotateVariant(variant, mStandardPon, forcePass);
+            mReferenceData.StandardPon.annotateVariant(variant, mStandardPon);
 
-        if(!forcePass && mArtefactsPon != null && mArtefactsPon.getPonData(variant) != null)
-            variant.addFilter(PON_ARTEFACT_FILTER);
+        applyFilters(variant);
     }
 
+    private void applyFilters(final VariantData variant)
+    {
+        applyFilters(variant, mConfig.SampleId, mReferenceData.StandardPon, mArtefactsPon);
+    }
+
+    @VisibleForTesting
+    public static void applyFilters(
+            final VariantData variant, final String sampleId, final PonAnnotation standardPon, final PonChrCache artefactsPon)
+    {
+        variant.filters().clear();
+
+        boolean isHotspot = variant.tier() == VariantTier.HOTSPOT;
+        boolean clinvarPathogenic = PathogenicSummaryFactory.fromContext(variant.context()).Status.isPathogenic();
+        boolean hotspotOrPathogenic = isHotspot || clinvarPathogenic;
+        int repeatCount = variant.repeatCount();
+
+        // the WGS PON
+        boolean ponFilter = true;
+
+        if(hotspotOrPathogenic)
+        {
+            if(belowPonThreshold(variant.ponSampleCount(), repeatCount))
+            {
+                ponFilter = false;
+            }
+            else
+            {
+                double variantVaf = variant.sampleVaf(sampleId);
+                int repeatBaseLength = variant.repeatSequence().length();
+                double vafLimit = max(PON_VAF_THRESHOLD, 0.01 * repeatBaseLength);
+
+                if(variant.ponMaxReadCount() < PON_READ_COUNT_THRESHOLD && variantVaf > vafLimit)
+                {
+                    ponFilter = false;
+                }
+            }
+        }
+        else
+        {
+            ponFilter = standardPon.filterOnTierCriteria(variant.tier(), variant.ponSampleCount(), variant.ponMaxReadCount());
+        }
+
+        if(ponFilter)
+            variant.addFilter(PON_FILTER);
+
+        if(artefactsPon != null)
+        {
+            PonVariantData artefactPonData = artefactsPon.getPonData(variant);
+
+            if(artefactPonData != null)
+            {
+                if(!hotspotOrPathogenic || !belowPonThreshold(artefactPonData.Samples, repeatCount))
+                {
+                    variant.addFilter(PON_ARTEFACT_FILTER);
+                }
+            }
+        }
+
+        Double gnmoadFrequency = variant.gnomadFrequency();
+        double gnomadThreshold = hotspotOrPathogenic ? GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD : GNMOAD_FILTER_THRESHOLD;
+
+        if(gnmoadFrequency != null && gnmoadFrequency > gnomadThreshold)
+        {
+            variant.addFilter(PON_GNOMAD_FILTER);
+        }
+    }
+
+    private static boolean belowPonThreshold(final int ponSampleCount, final int repeatCount)
+    {
+        return ponSampleCount < PON_SAMPLE_COUNT_THRESHOLD && repeatCount < PON_REPEAT_COUNT_THRESHOLD;
+    }
 }

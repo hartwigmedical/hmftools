@@ -1,9 +1,17 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_HOTSPOT_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_HOTSPOT_SAMPLE_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_OTHER_TIER_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_OTHER_TIER_SAMPLE_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_PANEL_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_PANEL_SAMPLE_COUNT;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,6 +64,11 @@ public class PonAnnotation extends AnnotationData implements Callable
         }
 
         mPonFilters = Maps.newHashMap();
+
+        // set defaults
+        mPonFilters.put(VariantTier.HOTSPOT, new PonFilters(PON_FILTER_HOTSPOT_SAMPLE_COUNT, PON_FILTER_HOTSPOT_READ_COUNT));
+        mPonFilters.put(VariantTier.PANEL, new PonFilters(PON_FILTER_PANEL_SAMPLE_COUNT, PON_FILTER_PANEL_READ_COUNT));
+        mPonFilters.put(VariantTier.UNKNOWN, new PonFilters(PON_FILTER_OTHER_TIER_SAMPLE_COUNT, PON_FILTER_OTHER_TIER_READ_COUNT));
     }
 
     @Override
@@ -71,6 +84,8 @@ public class PonAnnotation extends AnnotationData implements Callable
     {
         if(filtersConfig == null)
             return true;
+
+        mPonFilters.clear();
 
         String[] tierFilters = filtersConfig.split(ITEM_DELIM, -1);
 
@@ -132,26 +147,23 @@ public class PonAnnotation extends AnnotationData implements Callable
         return (long)0;
     }
 
-    public void annotateVariant(final VariantData variant, final PonChrCache chrCache, final boolean forcePass)
+    public void annotateVariant(final VariantData variant, final PonChrCache chrCache)
     {
         PonVariantData ponData = chrCache.getPonData(variant);
         if(ponData == null)
             return;
 
         variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads);
+    }
 
-        if(forcePass)
-            return;
-
-        VariantTier tier = variant.tier();
-
+    public boolean filterOnTierCriteria(final VariantTier tier, final int ponSampleCount, final int ponMaxSampleReads)
+    {
         PonFilters filters = mPonFilters.containsKey(tier) ? mPonFilters.get(tier) : mPonFilters.get(VariantTier.UNKNOWN);
 
         if(filters == null)
-            return;
+            return false;
 
-        if(ponData.Samples >= filters.RequiredSampleCount && ponData.MaxSampleReads >= filters.RequiredMaxReadCount)
-            variant.addFilter(PON_FILTER);
+        return ponSampleCount >= filters.SampleCount && ponMaxSampleReads >= filters.MaxReadCount;
     }
 
     public boolean hasEntry(final String chromosome, final int position, final String ref, final String alt)
@@ -293,13 +305,15 @@ public class PonAnnotation extends AnnotationData implements Callable
 
     private static class PonFilters
     {
-        public final int RequiredSampleCount;
-        public final int RequiredMaxReadCount;
+        public final int SampleCount;
+        public final int MaxReadCount;
 
-        public PonFilters(final int requiredSampleCount, final int requiredMaxReadCount)
+        public PonFilters(final int sampleCount, final int maxReadCount)
         {
-            RequiredSampleCount = requiredSampleCount;
-            RequiredMaxReadCount = requiredMaxReadCount;
+            SampleCount = sampleCount;
+            MaxReadCount = maxReadCount;
         }
+
+        public String toString() { return format("samples(%d) maxReads(%d)", SampleCount, MaxReadCount); }
     }
 }

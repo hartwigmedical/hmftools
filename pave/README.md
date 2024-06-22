@@ -77,6 +77,8 @@ pon_file | PON file to annotate variants (see file format below) | PON_COUNT, PO
 pon_filters | Apply PON filters (see details below) | Filter 'PON'
 mappability_bed | BED file with mappability values | MAPPABILITY=value
 clinvar_vcf | VCF from Clinvar database | Writes CLNSIG=significance and CLNSIGCONF=conflicting info
+gnomad_freq_file | CSV with Gnomad frequencies per variant
+gnomad_freq_dir | Path to Gnmoad frequency files per chromosome
 blacklist_bed | BED file with blacklist entries | BLACKLIST_BED
 blacklist_vcf | VCF file with blacklist entries | BLACKLIST_VCF
 

@@ -37,7 +37,6 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     private final Map<String,GnomadChrCache> mChrCacheMap;
     private final RefGenomeVersion mRefGenomeVersion;
     private final Map<String,String> mChromosomeFiles;
-    private final double mPonFilterThreshold;
     private boolean mHasValidData;
     private final boolean mEnabled;
     private final String mGnomadFilename;
@@ -48,8 +47,6 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
 
     public static final String PON_GNOMAD_FILTER = "PONGnomad";
-
-    private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
 
     public GnomadAnnotation(final ConfigBuilder configBuilder)
     {
@@ -77,8 +74,6 @@ public class GnomadAnnotation extends AnnotationData implements Callable
             mGnomadFilename = null;
             mEnabled = false;
         }
-
-        mPonFilterThreshold = configBuilder.getDecimal(GNOMAD_PON_FILTER);
     }
 
     @Override
@@ -90,22 +85,14 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     @Override
     public boolean hasValidData() { return mHasValidData; }
 
-    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache, final boolean forcePass)
+    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache)
     {
         Double gnomadFreq = chrCache.getFrequency(variant);
 
         if(gnomadFreq != null)
         {
             variant.setGnomadFrequency(gnomadFreq);
-
-            if(!forcePass && exceedsPonThreshold(gnomadFreq))
-                variant.addFilter(PON_GNOMAD_FILTER);
         }
-    }
-
-    public boolean exceedsPonThreshold(final Double frequency)
-    {
-        return frequency != null && mPonFilterThreshold >= 0 && frequency >= mPonFilterThreshold;
     }
 
     public synchronized GnomadChrCache getChromosomeCache(final String chromosome)
@@ -265,17 +252,11 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     {
         configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
         configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
-        configBuilder.addDecimal(GNOMAD_PON_FILTER, "Gnomad PON frequency filter", DEFAULT_PON_FILTER_THRESHOLD);
     }
 
     public static void addHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
-    }
-
-    public void loadCacheSize()
-    {
-
     }
 }
