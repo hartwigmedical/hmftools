@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
+import static htsjdk.samtools.ValidationStringency.SILENT;
+
 import java.io.File;
 
 import htsjdk.samtools.QueryInterval;
@@ -28,7 +30,9 @@ public class BamSequenceReader
     {
         File file = new File(bamFile);
         mFilename = file.getName();
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(refGenomeFile)).open(file);
+        mSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(SILENT)
+                .referenceSequence(new File(refGenomeFile)).open(file);
 
         mSequenceInfo = sequenceInfo;
 

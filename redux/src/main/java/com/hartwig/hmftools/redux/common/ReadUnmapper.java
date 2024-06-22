@@ -669,6 +669,7 @@ public class ReadUnmapper
     private static void setUnmappedAttributes(final SAMRecord read)
     {
         read.setReadUnmappedFlag(true);
+        read.setSecondaryAlignment(false);
         read.setMappingQuality(0);
 
         // store the original mapping

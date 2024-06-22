@@ -145,6 +145,20 @@ public class ReduxApplication
 
         fileWriterCache.close();
 
+        if(jitterAnalyser != null)
+        {
+            try
+            {
+                RD_LOGGER.info("analysing microsatellite jitter");
+                jitterAnalyser.writeAnalysisOutput();
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
+                System.exit(1);
+            }
+        }
+
         if(fileWriterCache.runSortMergeIndex())
         {
             // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
@@ -157,20 +171,6 @@ public class ReduxApplication
             if(!fileWriterCache.sortAndIndexBams())
             {
                 RD_LOGGER.error("sort-merge-index failed");
-                System.exit(1);
-            }
-        }
-
-        if(jitterAnalyser != null)
-        {
-            try
-            {
-                RD_LOGGER.info("analysing microsatellite jitter");
-                jitterAnalyser.writeAnalysisOutput();
-            }
-            catch(Exception e)
-            {
-                RD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
                 System.exit(1);
             }
         }
