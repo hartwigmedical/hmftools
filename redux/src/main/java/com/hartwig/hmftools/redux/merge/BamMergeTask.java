@@ -126,7 +126,7 @@ public class BamMergeTask extends Thread
 
             topWriter.moveNext();
 
-            // test most likely scnenario first
+            // test most likely scenario first ie that the current top BAM reader remains so
             if(topWriter.current() != null && mActiveBamReaders.size() > 1 && topWriter.isLowerOrEqualWith(mActiveBamReaders.get(1)))
             {
                 continue;
