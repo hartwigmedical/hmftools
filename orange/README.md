@@ -259,8 +259,10 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
+- [3.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.6.0)
+    - Cuppa predictions with NaN likelihood are filtered in the ORANGE conversion of CUPPA results
 - [3.5.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.1)
-    - Workaround added for bug with mapping various ORANGE cohorts to non-existing ISOFOX cohorts.  
+    - Workaround added for bug with mapping various ORANGE cohorts to non-existing ISOFOX cohorts.
 - [3.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.0)
     - Add `PurpleTranscriptImpact.reported` and make `PurpleVariant.reported` a derived field. This
       uses the REPORTABLE_TRANSCRIPTS vcf field introduced in PURPLE 4.0.

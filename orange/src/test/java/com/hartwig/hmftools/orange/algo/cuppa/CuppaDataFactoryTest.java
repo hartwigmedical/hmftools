@@ -58,11 +58,12 @@ public class CuppaDataFactoryTest
                 .build();
 
         Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
-        expectedPredictionsByCancerType.put("Skin: Melanoma", expectedPredictionMelanoma);
-        expectedPredictionsByCancerType.put("Skin: Other", expectedPredictionSkinOther);
-        expectedPredictionsByCancerType.put("Prostate", expectedPredictionProstate);
+        expectedPredictionsByCancerType.put(expectedPredictionMelanoma.cancerType(), expectedPredictionMelanoma);
+        expectedPredictionsByCancerType.put(expectedPredictionSkinOther.cancerType(), expectedPredictionSkinOther);
+        expectedPredictionsByCancerType.put(expectedPredictionProstate.cancerType(), expectedPredictionProstate);
+        expectedPredictionsByCancerType.put("Bone/Soft tissue: Cartilaginous neoplasm", null);
 
-        assertCuppaPredictions(CUPPA_VIS_DATA_WITH_RNA_TSV, expectedPredictionsByCancerType);
+        assertCuppaPredictions(CUPPA_VIS_DATA_WITH_RNA_TSV, 33, expectedPredictionsByCancerType);
     }
 
     @Test
@@ -89,13 +90,21 @@ public class CuppaDataFactoryTest
                 .snvPairwiseClassifier(9.922426122823756e-16)
                 .featureClassifier(0.00012385594573787126)
                 .build();
+        CuppaPrediction expectedPredictionCartilaginousNeoplasm = ImmutableCuppaPrediction.builder()
+                .cancerType("Bone/Soft tissue: Cartilaginous neoplasm")
+                .likelihood(3.289402919513386e-05)
+                .genomicPositionClassifier(4.107161442240924e-10)
+                .snvPairwiseClassifier(4.414947168645547e-16)
+                .featureClassifier(1.4125023004735242e-09)
+                .build();
 
         Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
-        expectedPredictionsByCancerType.put("Skin: Melanoma", expectedPredictionMelanoma);
-        expectedPredictionsByCancerType.put("Skin: Other", expectedPredictionSkinOther);
-        expectedPredictionsByCancerType.put("Prostate", expectedPredictionProstate);
+        expectedPredictionsByCancerType.put(expectedPredictionMelanoma.cancerType(), expectedPredictionMelanoma);
+        expectedPredictionsByCancerType.put(expectedPredictionSkinOther.cancerType(), expectedPredictionSkinOther);
+        expectedPredictionsByCancerType.put(expectedPredictionProstate.cancerType(), expectedPredictionProstate);
+        expectedPredictionsByCancerType.put(expectedPredictionCartilaginousNeoplasm.cancerType(), expectedPredictionCartilaginousNeoplasm);
 
-        assertCuppaPredictions(CUPPA_VIS_DATA_WITHOUT_RNA_TSV, expectedPredictionsByCancerType);
+        assertCuppaPredictions(CUPPA_VIS_DATA_WITHOUT_RNA_TSV, 40, expectedPredictionsByCancerType);
     }
 
     @Test
@@ -117,12 +126,13 @@ public class CuppaDataFactoryTest
     }
 
     private static void assertCuppaPredictions(@NotNull String inputFileName,
+            int expectedPredictionSize,
             @NotNull Map<String, CuppaPrediction> expectedPredictionsByCancerType) throws Exception
     {
         CuppaData cuppaData = CuppaDataFactory.create(inputFileName);
         List<CuppaPrediction> predictionEntries = cuppaData.predictions();
 
-        assertEquals(40, predictionEntries.size());
+        assertEquals(expectedPredictionSize, predictionEntries.size());
         assertEquals("Skin: Melanoma", cuppaData.bestPrediction().cancerType());
 
         Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
@@ -135,13 +145,19 @@ public class CuppaDataFactoryTest
         {
             CuppaPrediction expectedPrediction = expectedPredictionsByCancerType.get(cancerType);
             CuppaPrediction actualPrediction = actualPredictionsByCancerType.get(cancerType);
-
-            assertEquals(expectedPrediction.likelihood(), actualPrediction.likelihood(), EPSILON);
-            assertEqualsNullableDouble(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier());
-            assertEqualsNullableDouble(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier());
-            assertEqualsNullableDouble(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier());
-            assertEqualsNullableDouble(expectedPrediction.expressionPairwiseClassifier(), actualPrediction.expressionPairwiseClassifier());
-            assertEqualsNullableDouble(expectedPrediction.altSjCohortClassifier(), actualPrediction.altSjCohortClassifier());
+            if(expectedPrediction == null)
+            {
+                assertNull(actualPrediction);
+            }
+            else
+            {
+                assertEquals(expectedPrediction.likelihood(), actualPrediction.likelihood(), EPSILON);
+                assertEqualsNullableDouble(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier());
+                assertEqualsNullableDouble(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier());
+                assertEqualsNullableDouble(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier());
+                assertEqualsNullableDouble(expectedPrediction.expressionPairwiseClassifier(), actualPrediction.expressionPairwiseClassifier());
+                assertEqualsNullableDouble(expectedPrediction.altSjCohortClassifier(), actualPrediction.altSjCohortClassifier());
+            }
         }
     }
 
