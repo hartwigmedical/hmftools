@@ -51,7 +51,7 @@ public class CuppaComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY, FLD_CLASSIFIER_NAME);
+        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
     }
 
     @Override
