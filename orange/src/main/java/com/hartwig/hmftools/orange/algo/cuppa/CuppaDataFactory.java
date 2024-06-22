@@ -79,7 +79,7 @@ public final class CuppaDataFactory
                     .altSjCohortClassifier(probabilitiesByClassifier.get(ClassifierName.ALT_SJ))
                     .build();
 
-            // If a classifier has no data for a specific cancer type we should remove it completely, see ACTIN-1057
+            // If a classifier has no data for a specific cancer type we should remove it completely.
             if(!Double.isNaN(convertedPrediction.likelihood()))
             {
                 convertedCuppaPredictions.add(convertedPrediction);
