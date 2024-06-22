@@ -1,13 +1,11 @@
-package com.hartwig.hmftools.redux.utils;
+package com.hartwig.hmftools.redux.merge;
 
 import static java.lang.String.format;
 
 import java.io.File;
 
-import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -16,24 +14,19 @@ public class BamSequenceReader
     private final SamReader mSamReader;
     private final SAMRecordIterator mSamIterator;
     private final String mFilename;
-    private final String mChromosome;
 
     private SAMRecord mCurrentRecord;
-    private boolean mOnUnmappedRecords;
+    private int mCurentChromosomeRank;
 
-    public BamSequenceReader(final String refGenomeFile, final String bamFile, final SAMSequenceRecord sequence)
+    public BamSequenceReader(final String refGenomeFile, final String bamFile, final SequenceInfo sequenceInfo)
     {
         File file = new File(bamFile);
         mFilename = file.getName();
-        mChromosome = sequence.getContig();
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(refGenomeFile)).open(file);
         mCurrentRecord = null;
-        mOnUnmappedRecords = false;
+        mCurentChromosomeRank = -1;
 
-        QueryInterval[] queryIntervals = new QueryInterval[] {
-                new QueryInterval(sequence.getSequenceIndex(), 1, sequence.getEnd()) };
-
-        mSamIterator = mSamReader.queryOverlapping(queryIntervals);
+        mSamIterator = mSamReader.queryOverlapping(sequenceInfo.asArray());
 
         moveNext();
     }
@@ -52,25 +45,19 @@ public class BamSequenceReader
     {
         return mCurrentRecord != null ? mCurrentRecord.getAlignmentStart() : -1;
     }
+    public int currentChromosomeRank() { return mCurentChromosomeRank; }
 
-    public boolean isLowerOrEqualWith(final BamSequenceReader other)
-    {
-        return !isHigherThan(other);
-    }
+    public boolean isLowerOrEqualWith(final BamSequenceReader other) { return !isHigherThan(other); }
 
     public boolean isHigherThan(final BamSequenceReader other)
     {
         if(finished())
-        {
             return false;
-        }
 
-        if(mOnUnmappedRecords != other.onUnmappedRecords())
-        {
-            return mOnUnmappedRecords;
-        }
-
-        return currentPosition() > other.currentPosition();
+        if(mCurentChromosomeRank != other.currentChromosomeRank())
+            return mCurentChromosomeRank > other.currentChromosomeRank();
+        else
+            return currentPosition() > other.currentPosition();
     }
 
     public SAMRecord moveNext()
@@ -79,14 +66,15 @@ public class BamSequenceReader
         {
             mCurrentRecord = mSamIterator.next();
 
-            if(mCurrentRecord.getReadUnmappedFlag() && mCurrentRecord.getMateUnmappedFlag())
+            if(mCurentChromosomeRank != mCurrentRecord.getReferenceIndex())
             {
-                mOnUnmappedRecords = true;
+                mCurentChromosomeRank = mCurrentRecord.getReferenceIndex();
             }
         }
         else
         {
             mCurrentRecord = null;
+            mCurentChromosomeRank = -1;
         }
 
         return mCurrentRecord;
@@ -97,11 +85,6 @@ public class BamSequenceReader
         return mCurrentRecord == null;
     }
 
-    public boolean onUnmappedRecords()
-    {
-        return mOnUnmappedRecords;
-    }
-
     public String toString()
     {
         String state;
@@ -110,13 +93,9 @@ public class BamSequenceReader
         {
             state = "finished";
         }
-        else if(mOnUnmappedRecords)
-        {
-            state = "unmapped";
-        }
         else
         {
-            state = format("chr(%s:%d)", mChromosome, currentPosition());
+            state = format("chr(%s:%d)", mCurrentRecord.getReferenceName(), currentPosition());
         }
 
         return format("%s: %s", mFilename, state);

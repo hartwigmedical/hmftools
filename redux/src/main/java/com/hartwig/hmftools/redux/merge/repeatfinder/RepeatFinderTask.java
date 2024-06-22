@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.redux.utils.repeatfinder;
+package com.hartwig.hmftools.redux.merge.repeatfinder;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.redux.utils.repeatfinder.RepeatFinderConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.merge.repeatfinder.RepeatFinderConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.util.List;

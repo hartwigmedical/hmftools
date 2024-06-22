@@ -131,7 +131,7 @@ public class ReduxConfig
     private static final String DROP_DUPLICATES = "drop_duplicates";
 
     // debug
-    private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
+    public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";

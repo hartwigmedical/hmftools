@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.utils;
+package com.hartwig.hmftools.redux.merge;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -7,8 +7,11 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
+import static com.hartwig.hmftools.redux.ReduxConfig.KEEP_INTERIM_BAMS;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,12 +35,28 @@ public class MergeBams
 
         List<String> inputBams = Arrays.stream(configBuilder.getValue(INPUT_BAMS).split(",", -1)).collect(Collectors.toList());
 
+        // check input BAMs exist
+        boolean hasMissing = false;
+
+        for(String inputBam : inputBams)
+        {
+            if(!Files.exists(Paths.get(inputBam)))
+            {
+                RD_LOGGER.error("missing input BAM: {}", inputBam);
+                hasMissing = true;
+            }
+        }
+
+        if(hasMissing)
+            System.exit(1);
+
         String refGenome = configBuilder.getValue(REF_GENOME);
 
         String bamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        boolean keepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         int threads = parseThreads(configBuilder);
-        mBamMerger = new BamMerger(outputBam, inputBams, refGenome, bamToolPath, threads);
+        mBamMerger = new BamMerger(outputBam, inputBams, refGenome, bamToolPath, threads, keepInterimBams);
      }
 
     public void run()
@@ -60,6 +79,7 @@ public class MergeBams
 
         RefGenomeSource.addRefGenomeFile(configBuilder, true);
         BamToolName.addConfig(configBuilder);
+        configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
         addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
 

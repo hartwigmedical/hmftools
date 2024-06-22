@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.redux.utils.highdepth;
+package com.hartwig.hmftools.redux.merge.highdepth;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.redux.utils.highdepth.HighDepthFinderConfig.MD_LOGGER;
-import static com.hartwig.hmftools.redux.utils.highdepth.HighDepthFinder.writeHighDepthRegions;
+import static com.hartwig.hmftools.redux.merge.highdepth.HighDepthFinderConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.merge.highdepth.HighDepthFinder.writeHighDepthRegions;
 
 import java.io.BufferedWriter;
 import java.io.File;

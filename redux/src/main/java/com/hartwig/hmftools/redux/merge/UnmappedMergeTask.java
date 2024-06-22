@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.redux.utils;
+package com.hartwig.hmftools.redux.merge;
 
-import static com.hartwig.hmftools.redux.utils.BamMerger.UNMAPPED_READS;
-import static com.hartwig.hmftools.redux.utils.BamMerger.formBamFilename;
+import static com.hartwig.hmftools.redux.merge.BamMerger.UNMAPPED_READS;
+import static com.hartwig.hmftools.redux.merge.BamMerger.formBamFilename;
 
 import java.io.File;
 import java.util.List;

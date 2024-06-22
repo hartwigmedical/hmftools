@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.utils.highdepth;
+package com.hartwig.hmftools.redux.merge.highdepth;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;

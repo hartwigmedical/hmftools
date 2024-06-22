@@ -1,7 +1,6 @@
-package com.hartwig.hmftools.redux.utils;
+package com.hartwig.hmftools.redux.merge;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.utils.BamMerger.formSequenceBamFilename;
 
 import java.io.File;
 import java.util.List;
@@ -13,15 +12,13 @@ import com.google.common.collect.Lists;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 public class BamMergeTask extends Thread
 {
     private final List<String> mInputBams;
-    private final Queue<SAMSequenceRecord> mSAMSequences;
-    private final String mOutputBamPrefix;
+    private final Queue<SequenceInfo> mSAMSequences;
 
     private final List<BamSequenceReader> mActiveBamReaders;
     private final List<BamSequenceReader> mFinishedBamReaders;
@@ -31,10 +28,9 @@ public class BamMergeTask extends Thread
     private int mReorderCount;
 
     public BamMergeTask(
-            final List<String> inputBams, final String refGenomeFile, final Queue<SAMSequenceRecord> sequences, final String outputBamPrefix)
+            final List<String> inputBams, final String refGenomeFile, final Queue<SequenceInfo> sequences, final String outputBamPrefix)
     {
         mSAMSequences = sequences;
-        mOutputBamPrefix = outputBamPrefix;
         mInputBams = inputBams;
         mRefGenomeFile = refGenomeFile;
 
@@ -53,8 +49,8 @@ public class BamMergeTask extends Thread
         {
             try
             {
-                SAMSequenceRecord sequence = mSAMSequences.remove();
-                processSequence(sequence);
+                SequenceInfo sequenceInfo = mSAMSequences.remove();
+                processSequence(sequenceInfo);
             }
             catch(NoSuchElementException e)
             {
@@ -71,12 +67,12 @@ public class BamMergeTask extends Thread
 
     private static final int LOG_COUNT = 10_000_000;
 
-    private void processSequence(final SAMSequenceRecord sequence)
+    private void processSequence(final SequenceInfo sequenceInfo)
     {
         // open and prepare each BAM, adding in start order
         for(String bamFile : mInputBams)
         {
-            BamSequenceReader bamReader = new BamSequenceReader(mRefGenomeFile, bamFile, sequence);
+            BamSequenceReader bamReader = new BamSequenceReader(mRefGenomeFile, bamFile, sequenceInfo);
 
             if(bamReader.finished())
             {
@@ -88,16 +84,17 @@ public class BamMergeTask extends Thread
             }
         }
 
+        String sequenceIntervalStr = sequenceInfo.toString();
+
         if(mActiveBamReaders.isEmpty())
         {
-            RD_LOGGER.debug("contig({}) no BAM files with records found", sequence.getSequenceName(), mActiveBamReaders.size());
+            RD_LOGGER.debug("seqRange({}) no BAM files with records found", sequenceIntervalStr, mActiveBamReaders.size());
             return;
         }
 
-        String outputBam = formSequenceBamFilename(mOutputBamPrefix, sequence);
-        mSamFileWriter = initialiseWriter(outputBam);
+        mSamFileWriter = initialiseWriter(sequenceInfo.BamFile);
 
-        RD_LOGGER.debug("contig({}) merging {} BAMs", sequence.getSequenceName(), mActiveBamReaders.size());
+        RD_LOGGER.debug("seqRange({}) merging {} BAMs", sequenceIntervalStr, mActiveBamReaders.size());
 
         // begin the merge process:
         // 1. take the top record from the first BAM reader
@@ -109,13 +106,22 @@ public class BamMergeTask extends Thread
 
         while(!mActiveBamReaders.isEmpty())
         {
-            mSamFileWriter.addAlignment(topWriter.current());
+            try
+            {
+                mSamFileWriter.addAlignment(topWriter.current());
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("failed to add read from top writer({}): {}", topWriter.toString(), e.toString());
+                e.printStackTrace();
+                System.exit(1);
+            }
             ++recordCount;
 
             if((recordCount % LOG_COUNT) == 0)
             {
-                RD_LOGGER.trace("contig({}) merged {} records, readers(active={} finished={}) reorders({})",
-                        sequence.getSequenceName(), recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size(), mReorderCount);
+                RD_LOGGER.trace("seqRangeId({}) merged {} records, readers(active={} finished={}) reorders({})",
+                        sequenceInfo.Id, recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size(), mReorderCount);
             }
 
             topWriter.moveNext();
@@ -130,7 +136,7 @@ public class BamMergeTask extends Thread
 
             if(topWriter.finished())
             {
-                RD_LOGGER.trace("contig({}) bam({}) finished", sequence.getSequenceName(), topWriter.filename());
+                RD_LOGGER.trace("seqRangeId({}) bam({}) finished", sequenceInfo.Id, topWriter.filename());
                 mFinishedBamReaders.add(topWriter);
             }
             else
@@ -147,8 +153,8 @@ public class BamMergeTask extends Thread
             topWriter = mActiveBamReaders.get(0);
         }
 
-        RD_LOGGER.debug("contig({}) merged {} BAM files with {} records, reorder count({})",
-                sequence.getSequenceName(), mInputBams.size(), recordCount, mReorderCount);
+        RD_LOGGER.debug("seqRangeId({}) merged {} BAM files with {} records, reorder count({})",
+                sequenceInfo.Id, mInputBams.size(), recordCount, mReorderCount);
 
         mSamFileWriter.close();
     }
@@ -174,7 +180,6 @@ public class BamMergeTask extends Thread
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
-        // need to check this - must be unsorted to write as
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, true, new File(outputBam));

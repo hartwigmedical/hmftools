@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.redux.utils.repeatfinder;
+package com.hartwig.hmftools.redux.merge.repeatfinder;
 
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.redux.utils.repeatfinder.RepeatFinderConfig.MD_LOGGER;
+import static com.hartwig.hmftools.redux.merge.repeatfinder.RepeatFinderConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

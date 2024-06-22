@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.utils.repeatfinder;
+package com.hartwig.hmftools.redux.merge.repeatfinder;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;

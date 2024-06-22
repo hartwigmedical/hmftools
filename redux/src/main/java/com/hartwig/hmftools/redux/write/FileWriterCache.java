@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.bam.BamOperations;
 import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.merge.BamMerger;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -120,8 +122,8 @@ public class FileWriterCache
         }
         else
         {
-            bamWriter =
-                    new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
+            bamWriter = new BamWriterNoSync(
+                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
         }
 
         mBamWriters.add(bamWriter);
@@ -262,7 +264,13 @@ public class FileWriterCache
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
-        return BamOperations.mergeBams(bamToolName(), bamToolPath(), finalBamFilename, sortedThreadBams, mConfig.Threads);
+        if(bamToolName() == BamToolName.SAMBAMBA)
+            return BamOperations.mergeBams(bamToolName(), bamToolPath(), finalBamFilename, sortedThreadBams, mConfig.Threads);
+
+        // use internal BAM merge routine
+        BamMerger bamMerger = new BamMerger(
+                finalBamFilename, sortedThreadBams, mConfig.RefGenomeFile, bamToolPath(), mConfig.Threads, false);
+        return bamMerger.merge();
     }
 
     private void deleteInterimBams(final List<String> interimBams)
@@ -272,6 +280,7 @@ public class FileWriterCache
             for(String filename : interimBams)
             {
                 Files.deleteIfExists(Paths.get(filename));
+                Files.deleteIfExists(Paths.get(filename + BAM_INDEX_EXTENSION));
             }
         }
         catch(IOException e)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.utils.highdepth;
+package com.hartwig.hmftools.redux.merge.highdepth;
 
 import static java.lang.String.format;
 

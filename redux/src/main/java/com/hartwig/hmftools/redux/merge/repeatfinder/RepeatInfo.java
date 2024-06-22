@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.utils.repeatfinder;
+package com.hartwig.hmftools.redux.merge.repeatfinder;
 
 import java.util.List;
 import java.util.stream.Collectors;
