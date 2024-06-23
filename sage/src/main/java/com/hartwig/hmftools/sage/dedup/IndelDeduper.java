@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 
 import java.util.Collections;
@@ -52,7 +54,7 @@ public class IndelDeduper
 
             VariantData adjustedVariant = new VariantData(variant);
 
-            if(variant.isIndel() && adjustedVariant.unfiltered())
+            if(variant.isIndel() && adjustedVariant.allowByFilter())
                 indels.add(adjustedVariant);
 
             candidates.add(adjustedVariant);
@@ -144,7 +146,7 @@ public class IndelDeduper
         {
             VariantData variant = dedupGroup.get(index);
 
-            hasPassingVariant |= variant.unfiltered();
+            hasPassingVariant |= variant.allowByFilter();
 
             if(variant.Variant.isDelete() && positionsOverlap(indelPosition, indelPosition, variant.position(), variant.positionEnd()))
             {
@@ -468,7 +470,15 @@ public class IndelDeduper
         public int position() { return Variant.position(); }
         public int positionEnd() { return Variant.variant().positionEnd(); }
 
-        public boolean unfiltered() { return Variant.isPassing(); }
+        public boolean allowByFilter()
+        {
+            if(Variant.isPassing())
+                return true;
+
+            // must only have the germline filters below
+            return Variant.filters().stream().allMatch(x -> x.equals(MAX_GERMLINE_VAF.filterName())
+                    || x.equals(MAX_GERMLINE_ALT_SUPPORT.filterName()));
+        }
 
         public int indelScore()
         {
