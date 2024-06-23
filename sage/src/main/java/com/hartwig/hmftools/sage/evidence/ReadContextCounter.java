@@ -458,8 +458,6 @@ public class ReadContextCounter
 
             mRefFragmentStrandBias.registerFragment(record);
             mRefReadStrandBias.registerRead(record, fragmentData, this);
-
-            mReadEdgeDistance.update(record, fragmentData, false);
         }
         else if(matchType == ReadContextMatch.PARTIAL_MNV)
         {
@@ -467,6 +465,7 @@ public class ReadContextCounter
         }
 
         registerReadSupport(record, readSupport, modifiedQuality);
+        mReadEdgeDistance.update(record, fragmentData, false);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
