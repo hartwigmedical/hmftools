@@ -164,6 +164,10 @@ public class RepeatInfo
             }
 
             ++extraCount;
+
+            if(repeatStart - repeatLength < 0)
+                break;
+
             repeatStart -= repeatLength;
         }
 

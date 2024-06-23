@@ -58,8 +58,7 @@ public class RepeatBoundaries
                     continue;
 
                 // search backwards for longer instances of this repeat
-                if(repeat != null)
-                    repeat = extendRepeatLower(repeat, bases);
+                repeat = extendRepeatLower(repeat, bases);
 
                 if(!positionsOverlap(requiredIndexStart, requiredIndexEnd, repeat.Index, repeat.endIndex()))
                     continue;
