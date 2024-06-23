@@ -259,7 +259,10 @@ public class FileWriterCache
         if(!mConfig.KeepInterimBams)
             deleteInterimBams(interimBams);
 
-        return indexFinalBam(finalBamFilename);
+        // no need for indexing since both merge methods now create an index
+        // indexFinalBam(finalBamFilename);
+
+        return true;
     }
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
