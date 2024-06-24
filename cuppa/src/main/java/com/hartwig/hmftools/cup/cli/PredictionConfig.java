@@ -35,8 +35,8 @@ public class PredictionConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(FEATURES_PATH, false, CLASSIFIER_PATH_DESC);
-        configBuilder.addPath(CLASSIFIER_PATH, true, FEATURES_PATH_DESC);
+        configBuilder.addPath(FEATURES_PATH, false, FEATURES_PATH_DESC);
+        configBuilder.addPath(CLASSIFIER_PATH, true, CLASSIFIER_PATH_DESC);
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
         configBuilder.addPath(PYTHON_PATH, true, PYTHON_PATH_DESC);
     }
