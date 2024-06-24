@@ -43,7 +43,7 @@ public class SampleOneCategoryTask implements Callable
         int sampleNum = mSampleIndex + 1;
         int totalSamples = mConfig.SampleIds.size();
 
-        if(mConfig.isMultiSample() & (totalSamples < 10 || sampleNum % 100 == 0))
+        if(mConfig.isMultiSample() & sampleNum % mConfig.ProgressInterval == 0)
         {
             CUP_LOGGER.info("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
         }

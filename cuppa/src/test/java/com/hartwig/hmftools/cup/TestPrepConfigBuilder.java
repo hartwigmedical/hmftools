@@ -41,6 +41,7 @@ public class TestPrepConfigBuilder
     private String SomaticVariantsDir = TEST_SOMATIC_VARIANTS_DIR;
 
     private String AltSpliceJunctionSites = TEST_ALT_SPLICE_JUNCTION_SITES;
+    private int ProgressInterval = 100;
 
 
     public TestPrepConfigBuilder sampleIds(List<String> sampleIds)
@@ -138,6 +139,12 @@ public class TestPrepConfigBuilder
         return this;
     }
 
+    public TestPrepConfigBuilder progressInterval(int progressInterval)
+    {
+        ProgressInterval = progressInterval;
+        return this;
+    }
+
     public PrepConfig build()
     {
         return new PrepConfig(
@@ -154,7 +161,8 @@ public class TestPrepConfigBuilder
                 VirusDir,
                 IsofoxDir,
                 SomaticVariantsDir,
-                AltSpliceJunctionSites
+                AltSpliceJunctionSites,
+                ProgressInterval
         );
     };
 
