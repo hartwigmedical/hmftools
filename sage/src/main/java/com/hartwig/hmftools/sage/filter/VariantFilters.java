@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_MQ_LIMIT;
+import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
@@ -242,6 +243,12 @@ public class VariantFilters
     {
         if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0 || altSupport == 0)
             return false;
+
+        if(primaryTumor.readContext().MaxRepeat != null)
+        {
+            if(primaryTumor.readContext().MaxRepeat.totalLength() > QUALITY_SITE_REPEAT_MAX)
+                return false;
+        }
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double altAvgMapQual = primaryTumor.altMapQualityTotal() / altSupport;

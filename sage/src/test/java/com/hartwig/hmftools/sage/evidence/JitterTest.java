@@ -67,25 +67,25 @@ public class JitterTest
         String readBases = variantReadBases.substring(0, 11) + "G" + variantReadBases.substring(12);
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readBases.getBytes(), readQuals, SHORTENED, false, true));
+                repeat, readContext, 15, readBases.getBytes(), readQuals, SHORTENED, false, true, 1));
 
         // test 2: shortened at end
         readBases = variantReadBases.substring(0, 20) + "G" + variantReadBases.substring(21);
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readBases.getBytes(), readQuals, SHORTENED, false, false));
+                repeat, readContext, 15, readBases.getBytes(), readQuals, SHORTENED, false, false, 1));
 
         // test 3: lengthened at start
         readBases = variantReadBases.substring(0, 10) + "A" + variantReadBases.substring(11);
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readBases.getBytes(), readQuals, LENGTHENED, false, true));
+                repeat, readContext, 15, readBases.getBytes(), readQuals, LENGTHENED, false, true, 1));
 
         // test 4: lengthened at end
         readBases = variantReadBases.substring(0, 21) + "A" + variantReadBases.substring(22);
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readBases.getBytes(), readQuals, LENGTHENED, false, false));
+                repeat, readContext, 15, readBases.getBytes(), readQuals, LENGTHENED, false, false, 1));
 
 
         // test 5: low-qual base mismatches are permitted outside the core and within the core in specific locations
@@ -95,7 +95,7 @@ public class JitterTest
         readQuals[22] = 11;
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
 
         // 1 mismatch is permitted in the core outside the critical range
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
@@ -103,7 +103,7 @@ public class JitterTest
         readQuals[12] = 11;
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
 
         // 2 mismatches are not permitted
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
@@ -112,7 +112,7 @@ public class JitterTest
         readQuals[13] = 11;
 
         assertFalse(hasJitterMatchType(
-                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
 
         // and not within the critical range
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
@@ -120,7 +120,52 @@ public class JitterTest
         readQuals[15] = 11;
 
         assertFalse(hasJitterMatchType(
-                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false));
+                repeat, readContext, 15, readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
+    }
+
+    @Test
+    public void testDoubleJitter()
+    {
+        //                           10        20        30
+        //                 0123456789012345678901234567890123456789012345678
+        String refBases = "GTCGTCGTCGTATAAAAAAAAAACTCGTAGTCGTCATTCGTCATTCATT";
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        int varIndex = 23;
+        int reqPosStart = 100;
+        int position = reqPosStart + varIndex;
+        RefSequence refSequence = new RefSequence(reqPosStart, refBases.getBytes());
+
+        String variantReadBases = refBases.substring(0, varIndex) + "G" + refBases.substring(varIndex + 1);
+        SimpleVariant variant = createSimpleVariant(position, "C", "G");
+        SAMRecord read = buildSamRecord(reqPosStart, buildCigarString(variantReadBases.length()), variantReadBases);
+
+        VariantReadContext readContext = builder.createContext(variant, read, varIndex, refSequence);
+        assertTrue(readContext.isValid());
+        assertEquals(21, readContext.VarIndex);
+        assertEquals(1, readContext.AllRepeats.size());
+        RepeatInfo repeat = readContext.AllRepeats.get(0);
+        assertEquals(11, repeat.Index);
+        assertEquals(10, repeat.Count);
+
+        byte[] readQuals = buildDefaultBaseQuals(variantReadBases.length());
+
+        // double jitter for variants with long repeats
+        String readBases = variantReadBases.substring(0, 16) + "A" + variantReadBases.substring(16);
+
+        assertTrue(hasJitterMatchType(
+                repeat, readContext, varIndex + 1, readBases.getBytes(), readQuals, LENGTHENED, true, true, 1));
+
+        readBases = variantReadBases.substring(0, 16) + "AA" + variantReadBases.substring(16);
+
+        assertTrue(hasJitterMatchType(
+                repeat, readContext, varIndex + 2, readBases.getBytes(), readQuals, LENGTHENED, true, true, 2));
+
+        readBases = variantReadBases.substring(0, 16) + variantReadBases.substring(18);
+
+        assertTrue(hasJitterMatchType(
+                repeat, readContext, varIndex - 2, readBases.getBytes(), readQuals, SHORTENED, true, true, 2));
     }
 
     @Test

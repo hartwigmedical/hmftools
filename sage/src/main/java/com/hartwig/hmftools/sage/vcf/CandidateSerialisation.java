@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
@@ -44,7 +45,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialisation
 {
-    public static final int PRE_v3_5_FLANK_EXTENSION_LENGTH = 10;
+    public static final int PRE_v3_5_FLANK_EXTENSION_LENGTH = 50;
 
     public static VariantContextBuilder toContext(final Candidate candidate)
     {
@@ -123,7 +124,10 @@ public final class CandidateSerialisation
         VariantReadContext readContext = builder.createContext(variant, record, readContextVcfInfo.VarIndex, refSequence);
 
         if(readContext == null)
+        {
+            SG_LOGGER.error("variant({}) failed to recreate read context", variant);
             return null;
+        }
 
         // TEMP: tracking of changes
         if(buildFromOldTags)

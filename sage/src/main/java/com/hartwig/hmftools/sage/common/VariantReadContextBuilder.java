@@ -149,6 +149,21 @@ public class VariantReadContextBuilder
             int readFlankOffset = readFlankStart;
             repeatBoundaries.AllRepeats.forEach(x -> allRepeats.add(new RepeatInfo(
                     x.Index - readFlankOffset, x.Bases, x.Count)));
+
+            /*
+            // expand alt boundaries to cover any repeats on that side
+            int minRepeatIndex = allRepeats.get(0).Index - 1;
+            int maxRepeatIndex = allRepeats.get(0).endIndex() + 1;
+
+            for(int i = 1; i < allRepeats.size(); ++i)
+            {
+                minRepeatIndex = min(minRepeatIndex, allRepeats.get(i).Index - 1);
+                maxRepeatIndex = max(maxRepeatIndex, allRepeats.get(i).endIndex() + 1);
+            }
+
+            altIndexLower = min(altIndexLower, minRepeatIndex);
+            altIndexUpper = max(altIndexUpper, maxRepeatIndex);
+            */
         }
         else
         {

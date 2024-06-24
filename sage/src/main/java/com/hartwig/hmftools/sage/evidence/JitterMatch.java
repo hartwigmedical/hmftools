@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,6 +23,7 @@ public enum JitterMatch
 
         final byte[] readBases = record.getReadBases();
         final byte[] readQuals = record.getBaseQualities();
+        boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count > DOUBLE_JITTER_REPEAT_COUNT;
 
         // try each repeat covering the read context in turn
         for(RepeatInfo repeat : readContext.AllRepeats)
@@ -31,17 +33,35 @@ public enum JitterMatch
             {
                 JitterMatch jitterType = (i == 0) ? SHORTENED : LENGTHENED;
 
-                if(hasJitterMatchType(repeat, readContext, readVarIndex, readBases, readQuals, jitterType, true, true))
-                    return jitterType;
+                for(int j = 0; j <= 1; ++j)
+                {
+                    // with or without awareness of an indel
+                    boolean isIndelOffset = (j == 0);
 
-                if(hasJitterMatchType(repeat, readContext, readVarIndex, readBases, readQuals, jitterType, true, false))
-                    return jitterType;
+                    for(int k = 0; k <= 1; ++k)
+                    {
+                        // before or after the variant
+                        boolean jitterAtStart = (k == 0);
 
-                if(hasJitterMatchType(repeat, readContext, readVarIndex, readBases, readQuals, jitterType, false, true))
-                    return jitterType;
+                        if(hasJitterMatchType(
+                                repeat, readContext, readVarIndex, readBases, readQuals, jitterType,
+                                isIndelOffset, jitterAtStart, 1))
+                        {
+                            return jitterType;
+                        }
 
-                if(hasJitterMatchType(repeat, readContext, readVarIndex, readBases, readQuals, jitterType, false, false))
-                    return jitterType;
+                        if(isIndelOffset && checkDoubleJitter)
+                        {
+                            // for contexts with long repeats, test double jitter
+                            if(hasJitterMatchType(
+                                    repeat, readContext, readVarIndex, readBases, readQuals, jitterType,
+                                    isIndelOffset, jitterAtStart, 2))
+                            {
+                                return jitterType;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -51,9 +71,9 @@ public enum JitterMatch
     @VisibleForTesting
     public static boolean hasJitterMatchType(
             final RepeatInfo repeat, final VariantReadContext readContext, int readVarIndex, final byte[] readBases, final byte[] readQuals,
-            final JitterMatch jitterType, boolean isIndelOffset, boolean jitterAtStart)
+            final JitterMatch jitterType, boolean isIndelOffset, boolean jitterAtStart, int jitterCount)
     {
-        int repeatLength = repeat.repeatLength();
+        int repeatLength = repeat.repeatLength() * jitterCount;
         int repeatEndIndex = repeat.endIndex();
 
         int readVarIndexOffset = readVarIndex - readContext.VarIndex;;
