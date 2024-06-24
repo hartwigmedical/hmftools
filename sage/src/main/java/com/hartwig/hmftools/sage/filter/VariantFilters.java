@@ -364,6 +364,11 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_GERMLINE_VAF.filterName());
         }
 
+        if(aboveMaxGermlineRelativeVaf(config, normal, primaryTumor))
+        {
+            filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_VAF.filterName());
+        }
+
         // MNV Tests
         if(aboveMaxMnvIndelNormalAltSupport(tier, normal))
         {
@@ -388,8 +393,27 @@ public class VariantFilters
     private static boolean aboveMaxGermlineVaf(
             final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
     {
-        double normalVaf = normal.vaf();
-        return Doubles.greaterThan(normalVaf, config.MaxGermlineVaf);
+        double tumorVaf = primaryTumor.vaf();
+
+        if(tumorVaf == 0)
+            return false; // will be handled in tumor filters
+
+        double adjustedNormalVaf = (normal.readCounts().altSupport() + normal.partialMnvSupport()) / (double)normal.readCounts().Total;
+        double normalTumorVafRatio = adjustedNormalVaf / tumorVaf;
+        return Doubles.greaterThan(normalTumorVafRatio, config.MaxGermlineVaf);
+    }
+
+    private static boolean aboveMaxGermlineRelativeVaf(
+            final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
+    {
+        double tumorQual = primaryTumor.tumorQuality();
+        double normalQual = normal.tumorQuality();
+
+        if(tumorQual == 0)
+            return false; // will be handled in tumor filters
+
+        double normalTumorQualRatio = normalQual / tumorQual;
+        return Doubles.greaterThan(normalTumorQualRatio, config.MaxGermlineVaf);
     }
 
     private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal)

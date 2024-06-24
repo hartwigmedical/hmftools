@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.sage.SageConstants.JITTER_QUAL_BOOST_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 
 import java.util.List;
@@ -74,6 +75,8 @@ public class JitterData
 
         if(noiseOutcome == JitterNoiseOutcome.LENGTHENED_NOISE || noiseOutcome == JitterNoiseOutcome.BOTH_NOISE)
             mQualBoost += mLengthened / (double)fullSupport;
+
+        mQualBoost = min(mQualBoost, JITTER_QUAL_BOOST_MAX_PERC);
     }
 
     private enum JitterNoiseOutcome

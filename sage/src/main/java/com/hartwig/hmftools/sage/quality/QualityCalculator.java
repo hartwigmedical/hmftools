@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
@@ -35,8 +36,6 @@ public class QualityCalculator
     private final UltimaQualCalculator mUltimaQualCalculator;
 
     public static final byte INVALID_BASE_QUAL = -1;
-
-    private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     public QualityCalculator(
             final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
