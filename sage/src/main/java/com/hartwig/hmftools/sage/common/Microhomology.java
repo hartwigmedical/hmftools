@@ -1,18 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.utils.Arrays.equalArray;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.common.RepeatInfo.findMaxRepeat;
-
-import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.common.utils.VectorUtils;
-
-import htsjdk.samtools.SAMRecord;
 
 public class Microhomology
 {
@@ -36,70 +25,34 @@ public class Microhomology
         if(!variant.isIndel())
             return 0;
 
-        int leftAlignmentOffset = 0;
+        int leftAlignOffset = 0;
 
-        int indelLength = abs(variant.indelLength());
+        int currentPosition = variant.Position;
 
-        byte[] originalBases = Arrays.subsetArray(
-                variant.isInsert() ? variant.alt().getBytes() : variant.ref().getBytes(), 1, indelLength);
+        byte lastRefBase = (byte)variant.Ref.charAt(variant.refLength() - 1);
 
-        int maxRepeatLength = originalBases.length / 2;
-        RepeatInfo maxRepeat = findMaxRepeat(
-                originalBases, 0, 0, maxRepeatLength, 2, false, -1);
+        String altBases = variant.Alt;
+        byte lastAltBase = (byte)altBases.charAt(variant.altLength() - 1);
 
-        int baseIncrement = maxRepeat != null ? maxRepeat.repeatLength() : 1;
-
-        if(variant.isInsert())
+        while(lastRefBase == lastAltBase)
         {
-            int currentReadIndex = varReadIndex - baseIncrement;
+            --currentPosition;
+            ++leftAlignOffset;
 
-            while(currentReadIndex >= 0)
-            {
-                byte[] newBases = Arrays.subsetArray(readBases, currentReadIndex + 1, currentReadIndex + indelLength);
+            if(currentPosition < refSequence.Start)
+                break;
 
-                if(!equalArray(newBases, originalBases))
-                    break;
+            lastRefBase = refSequence.base(currentPosition);
 
-                leftAlignmentOffset += baseIncrement;
-                currentReadIndex -= baseIncrement;
-            }
+            if(varReadIndex - leftAlignOffset < 0)
+                break;
 
-            // additionally check for a duplicate of bases
-            if(leftAlignmentOffset > 0)
-                return leftAlignmentOffset;
-
-            int dupLength = originalBases.length;
-
-            currentReadIndex = varReadIndex - dupLength;
-
-            while(currentReadIndex >= 0)
-            {
-                byte[] newBases = Arrays.subsetArray(readBases, currentReadIndex + 1, currentReadIndex + indelLength);
-
-                if(!equalArray(newBases, originalBases))
-                    break;
-
-                leftAlignmentOffset += dupLength;
-                currentReadIndex -= dupLength;
-            }
-        }
-        else
-        {
-            int newAltStart = variant.Position + 1 - baseIncrement;
-
-            while(newAltStart >= refSequence.Start)
-            {
-                byte[] newBases = refSequence.baseRange(newAltStart, newAltStart + indelLength - 1);
-
-                if(!equalArray(newBases, originalBases))
-                    break;
-
-                leftAlignmentOffset += baseIncrement;
-                newAltStart -= baseIncrement;
-            }
+            char prevAltBase = (char)readBases[varReadIndex - leftAlignOffset];
+            altBases = prevAltBase + altBases.substring(0, altBases.length() - 1);
+            lastAltBase = (byte)altBases.charAt(variant.altLength() - 1);
         }
 
-        return leftAlignmentOffset;
+        return leftAlignOffset;
     }
 
     public static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)

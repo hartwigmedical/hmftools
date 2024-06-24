@@ -455,7 +455,7 @@ public class RefContextConsumer
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
 
-        if(variant.isIndel())
+        if(variant.isInsert())
         {
             int leftHomologyShift = findLeftHomologyShift(variant, mRefSequence, record.getReadBases(), readIndex);
 

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.E;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -87,6 +89,8 @@ public class RefSequence
         return new byte[] { Bases[index - 1], Bases[index], Bases[index + 1] };
     }
 
+    public String toString() { return format("%d-%d len(%d)", Start, End, length()); }
+
     @VisibleForTesting
     public RefSequence(final ChrBaseRegion region, final ReferenceSequenceFile refGenome)
     {
@@ -103,6 +107,4 @@ public class RefSequence
         End = Start + sequence.getBases().length - 1;
         Bases = sequence.getBases();
     }
-
-
 }

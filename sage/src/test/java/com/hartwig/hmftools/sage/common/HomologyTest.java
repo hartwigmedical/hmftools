@@ -19,7 +19,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.AltContext;
-import com.hartwig.hmftools.sage.candidate.AltRead;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
@@ -33,47 +32,31 @@ public class HomologyTest
     @Test
     public void testHomologyLeftAlignment()
     {
-        //            60        70
-        //            01234567890123
-        // ref bases: CTCGGAAAAAAAAC
+        //            50        60        70        80
+        //            0123456789012345678901234567890
+        // ref bases: CTGTCTGTGACTCGGAAAAAAAACTCCCTGA
 
-        // insert scenario:
+        // test 1: insert scenario:
         SimpleVariant var = createSimpleVariant(70, "A", "AAAAA");
 
         String readBases = REF_BASES_200.substring(60, 70) + "AAAAA" + REF_BASES_200.substring(71, 80);
         int leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), 10);
         assertEquals(6, leftHomShift);
 
-        // test 2: del scenario
-        var = createSimpleVariant(68, "AAAAA", "A");
-
-        readBases = REF_BASES_200.substring(60, 69) + REF_BASES_200.substring(73, 80);
-        leftHomShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), 8);
-        assertEquals(4, leftHomShift);
-
-        // dinucleotide repeats
+        // test 2: dinucleotide repeats
         String refBases = "CTGTCTGTGACTCGGATATATATATATATATCCCCTTGCGCTTCCCAGGT";
         RefSequence refSequence = new RefSequence(0, refBases.getBytes());
         //            10        20        30
         //            012345678901234567890123
         // ref bases: CTCGGATATATATATATATATCCC
 
-        // test 3: insert scenario:
         var = createSimpleVariant(30, "T", "TATAT");
 
         readBases = refBases.substring(10, 30) + "TATAT" + refBases.substring(31, 40);
         leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 20);
         assertEquals(16, leftHomShift);
 
-        // test 4: del scenario
-        var = createSimpleVariant(26, "TATAT", "T");
-
-        readBases = refBases.substring(10, 27) + refBases.substring(31, 40);
-        leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 16);
-        assertEquals(12, leftHomShift);
-
-
-        // test 5: duplicate scenario
+        // test 3: duplicate scenario
         refBases = "CTGTCTGTGACAAACCCGGGTCGGATCCCGGTAGGTAT";
         //          0         10        20        30
         //          0123456789012345678901234567890123456789
@@ -91,7 +74,7 @@ public class HomologyTest
         leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 9);
         assertEquals(9, leftHomShift);
 
-        // a duplication later on
+        // test 4: a duplication later on
         refBases = "CTGTCTGTGACAAACCCGGGAAACCCGGGTCGGATCCCGGTAGGTAT";
         //          0         10        20        30        40
         //          01234567890123456789012345678901234567890123456789
@@ -102,6 +85,23 @@ public class HomologyTest
 
         leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 18);
         assertEquals(18, leftHomShift);
+    }
+
+    @Test
+    public void testHomologyLeftAlignmentImperfectHomology()
+    {
+        //                          10        20        30        40        50        60        70
+        //                 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+        String refBases = "TTTGGTGAGGAATGGGATACTGTCTGAAAGTATCTCTACAAAGGGATAAAGAGTAACTTTACATCTAAGAAACCGACAGACATTAACTTAATCAAATGATCAAGGTGAAAATTACCAAATAGGACAAATCA";
+        String readBases = "CATCTAAGAAACCGACAGACATTAACTTAATCAAATGATCAAGGTGAAAATTACCAAATAGGATCTAAGAAACCGACAGACATTAACTTAATCAAATGATCAAGGTGAAAATTACCAAAT";
+        String alt = "ATCTAAGAAACCGACAGACATTAACTTAATCAAATGATCAAGGTGAAAATTACCAAATAGGA";
+
+        SimpleVariant var = createSimpleVariant(124, alt.substring(0, 1), alt);
+
+        RefSequence refSequence = new RefSequence(1, refBases.getBytes());
+
+        int leftHomShift = findLeftHomologyShift(var, refSequence, readBases.getBytes(), 62);
+        assertEquals(62, leftHomShift);
     }
 
     @Test
