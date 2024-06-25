@@ -66,7 +66,7 @@ public class DataItemMatrix
     {
         for(DataItem.Index index : Indexes)
         {
-            System.out.println(index + " Values=" + Arrays.toString(get(index)));
+            System.out.println(index + ", Values=" + Arrays.toString(get(index)));
         }
     }
 
