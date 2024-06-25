@@ -266,14 +266,16 @@ public final class CigarUtils
 
     public static int getPositionFromReadIndex(final int alignmentStart, final List<CigarElement> cigarElements, int readIndex)
     {
-        return getPositionFromReadIndex(alignmentStart, cigarElements, readIndex, false, false);
+        return getPositionFromReadIndex(alignmentStart, cigarElements, readIndex, false, false)[0];
     }
 
-    public static int getPositionFromReadIndex(
+    public static final int[] NO_POSITION_INFO = { NO_POSITION, 0 };
+
+    public static int[] getPositionFromReadIndex(
             final int alignmentStart, final List<CigarElement> cigarElements, int readIndex, boolean lastIfInserted, boolean inferFromSoftClip)
     {
         if(readIndex < 0)
-            return NO_POSITION;
+            return NO_POSITION_INFO;
 
         int refPosition = alignmentStart;
         int index = 0;
@@ -287,19 +289,22 @@ public final class CigarUtils
 
             if(element.getOperator().consumesReadBases() && index + element.getLength() - 1 >= readIndex)
             {
+                int readIndexShift = 0;
+
                 if(consumesRefBases)
                 {
                     refPosition += readIndex - index;
                 }
                 else
                 {
-                    if(lastIfInserted)
-                        --refPosition;
-                    else
-                        return NO_POSITION;
+                    if(!lastIfInserted)
+                        return NO_POSITION_INFO;
+
+                    --refPosition;
+                    readIndexShift = index - readIndex - 1;
                 }
 
-                return refPosition;
+                return new int[] { refPosition, readIndexShift };
             }
 
             if(consumesRefBases)
@@ -309,6 +314,6 @@ public final class CigarUtils
                 index += element.getLength();
         }
 
-        return NO_POSITION;
+        return NO_POSITION_INFO;
     }
 }

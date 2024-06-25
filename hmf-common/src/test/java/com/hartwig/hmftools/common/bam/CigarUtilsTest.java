@@ -154,8 +154,11 @@ public class CigarUtilsTest
         readIndex = getPositionFromReadIndex(100, cigarElements, 25);
         assertEquals(NO_POSITION, readIndex);
 
-        readIndex = getPositionFromReadIndex(100, cigarElements, 25, true, false);
-        assertEquals(119, readIndex);
+        int[] readInfo = getPositionFromReadIndex(
+                100, cigarElements, 25, true, false);
+
+        assertEquals(119, readInfo[0]);
+        assertEquals(-6, readInfo[1]);
 
         // within soft-clips
         cigarElements.clear();
@@ -169,10 +172,10 @@ public class CigarUtilsTest
         readIndex = getPositionFromReadIndex(100, cigarElements, 35);
         assertEquals(NO_POSITION, readIndex);
 
-        readIndex = getPositionFromReadIndex(100, cigarElements, 5, false, true);
+        readIndex = getPositionFromReadIndex(100, cigarElements, 5, false, true)[0];
         assertEquals(95, readIndex);
 
-        readIndex = getPositionFromReadIndex(100, cigarElements, 35, false, true);
+        readIndex = getPositionFromReadIndex(100, cigarElements, 35, false, true)[0];
         assertEquals(125, readIndex);
     }
 }

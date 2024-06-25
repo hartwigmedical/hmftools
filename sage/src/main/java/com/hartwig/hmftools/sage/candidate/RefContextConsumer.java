@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -464,12 +465,13 @@ public class RefContextConsumer
                 int newReadIndex = readIndex - leftHomologyShift;
 
                 // recompute the new reference position, taking into consideration indels in the read
-                refPosition = getPositionFromReadIndex(
+                int[] posInfo = getPositionFromReadIndex(
                         record.getAlignmentStart(), record.getCigar().getCigarElements(), newReadIndex, true, true);
 
-                if(refPosition != NO_POSITION)
+                if(posInfo != NO_POSITION_INFO)
                 {
-                    readIndex = newReadIndex;
+                    refPosition = posInfo[0];
+                    readIndex = newReadIndex + posInfo[1];
 
                     String newAltBases, newRefBases;
 
