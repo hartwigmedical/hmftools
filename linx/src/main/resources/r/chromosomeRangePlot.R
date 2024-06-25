@@ -23,7 +23,7 @@ doPlot <- function(contig) {
   chr = paste0("chr", contig)
   label = chromosomeRanges[chromosomeRanges$chromosome == contig, "label"]
   chrColor = chromosomeRanges[chromosomeRanges$chromosome == contig, "chrColor"]
-  
+
   itrack <- IdeogramTrack(genome="X",chromosome=chr, name=label, bands=bands, ucscChromosomeNames=FALSE,
                           cex = 1, fontsize = chromosomeFontsize , fontcolor = "black", font = "helvetica",
                           fill = chrColor, col = chrColor, lwd = 10)

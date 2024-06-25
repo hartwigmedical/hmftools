@@ -25,14 +25,8 @@ public class FusionExecution
     public Integer executeR(CircosConfig config, double labelSize) throws IOException, InterruptedException
     {
         int result = RExecutor.executeFromClasspath("r/fusionPlot.R",
-                mProteinDomainFile,
-                mExonFile,
-                mPlotFile,
-                String.valueOf(labelSize),
-                String.valueOf(config.FusionLegendRows),
-                String.valueOf(config.FusionLegendHeightPerRow),
-                String.valueOf(config.FusionHeight)
-        );
+                mProteinDomainFile, mExonFile, mPlotFile, String.valueOf(labelSize), String.valueOf(config.FusionLegendRows),
+                String.valueOf(config.FusionLegendHeightPerRow), String.valueOf(config.FusionHeight));
 
         if(result != 0)
         {
