@@ -112,6 +112,8 @@ public enum JitterMatch
 
         int altMatchCount = 0;
         int permittedLowQualMismatches = 1;
+        int permittedLowQualRangeLower = readContext.VarIndex;
+        int permittedLowQualRangeUpper = readContext.AltIndexUpper + (jitterType == LENGTHENED ? 1 : 0);
 
         for(; readIndex <= flankReadIndexEnd; ++readIndex, ++readContextIndex)
         {
@@ -188,7 +190,7 @@ public enum JitterMatch
                     // allow one mismatch in the core, but only outside a specific range from the variant index
                     if(permittedLowQualMismatches > 0)
                     {
-                        if(readContextIndex < readContext.VarIndex || readContextIndex > readContext.AltIndexUpper)
+                        if(readContextIndex < permittedLowQualRangeLower || readContextIndex > permittedLowQualRangeUpper)
                         {
                             --permittedLowQualMismatches;
                             differencePermitted = true;
