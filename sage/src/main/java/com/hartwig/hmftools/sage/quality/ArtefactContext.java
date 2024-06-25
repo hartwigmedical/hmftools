@@ -100,13 +100,13 @@ public class ArtefactContext
 
     public byte findApplicableBaseQual(final SAMRecord record, int varReadIndex)
     {
-        int homopolSide = record.getReadNegativeStrandFlag() ? SE_END : SE_START;
+        int homopolymerSide = record.getReadNegativeStrandFlag() ? SE_END : SE_START;
 
-        if(mHomopolymerStartOffset[homopolSide] == NO_INDEX)
+        if(mHomopolymerStartOffset[homopolymerSide] == NO_INDEX)
             return INVALID_BASE_QUAL;
 
         return findHomopolymerBaseQual(
-                record, varReadIndex, mHomopolymerStartOffset[homopolSide], homopolSide == SE_START);
+                record, varReadIndex, mHomopolymerStartOffset[homopolymerSide], homopolymerSide == SE_START);
     }
 
     private byte findHomopolymerBaseQual(final SAMRecord record, int varReadIndex, int hpOffset, boolean searchDown)

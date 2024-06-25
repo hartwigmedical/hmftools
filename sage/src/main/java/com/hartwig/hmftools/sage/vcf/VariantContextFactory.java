@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
@@ -39,20 +40,29 @@ public final class VariantContextFactory
 
     public static VariantContext create(final SageVariant variant, final List<String> referenceIds, final List<String> tumorIds)
     {
-        final List<Genotype> genotypes = Lists.newArrayList();
-        for(int i = 0; i < variant.normalReadCounters().size(); i++)
+        try
         {
-            ReadContextCounter normalContext = variant.normalReadCounters().get(i);
-            genotypes.add(createGenotype(normalContext, referenceIds.get(i)));
-        }
+            final List<Genotype> genotypes = Lists.newArrayList();
+            for(int i = 0; i < variant.normalReadCounters().size(); i++)
+            {
+                ReadContextCounter normalContext = variant.normalReadCounters().get(i);
+                genotypes.add(createGenotype(normalContext, referenceIds.get(i)));
+            }
 
-        for(int i = 0; i < variant.tumorReadCounters().size(); i++)
+            for(int i = 0; i < variant.tumorReadCounters().size(); i++)
+            {
+                ReadContextCounter tumorContext = variant.tumorReadCounters().get(i);
+                genotypes.add(createGenotype(tumorContext, tumorIds.get(i)));
+            }
+
+            return createContext(variant, genotypes);
+        }
+        catch(Exception e)
         {
-            ReadContextCounter tumorContext = variant.tumorReadCounters().get(i);
-            genotypes.add(createGenotype(tumorContext, tumorIds.get(i)));
+            SG_LOGGER.error("var({}) failed to create VCF context: {}", variant.candidate().readContext(), e.toString());
+            System.exit(1);
+            return null;
         }
-
-        return createContext(variant, genotypes);
     }
 
     private static VariantContext createContext(final SageVariant variant, final List<Genotype> genotypes)

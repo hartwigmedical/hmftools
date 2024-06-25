@@ -132,6 +132,9 @@ public enum JitterMatch
                     indexAdjusted = true;
                     readContextIndex -= repeatLength;
                 }
+
+                if(readIndex < 0 || readContextIndex < 0)
+                    return false;
             }
             else if(!isIndelOffset && !altAdjusted)
             {

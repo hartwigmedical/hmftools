@@ -461,13 +461,16 @@ public class RefContextConsumer
 
             if(leftHomologyShift > 0)
             {
-                readIndex -= leftHomologyShift;
+                int newReadIndex = readIndex - leftHomologyShift;
 
                 // recompute the new reference position, taking into consideration indels in the read
-                refPosition = getPositionFromReadIndex(record.getAlignmentStart(), record.getCigar().getCigarElements(), readIndex);
+                refPosition = getPositionFromReadIndex(
+                        record.getAlignmentStart(), record.getCigar().getCigarElements(), newReadIndex, true, true);
 
                 if(refPosition != NO_POSITION)
                 {
+                    readIndex = newReadIndex;
+
                     String newAltBases, newRefBases;
 
                     if(variant.isInsert())
