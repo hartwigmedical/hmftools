@@ -113,7 +113,7 @@ public class CuppaDataPrep
                 CategoryPrep categoryPrep = createCategoryPrep(categoryType);
                 SampleOneCategoryTask sampleTask = new SampleOneCategoryTask(0, mConfig, categoryPrep, null);
                 sampleTask.run();
-                dataItems.addAll(sampleTask.getDataItems());
+                dataItems.addAll(sampleTask.mDataItems);
             }
 
             return dataItems;
