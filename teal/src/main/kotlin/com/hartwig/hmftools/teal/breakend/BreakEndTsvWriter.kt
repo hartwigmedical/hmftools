@@ -122,9 +122,9 @@ object BreakEndTsvWriter
 
         populateData(row, evidence.germlineSupport, "germline")
 
-        if (logger.isDebugEnabled)
+        if (logger.isTraceEnabled)
         {
-            logger.debug("{} tumor: {}, germline: {}", mainBreakEnd.key, breakEndLogStr(evidence.tumorSupport),
+            logger.trace("{} tumor: {}, germline: {}", mainBreakEnd.key, breakEndLogStr(evidence.tumorSupport),
                 breakEndLogStr(evidence.germlineSupport))
         }
     }

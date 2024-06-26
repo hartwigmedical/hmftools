@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.teal.tellength
 
+import com.hartwig.hmftools.common.teal.ImmutableTelomereLength
+import com.hartwig.hmftools.common.teal.TelomereLengthFile
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
-import tech.tablesaw.api.DoubleColumn
-import tech.tablesaw.api.IntColumn
-import tech.tablesaw.api.StringColumn
-import tech.tablesaw.api.Table
-import tech.tablesaw.columns.numbers.NumberColumnFormatter
-import tech.tablesaw.io.csv.CsvWriteOptions
-import java.text.NumberFormat
 import java.util.*
 
 // analyse the telo bam and come up with our own score
@@ -57,8 +53,8 @@ class TelomereLengthCalc(
             getFragmentTypeCount(FragmentType.F4))
 
         logger.info("gc bias adj: {}", calcGcBiasAdj())
-        logger.info("sample mix length: {}", calcTelomereLength())
-        logger.info("tumor only length: {}", calcTumorTelomereLength())
+        logger.printf(Level.INFO, "sample mix length: %.2f", calcTelomereLength())
+        logger.printf(Level.INFO,"tumor only length: %.2f", calcTumorTelomereLength())
     }
 
     fun onReadGroup(readGroup: ReadGroup)
@@ -185,59 +181,21 @@ class TelomereLengthCalc(
 
     fun writeTelLengthTsv(lengthTsvPath: String, sampleId: String, sampleType: SampleType)
     {
-        val teloLengthTable = Table.create("TealLength")
-        teloLengthTable.addColumns(
-            StringColumn.create("sampleId"),
-            StringColumn.create("type"),
-            createDoubleColumn("rawTelomereLength", 2),
-            createDoubleColumn("finalTelomereLength", 2),
-            IntColumn.create("fullFragments"),
-            IntColumn.create("cRichPartialFragments"),
-            IntColumn.create("gRichPartialFragments"),
-            IntColumn.create("totalTelomericReads"),
-            DoubleColumn.create("purity"),
-            DoubleColumn.create("ploidy"),
-            DoubleColumn.create("duplicateProportion"),
-            DoubleColumn.create("meanReadDepth"),
-            DoubleColumn.create("gc50ReadDepth"))
+        val telomereLength = ImmutableTelomereLength.builder()
+            .type(sampleType.name)
+            .rawTelomereLength(calcTelomereLength())
+            .finalTelomereLength(if (sampleType == SampleType.ref) calcTelomereLength() else calcTumorTelomereLength())
+            .fullFragments(getFragmentTypeCount(FragmentType.F1))
+            .cRichPartialFragments(getFragmentTypeCount(FragmentType.F2))
+            .gRichPartialFragments(getFragmentTypeCount(FragmentType.F4))
+            .totalTelomericReads(calcTotalTelomericReads())
+            .purity(purity)
+            .ploidy(ploidy)
+            .duplicateProportion(duplicateProportion)
+            .meanReadDepth(meanReadDepth)
+            .gc50ReadDepth(gc50ReadDepth)
+            .build()
 
-        val row = teloLengthTable.appendRow()
-        row.setString("sampleId", sampleId)
-        row.setString("type", sampleType.name)
-        row.setDouble("rawTelomereLength", calcTelomereLength())
-        row.setDouble("finalTelomereLength", if (sampleType == SampleType.ref) calcTelomereLength() else calcTumorTelomereLength())
-        row.setInt("fullFragments", getFragmentTypeCount(FragmentType.F1))
-        row.setInt("cRichPartialFragments", getFragmentTypeCount(FragmentType.F2))
-        row.setInt("gRichPartialFragments", getFragmentTypeCount(FragmentType.F4))
-        row.setInt("totalTelomericReads", calcTotalTelomericReads())
-        row.setDouble("purity", purity)
-        row.setDouble("ploidy", ploidy)
-        row.setDouble("duplicateProportion", duplicateProportion)
-        row.setDouble("meanReadDepth", meanReadDepth)
-        row.setDouble("gc50ReadDepth", gc50ReadDepth)
-
-        try
-        {
-            val writeOptions = CsvWriteOptions.builder(lengthTsvPath).separator('\t').usePrintFormatters(true).build()
-            teloLengthTable.write().csv(writeOptions)
-        }
-        catch (e: java.io.IOException)
-        {
-            throw IllegalStateException("Could not save to csv file: $lengthTsvPath: ${e.message}")
-        }
-    }
-
-    companion object
-    {
-        fun createDoubleColumn(name: String, decimals: Int) : DoubleColumn
-        {
-            val col = DoubleColumn.create(name)
-
-            val format = NumberFormat.getInstance(Locale.ENGLISH)
-            format.isGroupingUsed = false
-            format.maximumFractionDigits = decimals
-            col.setPrintFormatter(NumberColumnFormatter(format, "0"))
-            return col
-        }
+        TelomereLengthFile.write(lengthTsvPath, sampleId, telomereLength)
     }
 }

@@ -1,78 +1,75 @@
 package com.hartwig.hmftools.teal.telbam
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.region.ChrBaseRegion
-import com.hartwig.hmftools.common.bam.BamSlicer
+import com.hartwig.hmftools.common.region.PartitionUtils
 import com.hartwig.hmftools.teal.ReadGroup
-import com.hartwig.hmftools.teal.TealUtils
-import com.hartwig.hmftools.teal.TealUtils.createPartitions
-import htsjdk.samtools.SAMRecord
+import com.hartwig.hmftools.teal.TealConstants
+import com.hartwig.hmftools.teal.TealUtils.openSamReader
+import htsjdk.samtools.SAMSequenceRecord
 import htsjdk.samtools.SamReader
-import htsjdk.samtools.SamReaderFactory
-import org.apache.commons.lang3.mutable.MutableInt
-import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
-import java.io.File
 import java.util.*
 import java.util.concurrent.*
 
 // use a blocking queue architecture to process a bam file
 // it creates multiple bam reader worker threads to read the bam file, and a writer thread to
 // drain the output
-object BamProcessor
+class BamProcessor(val config: TelbamParams)
 {
-    private val logger = LogManager.getLogger(javaClass)
-    private const val REGION_CONSOLIDATION_DISTANCE = 1000
-    
-    @JvmStatic
-    @Throws(InterruptedException::class)
-    fun processBam(config: TelbamParams, executorService: ExecutorService)
+    companion object
     {
+        private const val REGION_CONSOLIDATION_DISTANCE = 100_000
+    }
+
+    private val logger = LogManager.getLogger(javaClass)
+
+    private val incompleteReadNames: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap())
+    private val writer = BamRecordWriter(config, incompleteReadNames)
+    private val samReaderList: MutableList<SamReader> = Collections.synchronizedList(ArrayList<SamReader>())
+
+    // One bam reader per thread instead of one per task
+    private val threadBamReader: ThreadLocal<SamReader> = ThreadLocal.withInitial {
+        val samReader: SamReader = openSamReader(config)
+        samReaderList.add(samReader)
+        samReader
+    }
+
+    fun processBam()
+    {
+        val numBamReaders = Math.max(config.threadCount - 1, 1)
+        val numDigits = numBamReaders.toString().length
+        val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("thread-%0${numDigits}d").build()
+        val executorService = Executors.newFixedThreadPool(numBamReaders, namedThreadFactory)
+
         // we create one less for the bam writer
         logger.info("processing bam: {}", config.bamFile)
-        val telBamRecordQ: BlockingQueue<TelBamRecord> = LinkedBlockingDeque()
-        val incompleteReadNames = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
-        val writer = BamRecordWriter(config, telBamRecordQ, incompleteReadNames)
         writer.setProcessingMissingReadRegions(false)
-        val samReaderList = Collections.synchronizedList(ArrayList<SamReader>())
-
-        // One bam reader per thread instead of one per task
-        val threadBamReader = ThreadLocal.withInitial {
-            var factory = SamReaderFactory.makeDefault()
-            if (config.refGenomeFile != null && !config.refGenomeFile!!.isEmpty())
-            {
-                factory = factory.referenceSequence(File(config.refGenomeFile!!))
-            }
-            val samReader: SamReader = factory.open(File(config.bamFile!!))
-            samReaderList.add(samReader)
-            samReader
-        }
-
-        // add unmapped read first cause it is slower to process
-        val partitions = ArrayList<ChrBaseRegion?>()
-        partitions.add(null)
-        partitions.addAll(createPartitions(config))
 
         // add the bam reader tasks
         val bamReaderTasks: MutableList<Future<*>> = ArrayList()
 
-        for (baseRegion in partitions)
+        val partitions = ArrayList<BamPartition>()
+        partitions.addAll(createPartitions(config))
+
+        for (partition in partitions)
         {
-            val task = Runnable { sliceRegionTask(threadBamReader, baseRegion, telBamRecordQ, incompleteReadNames) }
+            val reader = PartitionReader(partition, writer, incompleteReadNames)
+            val task = Runnable { reader.readPartition(threadBamReader.get()) }
             bamReaderTasks.add(executorService.submit(task))
         }
 
         // start processing threads and run til completion
-        runTasksTillCompletion(telBamRecordQ, bamReaderTasks, writer)
+        runTasksTillCompletion(bamReaderTasks)
         logger.info("initial BAM file processing complete")
 
         // we want to process until no new reads have been accepted
-        while (!writer.incompleteReadGroups.isEmpty())
+        while (writer.incompleteReadGroups.isNotEmpty())
         {
             val numAcceptedReads = writer.numAcceptedReads
 
             // add unmapped read first cause it is slower to process
             partitions.clear()
-            partitions.add(null)
 
             // now we process the incomplete groups, since the threads have already finished there is no
             // concurrency problem
@@ -80,15 +77,16 @@ object BamProcessor
 
             logger.info("processing {} missing read regions", partitions.size)
 
-            for (baseRegion in partitions)
+            for (partition in partitions)
             {
-                val task = Runnable { sliceRegionTask(threadBamReader, baseRegion, telBamRecordQ, incompleteReadNames) }
+                val reader = PartitionReader(partition, writer, incompleteReadNames)
+                val task = Runnable { reader.readPartition(threadBamReader.get()) }
                 bamReaderTasks.add(executorService.submit(task))
             }
             writer.setProcessingMissingReadRegions(true)
 
             // start processing threads and run til completion
-            runTasksTillCompletion(telBamRecordQ, bamReaderTasks, writer)
+            runTasksTillCompletion(bamReaderTasks)
             if (writer.numAcceptedReads == numAcceptedReads)
             {
                 // no change, so we did not find any more reads
@@ -104,85 +102,27 @@ object BamProcessor
         }
     }
 
-    private fun sliceRegionTask(
-        samReaderSupplier: ThreadLocal<SamReader>,
-        region: ChrBaseRegion?,
-        telBamRecordQ: Queue<TelBamRecord>,
-        incompleteReadNames: Set<String>)
-    {
-        val reader = samReaderSupplier.get()
-        val bamSlicer = BamSlicer(0, true, true, true)
-        bamSlicer.setKeepUnmapped()
-        val readCount = MutableInt()
-
-        val readHandler = { samRecord: SAMRecord -> processReadRecord(samRecord, telBamRecordQ, incompleteReadNames, readCount) }
-
-        if(region != null)
-        {
-            //logger.printf(Level.INFO, "processing region(%s:%,d-%,d)", region.chromosome(), region.start(), region.end())
-            bamSlicer.slice(reader, region, readHandler)
-            logger.printf(Level.INFO, "processed region(%s:%,d-%,d) read count(%s)",
-                region.chromosome(), region.start(), region.end(), readCount)
-        }
-        else
-        {
-            bamSlicer.queryUnmapped(reader, readHandler)
-            logger.info("processed {} unmapped reads", readCount)
-        }
-    }
-
-    private fun processReadRecord(record: SAMRecord, telBamRecordQ: Queue<TelBamRecord>, incompleteReadNames: Set<String>,
-        readCount: MutableInt)
-    {
-        val hasTeloContent = TealUtils.hasTelomericContent(record.readString)
-        if (!hasTeloContent && !incompleteReadNames.contains(record.readName))
-        {
-            return
-        }
-
-        readCount.increment()
-
-        // push it on to the queue
-        val telBamRecord = TelBamRecord()
-        telBamRecord.samRecord = record
-        telBamRecord.hasTeloContent = hasTeloContent
-        telBamRecordQ.add(telBamRecord)
-    }
-
     // run the bam reader and record writer threads till completion
     @Throws(InterruptedException::class)
-    private fun runTasksTillCompletion(telBamRecordQ: Queue<TelBamRecord>,
-                                         bamReaderTasks: MutableList<Future<*>>,
-                                         writer: BamRecordWriter)
+    private fun runTasksTillCompletion(bamReaderTasks: MutableList<Future<*>>)
     {
-        val writerThread = Thread(writer)
-        writerThread.start()
-
         // wait for reader tasks to finish
         for (t in bamReaderTasks)
         {
             t.get()
         }
         logger.info("{} bam reader tasks finished", bamReaderTasks.size)
-
         bamReaderTasks.clear()
-
-        // now tell writer to finish also
-        val telBamRecord = TelBamRecord()
-        telBamRecord.poison = true
-        telBamRecordQ.add(telBamRecord)
-        writerThread.join()
-        logger.info("writer thread finished")
     }
 
-    private fun getMissingReadRegions(incompleteReadGroups: Map<String, ReadGroup>, specificChromosomes: List<String>): List<ChrBaseRegion>
+    private fun getMissingReadRegions(incompleteReadGroups: Map<String, ReadGroup>, specificChromosomes: List<String>): List<BamPartition>
     {
         var missingReadRegions: MutableList<ChrBaseRegion> = ArrayList()
         for (readGroup in incompleteReadGroups.values)
         {
             assert(readGroup.invariant())
             missingReadRegions.addAll(readGroup.findMissingReadBaseRegions())
-            if (!specificChromosomes.isEmpty())
+            if (specificChromosomes.isNotEmpty())
             {
                 val list: MutableList<ChrBaseRegion> = ArrayList()
                 for (x in missingReadRegions)
@@ -198,7 +138,7 @@ object BamProcessor
 
         // sort the mate regions
         missingReadRegions.sort()
-        if (!missingReadRegions.isEmpty())
+        if (missingReadRegions.isNotEmpty())
         {
             val compactBaseRegions: MutableList<ChrBaseRegion> = ArrayList()
 
@@ -227,6 +167,36 @@ object BamProcessor
             }
             missingReadRegions = compactBaseRegions
         }
-        return missingReadRegions
+
+        val partitionList = ArrayList<BamPartition>()
+        // add unmapped read first cause it is slower to process
+        partitionList.add(BamPartition.ofUnmapped())
+        partitionList.addAll(missingReadRegions.map { o -> BamPartition.ofRegion(o) })
+        return partitionList
+    }
+
+    private fun createPartitions(config: TelbamParams): List<BamPartition>
+    {
+        val samSequences: List<SAMSequenceRecord>
+
+        openSamReader(config).use { samReader ->
+            samSequences = samReader.fileHeader.sequenceDictionary.sequences
+        }
+
+        val partitions: MutableList<BamPartition> = ArrayList()
+
+        // add unmapped read first cause it is slower to process
+        partitions.add(BamPartition.ofUnmapped())
+
+        val partitionSize = TealConstants.DEFAULT_PARTITION_SIZE
+        for (seq in samSequences)
+        {
+            val chrStr = seq.sequenceName
+            if (config.specificChromosomes.isNotEmpty() && !config.specificChromosomes.contains(chrStr)) continue
+
+            partitions.addAll(PartitionUtils.buildPartitions(chrStr, seq.sequenceLength, partitionSize)
+                .map { o -> BamPartition.ofRegion(o) })
+        }
+        return partitions
     }
 }
