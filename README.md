@@ -1,8 +1,7 @@
 # Hartwig WiGiTS
 
 WiGiTS is a universal open source suite of genome, transcriptome analysis tools for cancer research and diagnostics developed by Hartwig Medical Foundation.  
-
-![image](https://github.com/hartwigmedical/hmftools/assets/18154939/8bfa1733-0e00-414f-84e6-32c9de29a16b)
+<img width="1043" alt="image" src="https://github.com/hartwigmedical/hmftools/assets/18154939/187fe7be-6ad4-4e1f-8fff-96b0a06cadbd">
 
 We recommend to run WiGiTS using the NextFlow implmentation called [OncoAnalyser](https://nf-co.re/oncoanalyser/dev).
 
