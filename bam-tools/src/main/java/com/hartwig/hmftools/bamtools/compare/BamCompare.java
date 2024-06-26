@@ -144,7 +144,7 @@ public class BamCompare
             }
             else
             {
-                buildPartitions(chromosome, sequenceRecord.getEnd(), mConfig.PartitionSize)
+                buildPartitions(chromosome, sequenceRecord.getSequenceLength(), mConfig.PartitionSize)
                         .forEach(region -> partitions.add(BamPartition.ofRegion(region)));
             }
         }
