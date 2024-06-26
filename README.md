@@ -1,6 +1,6 @@
-# Hartwig WiGiTS
+# WiGiTS
 
-WiGiTS is a universal open source suite of genome, transcriptome analysis tools for cancer research and diagnostics
+WiGiTS is a universal open source suite of genome and transcriptome analysis tools for cancer research and diagnostics
 
 <img width="1043" alt="image" src="https://github.com/hartwigmedical/hmftools/assets/18154939/187fe7be-6ad4-4e1f-8fff-96b0a06cadbd">
 
