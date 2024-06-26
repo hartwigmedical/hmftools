@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_MIXED_GERMLINE_SOMATIC;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +25,6 @@ import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 import com.hartwig.hmftools.sage.select.TranscriptSelector;
-import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 public class DedupMixedGermlineSomatic
 {
@@ -153,7 +152,7 @@ public class DedupMixedGermlineSomatic
                     SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
                     if(Doubles.greaterThan(adjustedNormalVaf, softFilterConfig.MaxGermlineVaf))
                     {
-                        next.filters().add(SoftFilter.MAX_GERMLINE_VAF.filterName());
+                        next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                     }
                 }
             }
@@ -181,11 +180,11 @@ public class DedupMixedGermlineSomatic
 
                 if(positionCodon != null && keepMnv(positionCodon, snvPassing.variant(), mnv.variant()))
                 {
-                    snvPassing.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
+                    snvPassing.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC);
                 }
                 else
                 {
-                    mnv.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
+                    mnv.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC);
                 }
             }
         }

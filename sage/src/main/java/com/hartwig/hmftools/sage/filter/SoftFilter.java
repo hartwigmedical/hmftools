@@ -21,10 +21,16 @@ public enum SoftFilter
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge"),
     MAP_QUAL_REF_ALT_DIFFERENCE(
             "mapQualRefAltDiff", "", true, false, "Alt support map qual well below ref support"),
-    JITTER("jitter", "", true, false, "Jitter filter");
+    JITTER("jitter", "", true, false, "Jitter filter"),
+    DEDUP_MNV("dedupMnv", "", true, false, "Filter MNV duplicate"),
+    DEDUP_MIXED_GERMLINE_SOMATIC(
+            "dedupMixedGermlineSomatic", "", true, false, "Variant duplicate mixed somatic/germline"),
+    DEDUP_SNV_MNV("dedupSnvMnv", "", true, false, "Variant duplicate MNV vs SNV"),
+    DEDUP_INDEL("dedupIndel", "", true, false, "Variant duplicate SNV/MNV vs INDEL"),
+    DEDUP_MATCH("dedupMatch", "", true, false, "Variant duplicate with different read contexts");
 
-    private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
-    public static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
+    private static final Set<SoftFilter> TUMOR_FILTERS = Sets.newHashSet();
+    public static final Set<SoftFilter> GERMLINE_FILTERS = Sets.newHashSet();
 
     static
     {
@@ -32,11 +38,11 @@ public enum SoftFilter
         {
             if(softFilter.mGermline)
             {
-                GERMLINE_FILTERS.add(softFilter.filterName());
+                GERMLINE_FILTERS.add(softFilter);
             }
             if(softFilter.mTumor)
             {
-                TUMOR_FILTERS.add(softFilter.filterName());
+                TUMOR_FILTERS.add(softFilter);
             }
         }
     }
@@ -62,9 +68,9 @@ public enum SoftFilter
 
     public String toString() { return mFilter; }
 
-    public static boolean isGermlineAndNotTumorFiltered(final Set<String> softFilters)
+    public static boolean isGermlineAndNotTumorFiltered(final Set<SoftFilter> softFilters)
     {
-        for(final String softFilter : softFilters)
+        for(SoftFilter softFilter : softFilters)
         {
             if(TUMOR_FILTERS.contains(softFilter))
                 return false;

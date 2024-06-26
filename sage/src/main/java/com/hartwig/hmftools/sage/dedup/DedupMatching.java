@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MATCH;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_MATCH;
 
 import java.util.List;
 import java.util.stream.Collectors;

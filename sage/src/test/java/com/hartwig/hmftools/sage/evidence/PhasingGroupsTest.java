@@ -313,13 +313,13 @@ public class PhasingGroupsTest
 
         SageVariant var2 = createVariant(12);
         var2.tumorReadCounters().get(0).addLocalPhaseSet(1, 10, 0);
-        var2.filters().add(MAX_GERMLINE_VAF.toString());
+        var2.filters().add(MAX_GERMLINE_VAF);
         variants.add(var2);
 
         // a second group, uninformative vs both 1 and 3
         SageVariant var3 = createVariant(13);
         var3.tumorReadCounters().get(0).addLocalPhaseSet(2, 1, 0);
-        var3.filters().add(MAX_GERMLINE_VAF.toString());
+        var3.filters().add(MAX_GERMLINE_VAF);
         variants.add(var3);
 
         SageVariant var4 = createVariant(14);
@@ -341,23 +341,23 @@ public class PhasingGroupsTest
 
         SageVariant var6 = createVariant(16);
         var6.tumorReadCounters().get(0).addLocalPhaseSet(3, 10, 0);
-        var6.filters().add(MAX_GERMLINE_VAF.toString());
+        var6.filters().add(MAX_GERMLINE_VAF);
         variants.add(var6);
 
         SageVariant var7 = createVariant(17);
         var7.tumorReadCounters().get(0).addLocalPhaseSet(4, 5, 0);
-        var7.filters().add(MAX_GERMLINE_VAF.toString());
+        var7.filters().add(MAX_GERMLINE_VAF);
         variants.add(var7);
 
         SageVariant var8 = createVariant(18);
         var8.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
         var8.tumorReadCounters().get(0).addLocalPhaseSet(6, 10, 0);
-        var8.filters().add(MAX_GERMLINE_VAF.toString());
+        var8.filters().add(MAX_GERMLINE_VAF);
         variants.add(var8);
 
         SageVariant var9 = createVariant(19);
         var9.tumorReadCounters().get(0).addLocalPhaseSet(7, 1, 0);
-        var9.filters().add(MAX_GERMLINE_VAF.toString());
+        var9.filters().add(MAX_GERMLINE_VAF);
         variants.add(var9);
 
         variants.stream().filter(x -> x.isPassing()).forEach(x -> x.localPhaseSets().stream().forEach(y -> passingPhaseSets.add(y)));

@@ -30,11 +30,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MATCH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MNV_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_SNV_MNV_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
@@ -215,13 +210,6 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
-
-        // filter options
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MATCH, "Variant duplicate with different read contexts"));
 
         for(SoftFilter filter : SoftFilter.values())
         {

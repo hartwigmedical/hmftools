@@ -84,7 +84,7 @@ public class SoftFilterTest
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
         FILTERS.applySoftFilters(variant);
 
-        assertTrue(variant.filters().contains(MIN_TUMOR_QUAL.filterName()));
+        assertTrue(variant.filters().contains(MIN_TUMOR_QUAL));
 
         readContextCounter.processRead(altRead, 1, null);
         readContextCounter.processRead(altRead, 1, null);
@@ -92,7 +92,7 @@ public class SoftFilterTest
         variant = sageVariantFromReadContextCounter(readContextCounter);
         FILTERS.applySoftFilters(variant);
 
-        assertFalse(variant.filters().contains(MIN_TUMOR_QUAL.filterName()));
+        assertFalse(variant.filters().contains(MIN_TUMOR_QUAL));
 
         // TODO: add more variations to test quality site criteria
     }
@@ -138,7 +138,7 @@ public class SoftFilterTest
 
         FILTERS.applySoftFilters(variant);
 
-        assertTrue(variant.filters().contains(MAX_EDGE_DISTANCE.filterName()));
+        assertTrue(variant.filters().contains(MAX_EDGE_DISTANCE));
     }
 
     @Test
@@ -186,7 +186,7 @@ public class SoftFilterTest
 
         FILTERS.applySoftFilters(variant);
 
-        assertTrue(variant.filters().contains(FRAGMENT_COORDS.filterName()));
+        assertTrue(variant.filters().contains(FRAGMENT_COORDS));
 
         // different frag coords pass the filter
         SAMRecord read3 = createSamRecord(

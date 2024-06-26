@@ -71,7 +71,7 @@ public final class VariantContextFactory
 
         builder.log10PError(variant.totalQuality() / -10d);
         builder.genotypes(genotypes);
-        builder.filters(variant.filters());
+        builder.filters(variant.filtersStringSet());
 
         if(variant.hasLocalPhaseSets())
         {

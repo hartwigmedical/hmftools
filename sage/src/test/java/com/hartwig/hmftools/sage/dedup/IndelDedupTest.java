@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.dedup.IndelDeduper.buildAltBasesString;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -275,7 +273,7 @@ public class IndelDedupTest
 
         // test again but this time with the SNV mostly unphased with the INDEL
         del.filters().clear();
-        del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+        del.filters().add(SoftFilter.MIN_TUMOR_QUAL);
 
         var1.tumorReadCounters().get(0).addLocalPhaseSet(2, 100, 0);
 
