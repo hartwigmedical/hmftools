@@ -11,17 +11,18 @@ import org.jetbrains.annotations.Nullable;
 public class SampleOneCategoryTask implements Callable
 {
     public final PrepConfig mConfig;
-    public final CategoryPrep mCategoryPrep;
     public final int mSampleIndex;
     public final String mSampleName;
 
-    @Nullable private List<DataItem> mDataItems;
-    @Nullable ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
+    @Nullable public CategoryPrep mCategoryPrep;
+
+    @Nullable public List<DataItem> mDataItems;
+    @Nullable public ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
     public SampleOneCategoryTask(
             final int sampleIndex,
             final PrepConfig prepConfig,
-            final CategoryPrep categoryPrep,
+            CategoryPrep categoryPrep,
             @Nullable ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix)
     {
         mConfig = prepConfig;
@@ -43,17 +44,12 @@ public class SampleOneCategoryTask implements Callable
         int sampleNum = mSampleIndex + 1;
         int totalSamples = mConfig.SampleIds.size();
 
-        if(mConfig.isMultiSample() & (totalSamples < 10 || sampleNum % 100 == 0))
+        if(mConfig.isMultiSample() & sampleNum % mConfig.ProgressInterval == 0)
         {
             CUP_LOGGER.info("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
         }
 
         mDataItems = mCategoryPrep.extractSampleData(mSampleName);
-    }
-
-    public List<DataItem> getDataItems()
-    {
-        return mDataItems;
     }
 
     public synchronized void addDataItemsToMatrix()
@@ -67,6 +63,16 @@ public class SampleOneCategoryTask implements Callable
         }
     }
 
+    public void clearDataItems()
+    {
+        mDataItems = null;
+    }
+
+    public void clearCategoryPrep()
+    {
+        mCategoryPrep = null;
+    }
+
     public void run()
     {
         processSample();
@@ -75,18 +81,20 @@ public class SampleOneCategoryTask implements Callable
         {
             if(mDataItems == null)
             {
-                CUP_LOGGER.error("multi-sample feature matrix will contain nulls for sample({}) category({})",
-                        mSampleName, mCategoryPrep.categoryType());
+                CUP_LOGGER.error("multi-sample feature matrix will contain nulls for sample({}) category({})", mSampleName, mCategoryPrep.categoryType());
             }
             else
             {
                 addDataItemsToMatrix();
+                clearDataItems();
             }
         }
+
+        clearCategoryPrep();
     }
 
     @Override
-    public Long call() throws Exception
+    public Long call()
     {
         run();
         return (long) 0;

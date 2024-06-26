@@ -4,7 +4,7 @@ import htsjdk.samtools.util.SequenceUtil
 
 object TealConstants
 {
-    const val DEFAULT_PARTITION_SIZE = 100_000_000
+    const val DEFAULT_PARTITION_SIZE = 10_000_000
     const val DEFAULT_MIN_TELE_SEQ_COUNT = 2
     const val POLY_G_THRESHOLD = 0.9
     const val MIN_TELOMERE_MATCH_BASES = 12

@@ -47,7 +47,7 @@ public interface BamPartition
         @Override
         public String toString()
         {
-            return mBaseRegion.toString();
+            return String.format("%s:%,d-%,d", mBaseRegion.chromosome(), mBaseRegion.start(), mBaseRegion.end());
         }
 
         @Override

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.teal
 
 import java.lang.StringBuilder
 import java.lang.ThreadLocal
-import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.telbam.TelbamParams
 import htsjdk.samtools.SamReader
 import htsjdk.samtools.SamReaderFactory
@@ -99,29 +98,6 @@ object TealUtils
         val numGCs = Math.max(StringUtils.countMatches(readSeq, 'G'), StringUtils.countMatches(readSeq, 'C')).toDouble()
         val gcFrac = numGCs / readSeq.length
         return gcFrac >= TealConstants.POLY_G_THRESHOLD
-    }
-
-    fun createPartitions(config: TelbamParams): List<ChrBaseRegion>
-    {
-        val samReader = openSamReader(config)
-        val samSequences = samReader.fileHeader.sequenceDictionary.sequences
-        val partitions: MutableList<ChrBaseRegion> = org.apache.commons.compress.utils.Lists.newArrayList()
-        val partitionSize = TealConstants.DEFAULT_PARTITION_SIZE
-        for (seq in samSequences)
-        {
-            val chrStr = seq.sequenceName
-            if (!config.specificChromosomes.isEmpty() && !config.specificChromosomes.contains(chrStr)) continue
-            val chromosomeLength = seq.sequenceLength
-            var startPos = 0
-            while (startPos < chromosomeLength)
-            {
-                var endPos = startPos + partitionSize - 1
-                if (endPos + partitionSize * 0.2 > chromosomeLength) endPos = chromosomeLength
-                partitions.add(ChrBaseRegion(chrStr, startPos, endPos))
-                startPos = endPos + 1
-            }
-        }
-        return partitions
     }
 
     fun openSamReader(config: TelbamParams): SamReader

@@ -2,51 +2,49 @@ package com.hartwig.hmftools.cup.prep;
 
 public enum ItemType
 {
-    SIGNATURE,
-    SNV96,
-    GEN_POS,
+    SIGNATURE("sig"),
+    SNV96("snv96"),
+    GEN_POS("gen_pos"),
 
-    TUMOR_MUTATIONAL_BURDEN,
+    TUMOR_MUTATIONAL_BURDEN("event.tmb"),
 
-    SAMPLE_TRAIT,
-    SV_COUNT,
-    VIRUS,
-    FUSION,
-    DRIVER,
+    SAMPLE_TRAIT("event.trait"),
+    SV_COUNT("event.sv"),
+    VIRUS("event.virus"),
+    FUSION("event.fusion"),
+    DRIVER("event.driver"),
 
-    EXPRESSION,
-    ALT_SJ;
+    EXPRESSION("gene_exp"),
+    ALT_SJ("alt_sj");
+
+    private final String mAlias;
+
+    ItemType(String alias)
+    {
+        mAlias = alias;
+    }
 
     public String getAlias()
     {
-        switch(this) {
-            case SNV96:
-                return "snv96";
-            case GEN_POS:
-                return "gen_pos";
-            case SIGNATURE:
-                return "sig";
+        return mAlias;
+    }
 
-            case TUMOR_MUTATIONAL_BURDEN:
-                return "event.tmb";
-            case SAMPLE_TRAIT:
-                return "event.trait";
-            case FUSION:
-                return "event.fusion";
-            case DRIVER:
-                return "event.driver";
-            case VIRUS:
-                return "event.virus";
-            case SV_COUNT:
-                return "event.sv";
-
-            case EXPRESSION:
-                return "gene_exp";
-            case ALT_SJ:
-                return "alt_sj";
-
+    public static ItemType fromAlias(String alias)
+    {
+        switch(alias) {
+            case "sig": return SIGNATURE;
+            case "snv96": return SNV96;
+            case "gen_pos": return GEN_POS;
+            case "event.tmb": return TUMOR_MUTATIONAL_BURDEN;
+            case "event.trait": return SAMPLE_TRAIT;
+            case "event.sv": return SV_COUNT;
+            case "event.virus": return VIRUS;
+            case "event.fusion": return FUSION;
+            case "event.driver": return DRIVER;
+            case "gene_exp": return EXPRESSION;
+            case "alt_sj": return ALT_SJ;
             default:
-                throw new IllegalArgumentException("Alias not implemented for: " + name());
+                throw new IllegalArgumentException("Invalid alias: " + alias);
         }
     }
 }

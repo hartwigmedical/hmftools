@@ -261,7 +261,8 @@ class ReadGroup(val name: String)
                 if (items.size < 5) continue
 
                 // supplementary(SA) string attribute looks like
-                // 4,191039958,+,68S33M,0,0
+                // SA:Z:(rname ,pos ,strand ,CIGAR ,mapQ ,NM ;)+
+                // 20,61647163,+,99M52S,0,1;11,70524575,+,95S30M26S,0,0;
                 // the first word is the chromosome, the second is the alignment start
                 val sa = SupplementaryAlignment(
                     firstOfPair = firstOfPair,

@@ -3,14 +3,12 @@ package com.hartwig.hmftools.teal.telbam
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParametersDelegate
 import com.beust.jcommander.UnixStyleUsageFormatter
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import org.apache.logging.log4j.LogManager
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
 class TelbamApp
@@ -61,12 +59,8 @@ class TelbamApp
     fun processBam()
     {
         logger.info("params: {}", params)
-
-        val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("worker-%d").build()
-        val numBamReaders = Math.max(params.threadCount - 1, 1)
-        val executorService = Executors.newFixedThreadPool(numBamReaders, namedThreadFactory)
-
-        BamProcessor.processBam(params, executorService)
+        val bamProcessor = BamProcessor(params)
+        bamProcessor.processBam()
     }
 
     companion object
