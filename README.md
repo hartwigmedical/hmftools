@@ -37,7 +37,7 @@ The table below has links for the each tool used in this release.
 | [Purple](./purple/README.md)      | Estimates copy number, purity and ploidy, and identifies driver events | [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v4.0)        |
 | [Redux](./redux/README.md)        | Duplicate marking, consensus reads, UMIs and read unmapping            | [1.1.7](https://github.com/hartwigmedical/hmftools/releases/tag/mark-dups-v1.1.7) |
 | [Sage](./sage/README.md)          | Point mutation variant calling and filtering                           | [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.4)          |
-| [Teal](./teal/README.md)          | Measures telomere content and estimates telomeric length               | [1.2.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.1)      |
+| [Teal](./teal/README.md)          | Measures telomere content and estimates telomeric length               | [1.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.0)      |
 | [SvPrep](./esvee/README.md)       | Pre-GRIDSS BAM filtering                                               | [1.2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.2.3)   |
 
 The following external tools are also used in the pipeline:
