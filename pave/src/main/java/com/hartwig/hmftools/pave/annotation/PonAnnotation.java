@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_HOTSPOT_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_HOTSPOT_MAX_READS;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_HOTSPOT_SAMPLE_COUNT;
-import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_OTHER_TIER_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_OTHER_TIER_MAX_READS;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_OTHER_TIER_SAMPLE_COUNT;
-import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_PANEL_READ_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_PANEL_MAX_READS;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_FILTER_PANEL_SAMPLE_COUNT;
 
 import java.io.BufferedReader;
@@ -66,9 +66,9 @@ public class PonAnnotation extends AnnotationData implements Callable
         mPonFilters = Maps.newHashMap();
 
         // set defaults
-        mPonFilters.put(VariantTier.HOTSPOT, new PonFilters(PON_FILTER_HOTSPOT_SAMPLE_COUNT, PON_FILTER_HOTSPOT_READ_COUNT));
-        mPonFilters.put(VariantTier.PANEL, new PonFilters(PON_FILTER_PANEL_SAMPLE_COUNT, PON_FILTER_PANEL_READ_COUNT));
-        mPonFilters.put(VariantTier.UNKNOWN, new PonFilters(PON_FILTER_OTHER_TIER_SAMPLE_COUNT, PON_FILTER_OTHER_TIER_READ_COUNT));
+        mPonFilters.put(VariantTier.HOTSPOT, new PonFilters(PON_FILTER_HOTSPOT_SAMPLE_COUNT, PON_FILTER_HOTSPOT_MAX_READS));
+        mPonFilters.put(VariantTier.PANEL, new PonFilters(PON_FILTER_PANEL_SAMPLE_COUNT, PON_FILTER_PANEL_MAX_READS));
+        mPonFilters.put(VariantTier.UNKNOWN, new PonFilters(PON_FILTER_OTHER_TIER_SAMPLE_COUNT, PON_FILTER_OTHER_TIER_MAX_READS));
     }
 
     @Override
@@ -153,7 +153,7 @@ public class PonAnnotation extends AnnotationData implements Callable
         if(ponData == null)
             return;
 
-        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads);
+        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
     }
 
     public boolean filterOnTierCriteria(final VariantTier tier, final int ponSampleCount, final int ponMaxSampleReads)

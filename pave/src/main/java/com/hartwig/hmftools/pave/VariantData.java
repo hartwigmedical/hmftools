@@ -79,6 +79,7 @@ public class VariantData
     public final Set<String> mFilters;
     public int mPonSampleCount;
     public int mPonMaxReadCount;
+    public int mPonMeanReadCount;
     private Double mGnomadFrequency;
 
     public static final int NO_LOCAL_PHASE_SET = -1;
@@ -157,6 +158,7 @@ public class VariantData
         mFilters = Sets.newHashSet();
         mPonSampleCount = 0;
         mPonMaxReadCount = 0;
+        mPonMeanReadCount = 0;
         mGnomadFrequency = null;
     }
 
@@ -340,11 +342,13 @@ public class VariantData
 
     public int ponSampleCount() { return mPonSampleCount; }
     public int ponMaxReadCount() { return mPonMaxReadCount; }
+    public int ponMeanReadCount() { return mPonMaxReadCount; }
 
-    public void setPonFrequency(int sampleCount, int maxReadCount)
+    public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount)
     {
         mPonSampleCount = sampleCount;
         mPonMaxReadCount = maxReadCount;
+        mPonMeanReadCount = meanReadCount;
     }
 
     public Double gnomadFrequency() { return mGnomadFrequency; }

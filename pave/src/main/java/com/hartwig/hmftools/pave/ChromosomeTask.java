@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
-import static com.hartwig.hmftools.pave.PaveConstants.PON_READ_COUNT_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_MEAN_READ_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
@@ -17,8 +17,6 @@ import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.VcfWriter.buildVariant;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
-
-import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
 
 import java.util.List;
 import java.util.Map;
@@ -252,10 +250,10 @@ public class ChromosomeTask implements Callable
             else
             {
                 double variantVaf = variant.sampleVaf(sampleId);
-                int repeatBaseLength = variant.repeatSequence().length();
+                int repeatBaseLength = variant.repeatSequence().length() * repeatCount;
                 double vafLimit = max(PON_VAF_THRESHOLD, 0.01 * repeatBaseLength);
 
-                if(variant.ponMaxReadCount() < PON_READ_COUNT_THRESHOLD && variantVaf > vafLimit)
+                if(variant.ponMeanReadCount() < PON_MEAN_READ_THRESHOLD && variantVaf > vafLimit)
                 {
                     ponFilter = false;
                 }

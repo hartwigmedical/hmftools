@@ -23,18 +23,18 @@ public class PaveConstants
     // PON related
     public static final int PON_SAMPLE_COUNT_THRESHOLD = 10;
     public static final int PON_REPEAT_COUNT_THRESHOLD = 4;
-    public static final int PON_READ_COUNT_THRESHOLD = 6;
+    public static final int PON_MEAN_READ_THRESHOLD = 6;
     public static final double PON_VAF_THRESHOLD = 0.08;
 
     public static final double GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD = 0.01;
     public static final double GNMOAD_FILTER_THRESHOLD = 0.00015;
 
     public static final int PON_FILTER_HOTSPOT_SAMPLE_COUNT = 10;
-    public static final int PON_FILTER_HOTSPOT_READ_COUNT = 6;
+    public static final int PON_FILTER_HOTSPOT_MAX_READS = 6;
 
-    public static final int PON_FILTER_PANEL_SAMPLE_COUNT = 10;
-    public static final int PON_FILTER_PANEL_READ_COUNT = 6;
+    public static final int PON_FILTER_PANEL_SAMPLE_COUNT = 6;
+    public static final int PON_FILTER_PANEL_MAX_READS = 6;
 
     public static final int PON_FILTER_OTHER_TIER_SAMPLE_COUNT = 6;
-    public static final int PON_FILTER_OTHER_TIER_READ_COUNT = 0;
+    public static final int PON_FILTER_OTHER_TIER_MAX_READS = 0;
 }

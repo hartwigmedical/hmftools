@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static java.lang.Math.round;
+
 public class PonVariantData
 {
     public final String Ref;
@@ -18,6 +20,8 @@ public class PonVariantData
     }
 
     public boolean matches(final String ref, final String alt) { return ref.equals(Ref) && alt.equals(Alt); }
+
+    public int meanReadCount() { return Samples > 0 ? (int)round(TotalSampleReads / (double)Samples) : 0; }
 
     public String toString()
     {

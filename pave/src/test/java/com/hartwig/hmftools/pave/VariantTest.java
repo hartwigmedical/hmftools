@@ -155,7 +155,7 @@ public class VariantTest
         assertFilters(var, false, false, true);
 
         // standard PON
-        var.setPonFrequency(11, 7);
+        var.setPonFrequency(11, 7, 100);
         applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
         assertFilters(var, true, false, true);
 
@@ -163,6 +163,11 @@ public class VariantTest
         artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 11, 11, 100);
         applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
         assertFilters(var, true, true, true);
+
+        artefactsPon.clear();
+        artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 5, 11, 20);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        assertFilters(var, true, false, true);
 
         // non-hotspot variant
         variantContext = buildVariantContext(var, PANEL, 0.2, 3, "");
