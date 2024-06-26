@@ -241,6 +241,10 @@ public class FusionReportability
         length = min(round(length/10), 99);
         fusionPriorityScore += length * factor;
 
+        factor /= 10;
+
+        fusionPriorityScore += upTrans.gene().jcn() * factor;
+
         return fusionPriorityScore;
     }
 
