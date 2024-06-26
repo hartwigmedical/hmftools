@@ -62,8 +62,11 @@ public class PartitionThread extends Thread
 
                 TargetRegionStats.writeStatistics(mMetricsWriter.targetRegionsWriter(), bamReader.targetRegionStats());
 
-                OffTargetFragments.writeEnrichedRegions(
-                        mMetricsWriter.offTargetHighFragmentOverlapWriter(), bamReader.offTargetFragments().enrichedFragmentSites());
+                if(mMetricsWriter.offTargetHighFragmentOverlapWriter() != null)
+                {
+                    OffTargetFragments.writeEnrichedRegions(
+                            mMetricsWriter.offTargetHighFragmentOverlapWriter(), bamReader.offTargetFragments().enrichedFragmentSites());
+                }
             }
             catch(NoSuchElementException e)
             {

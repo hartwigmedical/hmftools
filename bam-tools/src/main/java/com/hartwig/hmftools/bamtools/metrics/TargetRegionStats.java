@@ -62,6 +62,9 @@ public class TargetRegionStats extends ChrBaseRegion
 
     public synchronized static void writeStatistics(final BufferedWriter writer, final List<TargetRegionStats> targetRegionMetrics)
     {
+        if(writer == null)
+            return;
+
         try
         {
             for(TargetRegionStats regionStats : targetRegionMetrics)

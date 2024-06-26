@@ -278,6 +278,9 @@ public class OffTargetFragments
 
     public synchronized static void writeEnrichedRegions(final BufferedWriter writer, final List<String> fragmentData)
     {
+        if(writer == null)
+            return;
+
         try
         {
             for(String fragment : fragmentData)

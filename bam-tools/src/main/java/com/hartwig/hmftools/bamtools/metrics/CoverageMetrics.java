@@ -148,8 +148,8 @@ public class CoverageMetrics
             }
         }
 
-        BT_LOGGER.debug(format("mean(%.3f) median(%.1f) mad(%d) totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
-                mean, median, mad, totalFrequency, total, stdDeviation, varianceTotal));
+        BT_LOGGER.debug(format("mean(%.3f) median(%.1f) mad(%d) totalFrequency=%d total=%d) stdDeviation(%.3f)",
+                mean, median, mad, totalFrequency, total, stdDeviation));
 
         mStatistics = new Statistics(mean, median, mad, stdDeviation);
     }

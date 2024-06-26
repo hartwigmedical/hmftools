@@ -81,7 +81,7 @@ public class CoverageTest
                 false, false, null);
         addConsensusReadAttribute(read, 2, 1, UmiReadType.SINGLE);
 
-        baseCoverage.processRead(read, null, false);
+        baseCoverage.processRead(read, null, true);
 
         // low base qual
         read = SamRecordTestUtils.createSamRecord(
@@ -99,7 +99,7 @@ public class CoverageTest
 
         assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()]);
-        assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
+        assertEquals(readLength, metrics.FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
 
         baseCoverage.clear();
