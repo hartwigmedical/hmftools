@@ -14,9 +14,10 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.Level;
@@ -134,4 +135,24 @@ public class CompareConfig
     }
 
     public boolean ignoreUnmapped() { return SpecificChrRegions != null && !SpecificChrRegions.Regions.isEmpty(); }
+
+    @VisibleForTesting
+    public CompareConfig()
+    {
+        OutputFile = null;
+        OrigBamFile = null;
+        NewBamFile = null;
+        RefGenomeFile = null;
+        RefGenVersion = null;
+        PartitionSize = 0;
+        MaxCachedReadsPerThread = 0;
+        ExcludeRegions = false;
+        IgnoreDupDiffs = false;
+        IgnoreAlterations = false;
+        IgnoreConsensusReads = false;
+        IgnoreSupplementaryReads = false;
+        Threads = 0;
+        LogReadIds = null;
+        SpecificChrRegions = null;
+    }
 }

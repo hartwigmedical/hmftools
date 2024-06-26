@@ -43,7 +43,6 @@ public class PartitionReader implements Runnable
     private final UnmatchedReadHandler mUnmatchedReadHandler;
     private final boolean mLogReadIds;
 
-    //private final ChrBaseRegion mExcludedRegion;
     private final Statistics mStats;
 
     public PartitionReader(
@@ -246,7 +245,7 @@ public class PartitionReader implements Runnable
         ++mStats.OrigReadCount;
         ++mStats.NewReadCount;
 
-        List<String> diffs = compareReads(read1, read2, mConfig.IgnoreDupDiffs);
+        List<String> diffs = compareReads(read1, read2, mConfig);
         if(!diffs.isEmpty())
         {
             ++mStats.DiffCount;
@@ -254,7 +253,7 @@ public class PartitionReader implements Runnable
         }
     }
 
-    static List<String> compareReads(final SAMRecord read1, final SAMRecord read2, boolean ignoreDupDiffs)
+    static List<String> compareReads(final SAMRecord read1, final SAMRecord read2, final CompareConfig config)
     {
         List<String> diffs = new ArrayList<>();
 
@@ -278,13 +277,16 @@ public class PartitionReader implements Runnable
             if(read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag())
                 diffs.add(format("negStrand(%s/%s)", read1.getReadNegativeStrandFlag(), read2.getReadNegativeStrandFlag()));
 
-            if(!ignoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
+            if(!config.IgnoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
                 diffs.add(format("duplicate(%s/%s)", read1.getDuplicateReadFlag(), read2.getDuplicateReadFlag()));
         }
 
         // check key attributes:
         for(String attribute : KEY_ATTRIBUTES)
         {
+            if(attribute.equals(SUPPLEMENTARY_ATTRIBUTE) && config.IgnoreSupplementaryReads)
+                continue;
+
             String readAttr1 = read1.getStringAttribute(attribute);
             String readAttr2 = read2.getStringAttribute(attribute);
 
