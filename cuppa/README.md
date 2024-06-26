@@ -123,18 +123,19 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -threads 8
 ```
 
-This will produce multi TSV files:
-* `cuppa_data.cohort.sv.tsv.gz`
-* `cuppa_data.cohort.alt_sj.tsv.gz`
-* `cuppa_data.cohort.feature.tsv.gz`
-* `cuppa_data.cohort.gene_exp.tsv.gz`
-* `cuppa_data.cohort.sample_trait.tsv.gz`
+Because `-write_by_category` was specified, this will produce multi TSV files:
 * `cuppa_data.cohort.snv.tsv.gz`
+* `cuppa_data.cohort.sv.tsv.gz`
+* `cuppa_data.cohort.driver.tsv.gz`
+* `cuppa_data.cohort.sample_trait.tsv.gz`
+* `cuppa_data.cohort.alt_sj.tsv.gz`
+* `cuppa_data.cohort.gene_exp.tsv.gz`
 
-Alternatively, if `-write_by_category` is not specified, one output file is produced:
+Using `-write_by_category` is handy to prevent the output files from becoming too big (i.e. when running `CuppaDataPrep` on thousands of 
+samples). Alternatively, if `-write_by_category` is not specified, one output file is produced:
 * `cuppa_data.cohort.tsv.gz`
 
-These TSV files have the following format:
+These 'cohort' TSV files have the following format:
 ```
 Source  Category       Key  SAMPLE_1  SAMPLE_2
    DNA     snv96   C>A_ACA       131         5
@@ -164,22 +165,25 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 |-----------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | `-sample`             | COLO829v003T                        | [Required <sup>1</sup>] Sample name                                                                                                           |
 | `-sample_id_file`     | sample_ids.tsv                      | [Required <sup>1</sup>] One column text file with "SampleId" as the header, and where each row is a sample name                               |
-| `-output_dir`         |                                     | [Required] Directory to write the output files                                                                                                |
-| `-categories`         | DNA                                 | [Required] Valid values: DNA, RNA, ALL (both DNA and RNA)                                                                                     |
 | `-sample_data_dir`    |                                     | [Required <sup>2</sup>] Directory containing all input files                                                                                  |
-| `-purple_dir`         | /data/datasets/*/purple/            | [Required <sup>2</sup>] Directory containing the PURPLE files. Wildcards (*) are replaced with sample names                                   |
-| `-linx_dir`           | /data/datasets/*/linx/              | [Required <sup>2</sup>] Directory containing the LINX files. Wildcards (*) are replaced with sample names                                     |
-| `-virus_dir`          | /data/datasets/*/virus_interpreter/ | [Required <sup>2</sup>] Directory containing the Virus Interpreter files. Wildcards (*) are replaced with sample names                        |
-| `-isofox_dir`         | /data/rna/*/                        | [Required <sup>2</sup>] Directory containing the ISOFOX files. Wildcards (*) are replaced with sample names                                   |
+| `-purple_dir`         | /data/datasets/*/purple/            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                 |
+| `-linx_dir`           | /data/datasets/*/linx/              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                   |
+| `-virus_dir`          | /data/datasets/*/virus_interpreter/ | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                       |
+| `-isofox_dir`         | /data/rna/*/                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                 |
 | `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz         | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd |
+| `-categories`         | DNA                                 | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                             |
+| `-output_dir`         |                                     | [Required] Directory to write the output files                                                                                                |
 | `-ref_genome_version` | V37                                 | Valid values: V37 (default), V38                                                                                                              |
 | `-threads`            | 8                                   | Number of threads to use. Each thread processes one sample at a time                                                                          |
 | `-write_by_category`  |                                     | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
+| `-progress_interval`  | 100                                 | Print progress per this number of samples in multi-sample mode                                                                                |
+| `-log_level`          | DEBUG                               | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                    |
+| `-log_debug`          |                                     | Flag. Set log level to DEBUG                                                                                                                  |
 
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
-2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files 
-3. `=ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL). `alt_sj.selected_loci.tsv.gz` files for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo
+2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files. Wildcards (`*`) are replaced with sample names 
+3. `-ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL). `alt_sj.selected_loci.tsv.gz` files for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo
 
 ## Classifier (Python component)
 
@@ -256,26 +260,26 @@ python3 -m cuppa.train \
 
 The below table lists all possible arguments for training and/or predicting.
 
-| Argument                  | Task    | Description                                                                                                                                                                                     |
-|---------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--features_path`         | Both    | [Required] **Single sample mode**: Path to the \*.cuppa_data.tsv.gz file. <br/>**Multi-sample mode**: Path to the directory with the cuppa_data.cohort.*.tsv.gz files                           |
-| `--output_dir`            | Both    | [Required] Output directory                                                                                                                                                                     |
-| `--classifier_path`       | Predict | [Required] Path to the pickle file containing a CuppaClassifier python object                                                                                                                   |
-| `--sample_id`             | Predict | [Required in single sample mode] Adds `sample_id` within output files and to the output filenames                                                                                               ||
-| `--metadata_path`         | Train   | [Required] Path to the metadata file with cancer type labels per sample                                                                                                                         |
-| `--cv_predictions_path`   | Predict | Path to a CuppaPrediction tsv file containing the cross-validation predictions. Samples found in <br/>this file will have their predictions returned from this file instead of being computed   |
-| `--compress_tsv_files`    | Predict | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                              |
-| `--genome_version`        | Both    | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                            |
-| `--excl_chroms`           | Both    | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: 'ChrY,Y'                                                                           |
-| `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                    |
-| `--min_samples_with_rna`  | Train   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, <br/>the cancer subtype will be excluded from training. Default: 5 |
-| `--fusion_overrides_path` | Train   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                            |
-| `--cv_folds`              | Train   | Number of cross-validation folds. Default: 10                                                                                                                                                   |
-| `--skip_cv`               | Train   | Skip cross-validation?                                                                                                                                                                          |
-| `--no_cache_training`     | Train   | Don't cache models during cross-validation and training of final model?                                                                                                                         |
-| `--n_jobs`                | Train   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                         |
-| `--log_to_file`           | Train   | Output logs to a file?                                                                                                                                                                          |
-| `--log_path`              | Train   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                                |
+| Argument                  | Task    | Description                                                                                                                                                                                   |
+|---------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--features_path`         | Both    | [Required] **Single sample mode**: Path to the \*.cuppa_data.tsv.gz file. <br/>**Multi-sample mode**: Path to the directory with the cuppa_data.cohort.*.tsv.gz files                         |
+| `--output_dir`            | Both    | [Required] Output directory                                                                                                                                                                   |
+| `--classifier_path`       | Predict | [Required] Path to the pickle file containing a CuppaClassifier python object                                                                                                                 |
+| `--sample_id`             | Predict | [Required in single sample mode] Adds `sample_id` within output files and to the output filenames                                                                                             |
+| `--metadata_path`         | Train   | [Required] Path to the metadata file with cancer type labels per sample                                                                                                                       |
+| `--cv_predictions_path`   | Predict | Path to a CuppaPrediction tsv file containing the cross-validation predictions. Samples found in <br/>this file will have their predictions returned from this file instead of being computed |
+| `--compress_tsv_files`    | Predict | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                            |
+| `--genome_version`        | Both    | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                          |
+| `--excl_chroms`           | Both    | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: 'ChrY,Y'                                                                         |
+| `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                  |
+| `--min_samples_with_rna`  | Train   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, the cancer subtype will be excluded from training. Default: 5    |
+| `--fusion_overrides_path` | Train   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                          |
+| `--cv_folds`              | Train   | Number of cross-validation folds. Default: 10                                                                                                                                                 |
+| `--skip_cv`               | Train   | Skip cross-validation?                                                                                                                                                                        |
+| `--no_cache_training`     | Train   | Don't cache models during cross-validation and training of final model?                                                                                                                       |
+| `--n_jobs`                | Train   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                       |
+| `--log_to_file`           | Train   | Output logs to a file?                                                                                                                                                                        |
+| `--log_path`              | Train   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                              |
 
 ### Additional input files for training CUPPA
 
