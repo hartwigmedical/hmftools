@@ -8,6 +8,7 @@ We recommend to run WiGiTS using the NextFlow implmentation called [OncoAnalyser
 Alternatively, an example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
 
+## Pipeline overview
 Here is a schematic showing how the interactions between the core molecular DNA components of the tool suite:
 ![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
 
