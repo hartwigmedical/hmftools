@@ -406,8 +406,7 @@ public class VariantFilters
             return false; // will be handled in tumor filters
 
         double adjustedNormalVaf = (normal.readCounts().altSupport() + normal.partialMnvSupport()) / (double)normal.readCounts().Total;
-        double normalTumorVafRatio = adjustedNormalVaf / tumorVaf;
-        return Doubles.greaterThan(normalTumorVafRatio, config.MaxGermlineVaf);
+        return Doubles.greaterThan(adjustedNormalVaf, config.MaxGermlineVaf);
     }
 
     private static boolean aboveMaxGermlineRelativeVaf(

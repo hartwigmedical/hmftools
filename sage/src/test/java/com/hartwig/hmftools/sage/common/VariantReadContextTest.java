@@ -253,24 +253,30 @@ public class VariantReadContextTest
         var = createSimpleVariant(57, refBases, altBase);
 
         readBases = REF_BASES_200.substring(1, 58) + REF_BASES_200.substring(59, 79);
-        readCigar = "49S8M1D20M"; // so del occurs 49 + 8 = 57 bases into the read
+
+        // unclipped pos 1-49 = 49S, read index 0-48
+        // aligned pos   50-57, read index 49-56
+        // del pos       58
+        // aligned pos   59-78, read index 57-76
+        // so del occurs 49 + 8 = 57 bases into the read
+        readCigar = "49S8M1D20M";
         read = buildSamRecord(50, readCigar, readBases);
 
         builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH); // full flank so it extends into the soft-clip
-        readContext = builder.createContext(var, read, 57, REF_SEQUENCE_200);
+        readContext = builder.createContext(var, read, 56, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(50, readContext.AlignmentStart);
-        assertEquals(71, readContext.AlignmentEnd);
+        assertEquals(70, readContext.AlignmentEnd);
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(11, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(11, readContext.AltIndexLower);
         assertEquals(12, readContext.AltIndexUpper);
-        assertEquals("3S8M1D13M", readContext.readCigar());
-        assertEquals("TACT", readContext.coreStr());
-        assertEquals("CCGCTGTCTG", readContext.leftFlankStr());
-        assertEquals("CGGAAAAAAA", readContext.rightFlankStr());
+        assertEquals("4S8M1D12M", readContext.readCigar());
+        assertEquals("GTAC", readContext.coreStr());
+        assertEquals("ACCGCTGTCT", readContext.leftFlankStr());
+        assertEquals("TCGGAAAAAA", readContext.rightFlankStr());
 
         // test 3: del spanning into the right soft-clip
         refBases = REF_BASES_200.substring(30, 33);

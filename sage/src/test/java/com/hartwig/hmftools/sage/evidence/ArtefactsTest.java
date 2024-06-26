@@ -51,6 +51,7 @@ public class ArtefactsTest
 
         assertFalse(artefactContext.hasHomopolymerOffset(SE_START));
         assertEquals(0, artefactContext.homopolymerOffset(SE_END));
+        assertEquals((byte)'T', artefactContext.homopolymerBase(SE_END));
 
         int readLength = readContextBases.length();
         String cigar = format("%dM", readLength);
@@ -83,6 +84,7 @@ public class ArtefactsTest
 
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
+        assertEquals((byte)'T', artefactContext.homopolymerBase(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[varIndex + 1] = lowQualBase;
@@ -111,6 +113,7 @@ public class ArtefactsTest
 
         assertNotNull(artefactContext);
         assertEquals(2, artefactContext.homopolymerOffset(SE_END));
+        assertEquals((byte)'T', artefactContext.homopolymerBase(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[17] = lowQualBase;
@@ -136,6 +139,7 @@ public class ArtefactsTest
 
         assertNotNull(artefactContext);
         assertEquals(3, artefactContext.homopolymerOffset(SE_END));
+        assertEquals((byte)'T', artefactContext.homopolymerBase(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[18] = lowQualBase;
@@ -166,6 +170,7 @@ public class ArtefactsTest
 
         assertNotNull(artefactContext);
         assertEquals(-1, artefactContext.homopolymerOffset(SE_END));
+        assertEquals((byte)'T', artefactContext.homopolymerBase(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[18] = lowQualBase;

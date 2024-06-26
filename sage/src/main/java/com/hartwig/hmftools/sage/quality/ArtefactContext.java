@@ -20,6 +20,7 @@ public class ArtefactContext
 
     private final int[] mHomopolymerStartOffset;
     private final boolean mRequiresCheck;
+    private final byte[] mHomopolymerBase;
 
     public static final byte NO_BASE = 0;
 
@@ -27,9 +28,10 @@ public class ArtefactContext
     private static final int HOMOPOLYMER_BASE_SEARCH = 3;
     private static final int HOMOPOLYMER_REPEAT_LENGTH = 8;
 
-    public ArtefactContext(final int[] homopolymerStartOffset)
+    public ArtefactContext(final int[] homopolymerStartOffset, final byte[] homopolymerBase)
     {
         mHomopolymerStartOffset = homopolymerStartOffset;
+        mHomopolymerBase = homopolymerBase;
         mRequiresCheck = mHomopolymerStartOffset[SE_START] != NO_BASE || mHomopolymerStartOffset[SE_END] != NO_BASE;
     }
 
@@ -45,6 +47,8 @@ public class ArtefactContext
         // for SNVs and MNVs, restrict the search to within the variant bases
         int hpStartOffset = NO_INDEX;
         int hpEndOffset = NO_INDEX;
+        byte hpStartBase = NO_INDEX;
+        byte hpEndBase = NO_INDEX;
 
         int altLength = variant.alt().length();
 
@@ -52,6 +56,7 @@ public class ArtefactContext
         {
             if(hasHomopolymerRepeat(flankAndBases, varIndex, true))
             {
+                hpStartBase = (byte)flankAndBases.charAt(varIndex);
                 hpStartOffset = indexInBases - varIndex;
 
                 // check for a single homopolymer base downstream of the variant eg from an insert
@@ -64,6 +69,7 @@ public class ArtefactContext
 
             if(hasHomopolymerRepeat(flankAndBases, varIndex, false))
             {
+                hpEndBase = (byte)flankAndBases.charAt(varIndex);
                 hpEndOffset = varIndex - indexInBases;
 
                 if(flankAndBases.charAt(varIndex - 1) == flankAndBases.charAt(varIndex))
@@ -83,6 +89,7 @@ public class ArtefactContext
 
                 if(hasHomopolymerRepeat(flankAndBases, delStartIndex, false))
                 {
+                    hpEndBase = (byte)flankAndBases.charAt(delStartIndex);
                     hpEndOffset = delStartIndex - indexInBases;
                 }
             }
@@ -91,11 +98,12 @@ public class ArtefactContext
         if(hpStartOffset == NO_INDEX && hpEndOffset == NO_INDEX)
             return null;
 
-        return new ArtefactContext(new int[] { hpStartOffset, hpEndOffset} );
+        return new ArtefactContext(new int[] { hpStartOffset, hpEndOffset}, new byte[] { hpStartBase, hpEndBase });
     }
 
     public boolean requiresCheck() { return mRequiresCheck; }
     public int homopolymerOffset(int seIndex) { return mHomopolymerStartOffset[seIndex]; }
+    public int homopolymerBase(int seIndex) { return mHomopolymerBase[seIndex]; }
     public boolean hasHomopolymerOffset(int seIndex) { return mHomopolymerStartOffset[seIndex] != NO_INDEX; }
 
     public byte findApplicableBaseQual(final SAMRecord record, int varReadIndex)
@@ -106,14 +114,15 @@ public class ArtefactContext
             return INVALID_BASE_QUAL;
 
         return findHomopolymerBaseQual(
-                record, varReadIndex, mHomopolymerStartOffset[homopolymerSide], homopolymerSide == SE_START);
+                record, varReadIndex, mHomopolymerStartOffset[homopolymerSide], mHomopolymerBase[homopolymerSide],
+                homopolymerSide == SE_START);
     }
 
-    private byte findHomopolymerBaseQual(final SAMRecord record, int varReadIndex, int hpOffset, boolean searchDown)
+    private byte findHomopolymerBaseQual(final SAMRecord record, int varReadIndex, int hpOffset, byte hpBase, boolean searchDown)
     {
         int hpStartIndex = searchDown ? varReadIndex - hpOffset : varReadIndex + hpOffset;
 
-        int minBaseQual = 0;
+        int minBaseQual = -1;
 
         for(int i = 0; i < HOMOPOLYMER_BASE_SEARCH; ++i)
         {
@@ -122,7 +131,10 @@ public class ArtefactContext
             if(hpIndex < 0 || hpIndex >= record.getBaseQualities().length)
                 break;
 
-            if(i == 0)
+            if(record.getReadBases()[hpIndex] != hpBase)
+                continue;
+
+            if(minBaseQual < 0)
                 minBaseQual = record.getBaseQualities()[hpIndex];
             else
                 minBaseQual = min(minBaseQual, record.getBaseQualities()[hpIndex]);
@@ -164,6 +176,7 @@ public class ArtefactContext
 
     public String toString()
     {
-        return format("hpOffsets start(%d) end(%d)", mHomopolymerStartOffset[0], mHomopolymerStartOffset[1]);
+        return format("bases(%c / %c) offsets(%d / %d)",
+                (char)mHomopolymerBase[0], (char)mHomopolymerBase[1], mHomopolymerStartOffset[0], mHomopolymerStartOffset[1]);
     }
 }
