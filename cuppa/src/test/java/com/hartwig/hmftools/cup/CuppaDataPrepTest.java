@@ -10,10 +10,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.DataItemMatrix;
+import com.hartwig.hmftools.cup.prep.DataItemsIO;
 import com.hartwig.hmftools.cup.prep.DataSource;
 import com.hartwig.hmftools.cup.prep.ItemType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
@@ -51,15 +53,8 @@ public class CuppaDataPrepTest
 
         assertEquals(6228,  dataItems.size());
 
-        assertEquals(
-                new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_TCC", "2"),
-                dataItems.get(45)
-        );
-
-        assertEquals(
-                new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"),
-                dataItems.get(dataItems.size()-1)
-        );
+        assertEquals(new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_TCC", "2"), dataItems.get(45));
+        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"), dataItems.get(dataItems.size()-1));
 
         // Check output file exists
         File outputPath = new File(cuppaDataPrep.getOutputPath(null));
@@ -94,24 +89,16 @@ public class CuppaDataPrepTest
         HashMap<CategoryType, DataItemMatrix> dataItemMatricesByCategory = cuppaDataPrep.mDataItemMatricesByCategory;
         for(CategoryType categoryType : categoryTypes)
         {
-            // Check that values are exactly the same between duplicate MINIMAL_SAMPLE.
+            // Check that values are exactly the same between duplicate "MINIMAL_SAMPLE" samples.
             // Thread unsafe operations lead to different feature values even though the samples are the same.
             DataItemMatrix dataItemMatrix = dataItemMatricesByCategory.get(categoryType);
-            assertEquals(
-                    dataItemMatrix.getFeatureValuesBySampleIndex(0),
-                    dataItemMatrix.getFeatureValuesBySampleIndex(1)
-            );
 
-            assertEquals(
-                    dataItemMatrix.getFeatureValuesBySampleIndex(2),
-                    dataItemMatrix.getFeatureValuesBySampleIndex(3)
-            );
+            assertEquals(dataItemMatrix.getSampleFeatureValues(0), dataItemMatrix.getSampleFeatureValues(1));
 
-            // Check that values of the MINIMAL_SAMPLE and TUMOR_SAMPLE are different
-            assertNotEquals(
-                    dataItemMatrix.getFeatureValuesBySampleIndex(0),
-                    dataItemMatrix.getFeatureValuesBySampleIndex(4)
-            );
+            assertEquals(dataItemMatrix.getSampleFeatureValues(2), dataItemMatrix.getSampleFeatureValues(3));
+
+            // Check that values of the "MINIMAL_SAMPLE" and "TUMOR_SAMPLE" are different
+            assertNotEquals(dataItemMatrix.getSampleFeatureValues(0), dataItemMatrix.getSampleFeatureValues(4));
 
             // Check output files exist
             File outputFile = new File(cuppaDataPrep.getOutputPath(categoryType));
@@ -119,5 +106,39 @@ public class CuppaDataPrepTest
         }
 
         FileUtils.deleteDirectory(TMP_DIR);
+    }
+
+    @Test
+    public void canReadSingleSampleOutputFile()
+    {
+        String path = Resources.getResource("prep_output/TUMOR_SAMPLE.cuppa_data.modified.tsv").getPath();
+        List<DataItem> dataItems = DataItemsIO.readDataItemList(path);
+
+        assertEquals(new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_ACG", "1"), dataItems.get(0));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, "snv_count", "8"), dataItems.get(1));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.SIGNATURE, "SIG_7_UV", "6.4"), dataItems.get(2));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.GEN_POS, "1_500000", "1"), dataItems.get(3));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.SV_COUNT, "LINE", "3"), dataItems.get(4));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.SAMPLE_TRAIT, "is_male", "1"), dataItems.get(5));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1"), dataItems.get(6));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.FUSION, "TMPRSS2_ERG", "1"), dataItems.get(7));
+        assertEquals(new DataItem(DataSource.DNA, ItemType.VIRUS, "MERKEL", "1"), dataItems.get(8));
+        assertEquals(new DataItem(DataSource.RNA, ItemType.EXPRESSION, "BRAF", "3.43E+00"), dataItems.get(9));
+        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "7;140426316;140439612", "2"), dataItems.get(10));
+    }
+
+    @Test
+    public void canReadMultiSampleOutputFile()
+    {
+        String path = Resources.getResource("prep_output/cuppa_data.cohort.gene_exp.modified.tsv").getPath();
+        DataItemMatrix dataItemMatrix = DataItemsIO.readDataItemMatrix(path);
+
+        List<DataItem.Index> matrixIndexes =  dataItemMatrix.Indexes;
+
+        assertEquals(new DataItem.Index(DataSource.RNA, ItemType.EXPRESSION, "BRAF"), matrixIndexes.get(0));
+        assertEquals(new String[] { null, "3.43E+00" }, dataItemMatrix.get(matrixIndexes.get(0)));
+
+        assertEquals(new DataItem.Index(DataSource.RNA, ItemType.EXPRESSION, "TP53"), matrixIndexes.get(1));
+        assertEquals(new String[] { null, "3.87E+00" }, dataItemMatrix.get(matrixIndexes.get(1)));
     }
 }
