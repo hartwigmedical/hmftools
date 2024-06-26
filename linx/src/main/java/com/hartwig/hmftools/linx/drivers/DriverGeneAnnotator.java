@@ -35,11 +35,9 @@ import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverGeneAnnotator implements CohortFileInterface
 {
-    private final DatabaseAccess mDbAccess;
     private final EnsemblDataCache mGeneTransCache;
     private final LinxConfig mConfig;
 
@@ -59,10 +57,9 @@ public class DriverGeneAnnotator implements CohortFileInterface
     private final VisSampleData mVisSampleData;
 
     public DriverGeneAnnotator(
-            final DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
+            final EnsemblDataCache geneTransCache, final LinxConfig config,
             final CnDataLoader cnDataLoader, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
-        mDbAccess = dbAccess;
         mGeneTransCache = geneTransCache;
         mConfig = config;
 
@@ -70,7 +67,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         mCohortDataWriter = cohortDataWriter;
 
-        mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache, config.DriverGenes);
+        mDataCache = new DriverDataCache(cnDataLoader, mGeneTransCache, config.DriverGenes);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
 
         Map<String,List<String>> disruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache);
@@ -107,10 +104,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
                     mConfig.PurpleDataPath.replaceAll("\\*", sampleId) : mConfig.PurpleDataPath;
 
             mDataCache.loadDataFromFile(samplePurpleDir);
-        }
-        else if(mDbAccess != null)
-        {
-            mDataCache.loadDataFromDatabase();
         }
 
         // types handled:

@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_SIMPLE_DUP_DEL_C
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -141,7 +140,7 @@ public class ClusteringPrep
 
         StructuralVariantData newSvData = ImmutableStructuralVariantData.builder()
                 .id(svId)
-                .vcfId(valueNotNull(sglSvData.vcfId()))
+                .vcfId(sglSvData.vcfId() != null ? sglSvData.vcfId() : "")
                 .startChromosome(sglSvData.startChromosome())
                 .endChromosome(infSvData.startChromosome())
                 .startPosition(sglSvData.startPosition())

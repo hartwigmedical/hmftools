@@ -32,7 +32,6 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CnDataLoader
 {
@@ -40,7 +39,6 @@ public class CnDataLoader
 
     private int mRecordId;
 
-    private final DatabaseAccess mDbAccess;
     private final List<StructuralVariantData> mSvDataList;
     private final List<PurpleCopyNumber> mCnRecords;
     private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
@@ -55,11 +53,10 @@ public class CnDataLoader
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
 
-    public CnDataLoader(final String purpleDataPath, final DatabaseAccess dbAccess)
+    public CnDataLoader(final String purpleDataPath)
     {
         mPurpleDataPath = !purpleDataPath.isEmpty() ? checkAddDirSeparator(purpleDataPath) : "";
 
-        mDbAccess = dbAccess;
         mChrCnDataMap = Maps.newHashMap();
         mSvDataList = Lists.newArrayList();
         mCnRecords = Lists.newArrayList();
@@ -127,12 +124,6 @@ public class CnDataLoader
                 LNX_LOGGER.error("failed to load purity context: {}", e.toString());
                 return;
             }
-        }
-        else
-        {
-            mCnRecords.addAll(mDbAccess.readCopynumbers(sampleId));
-            LNX_LOGGER.debug("sample({}) retrieved {} CN entries", sampleId, mCnRecords.size());
-            mPurityContext = mDbAccess.readPurityContext(sampleId);
         }
 
         String currentChromosome = "";

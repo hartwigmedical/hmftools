@@ -4,7 +4,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SvAnnotators
 {
@@ -12,7 +11,7 @@ public class SvAnnotators
     public final LineElementAnnotator LineElementAnnotator;
     public final PseudoGeneFinder PseudoGeneFinder;
 
-    public SvAnnotators(final LinxConfig config, final EnsemblDataCache geneDataCache, final DatabaseAccess dbAccess)
+    public SvAnnotators(final LinxConfig config, final EnsemblDataCache geneDataCache)
     {
         FragileSiteAnnotator = new FragileSiteAnnotator();
         FragileSiteAnnotator.loadFragileSitesFile(config.FragileSiteFile);
