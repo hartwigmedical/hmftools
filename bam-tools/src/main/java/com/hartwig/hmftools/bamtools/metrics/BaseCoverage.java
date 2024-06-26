@@ -132,19 +132,18 @@ public class BaseCoverage
 
             boolean exceedsCoverage = mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
 
-            if(!lowBaseQual && !exceedsCoverage)
+            if(!lowBaseQual && !exceedsCoverage && !overlapped)
             {
                 ++mBaseDepth[baseIndex];
 
                 // overlapping fragments count once towards unfiltered and a second time towards overlap counts
                 ++mFilterTypeCounts[FilterType.UNFILTERED.ordinal()];
-
-                if(overlapped)
-                    ++mFilterTypeCounts[FilterType.OVERLAPPED.ordinal()];
             }
             else
             {
-                if(lowBaseQual)
+                if(overlapped)
+                    ++mFilterTypeCounts[FilterType.OVERLAPPED.ordinal()];
+                else if(lowBaseQual)
                     ++mFilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()];
                 else if(exceedsCoverage)
                     ++mFilterTypeCounts[FilterType.MAX_COVERAGE.ordinal()];
