@@ -112,5 +112,7 @@ dev.off()
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
+pChr = pChr + theme(plot.margin = margin(t = 0, b = 0, l = 5, r = 5, unit = "pt"))
+
 pCombined = plot_grid(pCircos, pChr, ncol = 1, rel_heights = c(circosWidth, chromosomeHeight))
-ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeight)/300.0, units = "in", dpi = 300)
+ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeight)/300.0, units = "in", dpi = 300, bg="white")
