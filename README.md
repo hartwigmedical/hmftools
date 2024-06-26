@@ -7,6 +7,7 @@ WiGiTS is a universal open source suite of genome and transcriptome analysis too
 We recommend to run WiGiTS using the NextFlow implmentation called [OncoAnalyser](https://nf-co.re/oncoanalyser/dev).
 
 Alternatively, an example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
+
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
 
 ## Pipeline overview
