@@ -312,7 +312,7 @@ Fuzzier matching could potentially better handle uncertainty in the calling in t
 A more careful approach could be beneficial.
 
 ## Version History / Download Links
-* Upcoming
+* [2.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/peach-v2.0.0)
   * Converted from Python to Java.
   * Significantly change formats of input and output files.
     * Remove requirement to include both V37 and V38 coordinates in the resource files when calling on a V37 reference genome.
