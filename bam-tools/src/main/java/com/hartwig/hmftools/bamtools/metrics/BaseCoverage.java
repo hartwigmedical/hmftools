@@ -44,7 +44,9 @@ public class BaseCoverage
 
         if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
-            mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
+            if(!isConsensusRead)
+                mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
+            
             return;
         }
 
