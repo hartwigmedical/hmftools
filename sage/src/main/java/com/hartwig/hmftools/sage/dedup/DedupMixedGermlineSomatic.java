@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
 
 import java.util.List;
@@ -17,22 +18,27 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
+import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 import com.hartwig.hmftools.sage.select.TranscriptSelector;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 public class DedupMixedGermlineSomatic
 {
     private final TranscriptSelector mSelector;
+    private final FilterConfig mFilterConfig;
     private int mNextMixedId;
 
     private static int MAX_DISTANCE = 5;
 
-    public DedupMixedGermlineSomatic(final List<TranscriptData> transcripts)
+    public DedupMixedGermlineSomatic(final List<TranscriptData> transcripts, final FilterConfig filterConfig)
     {
         mSelector = new TranscriptSelector(transcripts);
+        mFilterConfig = filterConfig;
         mNextMixedId = 1;
     }
 
@@ -57,8 +63,14 @@ public class DedupMixedGermlineSomatic
 
         */
 
-        List<SageVariant> candidates = variants.stream()
-                .filter(x -> isGermlineFilteredSnv(x) || isPassingSnv(x) || isPassingMnv(x))
+        List<SageVariant> initialCandidates = variants.stream()
+                .filter(x -> isGermlineFilteredSnv(x) || isPassingSnv(x) || x.isMnv())
+                .collect(Collectors.toList());
+
+        markSnvGermlineFromPartialMnvs(initialCandidates);
+
+        List<SageVariant> candidates = initialCandidates.stream()
+                .filter(x -> x.isSnv() || isPassingMnv(x))
                 .collect(Collectors.toList());
 
         int index = 0;
@@ -87,14 +99,6 @@ public class DedupMixedGermlineSomatic
                 if(nextVariant.position() - maxPos > MAX_DISTANCE)
                     break;
 
-                /*
-                if(!nextVariant.hasMatchingLps(firstVariant.localPhaseSets()))
-                {
-                    ++nextIndex;
-                    continue;
-                }
-                */
-
                 if(mnv == null && isPassingMnv(nextVariant))
                     mnv = nextVariant;
                 else if(snvPassing == null && isPassingSnv(nextVariant))
@@ -115,6 +119,46 @@ public class DedupMixedGermlineSomatic
 
             ++index;
         }
+    }
+
+    private void markSnvGermlineFromPartialMnvs(final List<SageVariant> candidates)
+    {
+        for(int i = 0; i < candidates.size() - 1; ++i)
+        {
+            SageVariant variant = candidates.get(i);
+
+            if(!variant.isMnv() || variant.normalReadCounters().isEmpty() || variant.normalReadCounters().get(0).partialMnvSupport() == 0)
+                continue;
+
+            int[] mnvGermlineCount = variant.normalReadCounters().get(0).partialMnvCounts();
+
+            // assign germline support to any SNV matching the bases of the MNV
+            for(int j = i + 1; j < candidates.size(); ++j)
+            {
+                SageVariant next = candidates.get(j);
+
+                if(!next.isSnv() || !next.isPassing() || isGermlineFilteredSnv(next))
+                    continue;
+
+                if(next.position() > variant.position() + 1)
+                    break;
+
+                int posOffset = next.position() - variant.position();
+
+                if(variant.alt().charAt(posOffset) == next.alt().charAt(0))
+                {
+                    int mnvGermlineSupport = mnvGermlineCount[posOffset];
+                    double adjustedNormalVaf = mnvGermlineSupport / (double)next.normalReadCounters().get(0).readCounts().Total;
+
+                    SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
+                    if(Doubles.greaterThan(adjustedNormalVaf, softFilterConfig.MaxGermlineVaf))
+                    {
+                        next.filters().add(SoftFilter.MAX_GERMLINE_VAF.filterName());
+                    }
+                }
+            }
+        }
+
     }
 
     private void checkGroup(final SageVariant mnv, final SageVariant snvPassing, final SageVariant snvGermline)

@@ -10,15 +10,17 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.filter.FilterConfig;
 
 public class VariantDeduper
 {
     private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
     private final IndelDeduper mIndelDeduper;
 
-    public VariantDeduper(final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, int readLength)
+    public VariantDeduper(
+            final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, int readLength, final FilterConfig filterConfig)
     {
-        mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
+        mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts, filterConfig);
         mIndelDeduper = new IndelDeduper(refGenome, readLength);
     }
 

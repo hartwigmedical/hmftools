@@ -45,6 +45,7 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair
 
 import static htsjdk.samtools.CigarOperator.N;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -94,7 +95,7 @@ public class ReadContextCounter
     // counts and quals by support type
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
-    private int mPartialMnvCount; // count of SNV matches within an MNV where Core match failed
+    private final int[] mPartialMnvCounts; // count of SNV matches within an MNV where Core match failed
 
     private final StrandBiasData mAltFragmentStrandBias;
     private final StrandBiasData mRefFragmentStrandBias;
@@ -143,7 +144,7 @@ public class ReadContextCounter
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
-        mPartialMnvCount = 0;
+        mPartialMnvCounts = variant().isMNV() ? new int[variant().refLength()] : null;
 
         mJitterData = new JitterData();
 
@@ -185,7 +186,16 @@ public class ReadContextCounter
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
-    public int partialMnvSupport() { return mPartialMnvCount; }
+
+    public int partialMnvSupport()
+    {
+        if(mPartialMnvCounts == null)
+            return 0;
+
+        return Arrays.stream(mPartialMnvCounts).sum();
+    }
+
+    public int[] partialMnvCounts() { return mPartialMnvCounts; }
 
     public int depth() { return mCounts.Total; }
 
@@ -461,7 +471,7 @@ public class ReadContextCounter
         }
         else if(matchType == ReadContextMatch.PARTIAL_MNV)
         {
-            ++mPartialMnvCount;
+            mReadContextMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
         }
 
         registerReadSupport(record, readSupport, modifiedQuality);

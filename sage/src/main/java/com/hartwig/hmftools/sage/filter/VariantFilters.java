@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
+import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -101,7 +102,7 @@ public class VariantFilters
             return;
 
         final VariantTier tier = variant.tier();
-        final SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier);
+        final SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier, mConfig);
 
         final Set<String> variantFilters = variant.filters();
 
@@ -132,21 +133,6 @@ public class VariantFilters
             {
                 variantFilters.addAll(tumorFilters);
             }
-        }
-    }
-
-    public SoftFilterConfig getTieredSoftFilterConfig(final VariantTier tier)
-    {
-        switch(tier)
-        {
-            case HOTSPOT:
-                return mConfig.SoftHotspotFilter;
-            case PANEL:
-                return mConfig.SoftPanelFilter;
-            case HIGH_CONFIDENCE:
-                return mConfig.SoftHighConfidenceFilter;
-            default:
-                return mConfig.SoftLowConfidenceFilter;
         }
     }
 

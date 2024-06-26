@@ -468,27 +468,27 @@ public class RefContextConsumer
                 int[] posInfo = getPositionFromReadIndex(
                         record.getAlignmentStart(), record.getCigar().getCigarElements(), newReadIndex, true, true);
 
-                if(posInfo != NO_POSITION_INFO)
+                if(posInfo == NO_POSITION_INFO) // don't revert to original variant if cannot align to the new index
+                    return null;
+
+                refPosition = posInfo[0];
+                readIndex = newReadIndex + posInfo[1];
+
+                String newAltBases, newRefBases;
+
+                if(variant.isInsert())
                 {
-                    refPosition = posInfo[0];
-                    readIndex = newReadIndex + posInfo[1];
-
-                    String newAltBases, newRefBases;
-
-                    if(variant.isInsert())
-                    {
-                        newRefBases = mRefSequence.positionBases(refPosition, refPosition);
-                        newAltBases = newRefBases + new String(Arrays.subsetArray(
-                                record.getReadBases(), readIndex + 1, readIndex + variant.altLength() - 1));
-                    }
-                    else
-                    {
-                        newRefBases = mRefSequence.positionBases(refPosition, refPosition + variant.refLength() - 1);
-                        newAltBases = newRefBases.substring(0, 1);
-                    }
-
-                    variant = new SimpleVariant(record.getContig(), refPosition, newRefBases, newAltBases);
+                    newRefBases = mRefSequence.positionBases(refPosition, refPosition);
+                    newAltBases = newRefBases + new String(Arrays.subsetArray(
+                            record.getReadBases(), readIndex + 1, readIndex + variant.altLength() - 1));
                 }
+                else
+                {
+                    newRefBases = mRefSequence.positionBases(refPosition, refPosition + variant.refLength() - 1);
+                    newAltBases = newRefBases.substring(0, 1);
+                }
+
+                variant = new SimpleVariant(record.getContig(), refPosition, newRefBases, newAltBases);
             }
         }
 

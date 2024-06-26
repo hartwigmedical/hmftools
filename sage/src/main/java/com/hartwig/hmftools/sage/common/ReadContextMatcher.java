@@ -201,7 +201,7 @@ public class ReadContextMatcher
 
         if(coreMatch == NONE)
         {
-            return isPartialMnvMatch(readBases, readVarIndex) ? PARTIAL_MNV : NONE;
+            return checkPartialMnvMatch(readBases, readVarIndex, null) ? PARTIAL_MNV : NONE;
         }
 
         BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readVarIndex, true);
@@ -295,10 +295,12 @@ public class ReadContextMatcher
         }
     }
 
-    private boolean isPartialMnvMatch(final byte[] readBases, final int readVarIndex)
+    public boolean checkPartialMnvMatch(final byte[] readBases, final int readVarIndex, @Nullable final int[] snvCounts)
     {
         if(!mContext.variant().isMNV())
             return false;
+
+        boolean diffFound = false;
 
         for(int i = 0 ; i < mContext.variant().refLength(); ++i)
         {
@@ -307,10 +309,15 @@ public class ReadContextMatcher
             byte readBase = readBases[readVarIndex + i];
 
             if(refBase != altBase && readBase == altBase)
-                return true;
+            {
+                if(snvCounts != null)
+                    ++snvCounts[i];
+
+                diffFound = true;
+            }
         }
 
-        return false;
+        return diffFound;
     }
 
     private enum BaseMatchType

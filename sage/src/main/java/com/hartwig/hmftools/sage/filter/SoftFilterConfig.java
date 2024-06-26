@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 public class SoftFilterConfig
 {
@@ -46,6 +47,21 @@ public class SoftFilterConfig
         MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
         MinGermlineCoverageAllosomeLongInsert = minGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = maxGermlineVaf;
+    }
+
+    public static SoftFilterConfig getTieredSoftFilterConfig(final VariantTier tier, final FilterConfig filterConfig)
+    {
+        switch(tier)
+        {
+            case HOTSPOT:
+                return filterConfig.SoftHotspotFilter;
+            case PANEL:
+                return filterConfig.SoftPanelFilter;
+            case HIGH_CONFIDENCE:
+                return filterConfig.SoftHighConfidenceFilter;
+            default:
+                return filterConfig.SoftLowConfidenceFilter;
+        }
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder, final SoftFilterConfig defaultConfig)
