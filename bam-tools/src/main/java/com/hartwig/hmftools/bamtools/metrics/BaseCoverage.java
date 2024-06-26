@@ -46,7 +46,7 @@ public class BaseCoverage
         {
             if(!isConsensusRead)
                 mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
-            
+
             return;
         }
 

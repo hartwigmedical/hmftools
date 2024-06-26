@@ -23,7 +23,7 @@ public enum JitterMatch
 
         final byte[] readBases = record.getReadBases();
         final byte[] readQuals = record.getBaseQualities();
-        boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count > DOUBLE_JITTER_REPEAT_COUNT;
+        boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= DOUBLE_JITTER_REPEAT_COUNT;
 
         // try each repeat covering the read context in turn
         for(RepeatInfo repeat : readContext.AllRepeats)

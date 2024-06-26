@@ -39,7 +39,6 @@ public class VariantReadContext
 
     private final SimpleVariant mVariant;
 
-    private final List<CigarElement> mReadCigar;
     private final String mReadCigarStr;
 
     private ArtefactContext mArtefactContext;
@@ -65,7 +64,6 @@ public class VariantReadContext
         MaxRepeat = maxRepeat;
         AllRepeats = allRepeats;
 
-        mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
         AltIndexLower = altIndexLower;
@@ -105,6 +103,9 @@ public class VariantReadContext
             return false;
 
         if(VarIndex <= CoreIndexStart || CoreIndexEnd <= VarIndex) // invalid var index
+            return false;
+
+        if(mVariant.Position <= CorePositionStart || mVariant.Position >= CorePositionEnd)
             return false;
 
         if(AltIndexLower > AltIndexUpper)
