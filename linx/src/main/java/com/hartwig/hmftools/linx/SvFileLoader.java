@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -30,26 +29,24 @@ import com.hartwig.hmftools.linx.germline.GermlineFilter;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SvFileLoader
 {
-    public static List<StructuralVariantData> loadSampleSvDataFromFile(final LinxConfig config, final String sampleId)
+    public static List<StructuralVariantData> loadVariantsFromVcf(final LinxConfig config, final String sampleId)
     {
         String vcfFile = convertWildcardSamplePath(config.SvVcfFile, sampleId);
 
         if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile, sampleId);
+            return loadGermlineVariantsFromVcf(vcfFile, sampleId);
         else
-            return loadSvDataFromVcf(vcfFile);
+            return loadSomaticVariantsFromVcf(vcfFile);
     }
 
-    private static List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
+    private static List<StructuralVariantData> loadSomaticVariantsFromVcf(final String vcfFile)
     {
-        final List<StructuralVariantData> svDataList = Lists.newArrayList();
+        List<StructuralVariantData> svDataList = Lists.newArrayList();
 
         try
         {
@@ -75,7 +72,7 @@ public final class SvFileLoader
         return svDataList;
     }
 
-    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final String sampleId)
+    private static List<StructuralVariantData> loadGermlineVariantsFromVcf(final String vcfFile, final String sampleId)
     {
         // StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
         GridssSvFactory svFactory = GridssSvFactory.build(new GermlineFilter());

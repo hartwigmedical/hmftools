@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.SvFileLoader.createSvData;
-import static com.hartwig.hmftools.linx.SvFileLoader.loadSampleSvDataFromFile;
+import static com.hartwig.hmftools.linx.SvFileLoader.loadVariantsFromVcf;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
@@ -209,7 +209,7 @@ public class SampleAnalyser implements Callable
         mCurrentSampleId = sampleId;
         mVisSampleData.setSampleId(sampleId);
 
-        List<StructuralVariantData> svRecords = loadSampleSvDataFromFile(mConfig, mCurrentSampleId);
+        List<StructuralVariantData> svRecords = loadVariantsFromVcf(mConfig, mCurrentSampleId);
 
         final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
