@@ -1,28 +1,25 @@
-# HMF Tools
+# Hartwig WiGiTS
 
-This repository contains the suite of tools used in the Hartwig Medical Foundation whole genome,targeted DNA and whole transcriptome
-analysis pipeline.
+WiGiTS is a universal open source suite of genome, transcriptome analysis tools for cancer research and diagnostics developed by Hartwig Medical Foundation.  
 
-## DNA Pipeline Components
+![image](https://github.com/hartwigmedical/hmftools/assets/18154939/8bfa1733-0e00-414f-84e6-32c9de29a16b)
 
+We recommend to run WiGiTS using the NextFlow implmentation called [OncoAnalyser](https://nf-co.re/oncoanalyser/dev).
+
+Alternatively, an example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
+An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
+
+Here is a schematic showing how the interactions between the core molecular DNA components of the tool suite:
 ![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
 
-#### Latest Pipeline Version
+## Latest Pipeline Version
 
 The latest HMF pipeline is v5.34. Release notes
 are [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/docs/PipelineReleaseNotes.v5.34.pdf).
 
 The table below has links for the each tool used in this release.
 
-#### Running the Pipeline
-
-The full pipeline can be run using a NextFlow implmentation
-called [OncoAnalyser](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_ONCOANALYSER.md).
-
-An example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
-An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
-
-#### Current versions
+### DNA Tools
 
 | Component                         | Description                                                            | Current Version                                                                   |
 |-----------------------------------|------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -41,19 +38,20 @@ An example targeted-panel pipeline, including support for the HMF and TSO-500 pa
 | [Teal](./teal/README.md)          | Measures telomere content and estimates telomeric length               | [1.2.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.1)      |
 | [SvPrep](./esvee/README.md)       | Pre-GRIDSS BAM filtering                                               | [1.2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.2.3)   |
 
-The following external tools are used in the pipeline:
+The following external tools are also used in the pipeline:
 
 | Component                                        | Description                                   | Current Version                                                       |
 |--------------------------------------------------|-----------------------------------------------|-----------------------------------------------------------------------|
 | [GRIDSS](https://github.com/PapenfussLab/gridss) | Structural variant calling                    | [2.13.2](https://github.com/PapenfussLab/gridss/releases/tag/v2.13.2) |
 | [Chord](https://github.com/UMCUGenetics/CHORD)   | Homologous Recombination Deficiency detection | [2.0](https://github.com/UMCUGenetics/CHORD/releases/tag/2.00)        |
 
-## Resource files
+### RNA Tools
 
-Resource files for each component (GRCh37 and GRCh38) are available to download
-from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
+| Component                    | Description                                                | Current Version                                                              |
+|------------------------------|------------------------------------------------------------|------------------------------------------------------------------------------|
+| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.7.1) |
 
-## Actionability and Clinical Reporting Tools
+### Actionability and Clinical Reporting Tools
 
 | Component                                                                          | Description                                                          | Current Version                                                                       |
 |------------------------------------------------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------|
@@ -63,9 +61,10 @@ from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/stora
 | [Orange](./orange/README.md)                                                       | PDF summary report and JSON file of all WGS output                   | [3.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.0)        |
 | Patient-reporter                                                                   | PDF summary report and JSON file of all clinical relevant WGS output | 7.25.1                                                                                |
 
-## RNA Tools
+### Resource files
 
-| Component                    | Description                                                | Current Version                                                              |
-|------------------------------|------------------------------------------------------------|------------------------------------------------------------------------------|
-| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.7.1) |
+Resource files for each component (GRCh37 and GRCh38) are available to download
+from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
+
+
 
