@@ -197,8 +197,7 @@ The chapter presents the following:
 
 In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fragment support.
 
-- Genomic immune escape analysis (inspired by [this paper](https://www.nature.com/articles/s41588-023-01367-1)),
-  with the following mechanism that ORANGE makes an attempt at detecting:
+- Genetic immune escape analysis (inspired by [this paper](https://www.nature.com/articles/s41588-023-01367-1)). ORANGE attempts to detect the following mechanisms:
     - HLA-1 loss-of-function, detected in case one of the following mutations is present in either HLA-A, HLA-B or HLA-C:
         - MACN < 0.3 without the presence of a loss (proxy for LOH)
         - A clonal variant with canonical coding effect `NONSENSE_OR_FRAMESHIFT` or `SPLICE`
