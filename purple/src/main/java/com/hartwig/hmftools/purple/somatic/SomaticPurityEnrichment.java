@@ -4,6 +4,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER;
@@ -81,18 +83,19 @@ public class SomaticPurityEnrichment
         double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
         boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
 
+        PPL_LOGGER.debug("variant({}) biallelic({} prob={})", variant, classifyBiallelic, format("%.4f", biallelicProbability));
+
         VariantContext variantContext = variant.context();
 
         variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
         variantContext.getCommonInfo().putAttribute(PURPLE_CN, copyNumber);
 
-        variantContext.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
+        variantContext.getCommonInfo().putAttribute(PURPLE_AF, format("%.4f", vaf));
         variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
-        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, biallelicProbability);
+        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, format("%.4f", biallelicProbability));
         variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, classifyBiallelic);
     }
 
-    // version 6.0 - New biallelic model
     private static double probabilityLoh(double minorAlleleCopyNumber)
     {
         double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE * (minorAlleleCopyNumber - 0.5)));
@@ -133,23 +136,19 @@ public class SomaticPurityEnrichment
 
     private static double conditionalProbNoWildtypeAssumeNoLoh(double conditionalProbNoWildtypeAssumeLoh, double probabilityLoh)
     {
-        double conditionalProbNoWildtypeAssumeNoLOH =
-                max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh)
-                        + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
+        double conditionalProbNoWildtypeAssumeNoLOH = max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) /
+                ((1 - conditionalProbNoWildtypeAssumeLoh) + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
 
         if(Double.isNaN(conditionalProbNoWildtypeAssumeNoLOH))
-        {
             return 0.0d;
-        }
 
         return conditionalProbNoWildtypeAssumeNoLOH;
     }
 
-    private static double probabilityNoWildtype(double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh,
-            double conditionalProbNoWildtypeAssumeNoLoh)
+    private static double probabilityNoWildtype(
+            double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh, double conditionalProbNoWildtypeAssumeNoLoh)
     {
-        double probabilityNoWildtype =
-                probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
+        double probabilityNoWildtype = probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
 
         return probabilityNoWildtype;
     }
@@ -173,12 +172,13 @@ public class SomaticPurityEnrichment
 
         // part 3
         double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(readCountAtThreshold, alleleReadCount);
-        double conditionalProbNoWildtypeAssumeNoLoh =
-                conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
 
-        // Final calculation
-        double probabilityNoWildtype =
-                probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
+        double conditionalProbNoWildtypeAssumeNoLoh = conditionalProbNoWildtypeAssumeNoLoh(
+                conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
+
+        double probabilityNoWildtype = probabilityNoWildtype(
+                probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
+
         return probabilityNoWildtype;
     }
 

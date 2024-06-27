@@ -313,23 +313,15 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
-            final List<PeakModelData> somaticPeaks = Lists.newArrayList();
-
-            PPL_LOGGER.info("modelling somatic peaks");
-            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream();
-
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
-
-            List<PeakModelData> peakModelValues = somaticPeakStream.somaticPeakModel(somaticCache);
-            somaticPeaks.addAll(peakModelValues);
 
             // at the moment the enriching of somatic variants is also contributing to the purity context, so it cannot be done afterwards
             // if the read and write process were split then so could the fitting and enriching steps
             PPL_LOGGER.info("enriching somatic variants");
 
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
 
             somaticStream.processAndWrite(purityAdjuster);
 
@@ -340,7 +332,7 @@ public class PurpleApplication
             FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
-            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticPeaks);
+            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
 
             if(mReferenceData.TargetRegions.hasTargetRegions())
             {
@@ -533,7 +525,7 @@ public class PurpleApplication
             somaticVariantCache.loadSomatics(somaticVcf, emptyHotspots);
 
             // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache, null);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache);
             somaticStream.registerReportedVariants();
         }
 
@@ -619,7 +611,7 @@ public class PurpleApplication
         if(mConfig.runTumor())
         {
             SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, Collections.emptyList());
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);

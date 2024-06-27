@@ -18,7 +18,7 @@ public class SomaticPeakStream
 {
     public SomaticPeakStream() {}
 
-    public List<PeakModelData> somaticPeakModel(final SomaticVariantCache somaticVariants)
+    public List<PeakModelData> generateModelPeaks(final SomaticVariantCache somaticVariants)
     {
         if(!somaticVariants.hasData())
             return Lists.newArrayList();
