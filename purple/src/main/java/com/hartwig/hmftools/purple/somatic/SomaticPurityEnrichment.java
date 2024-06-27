@@ -84,7 +84,7 @@ public class SomaticPurityEnrichment
         double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
         boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
 
-        PPL_LOGGER.debug("variant({}) biallelic({} prob={})", variant, classifyBiallelic, format("%.4f", biallelicProbability));
+        // PPL_LOGGER.trace("variant({}) biallelic({} prob={})", variant, classifyBiallelic, format("%.4f", biallelicProbability));
 
         VariantContext variantContext = variant.context();
 

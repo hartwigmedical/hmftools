@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -68,8 +69,7 @@ public final class TestPurpleVariantFactory
         return ImmutablePurpleVariantContext.builder()
                 .chromosome(Strings.EMPTY)
                 .position(0)
-                .totalReadCount(0)
-                .alleleReadCount(0)
+                .allelicDepth(new AllelicDepth(0, 0))
                 .type(VariantType.UNDEFINED)
                 .gene(Strings.EMPTY)
                 .ref(Strings.EMPTY)

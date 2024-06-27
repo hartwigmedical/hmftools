@@ -62,7 +62,7 @@ public class PurpleVariantFactory
                 .canonicalImpact(extractCanonicalImpact(context))
                 .otherImpacts(purpleVariantTranscriptImpacts)
                 .hotspot(HotspotType.valueOf(context.hotspot().name()))
-                .tumorDepth(PurpleConversion.convert(context))
+                .tumorDepth(PurpleConversion.convert(context.allelicDepth()))
                 .rnaDepth(rnaDepth)
                 .adjustedCopyNumber(context.adjustedCopyNumber())
                 .adjustedVAF(context.adjustedVAF())

@@ -416,8 +416,8 @@ public class VariantData
         sj.add(varDetails.filter());
         sj.add(varDetails.tier().toString());
         sj.add(String.valueOf(varDetails.qual()));
-        sj.add(String.valueOf(allelicDepth.alleleReadCount()));
-        sj.add(String.valueOf(allelicDepth.totalReadCount()));
+        sj.add(String.valueOf(allelicDepth.AlleleReadCount));
+        sj.add(String.valueOf(allelicDepth.TotalReadCount));
 
         return sj.toString();
     }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.AllelicDepth.NO_DEPTH;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
@@ -207,14 +208,12 @@ public class VariantContextDecorator implements GenomePosition
         return !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : null;
     }
 
-    @NotNull
     public AllelicDepth allelicDepth(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? AllelicDepth.fromGenotype(genotype) : NO_DEPTH;
     }
 
-    @NotNull
     public GenotypeStatus genotypeStatus(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
@@ -287,8 +286,7 @@ public class VariantContextDecorator implements GenomePosition
                 && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
     }
 
-    @NotNull
-    private static String displayFilter(@NotNull final VariantContext context)
+    private static String displayFilter(final VariantContext context)
     {
         if(context.isFiltered())
         {
@@ -301,21 +299,6 @@ public class VariantContextDecorator implements GenomePosition
             return SomaticVariantFactory.PASS_FILTER;
         }
     }
-
-    private static final AllelicDepth NO_DEPTH = new AllelicDepth()
-    {
-        @Override
-        public int totalReadCount()
-        {
-            return 0;
-        }
-
-        @Override
-        public int alleleReadCount()
-        {
-            return 0;
-        }
-    };
 
     @Override
     public String toString()

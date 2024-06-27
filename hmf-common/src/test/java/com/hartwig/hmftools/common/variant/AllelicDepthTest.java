@@ -14,7 +14,7 @@ public class AllelicDepthTest
     {
         final Genotype genotype = new GenotypeBuilder("SAMPLE").AD(new int[] { 6, 4 }).make();
         final AllelicDepth victim = AllelicDepth.fromGenotype(genotype);
-        assertEquals(10, victim.totalReadCount());
+        assertEquals(10, victim.TotalReadCount);
         assertEquals(0.4, victim.alleleFrequency(), 0.01);
     }
 
@@ -23,7 +23,7 @@ public class AllelicDepthTest
     {
         final Genotype genotype = new GenotypeBuilder("SAMPLE").AD(new int[] { 6, 4 }).DP(20).make();
         final AllelicDepth victim = AllelicDepth.fromGenotype(genotype);
-        assertEquals(20, victim.totalReadCount());
+        assertEquals(20, victim.TotalReadCount);
         assertEquals(0.2, victim.alleleFrequency(), 0.01);
     }
 
@@ -32,7 +32,7 @@ public class AllelicDepthTest
     {
         final Genotype genotype = new GenotypeBuilder("SAMPLE").AD(new int[] { 6, 4 }).DP(5).make();
         final AllelicDepth victim = AllelicDepth.fromGenotype(genotype);
-        assertEquals(10, victim.totalReadCount());
+        assertEquals(10, victim.TotalReadCount);
         assertEquals(0.4, victim.alleleFrequency(), 0.01);
     }
 }

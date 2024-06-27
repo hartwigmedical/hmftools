@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -48,8 +49,7 @@ public class PurpleVariantFactoryTest
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
                 .chromosome("chromosome")
                 .position(57181855)
-                .totalReadCount(153)
-                .alleleReadCount(80)
+                .allelicDepth(new AllelicDepth(153, 80))
                 .type(VariantType.INDEL)
                 .gene("CRACD")
                 .ref("C")

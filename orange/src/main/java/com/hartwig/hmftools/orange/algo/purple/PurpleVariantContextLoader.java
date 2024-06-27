@@ -106,7 +106,7 @@ public class PurpleVariantContextLoader
         }
 
         final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(variantContext.getGenotype(sample));
-        int readCount = tumorDepth.totalReadCount();
+        int readCount = tumorDepth.TotalReadCount;
 
         if(readCount < 0)
         {
@@ -140,8 +140,7 @@ public class PurpleVariantContextLoader
         return ImmutablePurpleVariantContext.builder()
                 .chromosome(contextDecorator.chromosome())
                 .position(contextDecorator.position())
-                .totalReadCount(tumorDepth.totalReadCount())
-                .alleleReadCount(tumorDepth.alleleReadCount())
+                .allelicDepth(new AllelicDepth(tumorDepth.TotalReadCount, tumorDepth.AlleleReadCount))
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .type(contextDecorator.type())
                 .gene(variantImpact.GeneName)

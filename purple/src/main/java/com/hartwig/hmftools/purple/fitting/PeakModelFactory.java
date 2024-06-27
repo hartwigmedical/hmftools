@@ -38,7 +38,7 @@ public class PeakModelFactory
         mBinomialDistributionMap = Maps.newHashMap();
     }
 
-    public List<PeakModelData> model(final List<ModifiableWeightedPloidy> weightedPloidies)
+    public List<PeakModelData> model(final List<WeightedPloidy> weightedPloidies)
     {
         boolean hasValidSubclonalPeaks = false;
         final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(MAX_HISTOGRAM_PLOIDY, mModelWidth);
@@ -59,14 +59,15 @@ public class PeakModelFactory
 
             // Subtract modelled weight
             double[] currentHistogram = peakHistogramFactory.histogram(weightedPloidies);
-            for(final ModifiableWeightedPloidy ploidy : weightedPloidies)
+
+            for(final WeightedPloidy ploidy : weightedPloidies)
             {
                 int bucket = peakHistogramFactory.bucket(ploidy.ploidy());
                 double currentWeight = ploidy.weight();
                 double bucketWeight = currentHistogram[bucket];
                 double peakWeight = peakHistogram[bucket];
                 double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - Math.abs(peakWeight / bucketWeight);
-                ploidy.setWeight(newWeight);
+                ploidy.Weight = newWeight;
             }
 
             // Add results
@@ -140,7 +141,7 @@ public class PeakModelFactory
 
     private double positiveWeight(final List<? extends WeightedPloidy> weightedPloidies)
     {
-        return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.weight())).sum();
+        return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.Weight)).sum();
     }
 
     double offset(double peak)
@@ -151,7 +152,7 @@ public class PeakModelFactory
     private List<WeightedPloidy> peakPloidies(double peak, final List<? extends WeightedPloidy> allPloidies)
     {
         return allPloidies.stream()
-                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mModelWidth / 2) && Doubles.lessThan(x.ploidy(),
+                .filter(x -> Doubles.greaterThan(x.Ploidy, peak - mModelWidth / 2) && Doubles.lessThan(x.Ploidy,
                         peak + mModelWidth / 2))
                 .collect(Collectors.toList());
     }
@@ -210,7 +211,7 @@ public class PeakModelFactory
         double[] result = new double[ploidies.size()];
         for(int i = 0; i < ploidies.size(); i++)
         {
-            result[i] = ploidies.get(i).weight() / ploidyLikelihood(ploidy, ploidies.get(i));
+            result[i] = ploidies.get(i).Weight / ploidyLikelihood(ploidy, ploidies.get(i));
         }
 
         return result;
@@ -218,15 +219,15 @@ public class PeakModelFactory
 
     double ploidyLikelihood(double ploidy, final WeightedPloidy weighted)
     {
-        final String binomialKey = weighted.alleleReadCount() + ":" + weighted.totalReadCount();
+        final String binomialKey = weighted.AlleleReadCount + ":" + weighted.TotalReadCount;
         final BinomialDistribution binomialDistribution = mBinomialDistributionMap.computeIfAbsent(binomialKey,
-                s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
+                s -> new BinomialDistribution(weighted.TotalReadCount, weighted.alleleFrequency()));
 
-        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mModelWidth / 2d) / weighted.Ploidy * weighted.AlleleReadCount;
         int lowerBoundAlleleReadCountRounded = (int) Math.round(lowerBoundAlleleReadCount);
         double lowerBoundAddition = lowerBoundAlleleReadCountRounded + 0.5 - lowerBoundAlleleReadCount;
 
-        double upperBoundAlleleReadCount = Math.max(0, ploidy + mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double upperBoundAlleleReadCount = Math.max(0, ploidy + mModelWidth / 2d) / weighted.Ploidy * weighted.AlleleReadCount;
         int upperBoundAlleleReadCountRounded = (int) Math.round(upperBoundAlleleReadCount);
         double upperBoundSubtraction = upperBoundAlleleReadCountRounded + 0.5 - upperBoundAlleleReadCount;
 
@@ -250,6 +251,6 @@ public class PeakModelFactory
         if(count == 0)
             return 0;
 
-        return ploidies.stream().mapToDouble(WeightedPloidy::weight).sum() / count;
+        return ploidies.stream().mapToDouble(x -> x.Weight).sum() / count;
     }
 }

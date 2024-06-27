@@ -33,8 +33,8 @@ public class PurpleVariantContextLoaderTest
 
         assertEquals(String.valueOf(4), variant.chromosome());
         assertEquals(57181855, variant.position());
-        assertEquals(153, variant.totalReadCount());
-        assertEquals(80, variant.alleleReadCount());
+        assertEquals(153, variant.allelicDepth().TotalReadCount);
+        assertEquals(80, variant.allelicDepth().AlleleReadCount);
         assertEquals(VariantType.SNP, variant.type());
         assertEquals("CRACD", variant.gene());
         assertEquals("C", variant.ref());

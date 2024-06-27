@@ -40,7 +40,7 @@ public class PeakModelFactoryTest
     {
         long startTime = new Date().getTime();
         WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
-        List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
+        List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
 
         victim.peakPloidy(10, ploidies);
 
@@ -59,21 +59,18 @@ public class PeakModelFactoryTest
     }
 
     @NotNull
-    public static List<ModifiableWeightedPloidy> readResource(@NotNull final String file)
+    public static List<WeightedPloidy> readResource(@NotNull final String file)
     {
-        final InputStream inputStream = PeakModelFactoryTest.class.getResourceAsStream("/clonality/" + file);
-        final List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+        InputStream inputStream = PeakModelFactoryTest.class.getResourceAsStream("/clonality/" + file);
+        List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
 
-        final List<ModifiableWeightedPloidy> result = Lists.newArrayList();
+        List<WeightedPloidy> result = Lists.newArrayList();
         for(String line : lines)
         {
             String[] values = line.split("\t");
 
-            ModifiableWeightedPloidy ploidy = ModifiableWeightedPloidy.create()
-                    .setPloidy(Double.parseDouble(values[0]))
-                    .setAlleleReadCount(Integer.parseInt(values[1]))
-                    .setTotalReadCount(Integer.parseInt(values[2]))
-                    .setWeight(1);
+            WeightedPloidy ploidy = new WeightedPloidy(
+                    Integer.parseInt(values[2]), Integer.parseInt(values[1]), Double.parseDouble(values[0]), 1);
 
             if(Doubles.lessThan(Double.parseDouble(values[0]), 10))
             {

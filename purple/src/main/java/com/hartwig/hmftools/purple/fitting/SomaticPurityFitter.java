@@ -133,7 +133,7 @@ public class SomaticPurityFitter
 
     private static boolean isFittingCandidate(final SomaticVariant variant, final int[] filterCounts)
     {
-        if(!variant.hasTumorAlleleDepth() || variant.tumorAlleleDepth().totalReadCount() == 0)
+        if(!variant.hasTumorAlleleDepth() || variant.tumorAlleleDepth().TotalReadCount == 0)
             return false;
 
         VariantTier variantTier = variant.decorator().tier();

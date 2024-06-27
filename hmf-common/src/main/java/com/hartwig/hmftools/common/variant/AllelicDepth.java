@@ -1,47 +1,57 @@
 package com.hartwig.hmftools.common.variant;
 
+import static java.lang.String.format;
+
 import com.google.common.base.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 
-public interface AllelicDepth
+public class AllelicDepth
 {
-    int totalReadCount();
+    public final int TotalReadCount;
+    public final int AlleleReadCount;
 
-    int alleleReadCount();
-
-    default double alleleFrequency()
+    public AllelicDepth(final int totalReadCount, final int alleleReadCount)
     {
-        return (double) alleleReadCount() / totalReadCount();
+        TotalReadCount = totalReadCount;
+        AlleleReadCount = alleleReadCount;
     }
 
-    static boolean containsAllelicDepth(final Genotype genotype)
+    public static final AllelicDepth NO_DEPTH = new AllelicDepth(0, 0);
+
+    public double alleleFrequency()
+    {
+        return TotalReadCount > 0 ? AlleleReadCount / (double)TotalReadCount : 0;
+    }
+
+    public String toString() { return format("%d/%d", AlleleReadCount, TotalReadCount); }
+
+    public static boolean containsAllelicDepth(final Genotype genotype)
     {
         return genotype != null && genotype.hasAD() && genotype.getAD().length > 1;
     }
 
-    @NotNull
-    static AllelicDepth fromGenotype(@NotNull final Genotype genotype)
+    public static AllelicDepth fromGenotype(final Genotype genotype)
     {
         Preconditions.checkArgument(genotype.hasAD());
         int[] adFields = genotype.getAD();
         final int alleleReadCount = adFields[1];
         int totalReadCount = totalReadCount(genotype);
-        return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
+        return new AllelicDepth(totalReadCount, alleleReadCount);
     }
 
-    static int totalReadCount(@NotNull final Genotype genotype)
+    public static int totalReadCount(final Genotype genotype)
     {
         // Note: this is a workaround of strelka's DP being only Tier 1
         return genotype.hasDP() ? Math.max(genotype.getDP(), sumReadCount(genotype.getAD())) : sumReadCount(genotype.getAD());
     }
 
-    static int sumReadCount(int[] adFields)
+    public static int sumReadCount(int[] adFields)
     {
         int totalReadCount = 0;
-        for(final int afField : adFields)
+        for(int afField : adFields)
         {
             totalReadCount += afField;
         }

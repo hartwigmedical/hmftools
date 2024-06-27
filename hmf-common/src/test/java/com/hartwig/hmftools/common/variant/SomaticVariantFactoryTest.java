@@ -67,8 +67,8 @@ public class SomaticVariantFactoryTest
         assertEquals("C", variant.ref());
         assertEquals("A,G", variant.alt());
 
-        assertEquals(0.5, variant.alleleFrequency(), EPSILON);
-        assertEquals(120, variant.totalReadCount(), EPSILON);
+        assertEquals(0.5, variant.allelicDepth().alleleFrequency(), EPSILON);
+        assertEquals(120, variant.allelicDepth().TotalReadCount, EPSILON);
     }
 
     @Test
