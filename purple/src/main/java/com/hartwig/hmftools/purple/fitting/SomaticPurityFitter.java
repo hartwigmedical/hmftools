@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -12,12 +13,18 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAP
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
 import static com.hartwig.hmftools.purple.fitting.SomaticKernelDensityPeaks.findMatchedFittedPurity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
@@ -26,6 +33,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
@@ -211,6 +219,59 @@ public class SomaticPurityFitter
         }
 
         return somaticFitPurity;
+    }
+
+    public static boolean useTumorOnlySomaticMode(final FittedPurity normalPurityFit)
+    {
+        return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
+            && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
+            && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+    }
+
+    @Nullable
+    public FittedPurity fromTumorOnlySomatics(final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
+    {
+        // only select from variants with VAF > 0.04
+        List<Double> variantVafs = Lists.newArrayList();
+
+        for(SomaticVariant variant : variants)
+        {
+            if(!variant.isPass() || variant.variantImpact() == null)
+                continue;
+
+            if(!variant.isHotspot() && !hasProteinImpact(variant.variantImpact().CanonicalCodingEffect))
+                continue;
+
+            if(variant.alleleFrequency() > SOMATIC_FIT_TUMOR_ONLY_MIN_VAF)
+                variantVafs.add(variant.alleleFrequency());
+        }
+
+        if(variantVafs.isEmpty())
+            return null;
+
+        Collections.sort(variantVafs);
+
+        double medianVaf;
+        int medianIndex = variantVafs.size() / 2;
+
+        if((variantVafs.size() % 2) == 0)
+        {
+            medianVaf = (variantVafs.get(medianIndex - 1) + variantVafs.get(medianIndex)) * 0.5;
+        }
+        else
+        {
+            medianVaf = variantVafs.get(medianIndex);
+        }
+
+        double somaticPurity = medianVaf * 2;
+        PPL_LOGGER.info("tumor-only somatic purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
+
+        FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);
+
+        if(matchedFittedPurity != null)
+            return matchedFittedPurity;
+
+        return null;
     }
 
     private double findHotspotVaf(

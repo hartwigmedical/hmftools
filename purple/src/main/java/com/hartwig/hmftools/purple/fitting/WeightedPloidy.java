@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.immutables.value.Value;
@@ -20,6 +22,8 @@ public class WeightedPloidy extends AllelicDepth
 
     public double ploidy() { return Ploidy; }
     public double weight() { return Weight; }
+
+    public String toString() { return format("frags(%s) ploidy(%.2f) weight(%.2f)", super.toString(), Ploidy, Weight); }
 
     public static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount)
     {

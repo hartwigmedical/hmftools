@@ -18,7 +18,6 @@ import org.junit.Test;
 
 public class PeakModelFactoryTest
 {
-
     @Test
     public void testOffset()
     {
@@ -58,7 +57,6 @@ public class PeakModelFactoryTest
         assertEquals(0.06, victim.ploidyLikelihood(1.8, ploidy), 0.001);
     }
 
-    @NotNull
     public static List<WeightedPloidy> readResource(@NotNull final String file)
     {
         InputStream inputStream = PeakModelFactoryTest.class.getResourceAsStream("/clonality/" + file);

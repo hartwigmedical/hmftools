@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 public class SomaticPeak
 {
-
     public final double AlleleFrequency;
     public final int Count;
 
