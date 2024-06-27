@@ -26,15 +26,12 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverDataCache
 {
     public final EnsemblDataCache GeneTransCache;
     public final CnDataLoader CopyNumberData;
     private final List<DriverGene> mDriverGenes;
-
-    private final DatabaseAccess mDbAccess;
 
     private final List<DriverCatalog> mDriverCatalog;
     private final List<DriverGeneData> mDriverGeneDataList;
@@ -46,14 +43,12 @@ public class DriverDataCache
     private boolean mIsMale;
 
     public DriverDataCache(
-            final DatabaseAccess dbAccess, final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache,
-            final List<DriverGene> driverGenes)
+            final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache, final List<DriverGene> driverGenes)
     {
         CopyNumberData = cnDataLoader;
         GeneTransCache = mGeneTransCache;
         mDriverGenes = driverGenes;
 
-        mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
         mDriverGeneDataList = Lists.newArrayList();
         mGeneCopyNumberData = Lists.newArrayList();
@@ -78,35 +73,6 @@ public class DriverDataCache
         mDriverCatalog.clear();
         mDriverGeneDataList.clear();
         mGeneCopyNumberData.clear();
-    }
-
-    public void loadDataFromDatabase()
-    {
-        clearCache();
-
-        final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
-
-        if(purityContext == null)
-        {
-            LNX_LOGGER.error("sample({}) purity record not found", mSampleId);
-            return;
-        }
-
-        setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
-
-        // add records but filter out any previously added by Linx or any other germline
-        mDriverCatalog.addAll(
-                mDbAccess.readDriverCatalog(mSampleId).stream()
-                        .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
-                        .collect(Collectors.toList()));
-
-        LNX_LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
-
-        if(!mDriverCatalog.isEmpty())
-        {
-            final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
-            mGeneCopyNumberData.addAll(mDbAccess.readGeneCopynumbers(mSampleId, driverGenes));
-        }
     }
 
     public void loadDataFromFile(final String purpleDataPath)
@@ -140,31 +106,7 @@ public class DriverDataCache
 
     public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
     {
-        GeneCopyNumber gcnData = null;
-
-        if(mDbAccess != null)
-        {
-            final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.geneName()));
-
-            if(geneCopyNumbers != null)
-            {
-                for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
-                {
-                    if(geneCopyNumber.transName().equals(transData.TransName))
-                    {
-                        gcnData = geneCopyNumber;
-                        break;
-                    }
-                }
-
-                if(gcnData == null && !geneCopyNumbers.isEmpty())
-                    gcnData = geneCopyNumbers.get(0);
-            }
-        }
-        else
-        {
-            gcnData = findGeneCopyNumber(gene.geneName());
-        }
+        GeneCopyNumber gcnData = findGeneCopyNumber(gene.geneName());
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(gene.geneName())).findFirst().orElse(null);
 

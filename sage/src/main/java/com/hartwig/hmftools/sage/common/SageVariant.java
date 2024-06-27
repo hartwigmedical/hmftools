@@ -9,13 +9,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.filter.SoftFilter;
 
 import org.jetbrains.annotations.Nullable;
 
 public class SageVariant
 {
     private final Candidate mCandidate;
-    private final Set<String> mFilters;
+    private final Set<SoftFilter> mFilters;
     private final List<ReadContextCounter> mNormalReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
@@ -155,8 +156,9 @@ public class SageVariant
 
     public VariantTier tier() { return mCandidate.tier(); }
 
-    public Set<String> filters() { return mFilters; }
-    public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
+    public Set<SoftFilter> filters() { return mFilters; }
+    public Set<String> filtersStringSet() { return mFilters.stream().map(x -> x.filterName()).collect(Collectors.toSet()); }
+    public String filtersStr() { return mFilters.stream().map(x -> x.filterName()).collect(Collectors.joining(",")); }
 
     public VariantReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 

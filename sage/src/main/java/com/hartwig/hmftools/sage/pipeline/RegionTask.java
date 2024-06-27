@@ -78,7 +78,7 @@ public class RegionTask
         mEvidenceStage = new EvidenceStage(
                 config.Common, refGenome, qualityRecalibrationMap, msiJitterCalcs, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength());
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength(), mConfig.Common.Filter);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();

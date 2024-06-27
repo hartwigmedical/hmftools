@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MNV_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_SNV_MNV_FILTER;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_MNV;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_SNV_MNV;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,29 +64,29 @@ public final class DedupSnvMnv
 
         if(firstChangedBases > secondChangedBases)
         {
-            second.filters().add(DEDUP_MNV_FILTER);
+            second.filters().add(DEDUP_MNV);
         }
         else if(secondChangedBases > firstChangedBases)
         {
-            first.filters().add(DEDUP_MNV_FILTER);
+            first.filters().add(DEDUP_MNV);
         }
         else
         {
             if(first.ref().length() < second.ref().length())
             {
-                second.filters().add(DEDUP_MNV_FILTER);
+                second.filters().add(DEDUP_MNV);
             }
             else if(second.ref().length() < first.ref().length())
             {
-                first.filters().add(DEDUP_MNV_FILTER);
+                first.filters().add(DEDUP_MNV);
             }
             else
             {
                 // equal so use tumor quality
                 if(first.totalQuality() > second.totalQuality())
-                    second.filters().add(DEDUP_MNV_FILTER);
+                    second.filters().add(DEDUP_MNV);
                 else
-                    first.filters().add(DEDUP_MNV_FILTER);
+                    first.filters().add(DEDUP_MNV);
             }
         }
     }
@@ -156,7 +156,7 @@ public final class DedupSnvMnv
 
         if(longerContainsShorter(snv, mnv))
         {
-            snv.filters().add(DEDUP_SNV_MNV_FILTER);
+            snv.filters().add(DEDUP_SNV_MNV);
             return true;
         }
 

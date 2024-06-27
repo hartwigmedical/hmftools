@@ -64,7 +64,7 @@ public class LinxTester
 
         if(!isGermline)
         {
-            CnDataLoader = new CnDataLoader("", null);
+            CnDataLoader = new CnDataLoader("");
             Analyser.setCnDataLoader(CnDataLoader);
 
             mCnSegmentBuilder = new CnSegmentBuilder();
@@ -102,7 +102,7 @@ public class LinxTester
 
     public void initialiseDriverGeneAnnotator(final EnsemblDataCache ensemblDataCache)
     {
-        DriverAnnotator = new DriverGeneAnnotator(null, ensemblDataCache, Config, CnDataLoader, CohortWriter, VisData);
+        DriverAnnotator = new DriverGeneAnnotator(ensemblDataCache, Config, CnDataLoader, CohortWriter, VisData);
     }
 
     public final int nextVarId() { return mNextVarId++; }

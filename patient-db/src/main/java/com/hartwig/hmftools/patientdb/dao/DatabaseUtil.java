@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import com.hartwig.hmftools.common.utils.Doubles;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,8 +26,7 @@ final public class DatabaseUtil
 
     private static double round(double number, int decimalPoints)
     {
-        double multiplier = Math.pow(10, decimalPoints);
-        return Math.round(number * multiplier) / multiplier;
+        return Doubles.round(number, decimalPoints);
     }
 
     @NotNull

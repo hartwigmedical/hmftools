@@ -72,7 +72,7 @@ public class LinxConfig
 
     public final int Threads;
 
-    public final ConfigBuilder CmdLineConfig; // TODO consider removing
+    public final ConfigBuilder CmdLineConfig;
 
     // config options
     public static final String VCF_FILE = "sv_vcf";
@@ -178,8 +178,6 @@ public class LinxConfig
     public final List<String> getSampleIds() { return mSampleIds; }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
-
-    public boolean loadSampleDataFromFile() { return (!PurpleDataPath.isEmpty() && SvVcfFile != null) || IsGermline; }
 
     private void setSamplesFromConfig(final ConfigBuilder configBuilder)
     {

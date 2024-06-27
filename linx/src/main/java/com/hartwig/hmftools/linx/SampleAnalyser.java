@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.SvFileLoader.createSvData;
-import static com.hartwig.hmftools.linx.SvFileLoader.loadSampleSvDataFromFile;
+import static com.hartwig.hmftools.linx.SvFileLoader.loadVariantsFromVcf;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.linx.ImmutableLinxLink;
@@ -57,8 +58,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 public class SampleAnalyser implements Callable
 {
@@ -67,7 +66,6 @@ public class SampleAnalyser implements Callable
     private List<String> mSampleIds;
 
     private final ClusterAnalyser mAnalyser;
-    private final DatabaseAccess mDbAccess;
     private final EnsemblDataCache mEnsemblDataCache;
 
     private final VisSampleData mVisSampleData;
@@ -94,7 +92,7 @@ public class SampleAnalyser implements Callable
     public static final String PERF_COUNTER_WRITE = "WriteAndUpload";
 
     public SampleAnalyser(
-            int instanceId, final LinxConfig config, final DatabaseAccess dbAccess, final SvAnnotators svAnnotators,
+            int instanceId, final LinxConfig config, final SvAnnotators svAnnotators,
             final EnsemblDataCache ensemblDataCache, final FusionResources fusionResources, final CohortDataWriter cohortDataWriter)
     {
         mId = instanceId;
@@ -104,7 +102,6 @@ public class SampleAnalyser implements Callable
         mVisSampleData = new VisSampleData();
         mCurrentSampleId = "";
 
-        mDbAccess = dbAccess;
         mEnsemblDataCache = ensemblDataCache;
 
         mCohortDataWriter = cohortDataWriter;
@@ -112,10 +109,10 @@ public class SampleAnalyser implements Callable
 
         mAnalyser = new ClusterAnalyser(config, mCohortDataWriter);
 
-        mCnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
+        mCnDataLoader = new CnDataLoader(config.PurpleDataPath);
 
         mDriverGeneAnnotator = mConfig.RunDrivers ?
-                new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
+                new DriverGeneAnnotator(ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
 
         mFusionAnalyser = new FusionDisruptionAnalyser(config, ensemblDataCache, fusionResources, cohortDataWriter, mVisSampleData);
 
@@ -212,8 +209,7 @@ public class SampleAnalyser implements Callable
         mCurrentSampleId = sampleId;
         mVisSampleData.setSampleId(sampleId);
 
-        final List<StructuralVariantData> svRecords = mConfig.loadSampleDataFromFile() ?
-                loadSampleSvDataFromFile(mConfig, mCurrentSampleId) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
+        List<StructuralVariantData> svRecords = loadVariantsFromVcf(mConfig, mCurrentSampleId);
 
         final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
@@ -626,8 +622,8 @@ public class SampleAnalyser implements Callable
                             .assembled(pair.isAssembled())
                             .traversedSVCount(pair.getTraversedSVCount())
                             .length(pair.baseLength())
-                            .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
-                            .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
+                            .junctionCopyNumber(Doubles.round(chain.jcn(), 4))
+                            .junctionCopyNumberUncertainty(Doubles.round(chain.jcnUncertainty(), 4))
                             .pseudogeneInfo(pair.getExonMatchData())
                             .ecDna(isDoubleMinute)
                             .build());

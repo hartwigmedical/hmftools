@@ -162,15 +162,13 @@ public class CoverageTest
         BaseCoverage baseCoverage = bamReader.baseCoverage();
         CoverageMetrics metrics = baseCoverage.createMetrics();
 
-        assertEquals(20, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(15, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
 
         assertTrue(bamReader.readGroupMap().isEmpty());
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            if(i >= 24 && i <= 28)
-                assertTrue(baseCoverage.baseDepth()[i] == 2);
-            else if(i >= 19 && i <= 33)
+            if(i >= 19 && i <= 33)
                 assertTrue(baseCoverage.baseDepth()[i] == 1);
             else
                 assertTrue(baseCoverage.baseDepth()[i] == 0);
@@ -208,12 +206,10 @@ public class CoverageTest
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            if((i >= 29 && i <= 38) || (i >= 59 && i <= 68))
-                assertTrue(baseCoverage.baseDepth()[i] == 2);
-            else if(i >= 39 && i <= 48)
-                assertTrue(baseCoverage.baseDepth()[i] == 3);
+            if((i >= 9 && i <= 18) || (i >= 29 && i <= 48) || (i >= 59 && i <= 68))
+                assertTrue(baseCoverage.baseDepth()[i] == 1);
             else
-                assertTrue(baseCoverage.baseDepth()[i] <= 1);
+                assertTrue(baseCoverage.baseDepth()[i] == 0);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());
@@ -243,10 +239,10 @@ public class CoverageTest
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
-            if(i >= 19 && i <= 28)
-                assertTrue(baseCoverage.baseDepth()[i] == 2);
+            if((i >= 9 && i <= 38) || (i >= 49 && i <= 68))
+                assertTrue(baseCoverage.baseDepth()[i] == 1);
             else
-                assertTrue(baseCoverage.baseDepth()[i] <= 1);
+                assertTrue(baseCoverage.baseDepth()[i] == 0);
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());

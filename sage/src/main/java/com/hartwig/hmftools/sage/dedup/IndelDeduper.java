@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_INDEL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -250,7 +250,7 @@ public class IndelDeduper
     private void markAsDedup(final SageVariant variant)
     {
         // mark only otherwise passing
-        variant.filters().add(DEDUP_INDEL_FILTER);
+        variant.filters().add(DEDUP_INDEL);
     }
 
     private boolean isDedupCandidate(final VariantData indel, final VariantData variant, boolean requireCoreEndInclusion)
@@ -477,9 +477,8 @@ public class IndelDeduper
                 return true;
 
             // must only have the germline filters below
-            return Variant.filters().stream().allMatch(x -> x.equals(MAX_GERMLINE_VAF.filterName())
-                    || x.equals(MAX_GERMLINE_RELATIVE_VAF.filterName())
-                    || x.equals(MAX_GERMLINE_ALT_SUPPORT.filterName()));
+            return Variant.filters().stream()
+                    .allMatch(x -> x.equals(MAX_GERMLINE_VAF) || x.equals(MAX_GERMLINE_RELATIVE_VAF) || x.equals(MAX_GERMLINE_ALT_SUPPORT));
         }
 
         public int indelScore()

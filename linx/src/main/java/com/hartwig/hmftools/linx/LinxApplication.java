@@ -3,14 +3,9 @@ package com.hartwig.hmftools.linx;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,7 +22,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -47,18 +41,9 @@ public class LinxApplication
 
         List<String> samplesList = config.getSampleIds();
 
-        DatabaseAccess dbAccess = null;
-
-        if(hasDatabaseConfig(configBuilder))
+        if(!config.hasValidSampleDataSource(configBuilder))
         {
-            dbAccess = createDatabaseAccess(configBuilder);
-        }
-        else
-        {
-            if(!config.hasValidSampleDataSource(configBuilder))
-            {
-                System.exit(1);
-            }
+            System.exit(1);
         }
 
         if(samplesList.isEmpty())
@@ -113,7 +98,7 @@ public class LinxApplication
 
         CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
 
-        SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache, dbAccess);
+        SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache);
 
         List<SampleAnalyser> sampleAnalysers = Lists.newArrayList();
 
@@ -126,7 +111,7 @@ public class LinxApplication
             for(int i = 0; i < threads; ++i)
             {
                 sampleAnalysers.add(new SampleAnalyser(
-                        i, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter));
+                        i, config, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter));
 
                 saSampleLists.add(Lists.newArrayList());
             }
@@ -152,7 +137,7 @@ public class LinxApplication
         else
         {
             SampleAnalyser sampleAnalyser = new SampleAnalyser(
-                    0, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter);
+                    0, config, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter);
 
             sampleAnalysers.add(sampleAnalyser);
             sampleAnalyser.setSampleIds(config.getSampleIds());
@@ -213,7 +198,6 @@ public class LinxApplication
         LinxConfig.addConfig(configBuilder);
         FusionConfig.addConfig(configBuilder);
 
-        addDatabaseCmdLineArgs(configBuilder, false);
         addEnsemblDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

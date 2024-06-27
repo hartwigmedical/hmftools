@@ -270,7 +270,7 @@ public class VariantVis
                 body(
                         firstVis.renderVariantInfo(
                                 sageVariant.totalQuality(),
-                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filters()),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filtersStringSet()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
                         readTable,

@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
+import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -101,9 +102,9 @@ public class VariantFilters
             return;
 
         final VariantTier tier = variant.tier();
-        final SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier);
+        final SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier, mConfig);
 
-        final Set<String> variantFilters = variant.filters();
+        final Set<SoftFilter> variantFilters = variant.filters();
 
         final List<ReadContextCounter> normalReadCounters = variant.normalReadCounters();
 
@@ -113,7 +114,7 @@ public class VariantFilters
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
-            final Set<String> tumorFilters = Sets.newHashSet();
+            Set<SoftFilter> tumorFilters = Sets.newHashSet();
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
@@ -135,73 +136,58 @@ public class VariantFilters
         }
     }
 
-    public SoftFilterConfig getTieredSoftFilterConfig(final VariantTier tier)
-    {
-        switch(tier)
-        {
-            case HOTSPOT:
-                return mConfig.SoftHotspotFilter;
-            case PANEL:
-                return mConfig.SoftPanelFilter;
-            case HIGH_CONFIDENCE:
-                return mConfig.SoftHighConfidenceFilter;
-            default:
-                return mConfig.SoftLowConfidenceFilter;
-        }
-    }
-
     // tumor-only tests
     public void applyTumorFilters(
-            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<String> filters)
+            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
             if(belowMinTumorQual(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+                filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
             if(belowMinTumorVaf(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_VAF.filterName());
+                filters.add(SoftFilter.MIN_TUMOR_VAF);
         }
 
         if(belowMaxEdgeDistance(primaryTumor))
         {
-            filters.add(SoftFilter.MAX_EDGE_DISTANCE.filterName());
+            filters.add(SoftFilter.MAX_EDGE_DISTANCE);
         }
 
         if(exceedsAltVsRefMapQual(primaryTumor))
         {
-            filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE.filterName());
+            filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
 
         if(tier != VariantTier.HOTSPOT)
         {
             if(primaryTumor.belowMinFragmentCoords())
             {
-                filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
+                filters.add(SoftFilter.FRAGMENT_COORDS);
             }
 
             if(mStrandBiasCalcs.isDepthBelowProbability(
                     primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), true))
             {
-                filters.add(SoftFilter.FRAGMENT_STRAND_BIAS.filterName());
+                filters.add(SoftFilter.FRAGMENT_STRAND_BIAS);
             }
 
             boolean checkRef = true;
             if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRef)
             || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
-                filters.add(SoftFilter.READ_STRAND_BIAS.filterName());
+                filters.add(SoftFilter.READ_STRAND_BIAS);
             }
 
             if(applyJitterFilter(primaryTumor))
             {
-                filters.add(SoftFilter.JITTER.filterName());
+                filters.add(SoftFilter.JITTER);
             }
         }
 
         if(belowMinAverageBaseQuality(primaryTumor, tier))
         {
-            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY.filterName());
+            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
         }
     }
 
@@ -359,27 +345,27 @@ public class VariantFilters
     // normal and paired tumor-normal tests
     public void applyTumorNormalFilters(
             final VariantTier tier, final SoftFilterConfig config,
-            final ReadContextCounter normal, final ReadContextCounter primaryTumor, final Set<String> filters)
+            final ReadContextCounter normal, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
     {
         if(belowMinGermlineCoverage(config, normal))
         {
-            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.filterName());
+            filters.add(SoftFilter.MIN_GERMLINE_DEPTH);
         }
 
         if(aboveMaxGermlineVaf(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_VAF.filterName());
+            filters.add(SoftFilter.MAX_GERMLINE_VAF);
         }
 
         if(aboveMaxGermlineRelativeVaf(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_VAF.filterName());
+            filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_VAF);
         }
 
         // MNV Tests
         if(aboveMaxMnvIndelNormalAltSupport(tier, normal))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
+            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT);
         }
     }
 
@@ -469,6 +455,4 @@ public class VariantFilters
 
         return true;
     }
-
-
 }

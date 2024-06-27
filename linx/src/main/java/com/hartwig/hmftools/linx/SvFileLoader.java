@@ -10,14 +10,13 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
@@ -28,25 +27,26 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.linx.germline.GermlineFilter;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
+
+import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SvFileLoader
 {
-    public static List<StructuralVariantData> loadSampleSvDataFromFile(final LinxConfig config, final String sampleId)
+    public static List<StructuralVariantData> loadVariantsFromVcf(final LinxConfig config, final String sampleId)
     {
         String vcfFile = convertWildcardSamplePath(config.SvVcfFile, sampleId);
 
         if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile, sampleId);
+            return loadGermlineVariantsFromVcf(vcfFile, sampleId);
         else
-            return loadSvDataFromVcf(vcfFile);
+            return loadSomaticVariantsFromVcf(vcfFile);
     }
 
-    private static List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
+    private static List<StructuralVariantData> loadSomaticVariantsFromVcf(final String vcfFile)
     {
-        final List<StructuralVariantData> svDataList = Lists.newArrayList();
+        List<StructuralVariantData> svDataList = Lists.newArrayList();
 
         try
         {
@@ -72,9 +72,10 @@ public final class SvFileLoader
         return svDataList;
     }
 
-    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final String sampleId)
+    private static List<StructuralVariantData> loadGermlineVariantsFromVcf(final String vcfFile, final String sampleId)
     {
-        StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
+        // StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
+        GridssSvFactory svFactory = GridssSvFactory.build(new GermlineFilter());
 
         VcfFileReader vcfReader = new VcfFileReader(vcfFile);
 
@@ -173,8 +174,8 @@ public final class SvFileLoader
                 .startHomologySequence(var.start().homology())
                 .endHomologySequence(var.end() == null ? "" : var.end().homology())
                 .junctionCopyNumber(contextStart.getAttributeAsDouble(PURPLE_JUNCTION_COPY_NUMBER, 0))
-                .startAF(DatabaseUtil.valueNotNull(var.start().alleleFrequency()))
-                .endAF(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().alleleFrequency()))
+                .startAF(valueNotNull(var.start().alleleFrequency()))
+                .endAF(var.end() == null ? 0 : valueNotNull(var.end().alleleFrequency()))
                 .adjustedStartAF(extractPurpleArrayValue(contextStart, PURPLE_AF))
                 .adjustedEndAF(extractPurpleArrayValue(contextEnd, PURPLE_AF))
                 .adjustedStartCopyNumber(extractPurpleArrayValue(contextStart, PURPLE_CN))
@@ -185,22 +186,22 @@ public final class SvFileLoader
                 .type(var.type())
                 .filter(var.filter())
                 .imprecise(var.imprecise())
-                .qualityScore(DatabaseUtil.valueNotNull(var.qualityScore()))
+                .qualityScore(valueNotNull(var.qualityScore()))
                 .event(valueNotNull(var.event()))
-                .startTumorVariantFragmentCount(DatabaseUtil.valueNotNull(var.start().tumorVariantFragmentCount()))
-                .startTumorReferenceFragmentCount(DatabaseUtil.valueNotNull(var.start().tumorReferenceFragmentCount()))
-                .startNormalVariantFragmentCount(DatabaseUtil.valueNotNull(var.start().normalVariantFragmentCount()))
-                .startNormalReferenceFragmentCount(DatabaseUtil.valueNotNull(var.start().normalReferenceFragmentCount()))
-                .endTumorVariantFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().tumorVariantFragmentCount()))
-                .endTumorReferenceFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().tumorReferenceFragmentCount()))
-                .endNormalVariantFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().normalVariantFragmentCount()))
-                .endNormalReferenceFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().normalReferenceFragmentCount()))
-                .startIntervalOffsetStart(DatabaseUtil.valueNotNull(var.start().startOffset()))
-                .startIntervalOffsetEnd(DatabaseUtil.valueNotNull(var.start().endOffset()))
-                .endIntervalOffsetStart(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().startOffset()))
-                .endIntervalOffsetEnd(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().endOffset()))
-                .inexactHomologyOffsetStart(DatabaseUtil.valueNotNull(var.start().inexactHomologyOffsetStart()))
-                .inexactHomologyOffsetEnd(DatabaseUtil.valueNotNull(var.start().inexactHomologyOffsetEnd()))
+                .startTumorVariantFragmentCount(valueNotNull(var.start().tumorVariantFragmentCount()))
+                .startTumorReferenceFragmentCount(valueNotNull(var.start().tumorReferenceFragmentCount()))
+                .startNormalVariantFragmentCount(valueNotNull(var.start().normalVariantFragmentCount()))
+                .startNormalReferenceFragmentCount(valueNotNull(var.start().normalReferenceFragmentCount()))
+                .endTumorVariantFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().tumorVariantFragmentCount()))
+                .endTumorReferenceFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().tumorReferenceFragmentCount()))
+                .endNormalVariantFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().normalVariantFragmentCount()))
+                .endNormalReferenceFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().normalReferenceFragmentCount()))
+                .startIntervalOffsetStart(valueNotNull(var.start().startOffset()))
+                .startIntervalOffsetEnd(valueNotNull(var.start().endOffset()))
+                .endIntervalOffsetStart(var.end() == null ? 0 : valueNotNull(var.end().startOffset()))
+                .endIntervalOffsetEnd(var.end() == null ? 0 : valueNotNull(var.end().endOffset()))
+                .inexactHomologyOffsetStart(valueNotNull(var.start().inexactHomologyOffsetStart()))
+                .inexactHomologyOffsetEnd(valueNotNull(var.start().inexactHomologyOffsetEnd()))
                 .startLinkedBy(valueNotNull(var.startLinkedBy()))
                 .endLinkedBy(valueNotNull(var.endLinkedBy()))
                 .vcfId(valueNotNull(var.id()))
@@ -212,11 +213,29 @@ public final class SvFileLoader
                 .insertSequenceAlignments(valueNotNull(var.insertSequenceAlignments()))
                 .insertSequenceRepeatClass(valueNotNull(var.insertSequenceRepeatClass()))
                 .insertSequenceRepeatType(valueNotNull(var.insertSequenceRepeatType()))
-                .insertSequenceRepeatOrientation(DatabaseUtil.valueNotNull(var.insertSequenceRepeatOrientation()))
-                .insertSequenceRepeatCoverage(DatabaseUtil.valueNotNull(var.insertSequenceRepeatCoverage()))
+                .insertSequenceRepeatOrientation(valueNotNull(var.insertSequenceRepeatOrientation()))
+                .insertSequenceRepeatCoverage(valueNotNull(var.insertSequenceRepeatCoverage()))
                 .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
                 .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
                 .ponCount(var.startContext().getAttributeAsInt(PON_COUNT, 0))
                 .build();
     }
+
+    private static double valueNotNull(final Double value)
+    {
+        return value != null ? value : 0D;
+    }
+    private static int valueNotNull(final Integer value)
+    {
+        return value != null ? value : 0;
+    }
+    private static byte valueNotNull(final Byte value)
+    {
+        return value != null ? value : 0;
+    }
+    private static String valueNotNull(final String value)
+    {
+        return value != null ? value : Strings.EMPTY;
+    }
+
 }

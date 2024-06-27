@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
@@ -58,12 +59,12 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+        VcfFileReader vcfReader = new VcfFileReader(germlineVcf);
 
         GermlineReportedEnrichment germlineReportedEnrichment = checkReported ?
                 new GermlineReportedEnrichment(mReferenceData.DriverGenes.driverGenes(), Collections.emptySet()) : null;
 
-        for(VariantContext context : vcfReader)
+        for(VariantContext context : vcfReader.iterator())
         {
             GermlineVariant variant = new GermlineVariant(context);
 

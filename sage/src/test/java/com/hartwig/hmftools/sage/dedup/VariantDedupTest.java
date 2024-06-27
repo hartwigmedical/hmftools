@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.dedup;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
@@ -181,7 +182,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var3.filters().add(MIN_GERMLINE_DEPTH.filterName());
+        var3.filters().add(MIN_GERMLINE_DEPTH);
 
         List<SageVariant> variants = Lists.newArrayList(var1, var2, var3);
 
@@ -190,7 +191,7 @@ public class VariantDedupTest
         transcripts.add(GeneTestUtils.createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {7, 20}, 9, 7, 25, true, ""));
 
-        DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(transcripts);
+        DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(transcripts, TEST_CONFIG.Filter);
         deduper.dedupVariants(variants);
 
         assertTrue(var1.isPassing());
@@ -207,7 +208,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var2.filters().add(MIN_GERMLINE_DEPTH.filterName());
+        var2.filters().add(MIN_GERMLINE_DEPTH);
 
         variants = Lists.newArrayList(var1, var2, var3);
 
