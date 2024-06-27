@@ -40,6 +40,9 @@ public class CompareConfig
 
     public final boolean IgnoreSupplementaryReads;
 
+    public final boolean MatchOrigUnmapped;
+    public final boolean MatchNewUnmapped;
+
     public final int Threads;
     public final List<String> LogReadIds;
 
@@ -55,6 +58,8 @@ public class CompareConfig
     private static final String IGNORE_ALTERATIONS = "ignore_alterations";
     private static final String IGNORE_SUPPLEMENTARY_READS = "ignore_supplementary_reads";
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
+    private static final String MATCH_ORIG_UNMAPPED = "match_orig_unmapped";
+    private static final String MATCH_NEW_UNMAPPED = "match_new_unmapped";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 10_000_000;
 
@@ -80,6 +85,9 @@ public class CompareConfig
         IgnoreAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
         IgnoreConsensusReads = configBuilder.hasFlag(IGNORE_CONSENSUS_READS);
         IgnoreSupplementaryReads = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_READS);
+
+        MatchOrigUnmapped = configBuilder.hasFlag(MATCH_ORIG_UNMAPPED);
+        MatchNewUnmapped = configBuilder.hasFlag(MATCH_NEW_UNMAPPED);
 
         BT_LOGGER.info("refGenomeVersion({}) origBam({}) newBam({})", RefGenVersion, OrigBamFile, NewBamFile);
         BT_LOGGER.info("origBam({}) newBam({})", OrigBamFile, NewBamFile);
@@ -128,6 +136,9 @@ public class CompareConfig
         configBuilder.addFlag(IGNORE_CONSENSUS_READS, "If set, ignore consensus reads");
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "If set, ignore supplementary reads");
 
+        configBuilder.addFlag(MATCH_ORIG_UNMAPPED, "If set, match unmapped reads in original bam against corresponding read in new bam");
+        configBuilder.addFlag(MATCH_NEW_UNMAPPED, "If set, match unmapped reads in new bam against corresponding read in original bam");
+
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
@@ -151,6 +162,8 @@ public class CompareConfig
         IgnoreAlterations = false;
         IgnoreConsensusReads = false;
         IgnoreSupplementaryReads = false;
+        MatchOrigUnmapped = false;
+        MatchNewUnmapped = false;
         Threads = 0;
         LogReadIds = null;
         SpecificChrRegions = null;

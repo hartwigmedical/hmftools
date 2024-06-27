@@ -240,45 +240,46 @@ public class PartitionReader implements Runnable
 
     private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);
 
-    private void checkReadDetails(final SAMRecord read1, final SAMRecord read2)
+    private void checkReadDetails(final SAMRecord origRead, final SAMRecord newRead)
     {
         ++mStats.OrigReadCount;
         ++mStats.NewReadCount;
 
-        List<String> diffs = compareReads(read1, read2, mConfig);
+        // note that the ReadKey of both readsw match
+        if(mConfig.MatchNewUnmapped && newRead.hasAttribute(UNMAP_ATTRIBUTE))
+            return;
+
+        if(mConfig.MatchOrigUnmapped && origRead.hasAttribute(UNMAP_ATTRIBUTE))
+            return;
+
+        List<String> diffs = compareReads(origRead, newRead, mConfig);
         if(!diffs.isEmpty())
         {
             ++mStats.DiffCount;
-            mReadWriter.writeComparison(read1, VALUE, diffs);
+            mReadWriter.writeComparison(origRead, VALUE, diffs);
         }
     }
 
-    static List<String> compareReads(final SAMRecord read1, final SAMRecord read2, final CompareConfig config)
+    static List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
     {
         List<String> diffs = new ArrayList<>();
 
-        if(read1.getInferredInsertSize() != read2.getInferredInsertSize())
-        {
-            diffs.add(format("insertSize(%d/%d)", read1.getInferredInsertSize(), read2.getInferredInsertSize()));
-        }
+        if(origRead.getInferredInsertSize() != newRead.getInferredInsertSize())
+            diffs.add(format("insertSize(%d/%d)", origRead.getInferredInsertSize(), newRead.getInferredInsertSize()));
 
-        if(read1.getMappingQuality() != read2.getMappingQuality())
-        {
-            diffs.add(format("mapQuality(%d/%d)", read1.getMappingQuality(), read2.getMappingQuality()));
-        }
+        if(origRead.getMappingQuality() != newRead.getMappingQuality())
+            diffs.add(format("mapQuality(%d/%d)", origRead.getMappingQuality(), newRead.getMappingQuality()));
 
-        if(!read1.getCigarString().equals(read2.getCigarString()))
-        {
-            diffs.add(format("cigar(%s/%s)", read1.getCigarString(), read2.getCigarString()));
-        }
+        if(!origRead.getCigarString().equals(newRead.getCigarString()))
+            diffs.add(format("cigar(%s/%s)", origRead.getCigarString(), newRead.getCigarString()));
 
-        if(read1.getFlags() != read2.getFlags())
+        if(origRead.getFlags() != newRead.getFlags())
         {
-            if(read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag())
-                diffs.add(format("negStrand(%s/%s)", read1.getReadNegativeStrandFlag(), read2.getReadNegativeStrandFlag()));
+            if(origRead.getReadNegativeStrandFlag() != newRead.getReadNegativeStrandFlag())
+                diffs.add(format("negStrand(%s/%s)", origRead.getReadNegativeStrandFlag(), newRead.getReadNegativeStrandFlag()));
 
-            if(!config.IgnoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
-                diffs.add(format("duplicate(%s/%s)", read1.getDuplicateReadFlag(), read2.getDuplicateReadFlag()));
+            if(!config.IgnoreDupDiffs && origRead.getDuplicateReadFlag() != newRead.getDuplicateReadFlag())
+                diffs.add(format("duplicate(%s/%s)", origRead.getDuplicateReadFlag(), newRead.getDuplicateReadFlag()));
         }
 
         // check key attributes:
@@ -287,8 +288,8 @@ public class PartitionReader implements Runnable
             if(attribute.equals(SUPPLEMENTARY_ATTRIBUTE) && config.IgnoreSupplementaryReads)
                 continue;
 
-            String readAttr1 = read1.getStringAttribute(attribute);
-            String readAttr2 = read2.getStringAttribute(attribute);
+            String readAttr1 = origRead.getStringAttribute(attribute);
+            String readAttr2 = newRead.getStringAttribute(attribute);
 
             if(!Objects.equals(readAttr1, readAttr2)) // Objects.equals handles null case
             {
@@ -299,20 +300,24 @@ public class PartitionReader implements Runnable
         }
 
         // check the read bases, make sure we account for the read negative strand flag
-        if(!basesMatch(read1.getReadString(), read1.getReadNegativeStrandFlag(),
-                read2.getReadString(), read2.getReadNegativeStrandFlag()))
+        if(!basesMatch(origRead.getReadString(), origRead.getReadNegativeStrandFlag(),
+                newRead.getReadString(), newRead.getReadNegativeStrandFlag()))
         {
             diffs.add(format("bases(%s/%s)",
-                read1.getReadNegativeStrandFlag() ? reverseComplement(read1.getReadString()) : read1.getReadString(),
-                read2.getReadNegativeStrandFlag() ? reverseComplement(read2.getReadString()) : read2.getReadString()));
+                    origRead.getReadNegativeStrandFlag() ? reverseComplement(origRead.getReadString()) : origRead.getReadString(),
+                    newRead.getReadNegativeStrandFlag() ? reverseComplement(newRead.getReadString()) : newRead.getReadString()));
         }
         // check the base qual, make sure we account for the read negative strand flag
-        if(!stringsMatch(read1.getBaseQualityString(), read1.getReadNegativeStrandFlag(),
-                read2.getBaseQualityString(), read2.getReadNegativeStrandFlag()))
+        if(!stringsMatch(origRead.getBaseQualityString(), origRead.getReadNegativeStrandFlag(),
+                newRead.getBaseQualityString(), newRead.getReadNegativeStrandFlag()))
         {
             diffs.add(format("baseQual(%s/%s)",
-                read1.getReadNegativeStrandFlag() ? new StringBuilder(read1.getBaseQualityString()).reverse() : read1.getBaseQualityString(),
-                read2.getReadNegativeStrandFlag() ? new StringBuilder(read2.getBaseQualityString()).reverse() : read2.getBaseQualityString()));
+                    origRead.getReadNegativeStrandFlag()
+                            ? new StringBuilder(origRead.getBaseQualityString()).reverse()
+                            : origRead.getBaseQualityString(),
+                    newRead.getReadNegativeStrandFlag()
+                            ? new StringBuilder(newRead.getBaseQualityString()).reverse()
+                            : newRead.getBaseQualityString()));
         }
 
         return diffs;
