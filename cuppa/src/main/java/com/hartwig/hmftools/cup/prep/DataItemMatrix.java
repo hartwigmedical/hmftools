@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class DataItemMatrix
 {
     public final List<String> SampleIds;
@@ -42,11 +44,6 @@ public class DataItemMatrix
         return FeatureBySampleMatrix.get(index);
     }
 
-    public List<DataItem.Index> getIndexes()
-    {
-        return Indexes;
-    }
-
     public int nFeatures()
     {
         return Indexes.size();
@@ -70,13 +67,18 @@ public class DataItemMatrix
         }
     }
 
-    public List<String> getFeatureValuesBySampleIndex(int sampleIndex)
+    @VisibleForTesting
+    public String[] getSampleFeatureValues(int sampleIndex)
     {
-        List<String> featureValues = new ArrayList<>();
-        for(DataItem.Index featureIndex : Indexes)
+        String[] featureValues = new String[nFeatures()];
+
+        int i = 0;
+        for(DataItem.Index dataItemIndex : Indexes)
         {
-            featureValues.add(get(featureIndex)[sampleIndex]);
+            featureValues[i] = get(dataItemIndex)[sampleIndex];
+            i++;
         }
+
         return featureValues;
     }
 }
