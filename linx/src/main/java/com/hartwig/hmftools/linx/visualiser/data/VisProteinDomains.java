@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain.UTR;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain.PROTEIN_DOMAIN_UTR;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,8 +15,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisProteinDomains
 {
@@ -31,7 +29,7 @@ public class VisProteinDomains
         final List<VisProteinDomain> result = Lists.newArrayList();
         for(VisProteinDomain proteinDomain : proteinDomains)
         {
-            if(proteinDomain.name().equals(UTR))
+            if(proteinDomain.name().equals(PROTEIN_DOMAIN_UTR))
             {
                 final List<VisGeneExon> proteinDomainExons = exons.stream()
                         .filter(x -> x.Transcript.equals(proteinDomain.Transcript)).sorted().collect(Collectors.toList());
