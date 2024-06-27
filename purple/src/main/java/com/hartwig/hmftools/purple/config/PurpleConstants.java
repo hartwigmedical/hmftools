@@ -126,6 +126,7 @@ public class PurpleConstants
 
     // biallelic (no wildtype allele remaining) probability
     public static final int BIALLELIC_LOH_GROWTH_RATE = 40;
-    public static final double BIALLELIC_THRESHOLD_PARAMETER = 1.5; // to change to 1.4
-    public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.01; // to change to 0.02
+    public static final double BIALLELIC_THRESHOLD_PARAMETER_I = 1.4;
+    public static final double BIALLELIC_THRESHOLD_PARAMETER_II = 0.8;
+    public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.02;
 }

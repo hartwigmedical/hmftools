@@ -16,7 +16,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_C
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER_I;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER_II;
 
 import java.util.List;
 import java.util.Optional;
@@ -112,7 +113,7 @@ public class SomaticPurityEnrichment
 
     private static double vcnThresholdForNoWildtype(double copyNumber)
     {
-        double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(BIALLELIC_THRESHOLD_PARAMETER, copyNumber - 0.8));
+        double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(BIALLELIC_THRESHOLD_PARAMETER_I, copyNumber - BIALLELIC_THRESHOLD_PARAMETER_II));
 
         return vcnThresholdForNoWildtype;
     }
