@@ -424,8 +424,7 @@ public class PurpleApplication
     {
         CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
 
-        List<SomaticVariant> fittingVariants = !mConfig.tumorOnlyMode() ?
-                SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions) : Lists.newArrayList();
+        List<SomaticVariant> fittingVariants = SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions);
 
         if(!fittingVariants.isEmpty())
         {

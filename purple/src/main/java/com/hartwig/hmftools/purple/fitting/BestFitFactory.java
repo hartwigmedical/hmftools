@@ -108,11 +108,11 @@ public class BestFitFactory
 
         if(!hasTumor)
         {
-            mBestNormalFit = builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
+            mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NO_TUMOR).build();
             return;
         }
 
-        if(mConfig.tumorOnlyMode() && useTumorOnlySomaticMode(lowestPurityFit))
+        if(mConfig.tumorOnlyMode() && useTumorOnlySomaticMode(lowestScoreFit))
         {
             FittedPurity somaticFit = mSomaticPurityFitter.fromTumorOnlySomatics(fittingSomatics, allCandidates);
 
