@@ -27,18 +27,17 @@ public class SomaticPurityEnrichmentTest extends TestCase
     @Test
     public void testCalculateBiallelic()
     {
-        // These test will fail if the model constants are changed (0.01 -> 0.02) and/or (1.5 -> 1.2)
+        // 27.06.2024: New unit tests due to model changes
         
-        /* Scenario 1: High MACN -> No LOH -> expect low probability of biallelic */
-
+        // Scenario 1:
         // input values:
-        double CN = 3.08;
-        double MACN = 1.01;
-        double VCN = 0.941; // has totalReadCount as an input
-        int alleleReadCount = 39;
+        double CN = 5.1;
+        double MACN = 2;
+        double VCN = 2.83;
+        int alleleReadCount = 42;
 
         // expected output:
-        double expectedBiallelicProbability = 0.01;
+        double expectedBiallelicProbability = 0.02;
 
         // MACN = (1 - BAF) * CN <=> BAF = 1 - MACN / CN
         double correspondingBAF = 1 - (MACN / CN);
@@ -49,146 +48,33 @@ public class SomaticPurityEnrichmentTest extends TestCase
 
         double biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
         assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-        
-        boolean classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(false,classifyBiallelic);
 
-        /* Scenario 2: Low MACN -> LOH -> expect high probability of biallelic */
-
-        // input values:
-        CN = 0.991;
-        MACN = 0.0021;
-        VCN = 1.06;
-        alleleReadCount = 37;
-
-        // expected output:
-        expectedBiallelicProbability = 1.00;
-        
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
-
-        /* Scenario 3: Opposing evidence -> expect probability of biallelic about 0.5 */
-
-        // input values:
-        CN = 2.06;
-        MACN = 0.04;
-        VCN = 1.57;
-        alleleReadCount = 11;
-
-        // expected output:
-        expectedBiallelicProbability = 0.54;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
-
-        /* Scenario 4 - another example of uncertain biallelic status */
-
-        // input values:
-        CN = 1.91;
-        MACN = 0.0;
-        VCN = 1.49;
-        alleleReadCount = 16;
-
-        // expected output:
-        expectedBiallelicProbability = 0.533;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
-
-        /* Scenario 5 - another example of uncertain biallelic status */
-
-        // input values:
-        CN = 2.16;
-        MACN = 0.0;
-        VCN = 1.51;
-        alleleReadCount = 22;
-
-        // expected output:
-        expectedBiallelicProbability = 0.528;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
-
-        /* Scenario 6 - probability around 0.20 */
-
-        // input values:
-        CN = 2.03;
-        MACN = 0.0007;
-        VCN = 1.18;
-        alleleReadCount = 10;
-
-        // expected output:
-        expectedBiallelicProbability = 0.208;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(false,classifyBiallelic);
-
-        /* Scenario 7 - probability around 0.80 */
-
-        // input values:
-        CN = 2.08;
-        MACN = 0.019;
-        VCN = 1.76;
-        alleleReadCount = 31;
-
-        // expected output:
-        expectedBiallelicProbability = 0.788;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
-
-        /* Scenario 8 - variant from colo at chr1:88044052 */
-
+        // Scenario 2:
         // input values:
         CN = 2.01;
-        MACN = 0.00;
-        VCN = 2.03;
-        alleleReadCount = 30;
+        MACN = 0.0004;
+        VCN = 2.11;
+        alleleReadCount = 52;
 
         // expected output:
-        expectedBiallelicProbability = 0.919;
+        expectedBiallelicProbability = 0.995;
+        
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        // Scenario 3
+        // input values:
+        CN = 2.98;
+        MACN = 0.991;
+        VCN = 2.33;
+        alleleReadCount = 36;
+
+        // expected output:
+        expectedBiallelicProbability = 0.054;
 
         correspondingBAF = 1 - (MACN / CN);
         copyNumber = createCopyNumber(CN, correspondingBAF);
@@ -197,8 +83,22 @@ public class SomaticPurityEnrichmentTest extends TestCase
         biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
         assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
 
-        classifyBiallelic = SomaticPurityEnrichment.classifyBiallelic(biallelicProbability);
-        assertEquals(true,classifyBiallelic);
+        // Scenario 4
+        // input values:
+        CN = 43.78;
+        MACN = 0.0;
+        VCN = 42.74;
+        alleleReadCount = 627;
+
+        // expected output:
+        expectedBiallelicProbability = 0.442;
+
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
     }
     
     
