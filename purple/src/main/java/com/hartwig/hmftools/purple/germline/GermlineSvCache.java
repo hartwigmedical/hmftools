@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -53,7 +54,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineSvCache
@@ -86,15 +86,15 @@ public class GermlineSvCache
         mFittedRegions = fittedRegions;
         mCopyNumbers = copyNumbers;
 
-        final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
-        mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
+        VcfFileReader vcfReader = new VcfFileReader(inputVcf);
+        mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.vcfHeader()));
 
         mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
 
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
 
-        for(VariantContext context : vcfReader)
+        for(VariantContext context : vcfReader.iterator())
         {
             mVariantCollection.add(context);
         }
@@ -173,6 +173,10 @@ public class GermlineSvCache
         double junctionCopyNumberTotal = 0;
         int legCount = 0;
 
+        ImmutableEnrichedStructuralVariantLeg.Builder legBuilderStart = null;
+        ImmutableEnrichedStructuralVariantLeg.Builder legBuilderEnd = null;
+        boolean[] adjustedCnChangeSet = new boolean[] {false, false};
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
@@ -183,6 +187,11 @@ public class GermlineSvCache
             VariantContext context = se == SE_START ? variant.startContext() : variant.endContext();
 
             ImmutableEnrichedStructuralVariantLeg.Builder legBuilder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
+
+            if(se == SE_START)
+                legBuilderStart = legBuilder;
+            else
+                legBuilderEnd = legBuilder;
 
             ObservedRegion fittedRegion = fittedRegions[se] != null ? fittedRegions[se].Region : null;
             PurpleCopyNumber copyNumber = copyNumbers[se];
@@ -201,6 +210,7 @@ public class GermlineSvCache
                     double cnChange = abs(fittedRegions[se].CopyNumberChange);
 
                     legBuilder.adjustedCopyNumberChange(cnChange);
+                    adjustedCnChangeSet[se] = true;
 
                     // take the higher of the ref CN regions
                     if(fittedRegion.germlineStatus() == AMPLIFICATION)
@@ -232,15 +242,25 @@ public class GermlineSvCache
                     junctionCopyNumberTotal += adjustedAF * adjustedCN;
                 }
             }
-
-            if(se == SE_START)
-                builder.start(legBuilder.build());
-            else
-                builder.end(legBuilder.build());
         }
+
 
         double junctionCopyNumber = legCount > 0 ? junctionCopyNumberTotal / legCount : 0;
         builder.junctionCopyNumber(junctionCopyNumber);
+
+        // revert to using simple JCN where the variant didn't match a fitted region (eg from being too short)
+        if(!adjustedCnChangeSet[SE_START])
+            legBuilderStart.adjustedCopyNumberChange(junctionCopyNumber);
+
+        builder.start(legBuilderStart.build());
+
+        if(legBuilderEnd != null)
+        {
+            if(!adjustedCnChangeSet[SE_END])
+                legBuilderEnd.adjustedCopyNumberChange(junctionCopyNumber);
+
+            builder.end(legBuilderEnd.build());
+        }
 
         addEnrichedVariantContexts(mVariantCollection, builder.build());
     }
