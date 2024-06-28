@@ -130,6 +130,7 @@ public class DedupMixedGermlineSomatic
                 continue;
 
             int[] mnvGermlineCount = variant.normalReadCounters().get(0).partialMnvCounts();
+            int mnvAltSupport = variant.normalReadCounters().get(0).altSupport();
 
             // assign germline support to any SNV matching the bases of the MNV
             for(int j = i + 1; j < candidates.size(); ++j)
@@ -139,7 +140,7 @@ public class DedupMixedGermlineSomatic
                 if(!next.isSnv() || !next.isPassing() || isGermlineFilteredSnv(next))
                     continue;
 
-                if(next.position() > variant.position() + 1)
+                if(next.position() > variant.position() + variant.alt().length() - 1)
                     break;
 
                 int posOffset = next.position() - variant.position();
@@ -147,10 +148,20 @@ public class DedupMixedGermlineSomatic
                 if(variant.alt().charAt(posOffset) == next.alt().charAt(0))
                 {
                     int mnvGermlineSupport = mnvGermlineCount[posOffset];
-                    double adjustedNormalVaf = mnvGermlineSupport / (double)next.normalReadCounters().get(0).readCounts().Total;
 
-                    SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
-                    if(Doubles.greaterThan(adjustedNormalVaf, softFilterConfig.MaxGermlineVaf))
+                    double snvNormalDepth = next.normalReadCounters().get(0).readCounts().Total;
+
+                    if(snvNormalDepth > 0)
+                    {
+                        double adjustedNormalVaf = (mnvGermlineSupport + mnvAltSupport) / snvNormalDepth;
+
+                        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
+                        if(Doubles.greaterThan(adjustedNormalVaf, softFilterConfig.MaxGermlineVaf))
+                        {
+                            next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
+                        }
+                    }
+                    else if(mnvGermlineSupport + mnvAltSupport > 0)
                     {
                         next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                     }

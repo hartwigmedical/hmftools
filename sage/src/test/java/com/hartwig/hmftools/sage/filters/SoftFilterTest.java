@@ -12,23 +12,32 @@ import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantTier.HIGH_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -96,6 +105,7 @@ public class SoftFilterTest
 
         // TODO: add more variations to test quality site criteria
     }
+
     @Test
     public void testMaxReadEdgeDistanceFilter()
     {
@@ -214,6 +224,75 @@ public class SoftFilterTest
         readContextCounter.processRead(read4, 1, null);
 
         assertTrue(readContextCounter.fragmentCoords().atCapacity());
+    }
+
+    @Test
+    public void testPartialMnvSnvFilterAndDedup()
+    {
+        int position = 50;
+
+        VariantReadContext readContext = createReadContext(
+                createSimpleVariant(position, "ACG", "TCA"),
+                REF_BASES.substring(48, position), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
+
+        ReadContextCounter normalRcCounter = new ReadContextCounter(
+                1, readContext, VariantTier.PANEL, 100, 0,
+                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+
+        ReadContextCounter tumorRcCounter = new ReadContextCounter(
+                1, readContext, VariantTier.PANEL, 100, 0,
+                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+
+        int readPosStart = 20;
+        String altBases = normalRcCounter.alt();
+
+        String refBases = REF_BASES.substring(position, position + 3);
+        String altReadBases = REF_BASES.substring(readPosStart, position) + altBases + REF_BASES.substring(position + 3, 80);
+        String readCigar = buildCigarString(altReadBases.length());
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+        normalRcCounter.processRead(altRead, 1, null);
+        tumorRcCounter.processRead(altRead, 1, null);
+
+        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES.substring(20, 80), readCigar);
+        normalRcCounter.processRead(refRead, 1, null);
+        tumorRcCounter.processRead(refRead, 1, null);
+
+        String partialAltReadBases = REF_BASES.substring(readPosStart, position)
+                + refBases.substring(0, 2) + altBases.substring(2) + REF_BASES.substring(position + 3, 80);
+        SAMRecord partialAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, partialAltReadBases, readCigar);
+        normalRcCounter.processRead(partialAltRead, 1, null);
+
+        VariantReadContext snvReadContext = createReadContext(
+                createSimpleVariant(position + 2, "G", "A"),
+                REF_BASES.substring(48, position + 2), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
+
+        ReadContextCounter snvNormalRcCounter = new ReadContextCounter(
+                1, snvReadContext, VariantTier.PANEL, 100, 0,
+                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+
+        ReadContextCounter snvTumorRcCounter = new ReadContextCounter(
+                1, snvReadContext, VariantTier.PANEL, 100, 0,
+                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+
+        snvTumorRcCounter.processRead(partialAltRead, 1, null);
+
+        Candidate candidate = new Candidate(HIGH_CONFIDENCE, readContext, 1, 1);
+        SageVariant mnv = new SageVariant(candidate, List.of(normalRcCounter), List.of(tumorRcCounter));
+        mnv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
+
+        FILTERS.applySoftFilters(mnv);
+
+        assertTrue(mnv.filters().contains(MAX_GERMLINE_ALT_SUPPORT));
+
+        candidate = new Candidate(HIGH_CONFIDENCE, snvReadContext, 1, 1);
+        SageVariant snv = new SageVariant(candidate, List.of(snvNormalRcCounter), List.of(snvTumorRcCounter));
+        snv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
+
+        DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(Collections.emptyList(), TEST_CONFIG.Filter);
+        deduper.dedupVariants(List.of(mnv, snv));
+
+        assertTrue(snv.filters().contains(MAX_GERMLINE_VAF));
     }
 
     private ReadContextCounter createSnvReadContextCounter(final int variantPosition)
