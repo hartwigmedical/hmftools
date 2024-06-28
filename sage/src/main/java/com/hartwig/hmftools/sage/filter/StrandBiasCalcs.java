@@ -6,7 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
-import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_DEPTH;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -34,34 +34,29 @@ public class StrandBiasCalcs
 
     public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
     {
-        if(strandBiasDataAlt.depth() < STRAND_BIAS_REF_MIN_DEPTH)
+        if(strandBiasDataAlt.depth() < STRAND_BIAS_NON_ALT_MIN_DEPTH)
             return false;
 
         return strandBiasDataAlt.forward() == 0 || strandBiasDataAlt.reverse() == 0;
     }
 
-    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataNonAlt)
     {
         double strandBias = strandBiasDataAlt.bias();
-
         double minStrandBias = min(strandBias, 1 - strandBias);
 
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
 
-        if(checkRef)
-        {
-            // to use the ref there must be min depth observed
-            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
-                return false;
+        // to use the ref there must be min depth observed
+        if(strandBiasDataNonAlt.forward() < STRAND_BIAS_NON_ALT_MIN_DEPTH || strandBiasDataNonAlt.reverse() < STRAND_BIAS_NON_ALT_MIN_DEPTH)
+            return false;
 
-            double refBias = strandBiasDataRef.bias();
+        double nonAltBias = strandBiasDataNonAlt.bias();
+        double minNonAltBias = min(nonAltBias, 1 - nonAltBias);
 
-            double minRefBias = min(refBias, 1 - refBias);
-
-            if(minRefBias < STRAND_BIAS_REF_MIN_BIAS && (refBias < 0.5) == (strandBias < 0.5))
-                return false;
-        }
+        if(minNonAltBias < STRAND_BIAS_REF_MIN_BIAS && (nonAltBias < 0.5) == (strandBias < 0.5))
+            return false;
 
         int depth = strandBiasDataAlt.depth();
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;

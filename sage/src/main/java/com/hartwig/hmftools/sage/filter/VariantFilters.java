@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_MQ_LIMIT;
+import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_JITTER_RATIO;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
@@ -166,14 +167,12 @@ public class VariantFilters
                 filters.add(SoftFilter.FRAGMENT_COORDS);
             }
 
-            if(mStrandBiasCalcs.isDepthBelowProbability(
-                    primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), true))
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
             {
                 filters.add(SoftFilter.FRAGMENT_STRAND_BIAS);
             }
 
-            boolean checkRef = true;
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRef)
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasNonAlt())
             || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS);
@@ -227,7 +226,13 @@ public class VariantFilters
     private static boolean isQualitySite(
             final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final double qual, final int altSupport)
     {
-        if(primaryTumor.jitter().shortened() > 0 || primaryTumor.jitter().lengthened() > 0 || altSupport == 0)
+        if(altSupport == 0)
+            return false;
+
+        double jitterTotals = primaryTumor.jitter().shortened() + primaryTumor.jitter().lengthened();
+        double jitterRatio = jitterTotals / altSupport;
+
+        if(jitterRatio > QUALITY_SITE_JITTER_RATIO)
             return false;
 
         if(primaryTumor.readContext().MaxRepeat != null)

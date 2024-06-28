@@ -98,9 +98,9 @@ public class ReadContextCounter
     private final int[] mPartialMnvCounts; // count of SNV matches within an MNV where Core match failed
 
     private final StrandBiasData mAltFragmentStrandBias;
-    private final StrandBiasData mRefFragmentStrandBias;
+    private final StrandBiasData mNonAltFragmentStrandBias;
     private final StrandBiasData mAltReadStrandBias;
-    private final StrandBiasData mRefReadStrandBias;
+    private final StrandBiasData mNonAltReadStrandBias;
 
     private final JitterData mJitterData;
     private int mImproperPairCount;
@@ -149,9 +149,9 @@ public class ReadContextCounter
         mJitterData = new JitterData();
 
         mAltFragmentStrandBias = new StrandBiasData(true);
-        mRefFragmentStrandBias = new StrandBiasData(false);
+        mNonAltFragmentStrandBias = new StrandBiasData(false);
         mAltReadStrandBias = new StrandBiasData(true);
-        mRefReadStrandBias = new StrandBiasData(false);
+        mNonAltReadStrandBias = new StrandBiasData(false);
 
         mImproperPairCount = 0;
 
@@ -234,9 +234,9 @@ public class ReadContextCounter
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
-    public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
+    public StrandBiasData fragmentStrandBiasNonAlt() { return mNonAltFragmentStrandBias; }
     public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
-    public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
+    public StrandBiasData readStrandBiasNonAlt() { return mNonAltReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
@@ -465,14 +465,14 @@ public class ReadContextCounter
         if(matchType == ReadContextMatch.REF)
         {
             readSupport = REF;
-
-            mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, this);
         }
         else if(matchType == ReadContextMatch.PARTIAL_MNV)
         {
             mReadContextMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
         }
+
+        mNonAltFragmentStrandBias.registerFragment(record);
+        mNonAltReadStrandBias.registerRead(record, fragmentData, this);
 
         registerReadSupport(record, readSupport, modifiedQuality);
         mReadEdgeDistance.update(record, fragmentData, false);
@@ -628,8 +628,6 @@ public class ReadContextCounter
 
         mQualities.applyRatio(calcRatio);
     }
-
-    public boolean logEvidence() { return mConfig.LogEvidenceReads; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

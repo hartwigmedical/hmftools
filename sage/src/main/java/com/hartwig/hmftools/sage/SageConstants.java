@@ -91,7 +91,7 @@ public class SageConstants
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
-    public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
+    public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
 
     public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
@@ -115,6 +115,7 @@ public class SageConstants
 
     public static final double QUALITY_SITE_AVG_MQ_LIMIT = 7.5;
     public static final int QUALITY_SITE_REPEAT_MAX = 10;
+    public static final double QUALITY_SITE_JITTER_RATIO = 0.1;
     public static final int QUALITY_SITE_AVG_BASE_QUALITY = 32;
     public static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 

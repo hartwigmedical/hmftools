@@ -473,12 +473,16 @@ public class IndelDeduper
 
         public boolean allowByFilter()
         {
+            return Variant.isPassing();
+
+            /* no inclusion of germline filtered variants any longer
             if(Variant.isPassing())
                 return true;
 
             // must only have the germline filters below
             return Variant.filters().stream()
                     .allMatch(x -> x.equals(MAX_GERMLINE_VAF) || x.equals(MAX_GERMLINE_RELATIVE_VAF) || x.equals(MAX_GERMLINE_ALT_SUPPORT));
+            */
         }
 
         public int indelScore()
