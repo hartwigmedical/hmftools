@@ -163,6 +163,32 @@ public class VariantReadContextTest
 
         ReadContextMatcher matcher = new ReadContextMatcher(readContext);
         assertEquals(REF, matcher.determineReadMatch(refRead, 32));
+
+
+        // test 2: repeats starting 1 base outside the basic core
+        refBases = "AGGTCGATCGTAAAAAAATGCGTCGCGCGCGCGCGTAGGTCGATCG";
+        //          100       110       120       130       140
+        //          01234567890123456789012345678901234567890123456789
+        //                              A
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        String altBase = "A";
+        readBases = refBases.substring(0, 20) + "A" + refBases.substring(21);
+        read = buildSamRecord(100, buildCigarString(readBases.length()), readBases);
+
+        builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        var = createSimpleVariant(120, refBases.substring(20, 21), altBase);
+        readContext = builder.createContext(var, read, 20, refSequence);
+
+        assertTrue(readContext.isValid());
+        assertEquals(100, readContext.AlignmentStart);
+        assertEquals(145, readContext.AlignmentEnd);
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(20, readContext.VarIndex);
+        assertEquals(35, readContext.CoreIndexEnd);
+        assertTrue(readContext.AllRepeats.isEmpty());
+        assertEquals("TAAAAAAATGAGTCGCGCGCGCGCGT", readContext.coreStr());
     }
 
     @Test

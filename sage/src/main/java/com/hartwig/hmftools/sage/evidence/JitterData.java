@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_QUAL_BOOST_MAX_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_HARD_FILTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class JitterData
     private int mShortened;
     private double mQualBoost;
     private boolean mFilterOnNoise;
+    private boolean mHardFilterOnNoise;
 
     public JitterData()
     {
@@ -28,6 +30,7 @@ public class JitterData
         mShortened = 0;
         mQualBoost = 1;
         mFilterOnNoise = false;
+        mHardFilterOnNoise = false;
     }
 
     public void update(final JitterMatch jitterMatch)
@@ -43,6 +46,7 @@ public class JitterData
     public int[] summary() { return new int[] { mShortened, mLengthened }; }
 
     public double qualBoost() { return mQualBoost; }
+    public boolean hardFilterOnNoise() { return mHardFilterOnNoise; }
     public boolean filterOnNoise() { return mFilterOnNoise; }
 
     public String toString() { return format("short(%d) long(%d)", mShortened, mLengthened); }
@@ -61,13 +65,20 @@ public class JitterData
         if(noiseOutcome == null)
             return;
 
-        if(noiseOutcome == JitterNoiseOutcome.FILTER_VARIANT)
+        if(noiseOutcome == JitterNoiseOutcome.HARD_FILTER_VARIANT)
+        {
+            mFilterOnNoise = true;
+            mHardFilterOnNoise = true;
+            return;
+        }
+        else if(noiseOutcome == JitterNoiseOutcome.FILTER_VARIANT)
         {
             mFilterOnNoise = true;
             return;
         }
 
         mFilterOnNoise = false;
+        mHardFilterOnNoise = false;
         mQualBoost = 1;
 
         if(noiseOutcome == JitterNoiseOutcome.SHORTENED_NOISE || noiseOutcome == JitterNoiseOutcome.BOTH_NOISE)
@@ -81,9 +92,11 @@ public class JitterData
 
     private enum JitterNoiseOutcome
     {
+        NOISE,
         SHORTENED_NOISE,
         LENGTHENED_NOISE,
         BOTH_NOISE,
+        HARD_FILTER_VARIANT,
         FILTER_VARIANT;
     }
 
@@ -104,27 +117,32 @@ public class JitterData
 
         if(shortened > fullSupport)
         {
-            if(isWithinNoise(fullSupport, shortened, shortenedErrorRate))
-                return JitterNoiseOutcome.FILTER_VARIANT;
+            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, shortened, shortenedErrorRate);
+
+            if(filterOutcome != JitterNoiseOutcome.NOISE)
+                return filterOutcome;
         }
         else if(fullSupport > shortened)
         {
             double errorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount, -1);
 
-            if(isWithinNoise(shortened, fullSupport, errorRate))
+            // note the values are swapped here - ie asking if full support looks like jitter vs the shortened jitter count
+            if(calcNoiseOutcome(shortened, fullSupport, errorRate) != JitterNoiseOutcome.NOISE)
                 outcome = JitterNoiseOutcome.SHORTENED_NOISE;
         }
 
         if(lengthened > fullSupport)
         {
-            if(isWithinNoise(fullSupport, lengthened, lengthenedErrorRate))
-                return JitterNoiseOutcome.FILTER_VARIANT;
+            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, lengthened, lengthenedErrorRate);
+
+            if(filterOutcome != JitterNoiseOutcome.NOISE)
+                return filterOutcome;
         }
         else if(fullSupport > lengthened)
         {
             double errorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount, 1);
 
-            if(isWithinNoise(lengthened, fullSupport, errorRate))
+            if(calcNoiseOutcome(lengthened, fullSupport, errorRate) != JitterNoiseOutcome.NOISE)
                 outcome = outcome == JitterNoiseOutcome.SHORTENED_NOISE ? JitterNoiseOutcome.BOTH_NOISE : JitterNoiseOutcome.LENGTHENED_NOISE;
         }
 
@@ -141,26 +159,35 @@ public class JitterData
 
             double prob = 1 - distribution.cumulativeProbability(fullSupport - 1);
 
-            if(prob > MSI_JITTER_NOISE_RATE)
+            if(prob > MSI_JITTER_HARD_FILTER_NOISE_RATE)
+                return JitterNoiseOutcome.HARD_FILTER_VARIANT;
+            else if(prob > MSI_JITTER_NOISE_RATE)
                 return JitterNoiseOutcome.FILTER_VARIANT;
         }
 
         return outcome;
     }
 
-    private boolean isWithinNoise(int fullSupport, int jitterCount, double errorRate)
+    private JitterNoiseOutcome calcNoiseOutcome(int fullSupport, int jitterCount, double errorRate)
     {
+        // tests whether the jitter count can be explained as noise vs the full count
+
         // a low full count relative to the total will be classified as within noise
         double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
         if(jitterRatio < 2 * errorRate)
-            return true;
+            return JitterNoiseOutcome.FILTER_VARIANT;
 
         // also test a p-value of jitter vs the full support counts
         BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRate);
 
         double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
 
-        return prob > MSI_JITTER_NOISE_RATE;
+        if(prob > MSI_JITTER_HARD_FILTER_NOISE_RATE)
+            return JitterNoiseOutcome.HARD_FILTER_VARIANT;
+        else if(prob > MSI_JITTER_NOISE_RATE)
+            return JitterNoiseOutcome.FILTER_VARIANT;
+        else
+            return JitterNoiseOutcome.NOISE;
     }
 
 
@@ -171,5 +198,6 @@ public class JitterData
         mLengthened = lengthened;
         mQualBoost = 1;
         mFilterOnNoise = false;
+        mHardFilterOnNoise = false;
     }
 }

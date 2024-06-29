@@ -22,6 +22,7 @@ public class SageConstants
     public static final int MIN_CORE_DISTANCE = 2;
     public static final int MAX_REPEAT_LENGTH = 5;
     public static final int MIN_REPEAT_COUNT = 3;
+    public static final int OUTER_MIN_REPEAT_COUNT = 6;
 
     public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
@@ -98,6 +99,7 @@ public class SageConstants
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
     public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
+    public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
     public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 

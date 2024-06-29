@@ -49,7 +49,8 @@ public class VariantFilters
     {
         RAW_ALT_SUPPORT,
         TUMOR_QUAL,
-        TUMOR_VAF;
+        TUMOR_VAF,
+        JITTER;
     }
 
     private static final StrandBiasCalcs mStrandBiasCalcs = new StrandBiasCalcs();
@@ -84,15 +85,22 @@ public class VariantFilters
             return false;
         }
 
+        if(readCounter.jitter().hardFilterOnNoise())
+        {
+            ++mFilterCounts[HardFilterType.JITTER.ordinal()];
+            return false;
+        }
+
         return true;
     }
 
     public String filterCountsStr()
     {
-        return String.format("alt=%d qual=%d vaf=%d",
+        return String.format("alt=%d qual=%d vaf=%d jitter=%d",
                 mFilterCounts[HardFilterType.RAW_ALT_SUPPORT.ordinal()],
                 mFilterCounts[HardFilterType.TUMOR_QUAL.ordinal()],
-                mFilterCounts[HardFilterType.TUMOR_VAF.ordinal()]);
+                mFilterCounts[HardFilterType.TUMOR_VAF.ordinal()],
+                mFilterCounts[HardFilterType.JITTER.ordinal()]);
     }
 
     public boolean enabled() { return !mConfig.DisableSoftFilter; }
