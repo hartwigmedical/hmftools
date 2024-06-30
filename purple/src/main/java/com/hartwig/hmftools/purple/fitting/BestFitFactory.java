@@ -41,9 +41,6 @@ public class BestFitFactory
     private final PurpleConfig mConfig;
     private final SomaticPurityFitter mSomaticPurityFitter;
 
-    private final int mMinReadCount;
-    private final int mMaxReadCount;
-
     private int mSvHotspotCount;
     private int mSvFragmentReadCount;
     private int mSomaticHotspotCount;
@@ -61,8 +58,6 @@ public class BestFitFactory
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
-        mMinReadCount = minReadCount;
-        mMaxReadCount = maxReadCount;
 
         mSvHotspotCount = 0;
         mSvFragmentReadCount = 0;
@@ -71,7 +66,7 @@ public class BestFitFactory
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
-                config.Fitting.MinPurity, config.Fitting.MaxPurity);
+                minReadCount, maxReadCount, config.Fitting.MinPurity, config.Fitting.MaxPurity);
 
         mBestNormalFit = null;
         mSomaticFit = null;
@@ -147,12 +142,8 @@ public class BestFitFactory
             return;
         }
 
-        List<SomaticVariant> fittingSomaticsWithinReadCountRange = fittingSomatics.stream()
-                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
-                .collect(toList());
-
         FittedPurity somaticFit = mSomaticPurityFitter.fromSomatics(
-                fittingSomaticsWithinReadCountRange, structuralVariants, diploidCandidates);
+                fittingSomatics, structuralVariants, diploidCandidates);
 
         if(somaticFit == null)
         {

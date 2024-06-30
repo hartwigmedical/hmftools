@@ -84,6 +84,9 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX = 2.2;
     public static final double SOMATIC_FIT_TUMOR_ONLY_MIN_VAF = 0.04;
 
+    // somatic fitting readjustment
+    public static final double SNV_READJUST_NTH_PERC = 0.005;
+
     public static final double CLONALITY_BIN_WIDTH = 0.05;
     public static final double CLONALITY_MAX_PLOIDY = 10;
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
