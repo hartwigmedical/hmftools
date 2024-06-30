@@ -83,6 +83,7 @@ public class ReadContextCounter
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
+    private final boolean mIsReferenceSample;
     private final int mMaxCoverage;
     private final VariantVis mVariantVis;
 
@@ -118,8 +119,8 @@ public class ReadContextCounter
     private FragmentCoords mFragmentCoords;
 
     public ReadContextCounter(
-            final int id, final VariantReadContext readContext, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
-            final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId)
+            final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
+            final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId, boolean isReferenceSample)
     {
         mId = id;
 
@@ -127,6 +128,7 @@ public class ReadContextCounter
         mMaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
         mSample = sampleId;
+        mIsReferenceSample = isReferenceSample;
         mQualityCalculator = qualityCalculator;
         mConfig = config;
 

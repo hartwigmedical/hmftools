@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.EnumSet;
@@ -28,6 +27,7 @@ public class ReadContextCounterFactory
             final List<Candidate> candidates, final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId)
     {
         List<ReadContextCounter> readCounters = Lists.newArrayListWithExpectedSize(candidates.size());
+        boolean isReferenceSample = config.ReferenceIds.contains(sampleId);
 
         int readId = 0;
 
@@ -40,7 +40,7 @@ public class ReadContextCounterFactory
             {
                 readCounters.add(new ReadContextCounter(
                         readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
-                        config, qualityCalculator, sampleId));
+                        config, qualityCalculator, sampleId, isReferenceSample));
             }
             catch(Exception e)
             {

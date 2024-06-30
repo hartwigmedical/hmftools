@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.common.TestUtils.HIGH_QUAL_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.MSI_JITTER_CALCS;
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantTier.HIGH_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
@@ -59,8 +61,6 @@ public class SoftFilterTest
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
 
-    public static final SageConfig HIGH_QUAL_CONFIG = new SageConfig(true);
-
     private static final VariantFilters FILTERS = new VariantFilters(TEST_CONFIG);
 
     @Test
@@ -72,9 +72,7 @@ public class SoftFilterTest
                 createSimpleVariant(position, "A", "T"),
                 REF_BASES.substring(48, 50), REF_BASES.substring(51, 53), REF_BASES.substring(38, 48), REF_BASES.substring(53, 63));
 
-        ReadContextCounter readContextCounter = new ReadContextCounter(
-                1, readContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+        ReadContextCounter readContextCounter = createReadCounter(readContext, HIGH_QUAL_CONFIG, VariantTier.PANEL);
 
         String altBase = readContextCounter.alt();
 
@@ -235,13 +233,8 @@ public class SoftFilterTest
                 createSimpleVariant(position, "ACG", "TCA"),
                 REF_BASES.substring(48, position), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
 
-        ReadContextCounter normalRcCounter = new ReadContextCounter(
-                1, readContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
-
-        ReadContextCounter tumorRcCounter = new ReadContextCounter(
-                1, readContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+        ReadContextCounter normalRcCounter = createReadCounter(readContext);
+        ReadContextCounter tumorRcCounter = createReadCounter(readContext);
 
         int readPosStart = 20;
         String altBases = normalRcCounter.alt();
@@ -267,13 +260,8 @@ public class SoftFilterTest
                 createSimpleVariant(position + 2, "G", "A"),
                 REF_BASES.substring(48, position + 2), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
 
-        ReadContextCounter snvNormalRcCounter = new ReadContextCounter(
-                1, snvReadContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
-
-        ReadContextCounter snvTumorRcCounter = new ReadContextCounter(
-                1, snvReadContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+        ReadContextCounter snvNormalRcCounter = createReadCounter(snvReadContext);
+        ReadContextCounter snvTumorRcCounter = createReadCounter(snvReadContext);
 
         snvTumorRcCounter.processRead(partialAltRead, 1, null);
 
@@ -307,8 +295,6 @@ public class SoftFilterTest
 
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        return new ReadContextCounter(
-                1, readContext, VariantTier.PANEL, 100, 0,
-                HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
+        return createReadCounter(readContext, HIGH_QUAL_CONFIG, VariantTier.PANEL);
     }
 }

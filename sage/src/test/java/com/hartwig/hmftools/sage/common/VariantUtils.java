@@ -3,15 +3,18 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
+import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -97,8 +100,22 @@ public final class VariantUtils
     public static ReadContextCounter createReadCounter(final int id, final VariantReadContext readContext)
     {
         return new ReadContextCounter(
-                id, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE);
+                id, readContext, LOW_CONFIDENCE, DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE,
+                false);
+    }
+
+    public static ReadContextCounter createReadCounter(final VariantReadContext readContext, final SageConfig config, final VariantTier tier)
+    {
+        return new ReadContextCounter(
+                0, readContext, tier, DEFAULT_MAX_READ_DEPTH, 1, config, QUALITY_CALCULATOR, TEST_SAMPLE,
+                false);
+    }
+
+    public static ReadContextCounter createReadCounter(final VariantReadContext readContext)
+    {
+        return new ReadContextCounter(
+                0, readContext, LOW_CONFIDENCE,
+                DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, false);
     }
 
     // Sage variant creation
@@ -113,8 +130,8 @@ public final class VariantUtils
     public static SageVariant createSageVariant(final VariantReadContext readContext)
     {
         ReadContextCounter readCounter = new ReadContextCounter(
-                0, readContext, VariantTier.LOW_CONFIDENCE, 100, 1,
-                TestUtils.TEST_CONFIG, QUALITY_CALCULATOR, null);
+                0, readContext, LOW_CONFIDENCE, 100, 1,
+                TestUtils.TEST_CONFIG, QUALITY_CALCULATOR, null, false);
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
 

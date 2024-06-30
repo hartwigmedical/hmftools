@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.sync.CombinedSyncData.formFragmentRead;
 
@@ -205,12 +206,10 @@ public class FragmentSyncTest
 
         final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
 
-        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
+        QualityCalculator qualityCalculator = new QualityCalculator(
                 TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME, MSI_JITTER_CALCS);
 
-        final ReadContextCounter readContextCounter = new ReadContextCounter(
-                1, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
+        ReadContextCounter readContextCounter = createReadCounter(readContext);
 
         String READ_ID = "READ_01";
 
