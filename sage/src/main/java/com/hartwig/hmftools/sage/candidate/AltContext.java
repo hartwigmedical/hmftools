@@ -204,7 +204,7 @@ public class AltContext extends SimpleVariant
         ReadContextCandidate(int numberOfEvents, final VariantReadContext readContext)
         {
             mReadContext = readContext;
-            mMatcher = new ReadContextMatcher(mReadContext, false);
+            mMatcher = new ReadContextMatcher(mReadContext, false, false);
             MinNumberOfEvents = numberOfEvents;
         }
 

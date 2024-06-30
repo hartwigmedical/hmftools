@@ -31,9 +31,6 @@ public class VariantReadContext
     public final RepeatInfo MaxRepeat;
     public final List<RepeatInfo> AllRepeats;
 
-    public final int AltIndexLower; // the first lower base relative to the index where the ref and alt differ
-    public final int AltIndexUpper;
-
     public final int CorePositionStart;
     public final int CorePositionEnd;
 
@@ -50,7 +47,7 @@ public class VariantReadContext
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
             final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
-            final int altIndexLower, final int altIndexUpper, final int corePositionStart, final int corePositionEnd)
+            final int corePositionStart, final int corePositionEnd)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -66,8 +63,6 @@ public class VariantReadContext
 
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
-        AltIndexLower = altIndexLower;
-        AltIndexUpper = altIndexUpper;
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
 
@@ -108,9 +103,6 @@ public class VariantReadContext
         if(mVariant.Position <= CorePositionStart || mVariant.Position >= CorePositionEnd)
             return false;
 
-        if(AltIndexLower > AltIndexUpper)
-            return false;
-
         return true;
     }
 
@@ -144,10 +136,9 @@ public class VariantReadContext
 
     public String toString()
     {
-        return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s) alt(%d-%d) ref(%s)",
+        return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s) ref(%s)",
                 mVariant, leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
-                CoreIndexStart, VarIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "",
-                AltIndexLower, AltIndexUpper, refBases());
+                CoreIndexStart, VarIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "", refBases());
     }
 
     @VisibleForTesting
@@ -167,7 +158,6 @@ public class VariantReadContext
 
         return VarIndex == other.VarIndex && AlignmentStart == other.AlignmentStart && AlignmentEnd == other.AlignmentEnd
                 && refBases().equals(other.refBases()) && readBases().equals(other.readBases()) && readCigar().equals(other.readCigar())
-                && CorePositionStart == other.CorePositionStart && CorePositionEnd == other.CorePositionEnd
-                && AltIndexLower == other.AltIndexLower && AltIndexUpper == other.AltIndexUpper;
+                && CorePositionStart == other.CorePositionStart && CorePositionEnd == other.CorePositionEnd;
     }
 }

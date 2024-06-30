@@ -47,7 +47,7 @@ public class Realignment
             return RealignedType.EXACT;
 
         // otherwise check jitter
-        JitterMatch jitterMatch = checkJitter(readContext, record, realignedReadIndex);
+        JitterMatch jitterMatch = checkJitter(readContext, readContextMatcher, record, realignedReadIndex);
 
         if(jitterMatch == JitterMatch.SHORTENED)
             return RealignedType.SHORTENED;

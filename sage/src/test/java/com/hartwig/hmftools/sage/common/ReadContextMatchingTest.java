@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.averageCoreQuality;
 
@@ -31,8 +32,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextMatchingTest
 {
-    private static final String READ_FLANK_BASES = REF_BASES_200.substring(0, 20);
-
     @Test
     public void testReadCoversCore()
     {
@@ -41,7 +40,7 @@ public class ReadContextMatchingTest
 
         VariantReadContext readContext = createReadContext(variant);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String readBases = REF_BASES_200.substring(0, 40);
         byte[] readQualities = SamRecordTestUtils.buildDefaultBaseQuals(readBases.length());
@@ -56,7 +55,7 @@ public class ReadContextMatchingTest
         // now test with an indel with a wider alt range
         SimpleVariant var = createSimpleVariant(position, "C", "CCC");
         readContext = createReadContext(var, "ATGTGTG", "CCA");
-        matcher = new ReadContextMatcher(readContext);
+        matcher = createReadContextMatcher(readContext);
 
         assertTrue(matcher.coversVariant(read, 20));
         assertTrue(matcher.coversVariant(read, 0));
@@ -65,7 +64,7 @@ public class ReadContextMatchingTest
 
         var = createSimpleVariant(position, "ACGT", "A");
         readContext = createReadContext(var, "AA", "GG");
-        matcher = new ReadContextMatcher(readContext);
+        matcher = createReadContextMatcher(readContext);
 
         assertTrue(matcher.coversVariant(read, 20));
         assertTrue(matcher.coversVariant(read, 0));
@@ -84,7 +83,7 @@ public class ReadContextMatchingTest
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String readBases = readContext.leftFlankStr() + leftCore + ref + rightCore + readContext.rightFlankStr();
         byte[] readQualities = buildDefaultBaseQuals(readBases.length());
@@ -162,7 +161,7 @@ public class ReadContextMatchingTest
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String readBases = readContext.leftFlankStr() + leftCore + "AGC" + rightCore + readContext.rightFlankStr();
         byte[] readQualities = buildDefaultBaseQuals(readBases.length());
@@ -195,7 +194,7 @@ public class ReadContextMatchingTest
 
         VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String refBases = REF_BASES_200.substring(30, 70);
         SAMRecord refRead = buildSamRecord(30, "40M", refBases);
@@ -218,7 +217,7 @@ public class ReadContextMatchingTest
 
         VariantReadContext readContext = builder.createContext(var, read, 24, REF_SEQUENCE_200);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         assertEquals(FULL, matcher.determineReadMatch(read, 24));
 
@@ -261,7 +260,7 @@ public class ReadContextMatchingTest
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String flankMismatch = "AAAAATTTTT";
         String readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + flankMismatch;
@@ -326,7 +325,7 @@ public class ReadContextMatchingTest
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
 
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         String readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + readContext.rightFlankStr();
         byte[] readQualities = buildDefaultBaseQuals(readBases.length());

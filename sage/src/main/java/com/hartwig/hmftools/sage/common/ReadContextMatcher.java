@@ -31,15 +31,14 @@ public class ReadContextMatcher
     private final int mMaxCoreLowQualMatches;
     private final boolean mAllowWildcardMatchInCore;
 
+    private final boolean mIsReference;
+    private final int mAltIndexLower; // the first lower base relative to the index where the ref and alt differ
+    private final int mAltIndexUpper;
+
     private final LowQualExclusion mLowQualExclusionRead;
     private final LowQualExclusion mLowQualExclusionRef;
 
     public static final byte WILDCARD_BASE = (byte) '.';
-
-    public ReadContextMatcher(final VariantReadContext variantReadContext)
-    {
-        this(variantReadContext, true);
-    }
 
     private class LowQualExclusion
     {
@@ -69,20 +68,24 @@ public class ReadContextMatcher
         public String toString() { return format("%s: %s", IsRange ? "range" : "values", Indices); }
     }
 
-    public ReadContextMatcher(final VariantReadContext variantReadContext, boolean allowMismatches)
+    public ReadContextMatcher(final VariantReadContext readContext, boolean allowMismatches, boolean isReference)
     {
-        mContext = variantReadContext;
+        mContext = readContext;
 
         mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualCoreMismatches() : 0;
         mAllowWildcardMatchInCore = allowMismatches ? mContext.variant().isSNV() && !mContext.hasHomology() : false;
+
+        mIsReference = isReference;
+        mAltIndexLower = readContext.VarIndex;
+        mAltIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
 
         if(allowMismatches)
         {
             if(mContext.variant().isIndel())
             {
                 Set<Integer> excludedBases = Sets.newHashSet();
-                int altIndexLower = determineIndelLowQualLowerIndex(variantReadContext);
-                int altIndexUpper = determineIndelLowQualRefReadDiffIndex(variantReadContext);
+                int altIndexLower = determineIndelLowQualLowerIndex(readContext);
+                int altIndexUpper = determineIndelLowQualRefReadDiffIndex(readContext);
                 excludedBases.add(altIndexLower);
                 excludedBases.add(altIndexUpper);
 
@@ -90,8 +93,8 @@ public class ReadContextMatcher
                 {
                     excludedBases.add(mContext.VarIndex);
                     excludedBases.add(mContext.VarIndex + 1);
-                    excludedBases.add(mContext.AltIndexUpper - 1);
-                    excludedBases.add(mContext.AltIndexUpper);
+                    excludedBases.add(mAltIndexUpper - 1);
+                    excludedBases.add(mAltIndexUpper);
                 }
 
                 mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
@@ -114,6 +117,20 @@ public class ReadContextMatcher
             mLowQualExclusionRead = null;
             mLowQualExclusionRef = null;
         }
+    }
+
+    public boolean isReference() { return mIsReference; }
+    public int altIndexLower() { return mAltIndexLower; }
+    public int altIndexUpper() { return mAltIndexUpper; }
+
+    private static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
+    {
+        if(variant.isInsert())
+            return readVarIndex + (homology != null ? homology.Length : 0) + 1 + abs(variant.indelLength());
+        else if(variant.isDelete())
+            return readVarIndex + (homology != null ? homology.Length : 0) + 1;
+        else
+            return readVarIndex + variant.altLength() - 1;
     }
 
     private static int determineIndelLowQualLowerIndex(final VariantReadContext readContext)
@@ -180,8 +197,8 @@ public class ReadContextMatcher
         if(readVarIndex < 0)
             return false;
 
-        int requiredReadIndexLower = readVarIndex + mContext.VarIndex - mContext.AltIndexLower;
-        int requiredReadIndexUpper = readVarIndex + mContext.AltIndexUpper - mContext.VarIndex;
+        int requiredReadIndexLower = readVarIndex + mContext.VarIndex - mAltIndexLower;
+        int requiredReadIndexUpper = readVarIndex + mAltIndexUpper - mContext.VarIndex;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
         return requiredReadIndexLower >= 0 && requiredReadIndexUpper < readBases.length;

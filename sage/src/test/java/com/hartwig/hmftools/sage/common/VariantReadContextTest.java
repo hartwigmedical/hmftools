@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
@@ -43,8 +44,6 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(7, readContext.VarIndex);
         assertEquals(9, readContext.CoreIndexEnd);
-        assertEquals(7, readContext.AltIndexLower);
-        assertEquals(7, readContext.AltIndexUpper);
         assertEquals("CGCTG", readContext.refBases());
         assertEquals("GTCACCGATGTCTGT", readContext.readBases());
         assertEquals("15M", readContext.readCigar());
@@ -83,8 +82,6 @@ public class VariantReadContextTest
         assertEquals(7, readContext.CoreIndexStart);
         assertEquals(9, readContext.VarIndex);
         assertEquals(11, readContext.CoreIndexEnd);
-        assertEquals(9, readContext.AltIndexLower);
-        assertEquals(9, readContext.AltIndexUpper);
         assertEquals("CGCTG", readContext.refBases());
         assertEquals("TGGGCACCGATGTCGGGT", readContext.readBases());
         assertEquals("1M3I10M3I1M", readContext.readCigar());
@@ -116,8 +113,6 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(12, readContext.VarIndex);
         assertEquals(21, readContext.CoreIndexEnd);
-        assertEquals(12, readContext.AltIndexLower);
-        assertEquals(13, readContext.AltIndexUpper);
         assertEquals("TGCGCGCTACACACACT", readContext.refBases());
         assertEquals("TGCGCGCGCCACACACT", readContext.coreStr());
         assertEquals("27M", readContext.readCigar());
@@ -161,7 +156,7 @@ public class VariantReadContextTest
         String readRefBases = refBases.substring(40, 100);
         SAMRecord refRead = buildSamRecord(40, readCigar, readRefBases);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
         assertEquals(REF, matcher.determineReadMatch(refRead, 32));
 
 
@@ -259,8 +254,6 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarIndex);
         assertEquals(9, readContext.CoreIndexEnd);
-        assertEquals(6, readContext.AltIndexLower);
-        assertEquals(8, readContext.AltIndexUpper);
         assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
@@ -297,8 +290,6 @@ public class VariantReadContextTest
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(11, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
-        assertEquals(11, readContext.AltIndexLower);
-        assertEquals(12, readContext.AltIndexUpper);
         assertEquals("4S8M1D12M", readContext.readCigar());
         assertEquals("GTAC", readContext.coreStr());
         assertEquals("ACCGCTGTCT", readContext.leftFlankStr());
@@ -322,8 +313,6 @@ public class VariantReadContextTest
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(14, readContext.VarIndex);
         assertEquals(16, readContext.CoreIndexEnd);
-        assertEquals(14, readContext.AltIndexLower);
-        assertEquals(15, readContext.AltIndexUpper);
         assertEquals("15M2D5M7S", readContext.readCigar());
     }
 
@@ -346,8 +335,7 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarIndex);
         assertEquals(13, readContext.CoreIndexEnd);
-        assertEquals(6, readContext.AltIndexLower);
-        assertEquals(12, readContext.AltIndexUpper);
+        // assertEquals(12, readContext.AltIndexUpper);
         assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTGTGTCTGTGAC", readContext.readBases());
         assertEquals("7M2I10M", readContext.readCigar());

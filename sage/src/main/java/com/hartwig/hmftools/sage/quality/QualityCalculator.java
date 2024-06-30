@@ -246,9 +246,10 @@ public class QualityCalculator
 
         if(readContextCounter.isIndel())
         {
+
             VariantReadContext readContext = readContextCounter.readContext();
-            int lowerVarIndex = readIndex - (readContext.VarIndex - readContext.AltIndexLower);
-            int upperVarIndex = readIndex + (readContext.AltIndexUpper - readContext.VarIndex);
+            int lowerVarIndex = readIndex - (readContext.VarIndex - readContextCounter.matcher().altIndexLower());
+            int upperVarIndex = readIndex + (readContextCounter.matcher().altIndexUpper() - readContext.VarIndex);
 
             minDistance = max(0, min(lowerVarIndex, record.getReadBases().length - 1 - upperVarIndex));
         }

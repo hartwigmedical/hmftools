@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineAltIndexUpper;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 
 import java.util.Collections;
@@ -88,12 +87,9 @@ public final class VariantUtils
         int corePositionStart = variant.Position - leftCore.length();
         int corePositionEnd = variant.Position + rightCore.length();
 
-        int altIndexLower = varReadIndex;
-        int altIndexUpper = determineAltIndexUpper(variant, varReadIndex, null);
-
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
-                coreIndexEnd, null, null, Collections.emptyList(), altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
+                coreIndexEnd, null, null, Collections.emptyList(), corePositionStart, corePositionEnd);
     }
 
     // Read context counter
@@ -116,6 +112,11 @@ public final class VariantUtils
         return new ReadContextCounter(
                 0, readContext, LOW_CONFIDENCE,
                 DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, false);
+    }
+
+    public static ReadContextMatcher createReadContextMatcher(final VariantReadContext readContext)
+    {
+        return new ReadContextMatcher(readContext, true, false);
     }
 
     // Sage variant creation

@@ -79,7 +79,7 @@ public class ReadContextCounter
     private final VariantTier mTier;
     private final SimpleVariant mVariant;
     private final VariantReadContext mReadContext;
-    private final ReadContextMatcher mReadContextMatcher;
+    private final ReadContextMatcher mMatcher;
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
@@ -133,7 +133,7 @@ public class ReadContextCounter
         mConfig = config;
 
         mReadContext = readContext;
-        mReadContextMatcher = new ReadContextMatcher(mReadContext);
+        mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
         mVariant = readContext.variant();
 
         mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
@@ -173,7 +173,7 @@ public class ReadContextCounter
     public int id() { return mId; }
     public SimpleVariant variant() { return mVariant; }
     public VariantReadContext readContext() { return mReadContext; }
-    public ReadContextMatcher readContextMatcher() { return mReadContextMatcher; }
+    public ReadContextMatcher matcher() { return mMatcher; }
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mVariant.isSNV(); }
@@ -409,7 +409,7 @@ public class ReadContextCounter
             if(realignedReadIndex == null)
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
 
-            realignedType = checkRealignment(mReadContext, mReadContextMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
+            realignedType = checkRealignment(mReadContext, mMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
 
             if(realignedType != RealignedType.NONE)
             {
@@ -457,7 +457,7 @@ public class ReadContextCounter
 
         if(realignedType == RealignedType.NONE)
         {
-            JitterMatch jitterMatch = checkJitter(mReadContext, record, readVarIndex);
+            JitterMatch jitterMatch = checkJitter(mReadContext, mMatcher, record, readVarIndex);
             mJitterData.update(jitterMatch);
         }
 
@@ -469,7 +469,7 @@ public class ReadContextCounter
         }
         else if(matchType == ReadContextMatch.PARTIAL_MNV)
         {
-            mReadContextMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
+            mMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
         }
 
         mNonAltFragmentStrandBias.registerFragment(record);
@@ -487,20 +487,20 @@ public class ReadContextCounter
     private boolean coversVariant(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
         if(splitReadSegment != null)
-            return mReadContextMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadVarIndex);
+            return mMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadVarIndex);
 
-        return mReadContextMatcher.coversVariant(record.getReadBases(), readIndex);
+        return mMatcher.coversVariant(record.getReadBases(), readIndex);
     }
 
     private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
         if(splitReadSegment != null)
         {
-            return mReadContextMatcher.determineReadMatch(
+            return mMatcher.determineReadMatch(
                     splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false);
         }
 
-        return mReadContextMatcher.determineReadMatch(record, readIndex);
+        return mMatcher.determineReadMatch(record, readIndex);
     }
 
     private boolean belowQualThreshold(double calcBaseQuality)

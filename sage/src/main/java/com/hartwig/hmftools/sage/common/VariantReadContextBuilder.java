@@ -127,9 +127,6 @@ public class VariantReadContextBuilder
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
 
-        int altIndexLower = readVarIndex;
-        int altIndexUpper = determineAltIndexUpper(variant, readVarIndex, homology);
-
         RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;
 
@@ -169,21 +166,11 @@ public class VariantReadContextBuilder
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
-                coreIndexEnd, homology, maxRepeat, allRepeats, altIndexLower, altIndexUpper, corePositionStart, corePositionEnd);
+                coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
-    }
-
-    public static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
-    {
-        if(variant.isInsert())
-            return readVarIndex + (homology != null ? homology.Length : 0) + 1 + abs(variant.indelLength());
-        else if(variant.isDelete())
-            return readVarIndex + (homology != null ? homology.Length : 0) + 1;
-        else
-            return readVarIndex + variant.altLength() - 1;
     }
 }

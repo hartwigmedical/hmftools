@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
@@ -56,7 +57,7 @@ public class RealignmentTest
         readCigar = buildCigarString(varBuildReadBases.length());
         SAMRecord realignedRead = buildSamRecord(realignedStartPos, readCigar, varBuildReadBases);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         int realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
         ReadContextMatch matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
@@ -95,7 +96,7 @@ public class RealignmentTest
         assertEquals(126, readContext.CorePositionEnd);
         assertEquals("GGTCTATCTATCTATCTATCTAGG", readContext.coreStr());
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         // confirm the initial read is a full match
         ReadContextMatch matchType = matcher.determineReadMatch(varBuildRead, varIndexInRead);
@@ -168,7 +169,7 @@ public class RealignmentTest
         RawContext rawContext = RawContext.createFromRead(var, varBuildRead);
         assertEquals(15, rawContext.ReadVariantIndex);
 
-        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        ReadContextMatcher matcher = createReadContextMatcher(readContext);
 
         // test 1: basic realignment
         String readBases = "CTTTCTTTTTCTTTCTTTCTTTA" + REF_BASES_200.substring(0, 20); // 17 + 20
@@ -192,7 +193,7 @@ public class RealignmentTest
         realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
 
         realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
-        matcher = new ReadContextMatcher(readContext);
+        matcher = createReadContextMatcher(readContext);
         RealignedType realignedType = Realignment.checkRealignment(
                 readContext, matcher, realignedRead,  16, realignedReadIndex, null);
 
@@ -226,7 +227,7 @@ public class RealignmentTest
         realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
 
         realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
-        matcher = new ReadContextMatcher(readContext);
+        matcher = createReadContextMatcher(readContext);
         matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
         assertEquals(FULL, matchType);
 
@@ -246,7 +247,7 @@ public class RealignmentTest
         realignedRead = buildSamRecord(realignedStartPos, readCigar, readBases);
 
         realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
-        matcher = new ReadContextMatcher(readContext);
+        matcher = createReadContextMatcher(readContext);
         matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
         // assertEquals(FULL, matchType);
 
