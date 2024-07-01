@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
@@ -61,7 +63,7 @@ public class WeightedPloidyHistogramTest
     public void testHistogramConstruction()
     {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
-        final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
+        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
 
         assertEquals(1, histogram[victim.bucket(0.18)], 0.1);
@@ -74,7 +76,7 @@ public class WeightedPloidyHistogramTest
     public void testHistogramConstructionWithNoOffset()
     {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05);
-        final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
+        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
 
         assertEquals(2, histogram[victim.bucket(0.20)], 0.1);
@@ -86,7 +88,7 @@ public class WeightedPloidyHistogramTest
     public void testHistogramConstructionWithOffset()
     {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05, 0.02);
-        final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
+        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
 
         assertEquals(1, histogram[victim.bucket(0.17)], 0.1);
@@ -103,22 +105,26 @@ public class WeightedPloidyHistogramTest
         assertEquals(1, WeightedPloidyHistogram.peakBucket(2, new double[] { 10, 11, 0, 18, 8 }));
     }
 
-    @NotNull
-    public static List<ModifiableWeightedPloidy> readResource(@NotNull final String file)
+    public static List<WeightedPloidy> readResource(@NotNull final String file)
     {
-        final InputStream inputStream = WeightedPloidyHistogramTest.class.getResourceAsStream("/fitting/" + file);
-        final List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+        InputStream inputStream = WeightedPloidyHistogramTest.class.getResourceAsStream("/fitting/" + file);
+        List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
 
-        final List<ModifiableWeightedPloidy> result = Lists.newArrayList();
+        List<WeightedPloidy> result = Lists.newArrayList();
         for(String line : lines)
         {
-            String[] values = line.split("\t");
+            String[] values = line.split(TSV_DELIM);
 
+            WeightedPloidy ploidy = new WeightedPloidy(
+                    Integer.parseInt(values[2]), Integer.parseInt(values[1]), Double.parseDouble(values[0]), 1);
+
+            /*
             ModifiableWeightedPloidy ploidy = ModifiableWeightedPloidy.create()
                     .setPloidy(Double.parseDouble(values[0]))
                     .setAlleleReadCount(Integer.parseInt(values[1]))
                     .setTotalReadCount(Integer.parseInt(values[2]))
                     .setWeight(1);
+             */
 
             if(Doubles.lessThan(Double.parseDouble(values[0]), 10))
             {

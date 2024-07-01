@@ -26,7 +26,7 @@ public class GermlineRescueLowVAF
             Genotype germlineGenotype = variant.getGenotype(mGermlineSample);
             AllelicDepth germlineDepth = AllelicDepth.fromGenotype(germlineGenotype);
 
-            if(germlineDepth.alleleReadCount() >= MIN_ALLELE_READ_COUNT && Doubles.greaterOrEqual(variant.copyNumber(), MIN_VCN))
+            if(germlineDepth.AlleleReadCount >= MIN_ALLELE_READ_COUNT && Doubles.greaterOrEqual(variant.copyNumber(), MIN_VCN))
             {
                 variant.filters().clear();
                 variant.filters().add(PASS);

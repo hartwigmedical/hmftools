@@ -98,9 +98,9 @@ public class ReadContextCounter
     private final int[] mPartialMnvCounts; // count of SNV matches within an MNV where Core match failed
 
     private final StrandBiasData mAltFragmentStrandBias;
-    private final StrandBiasData mRefFragmentStrandBias;
+    private final StrandBiasData mNonAltFragmentStrandBias;
     private final StrandBiasData mAltReadStrandBias;
-    private final StrandBiasData mRefReadStrandBias;
+    private final StrandBiasData mNonAltReadStrandBias;
 
     private final JitterData mJitterData;
     private int mImproperPairCount;
@@ -149,9 +149,9 @@ public class ReadContextCounter
         mJitterData = new JitterData();
 
         mAltFragmentStrandBias = new StrandBiasData(true);
-        mRefFragmentStrandBias = new StrandBiasData(false);
+        mNonAltFragmentStrandBias = new StrandBiasData(false);
         mAltReadStrandBias = new StrandBiasData(true);
-        mRefReadStrandBias = new StrandBiasData(false);
+        mNonAltReadStrandBias = new StrandBiasData(false);
 
         mImproperPairCount = 0;
 
@@ -234,9 +234,9 @@ public class ReadContextCounter
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
-    public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
+    public StrandBiasData fragmentStrandBiasNonAlt() { return mNonAltFragmentStrandBias; }
     public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
-    public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
+    public StrandBiasData readStrandBiasNonAlt() { return mNonAltReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
@@ -386,7 +386,7 @@ public class ReadContextCounter
             {
                 VariantReadSupport readSupport = matchType.toReadSupport();
 
-                registerReadSupport(record, readSupport, modifiedQuality);
+                registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
 
                 mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
@@ -396,7 +396,6 @@ public class ReadContextCounter
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
                 countAltSupportMetrics(record, fragmentData);
 
-                checkImproperCount(record);
                 return ALT_SUPPORT;
             }
         }
@@ -429,7 +428,7 @@ public class ReadContextCounter
                 if(realignedType == EXACT)
                 {
                     matchType = ReadContextMatch.REALIGNED;
-                    registerReadSupport(record, REALIGNED, modifiedQuality);
+                    registerReadSupport(record, REALIGNED, modifiedQuality, readVarIndex);
 
                     mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
 
@@ -465,16 +464,16 @@ public class ReadContextCounter
         if(matchType == ReadContextMatch.REF)
         {
             readSupport = REF;
-
-            mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, this);
         }
         else if(matchType == ReadContextMatch.PARTIAL_MNV)
         {
             mReadContextMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
         }
 
-        registerReadSupport(record, readSupport, modifiedQuality);
+        mNonAltFragmentStrandBias.registerFragment(record);
+        mNonAltReadStrandBias.registerRead(record, fragmentData, this);
+
+        registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
         mReadEdgeDistance.update(record, fragmentData, false);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
@@ -507,10 +506,16 @@ public class ReadContextCounter
         return !mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
     }
 
-    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, final double quality)
+    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality, int readVarIndex)
     {
-        mCounts.addSupport(support, 1);
-        mQualities.addSupport(support, (int)quality);
+        // special case to ignore updating depth when an indel could not have support the alt
+        boolean skipDepthUpdate = mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0;
+
+        if(!skipDepthUpdate)
+        {
+            mCounts.addSupport(support, 1);
+            mQualities.addSupport(support, (int) quality);
+        }
 
         boolean supportsVariant = support != null
                 && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
@@ -523,6 +528,12 @@ public class ReadContextCounter
         if(mFragmentLengthData != null && (support == REF || supportsVariant))
         {
             mFragmentLengthData.addLength(abs(record.getInferredInsertSize()), supportsVariant);
+        }
+
+        if(support != null && (support == FULL || support == VariantReadSupport.PARTIAL_CORE))
+        {
+            if(isImproperPair(record) || record.getSupplementaryAlignmentFlag())
+                mImproperPairCount++;
         }
     }
 
@@ -604,14 +615,6 @@ public class ReadContextCounter
         }
     }
 
-    private void checkImproperCount(final SAMRecord record)
-    {
-        if(isImproperPair(record) || record.getSupplementaryAlignmentFlag())
-        {
-            mImproperPairCount++;
-        }
-    }
-
     public void applyMapQualityRatio()
     {
         int depth = depth();
@@ -628,8 +631,6 @@ public class ReadContextCounter
 
         mQualities.applyRatio(calcRatio);
     }
-
-    public boolean logEvidence() { return mConfig.LogEvidenceReads; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

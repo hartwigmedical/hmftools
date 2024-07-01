@@ -121,9 +121,7 @@ public final class VariantUtils
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, tumorCounters.get(0).readContext(), 1, 1);
 
-        List<ReadContextCounter> normalCounters = Lists.newArrayList();
-
-        return new SageVariant(candidate, normalCounters, tumorCounters);
+        return new SageVariant(candidate, Collections.emptyList(), tumorCounters);
     }
 
     public static SageVariant sageVariantFromReadContextCounter(final ReadContextCounter readContextCounter)

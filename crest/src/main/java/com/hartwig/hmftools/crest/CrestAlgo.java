@@ -110,10 +110,10 @@ public class CrestAlgo
                 if(decorator.isPass() && decorator.type() == VariantType.SNP && !decorator.gene().isEmpty())
                 {
                     AllelicDepth rnaDepth = decorator.allelicDepth(sampleToCheck);
-                    if(rnaDepth.totalReadCount() >= minTotalReads)
+                    if(rnaDepth.TotalReadCount >= minTotalReads)
                     {
                         total += 1;
-                        if(rnaDepth.alleleReadCount() >= minRnaReads)
+                        if(rnaDepth.AlleleReadCount >= minRnaReads)
                         {
                             supported += 1;
                         }

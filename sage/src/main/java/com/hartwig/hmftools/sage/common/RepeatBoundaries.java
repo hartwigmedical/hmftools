@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.OUTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.addIfUnique;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.extendRepeatLower;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
@@ -43,9 +44,7 @@ public class RepeatBoundaries
 
         int minTotalRepeatLength = minCount; // being a single-base repeat
 
-        // find the longest repeat which crosses the required indices, and a second repeat if reaches to or past the required end
-        // if the longest one does not do so
-
+        // find all unique repeats crossing the specified core boundaries
         List<RepeatInfo> allRepeats = null;
 
         while(index <= min(bases.length - minTotalRepeatLength, requiredIndexEnd))
@@ -76,45 +75,138 @@ public class RepeatBoundaries
             ++index;
         }
 
-        if(allRepeats == null)
-            return null;
-
-        RepeatInfo lowerRepeat = null;
-        RepeatInfo upperRepeat = null;
+        // find the longest repeat which crosses the required indices, and and secondary repeats if they reach to or past the required indices
         RepeatInfo maxRepeat = null;
+        int lowerRepeatIndex = requiredIndexStart;
+        int upperRepeatIndex = requiredIndexEnd;
 
-        for(RepeatInfo repeat : allRepeats)
+        if(allRepeats != null)
         {
-            if(maxRepeat == null || repeat.Count > maxRepeat.Count)
-                maxRepeat = repeat;
+            RepeatInfo lowerRepeat = null;
+            RepeatInfo upperRepeat = null;
 
-            if(positionWithin(requiredIndexStart, repeat.Index, repeat.endIndex()))
+            for(RepeatInfo repeat : allRepeats)
             {
-                if(lowerRepeat == null || repeat.Index < lowerRepeat.Index)
-                    lowerRepeat = repeat;
+                if(maxRepeat == null || repeat.Count > maxRepeat.Count)
+                    maxRepeat = repeat;
+
+                if(positionWithin(requiredIndexStart, repeat.Index, repeat.endIndex()))
+                {
+                    if(lowerRepeat == null || repeat.Index < lowerRepeat.Index)
+                        lowerRepeat = repeat;
+                }
+
+                if(positionWithin(requiredIndexEnd, repeat.Index, repeat.endIndex()))
+                {
+                    if(upperRepeat == null || repeat.endIndex() > upperRepeat.endIndex())
+                        upperRepeat = repeat;
+                }
             }
 
-            if(positionWithin(requiredIndexEnd, repeat.Index, repeat.endIndex()))
-            {
-                if(upperRepeat == null || repeat.endIndex() > upperRepeat.endIndex())
-                    upperRepeat = repeat;
-            }
+            if(lowerRepeat == null)
+                lowerRepeat = maxRepeat;
+
+            if(upperRepeat == null)
+                upperRepeat = maxRepeat;
+
+            lowerRepeatIndex = findPostRepeatIndex(lowerRepeat, bases, true);
+            upperRepeatIndex = findPostRepeatIndex(upperRepeat, bases, false);
         }
 
-        if(lowerRepeat == null)
-            lowerRepeat = maxRepeat;
+        // search for a repeat ending/starting at the outer-most base
+        int outerLowerRequiredIndex = lowerRepeatIndex < requiredIndexStart ? lowerRepeatIndex : requiredIndexStart - 1;
+        int outerLowerRepeatBoundary = extendLowerRepeatBoundary(bases, outerLowerRequiredIndex);
 
-        if(upperRepeat == null)
-            upperRepeat = maxRepeat;
+        if(outerLowerRepeatBoundary >= 0)
+            lowerRepeatIndex = min(outerLowerRepeatBoundary, lowerRepeatIndex);
 
-        int lowerRepeatIndex = findPostRepeatIndex(lowerRepeat, bases, true);
-        int upperRepeatIndex = findPostRepeatIndex(upperRepeat, bases, false);
+        int outerUpperRequiredIndex = upperRepeatIndex > requiredIndexEnd ? upperRepeatIndex : requiredIndexEnd + 1;
+        int outerUpperRepeatBoundary = extendUpperRepeatBoundary(bases, outerUpperRequiredIndex);
+
+        if(outerUpperRepeatBoundary >= 0)
+            upperRepeatIndex = max(outerUpperRepeatBoundary, upperRepeatIndex);
 
         return new RepeatBoundaries(lowerRepeatIndex, upperRepeatIndex, maxRepeat, allRepeats);
     }
 
+    private static int extendLowerRepeatBoundary(final byte[] bases, final int requiredIndexStart)
+    {
+        // look for a novel repeat ending at the specified index and extend if found
+        int searchIndexStart = max(0, requiredIndexStart - REPEAT_SEARCH_LENGTH);
+
+        int index = searchIndexStart;
+        int minTotalRepeatLength = OUTER_MIN_REPEAT_COUNT;
+
+        // find the longest repeat which crosses the required indices, and and secondary repeats if they reach to or past the required end
+        RepeatInfo maxRepeat = null;
+
+        while(index <= min(bases.length - minTotalRepeatLength, requiredIndexStart - 1))
+        {
+            for(int repeatLength = 1; repeatLength <= MAX_REPEAT_LENGTH; ++repeatLength)
+            {
+                int requiredStart = requiredIndexStart - repeatLength * OUTER_MIN_REPEAT_COUNT;
+
+                if(requiredStart < 0)
+                    continue;
+
+                RepeatInfo repeat = findMultiBaseRepeat(bases, index, repeatLength, MIN_REPEAT_COUNT);
+
+                if(repeat == null)
+                    continue;
+
+                // search backwards for longer instances of this repeat
+                repeat = extendRepeatLower(repeat, bases);
+
+                if(repeat.Count < OUTER_MIN_REPEAT_COUNT)
+                    continue;
+
+                if(!positionWithin(requiredIndexStart, repeat.Index, repeat.endIndex()))
+                    continue;
+
+                if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
+                    maxRepeat = repeat;
+            }
+
+            ++index;
+        }
+
+        if(maxRepeat == null)
+            return -1;
+
+        return findPostRepeatIndex(maxRepeat, bases, true);
+    }
+
+    private static int extendUpperRepeatBoundary(final byte[] bases, final int requiredIndex)
+    {
+        // look for a novel repeat starting at the specified index and extend if found
+        int index = requiredIndex;
+
+        RepeatInfo maxRepeat = null;
+
+        for(int repeatLength = 1; repeatLength <= MAX_REPEAT_LENGTH; ++repeatLength)
+        {
+            RepeatInfo repeat = findMultiBaseRepeat(bases, index, repeatLength, OUTER_MIN_REPEAT_COUNT);
+
+            if(repeat == null)
+                continue;
+
+            // search backwards for longer instances of this repeat
+            repeat = extendRepeatLower(repeat, bases);
+
+            if(maxRepeat == null || repeat.totalLength() > maxRepeat.totalLength())
+                maxRepeat = repeat;
+        }
+
+
+        if(maxRepeat == null)
+            return -1;
+
+        return findPostRepeatIndex(maxRepeat, bases, false);
+    }
+
     private static int findPostRepeatIndex(final RepeatInfo repeat, final byte[] bases, boolean searchDown)
     {
+        // extend the current repeat with any part of it found and then add 1 additional non-repeat basr
         int partialBaseMatch = 0;
 
         if(searchDown)

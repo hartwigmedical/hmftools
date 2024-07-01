@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
+import static com.hartwig.hmftools.purple.fitting.SomaticPurityFitter.useTumorOnlySomaticMode;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -39,9 +41,6 @@ public class BestFitFactory
     private final PurpleConfig mConfig;
     private final SomaticPurityFitter mSomaticPurityFitter;
 
-    private final int mMinReadCount;
-    private final int mMaxReadCount;
-
     private int mSvHotspotCount;
     private int mSvFragmentReadCount;
     private int mSomaticHotspotCount;
@@ -59,8 +58,6 @@ public class BestFitFactory
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
-        mMinReadCount = minReadCount;
-        mMaxReadCount = maxReadCount;
 
         mSvHotspotCount = 0;
         mSvFragmentReadCount = 0;
@@ -69,7 +66,7 @@ public class BestFitFactory
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
-                config.Fitting.MinPurity, config.Fitting.MaxPurity);
+                minReadCount, maxReadCount, config.Fitting.MinPurity, config.Fitting.MaxPurity);
 
         mBestNormalFit = null;
         mSomaticFit = null;
@@ -106,7 +103,27 @@ public class BestFitFactory
 
         if(!hasTumor)
         {
-            mBestNormalFit = builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
+            mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NO_TUMOR).build();
+            return;
+        }
+
+        if(mConfig.tumorOnlyMode() && useTumorOnlySomaticMode(lowestScoreFit))
+        {
+            FittedPurity somaticFit = mSomaticPurityFitter.fromTumorOnlySomatics(fittingSomatics, allCandidates);
+
+            if(somaticFit != null)
+            {
+                mBestNormalFit = builder.fit(somaticFit).method(FittedPurityMethod.SOMATIC).build();
+            }
+            else
+            {
+                FittedPurity noTumorFit = ImmutableFittedPurity.builder()
+                        .purity(MIN_PURITY_DEFAULT).ploidy(2)
+                        .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
+
+                mBestNormalFit = builder.fit(noTumorFit).method(FittedPurityMethod.NO_TUMOR).build();
+            }
+
             return;
         }
 
@@ -125,12 +142,8 @@ public class BestFitFactory
             return;
         }
 
-        final List<SomaticVariant> fittingSomaticsWithinReadCountRange = fittingSomatics.stream()
-                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
-                .collect(toList());
-
-        final FittedPurity somaticFit = mSomaticPurityFitter.fromSomatics(
-                fittingSomaticsWithinReadCountRange, structuralVariants, diploidCandidates);
+        FittedPurity somaticFit = mSomaticPurityFitter.fromSomatics(
+                fittingSomatics, structuralVariants, diploidCandidates);
 
         if(somaticFit == null)
         {

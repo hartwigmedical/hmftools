@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.data.FusedExons.convertRegion;
 
 import java.io.File;
@@ -23,8 +24,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusedProteinDomains
 {
-    private static final String DELIMITER = "\t";
-
     public static List<VisProteinDomain> fusedProteinDomains(final VisFusion fusion, final List<FusedExon> fusedExons,
             final List<VisProteinDomain> proteinDomains)
     {
@@ -101,7 +100,7 @@ public class FusedProteinDomains
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("sampleId")
                 .add("clusterId")
                 .add("fusion")
@@ -116,7 +115,7 @@ public class FusedProteinDomains
     @NotNull
     private static String toString(final ProteinDomainColors colors, final VisProteinDomain domain)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(domain.SampleId)
                 .add(String.valueOf(domain.ClusterId))
                 .add(domain.chromosome())

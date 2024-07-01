@@ -46,12 +46,8 @@ public class SomaticHistogramPeaks
     public double findVafPeak(final List<WeightedPloidy> weightedVAFs)
     {
         // find the highest VAF peak
-        final List<ModifiableWeightedPloidy> weightedVariants = weightedVAFs.stream()
-                .map(x -> ModifiableWeightedPloidy.create()
-                        .setTotalReadCount(x.totalReadCount())
-                        .setAlleleReadCount(x.alleleReadCount())
-                        .setPloidy(x.ploidy())
-                        .setWeight(x.weight()))
+        List<WeightedPloidy> weightedVariants = weightedVAFs.stream()
+                .map(x -> new WeightedPloidy(x.TotalReadCount, x.AlleleReadCount, x.Ploidy, x.Weight))
                 .collect(Collectors.toList());
 
         final List<SomaticPeak> somaticPeaks = Lists.newArrayList();
@@ -84,10 +80,10 @@ public class SomaticHistogramPeaks
                 maxWeightPeak = peak;
             }
 
-            for(final ModifiableWeightedPloidy variant : weightedVariants)
+            for(WeightedPloidy weightedPloidy : weightedVariants)
             {
-                int bucket = peakHistogramFactory.bucket(variant.ploidy());
-                double currentWeight = variant.weight();
+                int bucket = peakHistogramFactory.bucket(weightedPloidy.Ploidy);
+                double currentWeight = weightedPloidy.weight();
                 double bucketWeight = currentHistogram[bucket];
                 double peakWeight = peakHistogram[bucket];
 
@@ -95,7 +91,7 @@ public class SomaticHistogramPeaks
                 {
                     double assignedWeight = abs(peakWeight / bucketWeight);
                     double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - assignedWeight;
-                    variant.setWeight(newWeight);
+                    weightedPloidy.Weight = newWeight;
                 }
             }
 
@@ -133,7 +129,7 @@ public class SomaticHistogramPeaks
 
     private double positiveWeight(final List<? extends WeightedPloidy> weightedPloidies)
     {
-        return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.weight())).sum();
+        return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.Weight)).sum();
     }
 
     double offset(double peak)
@@ -144,7 +140,7 @@ public class SomaticHistogramPeaks
     private List<WeightedPloidy> peakPloidies(double peak, final List<? extends WeightedPloidy> allPloidies)
     {
         return allPloidies.stream()
-                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mBinWidth / 2) && Doubles.lessThan(x.ploidy(),
+                .filter(x -> Doubles.greaterThan(x.Ploidy, peak - mBinWidth / 2) && Doubles.lessThan(x.Ploidy,
                         peak + mBinWidth / 2))
                 .collect(Collectors.toList());
     }
@@ -203,7 +199,7 @@ public class SomaticHistogramPeaks
         double[] result = new double[ploidies.size()];
         for(int i = 0; i < ploidies.size(); i++)
         {
-            result[i] = ploidies.get(i).weight() / ploidyLikelihood(ploidy, ploidies.get(i));
+            result[i] = ploidies.get(i).Weight / ploidyLikelihood(ploidy, ploidies.get(i));
         }
 
         return result;
@@ -211,15 +207,15 @@ public class SomaticHistogramPeaks
 
     protected double ploidyLikelihood(double ploidy, final WeightedPloidy weighted)
     {
-        final String binomialKey = weighted.alleleReadCount() + ":" + weighted.totalReadCount();
+        final String binomialKey = weighted.AlleleReadCount + ":" + weighted.TotalReadCount;
         final BinomialDistribution binomialDistribution = mBinomialDistributionMap.computeIfAbsent(binomialKey,
-                s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
+                s -> new BinomialDistribution(weighted.TotalReadCount, weighted.alleleFrequency()));
 
-        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mBinWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mBinWidth / 2d) / weighted.Ploidy * weighted.AlleleReadCount;
         int lowerBoundAlleleReadCountRounded = (int) round(lowerBoundAlleleReadCount);
         double lowerBoundAddition = lowerBoundAlleleReadCountRounded + 0.5 - lowerBoundAlleleReadCount;
 
-        double upperBoundAlleleReadCount = Math.max(0, ploidy + mBinWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double upperBoundAlleleReadCount = Math.max(0, ploidy + mBinWidth / 2d) / weighted.Ploidy * weighted.AlleleReadCount;
         int upperBoundAlleleReadCountRounded = (int) round(upperBoundAlleleReadCount);
         double upperBoundSubtraction = upperBoundAlleleReadCountRounded + 0.5 - upperBoundAlleleReadCount;
 
@@ -245,7 +241,7 @@ public class SomaticHistogramPeaks
             return 0;
         }
 
-        return ploidies.stream().mapToDouble(WeightedPloidy::weight).sum() / count;
+        return ploidies.stream().mapToDouble(x -> x.Weight).sum() / count;
     }
 
     private static final double UPPER_PEAK_PROB = 0.95;

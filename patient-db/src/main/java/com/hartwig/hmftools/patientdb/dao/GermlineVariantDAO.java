@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableGermlineVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -153,12 +152,12 @@ public class GermlineVariantDAO
                 decorator.qual(),
                 decorator.tier(),
                 decorator.genotypeStatus(referenceSample).simplifiedDisplay(),
-                referenceDepth.alleleReadCount(),
-                referenceDepth.totalReadCount(),
-                rnaDepth.alleleReadCount(),
-                rnaDepth.totalReadCount(),
-                tumorDepth.alleleReadCount(),
-                tumorDepth.totalReadCount(),
+                referenceDepth.AlleleReadCount,
+                referenceDepth.TotalReadCount,
+                rnaDepth.AlleleReadCount,
+                rnaDepth.TotalReadCount,
+                tumorDepth.AlleleReadCount,
+                tumorDepth.TotalReadCount,
                 checkStringLength(decorator.localPhaseSetsToString(), GERMLINEVARIANT.LOCALPHASESET),
                 decorator.adjustedVaf(),
                 decorator.variantCopyNumber(),
@@ -374,10 +373,9 @@ public class GermlineVariantDAO
     {
         Integer rnaAlleleReadCount = record.getValue(GERMLINEVARIANT.RNAALLELEREADCOUNT);
         Integer rnaTotalCount = record.getValue(GERMLINEVARIANT.RNATOTALREADCOUNT);
-        AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()
-                .alleleReadCount(rnaAlleleReadCount)
-                .totalReadCount(rnaTotalCount)
-                .build() : null;
+
+        AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
+                new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
         return ImmutableGermlineVariantImpl.builder()
                 .chromosome(record.getValue(GERMLINEVARIANT.CHROMOSOME))
@@ -400,8 +398,8 @@ public class GermlineVariantDAO
                 .canonicalHgvsProteinImpact(record.getValue(GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT))
                 .spliceRegion(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.SPLICEREGION)))
                 .otherReportedEffects(DatabaseUtil.valueNotNull(record.getValue(GERMLINEVARIANT.OTHERTRANSCRIPTEFFECTS)))
-                .alleleReadCount(record.getValue(GERMLINEVARIANT.GERMLINEALLELEREADCOUNT))
-                .totalReadCount(record.getValue(GERMLINEVARIANT.GERMLINETOTALREADCOUNT))
+                .allelicDepth(new AllelicDepth(
+                        record.getValue(GERMLINEVARIANT.GERMLINETOTALREADCOUNT), record.getValue(GERMLINEVARIANT.GERMLINEALLELEREADCOUNT)))
                 .adjustedCopyNumber(record.getValue(GERMLINEVARIANT.COPYNUMBER))
                 .adjustedVAF(record.getValue(GERMLINEVARIANT.ADJUSTEDVAF))
                 .variantCopyNumber(record.getValue(GERMLINEVARIANT.VARIANTCOPYNUMBER))

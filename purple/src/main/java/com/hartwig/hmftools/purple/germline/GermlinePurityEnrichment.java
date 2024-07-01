@@ -87,15 +87,11 @@ public class GermlinePurityEnrichment
 
     private double vaf(final GenotypeStatus germlineGenotype, PurpleCopyNumber purpleCopyNumber, final AllelicDepth tumorDepth)
     {
-        if(tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0)
-        {
+        if(tumorDepth.TotalReadCount == 0 || tumorDepth.AlleleReadCount == 0)
             return 0;
-        }
 
         if(Doubles.lessOrEqual(purpleCopyNumber.averageTumorCopyNumber(), 0.001))
-        {
             return 0;
-        }
 
         double rawAF = tumorDepth.alleleFrequency();
         double constrainedCopyNumber = Math.max(0.001, purpleCopyNumber.averageTumorCopyNumber());

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedDownstreamExons;
 import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedUpstreamExons;
 
@@ -18,8 +19,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 public class FusedExons
 {
-    private static final String DELIMITER = "\t";
-
     public static void write(final String fileName, final List<FusedExon> fusedExons) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(fusedExons));
@@ -189,7 +188,7 @@ public class FusedExons
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("sampleId")
+        return new StringJoiner(TSV_DELIM).add("sampleId")
                 .add("clusterId")
                 .add("fusion")
                 .add("gene")
@@ -207,7 +206,7 @@ public class FusedExons
 
     private static String toString(final FusedExon exon)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(exon.sampleId())
                 .add(String.valueOf(exon.clusterId()))
                 .add(exon.fusion())

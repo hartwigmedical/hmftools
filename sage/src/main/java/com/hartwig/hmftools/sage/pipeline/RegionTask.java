@@ -114,6 +114,8 @@ public class RegionTask
             return;
         }
 
+        mResults.addCandidates(initialCandidates.size());
+
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
 
         mPerfCounters.get(PC_EVIDENCE).start();

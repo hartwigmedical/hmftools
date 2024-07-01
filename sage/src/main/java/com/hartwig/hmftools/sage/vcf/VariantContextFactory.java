@@ -130,9 +130,9 @@ public final class VariantContextFactory
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
                 .attribute(
-                        FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasRef().bias(), counter.fragmentStrandBiasAlt().bias()))
+                        FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasNonAlt().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(
-                        READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasRef().bias(), counter.readStrandBiasAlt().bias()))
+                        READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasNonAlt().bias(), counter.readStrandBiasAlt().bias()))
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);
 

@@ -10,20 +10,20 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
+import com.hartwig.hmftools.purple.fitting.WeightedPloidy;
 
 public class SomaticPeakStream
 {
     public SomaticPeakStream() {}
 
-    public List<PeakModelData> somaticPeakModel(final SomaticVariantCache somaticVariants)
+    public List<PeakModelData> generateModelPeaks(final SomaticVariantCache somaticVariants)
     {
         if(!somaticVariants.hasData())
             return Lists.newArrayList();
 
-        final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+        final List<WeightedPloidy> weightedPloidies = newArrayList();
 
         for(SomaticVariant variant : somaticVariants.variants())
         {
@@ -40,10 +40,7 @@ public class SomaticPeakStream
 
             if(depth != null)
             {
-                weightedPloidies.add(ModifiableWeightedPloidy.create()
-                        .from(depth)
-                        .setPloidy(variant.copyNumber())
-                        .setWeight(1));
+                weightedPloidies.add(new WeightedPloidy(depth.TotalReadCount, depth.AlleleReadCount, variant.copyNumber(), 1));
             }
         }
 

@@ -85,7 +85,7 @@ public class DataItemsIO
                 writer.newLine();
             }
 
-            for(DataItem.Index index : dataItemMatrix.getIndexes())
+            for(DataItem.Index index : dataItemMatrix.Indexes)
             {
                 joiner = new StringJoiner(TSV_DELIM);
 
@@ -171,9 +171,16 @@ public class DataItemsIO
                          rowValues[2]
                  );
 
-                 String[] values = Arrays.copyOfRange(rowValues, INDEX_FIELDS.length, header.length);
+                 String[] featureValues = new String[sampleIds.size()];
+                 int sampleIndex = 0;
+                 for(int columnIndex = INDEX_FIELDS.length; columnIndex < header.length; columnIndex++)
+                 {
+                     String featureValue = rowValues[columnIndex];
+                     featureValues[sampleIndex] = featureValue.equals("null") ? null : featureValue;
+                     sampleIndex++;
+                 }
 
-                 featureBySampleMatrix.put(index, values);
+                 featureBySampleMatrix.put(index, featureValues);
              }
 
              return new DataItemMatrix(sampleIds, featureBySampleMatrix);

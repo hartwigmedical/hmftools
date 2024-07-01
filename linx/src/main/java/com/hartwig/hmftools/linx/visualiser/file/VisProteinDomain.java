@@ -30,7 +30,7 @@ public class VisProteinDomain implements GenomeRegion
     public static final String PD_THREE_PRIME_UTR = "3-Prime UTR";
     public static final String PD_NON_CODING = "Non Coding";
 
-    public static final String UTR = "UTR/Non-coding";
+    public static final String PROTEIN_DOMAIN_UTR = "UTR/Non-coding";
 
     public VisProteinDomain(final String sampleId, int clusterId, final String transcript,
             final String chromosome, int start, int end, final String info)
@@ -60,7 +60,7 @@ public class VisProteinDomain implements GenomeRegion
 
     public String name()
     {
-        return Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_NON_CODING) ? UTR : Info;
+        return Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_NON_CODING) ? PROTEIN_DOMAIN_UTR : Info;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_protein_domain.tsv";

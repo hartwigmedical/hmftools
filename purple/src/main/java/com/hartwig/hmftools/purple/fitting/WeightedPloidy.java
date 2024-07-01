@@ -1,26 +1,32 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface WeightedPloidy extends AllelicDepth
+public class WeightedPloidy extends AllelicDepth
 {
-    double ploidy();
+    public double Ploidy;
+    public double Weight;
 
-    double weight();
-
-    @NotNull
-    static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount)
+    public WeightedPloidy(final int totalReadCount, final int alleleReadCount, final double ploidy, final double weight)
     {
-        return ModifiableWeightedPloidy.create()
-                .setPloidy(ploidy)
-                .setWeight(1)
-                .setAlleleReadCount(alleleReadCount)
-                .setTotalReadCount(totalReadCount);
+        super(totalReadCount, alleleReadCount);
+        Ploidy = ploidy;
+        Weight = weight;
+    }
+
+    public double ploidy() { return Ploidy; }
+    public double weight() { return Weight; }
+
+    public String toString() { return format("frags(%s) ploidy(%.2f) weight(%.2f)", super.toString(), Ploidy, Weight); }
+
+    public static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount)
+    {
+        return new WeightedPloidy(totalReadCount, alleleReadCount, ploidy, 1);
     }
 }

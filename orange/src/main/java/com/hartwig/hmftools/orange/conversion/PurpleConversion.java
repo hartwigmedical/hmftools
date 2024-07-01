@@ -92,8 +92,8 @@ public final class PurpleConversion
     public static PurpleAllelicDepth convert(@NotNull AllelicDepth allelicDepth)
     {
         return ImmutablePurpleAllelicDepth.builder()
-                .totalReadCount(allelicDepth.totalReadCount())
-                .alleleReadCount(allelicDepth.alleleReadCount())
+                .totalReadCount(allelicDepth.TotalReadCount)
+                .alleleReadCount(allelicDepth.AlleleReadCount)
                 .build();
     }
 

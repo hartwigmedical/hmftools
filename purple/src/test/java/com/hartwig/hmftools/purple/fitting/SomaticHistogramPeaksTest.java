@@ -53,11 +53,7 @@ public class SomaticHistogramPeaksTest
 
         for(int i = 0; i < multiples; ++i)
         {
-            weightedPloidies.add(ModifiableWeightedPloidy.create()
-                    .setPloidy(vaf)
-                    .setWeight(weight)
-                    .setAlleleReadCount(alleleReadCount)
-                    .setTotalReadCount(totalReadCount));
+            weightedPloidies.add(new WeightedPloidy(totalReadCount, alleleReadCount, vaf, weight));
         }
     }
 }

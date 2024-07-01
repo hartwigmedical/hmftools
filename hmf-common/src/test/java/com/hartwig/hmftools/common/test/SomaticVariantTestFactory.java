@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.SomaticLikelihood.UNKNOWN;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -26,8 +27,7 @@ public final class SomaticVariantTestFactory
                 .alt(Strings.EMPTY)
                 .type(VariantType.UNDEFINED)
                 .filter(Strings.EMPTY)
-                .totalReadCount(0)
-                .alleleReadCount(0)
+                .allelicDepth(AllelicDepth.NO_DEPTH)
                 .gene(Strings.EMPTY)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .genesAffected(0)

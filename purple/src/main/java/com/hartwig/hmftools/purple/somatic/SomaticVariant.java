@@ -64,9 +64,9 @@ public class SomaticVariant implements GenomePosition
     public AllelicDepth tumorAlleleDepth() { return mTumorAllelicDepth; }
     public AllelicDepth referenceAlleleDepth() { return mReferenceAllelicDepth; }
     public double alleleFrequency() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleFrequency() : 0; }
-    public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.totalReadCount() : 0; }
-    public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleReadCount() : 0; }
-    public int referenceAlleleReadCount() { return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.alleleReadCount() : 0; }
+    public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.TotalReadCount : 0; }
+    public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.AlleleReadCount : 0; }
+    public int referenceAlleleReadCount() { return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.AlleleReadCount : 0; }
 
     public String toString()
     {

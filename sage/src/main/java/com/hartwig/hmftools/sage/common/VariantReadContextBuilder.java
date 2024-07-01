@@ -93,11 +93,8 @@ public class VariantReadContextBuilder
 
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
-        if(repeatBoundaries != null)
-        {
-            readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
-            readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
-        }
+        readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
+        readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
 
         int readFlankStart = readCoreStart - mFlankSize;
         int readFlankEnd = readCoreEnd + mFlankSize;
@@ -136,15 +133,15 @@ public class VariantReadContextBuilder
         RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;
 
-        if(repeatBoundaries != null)
+        if(repeatBoundaries.MaxRepeat != null)
         {
-            if(repeatBoundaries.MaxRepeat != null)
-            {
-                maxRepeat = new RepeatInfo(
-                        repeatBoundaries.MaxRepeat.Index - readContextOffset,
-                        repeatBoundaries.MaxRepeat.Bases, repeatBoundaries.MaxRepeat.Count);
-            }
+            maxRepeat = new RepeatInfo(
+                    repeatBoundaries.MaxRepeat.Index - readContextOffset,
+                    repeatBoundaries.MaxRepeat.Bases, repeatBoundaries.MaxRepeat.Count);
+        }
 
+        if(repeatBoundaries.AllRepeats != null)
+        {
             allRepeats = Lists.newArrayListWithCapacity(repeatBoundaries.AllRepeats.size());
             int readFlankOffset = readFlankStart;
             repeatBoundaries.AllRepeats.forEach(x -> allRepeats.add(new RepeatInfo(

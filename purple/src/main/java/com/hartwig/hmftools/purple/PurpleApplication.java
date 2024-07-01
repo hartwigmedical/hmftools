@@ -13,8 +13,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
-import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
-import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
@@ -313,23 +311,15 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
-            final List<PeakModelData> somaticPeaks = Lists.newArrayList();
-
-            PPL_LOGGER.info("modelling somatic peaks");
-            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream();
-
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
-
-            List<PeakModelData> peakModelValues = somaticPeakStream.somaticPeakModel(somaticCache);
-            somaticPeaks.addAll(peakModelValues);
 
             // at the moment the enriching of somatic variants is also contributing to the purity context, so it cannot be done afterwards
             // if the read and write process were split then so could the fitting and enriching steps
             PPL_LOGGER.info("enriching somatic variants");
 
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
 
             somaticStream.processAndWrite(purityAdjuster);
 
@@ -340,7 +330,7 @@ public class PurpleApplication
             FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
-            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticPeaks);
+            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
 
             if(mReferenceData.TargetRegions.hasTargetRegions())
             {
@@ -432,8 +422,7 @@ public class PurpleApplication
     {
         CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
 
-        List<SomaticVariant> fittingVariants = !mConfig.tumorOnlyMode() ?
-                SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions) : Lists.newArrayList();
+        List<SomaticVariant> fittingVariants = SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions);
 
         if(!fittingVariants.isEmpty())
         {
@@ -533,7 +522,7 @@ public class PurpleApplication
             somaticVariantCache.loadSomatics(somaticVcf, emptyHotspots);
 
             // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache, null);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache);
             somaticStream.registerReportedVariants();
         }
 
@@ -619,7 +608,7 @@ public class PurpleApplication
         if(mConfig.runTumor())
         {
             SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, Collections.emptyList());
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);

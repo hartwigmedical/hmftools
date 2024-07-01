@@ -162,19 +162,19 @@ public class SomaticVariantFactory implements VariantContextFilter
 
         if(mFilter.test(context) && AllelicDepth.containsAllelicDepth(genotype))
         {
-            final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
+            AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
 
-            final Optional<AllelicDepth> referenceDepth = Optional.ofNullable(reference)
+            Optional<AllelicDepth> referenceDepth = Optional.ofNullable(reference)
                     .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
                     .filter(AllelicDepth::containsAllelicDepth)
                     .map(AllelicDepth::fromGenotype);
 
-            final Optional<AllelicDepth> rnaDepth = Optional.ofNullable(rna)
+            Optional<AllelicDepth> rnaDepth = Optional.ofNullable(rna)
                     .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
                     .filter(AllelicDepth::containsAllelicDepth)
                     .map(AllelicDepth::fromGenotype);
 
-            if(tumorDepth.totalReadCount() > 0)
+            if(tumorDepth.TotalReadCount > 0)
             {
                 ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
                 builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
@@ -220,8 +220,7 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .position(decorator.position())
                 .ref(decorator.ref())
                 .alt(decorator.alt())
-                .alleleReadCount(allelicDepth.alleleReadCount())
-                .totalReadCount(allelicDepth.totalReadCount())
+                .allelicDepth(allelicDepth)
                 .hotspot(decorator.hotspot())
                 .minorAlleleCopyNumber(decorator.minorAlleleCopyNumber())
                 .adjustedCopyNumber(decorator.adjustedCopyNumber())

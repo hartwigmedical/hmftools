@@ -12,6 +12,8 @@ public class PartitionReaderTest
     @Test
     public void testCompareReads()
     {
+        final CompareConfig config = new CompareConfig();
+
         final SAMRecord read1 = new SAMRecord(null);
         read1.setReadName("read1");
         read1.setFirstOfPairFlag(true);
@@ -21,7 +23,7 @@ public class PartitionReaderTest
         read1.setReadNegativeStrandFlag(false);
         read1.setMappingQuality(20);
 
-        List<String> diffs = PartitionReader.compareReads(read1, read1, false);
+        List<String> diffs = PartitionReader.compareReads(read1, read1, config);
 
         Assert.assertTrue(diffs.isEmpty());
 
@@ -34,12 +36,12 @@ public class PartitionReaderTest
         read2.setReadNegativeStrandFlag(false);
         read2.setMappingQuality(20);
 
-        diffs = PartitionReader.compareReads(read1, read2, false);
+        diffs = PartitionReader.compareReads(read1, read2, config);
         Assert.assertTrue(diffs.isEmpty());
 
         // different map qual
         read2.setMappingQuality(30);
-        diffs = PartitionReader.compareReads(read1, read2, false);
+        diffs = PartitionReader.compareReads(read1, read2, config);
         Assert.assertEquals(1, diffs.size());
         Assert.assertEquals("mapQuality(20/30)", diffs.get(0));
 
@@ -47,7 +49,7 @@ public class PartitionReaderTest
         read2.setMappingQuality(read1.getMappingQuality());
         read1.setReadString("ATCG");
         read2.setReadString("ATCC");
-        diffs = PartitionReader.compareReads(read1, read2, false);
+        diffs = PartitionReader.compareReads(read1, read2, config);
         Assert.assertEquals(1, diffs.size());
         Assert.assertEquals("bases(ATCG/ATCC)", diffs.get(0));
 
@@ -55,7 +57,7 @@ public class PartitionReaderTest
         read2.setReadNegativeStrandFlag(true);
         read1.setReadString("ATCG");
         read2.setReadString("CGAT");
-        diffs = PartitionReader.compareReads(read1, read2, false);
+        diffs = PartitionReader.compareReads(read1, read2, config);
         Assert.assertEquals(1, diffs.size());
         Assert.assertEquals("negStrand(false/true)", diffs.get(0));
     }

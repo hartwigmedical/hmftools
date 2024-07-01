@@ -19,6 +19,7 @@ public class RegionResults
 {
     private final VcfWriter mVcfWriter;
     private int mTotalReads;
+    private int mCandidates;
     private int mTotaVariants;
     private final List<PerformanceCounter> mPerfCounters;
     private final int[] mSyncCounts;
@@ -27,11 +28,17 @@ public class RegionResults
     public RegionResults(final VcfWriter vcfWriter)
     {
         mVcfWriter = vcfWriter;
+        mCandidates = 0;
         mTotalReads = 0;
         mTotaVariants = 0;
         mPerfCounters = Lists.newArrayList();
         mSyncCounts = new int[FragmentSyncType.values().length];
         mEvidenceStats = new EvidenceStats();
+    }
+
+    public synchronized void addCandidates(int candidateCount)
+    {
+        mCandidates += candidateCount;
     }
 
     public synchronized void addFinalVariants(final int taskId, final List<SageVariant> variants)
@@ -73,6 +80,7 @@ public class RegionResults
     }
 
     public int totalReads() { return mTotalReads; }
+    public int totalCandidates() { return mCandidates; }
     public int totalVariants() { return mTotaVariants; }
 
     public void logPerfCounters()

@@ -29,7 +29,7 @@ public class ProteinDomainColors
 
     ProteinDomainColors(final Set<String> proteinDomains)
     {
-        proteinColorMap.put(VisProteinDomain.UTR, UTR);
+        proteinColorMap.put(VisProteinDomain.PROTEIN_DOMAIN_UTR, UTR);
 
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.containsKey(x)).collect(Collectors.toList());
@@ -44,7 +44,7 @@ public class ProteinDomainColors
     @NotNull
     public Color color(final VisProteinDomain proteinDomain)
     {
-        if(proteinDomain.name().equals(VisProteinDomain.UTR))
+        if(proteinDomain.name().equals(VisProteinDomain.PROTEIN_DOMAIN_UTR))
         {
             return proteinDomain.start() == 1 ? UTR_DOWN : UTR_UP;
         }

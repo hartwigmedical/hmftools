@@ -34,7 +34,7 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
         snv="cuppa_data.cohort.snv.*.tsv",
         sv="cuppa_data.cohort.sv.*.tsv",
         trait="cuppa_data.cohort.sample_trait.*.tsv",
-        driver_fusion_virus="cuppa_data.cohort.feature.*.tsv",
+        driver="cuppa_data.cohort.driver.*.tsv",
 
         gene_exp="cuppa_data.cohort.gene_exp.*.tsv",
         alt_sj="cuppa_data.cohort.alt_sj.*.tsv",
@@ -65,32 +65,29 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
             cls.get_class_logger(cls).error("`file_format` must be 'old' or 'new'")
             raise ValueError
 
-        patterns_missing = {}
         paths = {}
+        missing_any_required_files = False
 
         for key, pattern in patterns_expected.items():
 
             matched_files = cls.find_files_in_dir_by_pattern(directory, pattern)
 
-            if len(matched_files) == 0:
-                patterns_missing[key] = pattern
+            if len(matched_files) > 0:
+                if len(matched_files) > 1:
+                    logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
 
+                matched_file = os.path.join(directory, matched_files.iloc[0])
+                paths[key] = matched_file
+
+            else:
                 if key in cls.OPTIONAL_PATTERN_KEYS:
                     logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
                 else:
                     logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
-                    raise FileNotFoundError
+                    missing_any_required_files = True
 
-            if len(matched_files) > 1:
-                logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
-
-            matched_file = os.path.join(directory, matched_files.iloc[0])
-
-            paths[key] = matched_file
-
-        if len(patterns_missing) > 0:
-            logger.info("Could not load paths to features. If using old features format, use `file_format='old'`")
-            raise Exception
+        if missing_any_required_files:
+            raise FileNotFoundError
 
         return CuppaFeaturesPaths(paths)
 
@@ -134,10 +131,8 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
         verbose: bool = True,
         *args, **kwargs
     ) -> None:
-        # out_dir = "/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/output/cuppa_features/"
 
         for feat_type in self.feat_types:
-            # feat_type="gene_exp"
 
             path = os.path.join(out_dir, feat_type + ".tsv.gz")
             df = self.get_feat_type_cols(feat_type)

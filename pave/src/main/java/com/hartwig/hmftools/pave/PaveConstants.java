@@ -30,10 +30,10 @@ public class PaveConstants
     public static final double GNMOAD_FILTER_THRESHOLD = 0.00015;
 
     public static final int PON_FILTER_HOTSPOT_SAMPLE_COUNT = 10;
-    public static final int PON_FILTER_HOTSPOT_MAX_READS = 6;
+    public static final int PON_FILTER_HOTSPOT_MAX_READS = 5;
 
     public static final int PON_FILTER_PANEL_SAMPLE_COUNT = 6;
-    public static final int PON_FILTER_PANEL_MAX_READS = 6;
+    public static final int PON_FILTER_PANEL_MAX_READS = 5;
 
     public static final int PON_FILTER_OTHER_TIER_SAMPLE_COUNT = 6;
     public static final int PON_FILTER_OTHER_TIER_MAX_READS = 0;
