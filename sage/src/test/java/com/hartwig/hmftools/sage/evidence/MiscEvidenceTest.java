@@ -3,23 +3,34 @@ package com.hartwig.hmftools.sage.evidence;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
+import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
@@ -29,6 +40,48 @@ import junit.framework.TestCase;
 
 public class MiscEvidenceTest
 {
+    @Test
+    public void testLongInsertPartialReadMatches()
+    {
+        int position = 35;
+
+        String insertedBases = "TTTTTTTTTTT";
+
+        String refBase = REF_BASES_200.substring(35, 36);
+        SimpleVariant variant = createSimpleVariant(position, refBase, refBase + insertedBases);
+
+        String readBases = REF_BASES_200.substring(1, 35) + variant.Alt + REF_BASES_200.substring(37, 60);
+        String readCigar = "35M11I24M";
+
+        SAMRecord initialRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 1, readBases, readCigar);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(variant, initialRead, 34, REF_SEQUENCE_200);
+
+        assertEquals(11, readContext.VarIndex);
+        assertTrue(readContext.isValid());
+        assertEquals(readBases.substring(33, 48), readContext.coreStr());
+
+        ReadContextCounter readCounter = new ReadContextCounter(
+                0, readContext, LOW_CONFIDENCE,
+                DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, true);
+
+        readCounter.processRead(initialRead, 1, null);
+
+        assertEquals(1, readCounter.readCounts().Full);
+
+        // now a read which matches the read context by 2 or more bases than then ref without being a full core match
+        String altReadBases = REF_BASES_200.substring(1, 35) + variant.Alt.substring(0, 8) + "GGGG" + REF_BASES_200.substring(37, 60);
+        readCigar = buildCigarString(altReadBases.length());
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 1, altReadBases, readCigar);
+
+        readCounter.processRead(altRead, 1, null);
+
+        assertEquals(1, readCounter.readCounts().PartialCore);
+    }
+
     @Test
     public void testReadEdgeDistancePenalty()
     {

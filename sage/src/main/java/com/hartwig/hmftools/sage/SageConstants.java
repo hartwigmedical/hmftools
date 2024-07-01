@@ -57,6 +57,7 @@ public class SageConstants
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
 
     public static final int LONG_GERMLINE_INSERT_LENGTH = 11;
+    public static final int LONG_GERMLINE_INSERT_READ_VS_REF_DIFF = 2;
 
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
 

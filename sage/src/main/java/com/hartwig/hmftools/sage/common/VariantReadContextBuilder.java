@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +41,13 @@ public class VariantReadContextBuilder
             // enforce full flanks
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
+
+            // ref bases are extended for long inserts for partial ref matching
+            if(isLongInsert(variant))
+            {
+                readContext.setExtendedRefBases(refSequence.positionBases(
+                        readContext.CorePositionEnd + 1, readContext.CorePositionEnd + 11));
+            }
 
             readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
 
@@ -149,8 +157,8 @@ public class VariantReadContextBuilder
         }
 
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex,
-                coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
+                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
+                readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)

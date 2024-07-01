@@ -170,14 +170,9 @@ public class JitterData
 
     private JitterNoiseOutcome calcNoiseOutcome(int fullSupport, int jitterCount, double errorRate)
     {
-        // tests whether the jitter count can be explained as noise vs the full count
+        // checks whether the jitter count can be explained as noise vs the full count
 
-        // a low full count relative to the total will be classified as within noise
-        double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
-        if(jitterRatio < 2 * errorRate)
-            return JitterNoiseOutcome.FILTER_VARIANT;
-
-        // also test a p-value of jitter vs the full support counts
+        // test a p-value of jitter vs the full support counts
         BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRate);
 
         double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
@@ -186,10 +181,14 @@ public class JitterData
             return JitterNoiseOutcome.HARD_FILTER_VARIANT;
         else if(prob > MSI_JITTER_NOISE_RATE)
             return JitterNoiseOutcome.FILTER_VARIANT;
-        else
-            return JitterNoiseOutcome.NOISE;
-    }
 
+        // a low full count relative to the total will be classified as within noise
+        double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
+        if(jitterRatio < 2 * errorRate)
+            return JitterNoiseOutcome.FILTER_VARIANT;
+
+        return JitterNoiseOutcome.NOISE;
+    }
 
     @VisibleForTesting
     public void setValues(int shortened, int lengthened)

@@ -7,12 +7,14 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_READ_VS_REF_DIFF;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_MNV;
+import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
 import java.util.List;
 import java.util.Set;
@@ -71,7 +73,6 @@ public class ReadContextMatcher
         mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualCoreMismatches() : 0;
 
         mIsReference = isReference;
-
 
         int altIndexLower = readContext.VarIndex;
         int altIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
@@ -234,6 +235,19 @@ public class ReadContextMatcher
 
         if(coreMatch == NONE)
         {
+            if(mIsReference && isLongInsert(mContext.variant()))
+            {
+                String extendedRefBases = mContext.refBases() + mContext.extendedRefBases();
+
+                int[] refReadMatches = countRefAndReadDifferences(
+                        readBases, mContext.ReadBases, extendedRefBases.getBytes(), readVarIndex, mContext.VarIndex, mContext.variantRefIndex());
+
+                if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
+                    return PARTIAL_CORE;
+                else
+                    return NONE;
+            }
+
             return checkPartialMnvMatch(readBases, readVarIndex, null) ? PARTIAL_MNV : NONE;
         }
 
@@ -457,5 +471,44 @@ public class ReadContextMatcher
         }
 
         return BaseMatchType.MATCH;
+    }
+
+    private static int[] countRefAndReadDifferences(
+            final byte[] readBases, final byte[] readContextBases, final byte[] refBases,
+            final int readIndexStart, final int readContextIndexStart, final int refIndexStart)
+    {
+        // fail if asking to check bases beyond either array
+        int readContextMatches = 0;
+        int refMatches = 0;
+
+        int i = 0;
+
+        while(true)
+        {
+            int readBaseIndex = readIndexStart + i;
+
+            if(readBaseIndex >= readBases.length)
+                break;
+
+            int readContextIndex = readContextIndexStart + i;
+
+            if(readContextIndex >= readContextBases.length)
+                break;
+
+            int refIndex = refIndexStart + i;
+
+            if(refIndex >= refBases.length)
+                break;
+
+            if(readBases[readBaseIndex] == readContextBases[readContextIndex])
+                ++readContextMatches;
+
+            if(readBases[readBaseIndex] == refBases[refIndex])
+                ++refMatches;
+
+            ++i;
+        }
+
+        return new int[] { refMatches, readContextMatches };
     }
 }

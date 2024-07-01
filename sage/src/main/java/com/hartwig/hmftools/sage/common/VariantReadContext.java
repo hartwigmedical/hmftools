@@ -19,8 +19,6 @@ public class VariantReadContext
     public final int AlignmentStart; // alignments of the flanks using read bases
     public final int AlignmentEnd;
 
-    public final byte[] RefBases; // captured for the core only
-
     // read bases and info
     public final byte[] ReadBases;
     public final int CoreIndexStart; // in the read to the start of the core
@@ -34,6 +32,8 @@ public class VariantReadContext
     public final int CorePositionStart;
     public final int CorePositionEnd;
 
+    public final byte[] RefBases; // captured for the core
+
     private final SimpleVariant mVariant;
 
     private final String mReadCigarStr;
@@ -42,10 +42,11 @@ public class VariantReadContext
     private UltimaQualModel mUltimaQualModel;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
+    private String mExtendedRefBases;
 
     public VariantReadContext(
-            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, final byte[] readBases,
-            final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
+            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
+            final byte[] readBases, final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
             final int corePositionStart, final int corePositionEnd)
     {
@@ -69,6 +70,7 @@ public class VariantReadContext
         mArtefactContext = null;
         mUltimaQualModel = null;
         mMaxRefRepeat = null;
+        mExtendedRefBases = null;
     }
 
     // read context methods
@@ -133,6 +135,9 @@ public class VariantReadContext
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }
+
+    public String extendedRefBases() { return mExtendedRefBases; }
+    public void setExtendedRefBases(final String refBases) { mExtendedRefBases = refBases; }
 
     public String toString()
     {
