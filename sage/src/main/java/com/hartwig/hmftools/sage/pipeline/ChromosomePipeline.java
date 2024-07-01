@@ -127,8 +127,8 @@ public class ChromosomePipeline implements AutoCloseable
         if(!runThreadTasks(workers))
             System.exit(1);
 
-        SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads, initial candidates({}) final variants({})",
-                mChromosome, regionCount, mRegionResults.totalReads(), mRegionResults.totalCandidates(), mRegionResults.totalVariants());
+        SG_LOGGER.debug("chromosome({}) {} regions complete, initial candidates({}) final variants({}) reads({})",
+                mChromosome, regionCount, mRegionResults.totalCandidates(), mRegionResults.totalVariants(), mRegionResults.totalReads());
 
         mVcfWriter.flushChromosome();
 

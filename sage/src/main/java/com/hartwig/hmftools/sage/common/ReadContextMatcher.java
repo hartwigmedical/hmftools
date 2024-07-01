@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -70,18 +71,39 @@ public class ReadContextMatcher
         mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualCoreMismatches() : 0;
 
         mIsReference = isReference;
-        mAltIndexLower = readContext.VarIndex;
-        mAltIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
+
+
+        int altIndexLower = readContext.VarIndex;
+        int altIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
+
+        if(!mIsReference && !readContext.AllRepeats.isEmpty())
+        {
+            // expand alt boundaries to cover any repeats on that side
+            int minRepeatIndex = readContext.AllRepeats.get(0).Index - 1;
+            int maxRepeatIndex = readContext.AllRepeats.get(0).endIndex() + 1;
+
+            for(int i = 1; i < readContext.AllRepeats.size(); ++i)
+            {
+                minRepeatIndex = min(minRepeatIndex, readContext.AllRepeats.get(i).Index - 1);
+                maxRepeatIndex = max(maxRepeatIndex, readContext.AllRepeats.get(i).endIndex() + 1);
+            }
+
+            altIndexLower = min(altIndexLower, minRepeatIndex);
+            altIndexUpper = max(altIndexUpper, maxRepeatIndex);
+        }
+
+        mAltIndexLower = altIndexLower;
+        mAltIndexUpper = altIndexUpper;
 
         if(allowMismatches)
         {
             if(mContext.variant().isIndel())
             {
                 Set<Integer> excludedBases = Sets.newHashSet();
-                int altIndexLower = determineIndelLowQualLowerIndex(readContext);
-                int altIndexUpper = determineIndelLowQualRefReadDiffIndex(readContext);
-                excludedBases.add(altIndexLower);
-                excludedBases.add(altIndexUpper);
+                int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
+                int lowQualIndexUpper = determineIndelLowQualRefReadDiffIndex(readContext);
+                excludedBases.add(lowQualIndexLower);
+                excludedBases.add(lowQualIndexUpper);
 
                 if(mContext.Homology != null)
                 {
@@ -94,7 +116,7 @@ public class ReadContextMatcher
                 mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
 
                 int refIndexDiff = mContext.leftFlankLength();
-                mLowQualExclusionRef = new LowQualExclusion(List.of(altIndexLower - refIndexDiff, altIndexUpper - refIndexDiff));
+                mLowQualExclusionRef = new LowQualExclusion(List.of(lowQualIndexLower - refIndexDiff, lowQualIndexUpper - refIndexDiff));
             }
             else
             {

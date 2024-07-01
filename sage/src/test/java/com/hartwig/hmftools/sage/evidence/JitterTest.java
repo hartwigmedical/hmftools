@@ -63,7 +63,7 @@ public class JitterTest
 
         byte[] readQuals = buildDefaultBaseQuals(variantReadBases.length());
 
-        ReadContextMatcher matcher = createReadContextMatcher(readContext);
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext, true, true);
 
         // test jitter without indication of a indel
 
@@ -208,7 +208,7 @@ public class JitterTest
         assertTrue(readContext.AllRepeats.stream().anyMatch(x -> x.matches("A", 24, 9)));
         assertTrue(readContext.AllRepeats.stream().anyMatch(x -> x.matches("TTCC", 11, 3)));
 
-        ReadContextMatcher matcher = createReadContextMatcher(readContext);
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext, true, true);
 
         SAMRecord read1 = buildSamRecord(1, readCigar, readBases);
 
