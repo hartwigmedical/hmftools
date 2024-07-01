@@ -4,6 +4,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER_I;
@@ -78,18 +80,20 @@ public class SomaticPurityEnrichment
                 purpleCopyNumber.chromosome(), max(0.001, copyNumber), variant.alleleFrequency(), isGermlineHetDeletion);
 
         double variantCopyNumber = max(0, vaf * copyNumber);
-
-        double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
-        boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
-
+        
         VariantContext variantContext = variant.context();
 
         variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
         variantContext.getCommonInfo().putAttribute(PURPLE_CN, copyNumber);
-
-        variantContext.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
+        variantContext.getCommonInfo().putAttribute(PURPLE_AF, format("%.4f", vaf));
         variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
-        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, biallelicProbability);
+        
+        double biallelicProbability = calculateBiallelic(purpleCopyNumber, variant);
+        boolean classifyBiallelic = classifyBiallelic(biallelicProbability);
+        
+        PPL_LOGGER.debug("variant({}) biallelic({} prob={})", variant, classifyBiallelic, format("%.4f", biallelicProbability));
+        
+        variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_PROB, format("%.4f", biallelicProbability)); 
         variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, classifyBiallelic);
     }
 
@@ -160,7 +164,6 @@ public class SomaticPurityEnrichment
         // inputs
         double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-
         double variantCopyNumber = variant.decorator().variantCopyNumber();
         int alleleReadCount = variant.alleleReadCount();
 
