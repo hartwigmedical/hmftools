@@ -487,7 +487,7 @@ public class IndelDeduper
 
         public int indelScore()
         {
-            return (Variant.isIndel() ? (ReadCounter.indelLength() - 1) * INDEL_LENGTH_FACTOR : 0)
+            return (Variant.isIndel() ? ReadCounter.variant().indelLengthAbs() * INDEL_LENGTH_FACTOR : 0)
                         + ReadCounter.readEdgeDistance().maxAltDistanceFromEdge()
                         - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
         }

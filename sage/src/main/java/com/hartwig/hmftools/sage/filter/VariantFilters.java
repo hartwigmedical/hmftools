@@ -310,11 +310,6 @@ public class VariantFilters
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
-    private static boolean isLongInsert(final ReadContextCounter variant)
-    {
-        return variant.isIndel() && variant.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
-    }
-
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
     {
         if(primaryTumor.readContext().MaxRepeat == null)
@@ -325,7 +320,7 @@ public class VariantFilters
 
     private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)
     {
-        if(isLongInsert(primaryTumor))
+        if(primaryTumor.isLongInsert())
             return false;
 
         int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
@@ -387,7 +382,7 @@ public class VariantFilters
         boolean chromosomeIsAllosome = HumanChromosome.contains(refCounter.chromosome())
                 && HumanChromosome.fromString(refCounter.chromosome()).isAllosome();
 
-        boolean isLongInsert = isLongInsert(refCounter);
+        boolean isLongInsert = refCounter.isLongInsert();
 
         int minGermlineCoverage = chromosomeIsAllosome ?
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
@@ -404,7 +399,14 @@ public class VariantFilters
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
 
-        double adjustedRefVaf = (refCounter.readCounts().altSupport() + refCounter.partialMnvSupport()) / (double)refCounter.readCounts().Total;
+        int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.partialMnvSupport();
+
+        if(refCounter.isLongInsert())
+        {
+            adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
+        }
+
+        double adjustedRefVaf = adjustedRefAltCount / (double)refCounter.readCounts().Total;
         return Doubles.greaterThan(adjustedRefVaf, config.MaxGermlineVaf);
     }
 
@@ -426,7 +428,7 @@ public class VariantFilters
         if(tier == VariantTier.HOTSPOT)
             return false;
 
-        if(refCounter.variant().isMNV() || (refCounter.variant().isInsert() && refCounter.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
+        if(refCounter.variant().isMNV() || refCounter.isLongInsert())
         {
             double depth = refCounter.depth();
             double altSupportPerc = depth > 0 ? refCounter.altSupport() / depth : 0;

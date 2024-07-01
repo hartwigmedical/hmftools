@@ -161,7 +161,7 @@ public class ReadContextCounter
         mMaxCandidateDeleteLength = 0;
         mMaxPositionVsReadStart = mVariant.isDelete() ? mVariant.Position + abs(mVariant.indelLength()) : mVariant.Position;
 
-        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
+        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), variant().indelLengthAbs() + 1));
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -175,9 +175,9 @@ public class ReadContextCounter
     public VariantReadContext readContext() { return mReadContext; }
     public ReadContextMatcher matcher() { return mMatcher; }
     public VariantTier tier() { return mTier; }
-    public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
+    public boolean isLongInsert() { return SimpleVariant.isLongInsert(mVariant); }
     public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }

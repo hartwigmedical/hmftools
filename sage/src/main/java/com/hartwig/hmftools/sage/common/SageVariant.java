@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -178,6 +180,8 @@ public class SageVariant
     }
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
+
+    public boolean isLongInsert() { return SimpleVariant.isLongInsert(mCandidate.variant()); }
 
     public String toString()
     {

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 
 import java.util.List;
 
@@ -16,7 +18,7 @@ public class SimpleVariant extends BasePosition
     public final String Alt;
     public final VariantType Type;
 
-    private final int mIndelLength; // number of bases inserted or deleted
+    private final int mIndelLength; // number of bases inserted or deleted, negative for DELs
 
     public SimpleVariant(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -63,15 +65,21 @@ public class SimpleVariant extends BasePosition
     public boolean isDelete() { return ref().length() > alt().length(); }
     public boolean isInsert() { return alt().length() > ref().length(); }
 
-    public int indelLength() { return mIndelLength; }
     public int altLength() { return Alt.length(); }
     public int refLength() { return Ref.length(); }
+    public int indelLength() { return mIndelLength; }
+    public int indelLengthAbs() { return abs(mIndelLength); }
 
     public boolean matches(final SimpleVariant variant) { return matches(variant.Chromosome, variant.Position, variant.Ref, variant.Alt); }
 
     public boolean matches(final String chromosome, final int position, final String ref, final String alt)
     {
         return Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt);
+    }
+
+    public static boolean isLongInsert(final SimpleVariant variant)
+    {
+        return variant.isInsert() && variant.indelLength() >= LONG_GERMLINE_INSERT_LENGTH;
     }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
