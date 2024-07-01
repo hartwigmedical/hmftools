@@ -233,40 +233,40 @@ public class SoftFilterTest
                 createSimpleVariant(position, "ACG", "TCA"),
                 REF_BASES.substring(48, position), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
 
-        ReadContextCounter normalRcCounter = createReadCounter(readContext);
-        ReadContextCounter tumorRcCounter = createReadCounter(readContext);
+        ReadContextCounter refCounter = createReadCounter(readContext);
+        ReadContextCounter tumorCounter = createReadCounter(readContext);
 
         int readPosStart = 20;
-        String altBases = normalRcCounter.alt();
+        String altBases = refCounter.alt();
 
         String refBases = REF_BASES.substring(position, position + 3);
         String altReadBases = REF_BASES.substring(readPosStart, position) + altBases + REF_BASES.substring(position + 3, 80);
         String readCigar = buildCigarString(altReadBases.length());
 
         SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
-        normalRcCounter.processRead(altRead, 1, null);
-        tumorRcCounter.processRead(altRead, 1, null);
+        refCounter.processRead(altRead, 1, null);
+        tumorCounter.processRead(altRead, 1, null);
 
         SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES.substring(20, 80), readCigar);
-        normalRcCounter.processRead(refRead, 1, null);
-        tumorRcCounter.processRead(refRead, 1, null);
+        refCounter.processRead(refRead, 1, null);
+        tumorCounter.processRead(refRead, 1, null);
 
         String partialAltReadBases = REF_BASES.substring(readPosStart, position)
                 + refBases.substring(0, 2) + altBases.substring(2) + REF_BASES.substring(position + 3, 80);
         SAMRecord partialAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, partialAltReadBases, readCigar);
-        normalRcCounter.processRead(partialAltRead, 1, null);
+        refCounter.processRead(partialAltRead, 1, null);
 
         VariantReadContext snvReadContext = createReadContext(
                 createSimpleVariant(position + 2, "G", "A"),
                 REF_BASES.substring(48, position + 2), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
 
-        ReadContextCounter snvNormalRcCounter = createReadCounter(snvReadContext);
-        ReadContextCounter snvTumorRcCounter = createReadCounter(snvReadContext);
+        ReadContextCounter snvRefCounter = createReadCounter(snvReadContext);
+        ReadContextCounter snvTumorCounter = createReadCounter(snvReadContext);
 
-        snvTumorRcCounter.processRead(partialAltRead, 1, null);
+        snvTumorCounter.processRead(partialAltRead, 1, null);
 
         Candidate candidate = new Candidate(HIGH_CONFIDENCE, readContext, 1, 1);
-        SageVariant mnv = new SageVariant(candidate, List.of(normalRcCounter), List.of(tumorRcCounter));
+        SageVariant mnv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
         mnv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
 
         FILTERS.applySoftFilters(mnv);
@@ -274,7 +274,7 @@ public class SoftFilterTest
         assertTrue(mnv.filters().contains(MAX_GERMLINE_ALT_SUPPORT));
 
         candidate = new Candidate(HIGH_CONFIDENCE, snvReadContext, 1, 1);
-        SageVariant snv = new SageVariant(candidate, List.of(snvNormalRcCounter), List.of(snvTumorRcCounter));
+        SageVariant snv = new SageVariant(candidate, List.of(snvRefCounter), List.of(snvTumorCounter));
         snv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
 
         DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(Collections.emptyList(), TEST_CONFIG.Filter);

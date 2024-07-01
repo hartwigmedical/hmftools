@@ -126,11 +126,11 @@ public class DedupMixedGermlineSomatic
         {
             SageVariant variant = candidates.get(i);
 
-            if(!variant.isMnv() || variant.normalReadCounters().isEmpty() || variant.normalReadCounters().get(0).partialMnvSupport() == 0)
+            if(!variant.isMnv() || variant.referenceReadCounters().isEmpty() || variant.referenceReadCounters().get(0).partialMnvSupport() == 0)
                 continue;
 
-            int[] mnvGermlineCount = variant.normalReadCounters().get(0).partialMnvCounts();
-            int mnvAltSupport = variant.normalReadCounters().get(0).altSupport();
+            int[] mnvGermlineCount = variant.referenceReadCounters().get(0).partialMnvCounts();
+            int mnvAltSupport = variant.referenceReadCounters().get(0).altSupport();
 
             // assign germline support to any SNV matching the bases of the MNV
             for(int j = i + 1; j < candidates.size(); ++j)
@@ -149,14 +149,14 @@ public class DedupMixedGermlineSomatic
                 {
                     int mnvGermlineSupport = mnvGermlineCount[posOffset];
 
-                    double snvNormalDepth = next.normalReadCounters().get(0).readCounts().Total;
+                    double snvRefDepth = next.referenceReadCounters().get(0).readCounts().Total;
 
-                    if(snvNormalDepth > 0)
+                    if(snvRefDepth > 0)
                     {
-                        double adjustedNormalVaf = (mnvGermlineSupport + mnvAltSupport) / snvNormalDepth;
+                        double adjustedRefVaf = (mnvGermlineSupport + mnvAltSupport) / snvRefDepth;
 
                         SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
-                        if(Doubles.greaterThan(adjustedNormalVaf, softFilterConfig.MaxGermlineVaf))
+                        if(Doubles.greaterThan(adjustedRefVaf, softFilterConfig.MaxGermlineVaf))
                         {
                             next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                         }

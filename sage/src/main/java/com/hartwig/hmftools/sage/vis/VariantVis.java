@@ -220,33 +220,33 @@ public class VariantVis
     }
 
     public static void writeToHtmlFile(
-            final SageVariant sageVariant, final List<String> tumorIds, final List<String> normalIds, final VisConfig config)
+            final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds, final VisConfig config)
     {
         if(config.PassOnly && !sageVariant.isPassing())
             return;
 
         List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
-        List<ReadContextCounter> normalReadCounters = sageVariant.normalReadCounters();
+        List<ReadContextCounter> refReadCounters = sageVariant.referenceReadCounters();
 
         // can be null if doesn't meet the configured criteria
         List<VariantVis> tumorVis = tumorReadCounters.stream()
                 .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
 
-        List<VariantVis> normalVis = normalReadCounters.stream()
+        List<VariantVis> refVis = refReadCounters.stream()
                 .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
 
-        if(tumorVis.isEmpty() && normalVis.isEmpty())
+        if(tumorVis.isEmpty() && refVis.isEmpty())
             return;
 
-        ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : normalReadCounters.get(0);
-        VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : normalVis.get(0);
+        ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : refReadCounters.get(0);
+        VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : refVis.get(0);
 
-        String sampleId = tumorIds.isEmpty() ? normalIds.get(0) : tumorIds.get(0);
+        String sampleId = tumorIds.isEmpty() ? referenceIds.get(0) : tumorIds.get(0);
         String filename = firstVis.getFilename(sampleId);
 
         int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
-        int normalTotalReadCount = normalVis.stream().mapToInt(x -> x.mReadCount).sum();
-        int totalReadCount = tumorTotalReadCount + normalTotalReadCount;
+        int refTotalReadCount = refVis.stream().mapToInt(x -> x.mReadCount).sum();
+        int totalReadCount = tumorTotalReadCount + refTotalReadCount;
         if(totalReadCount == 0)
         {
             SG_LOGGER.info("not writing variant vis file {}, because there are no associated reads", filename);
@@ -254,11 +254,11 @@ public class VariantVis
         }
 
         tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
-        normalVis.forEach(x -> x.downsampleReadEvidenceRecords());
+        refVis.forEach(x -> x.downsampleReadEvidenceRecords());
 
         Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true)).flatMap(x -> x.stream());
-        Stream<DomContent> normalReadTableRows = normalVis.stream().map(x -> x.renderReads(false)).flatMap(x -> x.stream());
-        List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, normalReadTableRows).collect(Collectors.toList());
+        Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false)).flatMap(x -> x.stream());
+        List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, refReadTableRows).collect(Collectors.toList());
 
         CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
         CssBuilder verticalSpacerStyle = CssBuilder.EMPTY.height(CssSize.em(1));
@@ -272,7 +272,7 @@ public class VariantVis
                                 sageVariant.totalQuality(),
                                 firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filtersStringSet()),
                         verticalSpacer,
-                        renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
+                        renderSampleInfoTable(tumorReadCounters, refReadCounters, tumorIds, referenceIds),
                         readTable,
                         getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
@@ -296,7 +296,7 @@ public class VariantVis
 
     private static DomContent renderSampleInfoTable(
             final List<ReadContextCounter> tumorReadCounters,
-            final List<ReadContextCounter> normalReadCounters, final List<String> tumorIds, final List<String> normalIds)
+            final List<ReadContextCounter> refReadCounters, final List<String> tumorIds, final List<String> refIds)
     {
         CssBuilder sampleInfoTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
         CssBuilder firstColCellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5));
@@ -331,13 +331,13 @@ public class VariantVis
             allCounters.add(counter);
         }
 
-        for (int i = 0; i < normalReadCounters.size(); i++)
+        for (int i = 0; i < refReadCounters.size(); i++)
         {
-            ReadContextCounter counter = normalReadCounters.get(i);
+            ReadContextCounter counter = refReadCounters.get(i);
             if (counter.variantVis() == null)
                 continue;
 
-            allIds.add(normalIds.get(i));
+            allIds.add(refIds.get(i));
             allCounters.add(counter);
         }
 
@@ -521,7 +521,7 @@ public class VariantVis
         tableRows.add(tr(td(div().withStyle(verticalSpacerDivStyle.toString())).attr("colspan", columns.size() + 2)));
 
         // sample row
-        String sampleAnnotation = isTumor ? "(tumor)" : "(normal)";
+        String sampleAnnotation = isTumor ? "(tumor)" : "(reference)";
         tableRows.add(tr(td(mSample + " " + sampleAnnotation).attr("colspan", columns.size() + 2)));
 
         // header row

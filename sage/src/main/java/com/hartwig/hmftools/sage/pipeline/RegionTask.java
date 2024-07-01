@@ -125,8 +125,8 @@ public class RegionTask
 
         List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
 
-        ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
-                (mRegion, "normal", mConfig.Common.ReferenceIds, finalCandidates, false);
+        ReadContextCounters referenceEvidence = mEvidenceStage.findEvidence
+                (mRegion, "reference", mConfig.Common.ReferenceIds, finalCandidates, false);
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
@@ -147,7 +147,7 @@ public class RegionTask
 
             VariantFilters filters = new VariantFilters(mConfig.Common);
 
-            // combine normal and tumor together to create variants, then apply soft filters
+            // combine reference and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
             Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
@@ -155,12 +155,12 @@ public class RegionTask
             {
                 Candidate candidate = finalCandidates.get(candidateIndex);
 
-                final List<ReadContextCounter> normalReadCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
-                        normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
+                final List<ReadContextCounter> refCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
+                        referenceEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
 
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
-                SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
+                SageVariant sageVariant = new SageVariant(candidate, refCounters, tumorReadCounters);
                 setReferenceMaxRepeatInfo(sageVariant, refSequence);
                 mSageVariants.add(sageVariant);
 

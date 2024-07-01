@@ -17,16 +17,16 @@ public class SageVariant
 {
     private final Candidate mCandidate;
     private final Set<SoftFilter> mFilters;
-    private final List<ReadContextCounter> mNormalReadCounters;
+    private final List<ReadContextCounter> mReferenceReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mMixedImpact;
 
     public SageVariant(
-            final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
+            final Candidate candidate,  final List<ReadContextCounter> referenceCounters, final List<ReadContextCounter> tumorReadCounters)
     {
         mCandidate = candidate;
-        mNormalReadCounters = normalCounters;
+        mReferenceReadCounters = referenceCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
     }
@@ -149,8 +149,8 @@ public class SageVariant
 
     public boolean isPassing() { return mFilters.isEmpty(); }
 
-    public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
-    public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
+    public boolean hasTumorSamples() { return !mTumorReadCounters.isEmpty(); }
+    public boolean hasReferenceSamples() { return !mReferenceReadCounters.isEmpty(); }
 
     public SimpleVariant variant() { return mCandidate.variant(); }
 
@@ -162,7 +162,7 @@ public class SageVariant
 
     public VariantReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 
-    public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
+    public List<ReadContextCounter> referenceReadCounters() { return mReferenceReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }
 
     public int totalQuality() { return mTumorReadCounters.stream().mapToInt(x -> (int)round(x.tumorQuality())).sum(); }

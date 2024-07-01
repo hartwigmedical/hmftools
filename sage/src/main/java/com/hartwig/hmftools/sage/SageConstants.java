@@ -56,7 +56,7 @@ public class SageConstants
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
 
-    public static final int NORMAL_MATCHING_REPEAT_LENGTH = 11;
+    public static final int GERMLINE_MATCHING_REPEAT_LENGTH = 11;
 
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 
@@ -69,7 +69,7 @@ public class SageConstants
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
     public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.002;
     public static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
-    public static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
+    public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT = 3;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
 
     public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;

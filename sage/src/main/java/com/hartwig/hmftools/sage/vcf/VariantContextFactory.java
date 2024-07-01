@@ -43,16 +43,16 @@ public final class VariantContextFactory
         try
         {
             final List<Genotype> genotypes = Lists.newArrayList();
-            for(int i = 0; i < variant.normalReadCounters().size(); i++)
+            for(int i = 0; i < variant.referenceReadCounters().size(); i++)
             {
-                ReadContextCounter normalContext = variant.normalReadCounters().get(i);
-                genotypes.add(createGenotype(normalContext, referenceIds.get(i)));
+                ReadContextCounter refCounter = variant.referenceReadCounters().get(i);
+                genotypes.add(createGenotype(refCounter, referenceIds.get(i)));
             }
 
             for(int i = 0; i < variant.tumorReadCounters().size(); i++)
             {
-                ReadContextCounter tumorContext = variant.tumorReadCounters().get(i);
-                genotypes.add(createGenotype(tumorContext, tumorIds.get(i)));
+                ReadContextCounter tumorCounter = variant.tumorReadCounters().get(i);
+                genotypes.add(createGenotype(tumorCounter, tumorIds.get(i)));
             }
 
             return createContext(variant, genotypes);

@@ -115,10 +115,10 @@ public class VariantFilters
 
         final Set<SoftFilter> variantFilters = variant.filters();
 
-        final List<ReadContextCounter> normalReadCounters = variant.normalReadCounters();
+        final List<ReadContextCounter> refReadCounters = variant.referenceReadCounters();
 
-        // setting ref sample count to zero disables the tumor-normal filters
-        int maxNormalSamples = min(normalReadCounters.size(), mConfig.ReferenceSampleCount);
+        // setting ref sample count to zero disables the tumor-germline filters
+        int maxReferenceSamples = min(refReadCounters.size(), mConfig.ReferenceSampleCount);
 
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
@@ -127,10 +127,10 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
-            for(int i = 0; i < maxNormalSamples; ++i)
+            for(int i = 0; i < maxReferenceSamples; ++i)
             {
-                ReadContextCounter normal = normalReadCounters.get(i);
-                applyTumorNormalFilters(tier, softFilterConfig, normal, tumorReadContextCounter, tumorFilters);
+                ReadContextCounter referenceCounter = refReadCounters.get(i);
+                applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
             }
 
             if(tumorFilters.isEmpty())
@@ -355,81 +355,81 @@ public class VariantFilters
         return avgMapQuality - avgAltMapQuality > MAX_MAP_QUAL_ALT_VS_REF;
     }
 
-    // normal and paired tumor-normal tests
-    public void applyTumorNormalFilters(
+    // germline and paired tumor-germline tests
+    public void applyTumorGermlineFilters(
             final VariantTier tier, final SoftFilterConfig config,
-            final ReadContextCounter normal, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
+            final ReadContextCounter refCounter, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
     {
-        if(belowMinGermlineCoverage(config, normal))
+        if(belowMinGermlineCoverage(config, refCounter))
         {
             filters.add(SoftFilter.MIN_GERMLINE_DEPTH);
         }
 
-        if(aboveMaxGermlineVaf(config, normal, primaryTumor))
+        if(aboveMaxGermlineVaf(config, refCounter, primaryTumor))
         {
             filters.add(SoftFilter.MAX_GERMLINE_VAF);
         }
 
-        if(aboveMaxGermlineRelativeVaf(config, normal, primaryTumor))
+        if(aboveMaxGermlineRelativeVaf(config, refCounter, primaryTumor))
         {
             filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_VAF);
         }
 
         // MNV Tests
-        if(aboveMaxMnvIndelNormalAltSupport(tier, normal))
+        if(aboveMaxMnvIndelGermlineAltSupport(tier, refCounter))
         {
             filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT);
         }
     }
 
-    private static boolean belowMinGermlineCoverage(final SoftFilterConfig config, final ReadContextCounter normal)
+    private static boolean belowMinGermlineCoverage(final SoftFilterConfig config, final ReadContextCounter refCounter)
     {
-        boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
-                && HumanChromosome.fromString(normal.chromosome()).isAllosome();
+        boolean chromosomeIsAllosome = HumanChromosome.contains(refCounter.chromosome())
+                && HumanChromosome.fromString(refCounter.chromosome()).isAllosome();
 
-        boolean isLongInsert = isLongInsert(normal);
+        boolean isLongInsert = isLongInsert(refCounter);
 
         int minGermlineCoverage = chromosomeIsAllosome ?
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
                 : (isLongInsert ? config.MinGermlineCoverageLongInsert : config.MinGermlineCoverage);
 
-        return normal.depth() < minGermlineCoverage;
+        return refCounter.depth() < minGermlineCoverage;
     }
 
     private static boolean aboveMaxGermlineVaf(
-            final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
+            final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
         double tumorVaf = primaryTumor.vaf();
 
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
 
-        double adjustedNormalVaf = (normal.readCounts().altSupport() + normal.partialMnvSupport()) / (double)normal.readCounts().Total;
-        return Doubles.greaterThan(adjustedNormalVaf, config.MaxGermlineVaf);
+        double adjustedRefVaf = (refCounter.readCounts().altSupport() + refCounter.partialMnvSupport()) / (double)refCounter.readCounts().Total;
+        return Doubles.greaterThan(adjustedRefVaf, config.MaxGermlineVaf);
     }
 
     private static boolean aboveMaxGermlineRelativeVaf(
-            final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
+            final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
         double tumorQual = primaryTumor.tumorQuality();
-        double normalQual = normal.tumorQuality();
+        double refQual = refCounter.tumorQuality();
 
         if(tumorQual == 0)
             return false; // will be handled in tumor filters
 
-        double normalTumorQualRatio = normalQual / tumorQual;
-        return Doubles.greaterThan(normalTumorQualRatio, config.MaxGermlineVaf);
+        double refTumorQualRatio = refQual / tumorQual;
+        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineVaf);
     }
 
-    private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal)
+    private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)
     {
         if(tier == VariantTier.HOTSPOT)
             return false;
 
-        if(normal.variant().isMNV() || (normal.variant().isInsert() && normal.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
+        if(refCounter.variant().isMNV() || (refCounter.variant().isInsert() && refCounter.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
         {
-            double depth = normal.depth();
-            double altSupportPerc = depth > 0 ? normal.altSupport() / depth : 0;
+            double depth = refCounter.depth();
+            double altSupportPerc = depth > 0 ? refCounter.altSupport() / depth : 0;
             return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
         }
 
@@ -457,12 +457,12 @@ public class VariantFilters
         if(variant.mixedGermlineImpact() > 0)
             return true;
 
-        if(!variant.isNormalEmpty() && !variant.isTumorEmpty() && !MitochondrialChromosome.contains(variant.chromosome())
-                && !variant.hasMatchingLps(passingPhaseSets))
+        if(variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
+        && !variant.hasMatchingLps(passingPhaseSets))
         {
-            final ReadContextCounter normal = variant.normalReadCounters().get(0);
+            final ReadContextCounter refCounter = variant.referenceReadCounters().get(0);
 
-            if(normal.altSupport() > config.Filter.FilteredMaxNormalAltSupport)
+            if(refCounter.altSupport() > config.Filter.FilteredMaxGermlineAltSupport)
                 return false;
         }
 
