@@ -61,11 +61,7 @@ class TestCuppaFeaturesPaths:
 class TestFeatureLoader:
 
     def test_can_load_single_sample_from_tsv(self):
-        loader = FeatureLoader(
-            MockInputData.path_tsv_new_format,
-            sample_id = "COLO829",
-            excl_chroms = ["ChrY", "Y"],
-        )
+        loader = FeatureLoader(MockInputData.path_tsv_new_format, sample_id = "COLO829")
 
         features = loader.load()
         assert features.shape == (1, 6219)
