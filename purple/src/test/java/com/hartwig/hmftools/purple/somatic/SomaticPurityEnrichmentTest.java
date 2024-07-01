@@ -99,6 +99,23 @@ public class SomaticPurityEnrichmentTest extends TestCase
 
         biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
         assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+
+        // Scenario 5 - initially called BIALLELIC in COLO829v003T chr1:50084056
+        // input values:
+        CN = 2.81;
+        MACN = 0.811;
+        VCN = 2.83;
+        alleleReadCount = 73;
+
+        // expected output:
+        expectedBiallelicProbability = 0.833;
+
+        correspondingBAF = 1 - (MACN / CN);
+        copyNumber = createCopyNumber(CN, correspondingBAF);
+        variant = createVariant(alleleReadCount, VCN);
+
+        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
+        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
     }
     
     
