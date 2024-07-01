@@ -179,12 +179,10 @@ class FeatureLoader(LoggerMixin):
         self,
         path: str,
         sample_id: str | None = None,
-        excl_chroms: Iterable[str] | None = ["ChrY", "Y"], ## TODO: move this logic to java
-        na_fill_value: int | float = NA_FILL_VALUE,
+        na_fill_value: int | float = NA_FILL_VALUE
     ):
         self.path = path
         self.sample_id = sample_id
-        self.excl_chroms = excl_chroms
         self.na_fill_value = na_fill_value
 
         self.df: pd.DataFrame = None
@@ -195,6 +193,8 @@ class FeatureLoader(LoggerMixin):
     FLD_VALUE = "Value"
 
     INDEX_COLS = [FLD_SOURCE, FLD_CATEGORY, FLD_KEY]
+
+    CHROMS_AUTOSOMAL_AND_X = pd.Series([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,"X"]).astype(str)
 
     @property
     def is_multi_sample(self) -> bool:
@@ -256,20 +256,18 @@ class FeatureLoader(LoggerMixin):
             self.logger.error("The following features are duplicated: ", ", ".join(duplicated_keys.unique()))
             raise AssertionError
 
-    def _filter_gen_pos_chroms(self) -> None:
+    def _check_gen_pos_chroms(self) -> None:
+        bin_names = self.df.loc[ self.df[self.FLD_CATEGORY] == "gen_pos", "Key" ]
+        chroms_uniq = pd.Series(bin_names.str.split("_").str[0].unique())
 
-        if self.excl_chroms is None:
-            return
+        unexpected_chroms = chroms_uniq[
+            ~chroms_uniq.isin("chr" + self.CHROMS_AUTOSOMAL_AND_X) &
+            ~chroms_uniq.isin(self.CHROMS_AUTOSOMAL_AND_X)
+        ]
 
-        regex = "^(" + "|".join(self.excl_chroms) + ")"
-        is_excluded_feature = (self.df[self.FLD_CATEGORY] == "gen_pos") & self.df[self.FLD_KEY].str.match(regex)
-
-        if sum(is_excluded_feature) > 0:
-            self.logger.debug(
-                "Removed %i gen_pos bin(s) with the regex '%s'",
-                sum(is_excluded_feature), regex
-            )
-            self.df = self.df[~is_excluded_feature]
+        if len(unexpected_chroms) > 0:
+            self.logger.error("gen_pos bins must contain only chromosomes 1-22 and X. Found invalid chromosomes: " + ", ".join(unexpected_chroms))
+            raise ValueError
 
     MAPPINGS_SIGS = dict(
         SIG_1="Age (SBS1)",
@@ -306,7 +304,7 @@ class FeatureLoader(LoggerMixin):
     def load(self) -> CuppaFeatures:
         self._load_data()
         self._assert_no_duplicate_features()
-        self._filter_gen_pos_chroms()
+        self._check_gen_pos_chroms()
         self._parse_signatures()
         self._assign_feature_names()
         self._print_stats()
@@ -324,12 +322,10 @@ class FeatureLoaderOld(LoggerMixin):
         self,
         paths: CuppaFeaturesPaths,
         genome_version: int = 37,
-        excl_chroms: Iterable[str] = ["ChrY", "Y"],
         verbose: bool = True
     ):
         self.paths = paths
         self.genome_version = genome_version
-        self.excl_chroms = excl_chroms
         self.verbose = verbose
 
     @staticmethod
@@ -352,9 +348,8 @@ class FeatureLoaderOld(LoggerMixin):
         matrix = pd.read_csv(self.paths["gen_pos"]).transpose()
         matrix.columns = feat_names["chrom"] + "_" + feat_names["pos"].astype(str)
 
-        if self.excl_chroms is not None:
-            excl_chroms = pd.Series(self.excl_chroms)
-            matrix = matrix.loc[:, ~matrix.columns.str.startswith(tuple(excl_chroms))]
+        excl_chroms = pd.Series(["ChrY", "Y"])
+        matrix = matrix.loc[:, ~matrix.columns.str.startswith(tuple(excl_chroms))]
 
         return matrix
 
