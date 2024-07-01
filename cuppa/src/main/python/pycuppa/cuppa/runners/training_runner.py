@@ -33,7 +33,6 @@ class TrainingRunner(LoggerMixin):
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         min_samples_with_rna: int = DEFAULT_RUNNER_ARGS.min_samples_with_rna,
         excl_classes: str | list[str] = DEFAULT_RUNNER_ARGS.excl_classes,
-        excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
 
         fusion_overrides_path=DEFAULT_RUNNER_ARGS.fusion_overrides_path,
 
@@ -56,7 +55,6 @@ class TrainingRunner(LoggerMixin):
         self.using_old_features_format = using_old_features_format
 
         self.genome_version = genome_version
-        self.excl_chroms = excl_chroms
         self.excl_classes = excl_classes
         self.min_samples_with_rna = min_samples_with_rna
 
@@ -138,13 +136,11 @@ class TrainingRunner(LoggerMixin):
             return None
             ## TODO: add DNA and RNA sample selection
 
-
         paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
 
         loader = FeatureLoaderOld(
             paths=paths,
             genome_version=self.genome_version,
-            excl_chroms=self.excl_chroms,
             verbose=True
         )
 

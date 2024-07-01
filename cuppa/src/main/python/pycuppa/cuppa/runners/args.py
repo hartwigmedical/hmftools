@@ -15,7 +15,6 @@ class DEFAULT_RUNNER_ARGS:
     genome_version: int = 37
 
     min_samples_with_rna: int = 5
-    excl_chroms: str | list[str] = ["ChrY", "Y"]
     excl_classes: str | list[str] = ["_Other","_Unknown"]
 
     fusion_overrides_path: str = DEFAULT_FUSION_OVERRIDES_PATH
@@ -87,14 +86,6 @@ class RunnerArgs:
         default=DEFAULT_RUNNER_ARGS.genome_version,
         choices=[37, 38],
         help=f"Genome version. Can be 37 or 38. Used for getting the gen_pos bin names. Default={DEFAULT_RUNNER_ARGS.genome_version}"
-    )
-
-    excl_chroms = dict(
-        type=comma_sep_str_to_list,
-        default=DEFAULT_RUNNER_ARGS.excl_chroms,
-        help="Comma separated list of chromosomes to exclude from the gen_pos matrix."
-             "E.g. 'chrY' or 'chr1,chr2'. Default: "
-             ",".join(DEFAULT_RUNNER_ARGS.excl_chroms)
     )
 
     min_samples_with_rna = dict(
@@ -194,7 +185,6 @@ class RunnerArgParser:
             "compress_tsv_files",
             "using_old_features_format",
             "genome_version",
-            "excl_chroms",
             "log_to_file",
             "log_path",
             "log_format"
@@ -217,7 +207,6 @@ class RunnerArgParser:
             "genome_version",
             "min_samples_with_rna",
             "excl_classes",
-            "excl_chroms",
             "fusion_overrides_path",
 
             "skip_cv",

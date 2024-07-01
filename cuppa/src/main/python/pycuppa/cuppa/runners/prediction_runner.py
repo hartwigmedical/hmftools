@@ -23,7 +23,6 @@ class PredictionRunner(LoggerMixin):
         compress_tsv_files: bool = False,
         using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
-        excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
         clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
@@ -41,7 +40,6 @@ class PredictionRunner(LoggerMixin):
         self.using_old_features_format = using_old_features_format
 
         self.genome_version = genome_version
-        self.excl_chroms = excl_chroms
 
         self.cv_predictions_path = cv_predictions_path
         self.cv_predictions = cv_predictions
@@ -74,11 +72,11 @@ class PredictionRunner(LoggerMixin):
     def get_X(self) -> None:
 
         if not self.using_old_features_format:
-            loader = FeatureLoader(self.features_path, sample_id=self.sample_id, excl_chroms=self.excl_chroms)
+            loader = FeatureLoader(self.features_path, sample_id=self.sample_id)
             X = loader.load()
         else:
             paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
-            loader = FeatureLoaderOld(paths=paths, genome_version=self.genome_version, excl_chroms=self.excl_chroms, verbose=True)
+            loader = FeatureLoaderOld(paths=paths, genome_version=self.genome_version, verbose=True)
             X = loader.load_features()
 
         X = self.cuppa_classifier.fill_missing_cols(X)
