@@ -1,9 +1,0 @@
-{
-    "ini_name": "Somatic.ini",
-    "output_bucket": whatever,
-    "output_cluster": whatever,
-    "ref_sample": "CPCT12345678R",
-    "run_id": 1,
-    "set_id": 2,
-    "tumor_sample": "CPCT12345678T"
-}

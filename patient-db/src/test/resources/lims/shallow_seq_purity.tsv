@@ -1,4 +1,0 @@
-tumorBarcode	sampleId	purity	hasReliableQuality	hasReliablePurity
-FR1	SAMP01011234T	0.19	true	true
-FR2	SAMP01011235T	0.10	true	false
-FR3	SAMP01011236T	0.13	false	true
