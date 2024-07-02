@@ -179,12 +179,9 @@ class RunnerArgParser:
             "features_path",
             "output_dir",
             "sample_id",
-
             "clf_group",
             "cv_predictions_path",
             "compress_tsv_files",
-            "using_old_features_format",
-            "genome_version",
             "log_to_file",
             "log_path",
             "log_format"
@@ -204,7 +201,6 @@ class RunnerArgParser:
             "metadata_path",
 
             "using_old_features_format",
-            "genome_version",
             "min_samples_with_rna",
             "excl_classes",
             "fusion_overrides_path",
