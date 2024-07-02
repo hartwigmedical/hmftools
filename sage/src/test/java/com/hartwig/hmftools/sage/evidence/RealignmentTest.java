@@ -202,7 +202,7 @@ public class RealignmentTest
 
 
         refBases = REF_BASE_START
-                + "TTCTTTTCTTTCTTTTTCTTTA" + REF_BASES_200.substring(0, 50);
+                + "TTCTTTTCTTTCTTTTTCTTTA" + REF_BASES_200.substring(0, 60);
         // index   0123456789012345678901234567890123456789
         // pos     20        30        40
 
@@ -215,7 +215,7 @@ public class RealignmentTest
         readPosStart = 20; // drop back to make the flank long enough
         varIndexInRead = varPosition - readPosStart;
         varBuildReadBases = refBases.substring(readPosStart, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1);
-        readCigar = "12M8I20M";
+        readCigar = "12M8I30M";
         varBuildRead = buildSamRecord(readPosStart, readCigar, varBuildReadBases);
 
         readContext = builder.createContext(var, varBuildRead, varIndexInRead, refSequence);

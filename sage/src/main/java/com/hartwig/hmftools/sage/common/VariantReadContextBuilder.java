@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextBuilder
@@ -82,6 +83,12 @@ public class VariantReadContextBuilder
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
 
+            /*
+            int refBaseLength = read.getReadBases().length - varIndexInRead;
+            byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
+            Microhomology refHomology = Microhomology.findHomology(variant, homologyRefBases, 0);
+            */
+
             homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead);
 
             if(homology != null)
@@ -110,18 +117,20 @@ public class VariantReadContextBuilder
             return null;
 
         // build a CIGAR from the read to cover this range
-        ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(
+                read, variant, varIndexInRead, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
 
-        if(readCigarInfo == null)
+        if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
 
+        int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
 
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
 
-        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.FlankPositionStart);
+        int alignmentStart = max(readPositionStart, readCigarInfo.FlankPositionStart);
         int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.FlankPositionEnd);
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);

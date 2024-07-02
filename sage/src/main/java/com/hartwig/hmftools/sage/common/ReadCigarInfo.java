@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -24,6 +25,8 @@ public class ReadCigarInfo
 {
     public List<CigarElement> Cigar;
 
+    public final int ReadAlignmentStart;
+
     // positions may be an unclipped positions if the required indices fall in soft-clips
     public final int FlankPositionStart;  // may be an unclipped positions if the required indices fall in soft-clips
     public final int FlankPositionEnd;
@@ -35,9 +38,10 @@ public class ReadCigarInfo
     public final int FlankIndexEnd;
 
     public ReadCigarInfo(
-            final List<CigarElement> cigar, final int flankPositionStart, final int flankPositionEnd,
+            final int readAlignmentStart, final List<CigarElement> cigar, final int flankPositionStart, final int flankPositionEnd,
             final int corePositionStart, final int corePositionEnd, final int flankIndexStart, final int flankIndexEnd)
     {
+        ReadAlignmentStart = readAlignmentStart;
         Cigar = cigar;
         FlankPositionStart = flankPositionStart;
         FlankPositionEnd = flankPositionEnd;
@@ -45,6 +49,12 @@ public class ReadCigarInfo
         CorePositionEnd = corePositionEnd;
         FlankIndexStart = flankIndexStart;
         FlankIndexEnd = flankIndexEnd;
+    }
+
+    public boolean isValid()
+    {
+        return FlankIndexStart >= 0 && FlankIndexEnd > FlankIndexStart
+            && CorePositionStart < CorePositionEnd && CorePositionStart > FlankPositionStart && CorePositionEnd < FlankPositionEnd;
     }
 
     public String toString()
@@ -55,14 +65,57 @@ public class ReadCigarInfo
     }
 
     public static ReadCigarInfo buildReadCigar(
-            final SAMRecord read, int leftFlankIndex, int leftCoreIndex, int rightCoreIndex, int rightFlankIndex)
+            final SAMRecord read, final SimpleVariant variant, int varReadIndex,
+            int leftFlankIndex, int leftCoreIndex, int rightCoreIndex, int rightFlankIndex)
+    {
+        /*
+        // correct inserts in soft-clips before building the cigar
+        int readPositionStart = read.getAlignmentStart();
+        List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
+
+        if(isLongInsert(variant) && origReadCigar.get(0).getOperator() == S)
+        {
+            // turn soft-clips into inserts when they originate in a soft-clip
+            int leftSoftClipLength = origReadCigar.get(0).getLength();
+
+            if(varReadIndex < leftSoftClipLength)
+            {
+                List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
+                convertedCigar.remove(0);
+
+                convertedCigar.add(0, new CigarElement(varReadIndex + 1, M));
+                convertedCigar.add(1, new CigarElement(variant.indelLength(), I));
+
+                int remainingAlignedBases = leftSoftClipLength - (varReadIndex + 1) - variant.indelLength();
+
+                if(remainingAlignedBases > 0)
+                {
+                    int postInsertAlignedBases = convertedCigar.get(2).getLength();
+                    convertedCigar.remove(2);
+                    convertedCigar.add(2, new CigarElement(remainingAlignedBases + postInsertAlignedBases, M));
+                }
+
+                int convertedStartPosition = variant.position() - varReadIndex;
+
+                return buildReadCigar(
+                        convertedStartPosition, convertedCigar, leftFlankIndex, leftCoreIndex, rightCoreIndex, rightFlankIndex);
+            }
+        }
+        */
+
+        return buildReadCigar(
+                read.getAlignmentStart(), read.getCigar().getCigarElements(), leftFlankIndex, leftCoreIndex, rightCoreIndex, rightFlankIndex);
+    }
+
+    public static ReadCigarInfo buildReadCigar(
+            int readStart, final List<CigarElement> cigarElements, int leftFlankIndex, int leftCoreIndex, int rightCoreIndex, int rightFlankIndex)
     {
         // find the read index of the variant, and then build out the read cigar from there to the flanks, noting the flank
         // and core positions along the way
         List<CigarElement> cigar = Lists.newArrayList();
 
         int readIndex = 0;
-        int refPosition = read.getAlignmentStart();
+        int refPosition = readStart;
         int flankPosStart = 0;
         int flankPosEnd = 0;
         int corePosStart = 0;
@@ -71,9 +124,7 @@ public class ReadCigarInfo
         int finalIndexStart = leftFlankIndex;
         int finalIndexEnd = rightFlankIndex;
 
-        List<CigarElement> elements = read.getCigar().getCigarElements();
-
-        for(CigarElement element : elements)
+        for(CigarElement element : cigarElements)
         {
             if(readIndex == 0 && element.getOperator() == S)
             {
@@ -160,7 +211,7 @@ public class ReadCigarInfo
                             cigar.add(0, new CigarElement(1, M));
 
                             finalIndexStart -= extraIndexStart;
-                            flankPosStart = max(refPosition - 1, read.getAlignmentStart());
+                            flankPosStart = max(refPosition - 1, readStart);
                         }
                         else
                         {
@@ -221,6 +272,6 @@ public class ReadCigarInfo
                 break;
         }
 
-        return new ReadCigarInfo(cigar, flankPosStart, flankPosEnd, corePosStart, corePosEnd, finalIndexStart, finalIndexEnd);
+        return new ReadCigarInfo(readStart, cigar, flankPosStart, flankPosEnd, corePosStart, corePosEnd, finalIndexStart, finalIndexEnd);
     }
 }
