@@ -26,7 +26,6 @@ public class AltContext extends SimpleVariant
     private final List<ReadContextCandidate> mReadContextCandidates;
 
     private int mRawSupportAlt;
-    private int mRawBaseQualityAlt;
     private ReadContextCandidate mCandidate;
     private AltContext mSecondCandidate; // relevant if has a different read context and sufficient support
 
@@ -41,23 +40,17 @@ public class AltContext extends SimpleVariant
     }
 
     public AltContext(
-            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate,
-            int rawSupportAlt, int rawBaseQualAlt)
+            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate, int rawSupportAlt)
     {
         super(refContext.Chromosome, refContext.Position, ref, alt);
         RefContext = refContext;
 
         mCandidate = candidate;
         mRawSupportAlt = rawSupportAlt;
-        mRawBaseQualityAlt = rawBaseQualAlt;
         mReadContextCandidates = null;
     }
 
-    public void incrementAltRead(int baseQuality)
-    {
-        mRawSupportAlt++;
-        mRawBaseQualityAlt += baseQuality;
-    }
+    public void incrementAltRead() { mRawSupportAlt++; }
 
     public void addReadContext(int numberOfEvents, final VariantReadContext newReadContext)
     {
@@ -135,7 +128,7 @@ public class AltContext extends SimpleVariant
                 if(coreStr.contains(topCore) || topCore.contains(coreStr))
                     continue;
 
-                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt, mRawBaseQualityAlt);
+                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt);
                 break;
             }
         }
@@ -158,8 +151,6 @@ public class AltContext extends SimpleVariant
     public int position() { return RefContext.position(); }
 
     public int rawAltSupport() { return mRawSupportAlt; }
-
-    public int rawAltBaseQuality() { return mRawBaseQualityAlt; }
 
     @Override
     public boolean equals(@Nullable Object another)

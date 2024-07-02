@@ -8,7 +8,6 @@ public class AltRead
 {
     public final String Ref;
     public final String Alt;
-    public final int BaseQuality;
     public final int NumberOfEvents;
     public final boolean SufficientMapQuality;
 
@@ -18,13 +17,12 @@ public class AltRead
     private VariantReadContext mReadContext;
 
     public AltRead(
-            final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
+            final RefContext refContext, final String ref, final String alt, final int numberOfEvents,
             final boolean sufficientMapQuality, final VariantReadContext readContext)
     {
         mRefContext = refContext;
         Ref = ref;
         Alt = alt;
-        BaseQuality = baseQuality;
         NumberOfEvents = numberOfEvents;
         SufficientMapQuality = sufficientMapQuality;
 
@@ -48,7 +46,7 @@ public class AltRead
 
     public void updateRefContext()
     {
-        mRefContext.processAltRead(Ref, Alt, BaseQuality, NumberOfEvents, mReadContext);
+        mRefContext.processAltRead(Ref, Alt, NumberOfEvents, mReadContext);
     }
 
     public String toString() { return String.format("%d: %s>%s",

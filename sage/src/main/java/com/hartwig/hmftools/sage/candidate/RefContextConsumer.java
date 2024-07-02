@@ -271,8 +271,6 @@ public class RefContextConsumer
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
-        int baseQuality = baseQuality(readIndex, record, alt.length());
-
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
         VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
@@ -280,7 +278,7 @@ public class RefContextConsumer
         if(readContext == null)
             return null;
 
-        return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
     }
 
     private AltRead processDel(
@@ -307,8 +305,6 @@ public class RefContextConsumer
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(refContext != null)
         {
-            int baseQuality = baseQuality(readIndex, record, 2);
-
             SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
             VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
@@ -316,7 +312,7 @@ public class RefContextConsumer
             if(readContext == null)
                 return null;
 
-            return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+            return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
         }
 
         return null;
@@ -359,14 +355,13 @@ public class RefContextConsumer
                 if(refContext == null)
                     continue;
 
-                int baseQuality = record.getBaseQualities()[readBaseIndex];
                 final String alt = String.valueOf((char) readByte);
 
                 SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
                 VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readBaseIndex, mRefSequence);
 
                 if(readContext != null)
-                    result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
+                    result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext));
 
                 int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), mRefSequence.Bases);
 
@@ -393,7 +388,7 @@ public class RefContextConsumer
                         if(readContext != null)
                         {
                             result.add(new AltRead(
-                                    refContext, mnvRef, mnvAlt, baseQuality, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
+                                    refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
                                     sufficientMapQuality, mnvReadContext));
                         }
                     }
@@ -452,11 +447,9 @@ public class RefContextConsumer
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
-        int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
-
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
 
-        if(variant.isInsert())
+        if(variant.isInsert() && !onLeft)
         {
             int leftHomologyShift = findLeftHomologyShift(variant, mRefSequence, record.getReadBases(), readIndex);
 
@@ -499,7 +492,7 @@ public class RefContextConsumer
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
-        AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, numberOfEvents, sufficientMapQuality, readContext);
         return altReadFull;
     }
 
@@ -540,7 +533,7 @@ public class RefContextConsumer
             String ref = readBases.substring(impliedVarIndex, impliedVarIndex + 1);
             String alt = readBases.substring(impliedVarIndex, impliedVarIndex + altLength + 1);
 
-            return new AltRead(null, ref, alt, 0, 0, false, null);
+            return new AltRead(null, ref, alt, 0, false, null);
         }
         else
         {
@@ -567,7 +560,7 @@ public class RefContextConsumer
             String ref = readBases.substring(impliedVarIndex, impliedVarIndex + 1);
             String alt = readBases.substring(impliedVarIndex, impliedVarIndex + altLength + 1);
 
-            return new AltRead(null, ref, alt, 0, 0, false, null);
+            return new AltRead(null, ref, alt, 0, false, null);
         }
     }
 

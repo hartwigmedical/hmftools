@@ -23,10 +23,10 @@ public class RefContext extends BasePosition
         return mAlts != null ? mAlts.values() : null;
     }
 
-    public void processAltRead(final String ref, final String alt, int baseQuality, int numberOfEvents, final VariantReadContext readContext)
+    public void processAltRead(final String ref, final String alt, int numberOfEvents, final VariantReadContext readContext)
     {
         final AltContext altContext = getOrCreateAltContext(ref, alt);
-        altContext.incrementAltRead(baseQuality);
+        altContext.incrementAltRead();
 
         if(readContext != null)
         {
