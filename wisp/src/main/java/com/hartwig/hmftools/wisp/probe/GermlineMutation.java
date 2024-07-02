@@ -47,7 +47,7 @@ public class GermlineMutation extends Variant
     public double vaf() { return mVariant.adjustedVAF(); }
 
     @Override
-    public int tumorFragments() { return mVariant.alleleReadCount(); }
+    public int tumorFragments() { return mVariant.allelicDepth().AlleleReadCount; }
 
     @Override
     public boolean hasPhaseVariants()
