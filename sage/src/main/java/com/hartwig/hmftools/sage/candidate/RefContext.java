@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
 import htsjdk.samtools.SAMRecord;
@@ -25,17 +24,6 @@ public class RefContext extends BasePosition
     public Collection<AltContext> altContexts()
     {
         return mAlts != null ? mAlts.values() : null;
-    }
-
-    public void processAltRead(final String ref, final String alt, int numberOfEvents, final VariantReadContext readContext)
-    {
-        final AltContext altContext = getOrCreateAltContext(ref, alt);
-        altContext.incrementAltRead();
-
-        if(readContext != null)
-        {
-            altContext.addReadContext(numberOfEvents, readContext);
-        }
     }
 
     public void processAltRead(

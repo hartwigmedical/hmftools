@@ -25,21 +25,6 @@ public class AltRead
 
     public AltRead(
             final RefContext refContext, final String ref, final String alt, final int numberOfEvents,
-            final boolean sufficientMapQuality, final VariantReadContext readContext)
-    {
-        mRefContext = refContext;
-        Ref = ref;
-        Alt = alt;
-        NumberOfEvents = numberOfEvents;
-        SufficientMapQuality = sufficientMapQuality;
-
-        mReadContext = readContext;
-        mRead = null;
-        mVariantReadIndex = -1;
-    }
-
-    public AltRead(
-            final RefContext refContext, final String ref, final String alt, final int numberOfEvents,
             final boolean sufficientMapQuality, final SAMRecord read, final int variantReadIndex)
     {
         mRefContext = refContext;
@@ -63,13 +48,6 @@ public class AltRead
     public int length()
     {
         return Math.abs(Ref.length() - Alt.length());
-    }
-
-    public boolean hasReadContext() { return mReadContext != null; }
-
-    public void updateRefContext()
-    {
-        mRefContext.processAltRead(Ref, Alt, NumberOfEvents, mReadContext);
     }
 
     public void updateRefContext(final VariantReadContextBuilder readContextBuilder, final RefSequence refSequence)

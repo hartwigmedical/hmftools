@@ -96,42 +96,6 @@ public class AltContext extends SimpleVariant
         }
     }
 
-    public void addReadContext(int numberOfEvents, final VariantReadContext newReadContext)
-    {
-        if(!newReadContext.isValid())
-            return;
-
-        int coreMatch = 0;
-        ReadContextCandidate fullMatchCandidate = null;
-
-        for(ReadContextCandidate candidate : mReadContextCandidates)
-        {
-            // compare the core and flanks for the 2 contexts, not allowing for mismatches
-            ReadContextMatch match = candidate.matcher().determineReadMatch(
-                    newReadContext.ReadBases, null, newReadContext.VarIndex, true);
-
-            switch(match)
-            {
-                case FULL:
-                    candidate.incrementFull(1, numberOfEvents);
-                    fullMatchCandidate = candidate;
-                    break;
-
-                case CORE:
-                    candidate.CoreMatch++;
-                    coreMatch++;
-                    break;
-            }
-        }
-
-        if(fullMatchCandidate == null)
-        {
-            final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
-            candidate.CoreMatch += coreMatch;
-            mReadContextCandidates.add(candidate);
-        }
-    }
-
     public int readContextSupport() { return mCandidate.FullMatch; }
     public int minNumberOfEvents()
     {

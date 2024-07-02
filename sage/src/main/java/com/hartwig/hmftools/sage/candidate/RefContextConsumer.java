@@ -5,7 +5,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -32,7 +31,6 @@ import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
@@ -185,10 +183,7 @@ public class RefContextConsumer
 
         for(AltRead altRead : altReads)
         {
-            if(altRead.hasReadContext())
-                altRead.updateRefContext();
-            else
-                altRead.updateRefContext(mReadContextBuilder, mRefSequence);
+            altRead.updateRefContext(mReadContextBuilder, mRefSequence);
 
             if(altRead.SufficientMapQuality)
                 mRefContextCache.incrementDepth(altRead.position());
@@ -274,17 +269,6 @@ public class RefContextConsumer
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
-        /*
-        SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
-
-        VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
-
-        if(readContext == null)
-            return null;
-
-        return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
-        */
-
         return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readIndex);
     }
 
@@ -312,17 +296,6 @@ public class RefContextConsumer
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(refContext != null)
         {
-            /*
-            SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
-
-            VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
-
-            if(readContext == null)
-                return null;
-
-            return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
-            */
-
             return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readIndex);
         }
 
@@ -368,15 +341,6 @@ public class RefContextConsumer
 
                 final String alt = String.valueOf((char) readByte);
 
-                /*
-                SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
-
-                VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readBaseIndex, mRefSequence);
-
-                if(readContext != null)
-                    result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext));
-                */
-
                 result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readBaseIndex));
 
                 int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), mRefSequence.Bases);
@@ -397,19 +361,6 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
-                        /*
-                        SimpleVariant mnv = new SimpleVariant(record.getContig(), refPosition, mnvRef, mnvAlt);
-
-                        VariantReadContext mnvReadContext = mReadContextBuilder.createContext(mnv, record, readBaseIndex, mRefSequence);
-
-                        if(readContext != null)
-                        {
-                            result.add(new AltRead(
-                                    refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
-                                    sufficientMapQuality, mnvReadContext));
-                        }
-                        */
-
                         result.add(new AltRead(
                                 refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
                                 sufficientMapQuality, record, readBaseIndex));
@@ -507,15 +458,6 @@ public class RefContextConsumer
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
-        /*
-        VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
-
-        if(readContext == null)
-            return null;
-
-        AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, numberOfEvents, sufficientMapQuality, readContext);
-        */
-
         RefContext refContext = mRefContextCache.getOrCreateRefContext(variant.Chromosome, variant.Position);
 
         AltRead altReadFull = new AltRead(refContext, variant.Ref, variant.Alt, numberOfEvents, sufficientMapQuality, record, readIndex);
@@ -559,7 +501,7 @@ public class RefContextConsumer
             String ref = readBases.substring(impliedVarIndex, impliedVarIndex + 1);
             String alt = readBases.substring(impliedVarIndex, impliedVarIndex + altLength + 1);
 
-            return new AltRead(null, ref, alt, 0, false, null);
+            return new AltRead(null, ref, alt, 0, false, null, -1);
         }
         else
         {
@@ -586,7 +528,7 @@ public class RefContextConsumer
             String ref = readBases.substring(impliedVarIndex, impliedVarIndex + 1);
             String alt = readBases.substring(impliedVarIndex, impliedVarIndex + altLength + 1);
 
-            return new AltRead(null, ref, alt, 0, false, null);
+            return new AltRead(null, ref, alt, 0, false, null, -1);
         }
     }
 
