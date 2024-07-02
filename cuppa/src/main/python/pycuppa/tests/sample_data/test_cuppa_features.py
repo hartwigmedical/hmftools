@@ -1,3 +1,9 @@
+import os
+import shutil
+import tempfile
+
+import pytest
+
 from tests.mock_data import MockInputData
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader
 
@@ -11,24 +17,51 @@ class TestCuppaFeaturesPaths:
         )
         assert match_files.tolist() == ['cuppa_data.cohort.snv.tsv.gz']
 
+    def test_raise_error_when_required_files_missing(self):
 
-    def test_can_infer_old_features_format_paths_from_dir(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
+        tmp_dir = os.path.join(tempfile.gettempdir(), "CuppaFeaturesPaths_test")
+
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
+
+        os.mkdir(tmp_dir)
+
+        with(pytest.raises(FileNotFoundError)):
+            CuppaFeaturesPaths.from_dir(tmp_dir)
+
+        paths = dict(
+            ## DNA data is required
+            snv = os.path.join(tmp_dir, "cuppa_data.cohort.snv.tsv.gz"),
+            sv = os.path.join(tmp_dir, "cuppa_data.cohort.sv.tsv"),
+            driver = os.path.join(tmp_dir, "cuppa_data.cohort.driver.tsv"),
+            trait = os.path.join(tmp_dir, "cuppa_data.cohort.sample_trait.tsv"),
+
+            ## RNA data is optional
+            gene_exp = os.path.join(tmp_dir, "cuppa_data.cohort.gene_exp.tsv.gz"),
+            alt_sj = os.path.join(tmp_dir, "cuppa_data.cohort.alt_sj.tsv.gz"),
+        )
+
+        ## Check if error is raised if not all DNA data is present
+        open(paths["snv"], 'w').close()
+
+        with(pytest.raises(FileNotFoundError)):
+            CuppaFeaturesPaths.from_dir(tmp_dir)
+
+        ## Touch the remaining DNA data and check if CuppaFeaturesPaths succeeds
+        open(paths["sv"], 'w').close()
+        open(paths["driver"], 'w').close()
+        open(paths["trait"], 'w').close()
+
+        CuppaFeaturesPaths.from_dir(tmp_dir)
         assert True
 
-    def test_can_infer_new_features_format_paths_from_dir(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_new_format, file_format="new")
-        assert True
+        shutil.rmtree(tmp_dir)
 
 
 class TestFeatureLoader:
 
     def test_can_load_single_sample_from_tsv(self):
-        loader = FeatureLoader(
-            MockInputData.path_tsv_new_format,
-            sample_id = "COLO829",
-            excl_chroms = ["ChrY", "Y"],
-        )
+        loader = FeatureLoader(MockInputData.path_tsv_new_format, sample_id = "COLO829")
 
         features = loader.load()
         assert features.shape == (1, 6219)

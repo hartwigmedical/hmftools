@@ -19,7 +19,7 @@ from cuppa.compose.pipeline import PipelineCrossValidator
 
 if __name__ == '__main__':
 
-    from cuppa.tests.mock_data_builder import (
+    from tests.mock_data_builder import (
         MockTrainingDataBuilder,
         MockCvOutputBuilder,
         MockClassifierBuilder,
@@ -164,7 +164,6 @@ class MockTrainingDataBuilder(LoggerMixin):
         features_loader = FeatureLoaderOld(
             paths = features_paths,
             genome_version = 37,
-            excl_chroms = ["ChrY", "Y"],
             verbose = True
         )
 

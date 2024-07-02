@@ -9,7 +9,7 @@ from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader, CuppaFeatures
+from cuppa.sample_data.cuppa_features import FeatureLoader, CuppaFeatures
 from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
@@ -19,11 +19,8 @@ class PredictionRunner(LoggerMixin):
         classifier_path: str,
         features_path: str,
         output_dir: str,
-        sample_id: str | None = None, ## TODO: make this a mandatory arg
+        sample_id: str | None = None,
         compress_tsv_files: bool = False,
-        using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
-        genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
-        excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
         clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
@@ -37,11 +34,6 @@ class PredictionRunner(LoggerMixin):
         self.sample_id = sample_id
         self.compress_tsv_files = compress_tsv_files
         self.classifier_path = classifier_path
-
-        self.using_old_features_format = using_old_features_format
-
-        self.genome_version = genome_version
-        self.excl_chroms = excl_chroms
 
         self.cv_predictions_path = cv_predictions_path
         self.cv_predictions = cv_predictions
@@ -73,13 +65,8 @@ class PredictionRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        if not self.using_old_features_format:
-            loader = FeatureLoader(self.features_path, sample_id=self.sample_id, excl_chroms=self.excl_chroms)
-            X = loader.load()
-        else:
-            paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
-            loader = FeatureLoaderOld(paths=paths, genome_version=self.genome_version, excl_chroms=self.excl_chroms, verbose=True)
-            X = loader.load_features()
+        loader = FeatureLoader(self.features_path, sample_id=self.sample_id)
+        X = loader.load()
 
         X = self.cuppa_classifier.fill_missing_cols(X)
 
