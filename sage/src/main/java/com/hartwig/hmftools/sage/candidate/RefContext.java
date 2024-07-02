@@ -6,7 +6,11 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
+
+import htsjdk.samtools.SAMRecord;
 
 public class RefContext extends BasePosition
 {
@@ -32,6 +36,16 @@ public class RefContext extends BasePosition
         {
             altContext.addReadContext(numberOfEvents, readContext);
         }
+    }
+
+    public void processAltRead(
+            final String ref, final String alt, int numberOfEvents, final SAMRecord read, final int variantReadIndex,
+            final VariantReadContextBuilder readContextBuilder, final RefSequence refSequence)
+    {
+        final AltContext altContext = getOrCreateAltContext(ref, alt);
+        altContext.incrementAltRead();
+
+        altContext.addReadContext(numberOfEvents, read, variantReadIndex, readContextBuilder, refSequence);
     }
 
     public String chromosome()

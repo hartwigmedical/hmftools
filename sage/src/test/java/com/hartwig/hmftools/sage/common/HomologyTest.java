@@ -158,10 +158,11 @@ public class HomologyTest
         altContexts = refContextCache.altContexts();
         TestCase.assertEquals(2, altContexts.size());
 
-        altContext = altContexts.stream().filter(x -> x.position() == 30).findFirst().orElse(null);
+        altContext = altContexts.stream().filter(x -> x.position() == 18).findFirst().orElse(null);
         assertNotNull(altContext);
-        // readContext = altContext.readContext();
-        // assertEquals(20, readContext.variant().Position);
+        readContext = altContext.readContext();
+        assertEquals(17, readContext.CorePositionStart);
+        assertEquals(32, readContext.CorePositionEnd);
     }
 
     @Test

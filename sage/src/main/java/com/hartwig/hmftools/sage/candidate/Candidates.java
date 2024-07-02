@@ -74,7 +74,7 @@ public class Candidates
 
         final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
 
-        for(final AltContext altContext : altContexts)
+        for(AltContext altContext : altContexts)
         {
             Candidate candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
 

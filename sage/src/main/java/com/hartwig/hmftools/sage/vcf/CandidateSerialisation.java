@@ -116,10 +116,11 @@ public final class CandidateSerialisation
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
-        final SAMRecord record = new SAMRecord(null);
+        SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(readContextVcfInfo.AlignmentStart);
         record.setCigarString(readContextVcfInfo.Cigar);
         record.setReadBases(readContextVcfInfo.readBases().getBytes());
+        record.setReadName("CANDIDATE");
 
         VariantReadContext readContext = builder.createContext(variant, record, readContextVcfInfo.VarIndex, refSequence);
 

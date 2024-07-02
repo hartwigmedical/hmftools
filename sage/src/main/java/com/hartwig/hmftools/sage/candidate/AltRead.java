@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMRecord;
 
 public class AltRead
 {
@@ -16,6 +20,9 @@ public class AltRead
     @Nullable
     private VariantReadContext mReadContext;
 
+    private final int mVariantReadIndex;
+    private final SAMRecord mRead;
+
     public AltRead(
             final RefContext refContext, final String ref, final String alt, final int numberOfEvents,
             final boolean sufficientMapQuality, final VariantReadContext readContext)
@@ -27,6 +34,23 @@ public class AltRead
         SufficientMapQuality = sufficientMapQuality;
 
         mReadContext = readContext;
+        mRead = null;
+        mVariantReadIndex = -1;
+    }
+
+    public AltRead(
+            final RefContext refContext, final String ref, final String alt, final int numberOfEvents,
+            final boolean sufficientMapQuality, final SAMRecord read, final int variantReadIndex)
+    {
+        mRefContext = refContext;
+        Ref = ref;
+        Alt = alt;
+        NumberOfEvents = numberOfEvents;
+        SufficientMapQuality = sufficientMapQuality;
+
+        mRead = read;
+        mVariantReadIndex = variantReadIndex;
+        mReadContext = null;
     }
 
     public int position()
@@ -34,19 +58,23 @@ public class AltRead
         return mRefContext.position();
     }
 
-    public boolean isIndel()
-    {
-        return Ref.length() != Alt.length();
-    }
+    public boolean isIndel() { return Ref.length() != Alt.length(); }
 
     public int length()
     {
         return Math.abs(Ref.length() - Alt.length());
     }
 
+    public boolean hasReadContext() { return mReadContext != null; }
+
     public void updateRefContext()
     {
         mRefContext.processAltRead(Ref, Alt, NumberOfEvents, mReadContext);
+    }
+
+    public void updateRefContext(final VariantReadContextBuilder readContextBuilder, final RefSequence refSequence)
+    {
+        mRefContext.processAltRead(Ref, Alt, NumberOfEvents, mRead, mVariantReadIndex, readContextBuilder, refSequence);
     }
 
     public String toString() { return String.format("%d: %s>%s",

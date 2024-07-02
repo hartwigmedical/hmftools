@@ -13,11 +13,15 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMRecord;
 
 public class AltContext extends SimpleVariant
 {
@@ -51,6 +55,46 @@ public class AltContext extends SimpleVariant
     }
 
     public void incrementAltRead() { mRawSupportAlt++; }
+
+    public void addReadContext(
+            int numberOfEvents, final SAMRecord read, final int variantReadIndex,
+            final VariantReadContextBuilder readContextBuilder, final RefSequence refSequence)
+    {
+        int coreMatch = 0;
+        ReadContextCandidate fullMatchCandidate = null;
+
+        for(ReadContextCandidate candidate : mReadContextCandidates)
+        {
+            // compare the core and flanks for the 2 contexts, not allowing for mismatches
+            ReadContextMatch match = candidate.matcher().determineReadMatch(
+                    read.getReadBases(), null, variantReadIndex, true);
+
+            switch(match)
+            {
+                case FULL:
+                    candidate.incrementFull(1, numberOfEvents);
+                    fullMatchCandidate = candidate;
+                    break;
+
+                case CORE:
+                    candidate.CoreMatch++;
+                    coreMatch++;
+                    break;
+            }
+        }
+
+        if(fullMatchCandidate == null)
+        {
+            VariantReadContext readContext = readContextBuilder.createContext(this, read, variantReadIndex, refSequence);
+
+            if(readContext != null)
+            {
+                ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, readContext);
+                candidate.CoreMatch += coreMatch;
+                mReadContextCandidates.add(candidate);
+            }
+        }
+    }
 
     public void addReadContext(int numberOfEvents, final VariantReadContext newReadContext)
     {

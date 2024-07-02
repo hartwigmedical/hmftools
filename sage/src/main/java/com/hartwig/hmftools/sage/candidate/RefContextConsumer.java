@@ -185,7 +185,10 @@ public class RefContextConsumer
 
         for(AltRead altRead : altReads)
         {
-            altRead.updateRefContext();
+            if(altRead.hasReadContext())
+                altRead.updateRefContext();
+            else
+                altRead.updateRefContext(mReadContextBuilder, mRefSequence);
 
             if(altRead.SufficientMapQuality)
                 mRefContextCache.incrementDepth(altRead.position());
@@ -271,6 +274,7 @@ public class RefContextConsumer
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
+        /*
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
         VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
@@ -279,6 +283,9 @@ public class RefContextConsumer
             return null;
 
         return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
+        */
+
+        return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readIndex);
     }
 
     private AltRead processDel(
@@ -305,6 +312,7 @@ public class RefContextConsumer
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(refContext != null)
         {
+            /*
             SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
             VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
@@ -313,6 +321,9 @@ public class RefContextConsumer
                 return null;
 
             return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext);
+            */
+
+            return new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readIndex);
         }
 
         return null;
@@ -357,11 +368,16 @@ public class RefContextConsumer
 
                 final String alt = String.valueOf((char) readByte);
 
+                /*
                 SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
+
                 VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readBaseIndex, mRefSequence);
 
                 if(readContext != null)
                     result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, readContext));
+                */
+
+                result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readBaseIndex));
 
                 int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), mRefSequence.Bases);
 
@@ -381,6 +397,7 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
+                        /*
                         SimpleVariant mnv = new SimpleVariant(record.getContig(), refPosition, mnvRef, mnvAlt);
 
                         VariantReadContext mnvReadContext = mReadContextBuilder.createContext(mnv, record, readBaseIndex, mRefSequence);
@@ -391,6 +408,11 @@ public class RefContextConsumer
                                     refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
                                     sufficientMapQuality, mnvReadContext));
                         }
+                        */
+
+                        result.add(new AltRead(
+                                refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
+                                sufficientMapQuality, record, readBaseIndex));
                     }
                 }
             }
@@ -445,8 +467,6 @@ public class RefContextConsumer
         if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
-        RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
-
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
 
         if(variant.isInsert() && !onLeft)
@@ -485,14 +505,20 @@ public class RefContextConsumer
             }
         }
 
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
+
+        /*
         VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
 
         if(readContext == null)
             return null;
 
-        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
-
         AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, numberOfEvents, sufficientMapQuality, readContext);
+        */
+
+        RefContext refContext = mRefContextCache.getOrCreateRefContext(variant.Chromosome, variant.Position);
+
+        AltRead altReadFull = new AltRead(refContext, variant.Ref, variant.Alt, numberOfEvents, sufficientMapQuality, record, readIndex);
         return altReadFull;
     }
 
@@ -580,16 +606,5 @@ public class RefContextConsumer
             return 3;
 
         return isDifferent.apply((1)) ? 2 : 1;
-    }
-
-    private int baseQuality(int readIndex, final SAMRecord record, int length)
-    {
-        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
-        int quality = Integer.MAX_VALUE;
-        for(int i = readIndex; i <= maxIndex; i++)
-        {
-            quality = Math.min(quality, record.getBaseQualities()[i]);
-        }
-        return quality;
     }
 }
