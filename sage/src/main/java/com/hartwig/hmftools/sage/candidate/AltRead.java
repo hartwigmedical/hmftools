@@ -17,9 +17,6 @@ public class AltRead
 
     private final RefContext mRefContext;
 
-    @Nullable
-    private VariantReadContext mReadContext;
-
     private final int mVariantReadIndex;
     private final SAMRecord mRead;
 
@@ -35,7 +32,6 @@ public class AltRead
 
         mRead = read;
         mVariantReadIndex = variantReadIndex;
-        mReadContext = null;
     }
 
     public int position()
@@ -55,6 +51,5 @@ public class AltRead
         mRefContext.processAltRead(Ref, Alt, NumberOfEvents, mRead, mVariantReadIndex, readContextBuilder, refSequence);
     }
 
-    public String toString() { return String.format("%d: %s>%s",
-            mReadContext != null ? mReadContext.variant().Position : -1, Ref, Alt); }
+    public String toString() { return String.format("%d: %s>%s", mRefContext.Position, Ref, Alt); }
 }

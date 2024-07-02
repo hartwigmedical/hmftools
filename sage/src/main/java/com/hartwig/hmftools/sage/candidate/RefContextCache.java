@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
+import static com.hartwig.hmftools.sage.candidate.EvictingArray.MIN_CAPACITY;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.select.HotspotSelector;

@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.sage.candidate.EvictingArray;
 import com.hartwig.hmftools.sage.candidate.RefContext;
 
 import org.junit.Before;

@@ -11,7 +11,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-@NotThreadSafe
 public class PanelSelector
 {
     private final List<BaseRegion> mRegions;
@@ -92,5 +91,4 @@ public class PanelSelector
     {
         return mRegions.get(mIndex);
     }
-
 }

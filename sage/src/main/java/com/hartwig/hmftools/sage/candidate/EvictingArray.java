@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
-
-import com.hartwig.hmftools.sage.candidate.RefContext;
 
 public class EvictingArray
 {

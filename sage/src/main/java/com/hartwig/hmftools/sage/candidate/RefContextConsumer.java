@@ -99,7 +99,7 @@ public class RefContextConsumer
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record);
 
-        final List<AltRead> altReads = Lists.newArrayList();
+        List<AltRead> altReads = Lists.newArrayList();
 
         final CigarHandler handler = new CigarHandler()
         {
@@ -329,9 +329,8 @@ public class RefContextConsumer
             if(reachedDepthLimit(refPosition, panelStatus))
                 continue;
 
-            final byte refByte = mRefSequence.Bases[refBaseIndex];
-            final String ref = String.valueOf((char) refByte);
-            final byte readByte = record.getReadBases()[readBaseIndex];
+            byte refByte = mRefSequence.Bases[refBaseIndex];
+            byte readByte = record.getReadBases()[readBaseIndex];
 
             if(readByte != refByte)
             {
@@ -339,7 +338,8 @@ public class RefContextConsumer
                 if(refContext == null)
                     continue;
 
-                final String alt = String.valueOf((char) readByte);
+                String alt = String.valueOf((char) readByte);
+                String ref = String.valueOf((char) refByte);
 
                 result.add(new AltRead(refContext, ref, alt, numberOfEvents, sufficientMapQuality, record, readBaseIndex));
 
