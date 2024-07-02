@@ -5,9 +5,9 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -78,7 +78,7 @@ public final class WildTypeAlgo
             {
                 if(driverGene.gene().equals(homozygousDisruption.gene()))
                 {
-                    hasFusion = true;
+                    hasHomozygousDisruption = true;
                 }
             }
 
@@ -91,8 +91,7 @@ public final class WildTypeAlgo
                 }
             }
 
-            if(!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption
-                    && !hasBreakend)
+            if(!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption && !hasBreakend)
             {
                 wildTypeGenes.add(ImmutableWildTypeGene.builder().gene(driverGene.gene()).build());
             }
