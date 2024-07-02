@@ -1,4 +1,0 @@
-patientIdentifier	location	subLocation	type	subType	extraDetails	doids	snomedConceptIds	overridden
-patient1	Bile duct	Extrahepatic	Carcinoma	Adenocarcinoma		4947	70179006	false
-patient2	Bone marrow		Multiple myeloma		Morbus Kahler	9538	55921005	false
-patient3								false
