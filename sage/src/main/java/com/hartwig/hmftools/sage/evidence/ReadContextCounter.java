@@ -118,6 +118,10 @@ public class ReadContextCounter
     private FragmentLengthCounts mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
 
+    // info only for VCF
+    private boolean mIsQualitySite;
+    private double mTumorQualProbability;
+
     public ReadContextCounter(
             final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
             final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId, boolean isReferenceSample)
@@ -168,6 +172,9 @@ public class ReadContextCounter
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
+
+        mIsQualitySite = false;
+        mTumorQualProbability = 0;
     }
 
     public int id() { return mId; }
@@ -472,6 +479,10 @@ public class ReadContextCounter
             mMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
         }
 
+        // special case to ignore updating depth and other metrics when an indel could not have support the alt
+        if(matchType == NONE && mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0)
+            return UNRELATED;
+
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
 
@@ -510,14 +521,8 @@ public class ReadContextCounter
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality, int readVarIndex)
     {
-        // special case to ignore updating depth when an indel could not have support the alt
-        boolean skipDepthUpdate = mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0;
-
-        if(!skipDepthUpdate)
-        {
-            mCounts.addSupport(support, 1);
-            mQualities.addSupport(support, (int) quality);
-        }
+        mCounts.addSupport(support, 1);
+        mQualities.addSupport(support, (int) quality);
 
         boolean supportsVariant = support != null
                 && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
@@ -633,6 +638,12 @@ public class ReadContextCounter
 
         mQualities.applyRatio(calcRatio);
     }
+
+    public double tumorQualProbability() { return mTumorQualProbability; }
+    public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
+
+    public boolean isQualitySite() { return mIsQualitySite; }
+    public void markQualitySite() { mIsQualitySite = true; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

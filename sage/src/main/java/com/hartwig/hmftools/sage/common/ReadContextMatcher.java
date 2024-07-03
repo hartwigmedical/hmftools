@@ -214,8 +214,8 @@ public class ReadContextMatcher
         if(readVarIndex < 0)
             return false;
 
-        int requiredReadIndexLower = readVarIndex + mContext.VarIndex - mAltIndexLower;
-        int requiredReadIndexUpper = readVarIndex + mAltIndexUpper - mContext.VarIndex;
+        int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mAltIndexLower;
+        int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
         return requiredReadIndexLower >= 0 && requiredReadIndexUpper < readBases.length;

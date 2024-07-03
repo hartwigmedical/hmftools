@@ -15,10 +15,12 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.QUALITY_SITE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 
 import java.util.List;
 
@@ -92,6 +94,9 @@ public final class VariantContextFactory
         ReadContextCounter primaryRcCounter = variant.tumorReadCounters().get(0);
 
         builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromEdge());
+
+        builder.attribute(QUALITY_SITE, primaryRcCounter.isQualitySite());
+        builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
 
         if(primaryRcCounter.ultimaQualModel() != null)
         {

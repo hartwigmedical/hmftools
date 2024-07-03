@@ -52,4 +52,11 @@ public final class VcfTags
 
     public static final String QUAL_MODEL_TYPE = "QMT";
     public static final String QUAL_MODEL_TYPE_DESC = "Qual model type if applicable";
+
+    public static final String QUALITY_SITE = "QS";
+    public static final String QUALITY_SITE_DESC = "Meets quality site criteria in min tumor qual filter";
+
+    public static final String TUMOR_QUALITY_PROB = "TQP";
+    public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";
+
 }

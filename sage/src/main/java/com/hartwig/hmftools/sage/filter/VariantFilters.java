@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -222,12 +223,17 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        if(prob < config.QualPScore)
-            return false;
+        primaryTumor.setTumorQualProbability(prob);
 
         int altSupport = primaryTumor.altSupport();
 
-        return !isQualitySite(config, primaryTumor, depth, tumorQual, altSupport);
+        boolean isQualitySite = isQualitySite(config, primaryTumor, depth, tumorQual, altSupport);
+        primaryTumor.markQualitySite();
+
+        if(prob < config.QualPScore)
+            return false;
+
+        return !isQualitySite;
     }
 
     private static boolean isQualitySite(
@@ -400,7 +406,7 @@ public class VariantFilters
 
         int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.partialMnvSupport();
 
-        if(refCounter.isLongInsert())
+        if(refCounter.variant().indelLengthAbs() > LONG_GERMLINE_INSERT_LENGTH)
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
