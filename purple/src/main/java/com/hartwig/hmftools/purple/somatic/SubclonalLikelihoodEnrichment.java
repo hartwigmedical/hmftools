@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 
 import java.util.List;
 
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;

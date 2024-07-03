@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.BestFit.bestFitPerPurity;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -8,12 +7,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -114,5 +116,23 @@ public final class FittedPurityRangeFile
                 .add(FORMAT.format(purity.ploidy()))
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .toString();
+    }
+
+    public static List<FittedPurity> bestFitPerPurity(final List<FittedPurity> all)
+    {
+        final List<FittedPurity> sortableList = Lists.newArrayList(all);
+        sortableList.sort(Comparator.comparingDouble(FittedPurity::score));
+
+        final List<FittedPurity> result = Lists.newArrayList();
+        final TreeSet<Double> purities = new TreeSet<>(Doubles.comparator());
+        for(FittedPurity fittedPurity : sortableList)
+        {
+            if(purities.add(fittedPurity.purity()))
+            {
+                result.add(fittedPurity);
+            }
+        }
+
+        return result;
     }
 }

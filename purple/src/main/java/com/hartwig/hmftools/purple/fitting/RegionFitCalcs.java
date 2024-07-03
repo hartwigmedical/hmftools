@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_DIPLOID_COPY_NUMBER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_COPY_NUMBER;

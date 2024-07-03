@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.purple.fittingsnv.SomaticKernelDensityPeaks;
+import com.hartwig.hmftools.purple.fittingsnv.SomaticPeak;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -78,7 +78,7 @@ public final class FittedPurityScoreFactory
     }
 
     @VisibleForTesting
-    static boolean isPolyclonal(final double copyNumber)
+    public static boolean isPolyclonal(final double copyNumber)
     {
         double remainder = Math.abs(copyNumber - Math.round(copyNumber));
         return greaterThan(remainder, POLYCLONAL_DISTANCE);

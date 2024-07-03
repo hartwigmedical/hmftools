@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;

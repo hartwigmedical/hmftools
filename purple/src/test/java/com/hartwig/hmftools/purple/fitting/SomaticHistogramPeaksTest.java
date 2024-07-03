@@ -8,6 +8,9 @@ import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
+import com.hartwig.hmftools.purple.fittingsnv.SomaticHistogramPeaks;
+import com.hartwig.hmftools.purple.fittingsnv.WeightedPloidy;
+
 import org.junit.Test;
 
 public class SomaticHistogramPeaksTest

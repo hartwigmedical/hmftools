@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelFactory;
+import com.hartwig.hmftools.purple.fittingsnv.WeightedPloidy;
+import com.hartwig.hmftools.purple.fittingsnv.WeightedPloidyHistogram;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;

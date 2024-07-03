@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -19,7 +18,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.Nullable;
 
-final class SomaticKernelDensityPeaks
+public final class SomaticKernelDensityPeaks
 {
     private static final double KERNEL_BANDWIDTH = 0.03;
 

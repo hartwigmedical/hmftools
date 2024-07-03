@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.gripss.GripssFilters;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;

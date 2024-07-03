@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
@@ -6,6 +6,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.purple.fittingsnv.SomaticDeviation;
+
 import org.junit.Test;
 
 public class SomaticDeviationTest

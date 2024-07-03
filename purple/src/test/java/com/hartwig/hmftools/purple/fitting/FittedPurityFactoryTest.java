@@ -1,8 +1,10 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+
+import com.hartwig.hmftools.purple.fitting.FittedPurityFactory;
 
 import org.junit.Test;
 

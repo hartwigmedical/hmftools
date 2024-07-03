@@ -10,9 +10,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
-import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
-import com.hartwig.hmftools.purple.fitting.WeightedPloidy;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelFactory;
+import com.hartwig.hmftools.purple.fittingsnv.WeightedPloidy;
 
 public class SomaticPeakStream
 {

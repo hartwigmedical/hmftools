@@ -9,9 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
-import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 
 import htsjdk.variant.vcf.VCFHeader;

@@ -1,12 +1,8 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class WeightedPloidy extends AllelicDepth
 {

@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
-import static com.hartwig.hmftools.purple.purity.RegionFitCalculator.estimateMinMaxBaf;
+import static com.hartwig.hmftools.purple.fitting.RegionFitCalculator.estimateMinMaxBaf;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
@@ -18,8 +15,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.config.FittingConfig;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.RegionFitCalculator;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 
 import org.junit.Test;
 

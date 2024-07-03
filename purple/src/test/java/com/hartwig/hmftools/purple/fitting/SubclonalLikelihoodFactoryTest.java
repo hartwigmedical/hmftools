@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 import com.hartwig.hmftools.purple.somatic.SubclonalLikelihood;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SubclonalLikelihoodFactoryTest

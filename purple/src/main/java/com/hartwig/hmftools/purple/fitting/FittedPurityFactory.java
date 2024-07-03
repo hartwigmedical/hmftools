@@ -1,10 +1,7 @@
-package com.hartwig.hmftools.purple.purity;
-
-import static java.lang.String.format;
+package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,6 +23,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.fittingsnv.SomaticDeviation;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
@@ -75,7 +73,7 @@ public class FittedPurityFactory
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;
 
-        for(final ObservedRegion region : observedRegions)
+        for(ObservedRegion region : observedRegions)
         {
             if(useRegionToFitPurity(tumorOnlyMode, cobaltChromosomes, region))
             {
@@ -118,7 +116,7 @@ public class FittedPurityFactory
         }
         else
         {
-            final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
+            List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
             for(double purity = config.MinPurity; lessOrEqual(purity, config.MaxPurity); purity += config.PurityIncrement)
             {
                 futures.add(mExecutorService.submit(callableFitPurity(purity)));

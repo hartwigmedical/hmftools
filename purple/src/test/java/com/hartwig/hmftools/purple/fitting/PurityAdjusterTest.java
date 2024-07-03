@@ -1,15 +1,11 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.purple.config.FittingConfig;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 
 import org.junit.Test;
 

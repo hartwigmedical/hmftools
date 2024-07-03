@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 import java.util.Collection;
 import java.util.List;
@@ -89,7 +89,7 @@ public class WeightedPloidyHistogram
         return ploidy(peakBucket);
     }
 
-    static int peakBucket(int bucketBuffer, final double[] histogram)
+    public static int peakBucket(int bucketBuffer, final double[] histogram)
     {
         int maxBucket = -1;
         double maxBucketWeight = 0;

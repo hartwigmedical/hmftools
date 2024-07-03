@@ -12,14 +12,12 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.purple.sv.RecoverStructuralVariants;
-import com.hartwig.hmftools.purple.sv.RecoveredVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

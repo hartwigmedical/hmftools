@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
 import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
-import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
+import static com.hartwig.hmftools.purple.fitting.FittedPurityScoreFactory.polyclonalProportion;
 
 import java.util.List;
 import java.util.Set;
@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.BestFit;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -23,6 +22,7 @@ import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.copynumber.LohCalcData;
 import com.hartwig.hmftools.purple.copynumber.LohCalcs;
+import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
@@ -43,17 +43,17 @@ public final class PurpleSummaryData
 
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),
-                unsupportedCopyNumberSegments, deletedGenes, bestFit.fit().purity(), bestFit.method(), contamination, maxDeletedGenes);
+                unsupportedCopyNumberSegments, deletedGenes, bestFit.Fit.purity(), bestFit.Method, contamination, maxDeletedGenes);
 
         LohCalcData lohCalcData = LohCalcs.calcLohData(copyNumbers);
 
         return ImmutablePurpleQC.builder()
                 .status(statusSet)
-                .method(bestFit.method())
+                .method(bestFit.Method)
                 .contamination(contamination)
                 .cobaltGender(cobaltGender)
                 .amberGender(amberGender)
-                .purity(bestFit.fit().purity())
+                .purity(bestFit.Fit.purity())
                 .copyNumberSegments(copyNumbers.size())
                 .unsupportedCopyNumberSegments(unsupportedCopyNumberSegments)
                 .deletedGenes(deletedGenes)
@@ -68,11 +68,11 @@ public final class PurpleSummaryData
             final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final SomaticSvCache svCache)
     {
         return ImmutablePurityContext.builder()
-                .bestFit(bestFit.fit())
-                .method(bestFit.method())
+                .bestFit(bestFit.Fit)
+                .method(bestFit.Method)
                 .gender(gender)
                 .runMode(config.runMode())
-                .score(bestFit.score())
+                .score(bestFit.Score)
                 .polyClonalProportion(polyclonalProportion(copyNumbers))
                 .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
                 .microsatelliteIndelsPerMb(somaticStream != null ? somaticStream.msiIndelsPerMb() : 0)

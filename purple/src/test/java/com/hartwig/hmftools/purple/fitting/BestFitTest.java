@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createRandomPurityBuilder;
 

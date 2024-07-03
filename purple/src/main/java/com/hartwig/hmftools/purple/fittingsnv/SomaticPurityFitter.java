@@ -1,6 +1,5 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -16,20 +15,17 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAP
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_NTH_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
-import static com.hartwig.hmftools.purple.fitting.SomaticKernelDensityPeaks.findMatchedFittedPurity;
+import static com.hartwig.hmftools.purple.fittingsnv.SomaticKernelDensityPeaks.findMatchedFittedPurity;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;

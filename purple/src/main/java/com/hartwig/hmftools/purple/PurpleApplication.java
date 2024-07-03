@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
@@ -14,12 +12,9 @@ import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
-import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.calculateDeletedDepthWindows;
-import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.validateCopyNumbers;
 import static com.hartwig.hmftools.purple.fitting.BestFitFactory.buildGermlineBestFit;
-import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFittedRegionFactory;
+import static com.hartwig.hmftools.purple.fitting.FittedPurityFactory.createFittedRegionFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,24 +48,22 @@ import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
-import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
+import com.hartwig.hmftools.purple.fitting.BestFit;
+import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.hrd.HrdDetection;
-import com.hartwig.hmftools.purple.plot.RChartData;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.BestFit;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.purple.purity.RegionFitCalculator;
+import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -83,20 +75,14 @@ import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SampleDataFiles;
-import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineDeletions;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
-import com.hartwig.hmftools.purple.fitting.BestFitFactory;
-import com.hartwig.hmftools.purple.fitting.PeakModelFile;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
-import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.purple.segment.Segmentation;
-import com.hartwig.hmftools.purple.sv.RecoverStructuralVariants;
-import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
-import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
@@ -246,7 +232,7 @@ public class PurpleApplication
         mPurpleVersion.write(mConfig.OutputDir);
 
         PPL_LOGGER.info("applying segmentation");
-        final List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
+        List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
 
         if(observedRegions.isEmpty() || !validateObservedRegions(observedRegions))
         {
@@ -256,9 +242,9 @@ public class PurpleApplication
             System.exit(0);
         }
 
-        final List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
-        final List<ObservedRegion> fittedRegions = Lists.newArrayList();
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        List<ObservedRegion> fittedRegions = Lists.newArrayList();
 
         BestFit bestFit = null;
         PurityAdjuster purityAdjuster = null;
@@ -271,6 +257,18 @@ public class PurpleApplication
         {
             PPL_LOGGER.info("fitting purity");
 
+            PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
+                    mConfig, sampleData, mExecutorService, regionFitCalculator, observedRegions, mSegmentation);
+
+            purityPloidyFitter.run();
+
+            bestFit = purityPloidyFitter.finalFit();
+
+            purityAdjuster = purityPloidyFitter.purityAdjuster();
+
+            copyNumbers.addAll(purityPloidyFitter.copyNumbers());
+
+            /*
             BestFitFactory bestFitFactory = fitPurity(sampleData, observedRegions, regionFitCalculator, sampleData.SvCache.variants());
 
             boolean testSomaticFit = bestFitFactory.somaticFit() != null;
@@ -305,6 +303,7 @@ public class PurpleApplication
                     PPL_LOGGER.debug("somatic fit deleted DW percent({})", format("%.3f", deletedPercent));
                 }
             }
+            */
 
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
@@ -327,7 +326,7 @@ public class PurpleApplication
 
             reportedGenes.addAll(somaticStream.reportedGenes());
 
-            FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.allFits());
+            FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.AllFits);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
@@ -340,8 +339,8 @@ public class PurpleApplication
         }
         else
         {
-            bestFit = buildGermlineBestFit();
-            fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.fit().purity(), bestFit.fit().normFactor(), observedRegions));
+            bestFit = PurityPloidyFitter.buildGermlineBestFit();
+            fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.Fit.purity(), bestFit.Fit.normFactor(), observedRegions));
         }
 
         PPL_LOGGER.info("generating QC Stats");
@@ -415,6 +414,7 @@ public class PurpleApplication
         }
     }
 
+    /*
     private BestFitFactory fitPurity(
             final SampleData sampleData, final List<ObservedRegion> observedRegions,
             final RegionFitCalculator regionFitCalculator, final List<StructuralVariant> structuralVariants)
@@ -496,6 +496,7 @@ public class PurpleApplication
             System.exit(0);
         }
     }
+    */
 
     private void runDriversRoutine(final String tumorId) throws Exception
     {

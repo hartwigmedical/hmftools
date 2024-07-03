@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 public class PeakModelData
 {

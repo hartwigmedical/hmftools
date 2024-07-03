@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.purple.config.PurpleConfig;

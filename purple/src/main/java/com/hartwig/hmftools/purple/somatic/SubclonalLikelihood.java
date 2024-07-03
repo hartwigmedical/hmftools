@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
-import com.hartwig.hmftools.purple.fitting.WeightedPloidyHistogram;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
+import com.hartwig.hmftools.purple.fittingsnv.WeightedPloidyHistogram;
 
 import org.jetbrains.annotations.NotNull;
 

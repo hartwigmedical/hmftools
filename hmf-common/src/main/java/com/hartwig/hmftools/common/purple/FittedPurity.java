@@ -1,7 +1,13 @@
 package com.hartwig.hmftools.common.purple;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
+
 import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
 
 @Value.Immutable
 public abstract class FittedPurity implements Comparable<FittedPurity>
@@ -19,7 +25,7 @@ public abstract class FittedPurity implements Comparable<FittedPurity>
     public abstract double somaticPenalty();
 
     @Override
-    public int compareTo(@NotNull FittedPurity o) {
+    public int compareTo(final FittedPurity o) {
         return Double.compare(score(), o.score());
     }
 }

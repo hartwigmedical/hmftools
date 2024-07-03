@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.isPolyclonal;
+import static com.hartwig.hmftools.purple.fitting.FittedPurityScoreFactory.isPolyclonal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

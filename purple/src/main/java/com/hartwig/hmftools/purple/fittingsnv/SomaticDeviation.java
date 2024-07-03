@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.purity;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -9,6 +9,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -49,7 +50,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @VisibleForTesting
-    double deviationFromMax(
+    public double deviationFromMax(
             final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {
@@ -61,7 +62,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @VisibleForTesting
-    double maxConceivablePloidy(
+    public double maxConceivablePloidy(
             final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {
@@ -73,7 +74,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @VisibleForTesting
-    int maxConceivableReads(
+    public int maxConceivableReads(
             final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {

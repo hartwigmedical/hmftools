@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.purple.purity.RegionFitCalculator.calculateEventPenalty;
+import static com.hartwig.hmftools.purple.fitting.RegionFitCalculator.calculateEventPenalty;
 
 import static org.junit.Assert.assertEquals;
 

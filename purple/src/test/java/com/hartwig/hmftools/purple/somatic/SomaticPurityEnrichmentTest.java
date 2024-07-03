@@ -118,7 +118,6 @@ public class SomaticPurityEnrichmentTest extends TestCase
         assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
     }
     
-    
     private static SomaticVariant createVariant(int alleleReadCount, double variantCopyNumber)
     {
         GenotypeBuilder genotypeBuilder = new GenotypeBuilder(SAMPLE_ID);

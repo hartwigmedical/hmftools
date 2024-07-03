@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_RELATIVE_CO
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_RELATIVE_COPY_NUMBER_TOLERANCE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 

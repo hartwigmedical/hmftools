@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;

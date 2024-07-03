@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SV_FR
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
-import static com.hartwig.hmftools.purple.fitting.SomaticPurityFitter.useTumorOnlySomaticMode;
+import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.useTumorOnlySomaticMode;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,9 +28,9 @@ import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutableBestFit;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;

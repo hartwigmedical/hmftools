@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.fitting;
+package com.hartwig.hmftools.purple.fittingsnv;
 
 import static java.lang.String.format;
 
@@ -144,7 +144,7 @@ public class PeakModelFactory
         return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.Weight)).sum();
     }
 
-    double offset(double peak)
+    public double offset(double peak)
     {
         return peak - Math.round(peak / mModelWidth) * mModelWidth;
     }
@@ -158,7 +158,7 @@ public class PeakModelFactory
     }
 
     @VisibleForTesting
-    double[] modelPeakHistogram(double peak, final List<WeightedPloidy> peakPloidies)
+    public double[] modelPeakHistogram(double peak, final List<WeightedPloidy> peakPloidies)
     {
         double offset = offset(peak);
 
@@ -217,7 +217,7 @@ public class PeakModelFactory
         return result;
     }
 
-    double ploidyLikelihood(double ploidy, final WeightedPloidy weighted)
+    public double ploidyLikelihood(double ploidy, final WeightedPloidy weighted)
     {
         final String binomialKey = weighted.AlleleReadCount + ":" + weighted.TotalReadCount;
         final BinomialDistribution binomialDistribution = mBinomialDistributionMap.computeIfAbsent(binomialKey,
