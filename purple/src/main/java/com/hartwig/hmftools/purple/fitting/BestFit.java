@@ -30,7 +30,7 @@ public class BestFit
         AllFits = allFits;
     }
 
-    public static List<FittedPurity> mostDiploidPerPurity(@NotNull final List<FittedPurity> all)
+    public static List<FittedPurity> mostDiploidPerPurity(final List<FittedPurity> all)
     {
         final List<FittedPurity> sortableList = Lists.newArrayList(all);
         sortableList.sort((o1, o2) ->

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.INVALID_PURITY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAPPABILITY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
@@ -20,6 +21,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUM
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticKernelDensityPeaks.findMatchedFittedPurity;
+import static com.hartwig.hmftools.purple.fittingsnv.SomaticReadjustmentFit.calcReadjustmentPurity;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +33,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -184,7 +186,7 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fromSomatics(
-            final List<SomaticVariant> somaticVariants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
+            final List<SomaticVariant> somaticVariants, final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers)
     {
         List<SomaticVariant> filteredSomatics = somaticVariants.stream()
                 .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
@@ -198,7 +200,7 @@ public class SomaticPurityFitter
             PPL_LOGGER.info("looking for peak somatic allelic frequencies");
 
             FittedPurity kdFit = SomaticKernelDensityPeaks.fitPurity(
-                    allCandidates, filteredSomatics, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
+                    diploidCandidates, filteredSomatics, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
             if(kdFit != null)
             {
@@ -212,11 +214,11 @@ public class SomaticPurityFitter
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", filteredSomatics.size());
         }
 
-        double hotspotVaf = findHotspotVaf(filteredSomatics, structuralVariants, somaticPeakPurity);
+        double hotspotPurity = findHotspotPurity(filteredSomatics, somaticPeakPurity);
 
-        if(hotspotVaf > somaticPeakPurity)
+        if(hotspotPurity > somaticPeakPurity)
         {
-            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotVaf, allCandidates, 0.005);
+            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotPurity, diploidCandidates, 0.005);
 
             if(matchedFittedPurity != null)
                 return matchedFittedPurity;
@@ -224,7 +226,15 @@ public class SomaticPurityFitter
 
         if(somaticFitPurity != null)
         {
-            // assessReadjustment(filteredSomatics, somaticFitPurity);
+            double reassessmentPurity = calcReadjustmentPurity(filteredSomatics, somaticFitPurity, copyNumbers);
+
+            if(reassessmentPurity > somaticPeakPurity)
+            {
+                FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates, 0.005);
+
+                if(matchedFittedPurity != null)
+                    return matchedFittedPurity;
+            }
         }
 
         return somaticFitPurity;
@@ -282,8 +292,7 @@ public class SomaticPurityFitter
         return null;
     }
 
-    private double findHotspotVaf(
-            final List<SomaticVariant> somaticVariants, final List<StructuralVariant> structuralVariants, final double somaticPeakPurity)
+    private double findHotspotPurity(final List<SomaticVariant> somaticVariants, final double somaticPeakPurity)
     {
         // check for a hotspot variant with a higher VAF
         if(somaticVariants.size() > SNV_HOTSPOT_MAX_SNV_COUNT)

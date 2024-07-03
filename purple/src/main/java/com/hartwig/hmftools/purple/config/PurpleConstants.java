@@ -85,7 +85,16 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_MIN_VAF = 0.04;
 
     // somatic fitting readjustment
-    public static final double SNV_READJUST_NTH_PERC = 0.005;
+    public static final double SNV_READJUST_CN_MIN = 1.8;
+    public static final double SNV_READJUST_CN_MAX = 2.2;
+    public static final double SNV_READJUST_MINOR_ALLELE_MIN_MIN = 0.5;
+    public static final double SNV_READJUST_PROB_THRESHOLD = 0.005;
+    public static final double SNV_READJUST_EXPECTED_VARIANT_RATIO = 4;
+    public static final double SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL = 0.2;
+    public static final int SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY = 10;
+    public static final int SNV_READJUST_EXPECTED_VARIANT_COUNT = 20;
+    public static final double SNV_READJUST_PURITY_INCREMENT = 0.005;
+    public static final double INVALID_PURITY = -1;
 
     public static final double CLONALITY_BIN_WIDTH = 0.05;
     public static final double CLONALITY_MAX_PLOIDY = 10;

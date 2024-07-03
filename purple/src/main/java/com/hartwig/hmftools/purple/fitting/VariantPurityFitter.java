@@ -12,9 +12,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.PurpleApplication;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
@@ -104,9 +106,9 @@ public class VariantPurityFitter
         mHasTumor = false;
     }
 
-    public FittedPurity calcSomaticFit(final List<FittedPurity> diploidCandidates)
+    public FittedPurity calcSomaticFit(final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers)
     {
-        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, mSampleData.SvCache.variants(), diploidCandidates);
+        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, diploidCandidates, copyNumbers);
     }
 
     public FittedPurity tumorOnlySomaticFit(final List<FittedPurity> allCandidates)
@@ -158,5 +160,4 @@ public class VariantPurityFitter
             }
         }
     }
-
 }

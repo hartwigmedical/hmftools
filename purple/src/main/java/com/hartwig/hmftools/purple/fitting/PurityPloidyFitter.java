@@ -100,6 +100,9 @@ public class PurityPloidyFitter
 
     public BestFit finalFit()
     {
+        if(!mIsValid)
+            return null;
+
         if(mBestFit == null)
             mBestFit = new BestFit(mFinalPurityFit, mFitPurityScore, mFitMethod, mCopyNumberFitCandidates);
 
@@ -143,7 +146,6 @@ public class PurityPloidyFitter
         FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mConfig, mExecutorService, mSampleData.Cobalt.CobaltChromosomes, mRegionFitCalculator, mObservedRegions,
                 mVariantPurityFitter.fittingSomatics());
-
         try
         {
             fittedPurityFactory.fitPurity();
@@ -169,8 +171,6 @@ public class PurityPloidyFitter
 
     private void performSomaticFit()
     {
-        // ImmutableBestFit.Builder builder = ImmutableBestFit.builder().score(score).allFits(mCopyNumberFitCandidates);
-
         boolean exceedsPuritySpread = Doubles.greaterOrEqual(mFitPurityScore.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
         boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
 
@@ -232,7 +232,7 @@ public class PurityPloidyFitter
             return;
         }
 
-        mSomaticPurityFit = mVariantPurityFitter.calcSomaticFit(diploidCandidates);
+        mSomaticPurityFit = mVariantPurityFitter.calcSomaticFit(diploidCandidates, mCopyNumbers);
 
         if(mSomaticPurityFit == null)
         {

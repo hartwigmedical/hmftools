@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
-import static com.hartwig.hmftools.purple.fitting.BestFitFactory.buildGermlineBestFit;
 import static com.hartwig.hmftools.purple.fitting.FittedPurityFactory.createFittedRegionFactory;
 
 import java.io.IOException;
@@ -268,43 +267,6 @@ public class PurpleApplication
 
             copyNumbers.addAll(purityPloidyFitter.copyNumbers());
 
-            /*
-            BestFitFactory bestFitFactory = fitPurity(sampleData, observedRegions, regionFitCalculator, sampleData.SvCache.variants());
-
-            boolean testSomaticFit = bestFitFactory.somaticFit() != null;
-            bestFit = bestFitFactory.somaticFit() != null ? bestFitFactory.somaticFit() : bestFitFactory.bestNormalFit();
-
-            purityAdjuster = new PurityAdjuster(bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
-
-            buildCopyNumbers(
-                    sampleData, sampleDataFiles, regionFitCalculator, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
-
-            if(testSomaticFit)
-            {
-                double deletedPercent = calculateDeletedDepthWindows(copyNumbers);
-
-                if(deletedPercent >= MAX_SOMATIC_FIT_DELETED_PERC)
-                {
-                    PPL_LOGGER.info(format("somatic fit(purity=%.3f ploidy=%.3f) deleted DW percent(%.3f), reverting to normal fit(purity=%.3f ploidy=%.3f)",
-                            bestFit.fit().purity(), bestFit.fit().ploidy(), deletedPercent,
-                            bestFitFactory.bestNormalFit().fit().purity(), bestFitFactory.bestNormalFit().fit().ploidy()));
-
-                    // re-build using the normal fit
-                    bestFit = bestFitFactory.bestNormalFit();
-
-                    purityAdjuster = new PurityAdjuster(
-                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
-
-                    buildCopyNumbers(
-                            sampleData, sampleDataFiles, regionFitCalculator, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
-                }
-                else
-                {
-                    PPL_LOGGER.debug("somatic fit deleted DW percent({})", format("%.3f", deletedPercent));
-                }
-            }
-            */
-
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
@@ -413,90 +375,6 @@ public class PurpleApplication
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
         }
     }
-
-    /*
-    private BestFitFactory fitPurity(
-            final SampleData sampleData, final List<ObservedRegion> observedRegions,
-            final RegionFitCalculator regionFitCalculator, final List<StructuralVariant> structuralVariants)
-            throws ExecutionException, InterruptedException
-    {
-        CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
-
-        List<SomaticVariant> fittingVariants = SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions);
-
-        if(!fittingVariants.isEmpty())
-        {
-            PPL_LOGGER.info("somatic fitting variants({})", fittingVariants.size());
-        }
-
-        FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
-                mConfig, mExecutorService, cobaltChromosomes, regionFitCalculator, observedRegions, fittingVariants);
-
-        fittedPurityFactory.fitPurity();
-
-        List<FittedPurity> fitCandidates = Lists.newArrayList(fittedPurityFactory.getFittedPurities());
-
-        BestFitFactory bestFitFactory = new BestFitFactory(
-                mConfig,
-                sampleData.Amber.minSomaticTotalReadCount(),
-                sampleData.Amber.maxSomaticTotalReadCount(),
-                fitCandidates,
-                fittingVariants,
-                structuralVariants,
-                observedRegions);
-
-        return bestFitFactory;
-    }
-
-    private void buildCopyNumbers(
-            final SampleData sampleData, final SampleDataFiles sampleDataFiles, final RegionFitCalculator regionFitCalculator,
-            final PurityAdjuster purityAdjuster, final List<ObservedRegion> observedRegions, final FittedPurity fittedPurity,
-            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
-    {
-        copyNumbers.clear();
-        fittedRegions.clear();
-
-        final AmberData amberData = sampleData.Amber;
-        final CobaltData cobaltData = sampleData.Cobalt;
-
-        final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
-                mConfig.Fitting.MinDiploidTumorRatioCount,
-                mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
-                amberData.AverageTumorDepth,
-                fittedPurity.ploidy(),
-                purityAdjuster,
-                cobaltData.CobaltChromosomes);
-
-        PPL_LOGGER.info("calculating copy number");
-        fittedRegions.addAll(regionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
-
-        copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
-
-        int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
-                sampleData, sampleDataFiles, mConfig, purityAdjuster, copyNumberFactory.copyNumbers());
-
-        if(recoveredSVCount > 0)
-        {
-            PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-            final List<ObservedRegion> recoveredObservedRegions =
-                    mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
-
-            PPL_LOGGER.info("recalculating copy number");
-            fittedRegions.clear();
-            fittedRegions.addAll(regionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
-
-            copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
-        }
-
-        copyNumbers.addAll(copyNumberFactory.copyNumbers());
-
-        if(!validateCopyNumbers(copyNumbers))
-        {
-            PPL_LOGGER.warn("invalid copy numbers, exiting");
-            System.exit(0);
-        }
-    }
-    */
 
     private void runDriversRoutine(final String tumorId) throws Exception
     {
