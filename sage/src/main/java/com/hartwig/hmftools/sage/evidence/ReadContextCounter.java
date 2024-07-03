@@ -257,7 +257,7 @@ public class ReadContextCounter
     public double averageAltBaseQuality()
     {
         // excludes realigned
-        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
         return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
     }
 

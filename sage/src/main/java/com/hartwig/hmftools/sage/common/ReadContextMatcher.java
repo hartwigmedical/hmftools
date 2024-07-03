@@ -43,20 +43,28 @@ public class ReadContextMatcher
         public final List<Integer> Indices;
         public final boolean IsRange;
 
+        private int mIndexOffset;
+
         public LowQualExclusion(final int indexLower, final int indexUpper)
         {
             Indices = List.of(indexLower, indexUpper);
             IsRange = true;
+            mIndexOffset = 0;
         }
 
         public LowQualExclusion(final List<Integer> indices)
         {
             Indices = indices;
             IsRange = false;
+            mIndexOffset = 0;
         }
+
+        public void setIndexOffset(int offset) { mIndexOffset = offset; }
 
         public boolean coversIndex(int index)
         {
+            index += mIndexOffset;
+
             if(IsRange)
                 return index >= Indices.get(0) && index <= Indices.get(1);
             else
@@ -139,6 +147,9 @@ public class ReadContextMatcher
     public boolean isReference() { return mIsReference; }
     public int altIndexLower() { return mAltIndexLower; }
     public int altIndexUpper() { return mAltIndexUpper; }
+
+    public void setRealignmentIndexOffset(int offset) { mLowQualExclusionRead.setIndexOffset(offset); }
+    public void clearRealignmentIndexOffset() { mLowQualExclusionRead.setIndexOffset(0); }
 
     private static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
     {

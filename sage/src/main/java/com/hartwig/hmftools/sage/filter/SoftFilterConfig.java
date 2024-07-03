@@ -15,9 +15,7 @@ public class SoftFilterConfig
     public final int QualitySiteThreshold;
     public final double MinTumorVaf;
     public final int MinGermlineCoverage;
-    public final int MinGermlineCoverageLongInsert;
     public final int MinGermlineCoverageAllosome;
-    public final int MinGermlineCoverageAllosomeLongInsert;
     public final double MaxGermlineVaf;
 
     public SoftFilterConfig(final ConfigBuilder configBuilder, final String prefix, final SoftFilterConfig defaultValue)
@@ -27,25 +25,20 @@ public class SoftFilterConfig
         QualitySiteThreshold = defaultValue.QualitySiteThreshold;
         MinTumorVaf = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_VAF.configName());
         MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
-        MinGermlineCoverageLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
-        MinGermlineCoverageAllosomeLongInsert = defaultValue.MinGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_VAF.configName());
     }
 
     public SoftFilterConfig(
             final String name, final double qualPScore, final int qualitySiteThreshold, final double minTumorVaf, final int minGermlineCoverage,
-            final int minGermlineCoverageLongInsert, final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
-            final double maxGermlineVaf)
+            final int minGermlineCoverageAllosome, final double maxGermlineVaf)
     {
         Name = name;
         QualPScore = qualPScore;
         QualitySiteThreshold = qualitySiteThreshold;
         MinTumorVaf = minTumorVaf;
         MinGermlineCoverage = minGermlineCoverage;
-        MinGermlineCoverageLongInsert = minGermlineCoverageLongInsert;
         MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
-        MinGermlineCoverageAllosomeLongInsert = minGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = maxGermlineVaf;
     }
 

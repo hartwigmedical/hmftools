@@ -268,9 +268,7 @@ public class VariantFilters
         if(readStrandBias < STRAND_BIAS_CHECK_THRESHOLD && readStrandBias > (1 - STRAND_BIAS_CHECK_THRESHOLD))
             return false;
 
-        double avgAltBaseQual = primaryTumor.altBaseQualityTotal() / (double)altSupport;
-
-        return avgAltBaseQual >= QUALITY_SITE_AVG_BASE_QUALITY;
+        return primaryTumor.averageAltBaseQuality() >= QUALITY_SITE_AVG_BASE_QUALITY;
     }
 
     private static boolean belowMinTumorVaf(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
@@ -387,11 +385,7 @@ public class VariantFilters
         boolean chromosomeIsAllosome = HumanChromosome.contains(refCounter.chromosome())
                 && HumanChromosome.fromString(refCounter.chromosome()).isAllosome();
 
-        boolean isLongInsert = refCounter.isLongInsert();
-
-        int minGermlineCoverage = chromosomeIsAllosome ?
-                (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
-                : (isLongInsert ? config.MinGermlineCoverageLongInsert : config.MinGermlineCoverage);
+        int minGermlineCoverage = chromosomeIsAllosome ? config.MinGermlineCoverageAllosome : config.MinGermlineCoverage;
 
         return refCounter.depth() < minGermlineCoverage;
     }

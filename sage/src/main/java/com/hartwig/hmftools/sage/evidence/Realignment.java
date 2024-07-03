@@ -24,6 +24,8 @@ public class Realignment
 
         ReadContextMatch match = NONE;
 
+        int realignmentOffset = realignedReadIndex - readIndex;
+
         if(splitReadSegment != null)
         {
             realignedReadIndex -= splitReadSegment.SegmentIndexStart;
@@ -31,16 +33,16 @@ public class Realignment
             if(realignedReadIndex < 0 || realignedReadIndex >= splitReadSegment.length())
                 return RealignedType.NONE;
 
-            match = readContextMatcher.determineReadMatch(
-                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, realignedReadIndex, true);
+            match = checkMatch(
+                    readContextMatcher, splitReadSegment.ReadBases, splitReadSegment.ReadQuals, realignedReadIndex, realignmentOffset);
         }
         else
         {
             if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
                 return RealignedType.NONE;
 
-            match = readContextMatcher.determineReadMatch(
-                    record.getReadBases(), record.getBaseQualities(), realignedReadIndex, true);
+            match = checkMatch(
+                    readContextMatcher, record.getReadBases(), record.getBaseQualities(), realignedReadIndex, realignmentOffset);
         }
 
         if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
@@ -55,6 +57,19 @@ public class Realignment
             return RealignedType.LENGTHENED;
 
         return RealignedType.NONE;
+    }
+
+    private static ReadContextMatch checkMatch(
+            final ReadContextMatcher readContextMatcher, final byte[] readBases, final byte[] readQuals, final int readVarIndex,
+            int realignmentOffset)
+    {
+        readContextMatcher.setRealignmentIndexOffset(realignmentOffset);
+
+        ReadContextMatch match = readContextMatcher.determineReadMatch(readBases, readQuals, readVarIndex, true);
+
+        readContextMatcher.clearRealignmentIndexOffset();
+
+        return match;
     }
 
     public static boolean considerRealignedDel(final SAMRecord record, final int minPositionVsRead)

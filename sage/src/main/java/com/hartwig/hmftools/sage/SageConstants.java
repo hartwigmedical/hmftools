@@ -132,22 +132,19 @@ public class SageConstants
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 1e-3, 55, 0.01,
-            0, 0, 0, 0,
-            0.1);
+            0, 0, 0.1);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
             "panel", 1e-5, 80, 0.02,
-            0, 0, 0, 0,
-            0.05);
+            0, 0,0.05);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
             "high_confidence", 5e-8, 100, 0.025,
-            10, 15, 6, 9,
-            0.05);
+            10, 6,0.05);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
             "low_confidence", 1e-11, 180, 0.025,
-            10, 15, 6, 9,
+            10, 6,
             0.05);
 
     public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP = new JitterModelParams(
