@@ -149,11 +149,13 @@ public class DedupMixedGermlineSomatic
                 {
                     int mnvGermlineSupport = mnvGermlineCount[posOffset];
 
+                    int snvGermlineSupport = next.referenceReadCounters().get(0).altSupport();
+
                     double snvRefDepth = next.referenceReadCounters().get(0).readCounts().Total;
 
                     if(snvRefDepth > 0)
                     {
-                        double adjustedRefVaf = (mnvGermlineSupport + mnvAltSupport) / snvRefDepth;
+                        double adjustedRefVaf = (mnvGermlineSupport + snvGermlineSupport) / snvRefDepth;
 
                         SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
                         if(Doubles.greaterThan(adjustedRefVaf, softFilterConfig.MaxGermlineVaf))
@@ -161,7 +163,7 @@ public class DedupMixedGermlineSomatic
                             next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                         }
                     }
-                    else if(mnvGermlineSupport + mnvAltSupport > 0)
+                    else if(mnvGermlineSupport + snvGermlineSupport > 0)
                     {
                         next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                     }

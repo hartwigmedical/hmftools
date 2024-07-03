@@ -10,9 +10,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_INDEL;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_VAF;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 
 import java.util.Collections;
 import java.util.Comparator;

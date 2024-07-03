@@ -8,7 +8,6 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -365,9 +364,9 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_GERMLINE_VAF);
         }
 
-        if(aboveMaxGermlineRelativeVaf(config, refCounter, primaryTumor))
+        if(aboveMaxGermlineRelativeQual(config, refCounter, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_VAF);
+            filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_QUAL);
         }
 
         // MNV Tests
@@ -410,7 +409,7 @@ public class VariantFilters
         return Doubles.greaterThan(adjustedRefVaf, config.MaxGermlineVaf);
     }
 
-    private static boolean aboveMaxGermlineRelativeVaf(
+    private static boolean aboveMaxGermlineRelativeQual(
             final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
         double tumorQual = primaryTumor.tumorQuality();
