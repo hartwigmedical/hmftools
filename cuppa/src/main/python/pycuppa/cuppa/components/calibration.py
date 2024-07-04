@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import plotnine as p9
-from typing import Iterable, Optional, Callable
+from typing import Iterable, Callable
 
 from numpy._typing import NDArray
 from sklearn.base import BaseEstimator
 from sklearn.isotonic import IsotonicRegression
 from cuppa.components.passthrough import PassthroughRegression
 from cuppa.misc.utils import max_col
-from cuppa.misc.plotting import PlotnineFigExporter
 from cuppa.logger import LoggerMixin
 
 
@@ -282,28 +280,4 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
 
         return cal_curves
 
-    def plot_cal_curves(
-        self,
-        path: Optional[str] = None,
-        width: int | float = 20,
-        height: int | float = 15,
-        dpi: int = 300,
-        facet_ncol: Optional[int] = None
-    ) -> None:
-
-        cal_curves = self.get_cal_curves()
-
-        has_groups = "group" in cal_curves.columns
-
-        fig = (
-            p9.ggplot(cal_curves, p9.aes(x="x", y="y"))
-            + p9.facet_wrap("class", ncol=facet_ncol)
-            + (p9.geom_path(p9.aes(color="group", group="group")) if has_groups else p9.geom_path())
-            + p9.labs(x="Input probability", y="Calibrated probability")
-            + p9.theme_bw()
-            + p9.theme(panel_grid_minor=p9.element_blank())
-        ).draw(show=False, return_ggplot=False)
-
-        ## Export
-        fig_exporter = PlotnineFigExporter(width=width, height=height, dpi=dpi)
-        fig_exporter.export(fig, path)
+    ## TODO: Make plot using ggplot2 in R
