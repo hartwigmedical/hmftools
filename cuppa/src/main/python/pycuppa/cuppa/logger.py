@@ -2,12 +2,6 @@ import logging
 import sys
 from typing import Optional
 
-## Disable matplotlib logging
-logging.getLogger('matplotlib').disabled = True
-logging.getLogger('matplotlib.font_manager').disabled = True
-logging.getLogger('matplotlib.pyplot').disabled = True
-logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
-
 logging.addLevelName(logging.CRITICAL,  "[CRIT ]")
 logging.addLevelName(logging.ERROR,     "[ERROR]")
 logging.addLevelName(logging.WARNING,   "[WARN ]")
