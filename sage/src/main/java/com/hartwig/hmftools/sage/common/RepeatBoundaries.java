@@ -115,21 +115,33 @@ public class RepeatBoundaries
 
         // search for a repeat ending/starting at the outer-most base
         int outerLowerRequiredIndex = lowerRepeatIndex < requiredIndexStart ? lowerRepeatIndex : requiredIndexStart - 1;
-        int outerLowerRepeatBoundary = extendLowerRepeatBoundary(bases, outerLowerRequiredIndex);
+        RepeatInfo outerLowerRepeat = findExtraLowerRepeat(bases, outerLowerRequiredIndex);
 
-        if(outerLowerRepeatBoundary >= 0)
-            lowerRepeatIndex = min(outerLowerRepeatBoundary, lowerRepeatIndex);
+        if(outerLowerRepeat != null && outerLowerRepeat.Index < lowerRepeatIndex)
+        {
+            if(allRepeats == null)
+                allRepeats = Lists.newArrayList();
+
+            allRepeats.add(outerLowerRepeat);
+            lowerRepeatIndex = findPostRepeatIndex(outerLowerRepeat, bases, true);
+        }
 
         int outerUpperRequiredIndex = upperRepeatIndex > requiredIndexEnd ? upperRepeatIndex : requiredIndexEnd + 1;
-        int outerUpperRepeatBoundary = extendUpperRepeatBoundary(bases, outerUpperRequiredIndex);
 
-        if(outerUpperRepeatBoundary >= 0)
-            upperRepeatIndex = max(outerUpperRepeatBoundary, upperRepeatIndex);
+        RepeatInfo outerUpperRepeat = findExtraUpperRepeat(bases, outerUpperRequiredIndex);
+        if(outerUpperRepeat != null && outerUpperRepeat.endIndex() > upperRepeatIndex)
+        {
+            if(allRepeats == null)
+                allRepeats = Lists.newArrayList();
+
+            allRepeats.add(outerUpperRepeat);
+            upperRepeatIndex = findPostRepeatIndex(outerUpperRepeat, bases, false);
+        }
 
         return new RepeatBoundaries(lowerRepeatIndex, upperRepeatIndex, maxRepeat, allRepeats);
     }
 
-    private static int extendLowerRepeatBoundary(final byte[] bases, final int requiredIndexStart)
+    private static RepeatInfo findExtraLowerRepeat(final byte[] bases, final int requiredIndexStart)
     {
         // look for a novel repeat ending at the specified index and extend if found
         int searchIndexStart = max(0, requiredIndexStart - REPEAT_SEARCH_LENGTH);
@@ -170,13 +182,10 @@ public class RepeatBoundaries
             ++index;
         }
 
-        if(maxRepeat == null)
-            return -1;
-
-        return findPostRepeatIndex(maxRepeat, bases, true);
+        return maxRepeat;
     }
 
-    private static int extendUpperRepeatBoundary(final byte[] bases, final int requiredIndex)
+    private static RepeatInfo findExtraUpperRepeat(final byte[] bases, final int requiredIndex)
     {
         // look for a novel repeat starting at the specified index and extend if found
         int index = requiredIndex;
@@ -198,10 +207,7 @@ public class RepeatBoundaries
         }
 
 
-        if(maxRepeat == null)
-            return -1;
-
-        return findPostRepeatIndex(maxRepeat, bases, false);
+        return maxRepeat;
     }
 
     private static int findPostRepeatIndex(final RepeatInfo repeat, final byte[] bases, boolean searchDown)
