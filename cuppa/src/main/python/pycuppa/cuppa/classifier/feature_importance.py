@@ -3,11 +3,9 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 import pandas as pd
-import plotnine as p9
 
 from cuppa.constants import META_CLF_NAMES, SUB_CLF_NAMES
 from cuppa.logger import LoggerMixin
-from cuppa.misc.plotting import PlotnineFigExporter
 from cuppa.misc.utils import as_categorical
 
 if TYPE_CHECKING:
@@ -124,68 +122,4 @@ class FeatureImportance(pd.DataFrame, LoggerMixin):
 
         return prefixes, suffixes
 
-    def plot(
-        self,
-        path: Optional[str] = None,
-        clf_names: Optional[str] = None,
-
-        width: int | float = 20,
-        height: int | float = 15,
-        dpi: int = 300,
-
-        use_abs_values: bool = True,
-        facet_ncol: int = 6,
-        label_va: str = "bottom",
-
-    ) -> None:
-        summ = self.summarize(clf_names=clf_names)
-
-        ## Plot data --------------------------------
-        ## Get feat name affixes
-        prefixes, suffixes = self.get_feat_affixes(
-            summ["feat_name"],
-            strip_event_prefix = clf_names is not None
-        )
-
-        summ["feat_prefix"] = prefixes
-        summ["feat_suffix"] = suffixes
-
-        ## Fills and labels
-        summ["label"] = summ["feat_suffix"]
-        if not use_abs_values:
-            summ["value"] = summ["mean"]
-        else:
-            summ["value"] = summ["mean_abs"]
-
-            summ["sign_string"] = ""
-            summ.loc[summ["mean"] < 0, "sign_string"] = "(-) "
-            summ["label"] = summ["sign_string"] + summ["label"]
-
-        ## Label y position
-        y_range = summ["value"].max() - summ["value"].min()
-        label_ypos = summ["value"].min() + y_range * 0.01
-
-        ##
-        #summ["clf_name"]
-        summ["feat_prefix"] = pd.Categorical(summ["feat_prefix"], summ["feat_prefix"].unique())
-
-        ## Plot --------------------------------
-        fig = (
-            p9.ggplot(summ, p9.aes(x="rank", y="value"))
-            + p9.facet_wrap("class", ncol=facet_ncol)
-
-            + p9.geom_bar(p9.aes(fill="feat_prefix"), stat="identity", width=1, color="black", size=0.2)
-            + p9.geom_linerange(p9.aes(ymin="value - std", ymax="value + std"), color="grey")
-            + p9.geom_text(p9.aes(label="label", y=label_ypos), angle=90, va=label_va, size=6)
-
-            + p9.scale_fill_brewer(type="qual", palette="Set3")
-            + p9.labs(x="Feature rank", y="Coefficient (mean, SD)", fill="Feature group")
-            + p9.theme_bw()
-            + p9.theme(
-                panel_grid=p9.element_blank(),
-            )
-        ).draw(show=False, return_ggplot=False)
-
-        ## Export
-        fig_exporter = PlotnineFigExporter(width=width, height=height, dpi=dpi)
-        fig_exporter.export(fig, path)
+    ## TODO: Make plot using ggplot2 in R
