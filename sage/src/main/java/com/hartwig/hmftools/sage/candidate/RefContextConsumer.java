@@ -484,15 +484,23 @@ public class RefContextConsumer
             String requiredRefBases = new String(refSequence.Bases, refIndexStart, SC_INSERT_REF_TEST_LENGTH);
 
             String scBases = readBases.substring(0, scLength);
-            int scMatchIndex = scBases.lastIndexOf(requiredRefBases);
+            int maxMaxIndex = scLength - SC_INSERT_REF_TEST_LENGTH - SC_INSERT_MIN_LENGTH;
+
+            int scMatchIndex = -1;
+            int scNextMatchIndex = scBases.indexOf(requiredRefBases, 0);
+
+            while(scNextMatchIndex >= 0)
+            {
+                // must match at least 5 bases from the end of the soft-clip
+                // eg soft-clip = 20, 12 bases of ref then 5 of inserted, so must match 20 - 17 = 3 or earlier
+                if(scNextMatchIndex > maxMaxIndex)
+                    break;
+
+                scMatchIndex = scNextMatchIndex;
+                scNextMatchIndex = scBases.indexOf(requiredRefBases, scNextMatchIndex + 1);
+            }
 
             if(scMatchIndex <= 0)
-                return null;
-
-            // must match at least 5 bases from the end of the soft-clip
-            // eg soft-clip = 20, 12 bases of ref then 5 of inserted, so must match 20 - 17 = 3 or earlier
-            int maxMaxIndex = scLength - SC_INSERT_REF_TEST_LENGTH - SC_INSERT_MIN_LENGTH;
-            if(scMatchIndex > maxMaxIndex)
                 return null;
 
             int impliedVarIndex = scMatchIndex + SC_INSERT_REF_TEST_LENGTH - 1;

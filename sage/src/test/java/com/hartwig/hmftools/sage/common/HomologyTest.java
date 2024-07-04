@@ -165,6 +165,11 @@ public class HomologyTest
         assertEquals(32, readContext.CorePositionEnd);
     }
 
+    private static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)
+    {
+        return Microhomology.findHomology(variant, readBases, varReadIndex, true);
+    }
+
     @Test
     public void testHomology()
     {

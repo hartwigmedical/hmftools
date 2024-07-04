@@ -55,18 +55,22 @@ public class Microhomology
         return leftAlignOffset;
     }
 
-    public static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)
+    public static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex, boolean applyIndelLength)
     {
         if(!variant.isIndel())
             return null;
 
-        int indelAltLength = abs(variant.indelLength());
+        int indelAltLength = variant.indelLengthAbs();
 
         StringBuilder homology = null;
         String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
 
         // start looking in the read in the first base after the variant
-        int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
+        int homReadIndexStart = varReadIndex + 1;
+
+        if(applyIndelLength && variant.isInsert())
+            homReadIndexStart += indelAltLength;
+
         int homReadIndex = homReadIndexStart;
 
         for(int i = 0; i < indelBases.length() && homReadIndex < readBases.length; ++i, ++homReadIndex)

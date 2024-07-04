@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -14,6 +15,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.sage.candidate.AltRead;
+import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
 import org.junit.Test;
 
@@ -182,7 +186,7 @@ public class VariantReadContextTest
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(20, readContext.VarIndex);
         assertEquals(35, readContext.CoreIndexEnd);
-        assertTrue(readContext.AllRepeats.isEmpty());
+        assertEquals(2, readContext.AllRepeats.size());
         assertEquals("TAAAAAAATGAGTCGCGCGCGCGCGT", readContext.coreStr());
     }
 
@@ -351,101 +355,61 @@ public class VariantReadContextTest
         assertEquals(49, readContext.CorePositionStart);
         assertEquals(55, readContext.CorePositionEnd);
 
-        // CLEAN-UP: add more scenarios
+
+        // test 2: insert in left soft-clip with homology
+
+        // a duplicated section leading up to the aligned bases
+        // TTCGTCACCGCTGTCTGTGACTCGGAAAAAAAACTCC
+
+        String insert = REF_BASES_200.substring(40, 55);
+        readBases = REF_BASES_200.substring(15, 40) + insert +  REF_BASES_200.substring(40, 110);
+        readCigar = "40S70M";
+        read = buildSamRecord(40, readCigar, readBases);
+
+        builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        AltRead altRead = RefContextConsumer.processSoftClip(
+                40, 109, readBases, 40, 0, REF_SEQUENCE_200, true);
+
+        var = createSimpleVariant(39, altRead.Ref, altRead.Alt);
+
+        readContext = builder.createContext(var, read, 39, REF_SEQUENCE_200);
+
+        assertTrue(readContext.isValid());
+        assertEquals(38, readContext.CorePositionStart);
+        assertEquals(11, readContext.VarIndex);
+        assertEquals(58, readContext.CorePositionEnd);
+        assertEquals(16, readContext.Homology.Length);
+
+
+        // test 3: insertion (a duplicated segment) in the right soft clip
+        insert = REF_BASES_200.substring(85, 100);
+        readBases = REF_BASES_200.substring(30, 100) + insert +  REF_BASES_200.substring(100, 125);
+        readCigar = "70M40S";
+        read = buildSamRecord(30, readCigar, readBases);
+
+        builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        altRead = RefContextConsumer.processSoftClip(
+                30, 99, readBases, 40, 70, REF_SEQUENCE_200, false);
+
+        int readIndex = readBases.length() - 40 - 1;
+
+        var = createSimpleVariant(99, altRead.Ref, altRead.Alt);
+
+        int leftHomologyShift = findLeftHomologyShift(var, REF_SEQUENCE_200, readBases.getBytes(), readIndex);
+
+        readIndex -= leftHomologyShift;
+        int newPosition = var.Position - leftHomologyShift;
+        String newRef = REF_SEQUENCE_200.positionBases(newPosition, newPosition);
+        String newAlt = newRef + readBases.substring(readIndex + 1, readIndex + var.altLength());
+        var = createSimpleVariant(newPosition, newRef, newAlt);
+
+        readContext = builder.createContext(var, read, readIndex, REF_SEQUENCE_200);
+
+        assertTrue(readContext.isValid());
+        assertEquals(80, readContext.CorePositionStart);
+        assertEquals(14, readContext.VarIndex);
+        assertEquals(101, readContext.CorePositionEnd);
     }
-
-    /* old scenarios:
-
-
-        @Test
-        public void testInsertAtHomology()
-        {
-            String refSequence = "GATCATCTG";
-            String readSequence = "GATCATCATCTG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M3I8M", readSequence);
-            ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("GATCATCATCT", victim.coreString());
-        }
-
-        @Test
-        public void testInsertAtHomologyRepeat()
-        {
-            String refSequence = "GATCATCATCTG";
-            String readSequence = "GATCATCATCATCTG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M3I10M", readSequence);
-            ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("GATCATCATCATCT", victim.coreString());
-        }
-
-        @Test
-        public void testInsertAtHomologyWithAdditionalBases()
-        {
-            String refSequence = "ATGCGATCTTCC";
-            String readSequence = "ATGCGATCAATCTTCC";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("5M4I7M", readSequence);
-            ReadContext victim = this.victim.createInsertContext("GATCA", 1000, 4, record.getReadBases(), refBases);
-            assertEquals("GCGATCAAT", victim.coreString());
-        }
-
-        private static final ReadContextFactory READ_CONTEXT_FACTORY = new ReadContextFactory(DEFAULT_FLANK_LENGTH);
-
-        @Test
-        public void testSimpleDelete1()
-        {
-            // variant: pos 1025 AT>A
-            String refBases =  "ATCTCTCAATGTTGACGGACAGCCTATTTTTGCCAATATCACACTGCCAGGT";
-            String readBases = "ATCTCTCAATGTTGACGGACAGCCTATTTTGCCAATATCACACTGCCAGGT";
-            RefSequence refSequence = new RefSequence(1000, refBases.getBytes());
-
-            ReadContext readContext = READ_CONTEXT_FACTORY.createDelContext("AT", 1025, 25, readBases.getBytes(), refSequence);
-
-            assertFalse(readContext.hasIncompleteCore());
-            assertEquals("CTATTTTGC", readContext.coreString());
-            assertEquals("GACGGACAGC", readContext.leftFlankString());
-            assertEquals("CAATATCACA", readContext.rightFlankString());
-        }
-
-        @Test
-        public void testDeleteAtHomology()
-        {
-            String refSequence = "GATCGGATCGCTT";
-            String readSequence = "GATCGCTT";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M5D7M", readSequence);
-            ReadContext victim = this.victim.createDelContext("GATCGG", 1000, 0, record.getReadBases(), refBases);
-            assertEquals("GATCGC", victim.coreString());
-        }
-
-        @Test
-        public void testDeleteAtHomologyRepeat()
-        {
-            String refSequence = "GATCACCATCTG";
-            String readSequence = "GATCATCTG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M3D8M", readSequence);
-            ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("GATCATCT", victim.coreString());
-        }
-
-        @Test
-        public void testDeleteAtRepeatInRef()
-        {
-            String refSequence = "GATCATCATCTG";
-            String readSequence = "GATCATCTG";
-            RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
-
-            SAMRecord record = buildSamRecord("1M3D8M", readSequence);
-            ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record.getReadBases(), refBases);
-            assertEquals("GATCATCTG", victim.coreString());
-        }
-     */
-
 }

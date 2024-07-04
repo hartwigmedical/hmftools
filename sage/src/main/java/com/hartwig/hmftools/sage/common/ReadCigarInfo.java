@@ -65,50 +65,8 @@ public class ReadCigarInfo
     }
 
     public static ReadCigarInfo buildReadCigar(
-            final SAMRecord read, final SimpleVariant variant, int varReadIndex,
-            int leftFlankIndex, int leftCoreIndex, int rightCoreIndex, int rightFlankIndex)
-    {
-        /*
-        // correct inserts in soft-clips before building the cigar
-        int readPositionStart = read.getAlignmentStart();
-        List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
-
-        if(isLongInsert(variant) && origReadCigar.get(0).getOperator() == S)
-        {
-            // turn soft-clips into inserts when they originate in a soft-clip
-            int leftSoftClipLength = origReadCigar.get(0).getLength();
-
-            if(varReadIndex < leftSoftClipLength)
-            {
-                List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
-                convertedCigar.remove(0);
-
-                convertedCigar.add(0, new CigarElement(varReadIndex + 1, M));
-                convertedCigar.add(1, new CigarElement(variant.indelLength(), I));
-
-                int remainingAlignedBases = leftSoftClipLength - (varReadIndex + 1) - variant.indelLength();
-
-                if(remainingAlignedBases > 0)
-                {
-                    int postInsertAlignedBases = convertedCigar.get(2).getLength();
-                    convertedCigar.remove(2);
-                    convertedCigar.add(2, new CigarElement(remainingAlignedBases + postInsertAlignedBases, M));
-                }
-
-                int convertedStartPosition = variant.position() - varReadIndex;
-
-                return buildReadCigar(
-                        convertedStartPosition, convertedCigar, leftFlankIndex, leftCoreIndex, rightCoreIndex, rightFlankIndex);
-            }
-        }
-        */
-
-        return buildReadCigar(
-                read.getAlignmentStart(), read.getCigar().getCigarElements(), leftFlankIndex, leftCoreIndex, rightCoreIndex, rightFlankIndex);
-    }
-
-    public static ReadCigarInfo buildReadCigar(
-            int readStart, final List<CigarElement> cigarElements, int leftFlankIndex, int leftCoreIndex, int rightCoreIndex, int rightFlankIndex)
+            int readStart, final List<CigarElement> cigarElements, int leftFlankIndex, int leftCoreIndex, int rightCoreIndex,
+            int rightFlankIndex)
     {
         // find the read index of the variant, and then build out the read cigar from there to the flanks, noting the flank
         // and core positions along the way

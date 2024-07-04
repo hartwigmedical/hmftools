@@ -10,6 +10,10 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -77,19 +81,25 @@ public class VariantReadContextBuilder
 
         int readCoreStart, readCoreEnd;
         Microhomology homology = null;
+        SoftClipReadAdjustment softClipReadAdjustment = null;
 
         if(variant.isIndel())
         {
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
 
-            /*
-            int refBaseLength = read.getReadBases().length - varIndexInRead;
-            byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
-            Microhomology refHomology = Microhomology.findHomology(variant, homologyRefBases, 0);
-            */
+            softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
 
-            homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead);
+            if(softClipReadAdjustment != null)
+            {
+                int refBaseLength = read.getReadBases().length - varIndexInRead;
+                byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
+                homology = Microhomology.findHomology(variant, homologyRefBases, 0, false);
+            }
+            else
+            {
+                homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead, true);
+            }
 
             if(homology != null)
                 readCoreEnd += homology.Length;
@@ -118,7 +128,9 @@ public class VariantReadContextBuilder
 
         // build a CIGAR from the read to cover this range
         ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(
-                read, variant, varIndexInRead, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+                softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
+                softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
+                readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
 
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
@@ -168,6 +180,77 @@ public class VariantReadContextBuilder
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
+    }
+
+    private class SoftClipReadAdjustment
+    {
+        public final boolean IsLeft;
+        public final int AlignmentStart;
+        public final List<CigarElement> ConvertedCigar;
+
+        public SoftClipReadAdjustment(final boolean isLeft, final int alignmentStart, final List<CigarElement> convertedCigar)
+        {
+            IsLeft = isLeft;
+            AlignmentStart = alignmentStart;
+            ConvertedCigar = convertedCigar;
+        }
+    }
+
+    private SoftClipReadAdjustment checkIndelSoftClipAdjustment(final SAMRecord read, final SimpleVariant variant, int varReadIndex)
+    {
+        if(!isLongInsert(variant))
+            return null;
+
+        if(read.getCigar().getCigarElements().get(0).getOperator() == S
+        && varReadIndex < read.getCigar().getCigarElements().get(0).getLength())
+        {
+            // correct inserts in soft-clips before building the cigar
+            List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
+
+            // turn soft-clips into inserts when they originate in a soft-clip
+            int leftSoftClipLength = origReadCigar.get(0).getLength();
+
+            List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
+            convertedCigar.remove(0);
+
+            convertedCigar.add(0, new CigarElement(varReadIndex + 1, M));
+            convertedCigar.add(1, new CigarElement(variant.indelLength(), I));
+
+            int remainingAlignedBases = leftSoftClipLength - (varReadIndex + 1) - variant.indelLength();
+
+            if(remainingAlignedBases > 0)
+            {
+                int postInsertAlignedBases = convertedCigar.get(2).getLength();
+                convertedCigar.remove(2);
+                convertedCigar.add(2, new CigarElement(remainingAlignedBases + postInsertAlignedBases, M));
+            }
+
+            int convertedStartPosition = variant.position() - varReadIndex;
+
+            return new SoftClipReadAdjustment(true, convertedStartPosition, convertedCigar);
+        }
+
+        int lastCigarIndex = read.getCigar().getCigarElements().size() - 1;
+
+        if(read.getCigar().getCigarElements().get(lastCigarIndex).getOperator() == S
+        && varReadIndex > read.getCigar().getCigarElements().get(lastCigarIndex).getLength())
+        {
+            List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
+
+            int rightSoftClipLength = origReadCigar.get(lastCigarIndex).getLength();
+
+            List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
+            convertedCigar.remove(lastCigarIndex);
+
+            convertedCigar.add(new CigarElement(variant.indelLength(), I));
+
+            int remainingAlignedBases = rightSoftClipLength - variant.indelLength();
+            convertedCigar.add(new CigarElement(remainingAlignedBases, M));
+
+            return new SoftClipReadAdjustment(false, read.getAlignmentStart(), convertedCigar);
+        }
+
+        return null;
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
