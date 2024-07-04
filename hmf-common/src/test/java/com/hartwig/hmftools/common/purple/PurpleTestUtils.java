@@ -18,22 +18,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class PurpleTestUtils
 {
-    public static double nextDouble(@NotNull final Random random)
-    {
-        return Math.round(random.nextDouble() * 10000D) / 10000D;
-    }
-
-    @NotNull
-    public static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random)
-    {
-        return ImmutableFittedPurity.builder()
-                .purity(nextDouble(random))
-                .normFactor(nextDouble(random))
-                .score(nextDouble(random))
-                .diploidProportion(nextDouble(random))
-                .ploidy(nextDouble(random))
-                .somaticPenalty(nextDouble(random));
-    }
 
     public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, int position, double ratio)
     {
@@ -182,5 +166,4 @@ public class PurpleTestUtils
                 .noGenotypes()
                 .make();
     }
-
 }

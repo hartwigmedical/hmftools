@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -428,4 +429,10 @@ public class ConfigBuilder
 
         return false;
     }
+
+    @VisibleForTesting
+    public void setValue(final String name, final String value) { getItem(name, false).setValue(value); }
+    public void setValue(final String name, final boolean value) { getItem(name, false).setValue(String.valueOf(value)); }
+    public void setValue(final String name, final int value) { getItem(name, false).setValue(String.valueOf(value)); }
+    public void setValue(final String name, final double value) { getItem(name, false).setValue(String.valueOf(value)); }
 }

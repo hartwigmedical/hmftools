@@ -14,20 +14,14 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
-
-import org.apache.commons.cli.ParseException;
 
 public class PurpleConfig
 {
@@ -156,7 +150,7 @@ public class PurpleConfig
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
     }
 
-    public static void addOptions(final ConfigBuilder configBuilder)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addConfigItem(TUMOR, TUMOR_DESC);

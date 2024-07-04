@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
+import static com.hartwig.hmftools.purple.MiscTestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 

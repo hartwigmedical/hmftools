@@ -2,8 +2,8 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.purple.TestUtils.REF_SAMPLE_ID;
-import static com.hartwig.hmftools.purple.TestUtils.SAMPLE_ID;
+import static com.hartwig.hmftools.purple.MiscTestUtils.REF_SAMPLE_ID;
+import static com.hartwig.hmftools.purple.MiscTestUtils.SAMPLE_ID;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;

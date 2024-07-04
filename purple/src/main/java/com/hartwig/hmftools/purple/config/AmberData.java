@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -101,5 +102,16 @@ public class AmberData
     {
         ChromosomeBafs.clear();
         TumorSegments.clear();
+    }
+
+    @VisibleForTesting
+    public AmberData(int averageTumorDepth, final Gender patientGender)
+    {
+        ChromosomeBafs = ArrayListMultimap.create();
+        TumorSegments = ArrayListMultimap.create();
+
+        AverageTumorDepth = averageTumorDepth;
+        Contamination = 0;
+        PatientGender = patientGender;
     }
 }

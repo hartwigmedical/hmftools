@@ -120,14 +120,6 @@ public class WeightedPloidyHistogramTest
             WeightedPloidy ploidy = new WeightedPloidy(
                     Integer.parseInt(values[2]), Integer.parseInt(values[1]), Double.parseDouble(values[0]), 1);
 
-            /*
-            ModifiableWeightedPloidy ploidy = ModifiableWeightedPloidy.create()
-                    .setPloidy(Double.parseDouble(values[0]))
-                    .setAlleleReadCount(Integer.parseInt(values[1]))
-                    .setTotalReadCount(Integer.parseInt(values[2]))
-                    .setWeight(1);
-             */
-
             if(Doubles.lessThan(Double.parseDouble(values[0]), 10))
             {
                 result.add(ploidy);

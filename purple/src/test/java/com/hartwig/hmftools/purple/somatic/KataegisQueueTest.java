@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.purple.TestUtils.SAMPLE_ID;
+import static com.hartwig.hmftools.purple.MiscTestUtils.SAMPLE_ID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.Allele;

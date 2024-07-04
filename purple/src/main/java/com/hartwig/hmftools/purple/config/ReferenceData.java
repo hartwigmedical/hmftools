@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfil
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -254,5 +256,25 @@ public class ReferenceData
             ChromosomeLengths.put(chromosome, GenomePositions.create(chrStr, coordinates.Lengths.get(chromosome)));
             Centromeres.put(chromosome, GenomePositions.create(chrStr, coordinates.Centromeres.get(chromosome)));
         }
+    }
+
+    @VisibleForTesting
+    public ReferenceData(final PurpleConfig config)
+    {
+        mIsValid = true;
+        GcProfileFilename = null;
+        RefGenome = null;
+        RefGenVersion = V38;
+        ChromosomeLengths = Maps.newHashMap();
+        Centromeres = Maps.newHashMap();
+        setChromosomeCoords();
+        DriverGenes = DriverGenePanelFactory.empty();
+
+        OtherReportableTranscripts = Maps.newHashMap();
+        GeneTransCache = new EnsemblDataCache("", RefGenVersion);
+        SomaticHotspots = ArrayListMultimap.create();
+        GermlineHotspots = ArrayListMultimap.create();
+        CohortGermlineDeletions = new GermlineDeletionFrequency(null);
+        TargetRegions = new TargetRegionsData(null, null, null);
     }
 }

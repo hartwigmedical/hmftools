@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
@@ -88,5 +90,14 @@ public class CobaltData
         Ratios.clear();
         TumorSegments.clear();
         ReferenceSegments.clear();
+    }
+
+    @VisibleForTesting
+    public CobaltData(final CobaltChromosomes cobaltChromosomes)
+    {
+        CobaltChromosomes = cobaltChromosomes;
+        Ratios = Maps.newHashMap();
+        TumorSegments = ArrayListMultimap.create();
+        ReferenceSegments = ArrayListMultimap.create();
     }
 }

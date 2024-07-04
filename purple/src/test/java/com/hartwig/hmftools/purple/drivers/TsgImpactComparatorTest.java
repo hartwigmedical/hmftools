@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isMissense;
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isNonsense;
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isSplice;
 import static com.hartwig.hmftools.common.variant.Hotspot.NON_HOTSPOT;
-import static com.hartwig.hmftools.purple.TestUtils.createVariant;
+import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
 
 import static org.junit.Assert.assertTrue;
 

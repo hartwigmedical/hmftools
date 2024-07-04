@@ -27,8 +27,6 @@ import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-
 public class EnsemblDataCache
 {
     private final String mDataPath;
@@ -56,11 +54,6 @@ public class EnsemblDataCache
 
     public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     public static final String ENSEMBL_DATA_DIR_CFG = "Ensembl data file directory";
-
-    public EnsemblDataCache(final CommandLine cmd, final RefGenomeVersion refGenomeVersion)
-    {
-        this(cmd.getOptionValue(ENSEMBL_DATA_DIR), refGenomeVersion);
-    }
 
     public EnsemblDataCache(final ConfigBuilder configBuilder)
     {

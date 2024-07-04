@@ -54,11 +54,11 @@ public class FittingConfig
     public final double DeviationPenaltyGcMinAdjust;
     public final double GcRatioExponent;
 
-    private static final String MIN_PURITY = "min_purity";
-    private static final String MAX_PURITY = "max_purity";
-    private static final String PURITY_INCREMENT = "purity_increment";
-    private static final String MIN_PLOIDY = "min_ploidy";
-    private static final String MAX_PLOIDY = "max_ploidy";
+    public static final String MIN_PURITY = "min_purity";
+    public static final String MAX_PURITY = "max_purity";
+    public static final String PURITY_INCREMENT = "purity_increment";
+    public static final String MIN_PLOIDY = "min_ploidy";
+    public static final String MAX_PLOIDY = "max_ploidy";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
 

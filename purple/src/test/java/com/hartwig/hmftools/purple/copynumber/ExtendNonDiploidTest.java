@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.MiscTestUtils.createDefaultFittedRegion;
 import static com.hartwig.hmftools.purple.copynumber.ExtendLongArmTest.assertCombinedRegion;
 import static com.hartwig.hmftools.purple.copynumber.ExtendLongArmTest.createCombinedRegion;
 

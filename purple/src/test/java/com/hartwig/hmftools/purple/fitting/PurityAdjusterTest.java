@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
+import static com.hartwig.hmftools.purple.MiscTestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 
 import org.junit.Test;
 

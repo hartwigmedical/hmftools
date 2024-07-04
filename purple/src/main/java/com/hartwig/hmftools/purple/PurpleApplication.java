@@ -557,7 +557,7 @@ public class PurpleApplication
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        PurpleConfig.addOptions(configBuilder);
+        PurpleConfig.registerConfig(configBuilder);
 
         addLoggingOptions(configBuilder);
 

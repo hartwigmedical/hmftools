@@ -37,7 +37,7 @@ import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public final class TestUtils
+public final class MiscTestUtils
 {
     public static final String SAMPLE_ID = "SAMPLE_ID";
     public static final String REF_SAMPLE_ID = "REF_SAMPLE_ID";
@@ -69,9 +69,6 @@ public final class TestUtils
         double adjustedCopyNumber = 2;
 
         context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
-
-        //context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, );
-        //context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, );
 
         writeImpactDetails(context, impact);
 
@@ -134,17 +131,7 @@ public final class TestUtils
                 .make(true);
     }
 
-    public static ObservedRegion createObservedRegion(@NotNull final String chromosome, final int start, final int end)
-    {
-        return new ObservedRegion(
-                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
-                1, 1, 1, GermlineStatus.DIPLOID, false,
-                0.93, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0);
-    }
-
-    @NotNull
-    public static ObservedRegion createDefaultFittedRegion(@NotNull final String chromosome, final int start, final int end)
+    public static ObservedRegion createDefaultFittedRegion(final String chromosome, final int start, final int end)
     {
         return new ObservedRegion(
                 chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,

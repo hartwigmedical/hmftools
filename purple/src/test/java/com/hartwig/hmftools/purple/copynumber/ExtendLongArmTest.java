@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.MiscTestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExtendLongArmTest
