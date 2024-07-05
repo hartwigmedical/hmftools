@@ -152,18 +152,6 @@ public class ResultsWriter
         closeBufferedWriter(mFragLengthWriter);
     }
 
-    public void flush()
-    {
-        try
-        {
-            mCnRatioWriter.flush();
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to flush copy number segment file: {}", e.toString());
-        }
-    }
-
     public static String formatPurityValue(double purity)
     {
         if(purity >= 0.01)
@@ -178,5 +166,13 @@ public class ResultsWriter
             return format("%.4f", probability);
         else
             return format("%4.3e", probability);
+    }
+
+    public static String formatDetectionResult(double estimatedPurity, double limitOfDetection)
+    {
+        if(limitOfDetection >= 1)
+            return "NA";
+
+        return estimatedPurity > limitOfDetection ? "TRUE" : "FALSE";
     }
 }

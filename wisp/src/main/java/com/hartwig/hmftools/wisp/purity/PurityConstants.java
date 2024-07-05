@@ -12,8 +12,10 @@ public class PurityConstants
 
     public static final int MIN_QUAL_PER_AD = 18;
 
-    public static final double MAX_COPY_NUMBER = 6;
-    public static final double CLONAL_COPY_NUMBER_MARGIN = 0.2;
+    public static final double COPY_NUMBER_MAX = 6;
+    public static final double COPY_NUMBER_CLONAL_MARGIN = 0.2;
+    public static final double COPY_NUMBER_LOD_FACTOR = 0.004;
+    public static final double COPY_NUMBER_LOD_CLONAL_FACTOR = 3;
 
     public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
     public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;

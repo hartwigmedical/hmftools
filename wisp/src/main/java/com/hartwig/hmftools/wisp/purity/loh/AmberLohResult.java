@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.purity.loh;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
@@ -43,6 +44,7 @@ public class AmberLohResult
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add("LOH_MRD");
         sj.add("LOHPurity");
         sj.add("LOHRegionCount");
         sj.add("LOHSiteCount");
@@ -59,6 +61,7 @@ public class AmberLohResult
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(formatDetectionResult(EstimatedPurity, LOD));
         sj.add(formatPurityValue(EstimatedPurity));
         sj.add(String.valueOf(RegionCount));
         sj.add(String.valueOf(SiteCount));

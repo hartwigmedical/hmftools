@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
@@ -50,6 +51,7 @@ public class SomaticPurityResult
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add("SNV_MRD");
         sj.add("TotalVariants");
         sj.add("CalcVariants");
         sj.add("ChipVariants");
@@ -85,7 +87,7 @@ public class SomaticPurityResult
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-
+        sj.add(formatDetectionResult(PurityCalcs.PurityEstimate, PurityCalcs.LodPurityEstimate));
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
         sj.add(format("%d", ChipVariants));

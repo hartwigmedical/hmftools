@@ -226,9 +226,9 @@ public class CopyNumberProfile
 
     private static boolean useCopyNumberSegment(double copyNumber)
     {
-        for(int i = 0; i <= PurityConstants.MAX_COPY_NUMBER; ++i)
+        for(int i = 0; i <= PurityConstants.COPY_NUMBER_MAX; ++i)
         {
-            if(abs(copyNumber - i) <= PurityConstants.CLONAL_COPY_NUMBER_MARGIN)
+            if(abs(copyNumber - i) <= PurityConstants.COPY_NUMBER_CLONAL_MARGIN)
                 return true;
         }
 
