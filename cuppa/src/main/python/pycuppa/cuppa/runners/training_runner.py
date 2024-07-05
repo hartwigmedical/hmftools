@@ -14,7 +14,7 @@ from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.compose.pipeline import PipelineCrossValidator
 from cuppa.logger import LoggerMixin, initialize_logging
 from cuppa.performance.confusion_matrix import ConfusionMatrix
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader, CuppaFeatures
+from cuppa.sample_data.cuppa_features import FeatureLoader, CuppaFeatures
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 from cuppa.performance.performance_stats import PerformanceStats
 
@@ -28,9 +28,6 @@ class TrainingRunner(LoggerMixin):
         output_dir: str,
         metadata_path: str,
 
-        using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
-
-        genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         min_samples_with_rna: int = DEFAULT_RUNNER_ARGS.min_samples_with_rna,
         excl_classes: str | list[str] = DEFAULT_RUNNER_ARGS.excl_classes,
 
@@ -52,9 +49,6 @@ class TrainingRunner(LoggerMixin):
         self.metadata_path = metadata_path
 
         ## Settings
-        self.using_old_features_format = using_old_features_format
-
-        self.genome_version = genome_version
         self.excl_classes = excl_classes
         self.min_samples_with_rna = min_samples_with_rna
 
@@ -99,8 +93,8 @@ class TrainingRunner(LoggerMixin):
 
     ## Load data ================================
     def load_sample_metadata(self) -> None:
-        ## TODO: update to from_tsv() when the new round of training comes
-        self.sample_metadata = SampleMetadata.from_csv(self.metadata_path)
+        self.sample_metadata = SampleMetadata.from_csv(self.metadata_path) ## TODO: update from_csv() to from_tsv() when the new round of training comes
+
 
     def get_training_samples(self) -> None:
 
@@ -129,30 +123,10 @@ class TrainingRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        if not self.using_old_features_format:
-            loader = FeatureLoader(self.features_path)
-            X = loader.load()
-            self.X = X
-            return None
-            ## TODO: add DNA and RNA sample selection
-
-        paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
-
-        loader = FeatureLoaderOld(
-            paths=paths,
-            genome_version=self.genome_version,
-            verbose=True
-        )
-
-        X_dna = loader.load_dna_features()
-        X_rna = loader.load_rna_features()
-
-        X_dna = X_dna.loc[self.training_samples["dna"]]
-        X_rna = X_rna.loc[self.training_samples["rna"]]
-
-        X = pd.concat([X_dna, X_rna], axis=1)
-
+        loader = FeatureLoader(self.features_path)
+        X = loader.load()
         self.X = X
+        return None
 
     def load_data(self) -> None:
         self.load_sample_metadata()

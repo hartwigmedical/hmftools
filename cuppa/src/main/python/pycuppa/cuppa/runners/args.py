@@ -9,10 +9,6 @@ class DEFAULT_RUNNER_ARGS:
 
     output_prefix: str = None
     compress_tsv_files: bool = False
-    using_old_features_format: bool = False
-
-    ## TODO: genome_version required only to add gen_pos feature names with old features format. Deprecate when old format no longer used
-    genome_version: int = 37
 
     min_samples_with_rna: int = 5
     excl_classes: str | list[str] = ["_Other","_Unknown"]
@@ -74,18 +70,6 @@ class RunnerArgs:
         dest="compress_tsv_files",
         action="store_true",
         help="Compress tsv files with gzip? (will add .gz to the file extension)"
-    )
-
-    using_old_features_format = dict(
-        action="store_true",
-        help="Use old input features format?"
-    )
-
-    genome_version = dict(
-        type=int,
-        default=DEFAULT_RUNNER_ARGS.genome_version,
-        choices=[37, 38],
-        help=f"Genome version. Can be 37 or 38. Used for getting the gen_pos bin names. Default={DEFAULT_RUNNER_ARGS.genome_version}"
     )
 
     min_samples_with_rna = dict(
@@ -200,7 +184,6 @@ class RunnerArgParser:
             "output_dir",
             "metadata_path",
 
-            "using_old_features_format",
             "min_samples_with_rna",
             "excl_classes",
             "fusion_overrides_path",
