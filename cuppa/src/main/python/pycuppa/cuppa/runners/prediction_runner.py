@@ -5,11 +5,13 @@ from functools import cached_property
 from pprint import pformat
 from typing import Optional
 
+import pandas as pd
+
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
-from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader, CuppaFeatures
+from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
 from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
@@ -45,7 +47,7 @@ class PredictionRunner(LoggerMixin):
         self.set_up_logging()
 
         ## Attributes assigned at run time --------------------------------
-        self.X: CuppaFeatures = None
+        self.X: pd.DataFrame = None
         self.predictions: CuppaPrediction = None
         self.pred_summ: CuppaPredSummary = None
         self.vis_data: CuppaVisData = None

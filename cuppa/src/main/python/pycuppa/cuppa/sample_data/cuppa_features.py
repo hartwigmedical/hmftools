@@ -1,12 +1,8 @@
 from __future__ import annotations
 
 import os.path
-from functools import cached_property
-from typing import Iterable
-
 import pandas as pd
 
-from cuppa.components.preprocessing import NaRowFilter
 from cuppa.constants import NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import check_required_columns
@@ -65,88 +61,6 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
             raise FileNotFoundError
 
         return CuppaFeaturesPaths(paths)
-
-
-class CuppaFeatures(pd.DataFrame, LoggerMixin):
-    def __init__(self, df: pd.DataFrame, *args, **kwargs):
-        super().__init__(df, *args, **kwargs)
-
-    @property
-    def _constructor(self):
-        return CuppaFeatures
-
-    @cached_property
-    def col_feat_types(self) -> pd.Index:
-        ## Match up to but excluding first dot
-        return self.columns.str.extract("(^\w+[^.])", expand=False)
-
-    @cached_property
-    def feat_types(self) -> pd.Series:
-        return pd.Series(self.col_feat_types.unique())
-
-    def get_feat_type_cols(self, sel_feat_types: str | Iterable[str]) -> pd.Series:
-        sel_feat_types = pd.Series(sel_feat_types)
-
-        invalid_feat_types = sel_feat_types[~sel_feat_types.isin(self.feat_types)]
-        if len(invalid_feat_types)>0:
-            self.logger.error("Invalid feature types: " + ", ".join(invalid_feat_types))
-            raise LookupError
-
-        sel_cols = self.col_feat_types.isin(sel_feat_types)
-        return self.loc[:, sel_cols]
-
-    FEAT_TYPES_WIDE = ["gen_pos", "gene_exp", "alt_sj"]
-
-    def to_tsv_files(
-        self,
-        out_dir: str,
-        drop_na_rows: bool = True,
-        float_format: str = "%.8g",
-        chunksize: int = 1000,
-        verbose: bool = True,
-        *args, **kwargs
-    ) -> None:
-
-        for feat_type in self.feat_types:
-
-            path = os.path.join(out_dir, feat_type + ".tsv.gz")
-            df = self.get_feat_type_cols(feat_type)
-
-            if drop_na_rows:
-                na_rows = NaRowFilter.detect_na_rows(df, use_first_col=True)
-                df = df.loc[~na_rows]
-
-            if feat_type in self.FEAT_TYPES_WIDE:
-                df = df.transpose()
-
-            if verbose:
-                self.logger.info("Writing %s tsv to: %s" % (feat_type, path))
-
-            df.to_csv(
-                path,
-                sep="\t",
-                float_format=float_format,
-                chunksize=chunksize,
-                *args, **kwargs
-            )
-
-    # TODO: the below method is subject to change
-    @classmethod
-    def from_tsv_files(cls, paths: CuppaFeaturesPaths, verbose: bool = True) -> "CuppaFeatures":
-
-        features = {}
-        for feat_type, path in paths.items():
-            if verbose:
-                cls.get_class_logger(cls).info("Reading %s tsv from: %s" % (feat_type, path))
-
-            df = pd.read_table(path, index_col=0, engine="c")
-            if feat_type in cls.FEAT_TYPES_WIDE:
-                df = df.transpose()
-
-            features[feat_type] = df
-
-        features = pd.concat(features.values(), axis=1)
-        return CuppaFeatures(features)
 
 
 class CuppaFeaturesLoader(LoggerMixin):
@@ -276,7 +190,7 @@ class CuppaFeaturesLoader(LoggerMixin):
         else:
             self.logger.debug(f"Loaded {n_features} features from sample({self.sample_id})")
 
-    def load(self) -> CuppaFeatures:
+    def load(self) -> pd.DataFrame:
         self._load_data()
         self._assert_no_duplicate_features()
         self._check_gen_pos_chroms()
@@ -284,8 +198,4 @@ class CuppaFeaturesLoader(LoggerMixin):
         self._assign_feature_names()
         self._print_stats()
 
-        return CuppaFeatures(
-            self.df
-            .fillna(self.na_fill_value)
-            .transpose()
-        )
+        return self.df.fillna(self.na_fill_value).transpose()
