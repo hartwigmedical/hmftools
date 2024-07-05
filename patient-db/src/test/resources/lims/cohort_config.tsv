@@ -1,2 +1,0 @@
-cohortId	sampleContainsHospitalCenterId	reportGermline	reportGermlineFlag	reportConclusion	reportViral	reportPeach	requireHospitalId	requireHospitalPAId	requireHospitalPersonsStudy	requireHospitalPersonsRequester	requireAdditionalInformationForSidePanel
-TEST	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	TRUE	FALSE	FALSE

@@ -6,7 +6,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
@@ -45,10 +44,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
-import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
-import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
-import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -87,12 +82,6 @@ public class DatabaseAccess implements AutoCloseable
     private final Connection connection;
     @NotNull
     private final DSLContext context;
-    @NotNull
-    private final EcrfDAO ecrfDAO;
-    @NotNull
-    private final ClinicalDAO clinicalDAO;
-    @NotNull
-    private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
     private final DriverGenePanelDAO driverGenePanelDAO;
     @NotNull
@@ -150,9 +139,6 @@ public class DatabaseAccess implements AutoCloseable
         LOGGER.debug("Connecting to database '{}'", catalog);
         this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
-        this.ecrfDAO = new EcrfDAO(context);
-        this.clinicalDAO = new ClinicalDAO(context);
-        this.validationFindingsDAO = new ValidationFindingDAO(context);
         this.driverGenePanelDAO = new DriverGenePanelDAO(context);
         this.canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         this.metricDAO = new MetricDAO(context);
@@ -590,55 +576,9 @@ public class DatabaseAccess implements AutoCloseable
         snpCheckDAO.write(sample, isPass);
     }
 
-    public void clearCpctEcrf()
-    {
-        ecrfDAO.clearCpct();
-    }
-
-    public void clearDrupEcrf()
-    {
-        ecrfDAO.clearDrup();
-    }
-
-    public void clearClinicalTables()
-    {
-        validationFindingsDAO.clear();
-        clinicalDAO.clear();
-    }
-
-    public void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted)
-    {
-        clinicalDAO.writeFullClinicalData(patient, blacklisted);
-    }
-
-    public void writeSampleClinicalData(@NotNull String patientIdentifier, boolean blacklisted, @NotNull List<SampleData> samples)
-    {
-        clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
-    }
-
     public void writeGenePanel(@NotNull final List<DriverGene> driverGenes)
     {
         driverGenePanelDAO.writeDriverGenes(driverGenes);
-    }
-
-    public void writeDrupEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients)
-    {
-        LOGGER.info(" Writing DRUP datamodel...");
-        ecrfDAO.writeDrupDatamodel(model.fields());
-        LOGGER.info("  Done writing DRUP datamodel.");
-        LOGGER.info(" Writing raw DRUP patient data...");
-        model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("  Done writing raw DRUP patient data.");
-    }
-
-    public void writeCpctEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients)
-    {
-        LOGGER.info(" Writing CPCT datamodel...");
-        ecrfDAO.writeCpctDatamodel(model.fields());
-        LOGGER.info("  Done writing CPCT datamodel.");
-        LOGGER.info(" Writing raw CPCT patient data...");
-        model.patients().forEach(patient -> ecrfDAO.writeCpctPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("  Done writing raw CPCT patient data.");
     }
 
     public void writeCdr3Sequences(@NotNull String sample, @NotNull List<Cdr3Sequence> cdr3Sequences)
@@ -654,11 +594,6 @@ public class DatabaseAccess implements AutoCloseable
     public void writeTelomereLength(@NotNull String sample, @Nullable TelomereLength germlineTelomereLength, @Nullable TelomereLength somaticTelomereLength)
     {
         tealDAO.writeTelomereLength(sample, germlineTelomereLength, somaticTelomereLength);
-    }
-
-    public void writeValidationFindings(@NotNull List<ValidationFinding> findings)
-    {
-        validationFindingsDAO.write(findings);
     }
 
     public void deletePipelineDataForSample(@NotNull String sample)

@@ -1,4 +1,0 @@
-patient_id,Wide ptnr,Year of birth,"Gender, 1=male/2=female",Date IC,"Specimens can be stored indefinitely and used in future research, 0=no/1=yes","Data can be shared with HMF, 0=no/1=yes",Date biopsy,Biopsy site,Sample tissue,Sample type,Study code,Other trial,Other trial code,Date start other trial
-8888,WIDE-01-01-8888,1940,2,12/03/2018,1,1,11-Apr-2018,peritoneum,peritoneum,biopt,N18WGS-2,N,,
-8888,WIDE-01-01-8888,1940,2,12/03/2018,1,1,12-May-2018,lever,lever neoplasie,biopt,N18WGS-2,N,,
-9999,WIDE-01-01-9999,,,,1,0,,,,,,,,
