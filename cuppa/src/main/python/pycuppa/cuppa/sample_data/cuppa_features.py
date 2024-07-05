@@ -149,7 +149,7 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
         return CuppaFeatures(features)
 
 
-class FeatureLoader(LoggerMixin):
+class CuppaFeaturesLoader(LoggerMixin):
     def __init__(
         self,
         path: str,

@@ -5,7 +5,7 @@ import tempfile
 import pytest
 
 from tests.mock_data import MockInputData
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoader
+from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, CuppaFeaturesLoader
 
 
 class TestCuppaFeaturesPaths:
@@ -61,7 +61,7 @@ class TestCuppaFeaturesPaths:
 class TestFeatureLoader:
 
     def test_can_load_single_sample_from_tsv(self):
-        loader = FeatureLoader(MockInputData.path_tsv_new_format, sample_id = "COLO829")
+        loader = CuppaFeaturesLoader(MockInputData.path_tsv_new_format, sample_id ="COLO829")
 
         features = loader.load()
         assert features.shape == (1, 6219)
@@ -81,7 +81,7 @@ class TestFeatureLoader:
 
     def test_can_load_multi_sample_from_tsvs(self):
 
-        loader = FeatureLoader(MockInputData.dir_new_format)
+        loader = CuppaFeaturesLoader(MockInputData.dir_new_format)
         features = loader.load()
         assert features.shape == (2, 6225)
 
