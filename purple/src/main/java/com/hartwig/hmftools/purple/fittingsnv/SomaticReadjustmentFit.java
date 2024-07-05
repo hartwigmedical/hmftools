@@ -14,12 +14,12 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EX
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_RATIO;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_INIT_PROB_THRESHOLD;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_MINOR_ALLELE_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PROB_THRESHOLD;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_MINOR_ALLELE_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PURITY_INCREMENT;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class SomaticReadjustmentFit
 {
@@ -56,9 +56,19 @@ public class SomaticReadjustmentFit
             maxObservedVaf = max(maxObservedVaf, variant.alleleFrequency());
         }
 
-        int outlierCount = calcOutlierCount(candidateVariants, standardPurity, SNV_READJUST_INIT_PROB_THRESHOLD);
+        if(candidateVariants.size() < SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS)
+            return INVALID_PURITY;
 
-        double expectedOutlierCount = candidateVariants.size() * SNV_READJUST_PROB_THRESHOLD;
+        double standardVaf = standardPurity * 0.5;
+        List<Double> vafProbabilities = calcVafProbabilities(candidateVariants, standardVaf);
+
+        double probabilityThreshold = calcProbabilityThreshold(vafProbabilities, SNV_READJUST_PROB_THRESHOLD);
+
+        int outlierVafCount = (int)candidateVariants.stream().filter(x -> x.alleleFrequency() >= standardVaf).count();
+
+        double expectedOutlierCount = outlierVafCount * probabilityThreshold / 0.5;
+
+        int outlierCount = (int)vafProbabilities.stream().filter(x -> x >= probabilityThreshold).count();
 
         int minOutliers = standardPurity < SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL ?
                 SNV_READJUST_EXPECTED_VARIANT_COUNT : SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY;
@@ -93,31 +103,41 @@ public class SomaticReadjustmentFit
             && copyNumber.minorAlleleCopyNumber() >= SNV_READJUST_MINOR_ALLELE_MIN;
     }
 
-    private static int calcOutlierCount(final List<SomaticVariant> candidateVariants, double purity, double probabilityThreshold)
+    private static List<Double> calcVafProbabilities(final List<SomaticVariant> candidateVariants, double testVaf)
     {
-        int outlierCount = 0;
+        List<Double> vafProbabilities = Lists.newArrayList();
 
         for(SomaticVariant variant : candidateVariants)
         {
-            double expectedAlleleCount = variant.totalReadCount() * purity * 0.5;
+            double expectedAlleleCount = variant.totalReadCount() * testVaf;
 
             if(variant.alleleReadCount() > expectedAlleleCount)
             {
-                PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleCount);
-                double probability = 1 - poissonDist.cumulativeProbability(variant.alleleReadCount() - 1);
+                BinomialDistribution binomialDist = new BinomialDistribution(variant.totalReadCount(), testVaf);
+                double probability = 1 - binomialDist.cumulativeProbability(variant.alleleReadCount() - 1);
 
-                if(probability <= probabilityThreshold)
-                    ++outlierCount;
+                vafProbabilities.add(probability);
+            }
+            else
+            {
+                vafProbabilities.add(1.0);
             }
         }
 
-        return outlierCount;
+        Collections.sort(vafProbabilities);
+
+        return vafProbabilities;
     }
 
-    private static double calcExpectedOutlierCount(final List<SomaticVariant> candidateVariants, double purity)
+    private static double calcProbabilityThreshold(final List<Double> vafProbabilities, double probThresholdMin)
     {
-        double variantAboveVafLevel = candidateVariants.stream().filter(x -> x.alleleFrequency() > purity * 0.5).count();
-        return variantAboveVafLevel * 0.01;
+        if(vafProbabilities.size() < SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS)
+            return probThresholdMin;
+
+        Collections.sort(vafProbabilities);
+
+        double nthVariantProbability = vafProbabilities.get(SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS - 1);
+        return max(nthVariantProbability, probThresholdMin);
     }
 
     private static double findClosestExpectedPurity(final List<SomaticVariant> candidateVariants, double standardPurity, double maxObservedVaf)
@@ -130,13 +150,19 @@ public class SomaticReadjustmentFit
 
         double minValidPurity = INVALID_PURITY;
 
-        double probabilityThreshold = max(SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS / (double)candidateVariants.size(), SNV_READJUST_PROB_THRESHOLD);
-
         for(double testPurity = standardPurity; testPurity < maxImpliedPurity; testPurity += SNV_READJUST_PURITY_INCREMENT)
         {
-            int outlierCount = calcOutlierCount(candidateVariants, testPurity, probabilityThreshold);
+            double testVaf = testPurity * 0.5;
 
-            double expectedOutlierCount = calcExpectedOutlierCount(candidateVariants, testPurity);
+            List<Double> vafProbabilities = calcVafProbabilities(candidateVariants, testVaf);
+
+            double probabilityThreshold = calcProbabilityThreshold(vafProbabilities, SNV_READJUST_PROB_THRESHOLD);
+
+            int outlierVafCount = (int)candidateVariants.stream().filter(x -> x.alleleFrequency() >= testVaf).count();
+
+            double expectedOutlierCount = outlierVafCount * probabilityThreshold / 0.5;
+
+            int outlierCount = (int)vafProbabilities.stream().filter(x -> x <= probabilityThreshold).count();
 
             if(outlierCount <= expectedOutlierCount)
             {
