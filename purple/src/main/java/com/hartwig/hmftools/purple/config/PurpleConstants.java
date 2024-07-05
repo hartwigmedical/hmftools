@@ -87,8 +87,10 @@ public class PurpleConstants
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;
     public static final double SNV_READJUST_CN_MAX = 2.2;
-    public static final double SNV_READJUST_MINOR_ALLELE_MIN_MIN = 0.5;
-    public static final double SNV_READJUST_PROB_THRESHOLD = 0.005;
+    public static final double SNV_READJUST_MINOR_ALLELE_MIN = 0.5;
+    public static final double SNV_READJUST_INIT_PROB_THRESHOLD = 0.005;
+    public static final double SNV_READJUST_PROB_THRESHOLD = 0.01;
+    public static final int SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS = 5;
     public static final double SNV_READJUST_EXPECTED_VARIANT_RATIO = 4;
     public static final double SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL = 0.2;
     public static final int SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY = 10;

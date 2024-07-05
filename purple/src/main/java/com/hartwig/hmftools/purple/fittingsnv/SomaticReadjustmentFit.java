@@ -14,8 +14,10 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EX
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_EXPECTED_VARIANT_RATIO;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_MINOR_ALLELE_MIN_MIN;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_INIT_PROB_THRESHOLD;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_MINOR_ALLELE_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PROB_THRESHOLD;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_READJUST_PURITY_INCREMENT;
 
 import java.util.List;
@@ -31,11 +33,6 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class SomaticReadjustmentFit
 {
-    public SomaticReadjustmentFit()
-    {
-
-    }
-
     public static double calcReadjustmentPurity(
             final List<SomaticVariant> variants, final FittedPurity standardSomaticPurity, final List<PurpleCopyNumber> copyNumbers)
     {
@@ -44,8 +41,6 @@ public class SomaticReadjustmentFit
         double standardPurity = standardSomaticPurity.purity();
 
         List<SomaticVariant> candidateVariants = Lists.newArrayList();
-        // List<CandidateOutlier> candidateOutliers = Lists.newArrayList();
-        // List<Double> expectedAlleleCounts = Lists.newArrayList();
         double maxObservedVaf = 0;
 
         for(SomaticVariant variant : variants)
@@ -59,48 +54,16 @@ public class SomaticReadjustmentFit
             candidateVariants.add(variant);
 
             maxObservedVaf = max(maxObservedVaf, variant.alleleFrequency());
-            /*
-            double expectedAlleleCount = variant.totalReadCount() * standardPurity * 0.5;
-            expectedAlleleCounts.add(expectedAlleleCount);
-
-            if(variant.alleleReadCount() > expectedAlleleCount)
-            {
-                PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleCount);
-                double probability = 1 - poissonDist.cumulativeProbability(variant.alleleReadCount() - 1);
-
-                CandidateOutlier candidateOutlier = new CandidateOutlier(variant, probability);
-                candidateOutliers.add(candidateOutlier);
-            }
-
-            PPL_LOGGER.trace(format("hotspot(%s:%d) vaf(%.3f %d/%d)",
-                    variant.chromosome(), variant.position(),
-                    variant.alleleFrequency(), variant.alleleReadCount(), variant.totalReadCount()));
-            */
         }
 
-        int outlierCount = calcOutlierCount(candidateVariants, standardPurity);
+        int outlierCount = calcOutlierCount(candidateVariants, standardPurity, SNV_READJUST_INIT_PROB_THRESHOLD);
 
         double expectedOutlierCount = candidateVariants.size() * SNV_READJUST_PROB_THRESHOLD;
-        int minOutliers = standardPurity >= SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL ?
+
+        int minOutliers = standardPurity < SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY_LEVEL ?
                 SNV_READJUST_EXPECTED_VARIANT_COUNT : SNV_READJUST_EXPECTED_VARIANT_COUNT_LOW_PURITY;
 
         double requiredCount = max(expectedOutlierCount * SNV_READJUST_EXPECTED_VARIANT_RATIO, minOutliers);
-
-        /*
-        Collections.sort(candidateOutliers, Comparator.comparingDouble(x -> x.Probability));
-
-        // find the nth percentile
-        CandidateOutlier nthCandidate = candidateOutliers.get(nthPercIndex);
-
-        PPL_LOGGER.debug("nth outlier candidate({})", nthCandidate.Variant);
-
-        // find the nth percentile of expected counts
-        int nthPercIndex = (int)floor(expectedAlleleCounts.size() * SNV_READJUST_NTH_PERC);
-        Collections.reverse(expectedAlleleCounts);
-        double nthExpectedCount = expectedAlleleCounts.get(nthPercIndex);
-
-        int outlierCount = (int)candidateOutliers.stream().filter(x -> x.Variant.alleleReadCount() > nthExpectedCount).count();
-        */
 
         if(outlierCount < requiredCount)
             return INVALID_PURITY;
@@ -127,10 +90,10 @@ public class SomaticReadjustmentFit
 
         return copyNumber.averageTumorCopyNumber() >= SNV_READJUST_CN_MIN
             && copyNumber.averageTumorCopyNumber() <= SNV_READJUST_CN_MAX
-            && copyNumber.minorAlleleCopyNumber() >= SNV_READJUST_MINOR_ALLELE_MIN_MIN;
+            && copyNumber.minorAlleleCopyNumber() >= SNV_READJUST_MINOR_ALLELE_MIN;
     }
 
-    private static int calcOutlierCount(final List<SomaticVariant> candidateVariants, double purity)
+    private static int calcOutlierCount(final List<SomaticVariant> candidateVariants, double purity, double probabilityThreshold)
     {
         int outlierCount = 0;
 
@@ -143,7 +106,7 @@ public class SomaticReadjustmentFit
                 PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleCount);
                 double probability = 1 - poissonDist.cumulativeProbability(variant.alleleReadCount() - 1);
 
-                if(probability <= SNV_READJUST_PROB_THRESHOLD)
+                if(probability <= probabilityThreshold)
                     ++outlierCount;
             }
         }
@@ -167,9 +130,11 @@ public class SomaticReadjustmentFit
 
         double minValidPurity = INVALID_PURITY;
 
+        double probabilityThreshold = max(SNV_READJUST_PROB_THRESHOLD_MIN_VARIANTS / (double)candidateVariants.size(), SNV_READJUST_PROB_THRESHOLD);
+
         for(double testPurity = standardPurity; testPurity < maxImpliedPurity; testPurity += SNV_READJUST_PURITY_INCREMENT)
         {
-            int outlierCount = calcOutlierCount(candidateVariants, testPurity);
+            int outlierCount = calcOutlierCount(candidateVariants, testPurity, probabilityThreshold);
 
             double expectedOutlierCount = calcExpectedOutlierCount(candidateVariants, testPurity);
 
@@ -181,21 +146,5 @@ public class SomaticReadjustmentFit
         }
 
         return minValidPurity;
-    }
-
-    private class CandidateOutlier
-    {
-        public final SomaticVariant Variant;
-        public final double Probability;
-
-        public CandidateOutlier(final SomaticVariant variant, final double probability)
-        {
-            Variant = variant;
-            Probability = probability;
-        }
-
-        public double vaf() { return Variant.alleleReadCount() / (double)Variant.totalReadCount(); }
-
-        public String toString() { return format("%s prob(%.6f)", Variant, Probability); }
     }
 }
