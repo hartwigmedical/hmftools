@@ -410,6 +410,6 @@ public class VariantReadContextTest
         assertTrue(readContext.isValid());
         assertEquals(80, readContext.CorePositionStart);
         assertEquals(14, readContext.VarIndex);
-        assertEquals(101, readContext.CorePositionEnd);
+        assertEquals(116, readContext.CorePositionEnd);
     }
 }

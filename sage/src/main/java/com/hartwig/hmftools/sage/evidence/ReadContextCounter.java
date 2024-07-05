@@ -65,6 +65,7 @@ import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.common.NumberEvents;
@@ -363,7 +364,7 @@ public class ReadContextCounter
         ReadContextMatch matchType = NONE;
         double calcBaseQuality = 0;
         double modifiedQuality = 0;
-        QualityCalculator.QualityScores qualityScores = null;
+        QualityScores qualityScores = null;
 
         if(coreCovered)
         {
@@ -397,7 +398,7 @@ public class ReadContextCounter
 
                 registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
 
-                mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
+                mQualCounters.update(qualityScores, record.getMappingQuality(), true);
 
                 mReadEdgeDistance.update(record, fragmentData, true);
 
@@ -439,7 +440,7 @@ public class ReadContextCounter
                     matchType = ReadContextMatch.REALIGNED;
                     registerReadSupport(record, REALIGNED, modifiedQuality, readVarIndex);
 
-                    mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), true);
+                    mQualCounters.update(qualityScores, record.getMappingQuality(), true);
 
                     addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                     logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
@@ -459,8 +460,6 @@ public class ReadContextCounter
                 return readVarIndex < 0 ? UNRELATED : NON_CORE;
             }
         }
-
-        mQualCounters.update(qualityScores.RecalibratedBaseQuality, record.getMappingQuality(), false);
 
         if(realignedType == RealignedType.NONE)
         {
@@ -482,6 +481,8 @@ public class ReadContextCounter
         // special case to ignore updating depth and other metrics when an indel could not have support the alt
         if(matchType == NONE && mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0)
             return UNRELATED;
+
+        mQualCounters.update(qualityScores, record.getMappingQuality(), false);
 
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
@@ -563,7 +564,7 @@ public class ReadContextCounter
 
     private void addVariantVisRecord(
             final SAMRecord record, final ReadContextMatch matchType,
-            @Nullable QualityCalculator.QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
+            @Nullable QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
     {
         if(mVariantVis != null)
             mVariantVis.addEvidence(record, fragmentData, matchType, modifiedQualities);

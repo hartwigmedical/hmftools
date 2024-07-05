@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
@@ -16,12 +17,21 @@ public class ReadEdgeDistance
     
     private int mMaxDistanceFromEdge; // includes any soft-clipped bases
     private int mMaxDistanceFromEdgeAlt;
-    
+
+    private int mTotalDistanceFromEdge;
+    private int mTotalDistanceFromEdgeAlt;
+    private int mUpdates;
+    private int mUpdatesAlt;
+
     public ReadEdgeDistance(final int variantPosition)
     {
         mVariantPosition = variantPosition;
         mMaxDistanceFromEdge = 0;
         mMaxDistanceFromEdgeAlt = 0;
+        mTotalDistanceFromEdge = 0;
+        mTotalDistanceFromEdgeAlt = 0;
+        mUpdates = 0;
+        mUpdatesAlt = 0;
     }
 
     public static int calcAdjustedVariantPosition(final int variantPosition, final int indelLength)
@@ -33,10 +43,13 @@ public class ReadEdgeDistance
     public int maxAltDistanceFromEdge() { return mMaxDistanceFromEdgeAlt; }
     public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
 
+    public int avgDistanceFromEdge() { return mUpdates > 0 ? (int)round(mTotalDistanceFromEdge / (double)mUpdates) : 0; }
+    public int avgAltDistanceFromEdge() { return mUpdatesAlt > 0 ? (int)round(mTotalDistanceFromEdgeAlt / (double) mUpdatesAlt) : 0; }
+
     public void update(final SAMRecord record, final FragmentData fragmentData, boolean altSupport)
     {
-        if(mMaxDistanceFromEdgeAlt >= record.getReadBases().length / 2)
-            return;
+        // if(mMaxDistanceFromEdgeAlt >= record.getReadBases().length / 2) // no early exit since total is now tracked
+        //    return;
 
         if(record.getCigar().containsOperator(CigarOperator.N)) // unnecessary in append mode
             return;
@@ -65,12 +78,17 @@ public class ReadEdgeDistance
             minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
         }
 
+        ++mUpdates;
         mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
 
         if(altSupport)
         {
             mMaxDistanceFromEdgeAlt = max(minDistance, mMaxDistanceFromEdgeAlt);
+            mTotalDistanceFromEdgeAlt += minDistance;
+            ++mUpdatesAlt;
         }
+
+        mTotalDistanceFromEdge += minDistance;
     }
 
     private static final int NO_READ_EDGE_DISTANCE = -1;

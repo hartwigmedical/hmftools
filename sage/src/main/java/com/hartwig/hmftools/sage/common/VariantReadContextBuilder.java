@@ -233,7 +233,7 @@ public class VariantReadContextBuilder
         int lastCigarIndex = read.getCigar().getCigarElements().size() - 1;
 
         if(read.getCigar().getCigarElements().get(lastCigarIndex).getOperator() == S
-        && varReadIndex > read.getCigar().getCigarElements().get(lastCigarIndex).getLength())
+        && varReadIndex < read.getCigar().getCigarElements().get(lastCigarIndex).getLength())
         {
             List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
 

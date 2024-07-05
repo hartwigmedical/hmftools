@@ -88,7 +88,7 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import org.jetbrains.annotations.Nullable;
@@ -420,7 +420,7 @@ public class VariantVis
 
     public void addEvidence(
             final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextMatch matchType,
-            @Nullable final QualityCalculator.QualityScores modifiedQualities)
+            @Nullable final QualityScores modifiedQualities)
     {
         ++mReadCount;
         mReadCountByType.put(matchType, mReadCountByType.getOrDefault(matchType, 0) + 1);

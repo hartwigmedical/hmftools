@@ -76,26 +76,6 @@ public class QualityCalculator
         return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
 
-    public static class QualityScores
-    {
-        public final double CalcBaseQuality;
-        public final double RecalibratedBaseQuality;
-        public final int ModifiedMapQuality;
-        public final double ModifiedBaseQuality;
-        public final double ModifiedQuality;
-
-        public QualityScores(
-                double calcBaseQuality, double recalibratedBaseQuality, int modifiedMapQuality,
-                double modifiedBaseQuality, double modifiedQuality)
-        {
-            CalcBaseQuality = calcBaseQuality;
-            RecalibratedBaseQuality = recalibratedBaseQuality;
-            ModifiedMapQuality = modifiedMapQuality;
-            ModifiedBaseQuality = modifiedBaseQuality;
-            ModifiedQuality = modifiedQuality;
-        }
-    }
-
     public QualityScores calculateQualityScores(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double calcBaseQuality)
     {
@@ -124,7 +104,8 @@ public class QualityCalculator
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
         modifiedBaseQuality = modifiedBaseQuality - readEdgePenalty;
 
-        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+        // double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+        double modifiedQuality = max(0, modifiedBaseQuality);
 
         return new QualityScores(
                 calcBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
