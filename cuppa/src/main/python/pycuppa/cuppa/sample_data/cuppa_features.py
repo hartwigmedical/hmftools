@@ -8,10 +8,10 @@ from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import check_required_columns
 
 
-class CuppaFeaturesPaths(pd.Series, LoggerMixin):
+class CuppaFeaturesDir(LoggerMixin):
 
-    def __init__(self, paths: dict[str, str] | pd.Series):
-        super().__init__(paths)
+    def __init__(self, directory: str):
+        self.directory = directory
 
     FILE_PATTERNS = dict(
         snv="cuppa_data.cohort.snv.*.tsv",
@@ -26,41 +26,40 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
     OPTIONAL_PATTERN_KEYS = ("gene_exp", "alt_sj")
 
     @staticmethod
-    def find_files_in_dir_by_pattern(directory: str, pattern: str) -> pd.Series:
+    def _find_files_in_dir_by_pattern(directory: str, pattern: str) -> pd.Series:
         files = pd.Series(os.listdir(directory))
         matched_files = files[files.str.match(pattern)]
         return matched_files
 
-    @classmethod
-    def from_dir(cls, directory: str) -> "CuppaFeaturesPaths":
-
-        logger = cls.get_class_logger(cls)
+    def get_file_paths(self) -> pd.Series:
 
         paths = {}
         missing_any_required_files = False
 
-        for key, pattern in cls.FILE_PATTERNS.items():
+        for key, pattern in self.FILE_PATTERNS.items():
 
-            matched_files = cls.find_files_in_dir_by_pattern(directory, pattern)
+            matched_files = self._find_files_in_dir_by_pattern(self.directory, pattern)
 
             if len(matched_files) == 0:
-                if key in cls.OPTIONAL_PATTERN_KEYS:
-                    logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
+
+                if key in self.OPTIONAL_PATTERN_KEYS:
+                    self.logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
                 else:
-                    logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
+                    self.logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
                     missing_any_required_files = True
+
                 continue
 
             if len(matched_files) > 1:
-                logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
+                self.logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
 
-            matched_file = os.path.join(directory, matched_files.iloc[0])
+            matched_file = os.path.join(self.directory, matched_files.iloc[0])
             paths[key] = matched_file
 
         if missing_any_required_files:
             raise FileNotFoundError
 
-        return CuppaFeaturesPaths(paths)
+        return pd.Series(paths)
 
 
 class CuppaFeaturesLoader(LoggerMixin):
@@ -111,7 +110,7 @@ class CuppaFeaturesLoader(LoggerMixin):
         return df
 
     def _load_files_from_dir(self) -> pd.DataFrame:
-        paths = CuppaFeaturesPaths.from_dir(self.path)
+        paths = CuppaFeaturesDir(directory=self.path).get_file_paths()
         dfs = {}
         for data_type, path in paths.items():
             self.logger.debug("Loading file: " + os.path.basename(path))
