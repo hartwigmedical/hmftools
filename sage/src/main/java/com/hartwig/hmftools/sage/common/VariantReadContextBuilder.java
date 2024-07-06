@@ -231,23 +231,24 @@ public class VariantReadContextBuilder
         }
 
         int lastCigarIndex = read.getCigar().getCigarElements().size() - 1;
-
-        if(read.getCigar().getCigarElements().get(lastCigarIndex).getOperator() == S
-        && varReadIndex < read.getCigar().getCigarElements().get(lastCigarIndex).getLength())
+        if(read.getCigar().getCigarElements().get(lastCigarIndex).getOperator() == S)
         {
             List<CigarElement> origReadCigar = read.getCigar().getCigarElements();
-
             int rightSoftClipLength = origReadCigar.get(lastCigarIndex).getLength();
+            int rightSoftClipStartIndex = read.getReadBases().length - rightSoftClipLength;
 
-            List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
-            convertedCigar.remove(lastCigarIndex);
+            if(varReadIndex >= rightSoftClipStartIndex)
+            {
+                List<CigarElement> convertedCigar = Lists.newArrayList(origReadCigar);
+                convertedCigar.remove(lastCigarIndex);
 
-            convertedCigar.add(new CigarElement(variant.indelLength(), I));
+                convertedCigar.add(new CigarElement(variant.indelLength(), I));
 
-            int remainingAlignedBases = rightSoftClipLength - variant.indelLength();
-            convertedCigar.add(new CigarElement(remainingAlignedBases, M));
+                int remainingAlignedBases = rightSoftClipLength - variant.indelLength();
+                convertedCigar.add(new CigarElement(remainingAlignedBases, M));
 
-            return new SoftClipReadAdjustment(false, read.getAlignmentStart(), convertedCigar);
+                return new SoftClipReadAdjustment(false, read.getAlignmentStart(), convertedCigar);
+            }
         }
 
         return null;
