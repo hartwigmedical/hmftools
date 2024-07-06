@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -160,5 +161,10 @@ public class TestUtils
         record.setInferredInsertSize(600);
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 0);
         return record;
+    }
+
+    public static BaseRegion region(int start, int end)
+    {
+        return new BaseRegion(start, end);
     }
 }

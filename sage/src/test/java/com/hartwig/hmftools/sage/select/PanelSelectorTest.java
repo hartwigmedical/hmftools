@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.select;
 
+import static com.hartwig.hmftools.sage.common.TestUtils.region;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -54,10 +56,5 @@ public class PanelSelectorTest
         assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(994, 996)); // straddling
         assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(1995, 2000));
         assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(1500, 2500)); // straddling
-    }
-
-    private static BaseRegion region(int start, int end)
-    {
-        return new BaseRegion(start, end);
     }
 }

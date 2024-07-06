@@ -3,101 +3,56 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
+import com.google.common.annotations.VisibleForTesting;
 
 public class EvictingArray
 {
     // a ring buffer to store alts and ref/alt depth
     // capacity is designed to cover a set of reads covering at least a few multiples of the maximum read length
     private final RefContext[] mElements;
-    private final int[] mDepth;
-    private final int[] mDepthLimit;
     private final Consumer<RefContext> mEvictionHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
 
+    private final int mReadLengthBuffer;
     private final int mCapacity;
 
-    public static final int MIN_CAPACITY = 256;
+    public static final double READ_BUFFER_FACTOR = 1.25;
 
-    public EvictingArray(int capacity, Consumer<RefContext> evictionHandler)
+    public EvictingArray(int maxReadLength, final Consumer<RefContext> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
-        mCapacity = capacity;
+        mReadLengthBuffer = (int)round(maxReadLength * READ_BUFFER_FACTOR);
+        mCapacity = maxReadLength * 2;
         mElements = new RefContext[mCapacity];
-        mDepth = new int[mCapacity];
-        mDepthLimit = new int[mCapacity];
         mMinPosition = 0;
         mMinPositionIndex = 0;
     }
 
-    public int minPosition() { return mMinPosition; }
-    public int capacity() { return mCapacity; }
-
-    public Integer getDepth(int position)
-    {
-        int distanceFromMinPosition = position - mMinPosition;
-        if(distanceFromMinPosition < 0 || distanceFromMinPosition >= mCapacity)
-            return null;
-
-        int index = calcIndex(distanceFromMinPosition);
-        return mDepth[index];
-    }
-
-    public @Nullable Boolean exceedsDepthLimit(int position)
-    {
-        int distanceFromMinPosition = position - mMinPosition;
-        if(distanceFromMinPosition < 0 || distanceFromMinPosition >= mCapacity)
-            return null;
-
-        int index = calcIndex(distanceFromMinPosition);
-        if(mDepthLimit[index] == 0)
-            return null;
-
-        return mDepth[index] >= mDepthLimit[index];
-    }
-
-    public void registerDepthLimit(int position, int limit)
-    {
-        if(!isValidPosition(position, "registerDepthLimit"))
-            return;
-
-        // find position, flush if required, add depth
-        checkFlush(position);
-
-        int distanceFromMinPosition = position - mMinPosition;
-        int index = calcIndex(distanceFromMinPosition);
-        mDepthLimit[index] = limit;
-    }
-
-    public void registerDepth(int position)
-    {
-        if(!isValidPosition(position, "registerDepth"))
-            return;
-
-        checkFlush(position);
-
-        int distanceFromMinPosition = position - mMinPosition;
-        int index = calcIndex(distanceFromMinPosition);
-
-        ++mDepth[index];
-    }
-
     public RefContext getOrCreateRefContext(int position, final Function<Integer,RefContext> supplier)
     {
-        if(!isValidPosition(position, "getOrCreateRefContext"))
+        if(!isValidPosition(position))
             return null;
 
+        int minPositionStart = mMinPosition;
         checkFlush(position);
 
         int distanceFromMinPosition = position - mMinPosition;
         int index = calcIndex(distanceFromMinPosition);
+
+        if(index < 0 || index >= mCapacity)
+        {
+            SG_LOGGER.error("invalid evicting array index({}) position({}) minPosition({} -> {})",
+                    index, position, minPositionStart, mMinPosition);
+            System.exit(1);
+        }
 
         RefContext element = mElements[index];
         if(element == null)
@@ -125,11 +80,11 @@ public class EvictingArray
         return distanceFromMinPosition + mMinPositionIndex - mCapacity;
     }
 
-    private boolean isValidPosition(int position, final String caller)
+    private boolean isValidPosition(int position)
     {
         if(mMinPosition > 0 && position < mMinPosition)
         {
-            SG_LOGGER.warn("{}: ignoring read with position({}) before prior position({})", caller, position, mMinPosition);
+            SG_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
             return false;
         }
 
@@ -153,7 +108,9 @@ public class EvictingArray
             if(distanceFromMinPosition < mCapacity)
                 return;
 
-            flushCount = position - mMinPosition - mCapacity + 1;
+            // move min position to at most the read length behind the current position
+            int newMinPosition = position - mReadLengthBuffer;
+            flushCount = min(newMinPosition - mMinPosition, mCapacity);
         }
         else
         {
@@ -172,9 +129,6 @@ public class EvictingArray
                 mElements[mMinPositionIndex] = null;
             }
 
-            mDepth[mMinPositionIndex] = 0;
-            mDepthLimit[mMinPositionIndex] = 0;
-
             mMinPosition++;
 
             if(mMinPositionIndex + 1 >= mElements.length)
@@ -190,6 +144,35 @@ public class EvictingArray
     private void resetMinPosition(int position)
     {
         mMinPositionIndex = 0;
-        mMinPosition = max(1, position - (int)round(mCapacity * 0.5));
+        mMinPosition = max(1, position - mReadLengthBuffer);
+    }
+
+    @VisibleForTesting
+    public int minPosition() { return mMinPosition; }
+
+    @VisibleForTesting
+    public int readLengthBuffer() { return mReadLengthBuffer; }
+
+    @VisibleForTesting
+    public int capacity() { return mCapacity; }
+
+    @VisibleForTesting
+    public int itemCount()
+    {
+        int items = 0;
+
+        for(int i = 0; i < mElements.length; ++i)
+        {
+            if(mElements[i] != null)
+                ++items;
+        }
+
+        return items;
+    }
+
+    public String toString()
+    {
+        return format("capacity(%d) buffer(%d) minPos(%d) itemCount(%d)",
+                mCapacity, mReadLengthBuffer, mMinPosition, itemCount());
     }
 }

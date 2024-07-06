@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.sage.candidate.EvictingArray.MIN_CAPACITY;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -36,18 +35,11 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        int minCapacity = config.getReadLength() == DEFAULT_READ_LENGTH ?
-                MIN_CAPACITY : max(MIN_CAPACITY, config.getReadLength() * 2);
-
-        mEvictingArray = new EvictingArray(minCapacity, evictionHandler);
+        int minDefaultReadLength = max(config.getReadLength(), DEFAULT_READ_LENGTH);
+        mEvictingArray = new EvictingArray(minDefaultReadLength, evictionHandler);
     }
 
     public PanelSelector panelSelector() { return mPanelSelector; }
-
-    public void registerDepthLimit(int position, int limit) { mEvictingArray.registerDepthLimit(position, limit);}
-    public void incrementDepth(int position) { mEvictingArray.registerDepth(position); }
-
-    public Boolean exceedsDepthLimit(int position) { return mEvictingArray.exceedsDepthLimit(position); }
 
     public RefContext getOrCreateRefContext(final String chromosome, int position)
     {

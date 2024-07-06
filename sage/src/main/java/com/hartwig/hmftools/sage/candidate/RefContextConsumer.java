@@ -5,7 +5,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
@@ -24,8 +23,6 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
@@ -109,11 +106,7 @@ public class RefContextConsumer
         ++mReadCount;
 
         // check if the read falls within or overlaps a panel region, since this impacts the depth limits
-        // ReadPanelStatus panelStatus = mRefContextCache.panelSelector().panelStatus(readStart, readEnd);
         ReadPanelStatus panelStatus = mCurrentRegionBlock.panelStatus();
-
-        // if(reachedDepthLimit(readStart, panelStatus) || reachedDepthLimit(readEnd, panelStatus))
-        //    return;
 
         if(reachedDepthLimit(readStart) || reachedDepthLimit(readEnd))
             return;
@@ -123,8 +116,6 @@ public class RefContextConsumer
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents, applyMapQualEventPenalty(readStart, readEnd));
         boolean readExceedsQuality = adjustedMapQual > 0;
 
-        //final Boolean readCoversHotspot = !readExceedsQuality ?
-        //        mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd)) : null;
         boolean readCoversHotspot = readCoversHotspot(readStart, readEnd);
 
         // if the read is below the required threshold and does not cover a hotspot position, then stop processing it
@@ -150,17 +141,6 @@ public class RefContextConsumer
 
                 if(!readExceedsScAdjustedQuality && !readCoversHotspot)
                     return;
-
-                /*
-                if(!readExceedsScAdjustedQuality)
-                {
-                    if((readCoversHotspot != null && !readCoversHotspot)
-                    || mHotspotPositions.stream().noneMatch(x -> positionWithin(x, readStart, readEnd)))
-                    {
-                        return;
-                    }
-                }
-                */
 
                 altReads.addAll(processAlignment(
                         record, readIndex, refPosition, element.getLength(), panelStatus, numberOfEvents,
@@ -227,9 +207,6 @@ public class RefContextConsumer
         for(AltRead altRead : altReads)
         {
             altRead.updateRefContext(mReadContextBuilder, mRefSequence);
-
-            //if(altRead.SufficientMapQuality)
-            //    mRefContextCache.incrementDepth(altRead.position());
         }
     }
 
@@ -285,42 +262,8 @@ public class RefContextConsumer
         return true;
     }
 
-    private boolean reachedDepthLimit(int position, final ReadPanelStatus panelStatus)
-    {
-        /*
-        Boolean exceedsLimit = mRefContextCache.exceedsDepthLimit(position);
-
-        if(exceedsLimit != null)
-            return exceedsLimit;
-
-        // set depth limit on the first time this position is processed
-        int depthLimit = depthLimit(panelStatus, position);
-        mRefContextCache.registerDepthLimit(position, depthLimit);
-        */
-        return false;
-    }
-
-    private int depthLimit(final ReadPanelStatus panelStatus, int position)
-    {
-        if(mConfig.IncludeMT && MitochondrialChromosome.contains(mBounds.Chromosome))
-            return mConfig.MaxReadDepthPanel;
-
-        if(panelStatus == ReadPanelStatus.WITHIN_PANEL)
-            return mConfig.MaxReadDepthPanel;
-        else if(panelStatus == ReadPanelStatus.OUTSIDE_PANEL)
-            return mConfig.MaxReadDepth;
-
-        return mRefContextCache.panelSelector().panelStatus(position) == ReadPanelStatus.WITHIN_PANEL ?
-                mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
-    }
-
     private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents, boolean applyEventPenalty)
     {
-        /*
-        // ignore HLA genes
-        if(HlaCommon.overlaps(record.getContig(), record.getStart(), record.getEnd()))
-            return record.getMappingQuality();
-        */
         if(!applyEventPenalty)
             return record.getMappingQuality();;
 
@@ -335,7 +278,6 @@ public class RefContextConsumer
     private boolean isHotspotPosition(int position)
     {
         return mCurrentRegionBlock.isHotspot(position) || mNextRegionBlock != null && mNextRegionBlock.isHotspot(position);
-        // return mHotspotPositions.contains(position);
     }
 
     private AltRead processInsert(
@@ -348,9 +290,6 @@ public class RefContextConsumer
         boolean exceedsQuality = element.getLength() <= SC_READ_EVENTS_FACTOR ? readExceedsScAdjustedQuality : readExceedsQuality;
 
         if(!exceedsQuality && !isHotspotPosition(refPosition))
-            return null;
-
-        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
         int refIndex = mRefSequence.index(refPosition);
@@ -374,9 +313,6 @@ public class RefContextConsumer
         boolean exceedsQuality = element.getLength() <= SC_READ_EVENTS_FACTOR ? readExceedsScAdjustedQuality : readExceedsQuality;
 
         if(!exceedsQuality && !isHotspotPosition(refPosition))
-            return null;
-
-        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
         int refIndex = mRefSequence.index(refPosition);
@@ -418,9 +354,6 @@ public class RefContextConsumer
             if(!readExceedsQuality && !isHotspotPosition(refPosition))
                 continue;
 
-            if(reachedDepthLimit(refPosition, panelStatus))
-                continue;
-
             byte refByte = mRefSequence.Bases[refBaseIndex];
             byte readByte = record.getReadBases()[readBaseIndex];
 
@@ -458,11 +391,6 @@ public class RefContextConsumer
                                 sufficientMapQuality, record, readBaseIndex));
                     }
                 }
-            }
-            else
-            {
-                // if(sufficientMapQuality)
-                //    mRefContextCache.incrementDepth(refPosition);
             }
         }
 
@@ -505,9 +433,6 @@ public class RefContextConsumer
             return null;
 
         if(!withinReadContext(readIndex, record))
-            return null;
-
-        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
