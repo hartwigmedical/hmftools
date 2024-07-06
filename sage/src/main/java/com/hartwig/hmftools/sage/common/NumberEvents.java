@@ -35,9 +35,12 @@ public final class NumberEvents
 
     public static double calcSoftClipAdjustment(final SAMRecord record)
     {
-        int softClippedBases = leftSoftClipLength(record) + rightSoftClipLength(record);
+        return calcSoftClipAdjustment(leftSoftClipLength(record) + rightSoftClipLength(record));
+    }
 
-        return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
+    public static double calcSoftClipAdjustment(int softClipLength)
+    {
+        return softClipLength > 0 ? max(1, softClipLength / SC_READ_EVENTS_FACTOR) : 0;
     }
 
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)
