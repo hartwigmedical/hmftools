@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 

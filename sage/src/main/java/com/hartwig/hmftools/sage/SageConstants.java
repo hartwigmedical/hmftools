@@ -13,6 +13,7 @@ public class SageConstants
     public static final int DEFAULT_MAX_READ_DEPTH = 1000;
     public static final int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     public static final int DEFAULT_SLICE_SIZE = 100_000;
+    public static final int REGION_BLOCK_SIZE = 100;
     public static final int DEFAULT_MAX_PARTITION_SLICES = 10;
 
     public static final int DEFAULT_READ_LENGTH = 151;

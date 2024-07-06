@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadInde
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
+import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
@@ -47,13 +48,18 @@ public class RefContextConsumer
     private final VariantReadContextBuilder mReadContextBuilder;
     private final Set<Integer> mHotspotPositions;
 
+    private final List<RegionBlock> mRegionBlocks;
+    private int mCurrentRegionBlockIndex;
+    private RegionBlock mCurrentRegionBlock;
+    private RegionBlock mNextRegionBlock;
+
     private int mReadCount;
 
     public RefContextConsumer(
-            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refSequence, final RefContextCache refContextCache,
+            final SageConfig config, final ChrBaseRegion regionBounds, final RefSequence refSequence, final RefContextCache refContextCache,
             final List<SimpleVariant> regionHotspots)
     {
-        mBounds = bounds;
+        mBounds = regionBounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
         mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
@@ -62,10 +68,33 @@ public class RefContextConsumer
         mHotspotPositions = Sets.newHashSet();
         regionHotspots.forEach(x -> mHotspotPositions.add(x.position()));
 
+        mRegionBlocks = RegionBlock.buildRegionBlocks(
+                REGION_BLOCK_SIZE, regionBounds, mRefContextCache.panelSelector(), regionHotspots,
+                mConfig.MaxReadDepthPanel, mConfig.MaxReadDepth);
+
+        mCurrentRegionBlockIndex = 0;
+        mCurrentRegionBlock = mRegionBlocks.get(0);
+        mNextRegionBlock = null;
+
         mReadCount = 0;
     }
 
     public int getReadCount() { return mReadCount; }
+
+    private void updateCurrentRegionBlocks(int readStart)
+    {
+        if(mCurrentRegionBlock.containsPosition(readStart))
+            return;
+
+        while(readStart > mCurrentRegionBlock.end() && mCurrentRegionBlockIndex < mRegionBlocks.size())
+        {
+            ++mCurrentRegionBlockIndex;
+            mCurrentRegionBlock = mRegionBlocks.get(mCurrentRegionBlockIndex);
+        }
+
+        if(mCurrentRegionBlockIndex < mRegionBlocks.size() - 1)
+            mNextRegionBlock = mRegionBlocks.get(mCurrentRegionBlockIndex + 1);
+    }
 
     public void processRead(final SAMRecord record)
     {
@@ -75,25 +104,34 @@ public class RefContextConsumer
         if(!positionsOverlap(readStart, readEnd, mBounds.start(), mBounds.end()))
             return;
 
+        updateCurrentRegionBlocks(readStart);
+
         ++mReadCount;
 
         // check if the read falls within or overlaps a panel region, since this impacts the depth limits
-        ReadPanelStatus panelStatus = mRefContextCache.panelSelector().panelStatus(readStart, readEnd);
+        // ReadPanelStatus panelStatus = mRefContextCache.panelSelector().panelStatus(readStart, readEnd);
+        ReadPanelStatus panelStatus = mCurrentRegionBlock.panelStatus();
 
-        if(reachedDepthLimit(readStart, panelStatus) || reachedDepthLimit(readEnd, panelStatus))
+        // if(reachedDepthLimit(readStart, panelStatus) || reachedDepthLimit(readEnd, panelStatus))
+        //    return;
+
+        if(reachedDepthLimit(readStart) || reachedDepthLimit(readEnd))
             return;
 
         int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.calc(record, mRefSequence) : 0;
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(record);
-        int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents);
+        int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents, applyMapQualEventPenalty(readStart, readEnd));
         boolean readExceedsQuality = adjustedMapQual > 0;
 
-        final Boolean readCoversHotspot = !readExceedsQuality ?
-                mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd)) : null;
+        //final Boolean readCoversHotspot = !readExceedsQuality ?
+        //        mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd)) : null;
+        boolean readCoversHotspot = readCoversHotspot(readStart, readEnd);
 
         // if the read is below the required threshold and does not cover a hotspot position, then stop processing it
         if(!readExceedsQuality && !readCoversHotspot)
             return;
+
+        updateRegionBlockDepth(readStart, readEnd);
 
         int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadEventsPenalty);
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
@@ -110,6 +148,10 @@ public class RefContextConsumer
                 if(record.isSecondaryOrSupplementary())
                     return;
 
+                if(!readExceedsScAdjustedQuality && !readCoversHotspot)
+                    return;
+
+                /*
                 if(!readExceedsScAdjustedQuality)
                 {
                     if((readCoversHotspot != null && !readCoversHotspot)
@@ -118,6 +160,7 @@ public class RefContextConsumer
                         return;
                     }
                 }
+                */
 
                 altReads.addAll(processAlignment(
                         record, readIndex, refPosition, element.getLength(), panelStatus, numberOfEvents,
@@ -185,8 +228,8 @@ public class RefContextConsumer
         {
             altRead.updateRefContext(mReadContextBuilder, mRefSequence);
 
-            if(altRead.SufficientMapQuality)
-                mRefContextCache.incrementDepth(altRead.position());
+            //if(altRead.SufficientMapQuality)
+            //    mRefContextCache.incrementDepth(altRead.position());
         }
     }
 
@@ -203,8 +246,48 @@ public class RefContextConsumer
         return insertAlignmentOverlap < MIN_INSERT_ALIGNMENT_OVERLAP;
     }
 
+    private boolean reachedDepthLimit(int position)
+    {
+        if(mCurrentRegionBlock.containsPosition(position))
+            return mCurrentRegionBlock.depthLimitReached();
+
+        if(mNextRegionBlock != null && mNextRegionBlock.containsPosition(position))
+            return mNextRegionBlock.depthLimitReached();
+
+        return false;
+    }
+
+    private void updateRegionBlockDepth(int readStart, int readEnd)
+    {
+        if(mCurrentRegionBlock.containsPosition(readStart))
+            mCurrentRegionBlock.incrementDepth();
+
+        if(mNextRegionBlock != null && mNextRegionBlock.containsPosition(readEnd))
+            mNextRegionBlock.incrementDepth();
+    }
+
+    private boolean readCoversHotspot(int readStart, int readEnd)
+    {
+        if(mCurrentRegionBlock.coversHotspot(readStart, readEnd))
+            return true;
+
+        return mNextRegionBlock != null && mNextRegionBlock.coversHotspot(readStart, readEnd);
+    }
+
+    private boolean applyMapQualEventPenalty(int readStart, int readEnd)
+    {
+        if(mCurrentRegionBlock.containsPosition(readStart) && !mCurrentRegionBlock.applyEventPenalty())
+            return false;
+
+        if(mNextRegionBlock != null && mNextRegionBlock.containsPosition(readEnd))
+            return !mNextRegionBlock.applyEventPenalty();
+
+        return true;
+    }
+
     private boolean reachedDepthLimit(int position, final ReadPanelStatus panelStatus)
     {
+        /*
         Boolean exceedsLimit = mRefContextCache.exceedsDepthLimit(position);
 
         if(exceedsLimit != null)
@@ -213,6 +296,7 @@ public class RefContextConsumer
         // set depth limit on the first time this position is processed
         int depthLimit = depthLimit(panelStatus, position);
         mRefContextCache.registerDepthLimit(position, depthLimit);
+        */
         return false;
     }
 
@@ -230,11 +314,15 @@ public class RefContextConsumer
                 mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 
-    private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents)
+    private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents, boolean applyEventPenalty)
     {
+        /*
         // ignore HLA genes
         if(HlaCommon.overlaps(record.getContig(), record.getStart(), record.getEnd()))
             return record.getMappingQuality();
+        */
+        if(!applyEventPenalty)
+            return record.getMappingQuality();;
 
         int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadEventsPenalty);
 
@@ -244,7 +332,11 @@ public class RefContextConsumer
         return record.getMappingQuality() - mConfig.Quality.FixedPenalty - eventPenalty - improperPenalty;
     }
 
-    private boolean isHotspotPosition(int position) { return mHotspotPositions.contains(position); }
+    private boolean isHotspotPosition(int position)
+    {
+        return mCurrentRegionBlock.isHotspot(position) || mNextRegionBlock != null && mNextRegionBlock.isHotspot(position);
+        // return mHotspotPositions.contains(position);
+    }
 
     private AltRead processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
@@ -369,8 +461,8 @@ public class RefContextConsumer
             }
             else
             {
-                if(sufficientMapQuality)
-                    mRefContextCache.incrementDepth(refPosition);
+                // if(sufficientMapQuality)
+                //    mRefContextCache.incrementDepth(refPosition);
             }
         }
 
