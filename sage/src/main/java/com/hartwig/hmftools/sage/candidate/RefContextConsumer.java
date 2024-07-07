@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -246,7 +247,7 @@ public class RefContextConsumer
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = rawNM(record, mRefSequence) -  additionalIndels;
+            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - additionalIndels, 0);
         }
 
         return readInfo;
@@ -294,11 +295,12 @@ public class RefContextConsumer
 
     private boolean applyMapQualEventPenalty(int readStart, int readEnd)
     {
+        // if the read overlaps any block where the event penalty should not be applied, then don't apply it
         if(mCurrentRegionBlock.containsPosition(readStart) && !mCurrentRegionBlock.applyEventPenalty())
             return false;
 
-        if(mNextRegionBlock != null && mNextRegionBlock.containsPosition(readEnd))
-            return !mNextRegionBlock.applyEventPenalty();
+        if(mNextRegionBlock != null && mNextRegionBlock.containsPosition(readEnd) && !mNextRegionBlock.applyEventPenalty())
+            return false;
 
         return true;
     }
