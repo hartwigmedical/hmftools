@@ -104,8 +104,8 @@ public class QualityCalculator
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
         modifiedBaseQuality = modifiedBaseQuality - readEdgePenalty;
 
-        // double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
-        double modifiedQuality = max(0, modifiedBaseQuality);
+        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+        // double modifiedQuality = max(0, modifiedBaseQuality);
 
         return new QualityScores(
                 calcBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);

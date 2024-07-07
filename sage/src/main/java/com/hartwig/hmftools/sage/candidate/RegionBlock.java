@@ -58,9 +58,11 @@ public class RegionBlock extends BaseRegion
     }
 
     public static List<RegionBlock> buildRegionBlocks(
-            int blockSize, final ChrBaseRegion region, final PanelSelector panelSelector, List<SimpleVariant> regionHotspots,
+            int blockSize, final ChrBaseRegion region, final PanelSelector panelSelector, final List<SimpleVariant> regionHotspots,
             int maxReadDepthPanel, int maxReadDepthNonPanel)
     {
+        boolean isMitochonrial = MitochondrialChromosome.contains(region.Chromosome);
+
         int blockCount = (int)ceil(region.length() / blockSize);
         List<RegionBlock> regionBlocks = Lists.newArrayListWithCapacity(blockCount);
 
@@ -77,8 +79,7 @@ public class RegionBlock extends BaseRegion
 
             ReadPanelStatus panelStatus = panelSelector.panelStatus(blockStart, blockEnd);
 
-            int depthLimit = !MitochondrialChromosome.contains(region.Chromosome) && panelStatus == ReadPanelStatus.OUTSIDE_PANEL
-                    ? maxReadDepthNonPanel : maxReadDepthPanel;
+            int depthLimit = !isMitochonrial && panelStatus == ReadPanelStatus.OUTSIDE_PANEL ? maxReadDepthNonPanel : maxReadDepthPanel;
 
             boolean applyEventPenalty = !HlaCommon.overlaps(region.Chromosome, blockStart, blockEnd);
 

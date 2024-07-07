@@ -104,7 +104,7 @@ public class RefContextConsumer
 
         ++mReadCount;
 
-        if(reachedDepthLimit(readStart) || reachedDepthLimit(readEnd))
+        if(reachedDepthLimit(readStart) && reachedDepthLimit(readEnd))
             return;
 
         ReadInfo readInfo = buildReadInfo(record);
