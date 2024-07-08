@@ -94,7 +94,7 @@ public class PhaseSetBuilder
 
         addChainedSupport();
 
-        extendUnlinkedAssemblies();
+        // extendUnlinkedAssemblies();
 
         cleanupAssemblies();
     }
@@ -293,6 +293,7 @@ public class PhaseSetBuilder
         return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
     }
 
+    @Deprecated
     private void extendUnlinkedAssemblies()
     {
         for(JunctionAssembly assembly : mAssemblies)

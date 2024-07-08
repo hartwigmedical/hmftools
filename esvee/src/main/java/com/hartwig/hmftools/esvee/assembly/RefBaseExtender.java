@@ -425,7 +425,7 @@ public class RefBaseExtender
             refBaseAssembly.checkAddRead(support.cachedRead(), type, ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
         }
 
-        refBaseAssembly.checkValidBases();
+        // refBaseAssembly.checkValidBases();
 
         /* UNUSED for now: check for recurring indels in the ref base region, and de-prioritise these if not dominant
         Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();

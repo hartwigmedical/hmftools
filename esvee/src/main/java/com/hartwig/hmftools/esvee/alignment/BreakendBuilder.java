@@ -398,7 +398,7 @@ public class BreakendBuilder
 
                 if(sameOrientation)
                 {
-                    boolean reversePositions = !homology.isSymmetrical() && sameOrientation;
+                    boolean reversePositions = !homology.isSymmetrical() && firstIsLower;
                     boolean reverseBases = sameOrientation;
                     nextHomology = homology.invert(reversePositions, reverseBases);
                 }

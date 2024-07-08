@@ -180,7 +180,7 @@ public class RefBaseAssembly
 
         // and cap at the max observed read's position
         int maxSupportedLength = mJunction.isForward() ?
-                mJunction.Position - mMinAlignedPosition + 1 : mMaxAlignedPosition - mJunction.Position;
+                mJunction.Position - mMinAlignedPosition + 1 : mMaxAlignedPosition - mJunction.Position + 1;
 
         return min(maxSupportedLength, validRefBaseCount);
     }
