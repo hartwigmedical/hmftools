@@ -137,16 +137,16 @@ public class SageConstants
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
             "panel", 1e-5, 80, 0.02,
-            0, 0,0.05);
+            0, 0,0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
             "high_confidence", 5e-8, 100, 0.025,
-            10, 6,0.05);
+            10, 6,0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
             "low_confidence", 1e-11, 180, 0.025,
             10, 6,
-            0.05);
+            0.04);
 
     public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP = new JitterModelParams(
             "A/C/G/T", 0.05, 0.09, 0.13, 0.04,

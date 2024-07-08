@@ -124,48 +124,50 @@ public class DedupMixedGermlineSomatic
     {
         for(int i = 0; i < candidates.size() - 1; ++i)
         {
-            SageVariant variant = candidates.get(i);
+            SageVariant mnv = candidates.get(i);
 
-            if(!variant.isMnv() || variant.referenceReadCounters().isEmpty() || variant.referenceReadCounters().get(0).partialMnvSupport() == 0)
+            if(!mnv.isMnv() || mnv.referenceReadCounters().isEmpty() || mnv.referenceReadCounters().get(0).partialMnvSupport() == 0)
                 continue;
 
-            int[] mnvGermlineCount = variant.referenceReadCounters().get(0).partialMnvCounts();
-            int mnvAltSupport = variant.referenceReadCounters().get(0).altSupport();
+            int[] mnvGermlineCount = mnv.referenceReadCounters().get(0).partialMnvCounts();
 
             // assign germline support to any SNV matching the bases of the MNV
-            for(int j = i + 1; j < candidates.size(); ++j)
+            for(int j = 0; j < candidates.size(); ++j)
             {
-                SageVariant next = candidates.get(j);
+                SageVariant snv = candidates.get(j);
 
-                if(!next.isSnv() || !next.isPassing() || isGermlineFilteredSnv(next))
+                if(!snv.isSnv() || !snv.isPassing() || isGermlineFilteredSnv(snv))
                     continue;
 
-                if(next.position() > variant.position() + variant.alt().length() - 1)
+                if(snv.position() < mnv.position())
+                    continue;
+
+                if(snv.position() > mnv.position() + mnv.alt().length() - 1)
                     break;
 
-                int posOffset = next.position() - variant.position();
+                int posOffset = snv.position() - mnv.position();
 
-                if(variant.alt().charAt(posOffset) == next.alt().charAt(0))
+                if(mnv.alt().charAt(posOffset) == snv.alt().charAt(0))
                 {
                     int mnvGermlineSupport = mnvGermlineCount[posOffset];
 
-                    int snvGermlineSupport = next.referenceReadCounters().get(0).altSupport();
+                    int snvGermlineSupport = snv.referenceReadCounters().get(0).altSupport();
 
-                    double snvRefDepth = next.referenceReadCounters().get(0).readCounts().Total;
+                    double snvRefDepth = snv.referenceReadCounters().get(0).readCounts().Total;
 
                     if(snvRefDepth > 0)
                     {
                         double adjustedRefVaf = (mnvGermlineSupport + snvGermlineSupport) / snvRefDepth;
 
-                        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(next.tier(), mFilterConfig);
+                        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(snv.tier(), mFilterConfig);
                         if(Doubles.greaterThan(adjustedRefVaf, softFilterConfig.MaxGermlineVaf))
                         {
-                            next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
+                            snv.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                         }
                     }
                     else if(mnvGermlineSupport + snvGermlineSupport > 0)
                     {
-                        next.filters().add(SoftFilter.MAX_GERMLINE_VAF);
+                        snv.filters().add(SoftFilter.MAX_GERMLINE_VAF);
                     }
                 }
             }
