@@ -15,6 +15,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxReportableReason;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -58,6 +59,7 @@ public final class DnaFusionTable
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
                                     cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
+                            Maps.immutableEntry("Unreported reason(s)", cells.createValue(display(fusion.reportedReasons()))),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
@@ -102,6 +104,21 @@ public final class DnaFusionTable
                 return "NA";
         }
         throw new IllegalStateException();
+    }
+
+    @NotNull
+    private static String display(List<LinxReportableReason> reportableReasons)
+    {
+        if (reportableReasons.contains(LinxReportableReason.OK))
+        {
+            return "-";
+        }
+        else
+        {
+            return reportableReasons.stream()
+                    .map(LinxReportableReason::display)
+                    .collect(Collectors.joining(","));
+        }
     }
 
     @NotNull

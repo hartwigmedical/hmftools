@@ -26,6 +26,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxReportableReason;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -311,6 +312,7 @@ public class OrangeJsonTest
         LinxFusion fusion = linx.allSomaticFusions().iterator().next();
         assertTrue(fusion.reported());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
+        assertEquals(LinxReportableReason.OK, fusion.reportedReasons().iterator().next());
         assertEquals("TMPRSS2::ETV4", fusion.display());
         assertEquals("TMPRSS2", fusion.geneStart());
         assertEquals("ENST00000332149", fusion.geneTranscriptStart());
