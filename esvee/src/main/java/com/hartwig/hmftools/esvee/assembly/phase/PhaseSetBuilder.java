@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
@@ -19,8 +18,9 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_R
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -171,20 +171,20 @@ public class PhaseSetBuilder
 
                 for(SupportRead support : assembly1.support())
                 {
-                    if(hasMatchingFragment(assembly2.support(), support))
+                    if(hasMatchingFragmentRead(assembly2.support(), support))
                         ++sharedCount;
                 }
 
                 // also check candidate reads
                 for(SupportRead support : assembly1.candidateSupport())
                 {
-                    if(hasMatchingFragment(assembly2.support(), support))
+                    if(hasMatchingFragmentRead(assembly2.support(), support))
                         ++sharedCount;
                 }
 
                 for(SupportRead support : assembly1.candidateSupport())
                 {
-                    if(hasMatchingFragment(assembly2.support(), support))
+                    if(hasMatchingFragmentRead(assembly2.support(), support))
                         ++sharedCount;
                 }
 
@@ -378,7 +378,7 @@ public class PhaseSetBuilder
             }
 
             // first check for discordant reads with matching support in the other assembly
-            if(hasMatchingFragment(otherAssembly.support(), candidateRead))
+            if(hasFragmentOtherRead(otherAssembly.support(), candidateRead))
             {
                 candidateSupport.remove(index);
                 matchedCandidates.add(candidateRead);
@@ -401,7 +401,6 @@ public class PhaseSetBuilder
 
                     continue;
                 }
-
             }
 
             ++index;
@@ -549,6 +548,21 @@ public class PhaseSetBuilder
                 }
             }
         }
+    }
+
+    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // tests matching reads in both the junction reads and any extension reads (ie discordant)
+        for(SupportRead support : first.support())
+        {
+            if(support.type() == JUNCTION_MATE)
+                continue;
+
+            if(hasMatchingFragmentRead(second.support(), support))
+                return true;
+        }
+
+        return false;
     }
 
     private void formPhaseSets()

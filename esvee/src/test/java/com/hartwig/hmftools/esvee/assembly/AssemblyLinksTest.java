@@ -397,15 +397,23 @@ public class AssemblyLinksTest
         JunctionAssembly secondAssembly = junctionAssembler.processJunction(List.of(juncRead3, juncRead4)).get(0);
 
         Read discRead2 = createRead(
-                juncRead2.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 1, false);
+                juncRead2.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
+        discRead2.bamRecord().setSecondOfPairFlag(true);
 
         secondAssembly.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
 
-        // add the same junction read from the first assembly as a candidate for the second
+        // add the same junction read from the first assembly as a candidate for the second - this won't end up being counted as support
+        // since it matches the exact read as support in the first assembly
         secondAssembly.addCandidateSupport(juncRead1, CANDIDATE_DISCORDANT);
+
+        Read discRead1 = createRead(
+                juncRead1.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
+        discRead1.bamRecord().setSecondOfPairFlag(true);
+        secondAssembly.addCandidateSupport(discRead1, CANDIDATE_DISCORDANT);
 
         Read discRead3 = createRead(
                 juncRead3.id(), CHR_1, 20, refSequence.substring(20, 70), "50M", CHR_1, 151, false);
+        discRead3.bamRecord().setSecondOfPairFlag(true);
 
         firstAssembly.addCandidateSupport(discRead3, CANDIDATE_DISCORDANT);
 
@@ -432,11 +440,9 @@ public class AssemblyLinksTest
         assertEquals(2, getSupportTypeCount(firstAssembly, JUNCTION));
         assertEquals(1, getSupportTypeCount(firstAssembly, DISCORDANT));
 
-        assertEquals(3, secondAssembly.supportCount());
-
-        assertEquals(3, secondAssembly.supportCount());
+        assertEquals(4, secondAssembly.supportCount());
         assertEquals(2, getSupportTypeCount(secondAssembly, JUNCTION));
-        assertEquals(1, getSupportTypeCount(secondAssembly, DISCORDANT));
+        assertEquals(2, getSupportTypeCount(secondAssembly, DISCORDANT));
     }
 
     @Test

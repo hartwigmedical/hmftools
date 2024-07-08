@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
@@ -72,21 +70,6 @@ public final class AssemblyUtils
     {
         return first == second || first == N_BASE || second == N_BASE
                 || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
-    }
-
-    public static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        // tests matching reads in both the junction reads and any extension reads (ie discordant)
-        for(SupportRead support : first.support())
-        {
-            if(support.type() == JUNCTION_MATE)
-                continue;
-
-            if(hasMatchingFragment(second.support(), support))
-                return true;
-        }
-
-        return false;
     }
 
     public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)

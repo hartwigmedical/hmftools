@@ -147,7 +147,7 @@ public class SupportRead
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
 
-    public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
+    // public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
 
     public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
     {
@@ -179,14 +179,19 @@ public class SupportRead
     public int inferredFragmentLength() { return mInferredFragmentLength; }
     public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
 
-    public static boolean hasMatchingFragment(final List<SupportRead> support, final SupportRead read)
+    public static boolean hasFragmentOtherRead(final List<SupportRead> support, final SupportRead read)
     {
-        return support.stream().anyMatch(x -> x.matchesFragment(read));
+        return support.stream().anyMatch(x -> x.matchesFragment(read, false));
+    }
+
+    public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final SupportRead read)
+    {
+        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
     }
 
     public static List<SupportRead> findMatchingFragmentSupport(final List<SupportRead> support, final SupportRead read)
     {
-        return support.stream().filter(x -> x.matchesFragment(read)).collect(Collectors.toList());
+        return support.stream().filter(x -> x.matchesFragment(read, false)).collect(Collectors.toList());
     }
 
     public String toString()

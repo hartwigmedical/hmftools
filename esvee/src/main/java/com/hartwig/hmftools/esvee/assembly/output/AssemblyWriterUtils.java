@@ -201,7 +201,7 @@ public final class AssemblyWriterUtils
 
             boolean isReference = firstSupport.isReference();
 
-            if(second.support().stream().anyMatch(x -> x.matchesFragment(firstSupport)))
+            if(second.support().stream().anyMatch(x -> x.matchesFragment(firstSupport, false)))
             {
                 ++matchedFrags;
 
@@ -224,7 +224,7 @@ public final class AssemblyWriterUtils
 
             uniqueReadIds.add(secondSupport.id());
 
-            if(first.support().stream().noneMatch(x -> x.matchesFragment(secondSupport)))
+            if(first.support().stream().noneMatch(x -> x.matchesFragment(secondSupport, true)))
             {
                 ++uniqueFrags;
 
