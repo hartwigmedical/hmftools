@@ -4,16 +4,16 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.parseStandardFo
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_ASSEMLY_INFO;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_CIGAR;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_FLAGS;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_XA_TAG;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_MD_TAG;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_NMATCHES;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_REF_LOCATION;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_SCORE;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_SEQUENCE_COORDS;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_ASSEMLY_INFO;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_CIGAR;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_FLAGS;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_XA_TAG;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_MD_TAG;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_NMATCHES;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_REF_LOCATION;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SCORE;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SEQUENCE_COORDS;
 
 import java.io.IOException;
 import java.nio.file.Files;

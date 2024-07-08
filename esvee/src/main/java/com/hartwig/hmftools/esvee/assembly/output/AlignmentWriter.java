@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.output;
 
 import static java.lang.String.format;
 
@@ -17,6 +17,8 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.alignment.AlignData;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import htsjdk.samtools.Cigar;
@@ -112,7 +114,7 @@ public class AlignmentWriter
 
             if(topAlignment == null || topAlignment.Score == 0 || topAlignment.Cigar.isEmpty())
             {
-                sj.add("0").add("").add("0").add("0").add("").add("0").add("0");
+                sj.add("0").add("").add("0").add("0").add("").add("0");
                 sj.add(assemblyAlignment.fullSequence());
                 writer.write(sj.toString());
                 writer.newLine();
