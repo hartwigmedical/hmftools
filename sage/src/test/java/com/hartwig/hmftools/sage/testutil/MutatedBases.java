@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.google.common.primitives.Ints.min;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.EQ;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
@@ -111,7 +113,7 @@ public class MutatedBases
     }
 
     @Nullable
-    public SAMRecord getRead(final String readName, final String chromosome, int mutStartIndex, int readLength, int fragmentLength,
+    public SAMRecord getPairedRead(final String readName, final String chromosome, int mutStartIndex, int readLength, int fragmentLength,
             boolean firstInPair, boolean onForwardStrand)
     {
         List<MutatedBase> readBases = mMutatedBases.subList(mutStartIndex, mutStartIndex + readLength);
@@ -145,12 +147,31 @@ public class MutatedBases
         return read;
     }
 
+    @Nullable
+    public SAMRecord getUnpairedRead(final String readName, final String chromosome, int mutStartIndex, int readLength, boolean onForwardStrand)
+    {
+        List<MutatedBase> readBases = mMutatedBases.subList(mutStartIndex, mutStartIndex + readLength);
+        AlignedBases aligned = getAlignedBases(mRefBases, readBases);
+        if(aligned == null)
+        {
+            return null;
+        }
+
+        String readBasesStr = readBases.stream().map(x -> String.valueOf(x.Base)).collect(Collectors.joining());
+        int alignmentStart = aligned.Aligned.get(0).RefPos;
+        String cigarStr = getCigarStr(aligned);
+
+        SAMRecord read = createSamRecordUnpaired(readName, chromosome, alignmentStart, readBasesStr, cigarStr, !onForwardStrand, false, null);
+
+        return read;
+    }
+
     private static final int DEFAULT_MAX_FAILURES = 1000;
 
-    public List<SAMRecord> generateRandomReads(final Random random, String chromosome, int depth, int readLength, int fragmentLength,
+    public List<SAMRecord> generateRandomPairedReads(final Random random, String chromosome, int depth, int readLength, int fragmentLength,
             final BaseRegion overlappingRegion)
     {
-        return generateRandomReads(random, chromosome, depth, readLength, fragmentLength, overlappingRegion, DEFAULT_MAX_FAILURES);
+        return generateRandomPairedReads(random, chromosome, depth, readLength, fragmentLength, overlappingRegion, DEFAULT_MAX_FAILURES);
     }
 
     private static double averageOverlappingBases(int readLength, int regionLength)
@@ -164,7 +185,7 @@ public class MutatedBases
         return 1.0 * overlappingBasesCount / regionLength;
     }
 
-    public List<SAMRecord> generateRandomReads(final Random random, String chromosome, int depth, int readLength, int fragmentLength,
+    public List<SAMRecord> generateRandomPairedReads(final Random random, String chromosome, int depth, int readLength, int fragmentLength,
             final BaseRegion region, int maxFailures)
     {
         List<SAMRecord> reads = Lists.newArrayList();
@@ -183,7 +204,7 @@ public class MutatedBases
             int mutPosStart = regionStartMutIndex + random.nextInt(regionEndMutIndex - regionStartMutIndex - readLength + 1);
             boolean firstInPair = random.nextBoolean();
             boolean onForwardStrand = random.nextBoolean();
-            SAMRecord read = getRead(readName, chromosome, mutPosStart, readLength, fragmentLength, firstInPair, onForwardStrand);
+            SAMRecord read = getPairedRead(readName, chromosome, mutPosStart, readLength, fragmentLength, firstInPair, onForwardStrand);
             if(read == null)
             {
                 ++failureCount;

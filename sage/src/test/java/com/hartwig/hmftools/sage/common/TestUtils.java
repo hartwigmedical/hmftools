@@ -13,20 +13,30 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.qual.BqrRecord;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate.Candidates;
+import com.hartwig.hmftools.sage.candidate.RefContextCache;
+import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -194,6 +204,29 @@ public class TestUtils
         return new BaseRegion(start, end);
     }
 
+    public static List<Candidate> findInitialCandidates(final SageConfig config, final ChrBaseRegion region, final RefGenomeInterface refGenome,
+            final List<SAMRecord> reads)
+    {
+        List<SimpleVariant> hotspots = Lists.newArrayList();
+        List<BaseRegion> panelRegions = Lists.newArrayList();
+        List<BaseRegion> highConfidenceRegions = Lists.newArrayList();
+        List<BasePosition> specificPositions = Lists.newArrayList();
+        RefSequence refSequence = new RefSequence(region, refGenome);
+
+        RefContextCache refContextCache = new RefContextCache(config, hotspots, panelRegions);
+        RefContextConsumer refContextConsumer = new RefContextConsumer(config, region, refSequence, refContextCache, hotspots);
+
+        // generate read contexts
+        List<AltContext> altContexts = Lists.newArrayList();
+        reads.forEach(refContextConsumer::processRead);
+        altContexts.addAll(refContextCache.altContexts());
+
+        // choose candidates from the read contexts
+        Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
+        initialCandidates.addSingleSample(altContexts);
+        return initialCandidates.candidates(specificPositions);
+    }
+
     public static void dumpVariantVis(final String sampleId, final List<SAMRecord> reads,
             final ChrBaseRegion region, final MockRefGenome refGenome, final String fullVisOutputDir)
     {
@@ -222,7 +255,7 @@ public class TestUtils
         List<BaseRegion> highConfidenceRegions = Lists.newArrayList();
         List<TranscriptData> transcripts = null;
         MsiJitterCalcs msiJitterCalcs = null;
-        PhaseSetCounter phaseSetCounter = null;
+        PhaseSetCounter phaseSetCounter = new PhaseSetCounter();
         FragmentLengths fragmentLengths = null;
 
         RegionTask regionTask = new RegionTask(taskId, region, results, config, refGenome, hotspots, panelRegions, transcripts,

@@ -16,6 +16,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.util.Strings;
@@ -133,7 +134,7 @@ public class SageCallConfig
     @VisibleForTesting
     public SageCallConfig(@Nullable final String fullVisOutputDir)
     {
-        Common = new SageConfig(false, fullVisOutputDir);
+        Common = new SageConfig(false, SequencingType.ILLUMINA, fullVisOutputDir);
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";

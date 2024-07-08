@@ -355,7 +355,7 @@ public class SageConfig
     }
 
     @VisibleForTesting
-    public SageConfig(boolean highDepthMode, @Nullable final String fullVisOutputDir)
+    public SageConfig(boolean highDepthMode, final SequencingType sequencingType, @Nullable final String fullVisOutputDir)
     {
         SampleDataDir = "";
         ReferenceIds = Lists.newArrayList();
@@ -381,7 +381,7 @@ public class SageConfig
         PerfWarnTime = 0;
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        Sequencing = new SequencingConfig(false, SequencingType.ILLUMINA);
+        Sequencing = new SequencingConfig(false, sequencingType);
         WriteFragmentLengths = false;
         Visualiser = new VisConfig(fullVisOutputDir);
         SyncFragments = true;
@@ -392,6 +392,6 @@ public class SageConfig
     @VisibleForTesting
     public SageConfig(boolean highDepthMode)
     {
-        this(highDepthMode, null);
+        this(highDepthMode, SequencingType.ILLUMINA, null);
     }
 }
