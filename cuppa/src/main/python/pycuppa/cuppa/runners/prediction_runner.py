@@ -107,9 +107,9 @@ class PredictionRunner(LoggerMixin):
         predictions = CuppaPrediction.concat(predictions)
         predictions = predictions.loc[self.X.index]
 
-        if self.clf_group == "all":
+        if self.clf_group.lower() == "all":
             pass
-        elif self.clf_group == "dna":
+        elif self.clf_group.lower() == "dna":
             predictions = predictions.subset_probs_by_clf_groups("dna")
         else:
             self.logger.error("`clf_group` must be 'all' or 'dna'")
