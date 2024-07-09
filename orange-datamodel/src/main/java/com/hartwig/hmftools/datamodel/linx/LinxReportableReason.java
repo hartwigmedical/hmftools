@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum LinxReportableReason
 {
     OK(""),
@@ -18,13 +20,14 @@ public enum LinxReportableReason
     CHAIN_LINKS("Maximum chain links"),
     PROTEIN_DOMAINS("Protein domains");
 
-    private final String display;
+    private final @NotNull String display;
 
-    LinxReportableReason(String display)
+    LinxReportableReason(@NotNull String display)
     {
         this.display = display;
     }
 
+    @NotNull
     public String display()
     {
         return display;

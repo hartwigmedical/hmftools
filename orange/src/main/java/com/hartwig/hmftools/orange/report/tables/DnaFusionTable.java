@@ -107,17 +107,15 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static String display(List<LinxReportableReason> reportableReasons)
+    private static String display(@NotNull List<LinxReportableReason> reportableReasons)
     {
-        if (reportableReasons.contains(LinxReportableReason.OK))
+        if(reportableReasons.contains(LinxReportableReason.OK))
         {
             return "-";
         }
         else
         {
-            return reportableReasons.stream()
-                    .map(LinxReportableReason::display)
-                    .collect(Collectors.joining(", "));
+            return reportableReasons.stream().map(LinxReportableReason::display).collect(Collectors.joining(", "));
         }
     }
 
