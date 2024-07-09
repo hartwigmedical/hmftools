@@ -312,7 +312,7 @@ public class OrangeJsonTest
         LinxFusion fusion = linx.allSomaticFusions().iterator().next();
         assertTrue(fusion.reported());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
-        assertEquals(LinxReportableReason.OK, fusion.reportedReasons().iterator().next());
+        assertEquals(LinxReportableReason.NONE, fusion.unreportedReasons().iterator().next());
         assertEquals("TMPRSS2::ETV4", fusion.display());
         assertEquals("TMPRSS2", fusion.geneStart());
         assertEquals("ENST00000332149", fusion.geneTranscriptStart());

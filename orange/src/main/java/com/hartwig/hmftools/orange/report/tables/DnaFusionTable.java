@@ -59,7 +59,7 @@ public final class DnaFusionTable
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
                                     cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
-                            Maps.immutableEntry("Unreported reason(s)", cells.createValue(display(fusion.reportedReasons()))),
+                            Maps.immutableEntry("Unreported reason(s)", cells.createValue(display(fusion.unreportedReasons()))),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
@@ -109,14 +109,7 @@ public final class DnaFusionTable
     @NotNull
     private static String display(@NotNull List<LinxReportableReason> reportableReasons)
     {
-        if(reportableReasons.contains(LinxReportableReason.OK))
-        {
-            return "-";
-        }
-        else
-        {
-            return reportableReasons.stream().map(LinxReportableReason::display).collect(Collectors.joining(", "));
-        }
+        return reportableReasons.stream().map(LinxReportableReason::display).collect(Collectors.joining(", "));
     }
 
     @NotNull

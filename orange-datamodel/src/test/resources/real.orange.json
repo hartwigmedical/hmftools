@@ -813,7 +813,7 @@
         "geneTranscriptEnd": "ENST00000357033",
         "reported": false,
         "reportedType": "NONE",
-        "reportedReasons": [
+        "unreportedReasons": [
           "NOT_KNOWN"
         ],
         "phased": "INFRAME",

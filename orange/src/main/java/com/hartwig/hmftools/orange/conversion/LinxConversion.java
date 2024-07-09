@@ -2,8 +2,8 @@ package com.hartwig.hmftools.orange.conversion;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
@@ -75,7 +75,7 @@ public final class LinxConversion
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
-                .reportedReasons(reportableReasonStringToList(linxFusion.reportableReasons()))
+                .unreportedReasons(reportableReasonStringToList(linxFusion.reportableReasons()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
                 .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
@@ -88,11 +88,23 @@ public final class LinxConversion
                 .build();
     }
 
+
     @NotNull
-    public static List<LinxReportableReason> reportableReasonStringToList(@NotNull String input) {
-        List<LinxReportableReason> reasons = Lists.newArrayList();
-        Arrays.stream(input.split(FileDelimiters.ITEM_DELIM)).forEach(x -> reasons.add(LinxReportableReason.valueOf(x)));
-        return reasons;
+    private static List<LinxReportableReason> reportableReasonStringToList(@NotNull String input) {
+        return Arrays.stream(input.split(FileDelimiters.ITEM_DELIM))
+                .map(item -> {
+                    switch (item) {
+                        case "OK":
+                            return LinxReportableReason.NONE;
+                        case "PROTEIN_DOMAINS":
+                            return LinxReportableReason.DISRUPTED_PROTEIN_DOMAINS;
+                        case "NMD":
+                            return LinxReportableReason.NONSENSE_MEDIATED_DECAY;
+                        default:
+                            return LinxReportableReason.valueOf(item);
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     @NotNull

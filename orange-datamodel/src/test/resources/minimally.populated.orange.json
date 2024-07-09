@@ -345,8 +345,8 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "reportedReasons": [
-          "OK"
+        "unreportedReasons": [
+          "NONE"
         ],
         "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
@@ -370,8 +370,8 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "reportedReasons": [
-          "OK"
+        "unreportedReasons": [
+          "NONE"
         ],
         "driverLikelihood": "HIGH",
         "fusedExonUp": 1,

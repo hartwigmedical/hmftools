@@ -42,7 +42,7 @@ public interface LinxFusion
     LinxFusionType reportedType();
 
     @NotNull
-    List<LinxReportableReason> reportedReasons();
+    List<LinxReportableReason> unreportedReasons();
 
     @NotNull
     FusionPhasedType phased();
