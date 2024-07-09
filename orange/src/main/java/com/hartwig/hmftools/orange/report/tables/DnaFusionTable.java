@@ -109,7 +109,44 @@ public final class DnaFusionTable
     @NotNull
     private static String display(@NotNull List<LinxReportableReason> reportableReasons)
     {
-        return reportableReasons.stream().map(LinxReportableReason::display).collect(Collectors.joining(", "));
+        return reportableReasons.stream().map(item ->
+        {
+            switch(item)
+            {
+                case NONE:
+                    return "-";
+                case NOT_KNOWN:
+                    return "Unknown fusion pair";
+                case UNPHASED_NOT_KNOWN:
+                    return "Unphased, no known fusion pair";
+                case UNPHASED_5P_UTR:
+                    return "Unphased, 5P UTR";
+                case UNPHASED_SHORT:
+                    return "Unphased, short unphased distance";
+                case SGL_NOT_KNOWN:
+                    return "SGL, no known fusion pair";
+                case PRE_GENE_DISTANCE:
+                    return "Max upstream distance exceeded";
+                case NONSENSE_MEDIATED_DECAY:
+                    return "Nonsense mediated decay";
+                case NEG_SPLICE_ACC_DISTANCE:
+                    return "Negative previous splice acceptor distance";
+                case EXON_SKIPPING:
+                    return "Exon skipping";
+                case CHAIN_TERMINATED:
+                    return "Chain terminated";
+                case NON_DISRUPTIVE_CHAIN:
+                    return "Non-disruptive chain";
+                case INVALID_TRAVERSAL:
+                    return "Invalid chain traversal";
+                case CHAIN_LINKS:
+                    return "Maximum chain links exceeded";
+                case DISRUPTED_PROTEIN_DOMAINS:
+                    return "Disrupted protein domains";
+                default:
+                    throw new IllegalArgumentException("Unknown unreportable reason: " + item);
+            }
+        }).collect(Collectors.joining(","));
     }
 
     @NotNull
