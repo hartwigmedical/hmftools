@@ -9,6 +9,8 @@ authors = [{ name="Luan Nguyen", email="lnguyen@hartwigmedicalfoundation.nl" }]
 description = "Python machine learning component of CUPPA"
 readme = "README.md"
 requires-python = ">=3.9"
+
+## Use strict versioning due to avoid deprecation warnings and differing classifier output from future versions
 dependencies = [
     "pandas == 2.0.3",
     "numpy == 1.24.3",
@@ -22,7 +24,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest == 7.4.0"]
+test = ["pytest >= 7.4.0"]
 
 [tool.setuptools.packages.find]
 include = [
