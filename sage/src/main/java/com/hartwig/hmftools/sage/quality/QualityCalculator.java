@@ -65,13 +65,13 @@ public class QualityCalculator
     {
         if(config.isHighlyPolymorphic(position))
         {
-            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
+            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedMapQualPenalty);
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
-        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadEventsPenalty);
+        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty);
 
-        int modifiedMapQuality = mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
+        int modifiedMapQuality = mapQuality - config.FixedMapQualPenalty - improperPairPenalty - eventPenalty;
 
         return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
@@ -102,10 +102,10 @@ public class QualityCalculator
             modifiedBaseQuality -= mConfig.BaseQualityFixedPenalty;
 
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
-        modifiedBaseQuality = modifiedBaseQuality - readEdgePenalty;
+        modifiedBaseQuality -= readEdgePenalty;
 
-        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
-        // double modifiedQuality = max(0, modifiedBaseQuality);
+        // double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+        double modifiedQuality = max(0, modifiedBaseQuality);
 
         return new QualityScores(
                 calcBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);

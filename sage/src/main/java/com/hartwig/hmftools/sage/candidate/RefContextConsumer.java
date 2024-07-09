@@ -124,7 +124,7 @@ public class RefContextConsumer
 
         updateRegionBlockDepth(readStart, readEnd);
 
-        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadEventsPenalty);
+        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadMapQualEventsPenalty);
         readInfo.ReadExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record, readInfo.AlignedLength);
 
@@ -310,12 +310,12 @@ public class RefContextConsumer
         if(!applyEventPenalty)
             return record.getMappingQuality();;
 
-        int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadEventsPenalty);
+        int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadMapQualEventsPenalty);
 
         int improperPenalty = isImproperPair(record) || record.getSupplementaryAlignmentFlag() ?
                 mConfig.Quality.ImproperPairPenalty : 0;
 
-        return record.getMappingQuality() - mConfig.Quality.FixedPenalty - eventPenalty - improperPenalty;
+        return record.getMappingQuality() - mConfig.Quality.FixedMapQualPenalty - eventPenalty - improperPenalty;
     }
 
     private boolean isHotspotPosition(int position)

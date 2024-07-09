@@ -225,62 +225,40 @@ public class SoftFilterTest
     }
 
     @Test
-    public void testPartialMnvSnvFilterAndDedup()
+    public void testSimpleAtGermlineVaf()
     {
         int position = 50;
 
+        SimpleVariant variant = createSimpleVariant(position, "ACG", "TCA");
         VariantReadContext readContext = createReadContext(
-                createSimpleVariant(position, "ACG", "TCA"),
-                REF_BASES.substring(48, position), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
+                variant, REF_BASES.substring(48, position), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
 
-        ReadContextCounter refCounter = createReadCounter(readContext);
+        ReadContextCounter refCounter = createReadCounter(readContext, true);
         ReadContextCounter tumorCounter = createReadCounter(readContext);
 
         int readPosStart = 20;
-        String altBases = refCounter.alt();
+        String altBases = variant.alt();
 
-        String refBases = REF_BASES.substring(position, position + 3);
+        // trigger alt in the germline and and full support tumor reads to observe the germline filter still being applied
         String altReadBases = REF_BASES.substring(readPosStart, position) + altBases + REF_BASES.substring(position + 3, 80);
         String readCigar = buildCigarString(altReadBases.length());
 
         SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
-        refCounter.processRead(altRead, 1, null);
         tumorCounter.processRead(altRead, 1, null);
 
-        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES.substring(20, 80), readCigar);
-        refCounter.processRead(refRead, 1, null);
-        tumorCounter.processRead(refRead, 1, null);
+        String simpleAltReadBases = REF_BASES.substring(readPosStart, position - 1) + "G" + altBases + REF_BASES.substring(position + 3, 80);
+        SAMRecord simpleAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, simpleAltReadBases, readCigar);
+        refCounter.processRead(simpleAltRead, 1, null);
 
-        String partialAltReadBases = REF_BASES.substring(readPosStart, position)
-                + refBases.substring(0, 2) + altBases.substring(2) + REF_BASES.substring(position + 3, 80);
-        SAMRecord partialAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, partialAltReadBases, readCigar);
-        refCounter.processRead(partialAltRead, 1, null);
-
-        VariantReadContext snvReadContext = createReadContext(
-                createSimpleVariant(position + 2, "G", "A"),
-                REF_BASES.substring(48, position + 2), REF_BASES.substring(53, 55), REF_BASES.substring(38, 48), REF_BASES.substring(55, 63));
-
-        ReadContextCounter snvRefCounter = createReadCounter(snvReadContext);
-        ReadContextCounter snvTumorCounter = createReadCounter(snvReadContext);
-
-        snvTumorCounter.processRead(partialAltRead, 1, null);
+        assertEquals(1, refCounter.simpleAltMatches());
+        assertEquals(0, refCounter.altSupport());
 
         Candidate candidate = new Candidate(HIGH_CONFIDENCE, readContext, 1, 1);
         SageVariant mnv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
-        mnv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
 
         FILTERS.applySoftFilters(mnv);
 
-        assertTrue(mnv.filters().contains(MAX_GERMLINE_ALT_SUPPORT));
-
-        candidate = new Candidate(HIGH_CONFIDENCE, snvReadContext, 1, 1);
-        SageVariant snv = new SageVariant(candidate, List.of(snvRefCounter), List.of(snvTumorCounter));
-        snv.tumorReadCounters().get(0).addLocalPhaseSet(1, 2, 0);
-
-        DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(Collections.emptyList(), TEST_CONFIG.Filter);
-        deduper.dedupVariants(List.of(mnv, snv));
-
-        assertTrue(snv.filters().contains(MAX_GERMLINE_VAF));
+        assertTrue(mnv.filters().contains(MAX_GERMLINE_VAF));
     }
 
     private ReadContextCounter createSnvReadContextCounter(final int variantPosition)

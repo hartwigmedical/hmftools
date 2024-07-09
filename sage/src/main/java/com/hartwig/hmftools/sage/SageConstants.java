@@ -95,7 +95,7 @@ public class SageConstants
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
     public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
-    public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
+    public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.2;
 
     public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
@@ -113,9 +113,9 @@ public class SageConstants
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;
 
-    public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
+    public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 6.5;
 
     public static final double QUALITY_SITE_AVG_MQ_LIMIT = 7.5;
     public static final int QUALITY_SITE_REPEAT_MAX = 10;

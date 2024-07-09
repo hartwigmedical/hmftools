@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -55,7 +55,7 @@ public class StrandBiasCalcs
         double nonAltBias = strandBiasDataNonAlt.bias();
         double minNonAltBias = min(nonAltBias, 1 - nonAltBias);
 
-        if(minNonAltBias < STRAND_BIAS_REF_MIN_BIAS && (nonAltBias < 0.5) == (strandBias < 0.5))
+        if(minNonAltBias < STRAND_BIAS_NON_ALT_MIN_BIAS && (nonAltBias < 0.5) == (strandBias < 0.5))
             return false;
 
         int depth = strandBiasDataAlt.depth();

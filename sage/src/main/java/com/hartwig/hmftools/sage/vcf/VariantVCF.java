@@ -32,8 +32,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_MAP_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_MAP_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
@@ -44,8 +44,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUALITY_SITE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUALITY_SITE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
@@ -197,7 +195,6 @@ public class VariantVCF implements AutoCloseable
             header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
         }
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(QUALITY_SITE, 1, VCFHeaderLineType.Flag, QUALITY_SITE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
 
         // genotype fields
@@ -210,7 +207,7 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_MAP_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));

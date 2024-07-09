@@ -62,14 +62,8 @@ public class DedupMixedGermlineSomatic
 
         */
 
-        List<SageVariant> initialCandidates = variants.stream()
-                .filter(x -> isGermlineFilteredSnv(x) || isPassingSnv(x) || x.isMnv())
-                .collect(Collectors.toList());
-
-        markSnvGermlineFromPartialMnvs(initialCandidates);
-
-        List<SageVariant> candidates = initialCandidates.stream()
-                .filter(x -> x.isSnv() || isPassingMnv(x))
+        List<SageVariant> candidates = variants.stream()
+                .filter(x -> isGermlineFilteredSnv(x) || isPassingSnv(x) || isPassingMnv(x))
                 .collect(Collectors.toList());
 
         int index = 0;
@@ -118,61 +112,6 @@ public class DedupMixedGermlineSomatic
 
             ++index;
         }
-    }
-
-    private void markSnvGermlineFromPartialMnvs(final List<SageVariant> candidates)
-    {
-        for(int i = 0; i < candidates.size() - 1; ++i)
-        {
-            SageVariant mnv = candidates.get(i);
-
-            if(!mnv.isMnv() || mnv.referenceReadCounters().isEmpty() || mnv.referenceReadCounters().get(0).partialMnvSupport() == 0)
-                continue;
-
-            int[] mnvGermlineCount = mnv.referenceReadCounters().get(0).partialMnvCounts();
-
-            // assign germline support to any SNV matching the bases of the MNV
-            for(int j = 0; j < candidates.size(); ++j)
-            {
-                SageVariant snv = candidates.get(j);
-
-                if(!snv.isSnv() || !snv.isPassing() || isGermlineFilteredSnv(snv))
-                    continue;
-
-                if(snv.position() < mnv.position())
-                    continue;
-
-                if(snv.position() > mnv.position() + mnv.alt().length() - 1)
-                    break;
-
-                int posOffset = snv.position() - mnv.position();
-
-                if(mnv.alt().charAt(posOffset) == snv.alt().charAt(0))
-                {
-                    int mnvGermlineSupport = mnvGermlineCount[posOffset];
-
-                    int snvGermlineSupport = snv.referenceReadCounters().get(0).altSupport();
-
-                    double snvRefDepth = snv.referenceReadCounters().get(0).readCounts().Total;
-
-                    if(snvRefDepth > 0)
-                    {
-                        double adjustedRefVaf = (mnvGermlineSupport + snvGermlineSupport) / snvRefDepth;
-
-                        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(snv.tier(), mFilterConfig);
-                        if(Doubles.greaterThan(adjustedRefVaf, softFilterConfig.MaxGermlineVaf))
-                        {
-                            snv.filters().add(SoftFilter.MAX_GERMLINE_VAF);
-                        }
-                    }
-                    else if(mnvGermlineSupport + snvGermlineSupport > 0)
-                    {
-                        snv.filters().add(SoftFilter.MAX_GERMLINE_VAF);
-                    }
-                }
-            }
-        }
-
     }
 
     private void checkGroup(final SageVariant mnv, final SageVariant snvPassing, final SageVariant snvGermline)

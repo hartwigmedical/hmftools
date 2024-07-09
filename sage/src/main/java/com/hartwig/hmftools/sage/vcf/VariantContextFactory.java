@@ -12,13 +12,12 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUALITY_SITE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
@@ -103,7 +102,6 @@ public final class VariantContextFactory
                 new int[] { primaryRcCounter.readEdgeDistance().avgAltDistanceFromEdge(),
                         primaryRcCounter.readEdgeDistance().avgDistanceFromEdge() } );
 
-        builder.attribute(QUALITY_SITE, primaryRcCounter.isQualitySite());
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
 
         if(primaryRcCounter.ultimaQualModel() != null)
@@ -135,7 +133,7 @@ public final class VariantContextFactory
         int avgAltBaseQuality = (int)round(counter.averageAltBaseQuality());
 
         int avgModifiedBaseQuality = depth > 0 ? (int)round(qualCounters.modifiedBaseQualityTotal() / (double)depth) : 0;
-        int avgModifiedMapQuality = depth > 0 ? (int)round(qualCounters.modifiedMapQualityTotal() / (double)depth) : 0;
+        int avgAltModifiedMapQuality = depth > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)depth) : 0;
 
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
@@ -146,7 +144,7 @@ public final class VariantContextFactory
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
                 .attribute(AVG_MODIFIED_BASE_QUAL, avgModifiedBaseQuality)
-                .attribute(AVG_MODIFIED_MAP_QUAL, avgModifiedMapQuality)
+                .attribute(AVG_MODIFIED_ALT_MAP_QUAL, avgAltModifiedMapQuality)
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasNonAlt().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(

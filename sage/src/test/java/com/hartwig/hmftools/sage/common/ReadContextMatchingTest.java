@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
-import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_MNV;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.SIMPLE_ALT;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -151,7 +151,7 @@ public class ReadContextMatchingTest
     }
 
     @Test
-    public void testMnvPartialMatches()
+    public void testSimpleAltMatches()
     {
         String leftCore = "AC";
         String rightCore = "GT";
@@ -161,21 +161,33 @@ public class ReadContextMatchingTest
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        ReadContextMatcher matcher = createReadContextMatcher(readContext);
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext, true, true);
 
-        String readBases = readContext.leftFlankStr() + leftCore + "AGC" + rightCore + readContext.rightFlankStr();
+        String readBases = readContext.leftFlankStr() + "TT" + alt + rightCore + readContext.rightFlankStr();
         byte[] readQualities = buildDefaultBaseQuals(readBases.length());
         int readVarIndex = readContext.leftFlankLength() + 2;
         String cigar = buildCigarString(readBases.length());
 
         SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
-        assertEquals(PARTIAL_MNV, matcher.determineReadMatch(read, readVarIndex));
+        assertEquals(SIMPLE_ALT, matcher.determineReadMatch(read, readVarIndex));
 
-        // differing base not part of the MNV
-        readBases = readContext.leftFlankStr() + leftCore + "ACT" + rightCore + readContext.rightFlankStr();
+        // repeated for an SNV
+        ref = "A";
+        alt = "T";
+        variant = createSimpleVariant(position, ref, alt);
+        readContext = createReadContext(variant, leftCore, rightCore);
+
+        matcher = new ReadContextMatcher(readContext, true, true);
+
+        readBases = readContext.leftFlankStr() + leftCore + alt + "CC" + readContext.rightFlankStr();
+        readQualities = buildDefaultBaseQuals(readBases.length());
+        readVarIndex = readContext.leftFlankLength() + 2;
+        cigar = buildCigarString(readBases.length());
+
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
-        assertEquals(NONE, matcher.determineReadMatch(read, readVarIndex));
+
+        assertEquals(SIMPLE_ALT, matcher.determineReadMatch(read, readVarIndex));
     }
 
     @Test

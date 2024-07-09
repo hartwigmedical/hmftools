@@ -109,9 +109,14 @@ public final class VariantUtils
 
     public static ReadContextCounter createReadCounter(final VariantReadContext readContext)
     {
+        return createReadCounter(readContext, false);
+    }
+
+    public static ReadContextCounter createReadCounter(final VariantReadContext readContext, boolean isReference)
+    {
         return new ReadContextCounter(
                 0, readContext, LOW_CONFIDENCE,
-                DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, false);
+                DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, isReference);
     }
 
     public static ReadContextMatcher createReadContextMatcher(final VariantReadContext readContext)

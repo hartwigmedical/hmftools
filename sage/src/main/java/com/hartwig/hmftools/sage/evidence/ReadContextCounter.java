@@ -97,7 +97,7 @@ public class ReadContextCounter
     // counts and quals by support type
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
-    private final int[] mPartialMnvCounts; // count of SNV matches within an MNV where Core match failed
+    private int mSimpleAltMatches;
 
     private final StrandBiasData mAltFragmentStrandBias;
     private final StrandBiasData mNonAltFragmentStrandBias;
@@ -151,7 +151,7 @@ public class ReadContextCounter
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
-        mPartialMnvCounts = variant().isMNV() ? new int[variant().refLength()] : null;
+        mSimpleAltMatches = 0;
 
         mJitterData = new JitterData();
 
@@ -197,15 +197,7 @@ public class ReadContextCounter
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
 
-    public int partialMnvSupport()
-    {
-        if(mPartialMnvCounts == null)
-            return 0;
-
-        return Arrays.stream(mPartialMnvCounts).sum();
-    }
-
-    public int[] partialMnvCounts() { return mPartialMnvCounts; }
+    public int simpleAltMatches() { return mSimpleAltMatches; }
 
     public int depth() { return mCounts.Total; }
 
@@ -473,9 +465,9 @@ public class ReadContextCounter
         {
             readSupport = REF;
         }
-        else if(matchType == ReadContextMatch.PARTIAL_MNV)
+        else if(matchType == ReadContextMatch.SIMPLE_ALT)
         {
-            mMatcher.checkPartialMnvMatch(record.getReadBases(), readVarIndex, mPartialMnvCounts);
+            ++mSimpleAltMatches;
         }
 
         // special case to ignore updating depth and other metrics when an indel could not have support the alt
@@ -642,9 +634,6 @@ public class ReadContextCounter
 
     public double tumorQualProbability() { return mTumorQualProbability; }
     public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
-
-    public boolean isQualitySite() { return mIsQualitySite; }
-    public void markQualitySite() { mIsQualitySite = true; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

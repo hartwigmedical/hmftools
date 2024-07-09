@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.filter;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -43,6 +44,12 @@ public class StrandBiasData
     {
         double depth = mForwardCount + mReverseCount;
         return depth > 0 ? mForwardCount / depth : 0.5;
+    }
+
+    public double minBias()
+    {
+        double bias = bias();
+        return min(bias, 1 - bias);
     }
 
     public void registerFragment(final SAMRecord record)

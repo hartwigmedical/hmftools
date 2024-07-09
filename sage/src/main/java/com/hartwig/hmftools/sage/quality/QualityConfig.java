@@ -18,8 +18,8 @@ public class QualityConfig
 {
     public final int JitterMinRepeatCount;
     public final int BaseQualityFixedPenalty;
-    public final int FixedPenalty;
-    public final double ReadEventsPenalty;
+    public final int FixedMapQualPenalty;
+    public final double ReadMapQualEventsPenalty;
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
     public final boolean HighDepthMode;
@@ -38,12 +38,12 @@ public class QualityConfig
     {
         JitterMinRepeatCount = configBuilder.getInteger(JITTER_MIN_REPEAT_COUNT);
         BaseQualityFixedPenalty = configBuilder.getInteger(BASE_QUAL_FIXED_PENALTY);
-        ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
+        ReadMapQualEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
         HighDepthMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
 
-        FixedPenalty = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
+        FixedMapQualPenalty = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
                 DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY : configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
 
         MapQualityRatioFactor = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_RATIO_FACTOR) ?
@@ -56,8 +56,8 @@ public class QualityConfig
     {
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
-        FixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
-        ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
+        FixedMapQualPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
+        ReadMapQualEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
 

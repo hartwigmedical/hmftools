@@ -50,8 +50,8 @@ public final class VcfTags
     public static final String AVG_MODIFIED_BASE_QUAL = "AMBQ";
     public static final String AVG_MODIFIED_BASE_QUAL_DESC = "Average modified map quality";
 
-    public static final String AVG_MODIFIED_MAP_QUAL = "AMMQ";
-    public static final String AVG_MODIFIED_MAP_QUAL_DESC = "Average modified map quality";
+    public static final String AVG_MODIFIED_ALT_MAP_QUAL = "AMMQ";
+    public static final String AVG_MODIFIED_ALT_MAP_QUAL_DESC = "Average alt support modified map quality";
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESC = "Mixed Somatic and Germline variants";
@@ -61,9 +61,6 @@ public final class VcfTags
 
     public static final String QUAL_MODEL_TYPE = "QMT";
     public static final String QUAL_MODEL_TYPE_DESC = "Qual model type if applicable";
-
-    public static final String QUALITY_SITE = "QS";
-    public static final String QUALITY_SITE_DESC = "Meets quality site criteria in min tumor qual filter";
 
     public static final String TUMOR_QUALITY_PROB = "TQP";
     public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";

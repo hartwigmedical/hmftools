@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log;
+import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
@@ -18,6 +21,7 @@ import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_MQ_LIMIT;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_JITTER_RATIO;
 import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
@@ -227,48 +231,66 @@ public class VariantFilters
 
         int altSupport = primaryTumor.altSupport();
 
-        boolean isQualitySite = isQualitySite(config, primaryTumor, depth, tumorQual, altSupport);
-        primaryTumor.markQualitySite();
+        double mapQualFactor = calcMapQualFactor(primaryTumor, depth, altSupport);
 
-        if(prob < config.QualPScore)
-            return false;
+        if(mapQualFactor < 0)
+            return true;
 
-        return !isQualitySite;
+        return prob >= config.QualPScore;
     }
 
-    private static boolean isQualitySite(
-            final SoftFilterConfig config, final ReadContextCounter primaryTumor, final int depth, final double qual, final int altSupport)
+    private static double calcMapQualFactor(final ReadContextCounter primaryTumor, final int depth, final int altSupport)
     {
-        if(altSupport == 0)
-            return false;
+        /*
+        - PerReadModifiedMapQual = Avg(ModifiedMapQual) across all alt supporting reads
+        - MQDiffPenalty = 2 * (AMQ[all] - AMQ[alt]) if AMQ[all] > AMQ[alt], else 0
+        - RSBPenalty = 10 * (AD – 1) * log10(2) if alt RSB in (0, 1) and non-alt RSB between 0.2 and 0.8, else 0
+        - AEDPenalty = 10 * AD * log10(AED[all] / max(AED[alt], 1)) if AED[alt] / AED[all] < 0.66, else 0
+        - MSPenalty = min(3 * RC_REPC, 24) if len(RC_REPS) > 1, else 0
 
-        double jitterTotals = primaryTumor.jitter().shortened() + primaryTumor.jitter().lengthened();
-        double jitterRatio = jitterTotals / altSupport;
+        - Note that many of these concepts and thresholds are already used in other parts of Sage eg
+            - we have a soft filter if AMQ[all] - AMQ[alt] > 15, 0.2/0.8 for RSB is used as STRAND_BIAS_REF_MIN_BIAS
+            - 0.66 for edge distance is used as 2 * MAX_READ_EDGE_DISTANCE_PERC.
+        - The MSPenalty only applies to cores with a non-homopolymer MaxRepeat, since these are empirically associated with more error phone contexts,
+         particularly at repeat transitions.
+        - Then MQHeuristic = PerReadModifiedMapQual – 27.5 - MQDiffPenalty – RSBPenalty – AEDPenalty – MSPenalty.
+        - If MQHeuristic < 0, the variant is minTumorQual due to weakness in site quality characteristics.
+         */
 
-        if(jitterRatio > QUALITY_SITE_JITTER_RATIO)
-            return false;
-
-        if(primaryTumor.readContext().MaxRepeat != null)
-        {
-            if(primaryTumor.readContext().MaxRepeat.totalLength() > QUALITY_SITE_REPEAT_MAX)
-                return false;
-        }
+        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)depth;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
-        double altAvgMapQual = primaryTumor.altMapQualityTotal() / altSupport;
+        double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
 
-        if(abs(avgMapQual - altAvgMapQual) >= QUALITY_SITE_AVG_MQ_LIMIT)
-            return false;
+        double mapQualDiffPenalty = avgMapQual > avgAltMapQual ? 2 * (avgMapQual - avgAltMapQual) : 0;
 
-        if(qual < config.QualitySiteThreshold)
-            return false;
+        double readStrandBiasPenalty = 0;
+        double readStrandBiasAlt = primaryTumor.readStrandBiasAlt().minBias();
+        double readStrandBiasNonAlt = primaryTumor.readStrandBiasNonAlt().minBias();
 
-        double readStrandBias = primaryTumor.readStrandBiasAlt().bias();
+        if(readStrandBiasAlt == 0 && readStrandBiasNonAlt > STRAND_BIAS_NON_ALT_MIN_BIAS)
+        {
+            readStrandBiasPenalty = 10 * (altSupport - 1) * log(2);
+        }
 
-        if(readStrandBias < STRAND_BIAS_CHECK_THRESHOLD && readStrandBias > (1 - STRAND_BIAS_CHECK_THRESHOLD))
-            return false;
+        double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
+        double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
+        double edgeDistancePenalty = 0;
 
-        return primaryTumor.averageAltBaseQuality() >= QUALITY_SITE_AVG_BASE_QUALITY;
+        if(avgAltEdgeDistance / avgEdgeDistance < 0.66)
+        {
+            edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
+        }
+
+        double repeatPenalty = 0;
+
+        if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1)
+        {
+            repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, 24);
+        }
+
+        double mapQualFactor = avgAltModifiedMapQuality - 27.5 - mapQualDiffPenalty - readStrandBiasPenalty - edgeDistancePenalty - repeatPenalty;
+        return mapQualFactor;
     }
 
     private static boolean belowMinTumorVaf(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
@@ -398,7 +420,7 @@ public class VariantFilters
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
 
-        int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.partialMnvSupport();
+        int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.simpleAltMatches();
 
         if(refCounter.variant().indelLengthAbs() > LONG_GERMLINE_INSERT_LENGTH)
         {
