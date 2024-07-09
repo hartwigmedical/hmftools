@@ -117,7 +117,7 @@ public final class DnaFusionTable
         {
             return reportableReasons.stream()
                     .map(LinxReportableReason::display)
-                    .collect(Collectors.joining(","));
+                    .collect(Collectors.joining(", "));
         }
     }
 

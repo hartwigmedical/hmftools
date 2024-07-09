@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
@@ -16,6 +21,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxReportableReason;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -69,6 +75,7 @@ public final class LinxConversion
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
+                .reportedReasons(reportableReasonStringToList(linxFusion.reportableReasons()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
                 .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
@@ -79,6 +86,13 @@ public final class LinxConversion
                 .domainsLost(linxFusion.domainsLost())
                 .junctionCopyNumber(linxFusion.junctionCopyNumber())
                 .build();
+    }
+
+    @NotNull
+    public static List<LinxReportableReason> reportableReasonStringToList(@NotNull String input) {
+        List<LinxReportableReason> reasons = Lists.newArrayList();
+        Arrays.stream(input.split(FileDelimiters.ITEM_DELIM)).forEach(x -> reasons.add(LinxReportableReason.valueOf(x)));
+        return reasons;
     }
 
     @NotNull

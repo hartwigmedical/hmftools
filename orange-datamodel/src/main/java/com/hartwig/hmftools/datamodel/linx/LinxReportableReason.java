@@ -25,7 +25,8 @@ public enum LinxReportableReason
         this.display = display;
     }
 
-    public String display() {
+    public String display()
+    {
         return display;
-}
+    }
 }
