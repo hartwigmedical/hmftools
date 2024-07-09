@@ -6,6 +6,8 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
@@ -28,6 +30,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
@@ -35,6 +39,7 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
@@ -248,17 +253,34 @@ public class SomaticPurityFitter
     }
 
     @Nullable
-    public FittedPurity fromTumorOnlySomatics(final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
+    public FittedPurity fromTumorOnlySomatics(
+            final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
     {
         List<Double> variantVafs = Lists.newArrayList();
 
         for(SomaticVariant variant : variants)
         {
-            if(variant.variantImpact() == null)
-                continue;
+            if(!variant.isHotspot())
+            {
+                if(variant.variantImpact() == null)
+                    continue;
 
-            if(!variant.isHotspot() && !hasProteinImpact(variant.variantImpact().CanonicalCodingEffect))
-                continue;
+                CodingEffect codingEffect = variant.variantImpact().CanonicalCodingEffect;
+
+                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
+                    continue;
+
+                DriverGene driverGene = driverGenes.driverGenes().stream()
+                        .filter(x -> x.gene().equals(variant.variantImpact().GeneName)).findFirst().orElse(null);
+
+                if(driverGene == null)
+                    continue;
+
+                if(codingEffect == NONSENSE_OR_FRAMESHIFT && !driverGene.reportNonsenseAndFrameshift())
+                    continue;
+                else if(codingEffect == MISSENSE && !driverGene.reportMissenseAndInframe())
+                    continue;
+            }
 
             if(variant.alleleFrequency() > SOMATIC_FIT_TUMOR_ONLY_MIN_VAF)
                 variantVafs.add(variant.alleleFrequency());

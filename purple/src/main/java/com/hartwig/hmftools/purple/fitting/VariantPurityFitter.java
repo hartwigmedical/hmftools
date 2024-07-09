@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.PurpleApplication;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter;
@@ -26,7 +27,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class VariantPurityFitter
 {
-    private final PurpleConfig mConfig;
+    private final ReferenceData mReferenceData;
     private final SampleData mSampleData;
     private final SomaticPurityFitter mSomaticPurityFitter;
 
@@ -40,9 +41,9 @@ public class VariantPurityFitter
 
     private boolean mHasTumor;
 
-    public VariantPurityFitter(final PurpleConfig config, final SampleData sampleData)
+    public VariantPurityFitter(final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData)
     {
-        mConfig = config;
+        mReferenceData = referenceData;
         mSampleData = sampleData;
 
         mSvHotspotCount = 0;
@@ -113,7 +114,7 @@ public class VariantPurityFitter
 
     public FittedPurity tumorOnlySomaticFit(final List<FittedPurity> allCandidates)
     {
-        return mSomaticPurityFitter.fromTumorOnlySomatics(mFittingSomatics, allCandidates);
+        return mSomaticPurityFitter.fromTumorOnlySomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
     }
 
     public static boolean somaticFitIsWorse(final FittedPurity lowestScore, final FittedPurity somaticFit, final SomaticFitConfig config)

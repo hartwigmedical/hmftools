@@ -257,7 +257,7 @@ public class PurpleApplication
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, sampleData, mExecutorService, regionFitCalculator, observedRegions, mSegmentation);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, mSegmentation);
 
             purityPloidyFitter.run();
 

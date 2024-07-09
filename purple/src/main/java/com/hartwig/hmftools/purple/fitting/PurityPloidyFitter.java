@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -65,7 +66,7 @@ public class PurityPloidyFitter
     private boolean mIsValid;
 
     public PurityPloidyFitter(
-            final PurpleConfig config, final SampleData sampleData, final ExecutorService executorService,
+            final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData, final ExecutorService executorService,
             final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Segmentation segmentation)
     {
         mSampleData = sampleData;
@@ -79,7 +80,7 @@ public class PurityPloidyFitter
         mFittedRegions = Lists.newArrayList();
         mCopyNumberFitCandidates = Lists.newArrayList();
 
-        mVariantPurityFitter = new VariantPurityFitter(mConfig, sampleData);
+        mVariantPurityFitter = new VariantPurityFitter(mConfig, referenceData, sampleData);
         mPurityAdjuster = null;
 
         mCopyNumberPurityFit = null;

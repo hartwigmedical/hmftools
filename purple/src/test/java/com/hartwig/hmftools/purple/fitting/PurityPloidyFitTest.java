@@ -137,7 +137,7 @@ public class PurityPloidyFitTest
     {
         List<ObservedRegion> observedRegions = buildDefaultObservedRegions();
 
-        PurityPloidyFitter fitter = new PurityPloidyFitter(mConfig, mSampleData, null,
+        PurityPloidyFitter fitter = new PurityPloidyFitter(mConfig, mReferenceData, mSampleData, null,
                 mRegionFitCalculator, observedRegions, mSegmentation);
 
         assertTrue(fitter.isValid());
