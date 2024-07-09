@@ -120,7 +120,7 @@ public final class DnaFusionTable
                 case UNPHASED_NOT_KNOWN:
                     return "Unphased, not a known fusion pair";
                 case UNPHASED_5P_UTR:
-                    return "Unphased, 5P UTR";
+                    return "Unphased, 5' UTR";
                 case UNPHASED_SHORT:
                     return "Unphased, short unphased distance";
                 case SGL_NOT_KNOWN:
