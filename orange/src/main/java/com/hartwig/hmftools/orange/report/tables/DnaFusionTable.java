@@ -116,9 +116,9 @@ public final class DnaFusionTable
                 case NONE:
                     return "-";
                 case NOT_KNOWN:
-                    return "Unknown fusion pair";
+                    return "Not a known fusion pair";
                 case UNPHASED_NOT_KNOWN:
-                    return "Unphased, no known fusion pair";
+                    return "Unphased, not a known fusion pair";
                 case UNPHASED_5P_UTR:
                     return "Unphased, 5P UTR";
                 case UNPHASED_SHORT:
