@@ -812,10 +812,10 @@
         "geneContextEnd": "Exon 70",
         "geneTranscriptEnd": "ENST00000357033",
         "reported": false,
-        "reportedType": [
-          "NONE"
+        "reportedType": "NONE",
+        "reportedReasons": [
+          "NOT_KNOWN"
         ],
-        "reportedReasons": "NOT_KNOWN",
         "phased": "INFRAME",
         "driverLikelihood": "NA",
         "fusedExonUp": 67,

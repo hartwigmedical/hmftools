@@ -344,10 +344,10 @@
     "allSomaticFusions": [
       {
         "reported": true,
-        "reportedType": [
-          "KNOWN_PAIR"
+        "reportedType": "KNOWN_PAIR",
+        "reportedReasons": [
+          "OK"
         ],
-        "reportedReasons": "OK",
         "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
@@ -369,10 +369,10 @@
     "reportableSomaticFusions": [
       {
         "reported": true,
-        "reportedType": [
-          "KNOWN_PAIR"
+        "reportedType": "KNOWN_PAIR",
+        "reportedReasons": [
+          "OK"
         ],
-        "reportedReasons": "OK",
         "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
