@@ -5,13 +5,13 @@ import tempfile
 import pytest
 
 from tests.mock_data import MockInputData
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader
+from cuppa.sample_data.cuppa_features import CuppaFeaturesDir, CuppaFeaturesLoader
 
 
 class TestCuppaFeaturesPaths:
 
     def test_can_find_files_in_dir_by_pattern(self):
-        match_files = CuppaFeaturesPaths.find_files_in_dir_by_pattern(
+        match_files = CuppaFeaturesDir._find_files_in_dir_by_pattern(
             directory=MockInputData.dir_new_format,
             pattern="cuppa_data.cohort.snv.*.tsv",
         )
@@ -27,7 +27,7 @@ class TestCuppaFeaturesPaths:
         os.mkdir(tmp_dir)
 
         with(pytest.raises(FileNotFoundError)):
-            CuppaFeaturesPaths.from_dir(tmp_dir)
+            CuppaFeaturesDir(tmp_dir).get_file_paths()
 
         paths = dict(
             ## DNA data is required
@@ -45,14 +45,14 @@ class TestCuppaFeaturesPaths:
         open(paths["snv"], 'w').close()
 
         with(pytest.raises(FileNotFoundError)):
-            CuppaFeaturesPaths.from_dir(tmp_dir)
+            CuppaFeaturesDir(tmp_dir).get_file_paths()
 
         ## Touch the remaining DNA data and check if CuppaFeaturesPaths succeeds
         open(paths["sv"], 'w').close()
         open(paths["driver"], 'w').close()
         open(paths["trait"], 'w').close()
 
-        CuppaFeaturesPaths.from_dir(tmp_dir)
+        CuppaFeaturesDir(tmp_dir).get_file_paths()
         assert True
 
         shutil.rmtree(tmp_dir)
@@ -61,7 +61,7 @@ class TestCuppaFeaturesPaths:
 class TestFeatureLoader:
 
     def test_can_load_single_sample_from_tsv(self):
-        loader = FeatureLoader(MockInputData.path_tsv_new_format, sample_id = "COLO829")
+        loader = CuppaFeaturesLoader(MockInputData.path_tsv_new_format, sample_id ="COLO829")
 
         features = loader.load()
         assert features.shape == (1, 6219)
@@ -81,7 +81,7 @@ class TestFeatureLoader:
 
     def test_can_load_multi_sample_from_tsvs(self):
 
-        loader = FeatureLoader(MockInputData.dir_new_format)
+        loader = CuppaFeaturesLoader(MockInputData.dir_new_format)
         features = loader.load()
         assert features.shape == (2, 6225)
 
@@ -94,34 +94,3 @@ class TestFeatureLoader:
         assert features["sig.UV (SBS7)"].tolist() == [0, 6.4]
         assert features["gene_exp.BRAF"].tolist() == [loader.na_fill_value, 3.434]
         assert features["alt_sj.7;140426316;140439612"].tolist() == [loader.na_fill_value, 2]
-
-
-class TestFeatureLoaderOld:
-
-    def test_can_load_dna_features(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
-        loader = FeatureLoaderOld(paths)
-        loader.load_dna_features()
-        assert True
-
-    def test_can_load_rna_features(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
-        loader = FeatureLoaderOld(paths)
-        loader.load_rna_features()
-        assert True
-
-    def test_can_load_from_directory(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
-        loader = FeatureLoaderOld(paths)
-        features = loader.load_features()
-
-        assert features.columns.str.match("^gen_pos").any()
-        assert features.columns.str.match("^snv96").any()
-        assert features.columns.str.match("^event[.]sv").any()
-        assert features.columns.str.match("^event[.]fusion").any()
-        assert features.columns.str.match("^event[.]trait[.]is_male").any()
-        assert features.columns.str.match("^event[.]trait[.]whole_genome_duplication").any()
-        assert features.columns.str.match("^event[.]tmb").any()
-        assert features.columns.str.match("^sig").any()
-        assert features.columns.str.match("^gene_exp").any()
-        assert features.columns.str.match("^alt_sj").any()

@@ -5,11 +5,13 @@ from functools import cached_property
 from pprint import pformat
 from typing import Optional
 
+import pandas as pd
+
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
-from cuppa.sample_data.cuppa_features import FeatureLoader, CuppaFeatures
+from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
 from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
@@ -45,7 +47,7 @@ class PredictionRunner(LoggerMixin):
         self.set_up_logging()
 
         ## Attributes assigned at run time --------------------------------
-        self.X: CuppaFeatures = None
+        self.X: pd.DataFrame = None
         self.predictions: CuppaPrediction = None
         self.pred_summ: CuppaPredSummary = None
         self.vis_data: CuppaVisData = None
@@ -65,7 +67,7 @@ class PredictionRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        loader = FeatureLoader(self.features_path, sample_id=self.sample_id)
+        loader = CuppaFeaturesLoader(self.features_path, sample_id=self.sample_id)
         X = loader.load()
 
         X = self.cuppa_classifier.fill_missing_cols(X)
@@ -105,9 +107,9 @@ class PredictionRunner(LoggerMixin):
         predictions = CuppaPrediction.concat(predictions)
         predictions = predictions.loc[self.X.index]
 
-        if self.clf_group == "all":
+        if self.clf_group.lower() == "all":
             pass
-        elif self.clf_group == "dna":
+        elif self.clf_group.lower() == "dna":
             predictions = predictions.subset_probs_by_clf_groups("dna")
         else:
             self.logger.error("`clf_group` must be 'all' or 'dna'")

@@ -1,4 +1,4 @@
-from cuppa.sample_data.cuppa_features import FeatureLoader
+from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.constants import DEFAULT_CUPPA_CLASSIFIER_PATH
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter
@@ -8,7 +8,7 @@ INPUT_PATH = impresources.files("cuppa") / "resources/mock_data/input_data/new_f
 PLOT_PATH = impresources.files("doc") / "visualization/COLO829v003T.cuppa.vis.png"
 
 
-loader = FeatureLoader(str(INPUT_PATH), sample_id="COLO829v003T")
+loader = CuppaFeaturesLoader(str(INPUT_PATH), sample_id="COLO829v003T")
 features = loader.load()
 
 classifier = CuppaClassifier.from_file(DEFAULT_CUPPA_CLASSIFIER_PATH)

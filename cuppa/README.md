@@ -222,6 +222,9 @@ pyenv activate pycuppa_env
 ## Clone the hmftools repository
 git clone https://github.com/hartwigmedical/hmftools/
 
+## Upgrade python package manager
+pip install --upgrade pip
+
 ## Install `pycuppa` using `pip`. This will also install required python packages
 pip install hmftools/cuppa/src/main/python/pycuppa
 ```
@@ -237,9 +240,10 @@ pyenv activate pycuppa_env
 
 ## Call the module `pycuppa/cuppa/predict.py`
 python3 -m cuppa.predict \
---classifier_path=/path/to/cuppa_classifier.pickle.gz \
---features_path=/path/to/features/ \
---output_dir=/path/to/output/dir/
+--sample_id "TUMOR_SAMPLE" \
+--classifier_path /path/to/cuppa_classifier.pickle.gz \
+--features_path /path/to/features/ \
+--output_dir /path/to/output/dir/
 ```
 
 ### Training
@@ -251,10 +255,10 @@ pyenv activate pycuppa_env
 
 ## Call the module `pycuppa/cuppa/train.py`
 python3 -m cuppa.train \
---features_path=/path/to/features/ \
---metadata_path=/path/to/metadata/ \
---output_dir=/path/to/output/dir/ \
---n_jobs=5 \
+--features_path /path/to/features/ \
+--metadata_path /path/to/metadata/ \
+--output_dir /path/to/output/dir/ \
+--n_jobs 5 \
 --log_to_file
 ```
 
