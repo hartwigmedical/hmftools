@@ -258,6 +258,8 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
+- Upcoming:
+  - Add unreported reason to fusions in ORANGE
 - [3.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.6.0)
     - Cuppa predictions with NaN likelihood are filtered in the ORANGE conversion of CUPPA results
 - [3.5.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.1)

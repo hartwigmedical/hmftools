@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
@@ -16,6 +21,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -69,6 +75,7 @@ public final class LinxConversion
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
+                .unreportedReasons(unreportableReasonStringToList(linxFusion.reportableReasons()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
                 .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
@@ -79,6 +86,25 @@ public final class LinxConversion
                 .domainsLost(linxFusion.domainsLost())
                 .junctionCopyNumber(linxFusion.junctionCopyNumber())
                 .build();
+    }
+
+
+    @NotNull
+    private static List<LinxUnreportableReason> unreportableReasonStringToList(@NotNull String input) {
+        return Arrays.stream(input.split(FileDelimiters.ITEM_DELIM))
+                .map(item -> {
+                    switch (item) {
+                        case "OK":
+                            return LinxUnreportableReason.NONE;
+                        case "PROTEIN_DOMAINS":
+                            return LinxUnreportableReason.DISRUPTED_PROTEIN_DOMAINS;
+                        case "NMD":
+                            return LinxUnreportableReason.NONSENSE_MEDIATED_DECAY;
+                        default:
+                            return LinxUnreportableReason.valueOf(item);
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     @NotNull

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -58,6 +59,7 @@ public final class DnaFusionTable
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
                                     cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
+                            Maps.immutableEntry("Unreported reason(s)", cells.createValue(display(fusion.unreportedReasons()))),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
@@ -102,6 +104,49 @@ public final class DnaFusionTable
                 return "NA";
         }
         throw new IllegalStateException();
+    }
+
+    @NotNull
+    private static String display(@NotNull List<LinxUnreportableReason> unreportedReasons)
+    {
+        return unreportedReasons.stream().map(item ->
+        {
+            switch(item)
+            {
+                case NONE:
+                    return "-";
+                case NOT_KNOWN:
+                    return "Not a known fusion pair";
+                case UNPHASED_NOT_KNOWN:
+                    return "Unphased, not a known fusion pair";
+                case UNPHASED_5P_UTR:
+                    return "Unphased, 5' UTR";
+                case UNPHASED_SHORT:
+                    return "Unphased, short unphased distance";
+                case SGL_NOT_KNOWN:
+                    return "SGL, no known fusion pair";
+                case PRE_GENE_DISTANCE:
+                    return "Max upstream distance exceeded";
+                case NONSENSE_MEDIATED_DECAY:
+                    return "Nonsense mediated decay";
+                case NEG_SPLICE_ACC_DISTANCE:
+                    return "Negative previous splice acceptor distance";
+                case EXON_SKIPPING:
+                    return "Exon skipping";
+                case CHAIN_TERMINATED:
+                    return "Chain terminated";
+                case NON_DISRUPTIVE_CHAIN:
+                    return "Non-disruptive chain";
+                case INVALID_TRAVERSAL:
+                    return "Invalid chain traversal";
+                case CHAIN_LINKS:
+                    return "Maximum chain links exceeded";
+                case DISRUPTED_PROTEIN_DOMAINS:
+                    return "Disrupted protein domains";
+                default:
+                    throw new IllegalArgumentException("Unknown unreportable reason: " + item);
+            }
+        }).collect(Collectors.joining(","));
     }
 
     @NotNull
