@@ -15,7 +15,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.linx.LinxReportableReason;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -107,9 +107,9 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static String display(@NotNull List<LinxReportableReason> reportableReasons)
+    private static String display(@NotNull List<LinxUnreportableReason> unreportedReasons)
     {
-        return reportableReasons.stream().map(item ->
+        return unreportedReasons.stream().map(item ->
         {
             switch(item)
             {

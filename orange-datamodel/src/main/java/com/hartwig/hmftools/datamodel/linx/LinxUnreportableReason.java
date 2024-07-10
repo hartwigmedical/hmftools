@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.datamodel.linx;
 
-public enum LinxReportableReason
+public enum LinxUnreportableReason
 {
     NONE,
     NOT_KNOWN,
