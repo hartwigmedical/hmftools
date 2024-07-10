@@ -691,6 +691,38 @@ public class JunctionAssembly
         }
     }
 
+    public void trimRefBases(int newRefPosition)
+    {
+        byte[] existingBases = copyArray(mBases);
+        byte[] existingQuals = copyArray(mBaseQuals);
+
+        int existingRefPosition = refBasePosition();
+
+        int newBaseLength = mBases.length - abs(existingRefPosition - newRefPosition);
+        int baseLengthChange = mBases.length - newBaseLength;
+
+        if(mJunction.isForward())
+        {
+            mMinAlignedPosition = newRefPosition;
+            mJunctionIndex -= baseLengthChange;
+        }
+        else
+        {
+            mMaxAlignedPosition = newRefPosition;
+        }
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        int baseOffset = mJunction.isForward() ? baseLengthChange : 0;
+
+        for(int i = 0; i < newBaseLength; ++i)
+        {
+            mBases[i] = existingBases[i + baseOffset];
+            mBaseQuals[i] = existingQuals[i + baseOffset];
+        }
+    }
+
     public boolean hasReadSupport(final Read read)
     {
         return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);

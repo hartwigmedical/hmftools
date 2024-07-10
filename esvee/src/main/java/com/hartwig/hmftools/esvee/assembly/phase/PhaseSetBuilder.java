@@ -567,31 +567,27 @@ public class PhaseSetBuilder
         // for each assembly in a split link, look for a facing link (whether linked or not)
         Set<JunctionAssembly> facingAssemblies = Sets.newHashSet();
 
-        for(AssemblyLink splitLink : mSplitLinks)
+        for(int i = 0; i < mAssemblies.size() - 1; ++i)
         {
-            for(JunctionAssembly assembly : mAssemblies)
+            JunctionAssembly assembly1 = mAssemblies.get(i);
+
+            for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
-                if(splitLink.hasAssembly(assembly) || facingAssemblies.contains(assembly))
+                JunctionAssembly assembly2 = mAssemblies.get(j);
+
+                if(facingAssemblies.contains(assembly1) || facingAssemblies.contains(assembly2))
                     continue;
 
-                for(int i = 0; i <= 1; ++i)
-                {
-                    JunctionAssembly facingAssembly = (i == 0) ? splitLink.first() : splitLink.second();
-                    JunctionAssembly splitAssembly = (i == 0) ? splitLink.second() : splitLink.first();
+                AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2);
 
-                    AssemblyLink facingLink = tryAssemblyFacing(facingAssembly, assembly);
+                if(facingLink == null)
+                    continue;
 
-                    if(facingLink == null)
-                        continue;
-
-                    // compelling evidence is a read from the new assembly which overlaps with the linked junction's reads
-                    if(assembliesShareReads(assembly, splitAssembly))
-                    {
-                        mFacingLinks.add(facingLink);
-                        facingAssemblies.add(facingAssembly);
-                        facingAssemblies.add(assembly);
-                    }
-                }
+                // compelling evidence is a read from the new assembly which overlaps with the linked junction's reads
+                // if(assembliesShareReads(assembly2, splitAssembly))
+                mFacingLinks.add(facingLink);
+                facingAssemblies.add(assembly1);
+                facingAssemblies.add(assembly2);
             }
         }
     }
