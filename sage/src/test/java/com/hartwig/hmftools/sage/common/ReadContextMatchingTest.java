@@ -172,6 +172,11 @@ public class ReadContextMatchingTest
 
         assertEquals(SIMPLE_ALT, matcher.determineReadMatch(read, readVarIndex));
 
+        readBases = readContext.leftFlankStr() + "TT" + "TCC" + rightCore + readContext.rightFlankStr();
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(NONE, matcher.determineReadMatch(read, readVarIndex));
+
         // repeated for an SNV
         ref = "A";
         alt = "T";
@@ -201,11 +206,16 @@ public class ReadContextMatchingTest
         readBases = readContext.leftFlankStr() + leftCore + alt + "CC" + readContext.rightFlankStr();
         readQualities = buildDefaultBaseQuals(readBases.length());
         readVarIndex = readContext.leftFlankLength() + 2;
-        cigar = "13M2D12M";
 
+        cigar = "13M2D12M";
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
         assertEquals(SIMPLE_ALT, matcher.determineReadMatch(read, readVarIndex));
+
+        cigar = "14M2D12M";
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(NONE, matcher.determineReadMatch(read, readVarIndex));
 
         // test 4: insert
         ref = "A";
@@ -223,6 +233,11 @@ public class ReadContextMatchingTest
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
 
         assertEquals(SIMPLE_ALT, matcher.determineReadMatch(read, readVarIndex));
+
+        cigar = "13M4I12M";
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(NONE, matcher.determineReadMatch(read, readVarIndex));
     }
 
     @Test
