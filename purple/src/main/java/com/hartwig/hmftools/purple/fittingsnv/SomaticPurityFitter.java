@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
@@ -18,6 +19,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAP
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MAX_VAF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
@@ -256,6 +258,14 @@ public class SomaticPurityFitter
     public FittedPurity fromTumorOnlySomatics(
             final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
     {
+        PPL_LOGGER.info("starting tumor-only somatic mode");
+        
+        // Select a variant if
+        // it is a HOTSPOT, or
+        // it is a NON-HOTSPOT & the VAF (variant read count / total read count) <= 0.35
+        // Calculate purity as median sample VAF * 2
+        // But if median sample VAF < 0.04, set to NO_TUMOR mode
+        
         List<Double> variantVafs = Lists.newArrayList();
 
         for(SomaticVariant variant : variants)
@@ -267,7 +277,7 @@ public class SomaticPurityFitter
 
                 CodingEffect codingEffect = variant.variantImpact().CanonicalCodingEffect;
 
-                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
+                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE && codingEffect != SPLICE)
                     continue;
 
                 DriverGene driverGene = driverGenes.driverGenes().stream()
@@ -280,10 +290,14 @@ public class SomaticPurityFitter
                     continue;
                 else if(codingEffect == MISSENSE && !driverGene.reportMissenseAndInframe())
                     continue;
+                else if(codingEffect == SPLICE && !driverGene.reportSplice())
+                    continue;
             }
 
-            if(variant.alleleFrequency() > SOMATIC_FIT_TUMOR_ONLY_MIN_VAF)
+            if(variant.alleleFrequency() > SOMATIC_FIT_TUMOR_ONLY_MIN_VAF && variant.alleleFrequency() <= SOMATIC_FIT_TUMOR_ONLY_MAX_VAF)
                 variantVafs.add(variant.alleleFrequency());
+            
+            PPL_LOGGER.info("variant chromosome({}), position({}), alleleReadCount({}), totalReadCount({}), hotspot({})", variant.chromosome(), variant.position(), variant.alleleReadCount(), variant.totalReadCount(), variant.isHotspot());
         }
 
         if(variantVafs.isEmpty())
@@ -302,6 +316,8 @@ public class SomaticPurityFitter
         {
             medianVaf = variantVafs.get(medianIndex);
         }
+
+        PPL_LOGGER.info("The median vaf is {}", medianVaf);
 
         double somaticPurity = medianVaf * 2;
         PPL_LOGGER.info("tumor-only somatic purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());

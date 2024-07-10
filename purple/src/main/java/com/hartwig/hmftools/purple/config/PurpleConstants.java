@@ -83,6 +83,7 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN = 1.8;
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX = 2.2;
     public static final double SOMATIC_FIT_TUMOR_ONLY_MIN_VAF = 0.04;
+    public static final double SOMATIC_FIT_TUMOR_ONLY_MAX_VAF = 0.35;
 
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;
