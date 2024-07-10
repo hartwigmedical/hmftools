@@ -368,7 +368,7 @@ public class AssemblyLinksTest
     {
         String refSequence = REF_BASES_400;
 
-        MockRefGenome refGenome = new MockRefGenome(true);
+        MockRefGenome refGenome = new MockRefGenome(false);
         refGenome.RefGenomeMap.put(CHR_1, refSequence);
 
         // local inversion

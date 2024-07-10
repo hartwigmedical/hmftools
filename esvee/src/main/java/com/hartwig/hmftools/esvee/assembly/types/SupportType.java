@@ -6,7 +6,8 @@ public enum SupportType
     INDEL,
     CANDIDATE_DISCORDANT,
     DISCORDANT,
-    JUNCTION_MATE;
+    JUNCTION_MATE,
+    EXTENSION;
 
     public boolean isSplitSupport() { return this == JUNCTION || this == INDEL; }
 }

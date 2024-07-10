@@ -59,20 +59,18 @@ public class AssemblyWriter
 
             addSupportHeader(sj);
             AssemblyStats.addReadTypeHeader(sj);
-            AssemblyStats.addReadStatsHeader(sj);
-            sj.add("MismatchReads");
 
             sj.add("Outcome");
 
             addPhasingHeader(sj);
 
+            AssemblyStats.addReadStatsHeader(sj);
+            sj.add("MismatchReads");
+
             sj.add("RefBaseTrimmed");
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
-
-            if(mTruthsetAnnotation.enabled())
-                sj.add(TruthsetAnnotation.tsvHeader());
 
             addRemoteRegionHeader(sj);
 
@@ -125,12 +123,12 @@ public class AssemblyWriter
             addSupportCounts(assembly, sj);
             assembly.stats().addReadTypeCounts(sj);
 
-            assembly.stats().addReadStats(sj);
-            sj.add(String.valueOf(assembly.mismatchReadCount()));
-
             sj.add(String.valueOf(assembly.outcome()));
 
             addPhasingInfo(assembly, sj);
+
+            assembly.stats().addReadStats(sj);
+            sj.add(String.valueOf(assembly.mismatchReadCount()));
 
             sj.add(assembly.refBasesRepeatedTrimmed());
             sj.add(String.valueOf(assembly.refBaseTrimLength()));
@@ -147,9 +145,6 @@ public class AssemblyWriter
                 int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
-
-            if(mTruthsetAnnotation.enabled())
-                sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));
 
             addRemoteRegionInfo(assembly, sj);
 

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,7 +52,9 @@ public final class AssemblyWriterUtils
             if(uniqueReadIds.contains(read.id()))
                 continue;
 
-            uniqueReadIds.add(read.id()); // since fragments are being counted
+            // fragments, not reads, are being counted
+            if(read.type() != EXTENSION) // let any discordant read in the fragment count
+                uniqueReadIds.add(read.id());
 
             if(read.type().isSplitSupport())
             {

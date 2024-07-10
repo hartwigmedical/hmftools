@@ -1,22 +1,45 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public final class SequenceCompare
 {
     private static final int MISMATCH_RECOVERY_BASE_COUNT = 4;
+
+    public static int calcReadSequenceMismatches(
+            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
+            final Read read, final int readJunctionIndex, final int maxMismatches)
+    {
+        int readStartIndex = isForward ? readJunctionIndex : 0;
+        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
+
+        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
+        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
+        // so the comparison offset in the extension sequence is
+        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
+
+        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
+        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
+        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
+
+        return compareSequences(
+                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
+                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
+                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches);
+    }
 
     public static boolean matchedAssemblySequences(final JunctionAssembly first, final JunctionAssembly second)
     {

@@ -14,6 +14,7 @@ import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.READ_PAIRED;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
+import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.List;
@@ -61,7 +62,7 @@ public class SupportRead
     private final int mTrimCount;
     private final boolean mHasIndel;
 
-    private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non junction reads
+    private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non-junction reads
     private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
     private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
     private int mInferredFragmentLength;
@@ -121,6 +122,8 @@ public class SupportRead
     public int alignmentEnd() { return mAlignmentEnd; }
     public int unclippedStart() { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart < mAlignmentStart; }
+    public boolean isRightClipped() { return mUnclippedEnd > mAlignmentEnd; }
     public String mateChromosome() { return mMateChromosome; }
     public int mateAlignmentStart() { return mMateAlignmentStart; }
     public int mateAlignmentEnd() { return mMateAlignmentEnd; }
@@ -141,6 +144,7 @@ public class SupportRead
     public int flags() { return mFlags; }
     public boolean isSupplementary() { return isFlagSet(SUPPLEMENTARY_ALIGNMENT); }
     public boolean isPairedRead() { return isFlagSet(READ_PAIRED); }
+    public boolean isUnmapped() { return isFlagSet(READ_UNMAPPED); }
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
     public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }
     public boolean isDiscordant() { return mIsDiscordant; }

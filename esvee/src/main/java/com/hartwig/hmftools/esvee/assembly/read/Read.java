@@ -162,7 +162,7 @@ public class Read
 
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
     public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
-    public int  basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
+    public int basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
 
     // flags
     public int getFlags() { return mRecord.getFlags(); }
@@ -312,7 +312,7 @@ public class Read
 
         if(fromStart)
         {
-            while(remainingBases > 0)
+            while(mCigarElements.size() > 0 && remainingBases > 0)
             {
                 CigarElement element = mCigarElements.get(0);
 
@@ -340,7 +340,7 @@ public class Read
         }
         else
         {
-            while(remainingBases > 0)
+            while(mCigarElements.size() > 0 && remainingBases > 0)
             {
                 int lastIndex = mCigarElements.size() - 1;
                 CigarElement element = mCigarElements.get(lastIndex);

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
@@ -20,6 +21,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.UnmappedBaseExtender;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -94,7 +98,7 @@ public class PhaseSetBuilder
 
         addChainedSupport();
 
-        // extendUnlinkedAssemblies();
+        extendUnlinkedAssemblies();
 
         cleanupAssemblies();
     }
@@ -126,6 +130,8 @@ public class PhaseSetBuilder
             return;
 
         extendRemoteAssemblies();
+
+        buildUnmappedExtensions();
 
         extendUnlinkedAssemblies();
     }
@@ -293,7 +299,34 @@ public class PhaseSetBuilder
         return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
     }
 
-    @Deprecated
+    private void buildUnmappedExtensions()
+    {
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.outcome() != UNSET)
+                continue;
+
+            if(mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly)))
+                continue;
+
+            if(assembly.unmappedReads().isEmpty())
+                continue;
+
+            UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
+            unmappedBaseExtender.processReads(assembly.unmappedReads());
+
+            if(!unmappedBaseExtender.supportReads().isEmpty())
+            {
+                SV_LOGGER.debug("assembly({}) extended {} -> {} with {} unmapped reads",
+                        assembly, assembly.extensionLength(), unmappedBaseExtender.extensionBaseLength(),
+                        unmappedBaseExtender.supportReads().size());
+
+                assembly.expandExtensionBases(
+                        unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
+            }
+        }
+    }
+
     private void extendUnlinkedAssemblies()
     {
         for(JunctionAssembly assembly : mAssemblies)
@@ -305,10 +338,22 @@ public class PhaseSetBuilder
                 continue;
 
             // add junction mate reads to the ref side bases
-            List<SupportRead> juncMates = assembly.candidateSupport().stream()
-                    .filter(x -> x.type() == SupportType.JUNCTION_MATE).collect(Collectors.toList());
+            List<SupportRead> refExtensionReads = Lists.newArrayList();
 
-            extendRefBases(assembly, juncMates, mRefGenome, false);
+            for(SupportRead read : assembly.candidateSupport())
+            {
+                if(read.type() == JUNCTION_MATE)
+                {
+                    refExtensionReads.add(read);
+                }
+                else
+                {
+                    if(assembly.support().stream().filter(x -> x.type() == EXTENSION).anyMatch(x -> x.matchesFragment(read, false)))
+                        refExtensionReads.add(read);
+                }
+            }
+
+            extendRefBases(assembly, refExtensionReads, mRefGenome, false);
         }
     }
 
