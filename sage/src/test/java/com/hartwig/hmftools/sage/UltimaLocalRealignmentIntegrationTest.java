@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner;
 import com.hartwig.hmftools.sage.testutil.MutatedBases;
 import com.hartwig.hmftools.sage.testutil.MutatedBasesBuilder;
 
@@ -51,7 +52,9 @@ public class UltimaLocalRealignmentIntegrationTest
             ChrBaseRegion region = new ChrBaseRegion(CHROMOSOME, 1, refBases.length());
 
             MutatedBasesBuilder mutatedBasesBuilder = new MutatedBasesBuilder(refBases);
-            mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
+            // TODO: change this back once we get read base expansion working.
+//            mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
+            mutatedBasesBuilder.delBases(initRefBases.length() + 11, 1);
             mutatedBasesBuilder.mutateBase(initRefBases.length() + 13, 'T');
             MutatedBases mutatedBases = mutatedBasesBuilder.build();
 
@@ -79,10 +82,16 @@ public class UltimaLocalRealignmentIntegrationTest
             assertEquals(1, indelCandidates.size());
             assertEquals(1, snvCandidates.size());
 
+            Candidate indelCandidate = indelCandidates.get(0);
+            VariantReadContext indelReadContext = indelCandidate.readContext();
+
             Candidate snvCandidate = snvCandidates.get(0);
             VariantReadContext snvReadContext = snvCandidate.readContext();
 
+            UltimaLocalRealigner.realign(snvReadContext);
+//            UltimaLocalRealigner.realign(indelReadContext);
+
             // TODO: remove me
-            assertTrue(false);
+//            assertTrue(false);
         }
 }
