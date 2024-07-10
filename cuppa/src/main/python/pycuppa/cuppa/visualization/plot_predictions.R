@@ -14,7 +14,7 @@ load_packages <- function(){
    missing_packages <- required_packages[!(required_packages %in% rownames(installed.packages()))]
    if(length(missing_packages) > 0){
       warning("Installing missing packages: ", paste(missing_packages, collapse=", "))
-      install.packages(missing_packages)
+      install.packages(missing_packages, repos="https://cloud.r-project.org")
    }
    
    for(package in required_packages)
