@@ -3,12 +3,9 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
@@ -100,7 +97,7 @@ public class JunctionAssembler
             return Collections.emptyList();
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
-                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
+                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
@@ -148,7 +145,7 @@ public class JunctionAssembler
             return null;
 
         JunctionAssembly newAssembly = new JunctionAssembly(
-                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
+                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
 
         if(newAssembly.extensionLength() < PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
@@ -212,7 +209,7 @@ public class JunctionAssembler
             }
         }
 
-        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
+        assembly.extendRefBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
 
         if(topSupportRead != null)
         {

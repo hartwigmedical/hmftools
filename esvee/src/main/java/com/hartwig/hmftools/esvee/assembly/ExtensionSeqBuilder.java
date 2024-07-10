@@ -9,12 +9,10 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
-import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,10 +90,10 @@ public class ExtensionSeqBuilder
     }
 
     public byte[] extensionBases() { return mBases; }
-    public byte[] baseQualitiies() { return mBaseQuals; }
+    public byte[] baseQualities() { return mBaseQuals; }
     public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
-    public boolean  isValid() { return mIsValid; }
+    public boolean isValid() { return mIsValid; }
 
     public List<SupportRead> formAssemblySupport()
     {
@@ -367,28 +365,6 @@ public class ExtensionSeqBuilder
 
         if(repeats != null)
             mExtensionRepeats.addAll(repeats);
-    }
-
-    public static int calcReadSequenceMismatches(
-            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
-            final Read read, final int readJunctionIndex, final int maxMismatches)
-    {
-        int readStartIndex = isForward ? readJunctionIndex : 0;
-        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
-
-        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
-        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
-        // so the comparison offset in the extension sequence is
-        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
-
-        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
-        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
-        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
-
-        return compareSequences(
-                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
-                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches);
     }
 
     private class ReadState

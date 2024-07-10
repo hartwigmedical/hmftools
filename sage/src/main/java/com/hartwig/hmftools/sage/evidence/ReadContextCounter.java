@@ -298,6 +298,9 @@ public class ReadContextCounter
 
         RawContext rawContext = RawContext.createFromRead(mVariant, record);
 
+        int readVarIndex = rawContext.ReadVariantIndex;
+        SplitReadSegment splitReadSegment = record.getCigar().containsOperator(N) ? formSegment(record, mVariant.Position, readVarIndex) : null;
+
         if(rawContext.PositionType == VariantReadPositionType.LOW_QUAL)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
@@ -327,10 +330,6 @@ public class ReadContextCounter
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return IN_SPLIT;
         }
-
-        int readVarIndex = rawContext.ReadVariantIndex;
-
-        SplitReadSegment splitReadSegment = record.getCigar().containsOperator(N) ? formSegment(record, mVariant.Position, readVarIndex) : null;
 
         boolean coreCovered = coversVariant(record, readVarIndex, splitReadSegment);
 
@@ -390,7 +389,7 @@ public class ReadContextCounter
 
                 registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
 
-                mQualCounters.update(qualityScores, record.getMappingQuality(), true);
+                mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
                 mReadEdgeDistance.update(record, fragmentData, true);
 
@@ -409,7 +408,10 @@ public class ReadContextCounter
             if(realignedReadIndex == null)
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
 
-            realignedType = checkRealignment(mReadContext, mMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
+            boolean canRealign = realignedReadIndex != INVALID_INDEX && coversVariant(record, realignedReadIndex, splitReadSegment);
+
+            if(canRealign)
+                realignedType = checkRealignment(mReadContext, mMatcher, record, readVarIndex, realignedReadIndex, splitReadSegment);
 
             if(realignedType != RealignedType.NONE)
             {
@@ -432,7 +434,7 @@ public class ReadContextCounter
                     matchType = ReadContextMatch.REALIGNED;
                     registerReadSupport(record, REALIGNED, modifiedQuality, readVarIndex);
 
-                    mQualCounters.update(qualityScores, record.getMappingQuality(), true);
+                    mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
                     addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                     logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
@@ -465,7 +467,7 @@ public class ReadContextCounter
         {
             readSupport = REF;
         }
-        else if(matchType == ReadContextMatch.SIMPLE_ALT)
+        else if(matchType == ReadContextMatch.SIMPLE_ALT && rawContext.PositionType != VariantReadPositionType.SOFT_CLIP)
         {
             ++mSimpleAltMatches;
         }
@@ -474,7 +476,7 @@ public class ReadContextCounter
         if(matchType == NONE && mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0)
             return UNRELATED;
 
-        mQualCounters.update(qualityScores, record.getMappingQuality(), false);
+        mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);

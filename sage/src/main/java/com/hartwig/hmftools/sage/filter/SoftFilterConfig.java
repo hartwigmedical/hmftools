@@ -12,17 +12,19 @@ public class SoftFilterConfig
 {
     public final String Name;
     public final double QualPScore;
-    public final int QualitySiteThreshold;
+    public final double QualPScoreIndel;
     public final double MinTumorVaf;
     public final int MinGermlineCoverage;
     public final int MinGermlineCoverageAllosome;
     public final double MaxGermlineVaf;
 
+    private static final String MIN_TUMOR_QUAL_INDEL = "min_tumor_qual_indel";
+
     public SoftFilterConfig(final ConfigBuilder configBuilder, final String prefix, final SoftFilterConfig defaultValue)
     {
         Name = defaultValue.Name;
         QualPScore = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_QUAL.configName());
-        QualitySiteThreshold = defaultValue.QualitySiteThreshold;
+        QualPScoreIndel = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_QUAL_INDEL);
         MinTumorVaf = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_VAF.configName());
         MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
@@ -30,12 +32,12 @@ public class SoftFilterConfig
     }
 
     public SoftFilterConfig(
-            final String name, final double qualPScore, final int qualitySiteThreshold, final double minTumorVaf, final int minGermlineCoverage,
+            final String name, final double qualPScore, final double qualPScoreIndel, final double minTumorVaf, final int minGermlineCoverage,
             final int minGermlineCoverageAllosome, final double maxGermlineVaf)
     {
         Name = name;
         QualPScore = qualPScore;
-        QualitySiteThreshold = qualitySiteThreshold;
+        QualPScoreIndel = qualPScoreIndel;
         MinTumorVaf = minTumorVaf;
         MinGermlineCoverage = minGermlineCoverage;
         MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
@@ -63,6 +65,10 @@ public class SoftFilterConfig
 
         configBuilder.addDecimal(
                 prefix + "_" + MIN_TUMOR_QUAL.configName(), "Minimum " + prefix + " tumor quality P-score", defaultConfig.QualPScore);
+
+        configBuilder.addDecimal(
+                prefix + "_" + MIN_TUMOR_QUAL_INDEL, "Minimum " + prefix + " tumor quality P-score for microsatellite indels",
+                defaultConfig.QualPScoreIndel);
 
         configBuilder.addDecimal(
                 prefix + "_" + MIN_TUMOR_VAF.configName(), "Minimum " + prefix + " tumor VAF",defaultConfig.MinTumorVaf);

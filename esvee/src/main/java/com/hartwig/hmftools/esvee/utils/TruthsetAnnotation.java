@@ -41,11 +41,6 @@ public class TruthsetAnnotation
 
     public boolean enabled() { return !mChrBreakendMap.isEmpty(); }
 
-    public String findTruthsetAnnotation(final JunctionAssembly assembly)
-    {
-        return findAnnotation(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient);
-    }
-
     public String findTruthsetAnnotation(final Breakend breakend)
     {
         return findAnnotation(breakend.Chromosome, breakend.Position, breakend.Orient);

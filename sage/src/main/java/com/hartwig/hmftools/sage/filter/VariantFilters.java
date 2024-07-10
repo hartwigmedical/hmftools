@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.filter;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.log;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -16,14 +14,12 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUP
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
-import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_AVG_MQ_LIMIT;
-import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_JITTER_RATIO;
-import static com.hartwig.hmftools.sage.SageConstants.QUALITY_SITE_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
@@ -218,9 +214,9 @@ public class VariantFilters
         if(depth == 0)
             return true;
 
-        double tumorQual = primaryTumor.tumorQuality();
+        int altSupport = primaryTumor.altSupport();
         int strongSupport = primaryTumor.strongAltSupport();
-        byte qualPerRead = (byte)round(tumorQual / (double)strongSupport);
+        byte qualPerRead = (byte)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / (double)strongSupport);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerRead);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
@@ -229,67 +225,66 @@ public class VariantFilters
 
         primaryTumor.setTumorQualProbability(prob);
 
-        int altSupport = primaryTumor.altSupport();
-
-        double mapQualFactor = calcMapQualFactor(primaryTumor, depth, altSupport);
+        double mapQualFactor = calcMapQualFactor(primaryTumor, depth, altSupport, strongSupport);
 
         if(mapQualFactor < 0)
             return true;
 
-        return prob >= config.QualPScore;
+        double scoreCutoff = primaryTumor.useMsiErrorRate() ? config.QualPScoreIndel : config.QualPScore;
+        return prob >= scoreCutoff;
     }
 
-    private static double calcMapQualFactor(final ReadContextCounter primaryTumor, final int depth, final int altSupport)
+    private static double calcMapQualFactor(final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
     {
-        /*
-        - PerReadModifiedMapQual = Avg(ModifiedMapQual) across all alt supporting reads
-        - MQDiffPenalty = 2 * (AMQ[all] - AMQ[alt]) if AMQ[all] > AMQ[alt], else 0
-        - RSBPenalty = 10 * (AD – 1) * log10(2) if alt RSB in (0, 1) and non-alt RSB between 0.2 and 0.8, else 0
-        - AEDPenalty = 10 * AD * log10(AED[all] / max(AED[alt], 1)) if AED[alt] / AED[all] < 0.66, else 0
-        - MSPenalty = min(3 * RC_REPC, 24) if len(RC_REPS) > 1, else 0
-
-        - Note that many of these concepts and thresholds are already used in other parts of Sage eg
-            - we have a soft filter if AMQ[all] - AMQ[alt] > 15, 0.2/0.8 for RSB is used as STRAND_BIAS_REF_MIN_BIAS
-            - 0.66 for edge distance is used as 2 * MAX_READ_EDGE_DISTANCE_PERC.
-        - The MSPenalty only applies to cores with a non-homopolymer MaxRepeat, since these are empirically associated with more error phone contexts,
-         particularly at repeat transitions.
-        - Then MQHeuristic = PerReadModifiedMapQual – 27.5 - MQDiffPenalty – RSBPenalty – AEDPenalty – MSPenalty.
-        - If MQHeuristic < 0, the variant is minTumorQual due to weakness in site quality characteristics.
-         */
-
-        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)depth;
+        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
 
         double mapQualDiffPenalty = avgMapQual > avgAltMapQual ? 2 * (avgMapQual - avgAltMapQual) : 0;
 
-        double readStrandBiasPenalty = 0;
-        double readStrandBiasAlt = primaryTumor.readStrandBiasAlt().minBias();
-        double readStrandBiasNonAlt = primaryTumor.readStrandBiasNonAlt().minBias();
-
-        if(readStrandBiasAlt == 0 && readStrandBiasNonAlt > STRAND_BIAS_NON_ALT_MIN_BIAS)
+        double readStrandBiasPenalty;
+        StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
+        StrandBiasData readStrandBiasNonAlt = primaryTumor.readStrandBiasNonAlt();
+        if(readStrandBiasAlt.minBias() > STRAND_BIAS_CHECK_THRESHOLD)
         {
-            readStrandBiasPenalty = 10 * (altSupport - 1) * log(2);
+            readStrandBiasPenalty = 0;
+        }
+        else if(readStrandBiasNonAlt.forward() < STRAND_BIAS_NON_ALT_MIN_DEPTH || readStrandBiasNonAlt.reverse() < STRAND_BIAS_NON_ALT_MIN_DEPTH)
+        {
+            readStrandBiasPenalty = 0;
+        }
+        else if(readStrandBiasNonAlt.minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS && (readStrandBiasNonAlt.bias() < 0.5) == (readStrandBiasAlt.bias() < 0.5))
+        {
+            readStrandBiasPenalty = 0;
+        }
+        else
+        {
+            BinomialDistribution distribution = new BinomialDistribution(readStrandBiasAlt.depth(), 0.5);
+            double probability = 2 * distribution.cumulativeProbability((int)round(readStrandBiasAlt.depth() * readStrandBiasAlt.minBias()));
+            readStrandBiasPenalty = -10 * log10(probability);
         }
 
         double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
         double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
         double edgeDistancePenalty = 0;
 
-        if(avgAltEdgeDistance / avgEdgeDistance < 0.66)
+        if(avgAltEdgeDistance / avgEdgeDistance < 2 * MAX_READ_EDGE_DISTANCE_PERC)
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
         }
 
         double repeatPenalty = 0;
 
-        if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1)
+        if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1
+        && primaryTumor.readContext().MaxRepeat.repeatLength() * primaryTumor.readContext().MaxRepeat.Count >= 15)
         {
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, 24);
         }
 
-        double mapQualFactor = avgAltModifiedMapQuality - 27.5 - mapQualDiffPenalty - readStrandBiasPenalty - edgeDistancePenalty - repeatPenalty;
+        double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
+                - edgeDistancePenalty - repeatPenalty;
+
         return mapQualFactor;
     }
 

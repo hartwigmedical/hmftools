@@ -65,9 +65,6 @@ public final class ReadAdjustments
 
     public static boolean trimPolyGSequences(final Read read)
     {
-        if(read.isUnmapped() || !read.isPairedRead())
-            return false;
-
         int trailingGCount = 0;
 
         if(read.positiveStrand())

@@ -14,11 +14,12 @@ import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
-import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
+import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
@@ -59,6 +60,7 @@ public class JunctionAssembly
 
     private final List<SupportRead> mSupport;
     private final List<SupportRead> mCandidateSupport;
+    private final List<Read> mUnmappedCandidates;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
     private final List<RepeatInfo> mRepeatInfo;
@@ -132,6 +134,7 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList(assemblySupport);
         mCandidateSupport = Lists.newArrayList();
+        mUnmappedCandidates = Lists.newArrayList();
         mRepeatInfo = repeatInfo;
         mRefSideSoftClips = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
@@ -242,7 +245,7 @@ public class JunctionAssembly
         if(mismatchCount > permittedMismatches)
             return false;
 
-        addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount);
+        addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
         return true;
     }
 
@@ -316,7 +319,7 @@ public class JunctionAssembly
 
         boolean byReference = existingSupport != null;
 
-        if(type == JUNCTION || type == INDEL)
+        if(type.isSplitSupport())
         {
             if(existingSupport == null)
             {
@@ -400,7 +403,7 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            addSupport(read, type, readJunctionIndex, highQualMatchCount, mismatchCount);
+            addSupport(read, type, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
         }
         else
         {
@@ -408,14 +411,15 @@ public class JunctionAssembly
         }
     }
 
-    private void addSupport(final Read read, final SupportType type, final int readJunctionIndex, final int matches, final int mismatches)
+    private void addSupport(
+            final Read read, final SupportType type, int readJunctionIndex, int matches, int mismatches, int refMismatches)
     {
         boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
         SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
         SupportRead support = new SupportRead(read, adjustedType, readJunctionIndex, matches, mismatches);
+        support.setReferenceMismatches(refMismatches);
 
         mSupport.add(support);
-
         mStats.addRead(support, mJunction, read);
     }
 
@@ -423,9 +427,10 @@ public class JunctionAssembly
     {
         for(SupportRead read : mSupport)
         {
-            if(read.type().isSplitSupport())
+            if(read.type().isSplitSupport() || read.type() == EXTENSION)
             {
                 // say assembly junc index = 100, junction index in read = 70, then read's start index in assembly is 100 - 70 = 30
+                // for an extension read (where the junction position isn't in the read)
                 int assemblyIndex = mJunctionIndex - read.junctionReadIndex();
                 read.setJunctionAssemblyIndex(assemblyIndex);
             }
@@ -447,10 +452,11 @@ public class JunctionAssembly
         }
     }
 
-    public void extendBases(
+    public void extendRefBases(
             int refBaseExtensionDistance, int newMinAlignedPosition, int newMaxAlignedPosition, final RefBaseAssembly refBaseAssembly)
     {
-        // copy existing bases and quals
+        // extend the same of ref bases to accommodate new ref base information from existing or new reads
+
         byte[] existingBases = copyArray(mBases);
         byte[] existingQuals = copyArray(mBaseQuals);
 
@@ -540,12 +546,12 @@ public class JunctionAssembly
 
             int refBaseExtension = newRefBaseCount - existingRefBaseCount;
 
-            extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
+            extendRefBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
         }
 
         for(SupportRead support : refBaseAssembly.support())
         {
-            addRead(support.cachedRead(), support.type(), null);
+            addSupport(support.cachedRead(), support.type(), INVALID_INDEX, 0, 0, support.mismatchCount());
 
             // once added, clear the cached data read
             support.clearCachedRead();
@@ -570,13 +576,13 @@ public class JunctionAssembly
         {
             if(mJunction.isForward())
             {
-                readIndexCoords[0] = 0;
+                readIndexCoords[0] = read.leftClipLength();
                 readIndexCoords[1] = readJunctionIndex - 1; // the base at the junction will have already been set
             }
             else
             {
                 readIndexCoords[0] = readJunctionIndex + 1;
-                readIndexCoords[1] = read.basesLength() - 1;
+                readIndexCoords[1] = read.basesLength() - 1 - read.rightClipLength();
             }
         }
         else
@@ -611,6 +617,64 @@ public class JunctionAssembly
                 return mJunctionIndex; // ie bases starting from the junction
             else
                 return mJunctionIndex - (readJunctionIndex - readStartIndex);
+        }
+    }
+
+    public void expandExtensionBases(final byte[] extensionBases, final byte[] extensionBaseQuals, final List<SupportRead> supportReads)
+    {
+        // extend the same of ref bases to accomodate new ref base information from existing or new reads
+
+        byte[] existingBases = copyArray(mBases);
+        byte[] existingQuals = copyArray(mBaseQuals);
+
+        int newExtensionLength = extensionBases.length - 1; // since the extension bases include the junction index
+        int baseLengthChange = newExtensionLength - extensionLength();
+        int existingBaseLength = mBases.length;
+        int newBaseLength = existingBaseLength + baseLengthChange;
+
+        if(mJunction.isReverse())
+            mJunctionIndex += baseLengthChange;
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        int newExtBaseIndex = 0;
+        for(int i = 0; i < newBaseLength; ++i)
+        {
+            if(mJunction.isForward())
+            {
+                if(i < existingBaseLength)
+                {
+                    mBases[i] = existingBases[i];
+                    mBaseQuals[i] = existingQuals[i];
+                }
+                else
+                {
+                    mBases[i] = extensionBases[newExtBaseIndex];
+                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
+                    ++newExtBaseIndex;
+                }
+            }
+            else
+            {
+                if(i < baseLengthChange)
+                {
+                    mBases[i] = extensionBases[newExtBaseIndex];
+                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
+                    ++newExtBaseIndex;
+                }
+                else
+                {
+                    mBases[i] = existingBases[i - baseLengthChange];
+                    mBaseQuals[i] = existingQuals[i - baseLengthChange];
+                }
+            }
+        }
+
+        for(SupportRead support : supportReads)
+        {
+            mSupport.add(support);
+            mStats.addRead(support, mJunction, support.cachedRead());
         }
     }
 
@@ -744,6 +808,7 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
+        mUnmappedCandidates = Lists.newArrayList();
 
         mRepeatInfo = Lists.newArrayList();
         mRefBasesRepeatedTrimmed = initialAssembly.refBasesRepeatedTrimmed();
@@ -785,6 +850,9 @@ public class JunctionAssembly
 
     public List<SupportRead> candidateSupport() { return mCandidateSupport; }
     public void clearCandidateSupport() { mCandidateSupport.clear(); }
+
+    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
+    public List<Read> unmappedReads() { return mUnmappedCandidates; }
 
     public String toString()
     {
@@ -861,8 +929,7 @@ public class JunctionAssembly
     }
 
     @VisibleForTesting
-    public JunctionAssembly(
-            final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
+    public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
         mJunction = junction;
         mInitialReadId = null;
@@ -886,6 +953,7 @@ public class JunctionAssembly
         mBaseQuals = copyArray(quals);
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
+        mUnmappedCandidates = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRefBasesRepeatedTrimmed = "";
         mRefBaseTrimLength = 0;

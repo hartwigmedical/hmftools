@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.pow;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -8,7 +7,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 public class BreakendSegment
 {
     public final int AssemblyAlignmentId;
-    public final int SequenceLength;
+    public final int SequenceLength; // should be removed since it the same for all segments, and is a property of the assembly alignment
     public final int SequenceIndex;
     public final Orientation Orient;
     public final int Index;

@@ -321,7 +321,7 @@ public class Alignment
                 {
                     for(SupportRead read : assembly.support())
                     {
-                        if(read.type() == SupportType.JUNCTION_MATE) // any reason to count towards strand bias?
+                        if(read.type() == SupportType.JUNCTION_MATE || read.type() == SupportType.EXTENSION)
                             continue;
 
                         if(!breakend.Chromosome.equals(read.chromosome()))
