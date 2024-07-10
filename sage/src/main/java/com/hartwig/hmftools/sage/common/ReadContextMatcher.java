@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.SIMPLE_ALT;
 import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,6 +27,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextMatcher
@@ -234,7 +238,12 @@ public class ReadContextMatcher
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
     {
-        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
+        ReadContextMatch matchType = determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
+
+        if(matchType == NONE && mIsReference && checkSimpleAltMatch(record, readVarIndex))
+            return SIMPLE_ALT;
+
+        return matchType;
     }
 
     public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
@@ -246,22 +255,15 @@ public class ReadContextMatcher
 
         if(coreMatch == NONE)
         {
-            if(mIsReference)
+            if(mIsReference && isLongInsert(mContext.variant()))
             {
-                if(isLongInsert(mContext.variant()))
-                {
-                    String extendedRefBases = mContext.refBases() + mContext.extendedRefBases();
+                String extendedRefBases = mContext.refBases() + mContext.extendedRefBases();
 
-                    int[] refReadMatches = countRefAndReadDifferences(
-                            readBases, mContext.ReadBases, extendedRefBases.getBytes(), readVarIndex, mContext.VarIndex, mContext.variantRefIndex());
+                int[] refReadMatches = countRefAndReadDifferences(
+                        readBases, mContext.ReadBases, extendedRefBases.getBytes(), readVarIndex, mContext.VarIndex, mContext.variantRefIndex());
 
-                    if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
-                        return PARTIAL_CORE;
-                }
-                else if(!mContext.variant().isIndel() && !skipRefMatch)
-                {
-                    return checkSimpleMnvSnvMatch(readBases, readVarIndex) ? SIMPLE_ALT : NONE;
-                }
+                if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
+                    return PARTIAL_CORE;
             }
 
             return NONE;
@@ -356,20 +358,6 @@ public class ReadContextMatcher
                 return NONE;
             }
         }
-    }
-
-    private boolean checkSimpleMnvSnvMatch(final byte[] readBases, final int readVarIndex)
-    {
-        for(int i = 0 ; i < mContext.variant().altLength(); ++i)
-        {
-            byte altBase = (byte)mContext.variant().alt().charAt(i);
-            byte readBase = readBases[readVarIndex + i];
-
-            if(readBase != altBase)
-                return false;
-        }
-
-        return true;
     }
 
     private enum BaseMatchType
@@ -476,6 +464,65 @@ public class ReadContextMatcher
         }
 
         return BaseMatchType.MATCH;
+    }
+
+    private boolean checkSimpleAltMatch(final SAMRecord record, final int readVarIndex)
+    {
+        SimpleVariant variant = mContext.variant();
+
+        if(variant.isIndel())
+        {
+            // check that the indel exists at this location and matches
+            int readIndex = 0;
+            for(CigarElement element : record.getCigar().getCigarElements())
+            {
+                if(readIndex == readVarIndex + 1)
+                {
+                    if(element.getLength() != variant.indelLengthAbs())
+                        return false;
+
+                    if(variant.isDelete())
+                    {
+                        return element.getOperator() == D;
+                    }
+                    else
+                    {
+                        if(element.getOperator() != I)
+                            return false;
+
+                        // check that inserted bases match
+                        for(int i = 0; i < element.getLength(); ++i)
+                        {
+                            byte altBase = (byte)variant.alt().charAt(i + 1);
+                            byte readBase = record.getReadBases()[readIndex + i];
+
+                            if(readBase != altBase)
+                                return false;
+                        }
+
+                        return true;
+                    }
+                }
+
+                if(element.getOperator().consumesReadBases())
+                    readIndex += element.getLength();
+            }
+
+            return false;
+        }
+        else
+        {
+            for(int i = 0 ; i < variant.altLength(); ++i)
+            {
+                byte altBase = (byte)variant.alt().charAt(i);
+                byte readBase = record.getReadBases()[readVarIndex + i];
+
+                if(readBase != altBase)
+                    return false;
+            }
+
+            return true;
+        }
     }
 
     private static int[] countRefAndReadDifferences(

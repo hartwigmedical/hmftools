@@ -99,8 +99,8 @@ public final class VariantContextFactory
 
         builder.attribute(
                 AVG_READ_EDGE_DISTANCE,
-                new int[] { primaryRcCounter.readEdgeDistance().avgAltDistanceFromEdge(),
-                        primaryRcCounter.readEdgeDistance().avgDistanceFromEdge() } );
+                new int[] { primaryRcCounter.readEdgeDistance().avgDistanceFromEdge(),
+                        primaryRcCounter.readEdgeDistance().avgAltDistanceFromEdge() } );
 
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
 
@@ -126,14 +126,15 @@ public final class VariantContextFactory
 
         int depth = counter.depth();
         int altSupport = counter.altSupport();
+        int strongSupport = counter.strongAltSupport();
 
         int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.altMapQualityTotal() / (double)altSupport) : 0;
         int avgBaseQuality = depth > 0 ? (int)round(qualCounters.baseQualityTotal() / (double)depth) : 0;
         int avgAltBaseQuality = (int)round(counter.averageAltBaseQuality());
 
-        int avgModifiedBaseQuality = depth > 0 ? (int)round(qualCounters.modifiedBaseQualityTotal() / (double)depth) : 0;
-        int avgAltModifiedMapQuality = depth > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)depth) : 0;
+        int avgAltModifiedBaseQuality = strongSupport > 0 ? (int)round(qualCounters.modifiedAltBaseQualityTotal() / (double)strongSupport) : 0;
+        int avgAltModifiedMapQuality = strongSupport > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)strongSupport) : 0;
 
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
@@ -143,7 +144,7 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
-                .attribute(AVG_MODIFIED_BASE_QUAL, avgModifiedBaseQuality)
+                .attribute(AVG_MODIFIED_BASE_QUAL, avgAltModifiedBaseQuality)
                 .attribute(AVG_MODIFIED_ALT_MAP_QUAL, avgAltModifiedMapQuality)
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasNonAlt().bias(), counter.fragmentStrandBiasAlt().bias()))

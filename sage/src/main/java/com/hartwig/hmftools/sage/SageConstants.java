@@ -86,7 +86,7 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
-    public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.3;
+    public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
     public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
@@ -95,7 +95,7 @@ public class SageConstants
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
     public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
-    public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.2;
+    public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.25;
 
     public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
@@ -116,11 +116,7 @@ public class SageConstants
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 6.5;
-
-    public static final double QUALITY_SITE_AVG_MQ_LIMIT = 7.5;
-    public static final int QUALITY_SITE_REPEAT_MAX = 10;
-    public static final double QUALITY_SITE_JITTER_RATIO = 0.1;
-    public static final int QUALITY_SITE_AVG_BASE_QUALITY = 32;
+    public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
     public static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
 
@@ -132,19 +128,19 @@ public class SageConstants
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 1e-3, 55, 0.01,
+            "hotspot", 1e-3, 1e-3, 0.01,
             0, 0, 0.1);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 1e-5, 80, 0.02,
+            "panel", 1e-5, 1e-4, 0.02,
             0, 0,0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "high_confidence", 5e-8, 100, 0.025,
+            "high_confidence", 1e-8, 5e-5, 0.025,
             10, 6,0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "low_confidence", 1e-11, 180, 0.025,
+            "low_confidence", 1e-14, 5e-7, 0.025,
             10, 6,
             0.04);
 
