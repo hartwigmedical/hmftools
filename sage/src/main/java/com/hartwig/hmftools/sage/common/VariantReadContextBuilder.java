@@ -95,6 +95,7 @@ public class VariantReadContextBuilder
 
         if(variant.isIndel())
         {
+            // TODO: Cover indel case.
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
             int refBaseLength = read.getReadBases().length - varIndexInRead;
@@ -119,6 +120,7 @@ public class VariantReadContextBuilder
         }
         else
         {
+            // TODO: Expand core to cover holopolymers, but indel etc.
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE;
             readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
         }
