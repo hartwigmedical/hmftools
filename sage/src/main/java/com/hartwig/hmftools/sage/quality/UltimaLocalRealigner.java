@@ -130,15 +130,17 @@ public class UltimaLocalRealigner
         return homopolymers;
     }
 
-    public static void realign(final VariantReadContext readContext)
+    public static boolean isVariantExplained(final VariantReadContext readContext)
     {
         // TODO: consider indel variants.
         final SimpleVariant variant = readContext.variant();
 
-        assert !variant.isIndel();
+        // TODO: Test longer dels
+        // TODO: Test inserts
+        assert variant.indelLength() == -1 || variant.indelLength() == 0;
 
         // TODO: consider mnv variants.
-        assert variant.alt().length() == 1;
+        assert !variant.isMNV();
 
         // TODO: Consider sandwiched SNV/MNV.
         assert !isSandwichedNonIndel(readContext, getVariantRefIndex(readContext));
@@ -169,26 +171,26 @@ public class UltimaLocalRealigner
         // pair homopolymers between ref and read
         List<HomopolymerPair> homopolymerPairs = pairHomopolymers(refCoreHomopolymers, readCoreHomopolymers);
 
-        boolean isVariantExplained = variantExplained(readContext, homopolymerPairs);
-
         // TODO: Understand ultima qual calculator. Compute qual. Only if variant still exists after re-alignment.
 
-        // TODO: remove
-        System.out.println("TODO");
+        return isVariantExplainedHelper(readContext, homopolymerPairs);
     }
 
     // TODO: come up with a better way
-    private static boolean variantExplained(final VariantReadContext readContext, final List<HomopolymerPair> homopolymerPairs)
+    private static boolean isVariantExplainedHelper(final VariantReadContext readContext, final List<HomopolymerPair> homopolymerPairs)
     {
         SimpleVariant variant = readContext.variant();
 
-        // first get the homopolymer pair corresponding to the variant.
+        // get index of homopolymer pair associated to variant.
         int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart + 1;
         int varHomopolymerPairIndex = -1;
 
-        // get snv position
+        // TODO:
+        assert variant.isSNV() || variant.indelLength() == -1;
+        int offset = variant.isSNV() ? -1 : 0;
+
         int readBasesConsumed = 0;
-        while(readBasesConsumed < varCoreIndex)
+        while(readBasesConsumed <= varCoreIndex + offset)
         {
             Homopolymer readHomopolymer = homopolymerPairs.get(++varHomopolymerPairIndex).ReadHomopolymer;
             if(readHomopolymer != null)
@@ -198,32 +200,45 @@ public class UltimaLocalRealigner
         }
 
         // now check if homopolymers indels explain the variant.
-        HomopolymerPair varHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
-        HomopolymerPair beforeHomopolymerPair = varHomopolymerPairIndex == 0 ? null : homopolymerPairs.get(varHomopolymerPairIndex - 1);
-        HomopolymerPair afterHomopolymerPair = varHomopolymerPairIndex == homopolymerPairs.size() - 1 ? null : homopolymerPairs.get(varHomopolymerPairIndex + 1);
-
-        if (varHomopolymerPair.base() != variant.Alt.charAt(0) || varHomopolymerPair.indelLength() != 1)
+        if(variant.isSNV())
         {
+            HomopolymerPair varHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
+            HomopolymerPair beforeHomopolymerPair = varHomopolymerPairIndex == 0 ? null : homopolymerPairs.get(varHomopolymerPairIndex - 1);
+            HomopolymerPair afterHomopolymerPair = varHomopolymerPairIndex == homopolymerPairs.size() - 1 ? null : homopolymerPairs.get(varHomopolymerPairIndex + 1);
+
+            if (varHomopolymerPair.base() != variant.Alt.charAt(0) || varHomopolymerPair.indelLength() != 1)
+            {
+                return false;
+            }
+
+            // check var pair and before pair
+            if(beforeHomopolymerPair != null
+                    && beforeHomopolymerPair.base() == variant.Ref.charAt(0)
+                    && beforeHomopolymerPair.indelLength() == -1)
+            {
+                return true;
+            }
+
+            // check var pair and after pair
+            if(afterHomopolymerPair != null
+                    && afterHomopolymerPair.base() == variant.Ref.charAt(0)
+                    && afterHomopolymerPair.indelLength() == -1)
+            {
+                return true;
+            }
+
             return false;
         }
-
-        // check var pair and before pair
-        if(beforeHomopolymerPair != null
-                && beforeHomopolymerPair.base() == variant.Ref.charAt(0)
-                && beforeHomopolymerPair.indelLength() == -1)
+        else if(variant.indelLength() == -1)
         {
-            return true;
+            HomopolymerPair delHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
+            return delHomopolymerPair.base() == variant.Ref.charAt(1) && delHomopolymerPair.indelLength() == variant.indelLength();
         }
-
-        // check var pair and after pair
-        if(afterHomopolymerPair != null
-                && afterHomopolymerPair.base() == variant.Ref.charAt(0)
-                && afterHomopolymerPair.indelLength() == -1)
+        else
         {
-            return true;
+            // TODO:
+            throw new RuntimeException("TODO");
         }
-
-        return false;
     }
 
     private static int getVariantRefIndex(final VariantReadContext readContext)
