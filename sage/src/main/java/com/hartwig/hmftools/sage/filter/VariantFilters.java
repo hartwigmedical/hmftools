@@ -210,14 +210,15 @@ public class VariantFilters
     private static boolean belowMinTumorQual(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
     {
         int depth = primaryTumor.depth();
-
-        if(depth == 0)
-            return true;
-
         int altSupport = primaryTumor.altSupport();
         int strongSupport = primaryTumor.strongAltSupport();
-        byte qualPerRead = (byte)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / (double)strongSupport);
-        double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerRead);
+
+        if(strongSupport == 0)
+            return true;
+
+        int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+        byte qualPerReadFloored = (byte)max(qualPerRead, 15);
+        double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerReadFloored);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
 

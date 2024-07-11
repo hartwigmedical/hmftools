@@ -98,7 +98,7 @@ public class EvictingArrayTest
             evictingArray.getOrCreateRefContext(position, EvictingArrayTest::create);
         }
 
-        assertEquals(150, evictingArray.itemCount());
+        assertEquals(120, evictingArray.itemCount());
 
         // no flush yet
         assertEquals(0, handler.items().size());
@@ -108,9 +108,9 @@ public class EvictingArrayTest
             evictingArray.getOrCreateRefContext(position, EvictingArrayTest::create);
         }
 
-        assertEquals(1050, evictingArray.minPosition());
-        assertEquals(350, evictingArray.itemCount());
-        assertEquals(50, handler.items().size());
+        assertEquals(1080, evictingArray.minPosition());
+        assertEquals(320, evictingArray.itemCount());
+        assertEquals(80, handler.items().size());
 
         for(; position < 1600; position++)
         {

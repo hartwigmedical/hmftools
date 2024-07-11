@@ -24,12 +24,12 @@ public class EvictingArray
     private final int mReadLengthBuffer;
     private final int mCapacity;
 
-    public static final double READ_BUFFER_FACTOR = 1.25;
+    public static final int MAX_EXPECTED_DEL = 80;
 
     public EvictingArray(int maxReadLength, final Consumer<RefContext> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
-        mReadLengthBuffer = (int)round(maxReadLength * READ_BUFFER_FACTOR);
+        mReadLengthBuffer = maxReadLength + MAX_EXPECTED_DEL;
         mCapacity = maxReadLength * 2;
         mElements = new RefContext[mCapacity];
         mMinPosition = 0;
