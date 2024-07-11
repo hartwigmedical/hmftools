@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -233,8 +234,7 @@ public class RefBaseExtender
                 if(refBaseGap > ASSEMBLY_REF_BASE_MAX_GAP)
                     break;
 
-                if(!support.isLeftClipped())
-                    minAlignedPosition = min(minAlignedPosition, support.alignmentStart());
+                minAlignedPosition = min(minAlignedPosition, support.alignmentStart());
             }
             else
             {
@@ -243,8 +243,7 @@ public class RefBaseExtender
                 if(refBaseGap > ASSEMBLY_REF_BASE_MAX_GAP)
                     break;
 
-                if(!support.isRightClipped())
-                    maxAlignedPosition = max(maxAlignedPosition, support.alignmentEnd());
+                maxAlignedPosition = max(maxAlignedPosition, support.alignmentEnd());
             }
 
             nonJunctionSupport.add(support);
@@ -342,7 +341,7 @@ public class RefBaseExtender
             // SV_LOGGER.debug("assembly({}) post-support bases: {}", refBaseAssembly, new String(refBaseAssembly.bases()));
 
             if(refBaseAssembly.supportCount() > 0)
-                assembly.mergeRefBaseAssembly(refBaseAssembly, "non-branched");
+                assembly.mergeRefBaseAssembly(refBaseAssembly, assembly.refBaseLength(), "non-branched");
         }
         else if(isSoftClipped)
         {
@@ -385,7 +384,17 @@ public class RefBaseExtender
                 if(refSideSoftClip.matchesOriginal() || refSideSoftClip.hasProximateMatch(originalAssembly.refBasePosition()))
                     continue;
 
-                junctionAssembly = new JunctionAssembly(originalAssembly, refSideSoftClip, initialSupport, excludedReads);
+                int refBaseDifference = refSideSoftClip.Position - originalAssembly.refBasePosition();
+
+                if(originalAssembly.junction().isReverse())
+                    refBaseDifference *= -1;
+
+                if(refBaseDifference <= 0)
+                    break;
+
+                int newRefBaseLength = originalAssembly.refBaseLength() - refBaseDifference;
+
+                junctionAssembly = new JunctionAssembly(originalAssembly, refSideSoftClip, newRefBaseLength, initialSupport, excludedReads);
 
                 extensionRefPosition = refSideSoftClip.Position;
             }
@@ -395,12 +404,19 @@ public class RefBaseExtender
             checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, excludedReads);
 
             // only add branched assemblies if they have sufficient support
-            if(junctionAssembly != originalAssembly)
+            if(junctionAssembly == originalAssembly)
+            {
+                if(refBaseAssembly.supportCount() > 0) // same criteria as above
+                {
+                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, junctionAssembly.refBaseLength(),"branched original");
+                }
+            }
+            else
             {
                 if(refBaseAssembly.supportCount() == 0)
                     continue;
 
-                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, "branched new");
+                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, originalAssembly.refBaseLength(), "branched new");
 
                 if(AssemblyUtils.hasUnsetBases(junctionAssembly))
                     continue;
@@ -413,15 +429,12 @@ public class RefBaseExtender
                 if(!hasSufficientSecondRefSupport)
                     continue;
 
+                junctionAssembly.buildRepeatInfo();
                 branchedAssemblies.add(junctionAssembly);
                 junctionAssembly.setOutcome(DUP_BRANCHED);
-            }
-            else
-            {
-                if(refBaseAssembly.supportCount() > 0) // same criteria as above
-                {
-                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly, "branched original");
-                }
+
+                // for now only 1 branched assembly will be made
+                break;
             }
         }
 

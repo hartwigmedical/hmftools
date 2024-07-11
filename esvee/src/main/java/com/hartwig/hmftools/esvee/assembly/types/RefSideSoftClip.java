@@ -61,11 +61,19 @@ public class RefSideSoftClip
         if(junction.isForward())
         {
             refSideSoftClipPosition = read.alignmentStart();
+
+            if(refSideSoftClipPosition >= junction.Position)
+                return false;
+
             refSideSoftClipLength = read.leftClipLength();
         }
         else
         {
             refSideSoftClipPosition = read.alignmentEnd();
+
+            if(refSideSoftClipPosition <= junction.Position)
+                return false;
+
             refSideSoftClipLength = read.rightClipLength();
         }
 
@@ -99,7 +107,7 @@ public class RefSideSoftClip
             return;
 
         // drop if not sufficient support or matches the original assembly's ref extension position anyway
-        // or is close to it - where say homology causes aligned bases to match the soft-clip
+        // or is close to it - where say homology causes aligned bases to match the soft-clip, or is past the non-soft-clipped position
         int index = 0;
         RefSideSoftClip matching = null;
 
@@ -108,8 +116,11 @@ public class RefSideSoftClip
             RefSideSoftClip refSideSoftClip = refSideSoftClips.get(index);
 
             boolean isPositionMatchOrClose = refSideSoftClip.hasProximateMatch(nonSoftClipRefPosition);
+            boolean insufficientSupportOrLength = refSideSoftClip.readCount() < minCount || refSideSoftClip.maxLength() < minLength;
+            boolean invalidPosition = refSideSoftClip.Orient.isForward() ?
+                    refSideSoftClip.Position > nonSoftClipRefPosition : refSideSoftClip.Position < nonSoftClipRefPosition;
 
-            if(refSideSoftClip.readCount() < minCount || refSideSoftClip.maxLength() < minLength || isPositionMatchOrClose)
+            if(insufficientSupportOrLength || isPositionMatchOrClose || invalidPosition)
             {
                 refSideSoftClips.remove(index);
 

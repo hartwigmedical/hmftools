@@ -157,6 +157,9 @@ public class AssemblyAlignment
 
         String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formRefBaseSequence()) : second.formRefBaseSequence();
 
+        if(overlapLength >= secondSequence.length())
+            return null;
+
         fullSequence.append(overlapLength > 0 ? secondSequence.substring(overlapLength) : secondSequence);
 
         // set full assembly indices for all supporting reads, so they can be tested after alignment

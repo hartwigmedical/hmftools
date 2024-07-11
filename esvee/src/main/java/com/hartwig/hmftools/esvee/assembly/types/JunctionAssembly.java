@@ -531,20 +531,19 @@ public class JunctionAssembly
         }
     }
 
-    public void mergeRefBaseAssembly(final RefBaseAssembly refBaseAssembly, final String context)
+    public void mergeRefBaseAssembly(final RefBaseAssembly refBaseAssembly, int existingRefBaseLength, final String context)
     {
         // find the longest length of aligned reference bases extending back from the junction
         int newRefBaseCount = refBaseAssembly.validRefBaseLength();
-        int existingRefBaseCount = refBaseLength();
 
-        if(newRefBaseCount > existingRefBaseCount)
+        if(newRefBaseCount > existingRefBaseLength)
         {
             if(isForwardJunction())
                 mMinAlignedPosition = refBaseAssembly.minAlignedPosition();
             else
                 mMaxAlignedPosition = refBaseAssembly.maxAlignedPosition();
 
-            int refBaseExtension = newRefBaseCount - existingRefBaseCount;
+            int refBaseExtension = newRefBaseCount - existingRefBaseLength;
 
             extendRefBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
         }
@@ -562,7 +561,7 @@ public class JunctionAssembly
         if(!emptyBaseRanges.isEmpty())
         {
             SV_LOGGER.debug("assembly({}) context({}) refBases(existing={} new={}) empty ranges: {}",
-                    toString(), context, existingRefBaseCount, newRefBaseCount, emptyBaseRanges);
+                    toString(), context, existingRefBaseLength, newRefBaseCount, emptyBaseRanges);
         }
     }
 
@@ -788,7 +787,7 @@ public class JunctionAssembly
     public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
 
     public JunctionAssembly(
-            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
+            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
             final List<SupportRead> initialSupport, final Set<String> excludedReadIds)
     {
         // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
@@ -796,9 +795,8 @@ public class JunctionAssembly
 
         // copy the initial assembly's extension bases and ref bases up to the ref-side soft clip
         int extensionLength = initialAssembly.extensionLength();
-        int newBaseLength = extensionLength + abs(mJunction.Position - refSideSoftClip.Position) + 1;
+        int newBaseLength = extensionLength + refBaseLength;
         int initialBaseLength = initialAssembly.baseLength();
-
         int baseLengthDiff = initialBaseLength - newBaseLength;
 
         mBases = new byte[newBaseLength];
@@ -843,8 +841,8 @@ public class JunctionAssembly
         mUnmappedCandidates = Lists.newArrayList();
 
         mRepeatInfo = Lists.newArrayList();
-        mRefBasesRepeatedTrimmed = initialAssembly.refBasesRepeatedTrimmed();
-        mRefBaseTrimLength = initialAssembly.refBaseTrimLength();
+        mRefBasesRepeatedTrimmed = "";
+        mRefBaseTrimLength = 0;
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
         mMergedAssemblies = 0;
@@ -870,8 +868,8 @@ public class JunctionAssembly
 
         mInitialReadId = initialRead != null ? initialRead.id() : (!mSupport.isEmpty() ? mSupport.get(0).id() : "");
         mIndelCoords = initialAssembly.indelCoords();
-        mOutcome = initialAssembly.outcome();
-        mAlignmentOutcome = initialAssembly.alignmentOutcome();
+        mOutcome = UNSET;
+        mAlignmentOutcome = NO_SET;
     }
 
     public void addCandidateSupport(final Read read, final SupportType type)
