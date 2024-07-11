@@ -950,7 +950,6 @@ This HRD classifier is still in experimental stage due to the small number of tr
 - **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
 - **Subclonal likelihood** - Subclonal likelihood can be very volatile if subclonal peak and clonal peak hardly overlap.  In this case variants in the middle should be highly uncertain (ie. likelihood -> 0.5) 
 - **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
-- **Centromeric noise** - regions within 1Mb of the centromere are normally excluded from fitting in most tools.  This should be evaluated.
 - **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ingnored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincning evidence of high purity and should be captured.
 
 ## Version History and Download Links
