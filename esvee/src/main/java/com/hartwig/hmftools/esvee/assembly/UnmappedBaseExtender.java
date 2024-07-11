@@ -213,6 +213,9 @@ public class UnmappedBaseExtender
             byte base = read.getBases()[i];
             byte qual = read.getBaseQuality()[i];
 
+            if(extBaseIndex >= mBases.length)
+                break;
+
             if(mBases[extBaseIndex] == 0)
             {
                 mBases[extBaseIndex] = base;

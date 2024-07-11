@@ -132,11 +132,21 @@ public class RefBaseAssembly
 
         boolean canAddRead = canAddRead(read, readStartIndex, assemblyStartIndex, permittedMismatches,requiredOverlap);
 
-        if(!canAddRead)
+        if(!canAddRead && readStartIndex < read.getBases().length - 20)
         {
             // run a simple sequence search to find the alignment start where prior indels have offset the read's infer assembly index start
-            int readTestEndIndex = min(readStartIndex + 20, read.getBases().length);
-            String readBases = new String(read.getBases(), readStartIndex, readTestEndIndex - readStartIndex);
+            int readTestEndIndex = readStartIndex + 20;
+            int length = readTestEndIndex - readStartIndex + 1;
+
+            if(readStartIndex < 0 || readStartIndex >= read.getBases().length || readStartIndex + length > read.getBases().length)
+            {
+                SV_LOGGER.error("refAssembly({}) invalid indices({} - {}) vs readBases({}) for ref extension read search",
+                        toString(), readStartIndex, readTestEndIndex, read.getBases().length);
+
+                System.exit(1);
+            }
+
+            String readBases = new String(read.getBases(), readStartIndex, length);
             assemblyStartIndex = new String(mBases).indexOf(readBases);
 
             if(assemblyStartIndex >= 0)

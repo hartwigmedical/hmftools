@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -49,7 +51,16 @@ public class CandidateEvidence
 
         final Consumer<SAMRecord> consumer = record ->
         {
-            refContextConsumer.processRead(record);
+            try
+            {
+                refContextConsumer.processRead(record);
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("error processing read({} {}:{}-{}) error: {}",
+                        record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd());
+                System.exit(1);
+            }
 
             if(!geneCoverage.isEmpty())
             {

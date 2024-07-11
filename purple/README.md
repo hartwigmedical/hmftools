@@ -947,12 +947,18 @@ This HRD classifier is still in experimental stage due to the small number of tr
 
 ## Known issues / points for improvement
 
-- **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
-- **Subclonal likelihood** - Subclonal likelihood can be very volatile if subclonal peak and clonal peak hardly overlap.  In this case variants in the middle should be highly uncertain (ie. likelihood -> 0.5) 
+Purity & Ploidy fitting:
 - **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
-- **Centromeric noise** - regions within 1Mb of the centromere are normally excluded from fitting in most tools.  This should be evaluated.
+- **Fit resolution** - currently set to 1%. Setting to 0.5% or lower may allow better fitting at lower purities including potentially <0.08
 - **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ingnored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincning evidence of high purity and should be captured.
+- **Imputation** - Used population phased BAF points in segmentation would allow better subclonal calling and calling at TF < 0.08
 
+Other functionality:
+- **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
+- **Pathogenic GL DUP** - currently not called
+- **Subclonal likelihood** - Subclonal likelihood can be very volatile if subclonal peak and clonal peak hardly overlap.  In this case variants in the middle should be highly uncertain (ie. likelihood -> 0.5) 
+- **TCR CN estimate** - TCR regions currently excluded from the fit due to CN effects of T cell VDJ rearrangements.  We should use to estimate T cell infiltration from CN ratios 
+  
 ## Version History and Download Links
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.4)
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)

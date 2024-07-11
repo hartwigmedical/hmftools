@@ -115,7 +115,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 6.5;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
     public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
     public static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
@@ -132,15 +132,15 @@ public class SageConstants
             0, 0, 0.1);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 1e-5, 1e-4, 0.02,
+            "panel", 1e-5, 1e-5, 0.02,
             0, 0,0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "high_confidence", 1e-8, 5e-5, 0.025,
+            "high_confidence", 1e-8, 1e-8, 0.025,
             10, 6,0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "low_confidence", 1e-14, 5e-7, 0.025,
+            "low_confidence", 1e-14, 1e-14, 0.025,
             10, 6,
             0.04);
 

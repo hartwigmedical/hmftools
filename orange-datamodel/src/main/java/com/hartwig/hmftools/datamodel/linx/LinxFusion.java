@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import java.util.List;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +40,9 @@ public interface LinxFusion
 
     @NotNull
     LinxFusionType reportedType();
+
+    @NotNull
+    List<LinxUnreportableReason> unreportedReasons();
 
     @NotNull
     FusionPhasedType phased();
