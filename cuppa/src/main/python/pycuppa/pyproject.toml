@@ -10,11 +10,10 @@ description = "Python machine learning component of CUPPA"
 readme = "README.md"
 requires-python = ">=3.9"
 
-## Use strict versioning due to avoid deprecation warnings and differing classifier output from future versions
 dependencies = [
-    "pandas == 2.0.3",
-    "numpy == 1.24.3",
-    "scikit-learn == 1.3.0",
+    "pandas == 2.0.*", ## Strict versioning avoids deprecation warnings
+    "numpy >= 1.24",
+    "scikit-learn == 1.3.0", ## Strict versioning avoids wrong sklearn version de-serialization warnings
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -24,7 +23,10 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest >= 7.4.0"]
+dev = [
+    "pytest >= 7.4",
+    "ipython >= 8.18"
+]
 
 [tool.setuptools.packages.find]
 include = [
