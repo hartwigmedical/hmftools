@@ -117,4 +117,31 @@ public class PurpleTestUtils
     }
 
 
+    public static ObservedRegion createObservedRegion(final String chromosome, final int start, final int end, 
+            double tumorBAF, double normalBAF)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, normalBAF, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.50, 0, 0, 0, 0, 0,
+                0, 0, 0, tumorBAF, 0, 0);
+    }
+    
+    /*
+    AMBER:
+    - tumorBAF
+    - tumorModifiedBAF
+    - tumorDepth
+    - normalBAF
+    - normalModifiedBAF
+    - normalBAF
+    
+    COBALT:
+    - referenceReadCount
+    - tumorReadCount
+    - referenceGCRatio
+    - tumorGCRatio
+    - referenceGCDiploidRatio
+     */
+
 }

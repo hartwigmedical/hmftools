@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.pcf.PCFSource.TUMOR_BAF;
 import static com.hartwig.hmftools.common.utils.pcf.PCFSource.TUMOR_RATIO;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.REF_SAMPLE_ID;
@@ -11,12 +10,13 @@ import static com.hartwig.hmftools.purple.PurpleTestUtils.createAmberBaf;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createCobaltRatio;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createObservedRegion;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createSegmentation;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.FittingConfig.MAX_PLOIDY;
-import static com.hartwig.hmftools.purple.config.FittingConfig.MIN_PLOIDY;
 import static com.hartwig.hmftools.purple.config.FittingConfig.PURITY_INCREMENT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.PurpleTestUtils;
@@ -111,41 +112,131 @@ public class PurityPloidyFitTest
         mCobaltData.Ratios.put(chr1, cobaltRatios);
     }
 
-    private List<ObservedRegion> buildDefaultObservedRegions()
+    
+    // inspired by NO_TUMOR sample WIDE01010763T
+    private List<ObservedRegion> buildNoTumorObservedRegions()
+    {
+        List<ObservedRegion> observedRegions = Lists.newArrayList();
+
+        Chromosome chr1 = HumanChromosome._1;
+        
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 1, 1000, 0.4466, 0.4138));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 1001, 2000, 0.4655, 0.5417));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 2001, 3000, 0.4316, 0.4783));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 3001, 4000, 0.4211, 0.4348));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 4001, 5000, 0.3830, 0.4667));
+
+        return observedRegions;
+    }
+
+    // inspired by NORMAL (copyNumber mode) sample COREDB011180T
+    private List<ObservedRegion> buildCopyNumberObservedRegions()
     {
         List<ObservedRegion> observedRegions = Lists.newArrayList();
 
         Chromosome chr1 = HumanChromosome._1;
 
         observedRegions.add(createObservedRegion(
-                chr1.toString(), 1, 1000, 0.5, 0.5, GermlineStatus.DIPLOID, 1));
+                chr1.toString(), 1, 1000, 0.4286, 0.4643));
 
         observedRegions.add(createObservedRegion(
-                chr1.toString(), 1001, 2000, 0.5, 0.5, GermlineStatus.DIPLOID, 2));
+                chr1.toString(), 1001, 2000, 0.4699, 0.5952));
 
         observedRegions.add(createObservedRegion(
-                chr1.toString(), 2001, 3000, 0.5, 0.5, GermlineStatus.DIPLOID, 1));
+                chr1.toString(), 2001, 3000, 0.4787, 0.4524));
 
         observedRegions.add(createObservedRegion(
-                chr1.toString(), 3001, 4000, 0.5, 0.5, GermlineStatus.DIPLOID, 1));
+                chr1.toString(), 3001, 4000, 0.4725, 0.6111));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 4001, 5000, 0.4937, 0.6250));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 5001, 6000, 0.4348, 0.5588));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 6001, 7000, 0.5275, 0.5152));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 7001, 8000, 0.500, 0.5294));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 8001, 9000, 0.4316, 0.6286));
+
+        observedRegions.add(createObservedRegion(
+                chr1.toString(), 9001, 10000, 0.4388, 0.5758));
 
         return observedRegions;
     }
+    
+    
+    @Test
+    public void testNoTumorMode()
+    {
+        List<ObservedRegion> observedRegions = buildNoTumorObservedRegions();
+        
+        PurityPloidyFitter fitter;
+        fitter = new PurityPloidyFitter(mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, mSegmentation);
+        fitter.run();
+        
+        PPL_LOGGER.debug(fitter.copyNumberFit());
+        PPL_LOGGER.debug(fitter.somaticFit());
+        PPL_LOGGER.debug(fitter.finalFit().Method);
+        
+        assertNotNull(fitter.copyNumberFit());
+        
+        assertNull(fitter.somaticFit());
+        
+        String method = fitter.finalFit().Method.toString();
+        assertEquals(method, "NO_TUMOR");
+    }
 
     @Test
-    public void testSomaticFit()
+    public void testCopyNumberMode()
     {
-        List<ObservedRegion> observedRegions = buildDefaultObservedRegions();
+        List<ObservedRegion> observedRegions = buildCopyNumberObservedRegions();
 
-        PurityPloidyFitter fitter = new PurityPloidyFitter(mConfig, mReferenceData, mSampleData, null,
-                mRegionFitCalculator, observedRegions, mSegmentation);
-
-        assertTrue(fitter.isValid());
-
+        PurityPloidyFitter fitter;
+        fitter = new PurityPloidyFitter(mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, mSegmentation);
         fitter.run();
 
-        assertNotNull(fitter.finalFit());
+        PPL_LOGGER.debug(fitter.copyNumberFit());
+        PPL_LOGGER.debug(fitter.somaticFit());
+        PPL_LOGGER.debug(fitter.finalFit().Method);
+
+        assertNotNull(fitter.copyNumberFit());
+
+        assertNull(fitter.somaticFit());
+
+        String method = fitter.finalFit().Method.toString();
+        assertEquals(method, "NORMAL");
     }
+    
+    
+    
+//    @Test
+//    public void testSomaticFit()
+//    {
+//        List<ObservedRegion> observedRegions = buildNoTumorObservedRegions();
+//
+//        PurityPloidyFitter fitter = new PurityPloidyFitter(mConfig, mReferenceData, mSampleData, null,
+//                mRegionFitCalculator, observedRegions, mSegmentation);
+//
+//        assertTrue(fitter.isValid());
+//
+//        fitter.run();
+//
+//        assertNotNull(fitter.finalFit());
+//    }
 
     @Test
     public void testMostDiploidPurity()
