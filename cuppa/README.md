@@ -200,24 +200,24 @@ curl https://pyenv.run | bash
 ## Set up the shell environment
 echo '
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+command -v pyenv > /dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 ' >> ~/.bashrc ## On MacOS, change this to ~/.zshrc
 ```
 
 2. Install Python and create a virtual environment:
 ```shell
-## `pycuppa` requires Python 3.9.4 or higher 
+## `pycuppa` requires Python 3.9 or higher 
 pyenv install 3.9.4
 
-## Create virtual environment in pyenv
-pyenv virtualenv pycuppa_env
+## Create a virtual environment with Python 3.9.4 as the base
+pyenv virtualenv 3.9.4 pycuppa_venv
 
 ## Activate the virtual environment
-pyenv activate pycuppa_env
+pyenv activate pycuppa_venv
 ```
 
-3. Install `pycuppa`:
+3a. Install `pycuppa` from the `hmftools` repo:
 ```shell
 ## Clone the hmftools repository
 git clone https://github.com/hartwigmedical/hmftools/
@@ -225,22 +225,39 @@ git clone https://github.com/hartwigmedical/hmftools/
 ## Upgrade python package manager
 pip install --upgrade pip
 
-## Install `pycuppa` using `pip`. This will also install required python packages
+## Install `pycuppa`. This will also install required python packages
 pip install hmftools/cuppa/src/main/python/pycuppa
 ```
 
+3b. Alternatively, install `pycuppa` from a CUPPA jar file (see [releases](https://github.com/hartwigmedical/hmftools/releases/) for available versions):
+```shell
+## Download a cuppa jar. Replace the URL with the desired version
+wget https://github.com/hartwigmedical/hmftools/releases/download/cuppa-v2.2.1/cuppa_v2.2.1.jar
+
+## Extract the contents of the jar. Jars are just zip files!
+mkdir cuppa_jar/
+tar -xvzf cuppa_v2.2.1.jar -C cuppa_jar/
+
+## Upgrade python package manager
+pip install --upgrade pip
+
+## Install the `pycuppa` python package embedded in the jar
+pip install cuppa_jar/pycuppa/
+```
+
 ### Predicting
-Pre-trained classifiers (as `cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo.
+Pre-trained classifiers (`cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the 
+[common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo.
 
 To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: [Classifier output](#classifier-output).
 
 ```shell
-## Activate the previously created virtual environment (see above)
-pyenv activate pycuppa_env
+## Activate the previously created virtual environment
+pyenv activate pycuppa_venv
 
 ## Call the module `pycuppa/cuppa/predict.py`
-python3 -m cuppa.predict \
---sample_id "TUMOR_SAMPLE" \
+python -m cuppa.predict \
+--sample_id TUMOR_SAMPLE \
 --classifier_path /path/to/cuppa_classifier.pickle.gz \
 --features_path /path/to/features/ \
 --output_dir /path/to/output/dir/
@@ -250,11 +267,11 @@ python3 -m cuppa.predict \
 
 To train a new model, the following example command can be used:
 ```shell
-## Activate the previously created virtual environment (see above)
-pyenv activate pycuppa_env
+## Activate the previously created virtual environment
+pyenv activate pycuppa_venv
 
 ## Call the module `pycuppa/cuppa/train.py`
-python3 -m cuppa.train \
+python -m cuppa.train \
 --features_path /path/to/features/ \
 --metadata_path /path/to/metadata/ \
 --output_dir /path/to/output/dir/ \

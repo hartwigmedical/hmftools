@@ -1,6 +1,13 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 -- All database and field names are wrapped in backticks to force jOOQ code generation to use them literally
 
+DROP TABLE IF EXISTS `snpcheck`;
+CREATE TABLE `snpcheck`
+(   `sampleId` VARCHAR(255) NOT NULL,
+    `isPass` TINYINT(1) NOT NULL,
+    PRIMARY KEY (`sampleId`)
+);
+
 DROP TABLE IF EXISTS `amberPatient`;
 CREATE TABLE `amberPatient`
 (   `modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

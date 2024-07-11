@@ -2,8 +2,8 @@
   "sampleId": "Test",
   "samplingDate": {
     "year": 2024,
-    "month": 6,
-    "day": 5
+    "month": 7,
+    "day": 9
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -813,6 +813,9 @@
         "geneTranscriptEnd": "ENST00000357033",
         "reported": false,
         "reportedType": "NONE",
+        "unreportedReasons": [
+          "NOT_KNOWN"
+        ],
         "phased": "INFRAME",
         "driverLikelihood": "NA",
         "fusedExonUp": 67,
