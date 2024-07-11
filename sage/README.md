@@ -657,6 +657,13 @@ Phasing improvements
 - **Confusion of low qual mismatches in long cores** - low qual mismatches in long cores are tolerated, but can mean that some incommpatible variants may appear phased
 - **Germline phased variants may not be deduped** - SAGE does not dedup filtered variants so this may cause confusion in phasing.   This can be an issue around microsatellites.
 
+Other functionality
+- **scDNA / scRNA** - Support counting by single cell labels
+- **mhDEL sensitivity** - Could improve tiered sensitivity to better support HRD
+  
+Performance
+- **High depth regions** - Phasing may be slow in very high depth regions
+
 # Version History and Download Links
 - [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)
