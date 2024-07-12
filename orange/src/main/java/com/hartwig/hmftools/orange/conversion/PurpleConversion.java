@@ -83,8 +83,8 @@ public final class PurpleConversion
                 .germlineAberrations(ConversionUtil.mapToIterable(purpleQC.germlineAberrations(), PurpleConversion::convert))
                 .amberMeanDepth(purpleQC.amberMeanDepth())
                 .contamination(purpleQC.contamination())
+                .totalCopyNumberSegments(purpleQC.copyNumberSegments())
                 .unsupportedCopyNumberSegments(purpleQC.unsupportedCopyNumberSegments())
-                .copyNumberSegments(purpleQC.copyNumberSegments())
                 .deletedGenes(purpleQC.deletedGenes())
                 .build();
     }

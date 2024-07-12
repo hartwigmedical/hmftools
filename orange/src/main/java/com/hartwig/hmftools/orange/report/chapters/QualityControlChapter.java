@@ -80,22 +80,19 @@ public class QualityControlChapter implements ReportChapter
                         cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments (%)"),
                         cells.createHeader("Deleted Genes") });
 
-        int unsupportedSegments = report.purple().fit().qc().unsupportedCopyNumberSegments();
-        table.addCell(cells.createContent(purpleQCString()));
+        table.addCell(cells.createContent(purpleQCStatusString()));
         table.addCell(cells.createContent(report.refGenomeVersion().toString()));
         table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().amberMeanDepth())));
         table.addCell(cells.createContent(formatPercentage(report.purple().fit().qc().contamination())));
-        table.addCell(cells.createContent(
-                unsupportedSegments + " (" + percent((double) unsupportedSegments / report.purple().fit().qc().copyNumberSegments() * 100)
-                        + ")"));
+        table.addCell(cells.createContent(purpleQCSegmentsString()));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
     @NotNull
-    private String purpleQCString()
+    private String purpleQCStatusString()
     {
         StringJoiner joiner = new StringJoiner(", ");
         for(PurpleQCStatus status : report.purple().fit().qc().status())
@@ -103,6 +100,14 @@ public class QualityControlChapter implements ReportChapter
             joiner.add(status.toString());
         }
         return joiner.toString();
+    }
+
+    @NotNull
+    private String purpleQCSegmentsString()
+    {
+        int unsupportedSegments = report.purple().fit().qc().unsupportedCopyNumberSegments();
+        return unsupportedSegments + " (" + percent(
+                (double) unsupportedSegments / report.purple().fit().qc().totalCopyNumberSegments() * 100) + ")";
     }
 
     private void addPurplePurityFitPlot(@NotNull Document document)
