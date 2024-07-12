@@ -75,17 +75,20 @@ public class QualityControlChapter implements ReportChapter
     {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
-                new float[] { 2, 1, 1, 1, 1, 1, 1 },
+                new float[] { 1.5F, 1, 1, 1, 1, 1.2F, 1 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Ref Genome"), cells.createHeader("Fit Method"),
-                        cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments"),
+                        cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments (%)"),
                         cells.createHeader("Deleted Genes") });
 
+        int unsupportedSegments = report.purple().fit().qc().unsupportedCopyNumberSegments();
         table.addCell(cells.createContent(purpleQCString()));
         table.addCell(cells.createContent(report.refGenomeVersion().toString()));
         table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().amberMeanDepth())));
         table.addCell(cells.createContent(formatPercentage(report.purple().fit().qc().contamination())));
-        table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().unsupportedCopyNumberSegments())));
+        table.addCell(cells.createContent(
+                unsupportedSegments + " (" + percent((double) unsupportedSegments / report.purple().fit().qc().copyNumberSegments() * 100)
+                        + ")"));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
         document.add(new Tables(reportResources).createWrapping(table));

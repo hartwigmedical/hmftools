@@ -3,7 +3,7 @@
   "samplingDate": {
     "year": 2024,
     "month": 7,
-    "day": 9
+    "day": 12
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -71,6 +71,7 @@
         "amberMeanDepth": 111,
         "contamination": 0.0,
         "unsupportedCopyNumberSegments": 0,
+        "copyNumberSegments": 210,
         "deletedGenes": 4
       },
       "fittedPurityMethod": "NORMAL",

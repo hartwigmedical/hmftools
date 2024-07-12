@@ -45,6 +45,7 @@
         "status": [
         ],
         "unsupportedCopyNumberSegments": 0,
+        "copyNumberSegments": 0,
         "deletedGenes": 0,
         "contamination": 0,
         "amberMeanDepth": 0

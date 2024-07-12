@@ -84,6 +84,7 @@ public final class PurpleConversion
                 .amberMeanDepth(purpleQC.amberMeanDepth())
                 .contamination(purpleQC.contamination())
                 .unsupportedCopyNumberSegments(purpleQC.unsupportedCopyNumberSegments())
+                .copyNumberSegments(purpleQC.copyNumberSegments())
                 .deletedGenes(purpleQC.deletedGenes())
                 .build();
     }

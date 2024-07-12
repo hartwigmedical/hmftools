@@ -46,6 +46,7 @@
           "PASS"
         ],
         "unsupportedCopyNumberSegments": 0,
+        "copyNumberSegments": 100,
         "deletedGenes": 4,
         "contamination": 0.0,
         "amberMeanDepth": 111

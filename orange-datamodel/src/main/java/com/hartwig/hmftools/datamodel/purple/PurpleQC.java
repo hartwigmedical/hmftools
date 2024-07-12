@@ -24,5 +24,7 @@ public interface PurpleQC
 
     int unsupportedCopyNumberSegments();
 
+    int copyNumberSegments();
+
     int deletedGenes();
 }
