@@ -32,7 +32,7 @@ public class SignatureAllocationTableTest
     }
 
     @NotNull
-    private static SignatureAllocation create(@NotNull String signature, @NotNull Double allocation)
+    private static SignatureAllocation create(@NotNull String signature, double allocation)
     {
         return ImmutableSignatureAllocation.builder().signature(signature).allocation(allocation).percent(0D).etiology("test").build();
     }

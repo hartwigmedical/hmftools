@@ -76,6 +76,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
+import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -107,7 +108,7 @@ public class OrangeAlgo
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
-    private final Map<String, String> signaturesEtiologies;
+    private final Map<String, String> etiologyPerSignature;
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
@@ -138,9 +139,9 @@ public class OrangeAlgo
         List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
         LOGGER.info(" Read {} driver genes", driverGenes.size());
 
-        LOGGER.info("Reading signatures' etiologies from {}", config.signaturesEtiologiesTsv());
-        Map<String, String> signaturesEtiologies = SigsEtiologiesLoader.read(config.signaturesEtiologiesTsv());
-        LOGGER.info(" Read {} signatures' etiologies", signaturesEtiologies.size());
+        LOGGER.info("Reading signatures etiology from {}", config.signaturesEtiologyTsv());
+        Map<String, String> etiologyPerSignature = SigsEtiologiesLoader.read(config.signaturesEtiologyTsv());
+        LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
         LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
         KnownFusionCache knownFusionCache = new KnownFusionCache();
@@ -157,12 +158,13 @@ public class OrangeAlgo
         String outputDir = config.outputDir();
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, signaturesEtiologies, knownFusionCache, ensemblDataCache, plotManager);
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, etiologyPerSignature, knownFusionCache, ensemblDataCache,
+                plotManager);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
             @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final Map<String, String> signaturesEtiologies,
+            @NotNull final Map<String, String> etiologyPerSignature,
             @NotNull final KnownFusionCache knownFusionCache, @NotNull final EnsemblDataCache ensemblDataCache,
             @NotNull final PlotManager plotManager)
     {
@@ -170,7 +172,7 @@ public class OrangeAlgo
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
         this.driverGenes = driverGenes;
-        this.signaturesEtiologies = signaturesEtiologies;
+        this.etiologyPerSignature = etiologyPerSignature;
         this.knownFusionCache = knownFusionCache;
         this.ensemblDataCache = ensemblDataCache;
         this.plotManager = plotManager;
@@ -255,7 +257,7 @@ public class OrangeAlgo
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
-                .sigAllocations(OrangeConversion.convertAndAnnotateWithEtiology(sigAllocations, signaturesEtiologies))
+                .sigAllocations(SigsInterpreter.convertAndAnnotateWithEtiology(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();

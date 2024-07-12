@@ -1460,7 +1460,7 @@
     },
     {
       "signature": "Sig20",
-      "etiology": "Concurrent POLD1 mutations and defective DNA mismatch repair",
+      "etiology": "Unknown",
       "allocation": 253.052,
       "percent": 0.00672
     },
@@ -1478,7 +1478,7 @@
     },
     {
       "signature": "MISALLOC",
-      "etiology": null,
+      "etiology": "-",
       "allocation": 4611.476,
       "percent": 0.12245
     }

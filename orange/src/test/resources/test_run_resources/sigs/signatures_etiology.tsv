@@ -1,0 +1,31 @@
+signature	etiology
+Sig1	Deamination of 5-methylcytosine
+Sig2	APOBEC activity
+Sig3	Defective HR
+Sig4	Tobacco smoking
+Sig5	Unknown
+Sig6	Defective DNA mismatch repair
+Sig7	Ultraviolet light exposure
+Sig8	Unknown
+Sig9	Polymerase eta somatic hypermutation activity
+Sig10	Recurrent POLE somatic mutations
+Sig11	Temozolomide treatment
+Sig12	Unknown
+Sig13	APOBEC activity
+Sig14	Unknown
+Sig15	Defective DNA mismatch repair
+Sig16	Unknown
+Sig17	Unknown
+Sig18	Reactive oxygen species
+Sig19	Unknown
+Sig20	Unknown
+Sig21	Defective DNA mismatch repair
+Sig22	Aristolochic acid exposure
+Sig23	Unknown
+Sig24	Aflatoxin exposure
+Sig25	Chemotherapy treatment
+Sig26	Defective DNA mismatch repair
+Sig27	Unknown
+Sig28	Unknown
+Sig29	Tabacco chewing
+Sig30	Defective DNA base excision repair due to NTHL1 mutations
