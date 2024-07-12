@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -26,7 +27,8 @@ import htsjdk.samtools.CigarOperator;
 // TODO: clean up unneeded functions.
 public class UltimaLocalRealigner
 {
-    private static class Homopolymer
+    @VisibleForTesting
+    public static class Homopolymer
     {
         // TODO: Just use byte instead of char.
         public final char Base;
@@ -66,7 +68,8 @@ public class UltimaLocalRealigner
         }
     }
 
-    private static class HomopolymerPair
+    @VisibleForTesting
+    public static class HomopolymerPair
     {
         @Nullable
         public final Homopolymer RefHomopolymer;
@@ -100,6 +103,27 @@ public class UltimaLocalRealigner
             String refString = RefHomopolymer == null ? "null" : RefHomopolymer.toString();
             String readString = ReadHomopolymer == null ? "null" : ReadHomopolymer.toString();
             return format("ref(%s) read(%s)", refString, readString);
+        }
+
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(this == o)
+            {
+                return true;
+            }
+            if(!(o instanceof HomopolymerPair))
+            {
+                return false;
+            }
+            final HomopolymerPair that = (HomopolymerPair) o;
+            return Objects.equals(RefHomopolymer, that.RefHomopolymer) && Objects.equals(ReadHomopolymer, that.ReadHomopolymer);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(RefHomopolymer, ReadHomopolymer);
         }
     }
 
@@ -386,17 +410,16 @@ public class UltimaLocalRealigner
         return ref.equals(repeatedFlankBase) || alt.equals(repeatedFlankBase);
     }
 
-
-    // TODO: Use dynamic programming algorithm.
-    private static List<HomopolymerPair> pairHomopolymers(final List<Homopolymer> refCoreHomopolymers, final List<Homopolymer> readCoreHomopolymers)
+    @VisibleForTesting
+    public static List<HomopolymerPair> pairHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers)
     {
         List<HomopolymerPair> homopolymerPairs = Lists.newArrayList();
         int refIndex = 0;
         int readIndex = 0;
-        while(refIndex < refCoreHomopolymers.size() && readIndex < readCoreHomopolymers.size())
+        while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
-            Homopolymer refHomopolymer = refCoreHomopolymers.get(refIndex);
-            Homopolymer readHomopolymer = readCoreHomopolymers.get(readIndex);
+            Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
+            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
 
             if(refHomopolymer.Base == readHomopolymer.Base)
             {
@@ -406,8 +429,8 @@ public class UltimaLocalRealigner
                 continue;
             }
 
-            int refRemaining = refCoreHomopolymers.size() - refIndex - 1;
-            int readRemaining = readCoreHomopolymers.size() - readIndex - 1;
+            int refRemaining = refHomopolymers.size() - refIndex - 1;
+            int readRemaining = readHomopolymers.size() - readIndex - 1;
             if(refRemaining == readRemaining)
             {
                 // TODO:
@@ -425,16 +448,16 @@ public class UltimaLocalRealigner
             ++refIndex;
         }
 
-        while(refIndex < refCoreHomopolymers.size())
+        while(refIndex < refHomopolymers.size())
         {
-            Homopolymer refHomopolymer = refCoreHomopolymers.get(refIndex);
+            Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
             homopolymerPairs.add(new HomopolymerPair(refHomopolymer, null));
             ++refIndex;
         }
 
-        while(readIndex < readCoreHomopolymers.size())
+        while(readIndex < readHomopolymers.size())
         {
-            Homopolymer readHomopolymer = readCoreHomopolymers.get(readIndex);
+            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
             homopolymerPairs.add(new HomopolymerPair(null, readHomopolymer));
             ++readIndex;
         }
