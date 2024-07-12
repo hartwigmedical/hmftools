@@ -120,8 +120,8 @@ public class ReadContextCounter
     private FragmentCoords mFragmentCoords;
 
     // info only for VCF
-    private boolean mIsQualitySite;
     private double mTumorQualProbability;
+    private double mMapQualFactor;
 
     public ReadContextCounter(
             final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
@@ -174,8 +174,8 @@ public class ReadContextCounter
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
 
-        mIsQualitySite = false;
         mTumorQualProbability = 0;
+        mMapQualFactor = 0;
     }
 
     public int id() { return mId; }
@@ -636,6 +636,9 @@ public class ReadContextCounter
 
     public double tumorQualProbability() { return mTumorQualProbability; }
     public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
+
+    public double mapQualFactor() { return mMapQualFactor; }
+    public void setMapQualFactor(double factor) { mMapQualFactor = factor; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
