@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
@@ -39,7 +40,8 @@ public class OrangeConversionTest
         assertNotNull(OrangeConversion.convert(VirusTestFactory.annotatedVirusBuilder().build()));
         assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
         assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
-        assertNotNull(OrangeConversion.convert(SignatureTestFactory.builder().build()));
+        assertNotNull(OrangeConversion.convertAndAnnotateWithEtiology(Lists.newArrayList(SignatureTestFactory.builder()
+                .build()), SignatureTestFactory.createEtiologyMap()));
     }
 
     @Test

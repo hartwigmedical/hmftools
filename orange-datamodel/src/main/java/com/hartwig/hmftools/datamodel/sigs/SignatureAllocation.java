@@ -16,4 +16,7 @@ public interface SignatureAllocation
     double allocation();
 
     double percent();
+
+    @Nullable
+    String etiology();
 }

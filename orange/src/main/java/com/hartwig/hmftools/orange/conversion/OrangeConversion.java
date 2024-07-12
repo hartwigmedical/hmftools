@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -31,6 +35,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class OrangeConversion
 {
@@ -154,13 +159,25 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static SignatureAllocation convert(@NotNull com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation)
+    @Nullable
+    public static List<SignatureAllocation> convertAndAnnotateWithEtiology(
+            @Nullable List<com.hartwig.hmftools.common.sigs.SignatureAllocation> signatureAllocation,
+            @NotNull Map<String, String> signaturesEtiology)
     {
-        return ImmutableSignatureAllocation.builder()
-                .signature(signatureAllocation.signature())
-                .allocation(signatureAllocation.allocation())
-                .percent(signatureAllocation.percent())
-                .build();
+        if(signatureAllocation == null)
+        {
+            return null;
+        }
+        else
+        {
+            return signatureAllocation.stream()
+                    .map(signature -> ImmutableSignatureAllocation.builder()
+                            .signature(signature.signature())
+                            .etiology(signaturesEtiology.getOrDefault(signature.signature(), null))
+                            .allocation(signature.allocation())
+                            .percent(signature.percent())
+                            .build())
+                    .collect(Collectors.toList());
+        }
     }
 }

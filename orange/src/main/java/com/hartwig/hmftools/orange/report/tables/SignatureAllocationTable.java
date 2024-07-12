@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentag
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -33,13 +34,15 @@ public final class SignatureAllocationTable
 
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 3 },
-                new Cell[] { cells.createHeader("Signature"), cells.createHeader("Allocation"), cells.createHeader("Percent"),
+                new float[] { 1, 3, 1, 1, 1 },
+                new Cell[] { cells.createHeader("Signature"), cells.createHeader("Etiology"), cells.createHeader("Allocation"),
+                        cells.createHeader("Percent"),
                         cells.createHeader(Strings.EMPTY) });
 
         for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
         {
             table.addCell(cells.createContent(signatureAllocation.signature()));
+            table.addCell(cells.createContent(Objects.requireNonNullElse(signatureAllocation.etiology(), "-")));
             table.addCell(cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
             table.addCell(cells.createContent(formatPercentage(signatureAllocation.percent())));
             table.addCell(cells.createContent(Strings.EMPTY));
@@ -72,10 +75,7 @@ public final class SignatureAllocationTable
                 return sig1.compareTo(sig2);
             }
 
-            int sigNumber1 = Integer.parseInt(sig1.substring(3));
-            int sigNumber2 = Integer.parseInt(sig2.substring(3));
-
-            return Integer.compare(sigNumber1, sigNumber2);
+            return Double.compare(allocation1.allocation(), allocation2.allocation()) * -1;
         }).collect(Collectors.toList());
     }
 }
