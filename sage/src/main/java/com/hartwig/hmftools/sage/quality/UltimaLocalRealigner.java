@@ -7,10 +7,12 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -130,6 +132,7 @@ public class UltimaLocalRealigner
         return homopolymers;
     }
 
+    // TODO: Does this ever return false? Test this.
     public static boolean isVariantExplained(final VariantReadContext readContext)
     {
         // TODO: consider indel variants.
@@ -137,7 +140,7 @@ public class UltimaLocalRealigner
 
         // TODO: Test longer dels
         // TODO: Test inserts
-        assert variant.indelLength() == -1 || variant.indelLength() == 0;
+        assert variant.indelLength() <= 0;
 
         // TODO: consider mnv variants.
         assert !variant.isMNV();
@@ -177,31 +180,32 @@ public class UltimaLocalRealigner
     }
 
     // TODO: come up with a better way
+    // TODO: Really need to come up with a better method.
     private static boolean isVariantExplainedHelper(final VariantReadContext readContext, final List<HomopolymerPair> homopolymerPairs)
     {
         SimpleVariant variant = readContext.variant();
 
-        // get index of homopolymer pair associated to variant.
-        int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart + 1;
-        int varHomopolymerPairIndex = -1;
-
         // TODO:
-        assert variant.isSNV() || variant.indelLength() == -1;
-        int offset = variant.isSNV() ? -1 : 0;
-
-        int readBasesConsumed = 0;
-        while(readBasesConsumed <= varCoreIndex + offset)
-        {
-            Homopolymer readHomopolymer = homopolymerPairs.get(++varHomopolymerPairIndex).ReadHomopolymer;
-            if(readHomopolymer != null)
-            {
-                readBasesConsumed += readHomopolymer.Length;
-            }
-        }
+        assert variant.indelLength() <= 0;
+        assert !variant.isMNV();
 
         // now check if homopolymers indels explain the variant.
         if(variant.isSNV())
         {
+            // get index of homopolymer pair associated to variant.
+            int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart + 1;
+            int varHomopolymerPairIndex = -1;
+
+            int readBasesConsumed = 0;
+            while(readBasesConsumed < varCoreIndex)
+            {
+                Homopolymer readHomopolymer = homopolymerPairs.get(++varHomopolymerPairIndex).ReadHomopolymer;
+                if(readHomopolymer != null)
+                {
+                    readBasesConsumed += readHomopolymer.Length;
+                }
+            }
+
             HomopolymerPair varHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
             HomopolymerPair beforeHomopolymerPair = varHomopolymerPairIndex == 0 ? null : homopolymerPairs.get(varHomopolymerPairIndex - 1);
             HomopolymerPair afterHomopolymerPair = varHomopolymerPairIndex == homopolymerPairs.size() - 1 ? null : homopolymerPairs.get(varHomopolymerPairIndex + 1);
@@ -229,10 +233,49 @@ public class UltimaLocalRealigner
 
             return false;
         }
-        else if(variant.indelLength() == -1)
+        else if(variant.indelLength() <= -1)
         {
-            HomopolymerPair delHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
-            return delHomopolymerPair.base() == variant.Ref.charAt(1) && delHomopolymerPair.indelLength() == variant.indelLength();
+            String deletedBases = variant.Ref.substring(1);
+            List<Homopolymer> deletedAsHomopolymers = getHomopolymers(deletedBases);
+
+            char deletedBase = deletedBases.charAt(0);
+            int matchingPairCount = 0;
+            for(int i = 0; i < homopolymerPairs.size(); ++i)
+            {
+                boolean matches = true;
+                for(int j = 0; j < deletedAsHomopolymers.size(); ++j)
+                {
+                    Homopolymer deleted = deletedAsHomopolymers.get(j);
+                    HomopolymerPair pair = homopolymerPairs.get(i + j);
+                    if(deleted.Base != pair.base())
+                    {
+                        matches = false;
+                        break;
+                    }
+
+                    if(-deleted.Length != pair.indelLength())
+                    {
+                        matches = false;
+                        break;
+                    }
+
+                    if(j > 0 && j < deletedAsHomopolymers.size() - 1 && pair.ReadHomopolymer != null)
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+
+                if(matches)
+                {
+                    ++matchingPairCount;
+                }
+            }
+
+            // TODO: not more than one match.
+            assert matchingPairCount <= 1;
+
+            return matchingPairCount == 1;
         }
         else
         {
@@ -343,6 +386,8 @@ public class UltimaLocalRealigner
         return ref.equals(repeatedFlankBase) || alt.equals(repeatedFlankBase);
     }
 
+
+    // TODO: Use dynamic programming algorithm.
     private static List<HomopolymerPair> pairHomopolymers(final List<Homopolymer> refCoreHomopolymers, final List<Homopolymer> readCoreHomopolymers)
     {
         List<HomopolymerPair> homopolymerPairs = Lists.newArrayList();
