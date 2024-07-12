@@ -41,7 +41,7 @@ public class OrangeConversionTest
         assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
         assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
         assertNotNull(OrangeConversion.convertAndAnnotateWithEtiology(Lists.newArrayList(SignatureTestFactory.builder()
-                .build()), SignatureTestFactory.createEtiologyMap()));
+                .build()), SignatureTestFactory.createEtiologiesMap()));
     }
 
     @Test

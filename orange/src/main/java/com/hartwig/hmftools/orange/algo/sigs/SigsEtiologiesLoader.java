@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SigsEtiologyLoader
+public class SigsEtiologiesLoader
 {
     @NotNull
     public static Map<String, String> read(@NotNull String tsv) throws IOException

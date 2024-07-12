@@ -162,22 +162,19 @@ public final class OrangeConversion
     @Nullable
     public static List<SignatureAllocation> convertAndAnnotateWithEtiology(
             @Nullable List<com.hartwig.hmftools.common.sigs.SignatureAllocation> signatureAllocation,
-            @NotNull Map<String, String> signaturesEtiology)
+            @NotNull Map<String, String> signaturesEtiologies)
     {
         if(signatureAllocation == null)
         {
             return null;
         }
-        else
-        {
             return signatureAllocation.stream()
                     .map(signature -> ImmutableSignatureAllocation.builder()
                             .signature(signature.signature())
-                            .etiology(signaturesEtiology.getOrDefault(signature.signature(), null))
+                            .etiology(signaturesEtiologies.getOrDefault(signature.signature(), null))
                             .allocation(signature.allocation())
                             .percent(signature.percent())
                             .build())
                     .collect(Collectors.toList());
-        }
     }
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.sigs;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -16,10 +15,10 @@ public final class SignatureTestFactory
     }
 
     @NotNull
-    public static Map<String, String> createEtiologyMap()
+    public static Map<String, String> createEtiologiesMap()
     {
-        Map<String, String> etiologyMap = Maps.newHashMap();
-        etiologyMap.put("Sig1", "APOBEC");
-        return etiologyMap;
+        Map<String, String> etiologiesMap = Maps.newHashMap();
+        etiologiesMap.put("Sig1", "APOBEC");
+        return etiologiesMap;
     }
 }
