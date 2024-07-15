@@ -12,6 +12,7 @@ public final class TestPurpleQCFactory
         return ImmutablePurpleQC.builder()
                 .amberMeanDepth(0)
                 .unsupportedCopyNumberSegments(0)
+                .totalCopyNumberSegments(100)
                 .deletedGenes(0)
                 .contamination(0D);
     }

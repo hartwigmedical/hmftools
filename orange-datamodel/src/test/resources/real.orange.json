@@ -70,6 +70,7 @@
         ],
         "amberMeanDepth": 111,
         "contamination": 0.0,
+        "totalCopyNumberSegments": 210,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 4
       },

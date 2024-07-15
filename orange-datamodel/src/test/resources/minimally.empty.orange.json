@@ -44,6 +44,7 @@
       "qc": {
         "status": [
         ],
+        "totalCopyNumberSegments": 0,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 0,
         "contamination": 0,

@@ -22,6 +22,8 @@ public interface PurpleQC
 
     double contamination();
 
+    int totalCopyNumberSegments();
+
     int unsupportedCopyNumberSegments();
 
     int deletedGenes();

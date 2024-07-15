@@ -45,6 +45,7 @@
         "status": [
           "PASS"
         ],
+        "totalCopyNumberSegments": 100,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 4,
         "contamination": 0.0,
