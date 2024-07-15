@@ -37,6 +37,11 @@ Assuming the above checks succeed, the ID generator will do the following:
  - Write the new hashes to the "out" parameter provided to the command line
  - Repopulate the table "amberAnonymous" with the new sampleId -> hmfSampleId mappings.
 
+### Building and pushing to artifact registry
 
- 
-   
+```sh
+docker build --platform=linux/amd64 . -t europe-west4-docker.pkg.dev/hmf-build/hmf-docker/hmf-id-generator:3.1.1
+# test the image to see if it starts the application
+docker run europe-west4-docker.pkg.dev/hmf-build/hmf-docker/hmf-id-generator:3.1.1
+docker push europe-west4-docker.pkg.dev/hmf-build/hmf-docker/hmf-id-generator:3.1.1
+```
