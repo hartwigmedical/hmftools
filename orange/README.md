@@ -260,6 +260,7 @@ investigate potential causes for QC failure.
 
 - Upcoming:
   - Add unreported reason to fusions in ORANGE
+  - Add etiology information to signatures and sort by allocation
   - Add percentage of unsupported segments to Quality control page
 - [3.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.6.0)
     - Cuppa predictions with NaN likelihood are filtered in the ORANGE conversion of CUPPA results

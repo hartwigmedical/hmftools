@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -39,7 +38,6 @@ public class OrangeConversionTest
         assertNotNull(OrangeConversion.convert(VirusTestFactory.annotatedVirusBuilder().build()));
         assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
         assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
-        assertNotNull(OrangeConversion.convert(SignatureTestFactory.builder().build()));
     }
 
     @Test

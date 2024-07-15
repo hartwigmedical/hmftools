@@ -20,8 +20,6 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
-import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
@@ -151,16 +149,6 @@ public final class OrangeConversion
                 .urlPrescriptionInfo(peachGenotype.urlPrescriptionInfo())
                 .panelVersion(peachGenotype.panelVersion())
                 .repoVersion(peachGenotype.repoVersion())
-                .build();
-    }
-
-    @NotNull
-    public static SignatureAllocation convert(@NotNull com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation)
-    {
-        return ImmutableSignatureAllocation.builder()
-                .signature(signatureAllocation.signature())
-                .allocation(signatureAllocation.allocation())
-                .percent(signatureAllocation.percent())
                 .build();
     }
 }
