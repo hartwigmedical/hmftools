@@ -13,9 +13,10 @@ public interface SignatureAllocation
     @NotNull
     String signature();
 
+    @NotNull
+    String etiology();
+
     double allocation();
 
     double percent();
-
-    String etiology();
 }

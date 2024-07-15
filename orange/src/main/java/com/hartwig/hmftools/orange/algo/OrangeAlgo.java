@@ -257,7 +257,7 @@ public class OrangeAlgo
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
-                .sigAllocations(SigsInterpreter.convertAndAnnotateWithEtiology(sigAllocations, etiologyPerSignature))
+                .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();

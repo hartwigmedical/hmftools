@@ -33,7 +33,7 @@ public final class SignatureAllocationTable
 
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
-                new float[] { 1, 2.3F, 1, 1, 1 },
+                new float[] { 10, 23, 10, 10, 10 },
                 new Cell[] { cells.createHeader("Signature"), cells.createHeader("Etiology"), cells.createHeader("Allocation"),
                         cells.createHeader("Percent"),
                         cells.createHeader(Strings.EMPTY) });
