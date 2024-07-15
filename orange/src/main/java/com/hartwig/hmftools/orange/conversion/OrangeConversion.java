@@ -27,6 +27,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -101,8 +102,8 @@ public final class OrangeConversion
     public static VirusInterpreterData convert(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
     {
         return ImmutableVirusInterpreterData.builder()
-                .allViruses(ConversionUtil.mapToIterable(interpreterData.allViruses(), OrangeConversion::convert))
-                .reportableViruses(ConversionUtil.mapToIterable(interpreterData.reportableViruses(), OrangeConversion::convert))
+                .allViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterBlacklistedViruses(interpreterData.allViruses()), OrangeConversion::convert))
+                .reportableViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterBlacklistedViruses(interpreterData.reportableViruses()), OrangeConversion::convert))
                 .build();
     }
 
@@ -120,6 +121,7 @@ public final class OrangeConversion
                 .meanCoverage(annotatedVirus.meanCoverage())
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
                 .reported(annotatedVirus.reported())
+                .blacklisted(annotatedVirus.blacklisted())
                 .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .build();
     }

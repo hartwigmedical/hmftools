@@ -94,6 +94,7 @@ public class OrangeConversionTest
         assertEquals(input.meanCoverage(), converted.meanCoverage(), EPSILON);
         assertEquals(input.expectedClonalCoverage(), converted.expectedClonalCoverage());
         assertEquals(input.reported(), converted.reported());
+        assertEquals(input.blacklisted(), converted.blacklisted());
         assertEquals(input.virusDriverLikelihoodType().name(), converted.driverLikelihood().name());
     }
 }

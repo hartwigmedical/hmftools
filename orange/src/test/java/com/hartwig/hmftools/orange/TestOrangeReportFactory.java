@@ -327,6 +327,7 @@ public final class TestOrangeReportFactory
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
                 .reported(true)
+                .blacklisted(false)
                 .driverLikelihood(VirusLikelihoodType.UNKNOWN)
                 .build());
 

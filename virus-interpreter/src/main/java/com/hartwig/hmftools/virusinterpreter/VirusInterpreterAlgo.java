@@ -54,11 +54,19 @@ public class VirusInterpreterAlgo
                             ? coveragesAnalysis.ExpectedClonalCoverage
                             : null)
                     .reported(reported)
+                    .blacklisted(blacklist(taxid))
                     .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
                     .build());
         }
 
         return annotatedViruses;
+    }
+
+    @VisibleForTesting
+    Boolean blacklist(int taxid)
+    {
+        List<Integer> virusesToBlacklist = Lists.newArrayList(11646, 11966, 181858);
+        return virusesToBlacklist.contains(taxid);
     }
 
     @VisibleForTesting
