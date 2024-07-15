@@ -88,7 +88,8 @@
     "reportableSomaticBreakends": [],
     "somaticHomozygousDisruptions": [],
     "additionalSuspectSomaticBreakends": [],
-    "additionalSuspectSomaticFusions": []
+    "additionalSuspectSomaticFusions": [],
+    "additionalViableFusionsInCaseNoHighDrivers": null
   },
   "virusInterpreter": {
     "allViruses": [],

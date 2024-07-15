@@ -223,12 +223,14 @@ public class SomaticFindingsChapter implements ReportChapter
     {
         String driverFusionsTitle = "Driver fusions";
         String nonDriverFusionsTitle = "Other potentially interesting fusions";
+        String inFrameFusionsTitle = "Potentially interesting in-frame fusions in case no high drivers detected";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
         {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverFusionsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nonDriverFusionsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(inFrameFusionsTitle, contentWidth()));
         }
         else
         {
@@ -245,6 +247,20 @@ public class SomaticFindingsChapter implements ReportChapter
                     max10(report.linx().additionalSuspectSomaticFusions()),
                     report.isofox(),
                     reportResources));
+
+            if(report.linx().additionalViableFusionsInCaseNoHighDrivers().isEmpty())
+            {
+                document.add(new Tables(reportResources).createNonContent(inFrameFusionsTitle, contentWidth(), "High driver likelihood events are detected in this sample, therefore this section is empty"));
+            }
+            else
+            {
+                String titleInFrame = inFrameFusionsTitle + " (" + report.linx().additionalViableFusionsInCaseNoHighDrivers().size() + ")";
+                document.add(DnaFusionTable.build(titleInFrame,
+                        contentWidth(),
+                        report.linx().additionalViableFusionsInCaseNoHighDrivers(),
+                        report.isofox(),
+                        reportResources));
+            }
         }
     }
 

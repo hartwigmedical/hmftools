@@ -2,10 +2,14 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
@@ -95,6 +99,39 @@ public class DnaFusionSelectorTest
         assertEquals(2, fusions.size());
         assertNotNull(findByName(fusions, "with five onco"));
         assertNotNull(findByName(fusions, "with three onco"));
+    }
+
+    @Test
+    public void canSelectAllViableFusionsInCaseNoHighDrivers()
+    {
+        LinxFusion inFrameFusion = LinxTestFactory.fusionBuilder()
+                .phased(FusionPhasedType.INFRAME)
+                .chainTerminated(false)
+                .name("in frame fusion")
+                .build();
+        LinxFusion outOfFrameFusion = LinxTestFactory.fusionBuilder()
+                .phased(FusionPhasedType.OUT_OF_FRAME)
+                .chainTerminated(false)
+                .name("out of frame fusion")
+                .build();
+
+        DriverCatalog highDriver =
+                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRAF", 0.9, "transcript1", DriverCategory.ONCO);
+        DriverCatalog lowDriver =
+                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("TP53", 0.5, "transcript1", DriverCategory.ONCO);
+
+        List<LinxFusion> noHighDriversSample =
+                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList(), Lists.newArrayList(lowDriver));
+        assertEquals(1, noHighDriversSample.size());
+        assertNotNull(findByName(noHighDriversSample, "in frame fusion"));
+
+        List<LinxFusion> highDriverSample =
+                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList(), Lists.newArrayList(highDriver));
+        assertNull(highDriverSample);
+
+        List<LinxFusion> noFusions =
+                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Collections.emptyList(), Collections.emptyList(), Lists.newArrayList(lowDriver));
+        assertEquals(0, noFusions.size());
     }
 
     @Nullable

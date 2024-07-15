@@ -3,7 +3,7 @@
   "samplingDate": {
     "year": 2024,
     "month": 7,
-    "day": 12
+    "day": 15
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -371,6 +371,7 @@
         "reported": false
       }
     ],
+    "additionalViableFusionsInCaseNoHighDrivers": null,
     "allGermlineVariants": [
       {
         "type": "SNP",

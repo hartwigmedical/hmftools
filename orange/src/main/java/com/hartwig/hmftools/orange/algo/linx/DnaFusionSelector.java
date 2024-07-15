@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +36,45 @@ final class DnaFusionSelector
             }
         }
         return filtered;
+    }
+
+    @Nullable
+    public static List<LinxFusion> selectViableFusionsInCaseNoHighDrivers(@NotNull List<LinxFusion> somaticFusions,
+            @NotNull List<LinxFusion> additionalSuspectSomaticFusions, @NotNull List<DriverCatalog> driverCatalog)
+    {
+        if(hasHighDriverEvents(somaticFusions, driverCatalog))
+        {
+            return null;
+        }
+        else
+        {
+            return somaticFusions.stream()
+                    .filter(fusion -> fusion.phased() == FusionPhasedType.INFRAME && !fusion.chainTerminated() && !fusion.reported()
+                            && !additionalSuspectSomaticFusions.contains(fusion))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    @NotNull
+    private static Boolean hasHighDriverEvents(@NotNull List<LinxFusion> somaticFusions, @NotNull List<DriverCatalog> driverCatalog)
+    {
+        for(LinxFusion fusion : somaticFusions)
+        {
+            if(fusion.likelihood() == FusionLikelihoodType.HIGH)
+            {
+                return true;
+            }
+        }
+
+        for(DriverCatalog driver : driverCatalog)
+        {
+            if(DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean isInframeFusionWithOncogene(@NotNull LinxFusion fusion, @NotNull List<DriverGene> driverGenes)

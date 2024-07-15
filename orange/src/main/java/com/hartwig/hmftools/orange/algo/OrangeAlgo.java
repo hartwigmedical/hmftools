@@ -199,7 +199,7 @@ public class OrangeAlgo
         IsofoxData isofoxData = loadIsofoxData(config);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
-        LinxRecord linx = linxInterpreter.interpret(linxData);
+        LinxRecord linx = linxInterpreter.interpret(linxData, purpleData.somaticDrivers());
 
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);
 
