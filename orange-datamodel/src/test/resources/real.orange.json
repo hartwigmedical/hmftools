@@ -371,7 +371,7 @@
         "reported": false
       }
     ],
-    "additionalViableFusionsInCaseNoHighDrivers": null,
+    "additionalViableFusionsInCaseNoHighDrivers": [],
     "allGermlineVariants": [
       {
         "type": "SNP",

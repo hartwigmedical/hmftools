@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,13 +39,13 @@ final class DnaFusionSelector
         return filtered;
     }
 
-    @Nullable
+    @NotNull
     public static List<LinxFusion> selectViableFusionsInCaseNoHighDrivers(@NotNull List<LinxFusion> somaticFusions,
             @NotNull List<LinxFusion> additionalSuspectSomaticFusions, @NotNull List<DriverCatalog> driverCatalog)
     {
         if(hasHighDriverEvents(somaticFusions, driverCatalog))
         {
-            return null;
+            return Collections.emptyList();
         }
         else
         {

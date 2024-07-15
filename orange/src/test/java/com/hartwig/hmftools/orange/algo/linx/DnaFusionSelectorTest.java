@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -127,7 +126,7 @@ public class DnaFusionSelectorTest
 
         List<LinxFusion> highDriverSample =
                 DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList(), Lists.newArrayList(highDriver));
-        assertNull(highDriverSample);
+        assertEquals(0, highDriverSample.size());
 
         List<LinxFusion> noFusions =
                 DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Collections.emptyList(), Collections.emptyList(), Lists.newArrayList(lowDriver));

@@ -474,7 +474,7 @@
       }
     ],
     "additionalSuspectSomaticFusions": [],
-    "additionalViableFusionsInCaseNoHighDrivers": null
+    "additionalViableFusionsInCaseNoHighDrivers": []
   },
   "virusInterpreter": {
     "allViruses": [

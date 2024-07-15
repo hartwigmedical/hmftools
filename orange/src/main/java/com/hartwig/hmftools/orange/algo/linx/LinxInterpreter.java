@@ -41,8 +41,7 @@ public class LinxInterpreter
 
         List<LinxFusion> inFrameInCaseNoHighDrivers =
                 DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(linx.allSomaticFusions(), additionalSuspectSomaticFusions, somaticDrivers);
-        LOGGER.info(" Found an additional {} viable fusion, for no high drivers sample",
-                inFrameInCaseNoHighDrivers != null ? inFrameInCaseNoHighDrivers.size() : "0");
+        LOGGER.info(" Found an additional {} viable fusion, for no high drivers sample", inFrameInCaseNoHighDrivers.size());
 
         List<LinxBreakend> additionalSuspectSomaticBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
