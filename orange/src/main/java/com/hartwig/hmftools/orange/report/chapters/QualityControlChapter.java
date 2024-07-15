@@ -75,7 +75,7 @@ public class QualityControlChapter implements ReportChapter
     {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
-                new float[] { 1.5F, 1, 1, 1, 1, 1.2F, 1 },
+                new float[] { 15, 10, 10, 10, 10, 12, 10 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Ref Genome"), cells.createHeader("Fit Method"),
                         cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments (%)"),
                         cells.createHeader("Deleted Genes") });

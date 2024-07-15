@@ -49,7 +49,7 @@ public class ReportGeneratorTestApplication
     // Switch LIMIT_JSON_OUTPUT to true if you want to generate the real.orange.json test resource in orange-datamodel!
     private static final boolean LIMIT_JSON_OUTPUT = false;
     private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
-    private static final boolean TUMOR_ONLY = false;
+    private static final boolean TUMOR_ONLY = true;
 
     public static void main(String[] args) throws Exception
     {
