@@ -23,7 +23,9 @@ import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
@@ -116,6 +118,14 @@ public class VirusInterpreterAlgoTest
         assertFalse(algo.report(createTestVirusBreakendsFail(0).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
     }
 
+    @Test
+    public void canDetermineBlacklistedVirus()
+    {
+        VirusInterpreterAlgo algo = createTestAlgo();
+        assertTrue(algo.blacklist(11646));
+        assertFalse(algo.blacklist(10000));
+    }
+
     @NotNull
     private static VirusInterpreterAlgo createTestAlgo()
     {
@@ -146,6 +156,9 @@ public class VirusInterpreterAlgoTest
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
+        VirusBlacklistingDb virusBlacklisting1 =
+                ImmutableVirusBlacklistingDb.builder().taxid(11646).type("taxid_genus").name("Lentivirus").reason("HIV").build();
+
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
@@ -159,7 +172,7 @@ public class VirusInterpreterAlgoTest
 
         CoveragesAnalysis coveragesAnalysis = new CoveragesAnalysis(34.5);
 
-        return new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+        return new VirusInterpreterAlgo(taxonomyDb, Lists.newArrayList(virusBlacklisting1), virusReportingModel, coveragesAnalysis);
     }
 
     private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies)

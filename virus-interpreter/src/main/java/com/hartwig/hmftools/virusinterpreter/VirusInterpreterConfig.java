@@ -14,6 +14,7 @@ public class VirusInterpreterConfig
 {
     public final String SampleId;
     public final String VirusBreakendTsv;
+    public final String VirusBlacklistedTsv;
     public final String TaxonomyDbTsv;
     public final String VirusReportedDbTsv;
     public final String PurpleDir;
@@ -21,6 +22,7 @@ public class VirusInterpreterConfig
     public final String OutputDir;
 
     private static final String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
+    private static final String BLACKLISTED_VIRUS_TSV = "blacklisted_virus_tsv";
     private static final String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
     private static final String VIRUS_REPORTING_DB_TSV = "virus_reporting_db_tsv";
     private static final String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
@@ -30,6 +32,7 @@ public class VirusInterpreterConfig
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV");
+        configBuilder.addPath(BLACKLISTED_VIRUS_TSV, true, "Path towards the blacklisted viruses TSV");
         configBuilder.addPath(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name");
         configBuilder.addPath(VIRUS_REPORTING_DB_TSV, true, "Path towards a TSV containing reported of viruses");
         configBuilder.addPath(TUMOR_SAMPLE_WGS_METRICS_FILE, true, "Path towards the tumor sample WGS metrics file");
@@ -43,6 +46,7 @@ public class VirusInterpreterConfig
         SampleId = configBuilder.getValue(SAMPLE);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         VirusBreakendTsv = configBuilder.getValue(VIRUS_BREAKEND_TSV);
+        VirusBlacklistedTsv = configBuilder.getValue(BLACKLISTED_VIRUS_TSV);
         TaxonomyDbTsv = configBuilder.getValue(TAXONOMY_DB_TSV);
         VirusReportedDbTsv = configBuilder.getValue(VIRUS_REPORTING_DB_TSV);
         TumorSampleWGSMetricsFile = configBuilder.getValue(TUMOR_SAMPLE_WGS_METRICS_FILE);

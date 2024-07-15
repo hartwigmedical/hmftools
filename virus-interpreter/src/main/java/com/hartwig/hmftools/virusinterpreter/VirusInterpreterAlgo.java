@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
@@ -22,13 +23,16 @@ import org.jetbrains.annotations.Nullable;
 public class VirusInterpreterAlgo
 {
     private final TaxonomyDb taxonomyDb;
+    private final List<VirusBlacklistingDb> virusBlacklistingDb;
     private final VirusReportingDbModel virusReportingDbModel;
     private final CoveragesAnalysis coveragesAnalysis;
 
     public VirusInterpreterAlgo(
-            final TaxonomyDb taxonomyDb, final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
+            final TaxonomyDb taxonomyDb, final List<VirusBlacklistingDb> virusBlacklistingDb,
+            final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
     {
         this.taxonomyDb = taxonomyDb;
+        this.virusBlacklistingDb = virusBlacklistingDb;
         this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
     }
@@ -63,10 +67,9 @@ public class VirusInterpreterAlgo
     }
 
     @VisibleForTesting
-    Boolean blacklist(int taxid)
+    boolean blacklist(int taxid)
     {
-        List<Integer> virusesToBlacklist = Lists.newArrayList(11646, 11966, 181858);
-        return virusesToBlacklist.contains(taxid);
+        return virusBlacklistingDb.stream().anyMatch(virus -> virus.taxid() == taxid);
     }
 
     @VisibleForTesting
