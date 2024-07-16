@@ -12,48 +12,22 @@ CUPPA is intended to provide:
 2) Support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis)
 3) Predictions of primary tumor location for Cancer of Unknown Primary (CUP)
 
-# Table of contents
+# Contents
 <!-- TOC -->
-* [CUPPA: Cancer of Unknown Primary Prediction Algorithm](#cuppa--cancer-of-unknown-primary-prediction-algorithm)
-* [Introduction](#introduction)
-* [Table of contents](#table-of-contents)
 * [Usage](#usage)
   * [Feature extraction (Java component)](#feature-extraction--java-component-)
-    * [Single sample example](#single-sample-example)
-    * [Multi sample example](#multi-sample-example)
-    * [Inputs and arguments](#inputs-and-arguments)
   * [Classifier (Python component)](#classifier--python-component-)
-    * [Installation](#installation)
-    * [Predicting](#predicting)
-    * [Training](#training)
-    * [Additional input files for training CUPPA](#additional-input-files-for-training-cuppa)
-      * [Metadata](#metadata)
-      * [Fusion overrides file (optional)](#fusion-overrides-file--optional-)
-    * [Running CUPPA within python](#running-cuppa-within-python)
 * [Classifier output](#classifier-output)
-    * [Probabilities by classifier](#probabilities-by-classifier)
-    * [SNV96: Mutational signatures](#snv96--mutational-signatures)
-    * [EVENT: Feature contributions](#event--feature-contributions)
-    * [DNA_COMBINED: Training set performance](#dnacombined--training-set-performance)
-    * [TSV file](#tsv-file)
 * [Features](#features)
     * [GEN_POS](#genpos)
     * [SNV96](#snv96)
     * [EVENT](#event)
-      * [Driver mutations](#driver-mutations)
-      * [Fusions](#fusions)
-      * [Viral insertions](#viral-insertions)
-      * [Structural variants (SVs)](#structural-variants--svs-)
-      * [Tumor mutational burden (TMB)](#tumor-mutational-burden--tmb-)
-      * [Whole genome duplication (WGD)](#whole-genome-duplication--wgd-)
-      * [Sex](#sex)
     * [GENE_EXP](#geneexp)
     * [ALT_SJ](#altsj)
 * [Classifier structure](#classifier-structure)
     * [CuppaClassifier](#cuppaclassifier)
     * [LogisticRegression](#logisticregression)
-    * [ProbCombiner](#probcombiner)
-    * [Feature transformers](#feature-transformers)
+    * [Components](#components)
       * [ProfileSimilarityTransformer](#profilesimilaritytransformer)
       * [NoiseProfileAdder](#noiseprofileadder)
       * [NonBestSimilarityScaler](#nonbestsimilarityscaler)
@@ -61,19 +35,17 @@ CUPPA is intended to provide:
       * [MaxScaler](#maxscaler)
       * [Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)](#chi2featureselector--drivers-fusions-virus-sex-whole-genome-duplication-)
       * [NaRowFilter](#narowfilter)
+      * [ProbCombiner](#probcombiner)
     * [Adjustment of probabilities](#adjustment-of-probabilities)
       * [RollingAvgCalibration](#rollingavgcalibration)
       * [FusionProbOverrider](#fusionproboverrider)
       * [SexProbFilter](#sexprobfilter)
 * [Training set](#training-set)
-    * [Sample selection](#sample-selection)
-    * [Cancer subtype definitions](#cancer-subtype-definitions)
-    * [Cancer subtype groups](#cancer-subtype-groups)
-    * [Training procedure](#training-procedure)
-* [Version History and Download Links](#version-history-and-download-links)
 <!-- TOC -->
 
 # Usage
+The latest version of CUPPA can be downloaded from the HMFTools [releases page](https://github.com/hartwigmedical/hmftools/releases/).
+
 ## Feature extraction (Java component)
 The `CuppaDataPrep` java class can be used to extract the features required for CUPPA. `CuppaDataPrep` can be run for a single sample or 
 multiple samples.
@@ -365,15 +337,28 @@ purposes to confirm or reject CUPPA's predictions, such as in the following scen
 
 ### EVENT: Feature contributions
 This panel shows which [EVENT features](#event) (driver mutations, fusions, viral insertions, and various other 
-features) were most important for the resulting prediction (from the EVENT classifier). Each heatmap cell shows an 
-odds ratio, where a higher odds ratio means the feature was predictive for the respective cancer type. The odds ratio 
-specifically refers to the odds of the sample belonging to the target cancer type vs the odds of _not_ belonging to
-the target cancer type. For a given feature, the odds ratio is calculated from [SHAP values](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html) 
+features) were most important for the resulting prediction (from the EVENT classifier). Each heatmap cell shows an odds ratio which are 
+calculated from [SHAP values](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html) 
 as follows:
 ```
 shap_value = coef * (x – X_mean) ## SHAP values are in log(odds) space
 odds_ratio = e ** shap_value ## Exponentiate by e (=2.718) to get to odds space
 ```
+
+Odds ratios impacts probabilities as follows:
+- Odds ratio >1: _increases_ the eventual probability for a given cancer type
+- Odds ratio <1: _decreases_ the eventual probability for a given cancer type
+- Odds ratio == 1: no effect on probabilities
+
+Odds ratios can be interpreted as follows. The sample in the example visualization has a BRAF mutation which has the following odds 
+ratios:
+- Breast: Triple negative = 0.6
+- Lung: Non-small cell: LUAD = 5.4
+- Skin: Melanoma = 48
+
+This means that this sample is:
+- 8.9x more likely to be 'Skin: Melanoma' than 'Lung: Non-small cell: LUAD' (48 / 5.4)
+- 80x more likely to be 'Skin: Melanoma' than 'Breast: Triple negative' (48 / 0.6)
 
 ### DNA_COMBINED: Training set performance
 For each cancer type, the number of training samples, as well recall and precision (as determined by 
@@ -386,7 +371,7 @@ For each cancer type, the number of training samples, as well recall and precisi
 
 ### TSV file
 The visualization data TSV is a [long form table](https://tavareshugo.github.io/r-intro-tidyverse-gapminder/09-reshaping/index.html).
-The first few rows of the table are shown below.
+The first and last few rows of the table are shown below.
 
 ```
     sample_id     data_type clf_group  clf_name         feat_name  feat_value                               cancer_type  data_value  rank  rank_group
@@ -540,7 +525,6 @@ argument forces the logistic regression to optimize equally every cancer type co
 of their sample size: `cancer_type_weight = n_samples_total x (1 / n_samples_in_cancer_type)`.
 - `random_state=0`: Set the random seed so that re-running the training produces the same model.
 
-
 The GEN_POS, SNV96, and EVENT logistic regressions use the following non-default arguments:
 - `penalty="l1"`: LASSO (aka L1) regularization is used to remove irrelevant features during training by setting their
 weights to 0
@@ -556,13 +540,11 @@ here as all output probabilities from sub-classifiers are relevant albeit to dif
 - `C=4`: Increased C from 1 (default) to 4 to reduce the strength of ridge regularization
 - `max_iter=1000`: See above
 
-### ProbCombiner
-This layer combines the probabilities of the DNA_COMBINED and RNA_COMBINED meta-classifiers by multiplying them together. 
-It is however possible that the probability for a cancer type is 0.99 for DNA_COMBINED but 0.00 for RNA_COMBINED, which 
-when multiplied together equals 0.00. To avoid this issue, all probabilities <0.01 are set to 0.01 (`prob_floor=0.01`) 
-prior to multiplication. After multiplying the probabilities, they are normalized to sum to 1.
+### Components
 
-### Feature transformers
+Below are details of the components responsible for transforming the features before being fed into the logistic regressions, and 
+post-processing of the probabilities outputted by the logistic regressions.
+
 #### ProfileSimilarityTransformer
 For the GEN_POS classifier, consensus GEN_POS profiles are calculated per cancer type at training time. At prediction 
 time, the cosine similarity of a sample's profile to each per cancer type profile is then calculated.
@@ -667,27 +649,35 @@ steps.
 #### NaRowFilter
 Samples with no RNA data will bypass the RNA classifiers (GENE_EXP, ALT_SJ, RNA_COMBINED).
 
+#### ProbCombiner
+This component combines the probabilities of the DNA_COMBINED and RNA_COMBINED meta-classifiers by multiplying them together.
+It is however possible that the probability for a cancer type is 0.99 for DNA_COMBINED but 0.00 for RNA_COMBINED, which
+when multiplied together equals 0.00. To avoid this issue, all probabilities <0.01 are set to 0.01 (`prob_floor=0.01`)
+prior to multiplication. After multiplying the probabilities, they are normalized to sum to 1.
+
 ### Adjustment of probabilities
 #### RollingAvgCalibration
 [Probability calibration](https://scikit-learn.org/stable/modules/calibration.html) is performed to ensure that a 
-probability of 0.8 means that: of 100 samples predicted as e.g. breast cancer, 80 of these are actually breast cancer. Logistic regressions generally output under-confident probabilities, e.g. a probability of 0.75 in practice means a 
-probability of 0.85. Calibration of logistic regression probabilities increases the number of high confidence 
-probabilities (>0.8, the threshold for a diagnosis), allowing for more CUP patients to be diagnosed. CUPPA uses a 
-modified probability calibration approach based on [isotonic regression](https://en.wikipedia.org/wiki/Isotonic_regression). 
-For each cancer type, this is performed with the below procedure:
+probability of 0.8 means that: of 100 samples predicted as e.g. breast cancer, 80 of these are actually breast cancer. Logistic regressions 
+generally output under-confident probabilities, e.g. a probability of 0.75 in practice means a probability of 0.85. 
+
+Calibration can be performed using [isotonic regressions](https://en.wikipedia.org/wiki/Isotonic_regression), but these require lots of
+samples from target cancer type to train. "Rolling average calibration" is an adaptation of isotonic regression that allows training on
+cancer type cohorts with too few samples (<10; e.g. acute myeloid leukemia, AML) and is performed as follows (using AML as an example):
 
 Given:
-- An array of probabilities
-- An array of booleans, indicating whether a sample belongs to a cancer type
+- `x`: float array, probability of AML for each sample
+- `y`: boolean array, 1 = AML and 0 = not AML
 
-Perform the following steps:
-- Sort both arrays by the probabilities
-- Slide a window along the boolean array and take the mean of the values in the window at each step
-- Fit an isotonic regression, with the x-values being the probabilities and y-values being the sliding window means
+Do:
+- Order both arrays by the probabilities (i.e. `x`)
+- Slide a window along `y` and take the mean of the values in the window at each step. This produces more granular `y` values (boolean array 
+converted to float array).
+- Fit the isotonic regression on `x` and `y`
+- At prediction time, calibrated probabilities are normalized to sum to 1
 
-This approach results in more granular y-values, which improves the isotonic regression fit.
-
-After calibrating the probabilities, they are normalized to sum to 1.
+Calibration also increases the number of high confidence probabilities (>0.8, the threshold for a diagnosis), allowing for more CUP 
+patients to be diagnosed.
 
 #### FusionProbOverrider
 Certain gene fusions are highly characteristic of certain cancer types, e.g. RUNX1-RUNX1T1 for acute myeloid leukemia 
@@ -709,7 +699,7 @@ mask = [1.00, 0.01, 0.01, 0.01, ...]
 ## Apply mask
 probs = probs * mask ## [0.26, 0.03, 0.00, 0.00, ...]
 
-## Make probs sum to 1
+## Normalize probabilities to sum to 1
 probs = probs / sum(probs)
 ```
 
@@ -717,10 +707,8 @@ In total, there are 64 pathognomic fusion-cancer type mappings for which we appl
 provided to the `overrides` argument of FusionProbFilter as a dataframe in the format shown in section
 [Fusion overrides file](#fusion-overrides-file)
 
-After overriding the probabilities, they are normalized to sum to 1.
-
 #### SexProbFilter
-It is possible for e.g. a female sample to have a non-zero probability of Prostate, since the logistic regressions do 
+It is possible for e.g. a genetically female sample to have a non-zero probability of Prostate, since the logistic regressions do 
 not treat female and male cancer types differently. We therefore force the probability of male cancer types to be 0 in 
 female cancer types, and vice versa.
 
@@ -837,17 +825,3 @@ every sample in the training set. These probabilities were then used to calculat
 number of samples correctly predicted per cancer type).
 
 <img src="src/main/python/pycuppa/doc/diagrams/training_and_cross_validation.jpg" width="600"/>
-
-# Version History and Download Links
-- [2.1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.1.1)
-- [2.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.1.0)
-- [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.0)
-- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)
-- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7.2)
-- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
