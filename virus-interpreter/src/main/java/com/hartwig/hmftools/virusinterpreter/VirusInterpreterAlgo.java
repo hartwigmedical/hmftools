@@ -58,7 +58,7 @@ public class VirusInterpreterAlgo
                             ? coveragesAnalysis.ExpectedClonalCoverage
                             : null)
                     .reported(reported)
-                    .blacklisted(blacklist(taxid))
+                    .blacklisted(blacklist(taxid, reported))
                     .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
                     .build());
         }
@@ -67,9 +67,17 @@ public class VirusInterpreterAlgo
     }
 
     @VisibleForTesting
-    boolean blacklist(int taxid)
+    boolean blacklist(int taxid, boolean reported)
     {
-        return virusBlacklistingDb.stream().anyMatch(virus -> virus.taxid() == taxid);
+        boolean blacklisted = virusBlacklistingDb.stream().anyMatch(virus -> virus.taxid() == taxid);
+        if(blacklisted && reported)
+        {
+            throw new RuntimeException("Virus with taxid {} configured as reported and as blacklisted" + taxid);
+        }
+        else
+        {
+            return virusBlacklistingDb.stream().anyMatch(virus -> virus.taxid() == taxid);
+        }
     }
 
     @VisibleForTesting

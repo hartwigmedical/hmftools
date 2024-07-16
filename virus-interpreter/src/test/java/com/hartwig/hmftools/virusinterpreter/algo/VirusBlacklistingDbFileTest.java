@@ -11,12 +11,12 @@ import org.junit.Test;
 
 public class VirusBlacklistingDbFileTest
 {
-    private static final String VIRUS_REPORTING_DB_TSV = Resources.getResource("virus_interpreter/virus_blacklisting_db.tsv").getPath();
+    private static final String VIRUS_BLACKLISTING_DB_TSV = Resources.getResource("virus_interpreter/virus_blacklisting_db.tsv").getPath();
 
     @Test
-    public void canReadSignaturesEtiologyTsv() throws IOException
+    public void canReadVirusBlacklistingDbTsv() throws IOException
     {
-        List<VirusBlacklistingDb> blacklistedViruses = VirusBlacklistingDbFile.loadFromTsv(VIRUS_REPORTING_DB_TSV);
+        List<VirusBlacklistingDb> blacklistedViruses = VirusBlacklistingDbFile.loadFromTsv(VIRUS_BLACKLISTING_DB_TSV);
         assertEquals(3, blacklistedViruses.size());
     }
 }

@@ -41,8 +41,8 @@ public class VirusInterpreterApplication
         VI_LOGGER.info("Loading taxonomy db from {}", config.TaxonomyDbTsv);
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.TaxonomyDbTsv);
 
-        VI_LOGGER.info("Loading virus blacklisting db from {}", config.VirusBlacklistedTsv);
-        List<VirusBlacklistingDb> virusBlacklistingDb = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedTsv);
+        VI_LOGGER.info("Loading virus blacklisting db from {}", config.VirusBlacklistedDbTsv);
+        List<VirusBlacklistingDb> virusBlacklistingDb = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedDbTsv);
 
         VI_LOGGER.info("Building virus reporting db model from {}", config.VirusReportedDbTsv);
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.VirusReportedDbTsv);

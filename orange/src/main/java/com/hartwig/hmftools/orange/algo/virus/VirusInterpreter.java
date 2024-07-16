@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class VirusInterpreter
 {
     @NotNull
-    public static List<AnnotatedVirus> filterBlacklistedViruses(@NotNull List<AnnotatedVirus> allViruses)
+    public static List<AnnotatedVirus> filterOutBlacklistedViruses(@NotNull List<AnnotatedVirus> allViruses)
     {
         return allViruses.stream().filter(virus -> !virus.blacklisted()).collect(Collectors.toList());
     }

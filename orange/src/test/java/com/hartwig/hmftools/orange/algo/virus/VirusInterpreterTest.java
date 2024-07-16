@@ -20,12 +20,12 @@ public class VirusInterpreterTest
     public void canFilterBlacklistedViruses()
     {
         List<AnnotatedVirus> filteredViruses =
-                VirusInterpreter.filterBlacklistedViruses(Lists.newArrayList(createAnnotatedVirus(true), createAnnotatedVirus(false)));
+                VirusInterpreter.filterOutBlacklistedViruses(Lists.newArrayList(createAnnotatedVirus(true), createAnnotatedVirus(false)));
         assertEquals(1, filteredViruses.size());
     }
 
     @NotNull
-    public static AnnotatedVirus createAnnotatedVirus(@NotNull Boolean blacklisted)
+    public static AnnotatedVirus createAnnotatedVirus(boolean blacklisted)
     {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
