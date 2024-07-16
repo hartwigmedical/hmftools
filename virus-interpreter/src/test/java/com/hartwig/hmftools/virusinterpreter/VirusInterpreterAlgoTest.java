@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.TaxidType;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
@@ -122,8 +123,8 @@ public class VirusInterpreterAlgoTest
     public void canDetermineBlacklistedVirus()
     {
         VirusInterpreterAlgo algo = createTestAlgo();
-        assertTrue(algo.blacklist(11646));
-        assertFalse(algo.blacklist(10000));
+        assertTrue(algo.blacklist(11646, 0, 11646, false));
+        assertFalse(algo.blacklist(10000, 0, 1000, true));
     }
 
     @NotNull
@@ -157,7 +158,7 @@ public class VirusInterpreterAlgoTest
                 .build();
 
         VirusBlacklistingDb virusBlacklisting1 =
-                ImmutableVirusBlacklistingDb.builder().taxid(11646).type("taxid_genus").name("Lentivirus").reason("HIV").build();
+                ImmutableVirusBlacklistingDb.builder().taxid(11646).type(TaxidType.TAXID_GENUS).name("Lentivirus").reason("HIV").build();
 
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
         taxonomyMap.put(1, name);

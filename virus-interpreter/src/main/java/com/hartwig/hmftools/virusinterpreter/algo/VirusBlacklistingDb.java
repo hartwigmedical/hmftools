@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
+import com.hartwig.hmftools.common.virus.TaxidType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,10 +12,11 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VirusBlacklistingDb
 {
 
-    public abstract int taxid();
+    @NotNull
+    public abstract Integer taxid();
 
     @NotNull
-    public abstract String type();
+    public abstract TaxidType type();
 
     @NotNull
     public abstract String name();

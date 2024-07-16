@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.virus.TaxidType;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class VirusBlacklistingDbFile
@@ -26,7 +28,7 @@ public final class VirusBlacklistingDbFile
             {
                 blacklistedViruses.add(ImmutableVirusBlacklistingDb.builder()
                         .taxid(Integer.parseInt(parts[0].trim()))
-                        .type(parts[1].trim())
+                        .type(TaxidType.valueOf(parts[1].trim().toUpperCase()))
                         .name(parts[2].trim())
                         .reason(parts[3].trim())
                         .build());
