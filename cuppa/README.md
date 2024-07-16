@@ -15,15 +15,15 @@ CUPPA is intended to provide:
 # Contents
 <!-- TOC -->
 * [Usage](#usage)
-  * [Feature extraction (Java component)](#feature-extraction--java-component-)
-  * [Classifier (Python component)](#classifier--python-component-)
+    * [Feature extraction (Java component)](#feature-extraction-java-component)
+    * [Classifier (Python component)](#classifier-python-component)
 * [Classifier output](#classifier-output)
 * [Features](#features)
-    * [GEN_POS](#genpos)
-    * [SNV96](#snv96)
+    * [GEN_POS](#gen_pos)
+    * [SNV96](#snv_96)
     * [EVENT](#event)
-    * [GENE_EXP](#geneexp)
-    * [ALT_SJ](#altsj)
+    * [GENE_EXP](#gene_exp)
+    * [ALT_SJ](#alt_sj)
 * [Classifier structure](#classifier-structure)
     * [CuppaClassifier](#cuppaclassifier)
     * [LogisticRegression](#logisticregression)
@@ -33,7 +33,7 @@ CUPPA is intended to provide:
       * [NonBestSimilarityScaler](#nonbestsimilarityscaler)
       * [Log1pTransformer](#log1ptransformer)
       * [MaxScaler](#maxscaler)
-      * [Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)](#chi2featureselector--drivers-fusions-virus-sex-whole-genome-duplication-)
+      * [Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)](#chi2featureselector)
       * [NaRowFilter](#narowfilter)
       * [ProbCombiner](#probcombiner)
     * [Adjustment of probabilities](#adjustment-of-probabilities)
@@ -71,12 +71,12 @@ Source  Category       Key  Value
 ```
 
 ### Multi sample example
-In the single sample example, we have _all_ input files in the path provided to `-sample_data_dir`. However, for multiple samples, the input
+In the single sample example, we have all input files in the path provided to `-sample_data_dir`. However, for multiple samples, the input
 files are likely located in separate dirs. 
 
 We can instead provide input paths to `-purple_dir`, `-linx_dir`, `-virus_dir`, and `-isofox_dir` 
-using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. **NOTE: Paths containing wildcards must be 
-surrounded by double quotes (`"`)!**
+using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. **NOTE: Paths containing wildcards must 
+be surrounded by double quotes (`"`)!**
 
 The below command will extract the DNA and RNA features for multiple samples:
 
@@ -133,24 +133,24 @@ Below is a description of the required input files:
 
 Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbers mark conditionally required arguments.
 
-| Argument              | Example                             | Description                                                                                                                                   |
-|-----------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| `-sample`             | COLO829v003T                        | [Required <sup>1</sup>] Sample name                                                                                                           |
-| `-sample_id_file`     | sample_ids.tsv                      | [Required <sup>1</sup>] One column text file with "SampleId" as the header, and where each row is a sample name                               |
-| `-sample_data_dir`    |                                     | [Required <sup>2</sup>] Directory containing all input files                                                                                  |
-| `-purple_dir`         | /data/datasets/*/purple/            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                 |
-| `-linx_dir`           | /data/datasets/*/linx/              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                   |
-| `-virus_dir`          | /data/datasets/*/virus_interpreter/ | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                       |
-| `-isofox_dir`         | /data/rna/*/                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                 |
-| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz         | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd |
-| `-categories`         | DNA                                 | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                             |
-| `-output_dir`         |                                     | [Required] Directory to write the output files                                                                                                |
-| `-ref_genome_version` | V37                                 | Valid values: V37 (default), V38                                                                                                              |
-| `-threads`            | 8                                   | Number of threads to use. Each thread processes one sample at a time                                                                          |
-| `-write_by_category`  |                                     | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
-| `-progress_interval`  | 100                                 | Print progress per this number of samples in multi-sample mode                                                                                |
-| `-log_level`          | DEBUG                               | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                    |
-| `-log_debug`          |                                     | Flag. Set log level to DEBUG                                                                                                                  |
+| Argument              | Example                               | Description                                                                                                                                   |
+|-----------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `-sample`             | COLO829v003T                          | [Required <sup>1</sup>] Sample name                                                                                                           |
+| `-sample_id_file`     | sample_ids.tsv                        | [Required <sup>1</sup>] One column text file with "SampleId" as the header, and where each row is a sample name                               |
+| `-sample_data_dir`    |                                       | [Required <sup>2</sup>] Directory containing all input files                                                                                  |
+| `-purple_dir`         | "/data/datasets/*/purple/"            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                 |
+| `-linx_dir`           | "/data/datasets/*/linx/"              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                   |
+| `-virus_dir`          | "/data/datasets/*/virus_interpreter/" | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                       |
+| `-isofox_dir`         | "/data/rna/*/"                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                 |
+| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz           | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd |
+| `-categories`         | DNA                                   | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                             |
+| `-output_dir`         |                                       | [Required] Directory to write the output files                                                                                                |
+| `-ref_genome_version` | V37                                   | Valid values: V37 (default), V38                                                                                                              |
+| `-threads`            | 8                                     | Number of threads to use. Each thread processes one sample at a time                                                                          |
+| `-write_by_category`  |                                       | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
+| `-progress_interval`  | 100                                   | Print progress per this number of samples in multi-sample mode                                                                                |
+| `-log_level`          | DEBUG                                 | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                    |
+| `-log_debug`          |                                       | Flag. Set log level to DEBUG                                                                                                                  |
 
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
@@ -270,7 +270,7 @@ The below table lists all possible arguments for training and/or predicting.
 | `--no_cache_training`     | Train   | Don't cache models during cross-validation and training of final model?                                                                                                                       |
 | `--n_jobs`                | Train   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                       |
 | `--log_to_file`           | Train   | Output logs to a file?                                                                                                                                                                        |
-| `--log_path`              | Train   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                              |
+| `--log_path`              | Train   | Path to log file. Default: `${output_dir}/run.log`                                                                                                                                            |
 
 ### Additional input files for training CUPPA
 
@@ -526,8 +526,7 @@ of their sample size: `cancer_type_weight = n_samples_total x (1 / n_samples_in_
 - `random_state=0`: Set the random seed so that re-running the training produces the same model.
 
 The GEN_POS, SNV96, and EVENT logistic regressions use the following non-default arguments:
-- `penalty="l1"`: LASSO (aka L1) regularization is used to remove irrelevant features during training by setting their
-weights to 0
+- `penalty="l1"`: LASSO (aka L1) regularization is used to remove irrelevant features during training by setting their weights to 0
 - `max_iter=1000`: Number of gradient descent iterations
 
 The GENE_EXP and ALT_SJ logistic regressions use the following non-default arguments:
@@ -605,11 +604,11 @@ Max scaling is performed to scale (non-negative) features to range from 0 to 1. 
 regression expects features to be (roughly) in the same scale and range. This is performed for the SV and TMB features
 as well as for the GENE_EXP and ALT_SJ features.
 
-#### Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)
+#### Chi2FeatureSelector
 The [chi2 test](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.chi2.html) is used to as a 
-preliminary feature selection step remove irrelevant features. This test which quantifies how much each feature varies 
-across every cancer type in the training set compared to an expected (background) value for that feature. The below 
-pseudo-code describes the feature selection procedure.
+preliminary feature selection step remove irrelevant features (applies to drivers mutations, gene fusions, viral integrations, sex, and 
+whole genome duplication). This test quantifies how much each feature varies across every cancer type in the training set compared to an 
+expected (background) value for that feature. The below pseudo-code describes the feature selection procedure:
 
 ```python
 ## Inputs
