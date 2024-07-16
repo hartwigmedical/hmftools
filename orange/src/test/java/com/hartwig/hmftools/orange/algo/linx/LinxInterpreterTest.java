@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -16,8 +15,7 @@ public class LinxInterpreterTest
     public void canInterpretMinimalLinxData()
     {
         LinxInterpreter interpreter = createTestInterpreter();
-        assertNotNull(interpreter.interpret(ImmutableLinxData.builder().build(), PurpleTestFactory.createMinimalTestPurpleData()
-                .somaticDrivers()));
+        assertNotNull(interpreter.interpret(ImmutableLinxData.builder().build()));
     }
 
     @NotNull

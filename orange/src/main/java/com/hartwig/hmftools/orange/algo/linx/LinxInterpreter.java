@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -31,7 +30,7 @@ public class LinxInterpreter
     }
 
     @NotNull
-    public LinxRecord interpret(@NotNull LinxData linx, @NotNull List<DriverCatalog> somaticDrivers)
+    public LinxRecord interpret(@NotNull LinxData linx)
     {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
@@ -40,7 +39,7 @@ public class LinxInterpreter
                 additionalSuspectSomaticFusions.size());
 
         List<LinxFusion> inFrameInCaseNoHighDrivers =
-                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(linx.allSomaticFusions(), additionalSuspectSomaticFusions, somaticDrivers);
+                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
         LOGGER.info(" Found an additional {} viable fusion, for no high drivers sample", inFrameInCaseNoHighDrivers.size());
 
         List<LinxBreakend> additionalSuspectSomaticBreakends =
@@ -56,7 +55,7 @@ public class LinxInterpreter
                 .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
                 .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
                 .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
-                .additionalViableFusionsInCaseNoHighDrivers(ConversionUtil.mapToIterable(inFrameInCaseNoHighDrivers, LinxConversion::convert))
+                .additionalViableFusions(ConversionUtil.mapToIterable(inFrameInCaseNoHighDrivers, LinxConversion::convert))
                 .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), LinxConversion::convert))
                 .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), LinxConversion::convert))
                 .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, LinxConversion::convert))

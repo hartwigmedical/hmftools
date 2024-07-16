@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -248,18 +250,18 @@ public class SomaticFindingsChapter implements ReportChapter
                     report.isofox(),
                     reportResources));
 
-            if(report.linx().additionalViableFusionsInCaseNoHighDrivers().isEmpty())
+            if(!hasHighDriverEvents(report.linx().allSomaticFusions(), report.purple().somaticDrivers()))
             {
-                document.add(new Tables(reportResources).createNonContent(inFrameFusionsTitle, contentWidth(), "High driver likelihood events are detected in this sample, therefore this section is empty"));
+                String titleInFrame = inFrameFusionsTitle + " (" + report.linx().additionalViableFusions().size() + ")";
+                document.add(DnaFusionTable.build(titleInFrame,
+                        contentWidth(),
+                        report.linx().additionalViableFusions(),
+                        report.isofox(),
+                        reportResources));
             }
             else
             {
-                String titleInFrame = inFrameFusionsTitle + " (" + report.linx().additionalViableFusionsInCaseNoHighDrivers().size() + ")";
-                document.add(DnaFusionTable.build(titleInFrame,
-                        contentWidth(),
-                        report.linx().additionalViableFusionsInCaseNoHighDrivers(),
-                        report.isofox(),
-                        reportResources));
+                document.add(new Tables(reportResources).createNonContent(inFrameFusionsTitle, contentWidth(), "High driver likelihood events are detected in this sample, therefore this section is empty"));
             }
         }
     }
@@ -410,5 +412,27 @@ public class SomaticFindingsChapter implements ReportChapter
     private static <T> List<T> max10(@NotNull List<T> elements)
     {
         return elements.subList(0, Math.min(10, elements.size()));
+    }
+
+    private static boolean hasHighDriverEvents(@NotNull List<com.hartwig.hmftools.datamodel.linx.LinxFusion> somaticFusions,
+            @NotNull List<PurpleDriver> drivers)
+    {
+        for(com.hartwig.hmftools.datamodel.linx.LinxFusion fusion : somaticFusions)
+        {
+            if(fusion.driverLikelihood() == FusionLikelihoodType.HIGH)
+            {
+                return true;
+            }
+        }
+
+        for(PurpleDriver driver : drivers)
+        {
+            if(DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
