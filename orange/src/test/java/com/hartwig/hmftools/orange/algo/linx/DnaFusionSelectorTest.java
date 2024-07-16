@@ -113,12 +113,12 @@ public class DnaFusionSelectorTest
                 .build();
 
         List<LinxFusion> fusions =
-                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
+                DnaFusionSelector.selectViableFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
         assertEquals(1, fusions.size());
         assertNotNull(findByName(fusions, "in frame fusion"));
 
         List<LinxFusion> noFusions =
-                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(Collections.emptyList(), Collections.emptyList());
+                DnaFusionSelector.selectViableFusions(Collections.emptyList(), Collections.emptyList());
         assertEquals(0, noFusions.size());
     }
 

@@ -38,9 +38,9 @@ public class LinxInterpreter
         LOGGER.info(" Found an additional {} suspect somatic fusions that are potentially interesting",
                 additionalSuspectSomaticFusions.size());
 
-        List<LinxFusion> inFrameInCaseNoHighDrivers =
-                DnaFusionSelector.selectViableFusionsInCaseNoHighDrivers(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
-        LOGGER.info(" Found an additional {} viable fusion, for no high drivers sample", inFrameInCaseNoHighDrivers.size());
+        List<LinxFusion> additionalViableFusions =
+                DnaFusionSelector.selectViableFusions(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
+        LOGGER.info(" Found an additional {} viable fusions", additionalViableFusions.size());
 
         List<LinxBreakend> additionalSuspectSomaticBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
@@ -55,7 +55,7 @@ public class LinxInterpreter
                 .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
                 .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
                 .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
-                .additionalViableFusions(ConversionUtil.mapToIterable(inFrameInCaseNoHighDrivers, LinxConversion::convert))
+                .additionalViableFusions(ConversionUtil.mapToIterable(additionalViableFusions, LinxConversion::convert))
                 .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), LinxConversion::convert))
                 .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), LinxConversion::convert))
                 .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, LinxConversion::convert))
