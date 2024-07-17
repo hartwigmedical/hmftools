@@ -35,7 +35,7 @@ public class Tables
     }
 
     @NotNull
-    private Table createNonContent(@NotNull String title, float width, @NotNull String value)
+    public Table createNonContent(@NotNull String title, float width, @NotNull String value)
     {
         Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
 

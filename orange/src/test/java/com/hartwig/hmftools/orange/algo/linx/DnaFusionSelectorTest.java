@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.linx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -95,6 +96,32 @@ public class DnaFusionSelectorTest
         assertEquals(2, fusions.size());
         assertNotNull(findByName(fusions, "with five onco"));
         assertNotNull(findByName(fusions, "with three onco"));
+    }
+
+    @Test
+    public void canSelectAdditionalViableSomaticFusions()
+    {
+        LinxFusion inFrameFusion = LinxTestFactory.fusionBuilder()
+                .reported(false)
+                .phased(FusionPhasedType.INFRAME)
+                .chainTerminated(false)
+                .name("in frame fusion")
+                .build();
+        LinxFusion outOfFrameFusion = LinxTestFactory.fusionBuilder()
+                .reported(false)
+                .phased(FusionPhasedType.OUT_OF_FRAME)
+                .chainTerminated(false)
+                .name("out of frame fusion")
+                .build();
+
+        List<LinxFusion> fusions =
+                DnaFusionSelector.selectAdditionalViableSomaticFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
+        assertEquals(1, fusions.size());
+        assertNotNull(findByName(fusions, "in frame fusion"));
+
+        List<LinxFusion> noFusions =
+                DnaFusionSelector.selectAdditionalViableSomaticFusions(Collections.emptyList(), Collections.emptyList());
+        assertEquals(0, noFusions.size());
     }
 
     @Nullable

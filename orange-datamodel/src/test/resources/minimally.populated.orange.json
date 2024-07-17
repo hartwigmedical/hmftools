@@ -473,7 +473,8 @@
         "codingType": "UTR_3P"
       }
     ],
-    "additionalSuspectSomaticFusions": []
+    "additionalSuspectSomaticFusions": [],
+    "additionalViableSomaticFusions": []
   },
   "virusInterpreter": {
     "allViruses": [
