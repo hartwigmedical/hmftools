@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.conversion;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
@@ -96,7 +95,6 @@ public final class OrangeConversion
     }
 
     @NotNull
-    @VisibleForTesting
     public static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
