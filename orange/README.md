@@ -148,6 +148,8 @@ interesting and added to the report:
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
     2. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
+- Other potentially interesting in-frame fusions in case no high drivers events are detected
+    1. In case no high driver events are detected, any in frame non chain terminated fusion that is not already reported  
 - Other viral presence:
     1. Any viral presence that is not otherwise reported.
 - Potentially interesting gene disruptions:

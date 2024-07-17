@@ -36,7 +36,7 @@ final class DnaFusionSelector
     }
 
     @NotNull
-    public static List<LinxFusion> selectViableFusions(@NotNull List<LinxFusion> somaticFusions,
+    public static List<LinxFusion> selectViableSomaticFusions(@NotNull List<LinxFusion> somaticFusions,
             @NotNull List<LinxFusion> additionalSuspectSomaticFusions)
     {
         return somaticFusions.stream()

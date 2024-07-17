@@ -99,26 +99,28 @@ public class DnaFusionSelectorTest
     }
 
     @Test
-    public void canSelectAdditionalViableFusions()
+    public void canSelectAdditionalViableSomaticFusions()
     {
         LinxFusion inFrameFusion = LinxTestFactory.fusionBuilder()
+                .reported(false)
                 .phased(FusionPhasedType.INFRAME)
                 .chainTerminated(false)
                 .name("in frame fusion")
                 .build();
         LinxFusion outOfFrameFusion = LinxTestFactory.fusionBuilder()
+                .reported(false)
                 .phased(FusionPhasedType.OUT_OF_FRAME)
                 .chainTerminated(false)
                 .name("out of frame fusion")
                 .build();
 
         List<LinxFusion> fusions =
-                DnaFusionSelector.selectViableFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
+                DnaFusionSelector.selectViableSomaticFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
         assertEquals(1, fusions.size());
         assertNotNull(findByName(fusions, "in frame fusion"));
 
         List<LinxFusion> noFusions =
-                DnaFusionSelector.selectViableFusions(Collections.emptyList(), Collections.emptyList());
+                DnaFusionSelector.selectViableSomaticFusions(Collections.emptyList(), Collections.emptyList());
         assertEquals(0, noFusions.size());
     }
 

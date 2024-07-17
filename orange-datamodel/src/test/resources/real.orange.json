@@ -371,7 +371,7 @@
         "reported": false
       }
     ],
-    "additionalViableFusions": [],
+    "additionalViableSomaticFusions": [],
     "allGermlineVariants": [
       {
         "type": "SNP",
