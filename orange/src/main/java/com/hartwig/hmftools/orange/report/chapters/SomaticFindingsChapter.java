@@ -147,7 +147,8 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            document.add(new Paragraph("No kataegis plot could be generated for this sample").addStyle(reportResources.tableContentStyle()));
+            document.add(new Paragraph("No kataegis plot could be generated for this sample")
+                    .addStyle(reportResources.tableContentStyle()));
         }
     }
 
@@ -263,7 +264,8 @@ public class SomaticFindingsChapter implements ReportChapter
             }
             else
             {
-                document.add(new Tables(reportResources).createNonContent(otherFusionsInCaseNoHighDriversTitle, contentWidth(), "High driver likelihood events are detected in this sample, therefore this section is empty"));
+                document.add(new Tables(reportResources).createNonContent(otherFusionsInCaseNoHighDriversTitle, contentWidth(),
+                        "High driver likelihood events are detected in this sample, therefore this section is empty"));
             }
         }
     }
