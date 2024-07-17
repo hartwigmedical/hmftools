@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistingDbFile;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbFile;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
@@ -42,7 +41,7 @@ public class VirusInterpreterApplication
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.TaxonomyDbTsv);
 
         VI_LOGGER.info("Loading virus blacklisting db from {}", config.VirusBlacklistedDbTsv);
-        List<VirusBlacklistingDb> virusBlacklistingDb = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedDbTsv);
+        List<Integer> virusBlacklistingDb = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedDbTsv);
 
         VI_LOGGER.info("Building virus reporting db model from {}", config.VirusReportedDbTsv);
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.VirusReportedDbTsv);

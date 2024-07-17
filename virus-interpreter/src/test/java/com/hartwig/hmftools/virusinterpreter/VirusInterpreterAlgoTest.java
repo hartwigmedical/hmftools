@@ -18,15 +18,12 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxidType;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
@@ -157,9 +154,6 @@ public class VirusInterpreterAlgoTest
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
-        VirusBlacklistingDb virusBlacklisting1 =
-                ImmutableVirusBlacklistingDb.builder().taxid(11646).type(TaxidType.TAXID_GENUS).name("Lentivirus").reason("HIV").build();
-
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
@@ -173,7 +167,7 @@ public class VirusInterpreterAlgoTest
 
         CoveragesAnalysis coveragesAnalysis = new CoveragesAnalysis(34.5);
 
-        return new VirusInterpreterAlgo(taxonomyDb, Lists.newArrayList(virusBlacklisting1), virusReportingModel, coveragesAnalysis);
+        return new VirusInterpreterAlgo(taxonomyDb, Lists.newArrayList(11646), virusReportingModel, coveragesAnalysis);
     }
 
     private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies)
