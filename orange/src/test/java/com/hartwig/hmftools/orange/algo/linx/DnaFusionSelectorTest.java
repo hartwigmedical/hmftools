@@ -115,12 +115,12 @@ public class DnaFusionSelectorTest
                 .build();
 
         List<LinxFusion> fusions =
-                DnaFusionSelector.selectViableSomaticFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
+                DnaFusionSelector.selectAdditionalViableSomaticFusions(Lists.newArrayList(inFrameFusion, outOfFrameFusion), Collections.emptyList());
         assertEquals(1, fusions.size());
         assertNotNull(findByName(fusions, "in frame fusion"));
 
         List<LinxFusion> noFusions =
-                DnaFusionSelector.selectViableSomaticFusions(Collections.emptyList(), Collections.emptyList());
+                DnaFusionSelector.selectAdditionalViableSomaticFusions(Collections.emptyList(), Collections.emptyList());
         assertEquals(0, noFusions.size());
     }
 

@@ -39,7 +39,7 @@ public class LinxInterpreter
                 additionalSuspectSomaticFusions.size());
 
         List<LinxFusion> additionalViableSomaticFusions =
-                DnaFusionSelector.selectViableSomaticFusions(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
+                DnaFusionSelector.selectAdditionalViableSomaticFusions(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
         LOGGER.info(" Found an additional {} viable somatic fusions", additionalViableSomaticFusions.size());
 
         List<LinxBreakend> additionalSuspectSomaticBreakends =
