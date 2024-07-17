@@ -89,6 +89,7 @@ public final class AnnotatedVirusFile
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
+                    .blacklisted(Boolean.parseBoolean(values[fieldsIndexMap.get("blacklisted")]))
                     .virusDriverLikelihoodType(driverLikelihoodIndex != null ?
                             VirusLikelihoodType.valueOf(values[driverLikelihoodIndex]) : UNKNOWN)
                     .build());
@@ -108,6 +109,7 @@ public final class AnnotatedVirusFile
                 .add("meanCoverage")
                 .add("expectedClonalCoverage")
                 .add("reported")
+                .add("blacklisted")
                 .add("driverLikelihood")
                 .toString();
     }
@@ -124,6 +126,7 @@ public final class AnnotatedVirusFile
                 .add(String.valueOf(annotatedVirus.meanCoverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
                 .add(String.valueOf(annotatedVirus.reported()))
+                .add(String.valueOf(annotatedVirus.blacklisted()))
                 .add(String.valueOf(annotatedVirus.virusDriverLikelihoodType()))
                 .toString();
     }

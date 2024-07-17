@@ -484,6 +484,7 @@
         "integrations": 1,
         "interpretation": "HPV",
         "reported": true,
+        "blacklisted": false,
         "driverLikelihood": "HIGH",
         "percentageCovered": 0.9,
         "meanCoverage": 0
@@ -494,6 +495,7 @@
         "integrations": 0,
         "interpretation": null,
         "reported": false,
+        "blacklisted": false,
         "driverLikelihood": "LOW",
         "percentageCovered": 0.4,
         "meanCoverage": 0
@@ -506,6 +508,7 @@
         "integrations": 1,
         "interpretation": "HPV",
         "reported": true,
+        "blacklisted": false,
         "driverLikelihood": "HIGH",
         "percentageCovered": 0.9,
         "meanCoverage": 0

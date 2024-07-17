@@ -79,6 +79,7 @@ import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
+import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -253,7 +254,7 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null))
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
+                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))

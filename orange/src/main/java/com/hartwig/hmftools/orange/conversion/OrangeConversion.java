@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.conversion;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
@@ -20,11 +19,9 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
@@ -98,17 +95,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static VirusInterpreterData convert(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
-    {
-        return ImmutableVirusInterpreterData.builder()
-                .allViruses(ConversionUtil.mapToIterable(interpreterData.allViruses(), OrangeConversion::convert))
-                .reportableViruses(ConversionUtil.mapToIterable(interpreterData.reportableViruses(), OrangeConversion::convert))
-                .build();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    public static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
         return ImmutableVirusInterpreterEntry.builder()
