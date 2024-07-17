@@ -118,8 +118,7 @@ public class VirusInterpreterAlgo
     @VisibleForTesting
     boolean blacklist(int taxidGenus, int taxidSpecies)
     {
-        return blacklistedTaxids.stream()
-                .anyMatch(blacklistedTaxid -> taxidGenus == blacklistedTaxid || taxidSpecies == blacklistedTaxid);
+        return blacklistedTaxids.contains(taxidGenus) || blacklistedTaxids.contains(taxidSpecies);
     }
 
     @Nullable

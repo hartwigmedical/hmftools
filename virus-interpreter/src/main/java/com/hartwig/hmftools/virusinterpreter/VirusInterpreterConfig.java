@@ -47,7 +47,7 @@ public class VirusInterpreterConfig
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         VirusBreakendTsv = configBuilder.getValue(VIRUS_BREAKEND_TSV);
         TaxonomyDbTsv = configBuilder.getValue(TAXONOMY_DB_TSV);
-        VirusReportedDbTsv = configBuilder.getValue(VIRUS_BLACKLISTING_DB_TSV);
+        VirusReportedDbTsv = configBuilder.getValue(VIRUS_REPORTING_DB_TSV);
         VirusBlacklistedDbTsv = configBuilder.getValue(VIRUS_BLACKLISTING_DB_TSV);
         TumorSampleWGSMetricsFile = configBuilder.getValue(TUMOR_SAMPLE_WGS_METRICS_FILE);
         OutputDir = parseOutputDir(configBuilder);
