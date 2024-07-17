@@ -3,6 +3,8 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -11,6 +13,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -144,7 +147,8 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            document.add(new Paragraph("No kataegis plot could be generated for this sample").addStyle(reportResources.tableContentStyle()));
+            document.add(new Paragraph("No kataegis plot could be generated for this sample")
+                    .addStyle(reportResources.tableContentStyle()));
         }
     }
 
@@ -222,13 +226,15 @@ public class SomaticFindingsChapter implements ReportChapter
     private void addFusions(@NotNull Document document)
     {
         String driverFusionsTitle = "Driver fusions";
-        String nonDriverFusionsTitle = "Other potentially interesting fusions";
+        String otherFusionsTitle = "Other potentially interesting fusions";
+        String otherFusionsInCaseNoHighDriversTitle = "Potentially interesting in-frame fusions in case no high drivers detected";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
         {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverFusionsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(nonDriverFusionsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(otherFusionsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(otherFusionsInCaseNoHighDriversTitle, contentWidth()));
         }
         else
         {
@@ -239,12 +245,28 @@ public class SomaticFindingsChapter implements ReportChapter
                     report.isofox(),
                     reportResources));
 
-            String titleNonDrivers = nonDriverFusionsTitle + " (" + report.linx().additionalSuspectSomaticFusions().size() + ")";
-            document.add(DnaFusionTable.build(titleNonDrivers,
+            String titleOtherFusions = otherFusionsTitle + " (" + report.linx().additionalSuspectSomaticFusions().size() + ")";
+            document.add(DnaFusionTable.build(titleOtherFusions,
                     contentWidth(),
                     max10(report.linx().additionalSuspectSomaticFusions()),
                     report.isofox(),
                     reportResources));
+
+            if(!hasHighDriverEvents(report.linx().allSomaticFusions(), report.purple().somaticDrivers()))
+            {
+                String titleOtherFusionsNoHighDrivers =
+                        otherFusionsInCaseNoHighDriversTitle + " (" + report.linx().additionalViableSomaticFusions().size() + ")";
+                document.add(DnaFusionTable.build(titleOtherFusionsNoHighDrivers,
+                        contentWidth(),
+                        report.linx().additionalViableSomaticFusions(),
+                        report.isofox(),
+                        reportResources));
+            }
+            else
+            {
+                document.add(new Tables(reportResources).createNonContent(otherFusionsInCaseNoHighDriversTitle, contentWidth(),
+                        "High driver likelihood events are detected in this sample, therefore this section is empty"));
+            }
         }
     }
 
@@ -394,5 +416,26 @@ public class SomaticFindingsChapter implements ReportChapter
     private static <T> List<T> max10(@NotNull List<T> elements)
     {
         return elements.subList(0, Math.min(10, elements.size()));
+    }
+
+    private static boolean hasHighDriverEvents(@NotNull List<LinxFusion> somaticFusions, @NotNull List<PurpleDriver> drivers)
+    {
+        for(LinxFusion fusion : somaticFusions)
+        {
+            if(fusion.driverLikelihood() == FusionLikelihoodType.HIGH)
+            {
+                return true;
+            }
+        }
+
+        for(PurpleDriver driver : drivers)
+        {
+            if(DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -32,6 +33,16 @@ final class DnaFusionSelector
             }
         }
         return filtered;
+    }
+
+    @NotNull
+    public static List<LinxFusion> selectAdditionalViableSomaticFusions(@NotNull List<LinxFusion> somaticFusions,
+            @NotNull List<LinxFusion> additionalSuspectSomaticFusions)
+    {
+        return somaticFusions.stream()
+                .filter(fusion -> fusion.phased() == FusionPhasedType.INFRAME && !fusion.chainTerminated() && !fusion.reported()
+                        && !additionalSuspectSomaticFusions.contains(fusion))
+                .collect(Collectors.toList());
     }
 
     private static boolean isInframeFusionWithOncogene(@NotNull LinxFusion fusion, @NotNull List<DriverGene> driverGenes)

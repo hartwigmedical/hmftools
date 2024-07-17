@@ -31,6 +31,9 @@ public interface LinxRecord
     List<LinxFusion> additionalSuspectSomaticFusions();
 
     @NotNull
+    List<LinxFusion> additionalViableSomaticFusions();
+
+    @NotNull
     List<LinxBreakend> allSomaticBreakends();
 
     @Nullable
