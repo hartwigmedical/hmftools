@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.TaxidType;
+import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxidType;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
@@ -123,8 +123,8 @@ public class VirusInterpreterAlgoTest
     public void canDetermineBlacklistedVirus()
     {
         VirusInterpreterAlgo algo = createTestAlgo();
-        assertTrue(algo.blacklist(11646, 0, 11646, false));
-        assertFalse(algo.blacklist(10000, 0, 1000, true));
+        assertTrue(algo.blacklist(11646, 0));
+        assertFalse(algo.blacklist(10000, 0));
     }
 
     @NotNull

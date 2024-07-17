@@ -102,8 +102,8 @@ public final class OrangeConversion
     public static VirusInterpreterData convert(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
     {
         return ImmutableVirusInterpreterData.builder()
-                .allViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterOutBlacklistedViruses(interpreterData.allViruses()), OrangeConversion::convert))
-                .reportableViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterOutBlacklistedViruses(interpreterData.reportableViruses()), OrangeConversion::convert))
+                .allViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterBlacklistedViruses(interpreterData.allViruses()), OrangeConversion::convert))
+                .reportableViruses(ConversionUtil.mapToIterable(VirusInterpreter.filterBlacklistedViruses(interpreterData.reportableViruses()), OrangeConversion::convert))
                 .build();
     }
 
@@ -121,7 +121,6 @@ public final class OrangeConversion
                 .meanCoverage(annotatedVirus.meanCoverage())
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
                 .reported(annotatedVirus.reported())
-                .blacklisted(annotatedVirus.blacklisted())
                 .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .build();
     }

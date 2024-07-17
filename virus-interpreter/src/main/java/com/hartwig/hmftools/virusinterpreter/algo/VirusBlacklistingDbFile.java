@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.TaxidType;
+import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxidType;
 
 import org.jetbrains.annotations.NotNull;
 

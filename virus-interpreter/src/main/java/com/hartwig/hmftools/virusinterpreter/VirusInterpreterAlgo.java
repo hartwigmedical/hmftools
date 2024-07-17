@@ -46,6 +46,13 @@ public class VirusInterpreterAlgo
 
             int taxid = virusBreakend.referenceTaxid();
             boolean reported = report(virusBreakend, coveragesAnalysis.ExpectedClonalCoverage, purityContext.qc().status());
+            boolean blacklisted = blacklist(virusBreakend.taxidGenus(), virusBreakend.taxidSpecies());
+
+            if(blacklisted && reported)
+            {
+                throw new IllegalStateException("Virus with taxid {} configured as reported and as blacklisted" + taxid);
+            }
+
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
                     .taxid(taxid)
                     .name(taxonomyDb.lookupName(taxid))
@@ -58,7 +65,7 @@ public class VirusInterpreterAlgo
                             ? coveragesAnalysis.ExpectedClonalCoverage
                             : null)
                     .reported(reported)
-                    .blacklisted(blacklist(virusBreakend.taxidGenus(), virusBreakend.taxidSpecies(), taxid, reported))
+                    .blacklisted(blacklisted)
                     .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
                     .build());
         }
@@ -110,18 +117,10 @@ public class VirusInterpreterAlgo
     }
 
     @VisibleForTesting
-    boolean blacklist(int taxidGenus, int taxidSpecies, int taxid, boolean reported)
+    boolean blacklist(int taxidGenus, int taxidSpecies)
     {
-        boolean blacklisted = virusBlacklistingDb.stream()
+        return virusBlacklistingDb.stream()
                 .anyMatch(blacklistedVirus -> taxidGenus == blacklistedVirus.taxid() || taxidSpecies == blacklistedVirus.taxid());
-        if(blacklisted && reported)
-        {
-            throw new RuntimeException("Virus with taxid {} configured as reported and as blacklisted" + taxid);
-        }
-        else
-        {
-            return blacklisted;
-        }
     }
 
     @Nullable

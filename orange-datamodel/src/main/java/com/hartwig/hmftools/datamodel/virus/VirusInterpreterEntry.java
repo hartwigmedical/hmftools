@@ -30,8 +30,6 @@ public interface VirusInterpreterEntry
 
     boolean reported();
 
-    boolean blacklisted();
-
     @NotNull
     VirusLikelihoodType driverLikelihood();
 }

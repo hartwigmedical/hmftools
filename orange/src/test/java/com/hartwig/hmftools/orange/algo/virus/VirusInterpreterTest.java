@@ -19,7 +19,7 @@ public class VirusInterpreterTest
     public void canFilterBlacklistedViruses()
     {
         List<AnnotatedVirus> filteredViruses =
-                VirusInterpreter.filterOutBlacklistedViruses(Lists.newArrayList(createAnnotatedVirus("blacklisted virus", false, true), createAnnotatedVirus("non blacklisted virus", true, false)));
+                VirusInterpreter.filterBlacklistedViruses(Lists.newArrayList(createAnnotatedVirus("blacklisted virus", false, true), createAnnotatedVirus("non blacklisted virus", true, false)));
         assertEquals(1, filteredViruses.size());
         assertEquals(filteredViruses.iterator().next().name(), "non blacklisted virus");
     }
