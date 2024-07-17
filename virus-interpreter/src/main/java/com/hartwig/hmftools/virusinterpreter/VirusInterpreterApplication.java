@@ -41,7 +41,7 @@ public class VirusInterpreterApplication
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.TaxonomyDbTsv);
 
         VI_LOGGER.info("Loading virus blacklisting db from {}", config.VirusBlacklistedDbTsv);
-        List<Integer> virusBlacklistingDb = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedDbTsv);
+        List<Integer> blacklistedTaxids = VirusBlacklistingDbFile.loadFromTsv(config.VirusBlacklistedDbTsv);
 
         VI_LOGGER.info("Building virus reporting db model from {}", config.VirusReportedDbTsv);
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.VirusReportedDbTsv);
@@ -58,7 +58,7 @@ public class VirusInterpreterApplication
                 CoveragesAnalyzer.run(purityContext, config.TumorSampleWGSMetricsFile);
         VI_LOGGER.info("Determined the expected clonal coverage to be {}", coveragesAnalysis.ExpectedClonalCoverage);
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusBlacklistingDb, virusReportingDbModel, coveragesAnalysis);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, blacklistedTaxids, virusReportingDbModel, coveragesAnalysis);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, purityContext);
         VI_LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 

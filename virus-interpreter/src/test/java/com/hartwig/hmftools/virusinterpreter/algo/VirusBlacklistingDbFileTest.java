@@ -16,7 +16,7 @@ public class VirusBlacklistingDbFileTest
     @Test
     public void canReadVirusBlacklistingDbTsv() throws IOException
     {
-        List<Integer> blacklistedViruses = VirusBlacklistingDbFile.loadFromTsv(VIRUS_BLACKLISTING_DB_TSV);
-        assertEquals(3, blacklistedViruses.size());
+        List<Integer> blacklistedTaxids = VirusBlacklistingDbFile.loadFromTsv(VIRUS_BLACKLISTING_DB_TSV);
+        assertEquals(3, blacklistedTaxids.size());
     }
 }

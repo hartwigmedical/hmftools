@@ -22,16 +22,16 @@ import org.jetbrains.annotations.Nullable;
 public class VirusInterpreterAlgo
 {
     private final TaxonomyDb taxonomyDb;
-    private final List<Integer> virusBlacklistingDb;
+    private final List<Integer> blacklistedTaxids;
     private final VirusReportingDbModel virusReportingDbModel;
     private final CoveragesAnalysis coveragesAnalysis;
 
     public VirusInterpreterAlgo(
-            final TaxonomyDb taxonomyDb, final List<Integer> virusBlacklistingDb,
+            final TaxonomyDb taxonomyDb, final List<Integer> blacklistedTaxids,
             final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
     {
         this.taxonomyDb = taxonomyDb;
-        this.virusBlacklistingDb = virusBlacklistingDb;
+        this.blacklistedTaxids = blacklistedTaxids;
         this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
     }
@@ -118,8 +118,8 @@ public class VirusInterpreterAlgo
     @VisibleForTesting
     boolean blacklist(int taxidGenus, int taxidSpecies)
     {
-        return virusBlacklistingDb.stream()
-                .anyMatch(blacklistedVirus -> taxidGenus == blacklistedVirus || taxidSpecies == blacklistedVirus);
+        return blacklistedTaxids.stream()
+                .anyMatch(blacklistedTaxid -> taxidGenus == blacklistedTaxid || taxidSpecies == blacklistedTaxid);
     }
 
     @Nullable

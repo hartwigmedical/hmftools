@@ -17,14 +17,14 @@ public final class VirusBlacklistingDbFile
     {
         List<String> linesVirusBlacklistingDb = Files.readAllLines(new File(virusBlacklistingTsv).toPath());
 
-        List<Integer> blacklistedViruses = new ArrayList<>();
+        List<Integer> blacklistedTaxids = new ArrayList<>();
 
         for(String line : linesVirusBlacklistingDb.subList(1, linesVirusBlacklistingDb.size()))
         {
             String[] parts = line.split(TSV_DELIM);
             if(parts.length == 4)
             {
-                blacklistedViruses.add(Integer.parseInt(parts[0].trim()));
+                blacklistedTaxids.add(Integer.parseInt(parts[0].trim()));
             }
             else
             {
@@ -32,6 +32,6 @@ public final class VirusBlacklistingDbFile
             }
         }
 
-        return blacklistedViruses;
+        return blacklistedTaxids;
     }
 }
