@@ -39,8 +39,18 @@ class Maven:
     @staticmethod
     def deploy_all(*modules):
         module_str = ','.join([m.name for m in modules])
-        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
+        #subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
+        subprocess.run(['mvn', 'install', '-B', '-pl', module_str, '-am'], check=True)
 
+
+class Docker:
+    def __init__(self, module, version):
+        self.module = module
+        self.version = version
+        self.image = f'europe-west4-docker.pkg.dev/hmf-build/build-registry-docker/{self.module}:{self.version}'
+
+    def build(self):
+        subprocess.run(['docker', 'build', self.module, '-t', f'{self.image}', '--build-arg', f'VERSION={self.version}'])
 
 def extract_hmftools_dependencies(pom_path):
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
@@ -97,6 +107,7 @@ def build_and_release(raw_tag: str):
     module_pom.set_version(version)
 
     Maven.deploy_all(module_pom, *dependencies_pom)
+    Docker(module, version).build()
 
 
 if __name__ == '__main__':
