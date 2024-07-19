@@ -52,7 +52,8 @@ class Docker:
 
     def build(self):
         with open("/workspace/docker.sh", "w") as output:
-            output.write(f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}')
+            output.write(f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker push {self.internal_image}\n')
 
 def extract_hmftools_dependencies(pom_path):
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
