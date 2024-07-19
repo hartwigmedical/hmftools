@@ -5,12 +5,12 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>orange-0.0.0-beta.1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>orange</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.0-beta.1</version>
+    <version>${orange.version}</version>
     <name>HMF Tools - ORANGE</name>
 
     <dependencies>
