@@ -51,8 +51,8 @@ class Docker:
         self.external_image = f'europe-west4-docker.pkg.dev/hmf-build/build-registry-docker/{self.module}:{self.version}'
 
     def build(self):
-        subprocess.run(['echo', f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}',
-        '>/workspace/docker.sh'])
+        with open("/workspace/docker.sh", "w") as output:
+            output.write(f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}')
 
 def extract_hmftools_dependencies(pom_path):
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
