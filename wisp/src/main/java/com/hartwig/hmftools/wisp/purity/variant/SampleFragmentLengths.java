@@ -62,17 +62,22 @@ public class SampleFragmentLengths
         String fragLengthsDir = mConfig.FragmentLengthDir != null ? mConfig.FragmentLengthDir : somaticVcfDir;
         String fragmentLengthFile = fragLengthsDir + somaticVcf.replace(".vcf.gz", VARIANT_FRAG_LENGTHS_FILE_ID);
 
+        boolean foundFiles = false;
+
         if(Files.exists(Paths.get(fragmentLengthFile)))
         {
+            foundFiles = true;
             fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
         }
         else
         {
             int index = 0;
+            // P014501, like: P014501.sage.frag_lengths.0.tsv.gz
             fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
 
             while(Files.exists(Paths.get(fragmentLengthFile)))
             {
+                foundFiles = true;
                 fragmentLengths.addAll(VariantFragmentLength.read(fragmentLengthFile));
                 index += 3;
                 fragmentLengthFile = fragLengthsDir + format("%s.sage.frag_lengths.%d.tsv.gz", mSample.PatientId, index);
@@ -83,6 +88,11 @@ public class SampleFragmentLengths
                 CT_LOGGER.debug("patient({}) loaded {} fragment entries from {} files",
                         mSample.PatientId, fragmentLengths.size(), index / 3);
             }
+        }
+
+        if(!foundFiles)
+        {
+            CT_LOGGER.warn("patient({}) found no fragment files",mSample.PatientId);
         }
 
         return fragmentLengths;
