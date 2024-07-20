@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
-import static htsjdk.samtools.CigarOperator.S;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -57,7 +55,7 @@ public class RefBaseAssembly
 
         // copy the ref bases from the junction assembly starting at the first ref base (ie the junction base itself)
         int nonJunctionReadExtension = mJunction.isForward() ?
-                assembly.minAlignedPosition() - extensionRefPosition : extensionRefPosition - assembly.maxAlignedPosition();
+                assembly.refBasePosition() - extensionRefPosition : extensionRefPosition - assembly.refBasePosition();
 
         int copyJuncIndexStart, copyJuncIndexEnd;
         int assemblyIndex;
@@ -68,7 +66,7 @@ public class RefBaseAssembly
             copyJuncIndexEnd = assemblyLength - 1;
             copyJuncIndexStart = copyJuncIndexEnd - refBaseLength + 1;
             refBaseStart = extensionRefPosition;
-            refBaseEnd = assembly.minAlignedPosition() - 1;
+            refBaseEnd = assembly.refBasePosition() - 1;
             assemblyIndex = 0;
             mJunctionSequenceIndex = assemblyLength - 1;
         }
@@ -76,7 +74,7 @@ public class RefBaseAssembly
         {
             copyJuncIndexStart = 0;
             copyJuncIndexEnd = refBaseLength - 1;
-            refBaseStart = assembly.maxAlignedPosition() + 1;
+            refBaseStart = assembly.refBasePosition() + 1;
             refBaseEnd = extensionRefPosition;
             assemblyIndex = assembly.junctionIndex();
             mJunctionSequenceIndex = 0;
@@ -105,7 +103,7 @@ public class RefBaseAssembly
             }
         }
 
-        // SV_LOGGER.debug("assembly({}) pre-support bases: {}", assembly, new String(mBases));
+        SV_LOGGER.debug("assembly({}) pre-support bases: {}", assembly, new String(mBases));
     }
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
@@ -122,15 +120,14 @@ public class RefBaseAssembly
 
     public boolean checkAddRead(final Read read, final SupportType supportType, int permittedMismatches, int requiredOverlap)
     {
-        int[] startIndices = getReadAssemblyStartIndices(read);
+        ReadAssemblyIndices readIndexInfo = getReadAssemblyStartIndices(read);
 
-        if(startIndices == null)
+        if(readIndexInfo == null)
             return false;
 
-        int readStartIndex = startIndices[0];
-        int assemblyStartIndex = startIndices[1];
+        int readStartIndex = readIndexInfo.ReadIndexStart;
 
-        boolean canAddRead = canAddRead(read, readStartIndex, assemblyStartIndex, permittedMismatches,requiredOverlap);
+        boolean canAddRead = canAddRead(read, readIndexInfo, permittedMismatches, requiredOverlap);
 
         if(!canAddRead && readStartIndex < read.getBases().length - 20)
         {
@@ -147,11 +144,12 @@ public class RefBaseAssembly
             }
 
             String readBases = new String(read.getBases(), readStartIndex, length);
-            assemblyStartIndex = new String(mBases).indexOf(readBases);
+            int assemblyStartIndex = new String(mBases).indexOf(readBases);
 
             if(assemblyStartIndex >= 0)
             {
-                canAddRead = canAddRead(read, readStartIndex, assemblyStartIndex, permittedMismatches, requiredOverlap);
+                readIndexInfo = new ReadAssemblyIndices(readStartIndex, readIndexInfo.ReadIndexEnd, assemblyStartIndex);
+                canAddRead = canAddRead(read, readIndexInfo, permittedMismatches, requiredOverlap);
             }
         }
 
@@ -164,18 +162,18 @@ public class RefBaseAssembly
             return false;
         }
 
-        addRead(read, supportType, readStartIndex, assemblyStartIndex);
+        addRead(read, supportType, readIndexInfo);
 
         return true;
     }
 
-    private boolean canAddRead(final Read read, int readStartIndex, int assemblyStartIndex, int permittedMismatches, int requiredOverlap)
+    private boolean canAddRead(final Read read, final ReadAssemblyIndices readIndexInfo, int permittedMismatches, int requiredOverlap)
     {
         int mismatchCount = 0;
         int overlappedBaseCount = 0;
-        int assemblyIndex = assemblyStartIndex;
+        int assemblyIndex = readIndexInfo.AssemblyIndexStart;
 
-        for(int i = readStartIndex; i < read.getBases().length; ++i, ++assemblyIndex)
+        for(int i = readIndexInfo.ReadIndexStart; i <= readIndexInfo.ReadIndexEnd; ++i, ++assemblyIndex)
         {
             if(assemblyIndex >= mBases.length)
                 break;
@@ -201,13 +199,14 @@ public class RefBaseAssembly
         return overlappedBaseCount >= requiredOverlap;
     }
 
-    private int[] getReadAssemblyStartIndices(final Read read)
+    private ReadAssemblyIndices getReadAssemblyStartIndices(final Read read)
     {
         // ensure no indel-adjusted unclipped start is used when aligned to ref bases
 
         int alignmentStart = read.alignmentStart();
         int leftSoftClipOffset = read.leftClipLength();
-        // int unclippedStart = read.unclippedStart();
+        int rightSoftClipOffset = read.rightClipLength();
+        int readIndexEnd = read.basesLength() - rightSoftClipOffset - 1;
 
         if(mJunction.isForward())
         {
@@ -217,10 +216,10 @@ public class RefBaseAssembly
                     return null;
 
                 int readIndex = mExtensionRefPosition - alignmentStart + leftSoftClipOffset;
-                return new int[] {readIndex, 0};
+                return new ReadAssemblyIndices(readIndex, readIndexEnd, 0);
             }
 
-            return new int[] {leftSoftClipOffset, alignmentStart - mExtensionRefPosition};
+            return new ReadAssemblyIndices(leftSoftClipOffset, readIndexEnd, alignmentStart - mExtensionRefPosition);
         }
         else
         {
@@ -231,27 +230,23 @@ public class RefBaseAssembly
 
                 // index off the relative start positions
                 int readIndex = mJunction.Position - alignmentStart + leftSoftClipOffset;
-                return new int[] {readIndex, mJunctionSequenceIndex};
+                return new ReadAssemblyIndices(readIndex, readIndexEnd, mJunctionSequenceIndex);
             }
 
-            return new int[] {leftSoftClipOffset, alignmentStart - mJunction.Position};
+            return new ReadAssemblyIndices(leftSoftClipOffset, readIndexEnd, alignmentStart - mJunction.Position);
         }
     }
 
-    private void addRead(final Read read, final SupportType supportType, int readStartIndex, int assemblyStartIndex)
+    private void addRead(final Read read, final SupportType supportType, final ReadAssemblyIndices readIndexInfo)
     {
         int mismatchCount = 0;
 
-        int[] readIndexRange = {readStartIndex, read.getBases().length - 1};
-        int assemblyIndex = assemblyStartIndex;
+        int assemblyIndex = readIndexInfo.AssemblyIndexStart;
 
-        for(int i = readStartIndex; i < read.getBases().length; ++i, ++assemblyIndex)
+        for(int i = readIndexInfo.ReadIndexStart; i <= readIndexInfo.ReadIndexEnd; ++i, ++assemblyIndex)
         {
             if(assemblyIndex >= mBases.length)
-            {
-                readIndexRange[1] = i;
                 break;
-            }
 
             byte base = read.getBases()[i];
             byte qual = read.getBaseQuality()[i];
@@ -292,6 +287,9 @@ public class RefBaseAssembly
         }
 
         mSupport.add(new SupportRead(read, supportType, INVALID_INDEX, 0, mismatchCount));
+
+        // SV_LOGGER.trace("refAssembly({}) applied read({})", toString(), read.id());
+        // SV_LOGGER.trace("ref bases: {}", new String(mBases));
     }
 
     public int validRefBaseLength()

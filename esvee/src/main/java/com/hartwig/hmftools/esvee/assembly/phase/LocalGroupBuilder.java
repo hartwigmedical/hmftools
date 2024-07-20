@@ -158,9 +158,12 @@ public class LocalGroupBuilder extends ThreadTask
             JunctionAssembly assembly = (i == 0) ? first : second;
             JunctionAssembly otherAssembly = (i == 0) ? second : first;
 
+            int otherMinAlignedPosition = otherAssembly.minAlignedPosition();
+            int otherMaxAlignedPosition = otherAssembly.maxAlignedPosition();
+
             for(RefSideSoftClip refSideSoftClip : assembly.refSideSoftClips())
             {
-                if(!positionWithin(refSideSoftClip.Position, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
+                if(!positionWithin(refSideSoftClip.Position, otherMinAlignedPosition, otherMaxAlignedPosition))
                     continue;
 
                 for(String readId : refSideSoftClip.readIds())

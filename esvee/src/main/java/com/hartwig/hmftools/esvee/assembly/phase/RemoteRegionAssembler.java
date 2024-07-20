@@ -85,7 +85,10 @@ public class RemoteRegionAssembler
 
     public static boolean assemblyOverlapsRemoteRegion(final JunctionAssembly assembly, final RemoteRegion remoteRegion)
     {
-        return positionsOverlap(assembly.minAlignedPosition(), assembly.maxAlignedPosition(), remoteRegion.start(), remoteRegion.end());
+        if(assembly.isForwardJunction())
+            return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
+        else
+            return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
     }
 
     public AssemblyLink tryRemoteAssemblyLink(

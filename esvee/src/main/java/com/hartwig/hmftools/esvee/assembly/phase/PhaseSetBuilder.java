@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
+import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.UnmappedBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -82,21 +85,23 @@ public class PhaseSetBuilder
         if(mAssemblies.size() == 1)
         {
             handleSingleAssembly();
-            return;
         }
+        else if(mAssemblies.size() == 2)
+        {
+            handleAssemblyPair();
+        }
+        else
+        {
+            formSplitLinks();
 
-        if(mAssemblies.size() == 2 && handleAssemblyPair())
-            return;
+            extendRemoteAssemblies();
 
-        formSplitLinks();
+            formFacingLinks();
 
-        extendRemoteAssemblies();
+            formPhaseSets();
 
-        formFacingLinks();
-
-        formPhaseSets();
-
-        addChainedSupport();
+            addChainedSupport();
+        }
 
         extendUnlinkedAssemblies();
 
@@ -749,7 +754,7 @@ public class PhaseSetBuilder
                 if(matchedRead != null)
                 {
                     assembly.candidateSupport().remove(index);
-                    assembly.addDiscordantSupport(candidateRead);
+                    checkAddRefBaseRead(assembly, candidateRead.cachedRead(), DISCORDANT);
                     continue;
                 }
 
@@ -762,10 +767,10 @@ public class PhaseSetBuilder
                     if(matchedCandidate != null)
                     {
                         assembly.candidateSupport().remove(index);
-                        assembly.addDiscordantSupport(candidateRead);
+                        checkAddRefBaseRead(assembly, candidateRead.cachedRead(), DISCORDANT);
 
                         otherAssembly.candidateSupport().remove(matchedCandidate);
-                        otherAssembly.addDiscordantSupport(matchedCandidate);
+                        checkAddRefBaseRead(otherAssembly, matchedCandidate.cachedRead(), DISCORDANT);
 
                         continue;
                     }
@@ -779,6 +784,8 @@ public class PhaseSetBuilder
     private void cleanupAssemblies()
     {
         mAssemblies.forEach(x -> x.clearCandidateSupport()); // no longer required
+
+        mAssemblies.forEach(x -> RefBaseExtender.trimAssemblyRefBases(x));
 
         // finally remove any branched assemblies which did not form a facing link
         List<JunctionAssembly> branchedAssemblies = mAssemblies.stream()

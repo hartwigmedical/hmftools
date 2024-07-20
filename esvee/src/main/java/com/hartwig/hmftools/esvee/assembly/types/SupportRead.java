@@ -62,8 +62,10 @@ public class SupportRead
     private final int mTrimCount;
     private final boolean mHasIndel;
 
-    private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non-junction reads
-    private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
+    // TODO: make this the distance from the read's start (ie index not position) to the assembly junction index
+    private final int mJunctionReadIndex;
+
+    private int mJunctionAssemblyIndex; // index within this read's junction assembly of the read's start position
     private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
     private int mInferredFragmentLength;
 
@@ -150,8 +152,6 @@ public class SupportRead
     public boolean isDiscordant() { return mIsDiscordant; }
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
-
-    // public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
 
     public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
     {

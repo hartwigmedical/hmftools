@@ -201,7 +201,7 @@ public class BamWriter
             IndelCoords indelCoords = assembly.indelCoords();
             int upperRefLength = linkedAssembly.refBaseLength();
 
-            alignmentStart = assembly.minAlignedPosition();
+            alignmentStart = indelMinAlignedReadPosition(assembly);
 
             cigarString = format("%dM%d%s%dM",
                     assembly.refBaseLength(),
@@ -210,13 +210,13 @@ public class BamWriter
         }
         else
         {
-            alignmentStart = assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.junction().Position;
+            alignmentStart = assembly.minAlignedPosition();
             cigarString = formSplitAssemblyCigar(assembly);
 
             if(linkedAssembly != null)
             {
                 mateCigar = formSplitAssemblyCigar(linkedAssembly);
-                mateAlignmentStart = linkedAssembly.isForwardJunction() ? linkedAssembly.minAlignedPosition() : linkedAssembly.junction().Position;
+                mateAlignmentStart = linkedAssembly.minAlignedPosition();
             }
         }
 
@@ -245,5 +245,10 @@ public class BamWriter
         record.setAttribute(DISC_READ_COUNT, discordantFragmentCount);
 
         return record;
+    }
+
+    private static int indelMinAlignedReadPosition(final JunctionAssembly assembly)
+    {
+        return assembly.support().stream().mapToInt(x -> x.alignmentStart()).min().orElse(0);
     }
 }

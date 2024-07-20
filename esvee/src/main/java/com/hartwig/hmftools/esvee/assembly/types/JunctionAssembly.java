@@ -6,26 +6,20 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
-import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getRefReadIndices;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
@@ -38,6 +32,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.alignment.AlignmentOutcome;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
@@ -49,9 +44,9 @@ public class JunctionAssembly
 
     private int mJunctionIndex; // position of the junction in the read bases
 
-    // aligned position on the extension side is an inferred position only
-    private int mMinAlignedPosition;
-    private int mMaxAlignedPosition;
+    // aligned position on the ref base side
+    private int mRefBasePosition;
+    private final List<RefBaseIndel> mRefBaseIndels;
 
     private final IndelCoords mIndelCoords;
 
@@ -88,20 +83,18 @@ public class JunctionAssembly
         mJunction = junction;
 
         // set initial bounds from the assembly support
-        int minAlignedPosition = 0;
-        int maxAlignedPosition = 0;
         Read maxJunctionBaseQualRead = null;
         int maxJunctionBaseQualTotal = 0;
 
         IndelCoords indelCoords = null;
+        mRefBasePosition = -1;
 
         // FIXME: consider moving this out of the constructor and set prior - removes logic and possible dependence on Read being cached
         for(SupportRead support : assemblySupport)
         {
             Read read = support.cachedRead();
 
-            maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
-            minAlignedPosition = minAlignedPosition == 0 ? read.alignmentStart() : min(minAlignedPosition, read.alignmentStart());
+            updateRefBasePosition(read);
 
             int junctionBaseQualTotal = readQualFromJunction(read, junction);
 
@@ -129,9 +122,8 @@ public class JunctionAssembly
         mBaseQuals = baseQualities;
 
         mJunctionIndex = junction.isForward() ? 0 : mBases.length - 1;
-        mMinAlignedPosition = minAlignedPosition;
-        mMaxAlignedPosition = maxAlignedPosition;
 
+        mRefBaseIndels = Lists.newArrayList();
         mSupport = Lists.newArrayList(assemblySupport);
         mCandidateSupport = Lists.newArrayList();
         mUnmappedCandidates = Lists.newArrayList();
@@ -147,6 +139,14 @@ public class JunctionAssembly
 
         mStats = new AssemblyStats();
         assemblySupport.forEach(x -> mStats.addRead(x, mJunction, x.cachedRead()));
+    }
+
+    private void updateRefBasePosition(final Read read)
+    {
+        if(mJunction.isForward())
+            mRefBasePosition = mRefBasePosition < 0 ? read.alignmentStart() : min(read.alignmentStart(), mRefBasePosition);
+        else
+            mRefBasePosition = max(read.alignmentEnd(), mRefBasePosition);
     }
 
     public void setId(int id) { mAssemblyId = id; }
@@ -172,11 +172,7 @@ public class JunctionAssembly
     // base count beyond the junction
     public int extensionLength() { return mJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
 
-    // purely for informational purposes at this stage - since past the junction is just the soft-clip length, and on the
-    // reference side doesn't take into account any INDELs
-    public int minAlignedPosition() { return mMinAlignedPosition; }
-    public int maxAlignedPosition() { return mMaxAlignedPosition; }
-    public int refBasePosition() { return mJunction.isForward() ? mMinAlignedPosition : mMaxAlignedPosition; }
+    public int refBasePosition() { return mRefBasePosition; }
     public int baseLength() { return mBases.length; }
 
     public byte[] bases() { return mBases; }
@@ -190,124 +186,597 @@ public class JunctionAssembly
 
     public AssemblyStats stats() { return mStats; }
 
-    public boolean checkAddJunctionRead(final Read read)
+    public int mismatchReadCount() { return mMismatchReadCount; }
+    public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
+
+    public void addRead(
+            final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type, @Nullable final SupportRead existingSupport)
     {
+        if(readAssemblyIndices == ReadAssemblyIndices.INVALID_INDICES)
+            return;
+
         int mismatchCount = 0;
-
-        int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
-
-        if(readJunctionIndex == INVALID_INDEX)
-            return false;
-
-        int[] readIndexRange = getReadIndexCoordinates(read, readJunctionIndex, false);
-        int assemblyIndex = getReadAssemblyStartIndex(readJunctionIndex, readIndexRange[SE_START], false);
-
-        if(assemblyIndex < 0)
-            return false;
-
         int highQualMatchCount = 0;
-        int checkedBaseCount = 0;
+        int assemblyIndex = readAssemblyIndices.AssemblyIndexStart;
 
-        for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
+        for(int i = readAssemblyIndices.ReadIndexStart; i <= readAssemblyIndices.ReadIndexEnd; ++i, ++assemblyIndex)
         {
             if(assemblyIndex < 0)
                 continue;
 
-            if(assemblyIndex >= mBases.length)
-                break;
-
-            byte qual = read.getBaseQuality()[i];
-            ++checkedBaseCount;
-
-            if(basesMatch(read.getBases()[i], mBases[assemblyIndex], qual, mBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
+            if(assemblyIndex >= mBases.length || i >= read.getBases().length)
             {
+                // can possibly happen with INDELs in the CIGAR or not now that aligned positions are used to establish read coordinates?
+                // SV_LOGGER.debug("i({}) readCoords({}) assembly({}) read({})", i, readCoords, toString(), read.toString());
+                break;
+            }
+
+            byte base = read.getBases()[i];
+            byte qual = read.getBaseQuality()[i];
+
+            if(mBases[assemblyIndex] == 0)
+            {
+                mBases[assemblyIndex] = base;
+                mBaseQuals[assemblyIndex] = qual;
+
                 if(qual >= LOW_BASE_QUAL_THRESHOLD)
                     ++highQualMatchCount;
             }
             else
             {
-                ++mismatchCount;
+                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD)
+                {
+                    if((int)qual > (int)mBaseQuals[assemblyIndex])
+                        mBaseQuals[assemblyIndex] = qual;
 
-                if(mismatchCount > PRIMARY_ASSEMBLY_READ_MAX_MISMATCH)
-                    break;
+                    if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                        ++highQualMatchCount;
+                }
+                else if(mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
+                {
+                    mBases[assemblyIndex] = base;
+                    mBaseQuals[assemblyIndex] = qual;
+                }
+                else
+                {
+                    ++mismatchCount;
+                }
             }
         }
 
-        int permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
-
-        if(mismatchCount > permittedMismatches)
+        if(existingSupport == null)
         {
-            // test again taking repeats into consideration
-            mismatchCount = calcReadSequenceMismatches(
-                    mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
+            addSupport(read, type, readAssemblyIndices.JunctionIndex, highQualMatchCount, mismatchCount, 0);
         }
-
-        if(mismatchCount > permittedMismatches)
-            return false;
-
-        addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
-        return true;
-    }
-
-    public int mismatchReadCount() { return mMismatchReadCount; }
-    public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
-
-    public void extendRefBasesWithJunctionRead(final Read read, final SupportRead existingSupport)
-    {
-        addRead(read, existingSupport.type(), existingSupport);
-    }
-
-    public void addDiscordantSupport(final SupportRead support) { addDiscordantSupport(support, -1); }
-
-    public void addDiscordantSupport(final SupportRead support, int permittedMismatches)
-    {
-        if(permittedMismatches >= 0)
+        else
         {
-            int mismatchCount = 0;
-            int assemblyIndex;
+            existingSupport.setReferenceMismatches(mismatchCount);
+        }
+    }
 
-            Read read = support.cachedRead();
+    public void addSupport(
+            final Read read, final SupportType type, int readJunctionIndex, int matches, int mismatches, int refMismatches)
+    {
+        boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
+        SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
+        SupportRead support = new SupportRead(read, adjustedType, readJunctionIndex, matches, mismatches);
+        support.setReferenceMismatches(refMismatches);
 
-            int[] readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
+        mSupport.add(support);
+        mStats.addRead(support, mJunction, read);
+    }
+
+    public void extendRefBases(int newRefBasePosition, final List<RefBaseIndel> refBaseIndels, final RefGenomeInterface refGenome)
+    {
+        // extend the number of ref bases to accommodate new ref base information from existing or new reads
+        byte[] existingBases = copyArray(mBases);
+        byte[] existingQuals = copyArray(mBaseQuals);
+
+        // TODO: factor in indels to base length and any ref genome bases
+        // int totalIndelLength = refBaseIndels.stream().mapToInt(x -> x.Length).sum();
+        int totalIndelLength = 0;
+
+        int refBaseExtension = abs(newRefBasePosition - mRefBasePosition) + totalIndelLength;
+
+        int newBaseLength = mBases.length + refBaseExtension;
+
+        int existingRefBasePosition = mRefBasePosition;
+
+        mRefBasePosition = newRefBasePosition;
+
+        boolean isForwardJunction = mJunction.isForward();
+
+        if(isForwardJunction)
+            mJunctionIndex += refBaseExtension;
+
+        int baseOffset = isForwardJunction ? refBaseExtension : 0;
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        byte[] refGenomeBases = null;
+
+        if(refGenome != null)
+        {
+            int refBaseStart, refBaseEnd;
 
             if(mJunction.isForward())
             {
-                assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
+                refBaseStart = newRefBasePosition;
+                refBaseEnd = existingRefBasePosition - 1;
             }
             else
             {
-                assemblyIndex = mJunctionIndex + read.unclippedStart() - mJunction.Position;
+                refBaseStart = existingRefBasePosition + 1;
+                refBaseEnd = newRefBasePosition;
             }
 
-            if(readIndexRange[SE_START] < 0)
-                return;
+            refGenomeBases = refGenome.getBases(mJunction.Chromosome, refBaseStart, refBaseEnd);
+        }
 
-            for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
+        // forward junction: 0 up to base offset - 1 -> set to zero or ref genome bases, base offset to new length -> copy bases
+        // reverse junction: 0 up to base offset - 1 -> copy bases, base offset to new length -> set to zero or ref genome bases
+
+        int refBaseIndex = 0;
+
+        for(int i = 0; i < newBaseLength; ++i)
+        {
+            if(isForwardJunction)
             {
-                if(assemblyIndex < 0)
-                    continue;
+                if(i < baseOffset)
+                {
+                    if(refGenomeBases != null && refBaseIndex < refGenomeBases.length)
+                        mBases[i] = refGenomeBases[refBaseIndex];
+                    else
+                        mBases[i] = 0;
 
-                if(assemblyIndex >= mBases.length || i >= read.getBases().length)
-                    break;
+                    ++refBaseIndex;
+                    mBaseQuals[i] = 0;
+                }
+                else
+                {
+                    mBases[i] = existingBases[i - baseOffset];
+                    mBaseQuals[i] = existingQuals[i - baseOffset];
+                }
+            }
+            else
+            {
+                if(i < existingBases.length)
+                {
+                    mBases[i] = existingBases[i];
+                    mBaseQuals[i] = existingQuals[i];
+                }
+                else
+                {
+                    if(refGenomeBases != null && refBaseIndex < refGenomeBases.length)
+                        mBases[i] = refGenomeBases[refBaseIndex];
+                    else
+                        mBases[i] = 0;
 
-                byte base = read.getBases()[i];
-                byte qual = read.getBaseQuality()[i];
+                    ++refBaseIndex;
+                    mBaseQuals[i] = 0;
+                }
+            }
+        }
+    }
 
-                if(mBases[assemblyIndex] == 0)
-                    continue;
+    public void expandExtensionBases(final byte[] extensionBases, final byte[] extensionBaseQuals, final List<SupportRead> supportReads)
+    {
+        // extend the same of ref bases to accomodate new ref base information from existing or new reads
 
-                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD || mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
-                    continue;
+        byte[] existingBases = copyArray(mBases);
+        byte[] existingQuals = copyArray(mBaseQuals);
 
-                ++mismatchCount;
+        int newExtensionLength = extensionBases.length - 1; // since the extension bases include the junction index
+        int baseLengthChange = newExtensionLength - extensionLength();
+        int existingBaseLength = mBases.length;
+        int newBaseLength = existingBaseLength + baseLengthChange;
 
-                if(mismatchCount >= permittedMismatches)
-                    return;
+        if(mJunction.isReverse())
+            mJunctionIndex += baseLengthChange;
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        int newExtBaseIndex = 0;
+        for(int i = 0; i < newBaseLength; ++i)
+        {
+            if(mJunction.isForward())
+            {
+                if(i < existingBaseLength)
+                {
+                    mBases[i] = existingBases[i];
+                    mBaseQuals[i] = existingQuals[i];
+                }
+                else
+                {
+                    mBases[i] = extensionBases[newExtBaseIndex];
+                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
+                    ++newExtBaseIndex;
+                }
+            }
+            else
+            {
+                if(i < baseLengthChange)
+                {
+                    mBases[i] = extensionBases[newExtBaseIndex];
+                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
+                    ++newExtBaseIndex;
+                }
+                else
+                {
+                    mBases[i] = existingBases[i - baseLengthChange];
+                    mBaseQuals[i] = existingQuals[i - baseLengthChange];
+                }
             }
         }
 
-        addRead(support.cachedRead(), DISCORDANT, null);
+        for(SupportRead support : supportReads)
+        {
+            mSupport.add(support);
+            mStats.addRead(support, mJunction, support.cachedRead());
+        }
     }
+
+    public void removeSupportReads(final Set<String> readIds)
+    {
+        int index = 0;
+
+        while(index < mSupport.size())
+        {
+            if(readIds.contains(mSupport.get(index).id()))
+                mSupport.remove(index);
+            else
+                ++index;
+        }
+    }
+
+    public void trimRefBases(int newRefPosition)
+    {
+        // trims to the specified ref position, and assumes no indels are included
+        byte[] existingBases = copyArray(mBases);
+        byte[] existingQuals = copyArray(mBaseQuals);
+
+        int existingRefPosition = refBasePosition();
+
+        int newBaseLength = mBases.length - abs(existingRefPosition - newRefPosition);
+        int baseLengthChange = mBases.length - newBaseLength;
+
+        if(mJunction.isForward())
+            mJunctionIndex -= baseLengthChange;
+
+        mRefBasePosition = newRefPosition;
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        int baseOffset = mJunction.isForward() ? baseLengthChange : 0;
+
+        for(int i = 0; i < newBaseLength; ++i)
+        {
+            mBases[i] = existingBases[i + baseOffset];
+            mBaseQuals[i] = existingQuals[i + baseOffset];
+        }
+
+        buildRepeatInfo();
+    }
+
+    public boolean hasReadSupport(final Read read)
+    {
+        return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
+    }
+
+    public void clearSupportCachedRead() { mSupport.forEach(x -> x.clearCachedRead()); }
+
+    // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
+    // at least for +ve orientation assemblies
+    public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
+
+    public void buildRepeatInfo()
+    {
+        mRepeatInfo.clear();
+        List<RepeatInfo> repeats = findRepeats(mBases);
+        if(repeats != null)
+        {
+            mRepeatInfo.addAll(repeats);
+            mRefBasesRepeatedTrimmed = RepeatInfo.buildTrimmedRefBaseSequence(this, MIN_VARIANT_LENGTH);
+        }
+        else
+        {
+            mRefBasesRepeatedTrimmed = formRefBaseSequence(MIN_VARIANT_LENGTH);
+        }
+
+        mRefBaseTrimLength = calcTrimmedRefBaseLength(this);
+    }
+
+    public String refBasesRepeatedTrimmed() { return mRefBasesRepeatedTrimmed; }
+    public int refBaseTrimLength() { return mRefBaseTrimLength; }
+
+    public List<RefSideSoftClip> refSideSoftClips() { return mRefSideSoftClips; }
+
+    public boolean checkAddRefSideSoftClip(final Read read)
+    {
+        return RefSideSoftClip.checkAddRefSideSoftClip(mRefSideSoftClips, mJunction, read);
+    }
+
+    public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
+    public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
+
+    public PhaseGroup phaseGroup() { return mPhaseGroup; }
+    public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
+
+    public PhaseSet phaseSet()
+    {
+        // can only be a part of one and could add a reference but for now is retrieved
+        return mPhaseGroup != null ? mPhaseGroup.findPhaseSet(this) : null;
+    }
+
+    public AssemblyOutcome outcome() { return mOutcome; }
+
+    public void setOutcome(final AssemblyOutcome outcome)
+    {
+        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_INDEL) // persist classification for now
+            mOutcome = outcome;
+    }
+
+    public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }
+    public void setAlignmentOutcome(final AlignmentOutcome outcome) { mAlignmentOutcome = outcome; }
+
+    public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
+    public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
+
+    public void setReadIndices()
+    {
+        for(SupportRead read : mSupport)
+        {
+            if(read.type().isSplitSupport() || read.type() == EXTENSION)
+            {
+                // say assembly junc index = 100, junction index in read = 70, then read's start index in assembly is 100 - 70 = 30
+                // for an extension read (where the junction position isn't in the read)
+                int assemblyIndex = mJunctionIndex - read.junctionReadIndex();
+                read.setJunctionAssemblyIndex(assemblyIndex);
+            }
+            else
+            {
+                // TODO: use read junction offset instead of calculating from scratch
+
+                // set based on the relative positions
+                if(isForwardJunction())
+                {
+                    int assemblyIndex = read.unclippedStart() - mRefBasePosition;
+                    read.setJunctionAssemblyIndex(assemblyIndex);
+                }
+                else
+                {
+                    int junctionOffset = read.unclippedStart() - mJunction.Position;
+                    int assemblyIndex = mJunctionIndex + junctionOffset;
+                    read.setJunctionAssemblyIndex(assemblyIndex);
+                }
+            }
+        }
+    }
+
+    public JunctionAssembly(
+            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
+            final List<SupportRead> initialSupport)
+    {
+        // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
+        mJunction = initialAssembly.junction();
+
+        // copy the initial assembly's extension bases and ref bases up to the ref-side soft clip
+        int extensionLength = initialAssembly.extensionLength();
+        int newBaseLength = extensionLength + refBaseLength;
+        int initialBaseLength = initialAssembly.baseLength();
+        int baseLengthDiff = initialBaseLength - newBaseLength;
+
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
+
+        int assemblyIndexOffset = 0;
+
+        if(mJunction.isForward())
+        {
+            assemblyIndexOffset = baseLengthDiff;
+            mJunctionIndex = newBaseLength - extensionLength - 1;
+        }
+        else
+        {
+            mJunctionIndex = initialAssembly.junctionIndex();
+        }
+
+        mRefBasePosition = refSideSoftClip.Position;
+
+        int assemblyIndex = assemblyIndexOffset;
+        for(int i = 0; i < mBases.length; ++i, ++assemblyIndex)
+        {
+            if(assemblyIndex < 0)
+            {
+                mBases[i] = 0;
+                mBaseQuals[i] = 0;
+            }
+            else
+            {
+                if(assemblyIndex >= initialAssembly.bases().length)
+                    break;
+
+                mBases[i] = initialAssembly.bases()[assemblyIndex];
+                mBaseQuals[i] = initialAssembly.baseQuals()[assemblyIndex];
+            }
+        }
+
+        mSupport = Lists.newArrayList();
+        mCandidateSupport = Lists.newArrayList();
+        mUnmappedCandidates = Lists.newArrayList();
+
+        mRepeatInfo = Lists.newArrayList();
+        mRefBaseIndels = Lists.newArrayList();
+        mRefBasesRepeatedTrimmed = "";
+        mRefBaseTrimLength = 0;
+        mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
+        mRemoteRegions = Lists.newArrayList();
+        mMergedAssemblies = 0;
+        mMismatchReadCount = 0;
+        mPhaseGroup = null;
+
+        mStats = new AssemblyStats();
+
+        SupportRead initialRead = null;
+
+        for(SupportRead support : initialSupport)
+        {
+            mSupport.add(support);
+
+            mStats.addRead(support, mJunction, null);
+
+            if(support.id().equals(initialAssembly.initialReadId()))
+                initialRead = support;
+        }
+
+        mInitialReadId = initialRead != null ? initialRead.id() : (!mSupport.isEmpty() ? mSupport.get(0).id() : "");
+        mIndelCoords = initialAssembly.indelCoords();
+        mOutcome = UNSET;
+        mAlignmentOutcome = NO_SET;
+    }
+
+    public void addCandidateSupport(final Read read, final SupportType type)
+    {
+        mCandidateSupport.add(new SupportRead(read, type, 0, 0, 0));
+        ++mStats.CandidateSupportCount;
+    }
+
+    public List<SupportRead> candidateSupport() { return mCandidateSupport; }
+    public void clearCandidateSupport() { mCandidateSupport.clear(); }
+
+    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
+    public List<Read> unmappedReads() { return mUnmappedCandidates; }
+
+    public String toString()
+    {
+        return format("junc(%s) coords(extLen=%d refLen=%d refBasePos=%d len=%d juncIndex=%d) support(%d) mismatches(%d)",
+                mJunction.coords(), extensionLength(), refBaseLength(), refBasePosition(), baseLength(), mJunctionIndex,
+                mSupport.size(), mMismatchReadCount);
+    }
+
+    public String formFullSequence() { return formJunctionSequence(refBaseLength()); }
+
+    public String formJunctionSequence()
+    {
+        return formJunctionSequence(0);
+    }
+
+    public String formJunctionSequence(final int includeRefBaseCount)
+    {
+        int seqIndexStart;
+        int seqIndexEnd;
+
+        if(mJunction.isForward())
+        {
+            seqIndexStart = max(0, mJunctionIndex + 1 - includeRefBaseCount);
+            seqIndexEnd = mBases.length - 1;
+        }
+        else
+        {
+            seqIndexStart = 0;
+            seqIndexEnd = min(mJunctionIndex - 1 + includeRefBaseCount, mBases.length - 1);
+        }
+
+        return formSequence(seqIndexStart, seqIndexEnd);
+    }
+
+    public String formRefBaseSequence() { return formRefBaseSequence(-1); }
+
+    public String formRefBaseSequence(int maxRefBaseCount)
+    {
+        int seqIndexStart;
+        int seqIndexEnd;
+
+        if(mJunction.isForward())
+        {
+            seqIndexEnd = mJunctionIndex;
+
+            if(maxRefBaseCount > 0)
+                seqIndexStart = seqIndexEnd - maxRefBaseCount + 1;
+            else
+                seqIndexStart = 0;
+        }
+        else
+        {
+            seqIndexStart = mJunctionIndex;
+
+            if(maxRefBaseCount > 0)
+                seqIndexEnd = seqIndexStart + maxRefBaseCount - 1;
+            else
+                seqIndexEnd = mBases.length - 1;
+        }
+
+        return formSequence(seqIndexStart, seqIndexEnd);
+    }
+
+    public String formSequence(int seqIndexStart, int seqIndexEnd)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        for(int index = max(seqIndexStart, 0); index <= min(seqIndexEnd, mBases.length - 1); ++index)
+        {
+            sb.append((char)mBases[index]);
+        }
+
+        return sb.toString();
+    }
+
+    // convenience
+    public int minAlignedPosition() { return mJunction.isForward() ? refBasePosition() : mJunction.Position; }
+    public int maxAlignedPosition() { return mJunction.isReverse() ? refBasePosition() : mJunction.Position; }
+
+    @VisibleForTesting
+    public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
+    {
+        mJunction = junction;
+        mInitialReadId = null;
+
+        mJunctionIndex = junctionIndex;
+
+        // pos = 20, index = 10, length = 21, min align = 10, max align = 30
+
+        if(mJunction.isForward())
+        {
+            mRefBasePosition = mJunction.Position - junctionIndex;
+        }
+        else
+        {
+            mRefBasePosition = mJunction.Position + (bases.length - junctionIndex) - 1;
+        }
+
+        mBases = copyArray(bases);
+        mBaseQuals = copyArray(quals);
+        mSupport = Lists.newArrayList();
+        mCandidateSupport = Lists.newArrayList();
+        mUnmappedCandidates = Lists.newArrayList();
+        mRepeatInfo = Lists.newArrayList();
+        mRefBasesRepeatedTrimmed = "";
+        mRefBaseTrimLength = 0;
+        mRemoteRegions = Lists.newArrayList();
+        mRefSideSoftClips = Lists.newArrayList();
+        mRefBaseIndels = Lists.newArrayList();
+        mMergedAssemblies = 0;
+        mOutcome = UNSET;
+        mAlignmentOutcome = NO_SET;
+        mMismatchReadCount = 0;
+        mStats = new AssemblyStats();
+        mIndelCoords = null;
+    }
+
+    @VisibleForTesting
+    public void addJunctionRead(final Read read)
+    {
+        int junctionReadIndex = mJunction.Position - read.unclippedStart();
+
+        SupportRead support = new SupportRead(read, JUNCTION, junctionReadIndex, read.basesLength(), 0);
+        mSupport.add(support);
+        mStats.addRead(support, mJunction, read);
+    }
+
+    /* TODO: remove
 
     private void addRead(final Read read, final SupportType type, @Nullable final SupportRead existingSupport)
     {
@@ -411,160 +880,6 @@ public class JunctionAssembly
         }
     }
 
-    private void addSupport(
-            final Read read, final SupportType type, int readJunctionIndex, int matches, int mismatches, int refMismatches)
-    {
-        boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
-        SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
-        SupportRead support = new SupportRead(read, adjustedType, readJunctionIndex, matches, mismatches);
-        support.setReferenceMismatches(refMismatches);
-
-        mSupport.add(support);
-        mStats.addRead(support, mJunction, read);
-    }
-
-    public void setReadIndices()
-    {
-        for(SupportRead read : mSupport)
-        {
-            if(read.type().isSplitSupport() || read.type() == EXTENSION)
-            {
-                // say assembly junc index = 100, junction index in read = 70, then read's start index in assembly is 100 - 70 = 30
-                // for an extension read (where the junction position isn't in the read)
-                int assemblyIndex = mJunctionIndex - read.junctionReadIndex();
-                read.setJunctionAssemblyIndex(assemblyIndex);
-            }
-            else
-            {
-                // set based on the relative positions
-                if(isForwardJunction())
-                {
-                    int assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
-                    read.setJunctionAssemblyIndex(assemblyIndex);
-                }
-                else
-                {
-                    int junctionOffset = read.unclippedStart() - mJunction.Position;
-                    int assemblyIndex = mJunctionIndex + junctionOffset;
-                    read.setJunctionAssemblyIndex(assemblyIndex);
-                }
-            }
-        }
-    }
-
-    public void extendRefBases(
-            int refBaseExtensionDistance, int newMinAlignedPosition, int newMaxAlignedPosition, final RefBaseAssembly refBaseAssembly)
-    {
-        // extend the same of ref bases to accommodate new ref base information from existing or new reads
-
-        byte[] existingBases = copyArray(mBases);
-        byte[] existingQuals = copyArray(mBaseQuals);
-
-        int newBaseLength = mBases.length + refBaseExtensionDistance;
-
-        boolean isForwardJunction = mJunction.isForward();
-
-        if(isForwardJunction)
-            mJunctionIndex += refBaseExtensionDistance;
-
-        int baseOffset = isForwardJunction ? refBaseExtensionDistance : 0;
-
-        int refBaseOffset = 0;
-
-        if(refBaseAssembly != null && isForwardJunction)
-        {
-            // skip over bases which weren't supported by reads
-            refBaseOffset = refBaseAssembly.baseLength() - refBaseAssembly.validRefBaseLength();
-        }
-        else
-        {
-            refBaseOffset = extensionLength();
-        }
-
-        mBases = new byte[newBaseLength];
-        mBaseQuals = new byte[newBaseLength];
-
-        mMinAlignedPosition = newMinAlignedPosition;
-        mMaxAlignedPosition = newMaxAlignedPosition;
-
-        // forward junction: 0 up to base offset - 1 -> set to zero, base offset to new length -> copy bases
-        // reverse junction: 0 up to base offset - 1 -> copy bases, base offset to new length -> set to zero
-
-        for(int i = 0; i < newBaseLength; ++i)
-        {
-            if(isForwardJunction)
-            {
-                if(i < baseOffset)
-                {
-                    int refBaseIndex = i + refBaseOffset;
-                    if(refBaseAssembly != null && refBaseIndex < refBaseAssembly.bases().length)
-                        mBases[i] = refBaseAssembly.bases()[refBaseIndex];
-                    else
-                        mBases[i] = 0;
-
-                    mBaseQuals[i] = 0;
-                }
-                else
-                {
-                    mBases[i] = existingBases[i - baseOffset];
-                    mBaseQuals[i] = existingQuals[i - baseOffset];
-                }
-            }
-            else
-            {
-                if(i < existingBases.length)
-                {
-                    mBases[i] = existingBases[i];
-                    mBaseQuals[i] = existingQuals[i];
-                }
-                else
-                {
-                    int refBaseIndex = i - refBaseOffset;
-                    if(refBaseAssembly != null && refBaseIndex < refBaseAssembly.bases().length)
-                        mBases[i] = refBaseAssembly.bases()[refBaseIndex];
-                    else
-                        mBases[i] = 0;
-
-                    mBaseQuals[i] = 0;
-                }
-            }
-        }
-    }
-
-    public void mergeRefBaseAssembly(final RefBaseAssembly refBaseAssembly, int existingRefBaseLength, final String context)
-    {
-        // find the longest length of aligned reference bases extending back from the junction
-        int newRefBaseCount = refBaseAssembly.validRefBaseLength();
-
-        if(newRefBaseCount > existingRefBaseLength)
-        {
-            if(isForwardJunction())
-                mMinAlignedPosition = refBaseAssembly.minAlignedPosition();
-            else
-                mMaxAlignedPosition = refBaseAssembly.maxAlignedPosition();
-
-            int refBaseExtension = newRefBaseCount - existingRefBaseLength;
-
-            extendRefBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
-        }
-
-        for(SupportRead support : refBaseAssembly.support())
-        {
-            addSupport(support.cachedRead(), support.type(), INVALID_INDEX, 0, 0, support.mismatchCount());
-
-            // once added, clear the cached data read
-            support.clearCachedRead();
-        }
-
-        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
-
-        if(!emptyBaseRanges.isEmpty())
-        {
-            SV_LOGGER.debug("assembly({}) context({}) refBases(existing={} new={}) empty ranges: {}",
-                    toString(), context, existingRefBaseLength, newRefBaseCount, emptyBaseRanges);
-        }
-    }
-
     private int[] getReadIndexCoordinates(final Read read, final int readJunctionIndex, boolean byReferenceBases)
     {
         // using the position of the junction within the read coordinates, gets the read index range either from the junction into
@@ -619,391 +934,98 @@ public class JunctionAssembly
         }
     }
 
-    public void expandExtensionBases(final byte[] extensionBases, final byte[] extensionBaseQuals, final List<SupportRead> supportReads)
+    public void mergeRefBaseAssembly()
     {
-        // extend the same of ref bases to accomodate new ref base information from existing or new reads
+        if(mRefBaseAssembly == null || mRefBaseAssembly.supportCount() == 0)
+            return;
 
-        byte[] existingBases = copyArray(mBases);
-        byte[] existingQuals = copyArray(mBaseQuals);
+        int existingRefBaseLength = refBaseLength();
 
-        int newExtensionLength = extensionBases.length - 1; // since the extension bases include the junction index
-        int baseLengthChange = newExtensionLength - extensionLength();
-        int existingBaseLength = mBases.length;
-        int newBaseLength = existingBaseLength + baseLengthChange;
+        // find the longest length of aligned reference bases extending back from the junction
+        int newRefBaseCount = mRefBaseAssembly.validRefBaseLength();
 
-        if(mJunction.isReverse())
-            mJunctionIndex += baseLengthChange;
-
-        mBases = new byte[newBaseLength];
-        mBaseQuals = new byte[newBaseLength];
-
-        int newExtBaseIndex = 0;
-        for(int i = 0; i < newBaseLength; ++i)
+        if(newRefBaseCount > existingRefBaseLength)
         {
+            if(isForwardJunction())
+                mMinAlignedPosition = mRefBaseAssembly.minAlignedPosition();
+            else
+                mMaxAlignedPosition = mRefBaseAssembly.maxAlignedPosition();
+
+            int refBaseExtension = newRefBaseCount - existingRefBaseLength;
+
+            extendRefBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, mRefBaseAssembly);
+
+            // rebuild since ref bases have changed
+            buildRepeatInfo();
+        }
+
+        for(SupportRead support : mRefBaseAssembly.support())
+        {
+            addSupport(support.cachedRead(), support.type(), INVALID_INDEX, 0, 0, support.mismatchCount());
+
+            // once added, clear the cached data read
+            support.clearCachedRead();
+        }
+
+        // SV_LOGGER.debug("assembly({}) post-support ref bases: {}", toString(), formRefBaseSequence());
+
+        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
+
+        if(!emptyBaseRanges.isEmpty())
+        {
+            SV_LOGGER.debug("assembly({}) refBases(existing={} new={}) empty ranges: {}",
+                    toString(), existingRefBaseLength, newRefBaseCount, emptyBaseRanges);
+        }
+    }
+
+    public void addDiscordantSupport(final SupportRead support, int permittedMismatches)
+    {
+        if(permittedMismatches >= 0)
+        {
+            int mismatchCount = 0;
+            int assemblyIndex;
+
+            Read read = support.cachedRead();
+
+            int[] readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
+
             if(mJunction.isForward())
             {
-                if(i < existingBaseLength)
-                {
-                    mBases[i] = existingBases[i];
-                    mBaseQuals[i] = existingQuals[i];
-                }
-                else
-                {
-                    mBases[i] = extensionBases[newExtBaseIndex];
-                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
-                    ++newExtBaseIndex;
-                }
+                assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
             }
             else
             {
-                if(i < baseLengthChange)
-                {
-                    mBases[i] = extensionBases[newExtBaseIndex];
-                    mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
-                    ++newExtBaseIndex;
-                }
-                else
-                {
-                    mBases[i] = existingBases[i - baseLengthChange];
-                    mBaseQuals[i] = existingQuals[i - baseLengthChange];
-                }
+                assemblyIndex = mJunctionIndex + read.unclippedStart() - mJunction.Position;
             }
-        }
 
-        for(SupportRead support : supportReads)
-        {
-            mSupport.add(support);
-            mStats.addRead(support, mJunction, support.cachedRead());
-        }
-    }
+            if(readIndexRange[SE_START] < 0)
+                return;
 
-    public void removeSupportReads(final Set<String> readIds)
-    {
-        int index = 0;
-
-        while(index < mSupport.size())
-        {
-            if(readIds.contains(mSupport.get(index).id()))
-                mSupport.remove(index);
-            else
-                ++index;
-        }
-    }
-
-    public void trimRefBases(int newRefPosition)
-    {
-        byte[] existingBases = copyArray(mBases);
-        byte[] existingQuals = copyArray(mBaseQuals);
-
-        int existingRefPosition = refBasePosition();
-
-        int newBaseLength = mBases.length - abs(existingRefPosition - newRefPosition);
-        int baseLengthChange = mBases.length - newBaseLength;
-
-        if(mJunction.isForward())
-        {
-            mMinAlignedPosition = newRefPosition;
-            mJunctionIndex -= baseLengthChange;
-        }
-        else
-        {
-            mMaxAlignedPosition = newRefPosition;
-        }
-
-        mBases = new byte[newBaseLength];
-        mBaseQuals = new byte[newBaseLength];
-
-        int baseOffset = mJunction.isForward() ? baseLengthChange : 0;
-
-        for(int i = 0; i < newBaseLength; ++i)
-        {
-            mBases[i] = existingBases[i + baseOffset];
-            mBaseQuals[i] = existingQuals[i + baseOffset];
-        }
-    }
-
-    public boolean hasReadSupport(final Read read)
-    {
-        return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
-    }
-
-    public void clearSupportCachedRead() { mSupport.forEach(x -> x.clearCachedRead()); }
-
-    // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
-    // at least for +ve orientation assemblies
-    public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
-
-    public void buildRepeatInfo()
-    {
-        mRepeatInfo.clear();
-        List<RepeatInfo> repeats = findRepeats(mBases);
-        if(repeats != null)
-        {
-            mRepeatInfo.addAll(repeats);
-            mRefBasesRepeatedTrimmed = RepeatInfo.buildTrimmedRefBaseSequence(this, MIN_VARIANT_LENGTH);
-        }
-        else
-        {
-            mRefBasesRepeatedTrimmed = formRefBaseSequence(MIN_VARIANT_LENGTH);
-        }
-
-        mRefBaseTrimLength = calcTrimmedRefBaseLength(this);
-    }
-
-    public String refBasesRepeatedTrimmed() { return mRefBasesRepeatedTrimmed; }
-    public int refBaseTrimLength() { return mRefBaseTrimLength; }
-
-    public List<RefSideSoftClip> refSideSoftClips() { return mRefSideSoftClips; }
-
-    public boolean checkAddRefSideSoftClip(final Read read)
-    {
-        return RefSideSoftClip.checkAddRefSideSoftClip(mRefSideSoftClips, mJunction, read);
-    }
-
-    public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
-    public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
-
-    public PhaseGroup phaseGroup() { return mPhaseGroup; }
-    public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
-
-    public PhaseSet phaseSet()
-    {
-        // can only be a part of one and could add a reference but for now is retrieved
-        return mPhaseGroup != null ? mPhaseGroup.findPhaseSet(this) : null;
-    }
-
-    public AssemblyOutcome outcome() { return mOutcome; }
-
-    public void setOutcome(final AssemblyOutcome outcome)
-    {
-        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_INDEL) // persist classification for now
-            mOutcome = outcome;
-    }
-
-    public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }
-    public void setAlignmentOutcome(final AlignmentOutcome outcome) { mAlignmentOutcome = outcome; }
-
-    public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
-    public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
-
-    public JunctionAssembly(
-            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
-            final List<SupportRead> initialSupport, final Set<String> excludedReadIds)
-    {
-        // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
-        mJunction = initialAssembly.junction();
-
-        // copy the initial assembly's extension bases and ref bases up to the ref-side soft clip
-        int extensionLength = initialAssembly.extensionLength();
-        int newBaseLength = extensionLength + refBaseLength;
-        int initialBaseLength = initialAssembly.baseLength();
-        int baseLengthDiff = initialBaseLength - newBaseLength;
-
-        mBases = new byte[newBaseLength];
-        mBaseQuals = new byte[newBaseLength];
-
-        int assemblyIndexOffset = 0;
-
-        if(mJunction.isForward())
-        {
-            assemblyIndexOffset = baseLengthDiff;
-            mJunctionIndex = newBaseLength - extensionLength - 1;
-            mMinAlignedPosition = refSideSoftClip.Position;
-            mMaxAlignedPosition = initialAssembly.maxAlignedPosition();
-        }
-        else
-        {
-            mJunctionIndex = initialAssembly.junctionIndex();
-            mMinAlignedPosition = initialAssembly.minAlignedPosition();
-            mMaxAlignedPosition = refSideSoftClip.Position;
-        }
-
-        int assemblyIndex = assemblyIndexOffset;
-        for(int i = 0; i < mBases.length; ++i, ++assemblyIndex)
-        {
-            if(assemblyIndex < 0)
+            for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
             {
-                mBases[i] = 0;
-                mBaseQuals[i] = 0;
-            }
-            else
-            {
-                if(assemblyIndex >= initialAssembly.bases().length)
+                if(assemblyIndex < 0)
+                    continue;
+
+                if(assemblyIndex >= mBases.length || i >= read.getBases().length)
                     break;
 
-                mBases[i] = initialAssembly.bases()[assemblyIndex];
-                mBaseQuals[i] = initialAssembly.baseQuals()[assemblyIndex];
+                byte base = read.getBases()[i];
+                byte qual = read.getBaseQuality()[i];
+
+                if(mBases[assemblyIndex] == 0)
+                    continue;
+
+                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD || mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
+                    continue;
+
+                ++mismatchCount;
+
+                if(mismatchCount >= permittedMismatches)
+                    return;
             }
         }
 
-        mSupport = Lists.newArrayList();
-        mCandidateSupport = Lists.newArrayList();
-        mUnmappedCandidates = Lists.newArrayList();
-
-        mRepeatInfo = Lists.newArrayList();
-        mRefBasesRepeatedTrimmed = "";
-        mRefBaseTrimLength = 0;
-        mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
-        mRemoteRegions = Lists.newArrayList();
-        mMergedAssemblies = 0;
-        mMismatchReadCount = 0;
-        mPhaseGroup = null;
-
-        mStats = new AssemblyStats();
-
-        SupportRead initialRead = null;
-
-        for(SupportRead support : initialSupport)
-        {
-            if(excludedReadIds.contains(support.id()))
-                continue;
-
-            mSupport.add(support);
-
-            mStats.addRead(support, mJunction, null);
-
-            if(support.id().equals(initialAssembly.initialReadId()))
-                initialRead = support;
-        }
-
-        mInitialReadId = initialRead != null ? initialRead.id() : (!mSupport.isEmpty() ? mSupport.get(0).id() : "");
-        mIndelCoords = initialAssembly.indelCoords();
-        mOutcome = UNSET;
-        mAlignmentOutcome = NO_SET;
+        addRead(support.cachedRead(), DISCORDANT, null);
     }
-
-    public void addCandidateSupport(final Read read, final SupportType type)
-    {
-        mCandidateSupport.add(new SupportRead(read, type, 0, 0, 0));
-        ++mStats.CandidateSupportCount;
-    }
-
-    public List<SupportRead> candidateSupport() { return mCandidateSupport; }
-    public void clearCandidateSupport() { mCandidateSupport.clear(); }
-
-    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
-    public List<Read> unmappedReads() { return mUnmappedCandidates; }
-
-    public String toString()
-    {
-        return format("junc(%s) coords(extLen=%d refLen=%d refBasePos=%d len=%d juncIndex=%d) support(%d) mismatches(%d)",
-                mJunction.coords(), extensionLength(), refBaseLength(), refBasePosition(), baseLength(), mJunctionIndex,
-                mSupport.size(), mMismatchReadCount);
-    }
-
-    public String formFullSequence() { return formJunctionSequence(refBaseLength()); }
-
-    public String formJunctionSequence()
-    {
-        return formJunctionSequence(0);
-    }
-
-    public String formJunctionSequence(final int includeRefBaseCount)
-    {
-        int seqIndexStart;
-        int seqIndexEnd;
-
-        if(mJunction.isForward())
-        {
-            seqIndexStart = max(0, mJunctionIndex + 1 - includeRefBaseCount);
-            seqIndexEnd = mBases.length - 1;
-        }
-        else
-        {
-            seqIndexStart = 0;
-            seqIndexEnd = min(mJunctionIndex - 1 + includeRefBaseCount, mBases.length - 1);
-        }
-
-        return formSequence(seqIndexStart, seqIndexEnd);
-    }
-
-    public String formRefBaseSequence() { return formRefBaseSequence(-1); }
-
-    public String formRefBaseSequence(int maxRefBaseCount)
-    {
-        int seqIndexStart;
-        int seqIndexEnd;
-
-        if(mJunction.isForward())
-        {
-            seqIndexEnd = mJunctionIndex;
-
-            if(maxRefBaseCount > 0)
-                seqIndexStart = seqIndexEnd - maxRefBaseCount + 1;
-            else
-                seqIndexStart = 0;
-        }
-        else
-        {
-            seqIndexStart = mJunctionIndex;
-
-            if(maxRefBaseCount > 0)
-                seqIndexEnd = seqIndexStart + maxRefBaseCount - 1;
-            else
-                seqIndexEnd = mBases.length - 1;
-        }
-
-        return formSequence(seqIndexStart, seqIndexEnd);
-    }
-
-    public String formSequence(int seqIndexStart, int seqIndexEnd)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        for(int index = max(seqIndexStart, 0); index <= min(seqIndexEnd, mBases.length - 1); ++index)
-        {
-            sb.append((char)mBases[index]);
-        }
-
-        return sb.toString();
-    }
-
-    @VisibleForTesting
-    public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
-    {
-        mJunction = junction;
-        mInitialReadId = null;
-
-        mJunctionIndex = junctionIndex;
-
-        // pos = 20, index = 10, length = 21, min align = 10, max align = 30
-
-        if(mJunction.isForward())
-        {
-            mMinAlignedPosition = mJunction.Position - junctionIndex;
-            mMaxAlignedPosition = mJunction.Position + (bases.length - junctionIndex) - 1;
-        }
-        else
-        {
-            mMinAlignedPosition = mJunction.Position - junctionIndex;
-            mMaxAlignedPosition = mJunction.Position + (bases.length - junctionIndex) - 1;
-        }
-
-        mBases = copyArray(bases);
-        mBaseQuals = copyArray(quals);
-        mSupport = Lists.newArrayList();
-        mCandidateSupport = Lists.newArrayList();
-        mUnmappedCandidates = Lists.newArrayList();
-        mRepeatInfo = Lists.newArrayList();
-        mRefBasesRepeatedTrimmed = "";
-        mRefBaseTrimLength = 0;
-        mRemoteRegions = Lists.newArrayList();
-        mRefSideSoftClips = Lists.newArrayList();
-        mMergedAssemblies = 0;
-        mOutcome = UNSET;
-        mAlignmentOutcome = NO_SET;
-        mMismatchReadCount = 0;
-        mStats = new AssemblyStats();
-        mIndelCoords = null;
-    }
-
-    @VisibleForTesting
-    public void addJunctionRead(final Read read)
-    {
-        int junctionReadIndex = mJunction.Position - read.unclippedStart();
-
-        SupportRead support = new SupportRead(read, JUNCTION, junctionReadIndex, read.basesLength(), 0);
-        mSupport.add(support);
-        mStats.addRead(support, mJunction, read);
-    }
+    */
 }
