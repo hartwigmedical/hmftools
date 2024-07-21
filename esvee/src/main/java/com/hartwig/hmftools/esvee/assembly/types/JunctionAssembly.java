@@ -54,7 +54,7 @@ public class JunctionAssembly
     private byte mBaseQuals[];
 
     private final List<SupportRead> mSupport;
-    private final List<SupportRead> mCandidateSupport;
+    private final List<Read> mCandidateSupport;
     private final List<Read> mUnmappedCandidates;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
@@ -87,14 +87,11 @@ public class JunctionAssembly
         int maxJunctionBaseQualTotal = 0;
 
         IndelCoords indelCoords = null;
-        mRefBasePosition = -1;
+        mRefBasePosition = junction.Position; // initialised to the same prior to extending ref bases
 
-        // FIXME: consider moving this out of the constructor and set prior - removes logic and possible dependence on Read being cached
         for(SupportRead support : assemblySupport)
         {
             Read read = support.cachedRead();
-
-            updateRefBasePosition(read);
 
             int junctionBaseQualTotal = readQualFromJunction(read, junction);
 
@@ -139,14 +136,6 @@ public class JunctionAssembly
 
         mStats = new AssemblyStats();
         assemblySupport.forEach(x -> mStats.addRead(x, mJunction, x.cachedRead()));
-    }
-
-    private void updateRefBasePosition(final Read read)
-    {
-        if(mJunction.isForward())
-            mRefBasePosition = mRefBasePosition < 0 ? read.alignmentStart() : min(read.alignmentStart(), mRefBasePosition);
-        else
-            mRefBasePosition = max(read.alignmentEnd(), mRefBasePosition);
     }
 
     public void setId(int id) { mAssemblyId = id; }
@@ -638,13 +627,13 @@ public class JunctionAssembly
         mAlignmentOutcome = NO_SET;
     }
 
-    public void addCandidateSupport(final Read read, final SupportType type)
+    public void addCandidateSupport(final Read read)
     {
-        mCandidateSupport.add(new SupportRead(read, type, 0, 0, 0));
+        mCandidateSupport.add(read);
         ++mStats.CandidateSupportCount;
     }
 
-    public List<SupportRead> candidateSupport() { return mCandidateSupport; }
+    public List<Read> candidateSupport() { return mCandidateSupport; }
     public void clearCandidateSupport() { mCandidateSupport.clear(); }
 
     public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
@@ -775,257 +764,4 @@ public class JunctionAssembly
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
     }
-
-    /* TODO: remove
-
-    private void addRead(final Read read, final SupportType type, @Nullable final SupportRead existingSupport)
-    {
-        int mismatchCount = 0;
-        int highQualMatchCount = 0;
-        int readJunctionIndex;
-        int[] readIndexRange;
-        int assemblyIndex;
-
-        boolean byReference = existingSupport != null;
-
-        if(type.isSplitSupport())
-        {
-            if(existingSupport == null)
-            {
-                readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
-
-                if(readJunctionIndex == INVALID_INDEX)
-                    return;
-            }
-            else
-            {
-                readJunctionIndex = existingSupport.junctionReadIndex();
-            }
-
-            readIndexRange = getReadIndexCoordinates(read, readJunctionIndex, byReference);
-
-            assemblyIndex = getReadAssemblyStartIndex(readJunctionIndex, readIndexRange[SE_START], byReference);
-        }
-        else
-        {
-            readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
-
-            readJunctionIndex = INVALID_INDEX;
-
-            if(mJunction.isForward())
-            {
-                assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
-            }
-            else
-            {
-                assemblyIndex = mJunctionIndex + read.unclippedStart() - mJunction.Position;
-            }
-        }
-
-        if(readIndexRange[SE_START] < 0)
-            return;
-
-        for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
-        {
-            if(assemblyIndex < 0)
-                continue;
-
-            if(assemblyIndex >= mBases.length || i >= read.getBases().length)
-            {
-                // can possibly happen with INDELs in the CIGAR or not now that aligned positions are used to establish read coordinates?
-                // SV_LOGGER.debug("i({}) readCoords({}) assembly({}) read({})", i, readCoords, toString(), read.toString());
-                break;
-            }
-
-            byte base = read.getBases()[i];
-            byte qual = read.getBaseQuality()[i];
-
-            if(mBases[assemblyIndex] == 0)
-            {
-                mBases[assemblyIndex] = base;
-                mBaseQuals[assemblyIndex] = qual;
-
-                if(qual >= LOW_BASE_QUAL_THRESHOLD)
-                    ++highQualMatchCount;
-            }
-            else
-            {
-                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD)
-                {
-                    if((int)qual > (int)mBaseQuals[assemblyIndex])
-                        mBaseQuals[assemblyIndex] = qual;
-
-                    if(qual >= LOW_BASE_QUAL_THRESHOLD)
-                        ++highQualMatchCount;
-                }
-                else if(mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
-                {
-                    mBases[assemblyIndex] = base;
-                    mBaseQuals[assemblyIndex] = qual;
-                }
-                else
-                {
-                    ++mismatchCount;
-                }
-            }
-        }
-
-        if(existingSupport == null)
-        {
-            addSupport(read, type, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
-        }
-        else
-        {
-            existingSupport.setReferenceMismatches(mismatchCount);
-        }
-    }
-
-    private int[] getReadIndexCoordinates(final Read read, final int readJunctionIndex, boolean byReferenceBases)
-    {
-        // using the position of the junction within the read coordinates, gets the read index range either from the junction into
-        // soft-clip / junction bases, or from the junction, but not including it, back into reference bases
-        int[] readIndexCoords = {0, 0};
-
-        if(byReferenceBases)
-        {
-            if(mJunction.isForward())
-            {
-                readIndexCoords[0] = read.leftClipLength();
-                readIndexCoords[1] = readJunctionIndex - 1; // the base at the junction will have already been set
-            }
-            else
-            {
-                readIndexCoords[0] = readJunctionIndex + 1;
-                readIndexCoords[1] = read.basesLength() - 1 - read.rightClipLength();
-            }
-        }
-        else
-        {
-            if(mJunction.isForward())
-            {
-                readIndexCoords[0] = readJunctionIndex;
-                readIndexCoords[1] = read.basesLength() - 1;
-            }
-            else
-            {
-                readIndexCoords[0] = 0;
-                readIndexCoords[1] = readJunctionIndex;
-            }
-        }
-
-        return readIndexCoords;
-    }
-
-    private int getReadAssemblyStartIndex(final int readJunctionIndex, final int readStartIndex, final boolean byReferenceBases)
-    {
-        if(byReferenceBases)
-        {
-            if(mJunction.isForward())
-                return mJunctionIndex - (readJunctionIndex - readStartIndex);
-            else
-                return mJunctionIndex + 1;
-        }
-        else
-        {
-            if(mJunction.isForward())
-                return mJunctionIndex; // ie bases starting from the junction
-            else
-                return mJunctionIndex - (readJunctionIndex - readStartIndex);
-        }
-    }
-
-    public void mergeRefBaseAssembly()
-    {
-        if(mRefBaseAssembly == null || mRefBaseAssembly.supportCount() == 0)
-            return;
-
-        int existingRefBaseLength = refBaseLength();
-
-        // find the longest length of aligned reference bases extending back from the junction
-        int newRefBaseCount = mRefBaseAssembly.validRefBaseLength();
-
-        if(newRefBaseCount > existingRefBaseLength)
-        {
-            if(isForwardJunction())
-                mMinAlignedPosition = mRefBaseAssembly.minAlignedPosition();
-            else
-                mMaxAlignedPosition = mRefBaseAssembly.maxAlignedPosition();
-
-            int refBaseExtension = newRefBaseCount - existingRefBaseLength;
-
-            extendRefBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, mRefBaseAssembly);
-
-            // rebuild since ref bases have changed
-            buildRepeatInfo();
-        }
-
-        for(SupportRead support : mRefBaseAssembly.support())
-        {
-            addSupport(support.cachedRead(), support.type(), INVALID_INDEX, 0, 0, support.mismatchCount());
-
-            // once added, clear the cached data read
-            support.clearCachedRead();
-        }
-
-        // SV_LOGGER.debug("assembly({}) post-support ref bases: {}", toString(), formRefBaseSequence());
-
-        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
-
-        if(!emptyBaseRanges.isEmpty())
-        {
-            SV_LOGGER.debug("assembly({}) refBases(existing={} new={}) empty ranges: {}",
-                    toString(), existingRefBaseLength, newRefBaseCount, emptyBaseRanges);
-        }
-    }
-
-    public void addDiscordantSupport(final SupportRead support, int permittedMismatches)
-    {
-        if(permittedMismatches >= 0)
-        {
-            int mismatchCount = 0;
-            int assemblyIndex;
-
-            Read read = support.cachedRead();
-
-            int[] readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
-
-            if(mJunction.isForward())
-            {
-                assemblyIndex = read.unclippedStart() - mMinAlignedPosition;
-            }
-            else
-            {
-                assemblyIndex = mJunctionIndex + read.unclippedStart() - mJunction.Position;
-            }
-
-            if(readIndexRange[SE_START] < 0)
-                return;
-
-            for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
-            {
-                if(assemblyIndex < 0)
-                    continue;
-
-                if(assemblyIndex >= mBases.length || i >= read.getBases().length)
-                    break;
-
-                byte base = read.getBases()[i];
-                byte qual = read.getBaseQuality()[i];
-
-                if(mBases[assemblyIndex] == 0)
-                    continue;
-
-                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD || mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
-                    continue;
-
-                ++mismatchCount;
-
-                if(mismatchCount >= permittedMismatches)
-                    return;
-            }
-        }
-
-        addRead(support.cachedRead(), DISCORDANT, null);
-    }
-    */
 }

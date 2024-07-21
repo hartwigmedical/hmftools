@@ -118,7 +118,7 @@ public final class IndelBuilder
             // no discordant candidates for local indels
             if(isJunctionMate)
             {
-                assembly.addCandidateSupport(read, JUNCTION_MATE);
+                assembly.addCandidateSupport(read);
             }
         }
     }

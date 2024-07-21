@@ -18,6 +18,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -244,7 +245,7 @@ public class RemoteGroupBuilder extends ThreadTask
 
         for(String readId : firstRegion.readIds())
         {
-            if(hasMatchingFragment(second.support(), readId, mBuildStats))
+            if(hasMatchingSupportRead(second.support(), readId, mBuildStats))
             {
                 ++matchedCount;
                 ++mBuildStats.ReadMatches;
@@ -263,7 +264,7 @@ public class RemoteGroupBuilder extends ThreadTask
                 return false;
             }
 
-            if(hasMatchingFragment(second.candidateSupport(), readId, mBuildStats))
+            if(hasMatchingRead(second.candidateSupport(), readId, mBuildStats))
             {
                 ++matchedCount;
                 ++mBuildStats.ReadMatches;
@@ -286,9 +287,26 @@ public class RemoteGroupBuilder extends ThreadTask
         return false;
     }
 
-    public static boolean hasMatchingFragment(final List<SupportRead> support, final String readId, final RemoteBuildStats stats)
+    private static boolean hasMatchingSupportRead(final List<SupportRead> support, final String readId, final RemoteBuildStats stats)
     {
         for(SupportRead supportRead : support)
+        {
+            ++stats.ReadChecks;
+
+            if(supportRead.id().equals(readId))
+            {
+                ++stats.ReadMatches;
+                return true;
+            }
+        }
+
+        stats.ReadNonMatches += support.size();
+        return false;
+    }
+
+    private static boolean hasMatchingRead(final List<Read> support, final String readId, final RemoteBuildStats stats)
+    {
+        for(Read supportRead : support)
         {
             ++stats.ReadChecks;
 

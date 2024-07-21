@@ -21,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -51,6 +52,7 @@ public class Read
 
     // fragment state
     private Read mMateRead;
+    private boolean mHasJunctionMate; // mate read is a split/junction read
     private boolean mSuppDataExtracted;
     private SupplementaryReadData mSupplementaryData;
 
@@ -81,6 +83,7 @@ public class Read
         mMateAlignmentEnd = null;
         mIsReference = false;
         mMateRead = null;
+        mHasJunctionMate = false;
         mSuppDataExtracted = false;
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
@@ -137,6 +140,9 @@ public class Read
     }
 
     public Read mateRead() { return mMateRead; }
+
+    public boolean hasJunctionMate() { return mHasJunctionMate; }
+    public void markJunctionMate() { mHasJunctionMate = true; }
 
     public String id() { return mRecord.getReadName(); }
 
@@ -256,6 +262,8 @@ public class Read
         return mSnvCount;
     }
 
+    public int numOfEvents() { return snvCount() + totalIndelBases(); }
+
     private void calcNumberOfEvents()
     {
         Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
@@ -280,6 +288,19 @@ public class Read
         }
 
         return mIndelCoords;
+    }
+
+    public boolean matchesFragment(final Read other, boolean allowReadMatch)
+    {
+        if(!id().equals(other.id()))
+            return false;
+
+        return allowReadMatch || getFlags() != other.getFlags();
+    }
+
+    public static List<Read> findMatchingFragmentSupport(final List<Read> support, final Read read)
+    {
+        return support.stream().filter(x -> x.matchesFragment(read, false)).collect(Collectors.toList());
     }
 
     public String toString()

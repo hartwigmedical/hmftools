@@ -101,7 +101,7 @@ public class SupportRead
         mInsertSize = abs(read.bamRecord().getInferredInsertSize());
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
-        mNumOfEvents = read.snvCount() + read.totalIndelBases();
+        mNumOfEvents = read.numOfEvents();
         mHasIndel = read.indelCoords() != null;
 
         mJunctionMatches = matches;
@@ -161,6 +161,14 @@ public class SupportRead
         return allowReadMatch || mFlags != other.flags();
     }
 
+    public boolean matchesFragment(final Read other, boolean allowReadMatch)
+    {
+        if(!mId.equals(other.id()))
+            return false;
+
+        return allowReadMatch || mFlags != other.getFlags();
+    }
+
     public void clearCachedRead() { mRead = null; }
 
     @Nullable
@@ -185,17 +193,22 @@ public class SupportRead
 
     public static boolean hasFragmentOtherRead(final List<SupportRead> support, final SupportRead read)
     {
+        return hasFragmentOtherRead(support, read.cachedRead());
+    }
+
+    public static boolean hasFragmentOtherRead(final List<SupportRead> support, final Read read)
+    {
         return support.stream().anyMatch(x -> x.matchesFragment(read, false));
     }
 
     public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final SupportRead read)
     {
-        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
+        return hasMatchingFragmentRead(support, read.cachedRead());
     }
 
-    public static List<SupportRead> findMatchingFragmentSupport(final List<SupportRead> support, final SupportRead read)
+    public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final Read read)
     {
-        return support.stream().filter(x -> x.matchesFragment(read, false)).collect(Collectors.toList());
+        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
     }
 
     public String toString()

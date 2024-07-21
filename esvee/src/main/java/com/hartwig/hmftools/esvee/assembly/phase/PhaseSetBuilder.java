@@ -6,11 +6,13 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
+import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
@@ -19,7 +21,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_IN
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
@@ -187,13 +188,13 @@ public class PhaseSetBuilder
                 }
 
                 // also check candidate reads
-                for(SupportRead support : assembly1.candidateSupport())
+                for(Read support : assembly1.candidateSupport())
                 {
                     if(hasMatchingFragmentRead(assembly2.support(), support))
                         ++sharedCount;
                 }
 
-                for(SupportRead support : assembly1.candidateSupport())
+                for(Read support : assembly1.candidateSupport())
                 {
                     if(hasMatchingFragmentRead(assembly2.support(), support))
                         ++sharedCount;
@@ -343,11 +344,11 @@ public class PhaseSetBuilder
                 continue;
 
             // add junction mate reads to the ref side bases
-            List<SupportRead> refExtensionReads = Lists.newArrayList();
+            List<Read> refExtensionReads = Lists.newArrayList();
 
-            for(SupportRead read : assembly.candidateSupport())
+            for(Read read : assembly.candidateSupport())
             {
-                if(read.type() == JUNCTION_MATE)
+                if(read.hasJunctionMate())
                 {
                     refExtensionReads.add(read);
                 }
@@ -371,36 +372,36 @@ public class PhaseSetBuilder
             assembly2.setOutcome(LINKED);
 
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
-        List<SupportRead> matchedCandidates1 = Lists.newArrayList();
-        List<SupportRead> matchedCandidates2 = Lists.newArrayList();
+        List<Read> matchedCandidates1 = Lists.newArrayList();
+        List<Read> matchedCandidates2 = Lists.newArrayList();
 
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
         // remove any ref discordant candidates if their only criteria for inclusion is being long
-        List<SupportRead> refCandidates1 = Lists.newArrayList();
+        List<Read> refCandidates1 = Lists.newArrayList();
         boolean hasNonLocalTumorFragment = false;
         boolean hasNonLocalRefFragment = false;
 
-        for(SupportRead supportRead : matchedCandidates1)
+        for(Read read : matchedCandidates1)
         {
-            if(supportRead.isReference())
+            if(read.isReference())
             {
-                refCandidates1.add(supportRead);
+                refCandidates1.add(read);
 
                 hasNonLocalRefFragment |= CommonUtils.isDiscordantFragment(
-                        supportRead.cachedRead().bamRecord(), -1, supportRead.supplementaryData());
+                        read.bamRecord(), -1, read.supplementaryData());
             }
             else
             {
                 hasNonLocalTumorFragment |= CommonUtils.isDiscordantFragment(
-                        supportRead.cachedRead().bamRecord(), -1, supportRead.supplementaryData());
+                        read.bamRecord(), -1, read.supplementaryData());
             }
         }
 
         if(hasNonLocalTumorFragment && !hasNonLocalRefFragment)
         {
-            List<SupportRead> refCandidates2 = matchedCandidates2.stream().filter(x -> x.isReference()).collect(Collectors.toList());
+            List<Read> refCandidates2 = matchedCandidates2.stream().filter(x -> x.isReference()).collect(Collectors.toList());
             refCandidates1.forEach(x -> matchedCandidates1.remove(x));
             refCandidates2.forEach(x -> matchedCandidates2.remove(x));
         }
@@ -412,16 +413,16 @@ public class PhaseSetBuilder
 
     private static void checkMatchingCandidateSupport(
             final JunctionAssembly otherAssembly,
-            final List<SupportRead> candidateSupport, final List<SupportRead> otherCandidateSupport,
-            final List<SupportRead> matchedCandidates, final List<SupportRead> otherMatchedCandidates)
+            final List<Read> candidateSupport, final List<Read> otherCandidateSupport,
+            final List<Read> matchedCandidates, final List<Read> otherMatchedCandidates)
     {
         // consider each candidate support read to see if it has a matching read in the other assembly's candidates or junction reads
         int index = 0;
         while(index < candidateSupport.size())
         {
-            SupportRead candidateRead = candidateSupport.get(index);
+            Read candidateRead = candidateSupport.get(index);
 
-            if(candidateRead.type() == SupportType.JUNCTION_MATE) // added automatically to extend the reference
+            if(candidateRead.hasJunctionMate()) // added automatically to extend the reference
             {
                 candidateSupport.remove(index);
                 matchedCandidates.add(candidateRead);
@@ -439,7 +440,7 @@ public class PhaseSetBuilder
             // then check for candidate & candidate matches
             if(!otherCandidateSupport.isEmpty())
             {
-                List<SupportRead> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, candidateRead);
+                List<Read> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, candidateRead);
 
                 if(!matchedCandidateSupport.isEmpty())
                 {
@@ -532,7 +533,7 @@ public class PhaseSetBuilder
                         .collect(Collectors.toList());
 
                 assembly.candidateSupport().stream()
-                        .filter(x -> x.type() == SupportType.CANDIDATE_DISCORDANT)
+                        .filter(x -> !x.hasJunctionMate())
                         .filter(x -> remoteRegion.readIds().contains(x.id()))
                         .forEach(x -> localReadIds.add(x.id()));
 
@@ -739,9 +740,9 @@ public class PhaseSetBuilder
 
             while(index < assembly.candidateSupport().size())
             {
-                SupportRead candidateRead = assembly.candidateSupport().get(index);
+                Read candidateRead = assembly.candidateSupport().get(index);
 
-                if(candidateRead.type() == SupportType.JUNCTION_MATE)
+                if(candidateRead.hasJunctionMate())
                 {
                     ++index;
                     continue;
@@ -754,23 +755,23 @@ public class PhaseSetBuilder
                 if(matchedRead != null)
                 {
                     assembly.candidateSupport().remove(index);
-                    checkAddRefBaseRead(assembly, candidateRead.cachedRead(), DISCORDANT);
+                    checkAddRefBaseRead(assembly, candidateRead, DISCORDANT);
                     continue;
                 }
 
                 // otherwise check for candidate matches
                 if(i == 0)
                 {
-                    SupportRead matchedCandidate = otherAssembly.candidateSupport().stream()
+                    Read matchedCandidate = otherAssembly.candidateSupport().stream()
                             .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);
 
                     if(matchedCandidate != null)
                     {
                         assembly.candidateSupport().remove(index);
-                        checkAddRefBaseRead(assembly, candidateRead.cachedRead(), DISCORDANT);
+                        checkAddRefBaseRead(assembly, candidateRead, DISCORDANT);
 
                         otherAssembly.candidateSupport().remove(matchedCandidate);
-                        checkAddRefBaseRead(otherAssembly, matchedCandidate.cachedRead(), DISCORDANT);
+                        checkAddRefBaseRead(otherAssembly, matchedCandidate, DISCORDANT);
 
                         continue;
                     }
@@ -785,7 +786,7 @@ public class PhaseSetBuilder
     {
         mAssemblies.forEach(x -> x.clearCandidateSupport()); // no longer required
 
-        mAssemblies.forEach(x -> RefBaseExtender.trimAssemblyRefBases(x));
+        mAssemblies.forEach(x -> RefBaseExtender.trimAssemblyRefBases(x, ASSEMBLY_REF_BASE_MAX_GAP));
 
         // finally remove any branched assemblies which did not form a facing link
         List<JunctionAssembly> branchedAssemblies = mAssemblies.stream()

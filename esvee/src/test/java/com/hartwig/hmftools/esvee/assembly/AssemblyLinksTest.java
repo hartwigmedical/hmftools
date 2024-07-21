@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.CANDIDATE_DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 
@@ -400,22 +399,22 @@ public class AssemblyLinksTest
                 juncRead2.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
         discRead2.bamRecord().setSecondOfPairFlag(true);
 
-        secondAssembly.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
+        secondAssembly.addCandidateSupport(discRead2);
 
         // add the same junction read from the first assembly as a candidate for the second - this won't end up being counted as support
         // since it matches the exact read as support in the first assembly
-        secondAssembly.addCandidateSupport(juncRead1, CANDIDATE_DISCORDANT);
+        secondAssembly.addCandidateSupport(juncRead1);
 
         Read discRead1 = createRead(
                 juncRead1.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
         discRead1.bamRecord().setSecondOfPairFlag(true);
-        secondAssembly.addCandidateSupport(discRead1, CANDIDATE_DISCORDANT);
+        secondAssembly.addCandidateSupport(discRead1);
 
         Read discRead3 = createRead(
                 juncRead3.id(), CHR_1, 20, refSequence.substring(20, 70), "50M", CHR_1, 151, false);
         discRead3.bamRecord().setSecondOfPairFlag(true);
 
-        firstAssembly.addCandidateSupport(discRead3, CANDIDATE_DISCORDANT);
+        firstAssembly.addCandidateSupport(discRead3);
 
         PhaseGroup phaseGroup = new PhaseGroup(firstAssembly, secondAssembly);
 
@@ -561,13 +560,13 @@ public class AssemblyLinksTest
                 discRead1.id(), CHR_3, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 20, false);
 
         assertTrue(isValidSupportCoordsVsJunction(discRead1, assembly1.junction().isForward(), assembly1.junction().Position));
-        assembly1.addCandidateSupport(discRead1, CANDIDATE_DISCORDANT);
+        assembly1.addCandidateSupport(discRead1);
 
         assertTrue(isValidSupportCoordsVsJunction(discRead2, assembly4.junction().isForward(), assembly4.junction().Position));
-        assembly4.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
+        assembly4.addCandidateSupport(discRead2);
 
         assertFalse(isValidSupportCoordsVsJunction(discRead2, assembly5.junction().isForward(), assembly5.junction().Position));
-        assembly5.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
+        assembly5.addCandidateSupport(discRead2);
 
         Read discRead3 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_2, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 300, true);
@@ -577,11 +576,11 @@ public class AssemblyLinksTest
 
         assertFalse(isValidSupportCoordsVsJunction(discRead3, assembly2.junction().isForward(), assembly2.junction().Position));
         assertTrue(isValidSupportCoordsVsJunction(discRead3, assembly3.junction().isForward(), assembly3.junction().Position));
-        assembly3.addCandidateSupport(discRead3, CANDIDATE_DISCORDANT);
+        assembly3.addCandidateSupport(discRead3);
 
         assertFalse(isValidSupportCoordsVsJunction(discRead4, assembly1.junction().isForward(), assembly1.junction().Position));
         assertTrue(isValidSupportCoordsVsJunction(discRead4, assembly6.junction().isForward(), assembly6.junction().Position));
-        assembly6.addCandidateSupport(discRead4, CANDIDATE_DISCORDANT);
+        assembly6.addCandidateSupport(discRead4);
 
         PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
         phaseGroup.addAssembly(assembly3);

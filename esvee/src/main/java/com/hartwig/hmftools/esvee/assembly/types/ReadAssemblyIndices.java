@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -106,7 +105,6 @@ public class ReadAssemblyIndices
     public static ReadAssemblyIndices getRefReadIndices(final JunctionAssembly assembly, final int refBasePosition, final Read read)
     {
         // ensure no indel-adjusted unclipped start is used when aligned to ref bases
-
         int junctionPosition = assembly.junction().Position;
         int alignmentStart = read.alignmentStart();
         int leftSoftClipOffset = read.leftClipLength();
@@ -122,6 +120,7 @@ public class ReadAssemblyIndices
             {
                 // allow reads to start before the assembly's ref boundaries but will cull the bases used
                 // TODO: is this to handle minor diffs due to soft-clips or if not, why didn't these reads extend the ref position?
+                // TODO: suggest removing this allowance
                 int readIndex = refBasePosition - alignmentStart + leftSoftClipOffset;
                 return new ReadAssemblyIndices(readIndex, readIndexEnd, 0);
             }
@@ -140,7 +139,8 @@ public class ReadAssemblyIndices
                 return new ReadAssemblyIndices(readIndex, readIndexEnd, assembly.junctionIndex());
             }
 
-            return new ReadAssemblyIndices(leftSoftClipOffset, readIndexEnd, alignmentStart - junctionPosition);
+            int assemblyIndex = assembly.junctionIndex() + alignmentStart - junctionPosition;
+            return new ReadAssemblyIndices(leftSoftClipOffset, readIndexEnd, assemblyIndex);
         }
     }
 }

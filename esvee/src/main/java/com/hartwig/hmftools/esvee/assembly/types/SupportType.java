@@ -4,7 +4,6 @@ public enum SupportType
 {
     JUNCTION,
     INDEL,
-    CANDIDATE_DISCORDANT,
     DISCORDANT,
     JUNCTION_MATE,
     EXTENSION;
