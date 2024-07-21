@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
@@ -18,7 +16,6 @@ import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -35,6 +32,7 @@ public class SupportRead
 
     // inherited read properties & state
     private final String mId;
+    private final String mFullReadId;
 
     private final String mChromosome;
     private final int mAlignmentStart;
@@ -80,7 +78,9 @@ public class SupportRead
     {
         mType = type;
 
-        mId = READ_ID_TRIMMER.trim(read.id());
+        mFullReadId = read.id();
+        mId = READ_ID_TRIMMER.trim(mFullReadId);
+
         mChromosome = read.chromosome();
         mAlignmentStart = read.alignmentStart();
         mAlignmentEnd = read.alignmentEnd();
@@ -119,6 +119,7 @@ public class SupportRead
     public SupportType type() { return mType; }
 
     public String id() { return mId; }
+    public String fullReadId() { return mFullReadId; }
     public String chromosome() { return mChromosome; }
     public int alignmentStart() { return mAlignmentStart; }
     public int alignmentEnd() { return mAlignmentEnd; }
@@ -163,7 +164,7 @@ public class SupportRead
 
     public boolean matchesFragment(final Read other, boolean allowReadMatch)
     {
-        if(!mId.equals(other.id()))
+        if(!mFullReadId.equals(other.id()))
             return false;
 
         return allowReadMatch || mFlags != other.getFlags();
@@ -203,7 +204,7 @@ public class SupportRead
 
     public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final SupportRead read)
     {
-        return hasMatchingFragmentRead(support, read.cachedRead());
+        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
     }
 
     public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final Read read)

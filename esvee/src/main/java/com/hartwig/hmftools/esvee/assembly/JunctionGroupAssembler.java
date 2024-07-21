@@ -230,8 +230,8 @@ public class JunctionGroupAssembler extends ThreadTask
         // no longer needs to keep candidate reads since all have been assigned to assemblies
         junctionGroup.clearCandidateReads();
 
-        // clear assembly read info for support fragments - candidates will be cleared after phasing
-        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedRead());
+        // clear assembly read info for supporting fragments
+        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedReads());
 
         mCurrentJunctionGroup = null;
     }

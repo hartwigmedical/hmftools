@@ -6,24 +6,20 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
-import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getRefReadIndices;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 
 import java.util.List;
 import java.util.Set;
@@ -351,8 +347,7 @@ public class JunctionAssembly
 
     public void expandExtensionBases(final byte[] extensionBases, final byte[] extensionBaseQuals, final List<SupportRead> supportReads)
     {
-        // extend the same of ref bases to accomodate new ref base information from existing or new reads
-
+        // extend the same of ref bases to accommodate new ref base information from existing or new reads
         byte[] existingBases = copyArray(mBases);
         byte[] existingQuals = copyArray(mBaseQuals);
 
@@ -455,7 +450,7 @@ public class JunctionAssembly
         return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
     }
 
-    public void clearSupportCachedRead() { mSupport.forEach(x -> x.clearCachedRead()); }
+    public void clearSupportCachedReads() { mSupport.forEach(x -> x.clearCachedRead()); }
 
     // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
     // at least for +ve orientation assemblies

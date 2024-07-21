@@ -108,7 +108,7 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(assembly.id()));
                 sj.add(assemblyInfo);
 
-                sj.add(READ_ID_TRIMMER.restore(support.id()));
+                sj.add(support.fullReadId());
                 sj.add(support.type().toString());
                 sj.add(String.valueOf(support.isReference()));
                 sj.add(support.chromosome());

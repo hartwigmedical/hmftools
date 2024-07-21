@@ -85,7 +85,7 @@ public class PhaseSet
 
     public Orientation assemblyOrientation(final JunctionAssembly assembly)
     {
-        // the first assembly is defined as foward, meaning facing up the chain and each successive junction is alternating
+        // the first assembly is defined as forward, meaning facing up the chain and each successive junction is alternating
         Orientation assemblyOrientation = Orientation.FORWARD;
 
         for(int i = 0; i < mAssemblies.size(); ++i)
@@ -146,35 +146,6 @@ public class PhaseSet
             return assemblyOrientation2.isForward();
         }
     }
-
-    /*
-    public static boolean readsFaceInPhaseSet(
-            final JunctionAssembly assembly1, int assemblyIndex1, Orientation assemblyOrientation1, final SupportRead read1,
-            final JunctionAssembly assembly2, int assemblyIndex2, Orientation assemblyOrientation2, final SupportRead read2)
-    {
-        if(read1 == null || read2 == null)
-            return false;
-
-        Orientation adjustedReadOrientation1 = assembly1.junction().Orient == assemblyOrientation1 ?
-                read1.orientation() : read1.orientation().opposite();
-
-        Orientation adjustedReadOrientation2 = assembly2.junction().Orient == assemblyOrientation2 ?
-                read2.orientation() : read2.orientation().opposite();
-
-        if(adjustedReadOrientation1 == adjustedReadOrientation2)
-            return false;
-
-        // the read of the lower assembly (by index) faces up and vice versa
-        if(assemblyIndex1 < assemblyIndex2)
-        {
-            return adjustedReadOrientation1.isForward();
-        }
-        else
-        {
-            return adjustedReadOrientation2.isForward();
-        }
-    }
-    */
 
     public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
 }

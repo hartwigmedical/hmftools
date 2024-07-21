@@ -30,10 +30,12 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MAT
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
@@ -46,7 +48,6 @@ import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class PhaseSetBuilder
@@ -83,63 +84,21 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        if(mAssemblies.size() == 1)
-        {
-            handleSingleAssembly();
-        }
-        else if(mAssemblies.size() == 2)
-        {
-            handleAssemblyPair();
-        }
-        else
-        {
-            formSplitLinks();
-
-            extendRemoteAssemblies();
-
-            formFacingLinks();
-
-            formPhaseSets();
-
-            addChainedSupport();
-        }
-
-        extendUnlinkedAssemblies();
-
-        cleanupAssemblies();
-    }
-
-    private boolean handleAssemblyPair()
-    {
-        // simpler routine without prioritising pairs, facing links or branching - return true if a link is found
-        JunctionAssembly assembly1 = mAssemblies.get(0);
-        JunctionAssembly assembly2 = mAssemblies.get(1);
-
-        AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
-
-        if(assemblyLink != null)
-        {
-            applySplitLinkSupport(assembly1, assembly2, false);
-            mPhaseSets.add(new PhaseSet(assemblyLink));
-            return true;
-        }
-
-        return false;
-    }
-
-    private void handleSingleAssembly()
-    {
-        // simpler routine without prioritising pairs, facing links or branching - return true if a link is found
-        JunctionAssembly assembly = mAssemblies.get(0);
-
-        if(formsLocalLink(assembly))
-            return;
+        formSplitLinks();
 
         extendRemoteAssemblies();
 
         buildUnmappedExtensions();
 
-        extendUnlinkedAssemblies();
+        addUnlinkedAssemblyRefSupport();
+
+        formFacingLinks();
+
+        formPhaseSets();
+
+        addChainedSupport();
+
+        cleanupAssemblies();
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
@@ -161,8 +120,63 @@ public class PhaseSetBuilder
         return true;
     }
 
+    private void formSplitLinkFromPair()
+    {
+        // simpler routine without prioritising pairs, facing links or branching
+        JunctionAssembly assembly1 = mAssemblies.get(0);
+        JunctionAssembly assembly2 = mAssemblies.get(1);
+
+        if(assembly1.indel() != assembly2.indel())
+            return;
+
+        boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+
+        if(!isLocalLink)
+        {
+            // first check individual local alignments
+            boolean matchesLocal = formsLocalLink(assembly1);
+            matchesLocal = formsLocalLink(assembly2) || matchesLocal;
+
+            if(matchesLocal)
+                return;
+        }
+
+        boolean hasSharedFragments = assembly1.support().stream().anyMatch(x -> hasMatchingFragmentRead(assembly2.support(), x));
+
+        if(!hasSharedFragments)
+        {
+            hasSharedFragments = assembly1.candidateSupport().stream().anyMatch(x -> hasMatchingFragmentRead(assembly2.support(), x));
+        }
+
+        if(!hasSharedFragments)
+        {
+            hasSharedFragments = assembly2.candidateSupport().stream().anyMatch(x -> hasMatchingFragmentRead(assembly1.support(), x));
+        }
+
+        if(hasSharedFragments)
+        {
+            AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
+
+            if(assemblyLink != null)
+            {
+                // bypass the phase set building routine by forming one directly
+                mPhaseSets.add(new PhaseSet(assemblyLink));
+                applySplitLinkSupport(assembly1, assembly2, false);
+            }
+        }
+    }
+
     private void formSplitLinks()
     {
+        if(mAssemblies.size() == 1)
+            return;
+
+        if(mAssemblies.size() == 2)
+        {
+            formSplitLinkFromPair();
+            return;
+        }
+
         // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
         List<SharedAssemblySupport> assemblySupportPairs = Lists.newArrayList();
 
@@ -179,25 +193,37 @@ public class PhaseSetBuilder
 
                 boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
 
-                int sharedCount = 0;
+                Set<String> firstReadIds = Sets.newHashSet();
 
                 for(SupportRead support : assembly1.support())
                 {
-                    if(hasMatchingFragmentRead(assembly2.support(), support))
-                        ++sharedCount;
+                    firstReadIds.add(support.fullReadId());
                 }
 
                 // also check candidate reads
-                for(Read support : assembly1.candidateSupport())
+                for(Read read : assembly1.candidateSupport())
                 {
-                    if(hasMatchingFragmentRead(assembly2.support(), support))
-                        ++sharedCount;
+                    firstReadIds.add(read.id());
                 }
 
-                for(Read support : assembly1.candidateSupport())
+                int sharedCount = 0;
+
+                for(SupportRead support : assembly2.support())
                 {
-                    if(hasMatchingFragmentRead(assembly2.support(), support))
+                    if(firstReadIds.contains(support.fullReadId()))
+                    {
+                        firstReadIds.remove(support.fullReadId());
                         ++sharedCount;
+                    }
+                }
+
+                for(Read read : assembly2.candidateSupport())
+                {
+                    if(firstReadIds.contains(read.id()))
+                    {
+                        firstReadIds.remove(read.id());
+                        ++sharedCount;
+                    }
                 }
 
                 int candidateOnlyCount = 0;
@@ -215,6 +241,7 @@ public class PhaseSetBuilder
             }
         }
 
+        // favour local DELs & DUPs then pairs with the most support
         Collections.sort(assemblySupportPairs);
 
         // build any split links and only allow an assembly to be used once
@@ -291,6 +318,45 @@ public class PhaseSetBuilder
         }
     }
 
+    private class SharedAssemblySupport implements Comparable<SharedAssemblySupport>
+    {
+        public final JunctionAssembly Assembly1;
+        public final JunctionAssembly Assembly2;
+        public final int SharedSupport;
+        public final int CandidateOnlySupport;
+        public final boolean IsLocalDelDup;
+
+        public SharedAssemblySupport(
+                final JunctionAssembly assembly1, final JunctionAssembly assembly2, int sharedSupport, int candidateOnlySupport,
+                final boolean localDelDup)
+        {
+            Assembly1 = assembly1;
+            Assembly2 = assembly2;
+            SharedSupport = sharedSupport;
+            CandidateOnlySupport = candidateOnlySupport;
+            IsLocalDelDup = localDelDup;
+        }
+
+        @Override
+        public int compareTo(final SharedAssemblySupport other)
+        {
+            if(other.IsLocalDelDup != IsLocalDelDup)
+                return IsLocalDelDup ? -1 : 1;
+
+            if(SharedSupport != other.SharedSupport)
+                return SharedSupport > other.SharedSupport ? -1 : 1;
+
+            return 0;
+        }
+
+        public String toString()
+        {
+            return format("%s + %s shared(%d) candidates(%d) %s",
+                    Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport, CandidateOnlySupport,
+                    IsLocalDelDup ? "localDelDup" : "");
+        }
+    }
+
     private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         if(assembly1.junction() == assembly2.junction()) // ignore duplicates
@@ -307,6 +373,7 @@ public class PhaseSetBuilder
 
     private void buildUnmappedExtensions()
     {
+        // any assembly not in a link uses unmapped reads to extend out the extension sequence
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.outcome() != UNSET)
@@ -323,7 +390,7 @@ public class PhaseSetBuilder
 
             if(!unmappedBaseExtender.supportReads().isEmpty())
             {
-                SV_LOGGER.debug("assembly({}) extended {} -> {} with {} unmapped reads",
+                SV_LOGGER.trace("assembly({}) extended {} -> {} with {} unmapped reads",
                         assembly, assembly.extensionLength(), unmappedBaseExtender.extensionBaseLength(),
                         unmappedBaseExtender.supportReads().size());
 
@@ -333,8 +400,9 @@ public class PhaseSetBuilder
         }
     }
 
-    private void extendUnlinkedAssemblies()
+    private void addUnlinkedAssemblyRefSupport()
     {
+        // any assembly which did not form a link or only an unmapped extension will now extend its ref bases from junction & extension mates
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.outcome() != UNSET)
@@ -346,6 +414,8 @@ public class PhaseSetBuilder
             // add junction mate reads to the ref side bases
             List<Read> refExtensionReads = Lists.newArrayList();
 
+            List<SupportRead> extensionSupport = assembly.support().stream().filter(x -> x.type() == EXTENSION).collect(Collectors.toList());
+
             for(Read read : assembly.candidateSupport())
             {
                 if(read.hasJunctionMate())
@@ -354,7 +424,7 @@ public class PhaseSetBuilder
                 }
                 else
                 {
-                    if(assembly.support().stream().filter(x -> x.type() == EXTENSION).anyMatch(x -> x.matchesFragment(read, false)))
+                    if(extensionSupport.stream().anyMatch(x -> x.matchesFragment(read, false)))
                         refExtensionReads.add(read);
                 }
             }
@@ -459,45 +529,6 @@ public class PhaseSetBuilder
         }
     }
 
-    private class SharedAssemblySupport implements Comparable<SharedAssemblySupport>
-    {
-        public final JunctionAssembly Assembly1;
-        public final JunctionAssembly Assembly2;
-        public final int SharedSupport;
-        public final int CandidateOnlySupport;
-        public final boolean IsLocalDelDup;
-
-        public SharedAssemblySupport(
-                final JunctionAssembly assembly1, final JunctionAssembly assembly2, int sharedSupport, int candidateOnlySupport,
-                final boolean localDelDup)
-        {
-            Assembly1 = assembly1;
-            Assembly2 = assembly2;
-            SharedSupport = sharedSupport;
-            CandidateOnlySupport = candidateOnlySupport;
-            IsLocalDelDup = localDelDup;
-        }
-
-        @Override
-        public int compareTo(final SharedAssemblySupport other)
-        {
-            if(other.IsLocalDelDup != IsLocalDelDup)
-                return IsLocalDelDup ? -1 : 1;
-
-            if(SharedSupport != other.SharedSupport)
-                return SharedSupport > other.SharedSupport ? -1 : 1;
-
-            return 0;
-        }
-
-        public String toString()
-        {
-            return format("%s + %s shared(%d) candidates(%d) %s",
-                    Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport, CandidateOnlySupport,
-                    IsLocalDelDup ? "localDelDup" : "");
-        }
-    }
-
     private void extendRemoteAssemblies()
     {
         // form a fixed initial list since remote assemblies may be added to the phase group
@@ -567,7 +598,7 @@ public class PhaseSetBuilder
 
     private void formFacingLinks()
     {
-        if(mAssemblies.size() <= 2)
+        if(mAssemblies.size() == 1 || (mAssemblies.size() == 2 && mSplitLinks.size() == 1))
             return;
 
         // for each assembly in a split link, look for a facing link (whether linked or not)
@@ -784,29 +815,45 @@ public class PhaseSetBuilder
 
     private void cleanupAssemblies()
     {
-        mAssemblies.forEach(x -> x.clearCandidateSupport()); // no longer required
+        List<JunctionAssembly> branchedAssembliesToRemove = null;
 
-        mAssemblies.forEach(x -> RefBaseExtender.trimAssemblyRefBases(x, ASSEMBLY_REF_BASE_MAX_GAP));
-
-        // finally remove any branched assemblies which did not form a facing link
-        List<JunctionAssembly> branchedAssemblies = mAssemblies.stream()
-                .filter(x -> x.outcome() == DUP_BRANCHED)
-                .collect(Collectors.toList());
-
-        for(JunctionAssembly branchedAssembly : branchedAssemblies)
+        for(JunctionAssembly assembly : mAssemblies)
         {
-            boolean phaseLinked = false;
+            assembly.clearCandidateSupport(); // no further use for candidate reads
 
-            for(PhaseSet phaseSet : mPhaseSets)
+            assembly.clearSupportCachedReads(); // remove references to actual SAMRecords, keeping only summary info
+
+            RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
+
+            if(assembly.outcome() == DUP_BRANCHED)
             {
-                if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(branchedAssembly)))
+                // remove any branched assemblies which did not form a facing link
+                boolean phaseLinked = false;
+
+                for(PhaseSet phaseSet : mPhaseSets)
                 {
-                    phaseLinked = true;
-                    break;
+                    if(phaseSet.assemblyLinks().stream()
+                            .filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(assembly)))
+                    {
+                        phaseLinked = true;
+                        break;
+                    }
+                }
+
+                if(!phaseLinked)
+                {
+                    if(branchedAssembliesToRemove == null)
+                        branchedAssembliesToRemove = Lists.newArrayList(assembly);
+                    else
+                        branchedAssembliesToRemove.add(assembly);
                 }
             }
+        }
 
-            if(!phaseLinked)
+        // finally remove any branched assemblies which did not form a facing link
+        if(branchedAssembliesToRemove != null)
+        {
+            for(JunctionAssembly branchedAssembly : branchedAssembliesToRemove)
             {
                 mPhaseGroup.assemblies().remove(branchedAssembly);
                 mPhaseGroup.derivedAssemblies().remove(branchedAssembly);
