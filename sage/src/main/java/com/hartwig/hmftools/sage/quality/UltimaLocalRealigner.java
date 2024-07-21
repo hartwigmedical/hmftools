@@ -1,23 +1,29 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.tuple.Pair;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -78,6 +84,10 @@ public class UltimaLocalRealigner
 
         public HomopolymerPair(@Nullable final Homopolymer refHomopolymer, @Nullable final Homopolymer readHomopolymer)
         {
+            // TODO:
+            assert refHomopolymer != null || readHomopolymer != null;
+            assert refHomopolymer == null || readHomopolymer == null || refHomopolymer.Base == readHomopolymer.Base;
+
             RefHomopolymer = refHomopolymer;
             ReadHomopolymer = readHomopolymer;
         }
@@ -196,11 +206,12 @@ public class UltimaLocalRealigner
         assert actualRefBasesLength == expectedRefBasesLength;
 
         // pair homopolymers between ref and read
-        List<HomopolymerPair> homopolymerPairs = pairHomopolymers(refCoreHomopolymers, readCoreHomopolymers);
+        List<List<HomopolymerPair>> homopolymerPairs = pairHomopolymers(refCoreHomopolymers, readCoreHomopolymers);
 
         // TODO: Understand ultima qual calculator. Compute qual. Only if variant still exists after re-alignment.
-
-        return isVariantExplainedHelper(readContext, homopolymerPairs);
+        return homopolymerPairs.stream()
+                .map(pairs -> isVariantExplainedHelper(readContext, pairs))
+                .reduce(false, (acc, x) -> acc || x);
     }
 
     // TODO: come up with a better way
@@ -410,59 +421,243 @@ public class UltimaLocalRealigner
         return ref.equals(repeatedFlankBase) || alt.equals(repeatedFlankBase);
     }
 
-    @VisibleForTesting
-    public static List<HomopolymerPair> pairHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers)
+    // TODO: rename
+    private static class AlignmentScore implements Comparable<AlignmentScore>
     {
-        List<HomopolymerPair> homopolymerPairs = Lists.newArrayList();
-        int refIndex = 0;
-        int readIndex = 0;
-        while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
+        public final int FullIndelScore;
+        public final int MatchScore;
+
+        public AlignmentScore(final int fullIndelScore, final int matchScore)
         {
-            Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
-            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
-
-            if(refHomopolymer.Base == readHomopolymer.Base)
-            {
-                homopolymerPairs.add(new HomopolymerPair(refHomopolymer, readHomopolymer));
-                ++refIndex;
-                ++readIndex;
-                continue;
-            }
-
-            int refRemaining = refHomopolymers.size() - refIndex - 1;
-            int readRemaining = readHomopolymers.size() - readIndex - 1;
-            if(refRemaining == readRemaining)
-            {
-                // TODO:
-                throw new RuntimeException("TODO");
-            }
-
-            if(refRemaining < readRemaining)
-            {
-                homopolymerPairs.add(new HomopolymerPair(null, readHomopolymer));
-                ++readIndex;
-                continue;
-            }
-
-            homopolymerPairs.add(new HomopolymerPair(refHomopolymer, null));
-            ++refIndex;
+            FullIndelScore = fullIndelScore;
+            MatchScore = matchScore;
         }
 
-        while(refIndex < refHomopolymers.size())
+        public AlignmentScore incFullIndelScore(int i)
         {
-            Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
-            homopolymerPairs.add(new HomopolymerPair(refHomopolymer, null));
-            ++refIndex;
+            return new AlignmentScore(FullIndelScore + i, MatchScore);
         }
 
-        while(readIndex < readHomopolymers.size())
+        public AlignmentScore incMatchScore(int i)
         {
-            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
-            homopolymerPairs.add(new HomopolymerPair(null, readHomopolymer));
-            ++readIndex;
+            return new AlignmentScore(FullIndelScore, MatchScore + i);
         }
 
-        return homopolymerPairs;
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(this == o)
+            {
+                return true;
+            }
+            if(!(o instanceof AlignmentScore))
+            {
+                return false;
+            }
+            final AlignmentScore that = (AlignmentScore) o;
+            return FullIndelScore == that.FullIndelScore && MatchScore == that.MatchScore;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(FullIndelScore, MatchScore);
+        }
+
+        @Override
+        public String toString()
+        {
+            return format("(%d, %d)", FullIndelScore, MatchScore);
+        }
+
+        @Override
+        public int compareTo(final AlignmentScore o)
+        {
+            int fullIndelScoreComparison = FullIndelScore - o.FullIndelScore;
+            if(fullIndelScoreComparison != 0)
+            {
+                return fullIndelScoreComparison;
+            }
+
+            return MatchScore - o.MatchScore;
+        }
+    }
+
+    private static enum AlignmentScoreTableDirection
+    {
+        UP(-1, 0),
+        LEFT(0, -1),
+        UP_LEFT(-1, -1);
+
+        public final int RowInc;
+        public final int ColInc;
+
+        private AlignmentScoreTableDirection(int rowInc, int colInc)
+        {
+            RowInc = rowInc;
+            ColInc = colInc;
+        }
+    }
+
+    private static class AlignmentScoreTableElement
+    {
+        public final AlignmentScore Score;
+        public final List<AlignmentScoreTableDirection> Directions;
+
+        public AlignmentScoreTableElement(final AlignmentScore score, final List<AlignmentScoreTableDirection> directions)
+        {
+            Score = score;
+            Directions = directions;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.valueOf(Score) + ", " + Directions;
+        }
+    }
+
+    private static void pairHomopolymersBacktrackHelper(final List<Homopolymer> refHomopolymers,
+            final List<Homopolymer> readHomopolymers, final List<List<AlignmentScoreTableElement>> scores, int row, int col,
+            final PVector<HomopolymerPair> currentAlignment, final List<List<HomopolymerPair>> alignmentsOut)
+    {
+        if(row == 0 && col == 0)
+        {
+            List<HomopolymerPair> finalAlignment = Lists.newArrayList();
+            for(int i = currentAlignment.size() - 1; i >= 0; --i)
+            {
+                finalAlignment.add(currentAlignment.get(i));
+            }
+
+            alignmentsOut.add(finalAlignment);
+            return;
+        }
+
+        if(row == 0)
+        {
+            PVector<HomopolymerPair> nextCurrentAlignment = currentAlignment.plus(new HomopolymerPair(null, readHomopolymers.get(col - 1)));
+            pairHomopolymersBacktrackHelper(refHomopolymers, readHomopolymers, scores, row, col - 1, nextCurrentAlignment, alignmentsOut);
+            return;
+        }
+
+        if(col == 0)
+        {
+            PVector<HomopolymerPair> nextCurrentAlignment = currentAlignment.plus(new HomopolymerPair(refHomopolymers.get(row - 1), null));
+            pairHomopolymersBacktrackHelper(refHomopolymers, readHomopolymers, scores, row - 1, col, nextCurrentAlignment, alignmentsOut);
+            return;
+        }
+
+        for(AlignmentScoreTableDirection direction : scores.get(row).get(col).Directions)
+        {
+            Homopolymer refHomopolymer = direction.RowInc == 0 ? null : refHomopolymers.get(row - 1);
+            Homopolymer readHomopolymer = direction.ColInc == 0 ? null : readHomopolymers.get(col - 1);
+            PVector<HomopolymerPair> nextCurrentAlignment;
+            if(refHomopolymer == null || readHomopolymer == null || refHomopolymer.Base == readHomopolymer.Base)
+            {
+                nextCurrentAlignment = currentAlignment.plus(new HomopolymerPair(refHomopolymer, readHomopolymer));
+            }
+            else
+            {
+                nextCurrentAlignment = currentAlignment.plus(new HomopolymerPair(refHomopolymer, null)).plus(new HomopolymerPair(null, readHomopolymer));
+            }
+
+            pairHomopolymersBacktrackHelper(refHomopolymers, readHomopolymers, scores, row + direction.RowInc, col + direction.ColInc, nextCurrentAlignment, alignmentsOut);
+        }
+    }
+
+    private static List<List<HomopolymerPair>> pairHomopolymersBacktrack(final List<Homopolymer> refHomopolymers,
+            final List<Homopolymer> readHomopolymers, final List<List<AlignmentScoreTableElement>> scores)
+    {
+        int rowCount = refHomopolymers.size() + 1;
+        int colCount = readHomopolymers.size() + 1;
+        List<List<HomopolymerPair>> alignments = Lists.newArrayList();
+        pairHomopolymersBacktrackHelper(refHomopolymers, readHomopolymers, scores, rowCount - 1, colCount - 1, TreePVector.empty(), alignments);
+        return alignments;
+    }
+
+    // TODO: Do we need all of the pairings?
+    @VisibleForTesting
+    public static List<List<HomopolymerPair>> pairHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers)
+    {
+        // we ignore the length of homopolymers and use the Needleman–Wunsch algorithm to pair up the ref and read homopolymers
+        // we do not allow mismatches and simply penalise gaps
+        // we are trying to minimize, not maximize.
+
+        if(refHomopolymers.isEmpty() && readHomopolymers.isEmpty())
+        {
+            return Lists.newArrayList();
+        }
+
+        if(refHomopolymers.isEmpty())
+        {
+            return List.of(readHomopolymers.stream().map(homopolymer -> new HomopolymerPair(null, homopolymer)).collect(Collectors.toList()));
+        }
+
+        if(readHomopolymers.isEmpty())
+        {
+            return List.of(refHomopolymers.stream().map(homopolymer -> new HomopolymerPair(homopolymer,null)).collect(Collectors.toList()));
+        }
+
+        // now there is at least one homopolymer in both ref and read
+        // construct scoring matrix, rows (resp. columns) correspond to ref (resp. read) homopolymers
+        int rowCount = refHomopolymers.size() + 1;
+        int colCount = readHomopolymers.size() + 1;
+        List<List<AlignmentScoreTableElement>> scoreTableRows = Lists.newArrayList();
+        scoreTableRows.add(IntStream.range(0, colCount).mapToObj(x -> new AlignmentScoreTableElement(new AlignmentScore(-x, 0), null)).collect(Collectors.toList()));
+
+        List<AlignmentScore> tmpScores = Lists.newArrayList(null, null, null);
+        for(int row = 1; row < rowCount; ++row)
+        {
+            Homopolymer refHomopolymer = refHomopolymers.get(row - 1);
+            List<AlignmentScoreTableElement> nextRow = Lists.newArrayList(new AlignmentScoreTableElement(new AlignmentScore(-row, 0), null));
+            for(int col = 1; col < colCount; ++col)
+            {
+                Homopolymer readHomopolymer = readHomopolymers.get(col - 1);
+
+                // get the UP score, i.e. leaving off last ref homopolymer
+                AlignmentScore upScore = scoreTableRows.get(row - 1).get(col).Score;
+                tmpScores.set(AlignmentScoreTableDirection.UP.ordinal(), upScore.incFullIndelScore(-1));
+
+                // get the LEFT score, i.e. leaving off last read homopolymer
+                AlignmentScore leftScore = nextRow.get(col - 1).Score;
+                tmpScores.set(AlignmentScoreTableDirection.LEFT.ordinal(), leftScore.incFullIndelScore(-1));
+
+                // get the UP-LEFT score, i.e. attempting to match last ref and read homopolymer
+                AlignmentScore upLeftScore = scoreTableRows.get(row - 1).get(col - 1).Score;
+                if(refHomopolymer.Base == readHomopolymer.Base)
+                {
+                    int matchCount = min(refHomopolymer.Length, readHomopolymer.Length);
+                    int mismatchCount = abs(refHomopolymer.Length - readHomopolymer.Length);
+                    tmpScores.set(AlignmentScoreTableDirection.UP_LEFT.ordinal(), upLeftScore.incMatchScore(matchCount - mismatchCount));
+                }
+                else
+                {
+                    tmpScores.set(AlignmentScoreTableDirection.UP_LEFT.ordinal(), upLeftScore.incFullIndelScore(-2));
+                }
+
+                AlignmentScore bestScore = Collections.max(tmpScores);
+                List<AlignmentScoreTableDirection> bestDirections = Lists.newArrayList();
+                for(AlignmentScoreTableDirection direction : AlignmentScoreTableDirection.values())
+                {
+                    if(tmpScores.get(direction.ordinal()).equals(bestScore))
+                    {
+                        bestDirections.add(direction);
+                    }
+                }
+
+                nextRow.add(new AlignmentScoreTableElement(bestScore, bestDirections));
+            }
+
+            scoreTableRows.add(nextRow);
+        }
+
+        // TODO: remove
+        // Dump table.
+        System.out.println("++++++++++++++++++++++++++++++");
+        scoreTableRows.forEach(row -> System.out.println(row));
+        System.out.println("------------------------------");
+
+        return pairHomopolymersBacktrack(refHomopolymers, readHomopolymers, scoreTableRows);
     }
 
     private static List<CigarElement> collapseCigarOps(final List<CigarOperator> coreCigarOps)

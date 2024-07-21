@@ -21,7 +21,7 @@ public class UltimaLocalRealignerTest
         List<Homopolymer> refHomopolymers = Lists.newArrayList();
         List<Homopolymer> readHomopolymers = Lists.newArrayList();
 
-        List<HomopolymerPair> pairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+        List<List<HomopolymerPair>> pairs = pairHomopolymers(refHomopolymers, readHomopolymers);
 
         assertTrue(pairs.isEmpty());
     }
@@ -35,31 +35,31 @@ public class UltimaLocalRealignerTest
         List<Homopolymer> refHomopolymers = Lists.newArrayList(a1);
         List<Homopolymer> readHomopolymers = Lists.newArrayList(a3);
 
-        List<HomopolymerPair> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
-        List<HomopolymerPair> expectedPairs = Lists.newArrayList(new HomopolymerPair(a1, a3));
+        List<List<HomopolymerPair>> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+        List<List<HomopolymerPair>> expectedPairs = List.of(Lists.newArrayList(new HomopolymerPair(a1, a3)));
 
         assertEquals(expectedPairs, actualPairs);
     }
 
-    // TODO: Re-enable.
-//    @Test
-//    public void testPairHomopolymersSingleMatchmatch()
-//    {
-//        Homopolymer a1 = new Homopolymer('A', 1);
-//        Homopolymer t1 = new Homopolymer('T', 1);
-//
-//        List<Homopolymer> refHomopolymers = Lists.newArrayList(a1);
-//        List<Homopolymer> readHomopolymers = Lists.newArrayList(t1);
-//
-//        List<HomopolymerPair> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
-//
+    @Test
+    public void testPairHomopolymersSingleMatchmatch()
+    {
+        Homopolymer a1 = new Homopolymer('A', 1);
+        Homopolymer t1 = new Homopolymer('T', 1);
+
+        List<Homopolymer> refHomopolymers = Lists.newArrayList(a1);
+        List<Homopolymer> readHomopolymers = Lists.newArrayList(t1);
+
+        List<List<HomopolymerPair>> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+
+        // TODO: 3 pairings, one duplicate
 //        assertTrue(
 //                actualPairs.equals(Lists.newArrayList(new HomopolymerPair(a1, null), new HomopolymerPair(null, t1)))
 //                || actualPairs.equals(Lists.newArrayList(new HomopolymerPair(null, t1), new HomopolymerPair(a1, null))));
-//
-//        // TODO: Remove me
+
+        // TODO: Remove me
 //        assertTrue(false);
-//    }
+    }
 
     @Test
     public void testPairHomopolymersMultipleMatch()
@@ -72,8 +72,8 @@ public class UltimaLocalRealignerTest
         List<Homopolymer> refHomopolymers = Lists.newArrayList(a1, t2);
         List<Homopolymer> readHomopolymers = Lists.newArrayList(a3, t1);
 
-        List<HomopolymerPair> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
-        List<HomopolymerPair> expectedPairs = Lists.newArrayList(new HomopolymerPair(a1, a3), new HomopolymerPair(t2, t1));
+        List<List<HomopolymerPair>> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+        List<List<HomopolymerPair>> expectedPairs = List.of(Lists.newArrayList(new HomopolymerPair(a1, a3), new HomopolymerPair(t2, t1)));
 
         assertEquals(expectedPairs, actualPairs);
     }
@@ -96,14 +96,14 @@ public class UltimaLocalRealignerTest
                 new Homopolymer('G', 1),
                 new Homopolymer('A', 1));
 
-        List<HomopolymerPair> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
-        List<HomopolymerPair> expectedPairs = Lists.newArrayList(
+        List<List<HomopolymerPair>> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+        List<List<HomopolymerPair>> expectedPairs = List.of(Lists.newArrayList(
                 new HomopolymerPair(new Homopolymer('C', 2), new Homopolymer('C', 2)),
                 new HomopolymerPair(new Homopolymer('T', 1), new Homopolymer('T', 1)),
                 new HomopolymerPair(new Homopolymer('C', 3), new Homopolymer('C', 2)),
                 new HomopolymerPair(null, new Homopolymer('T', 1)),
                 new HomopolymerPair(new Homopolymer('G', 2), new Homopolymer('G', 1)),
-                new HomopolymerPair(new Homopolymer('A', 1), new Homopolymer('A', 1)));
+                new HomopolymerPair(new Homopolymer('A', 1), new Homopolymer('A', 1))));
 
         assertEquals(expectedPairs, actualPairs);
     }
@@ -122,12 +122,12 @@ public class UltimaLocalRealignerTest
                 new Homopolymer('T', 2),
                 new Homopolymer('G', 1));
 
-        List<HomopolymerPair> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
-        List<HomopolymerPair> expectedPairs = Lists.newArrayList(
+        List<List<HomopolymerPair>> actualPairs = pairHomopolymers(refHomopolymers, readHomopolymers);
+        List<List<HomopolymerPair>> expectedPairs = List.of(Lists.newArrayList(
                 new HomopolymerPair(new Homopolymer('C', 1), new Homopolymer('C', 1)),
                 new HomopolymerPair(new Homopolymer('T', 1), new Homopolymer('T', 2)),
                 new HomopolymerPair(new Homopolymer('C', 3), null),
-                new HomopolymerPair(new Homopolymer('G', 2), new Homopolymer('G', 1)));
+                new HomopolymerPair(new Homopolymer('G', 2), new Homopolymer('G', 1))));
 
         assertEquals(expectedPairs, actualPairs);
     }
