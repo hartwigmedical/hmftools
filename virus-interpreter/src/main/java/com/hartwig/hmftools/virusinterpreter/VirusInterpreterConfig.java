@@ -16,6 +16,7 @@ public class VirusInterpreterConfig
     public final String VirusBreakendTsv;
     public final String TaxonomyDbTsv;
     public final String VirusReportedDbTsv;
+    public final String VirusBlacklistedDbTsv;
     public final String PurpleDir;
     public final String TumorSampleWGSMetricsFile;
     public final String OutputDir;
@@ -23,6 +24,7 @@ public class VirusInterpreterConfig
     private static final String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
     private static final String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
     private static final String VIRUS_REPORTING_DB_TSV = "virus_reporting_db_tsv";
+    private static final String VIRUS_BLACKLISTING_DB_TSV = "virus_blacklisting_db_tsv";
     private static final String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -32,6 +34,7 @@ public class VirusInterpreterConfig
         configBuilder.addPath(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV");
         configBuilder.addPath(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name");
         configBuilder.addPath(VIRUS_REPORTING_DB_TSV, true, "Path towards a TSV containing reported of viruses");
+        configBuilder.addPath(VIRUS_BLACKLISTING_DB_TSV, true, "Path towards a TSV containing viruses to blacklist");
         configBuilder.addPath(TUMOR_SAMPLE_WGS_METRICS_FILE, true, "Path towards the tumor sample WGS metrics file");
 
         addOutputDir(configBuilder);
@@ -45,6 +48,7 @@ public class VirusInterpreterConfig
         VirusBreakendTsv = configBuilder.getValue(VIRUS_BREAKEND_TSV);
         TaxonomyDbTsv = configBuilder.getValue(TAXONOMY_DB_TSV);
         VirusReportedDbTsv = configBuilder.getValue(VIRUS_REPORTING_DB_TSV);
+        VirusBlacklistedDbTsv = configBuilder.getValue(VIRUS_BLACKLISTING_DB_TSV);
         TumorSampleWGSMetricsFile = configBuilder.getValue(TUMOR_SAMPLE_WGS_METRICS_FILE);
         OutputDir = parseOutputDir(configBuilder);
     }

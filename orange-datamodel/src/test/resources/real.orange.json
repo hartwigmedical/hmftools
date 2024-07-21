@@ -3,7 +3,7 @@
   "samplingDate": {
     "year": 2024,
     "month": 7,
-    "day": 9
+    "day": 15
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -70,6 +70,7 @@
         ],
         "amberMeanDepth": 111,
         "contamination": 0.0,
+        "totalCopyNumberSegments": 210,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 4
       },
@@ -370,6 +371,7 @@
         "reported": false
       }
     ],
+    "additionalViableSomaticFusions": [],
     "allGermlineVariants": [
       {
         "type": "SNP",
@@ -1412,61 +1414,73 @@
   "sigAllocations": [
     {
       "signature": "Sig2",
+      "etiology": "APOBEC activity",
       "allocation": 3702.746,
       "percent": 0.09832
     },
     {
       "signature": "Sig4",
+      "etiology": "Tobacco smoking",
       "allocation": 2038.759,
       "percent": 0.05414
     },
     {
       "signature": "Sig7",
+      "etiology": "Ultraviolet light exposure",
       "allocation": 23286.311,
       "percent": 0.61833
     },
     {
       "signature": "Sig8",
+      "etiology": "Unknown",
       "allocation": 1984.845,
       "percent": 0.0527
     },
     {
       "signature": "Sig11",
+      "etiology": "Temozolomide treatment",
       "allocation": 1313.281,
       "percent": 0.03487
     },
     {
       "signature": "Sig12",
+      "etiology": "Unknown",
       "allocation": 1137.124,
       "percent": 0.03019
     },
     {
       "signature": "Sig17",
+      "etiology": "Unknown",
       "allocation": 1083.158,
       "percent": 0.02876
     },
     {
       "signature": "Sig18",
+      "etiology": "Reactive oxygen species",
       "allocation": 2057.316,
       "percent": 0.05463
     },
     {
       "signature": "Sig20",
+      "etiology": "Unknown",
       "allocation": 253.052,
       "percent": 0.00672
     },
     {
       "signature": "Sig24",
+      "etiology": "Aflatoxin exposure",
       "allocation": 288.967,
       "percent": 0.00767
     },
     {
       "signature": "Sig28",
+      "etiology": "Unknown",
       "allocation": 514.441,
       "percent": 0.01366
     },
     {
       "signature": "MISALLOC",
+      "etiology": "-",
       "allocation": 4611.476,
       "percent": 0.12245
     }

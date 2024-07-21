@@ -148,6 +148,8 @@ interesting and added to the report:
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
     2. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
+- Other potentially interesting in-frame fusions in case no high drivers events are detected
+    1. In case no high driver events are detected, any in-frame non chain terminated fusion that is not already reported  
 - Other viral presence:
     1. Any viral presence that is not otherwise reported.
 - Potentially interesting gene disruptions:
@@ -260,6 +262,10 @@ investigate potential causes for QC failure.
 
 - Upcoming:
   - Add unreported reason to fusions in ORANGE
+  - Add etiology information to signatures and sort by allocation
+  - Add percentage of unsupported segments to Quality control page
+  - Show all viable fusions in ORANGE in samples where we detect no HIGH drivers
+  - Ensure HIV is never reported in ORANGE report or included in ORANGE json
 - [3.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.6.0)
     - Cuppa predictions with NaN likelihood are filtered in the ORANGE conversion of CUPPA results
 - [3.5.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.5.1)

@@ -1,3 +1,3 @@
-taxid	name	qcStatus	integrations	interpretation	percentageCovered	meanCoverage	expectedClonalCoverage	reported	driverLikelihood
-1	Virus1	NO_ABNORMALITIES	2	HPV	2	2	2	TRUE	HIGH
-2	Virus2	NO_ABNORMALITIES	0	null	2	2	2	FALSE	LOW
+taxid	name	qcStatus	integrations	interpretation	percentageCovered	meanCoverage	expectedClonalCoverage	reported	blacklisted	driverLikelihood
+1	Virus1	NO_ABNORMALITIES	2	HPV	2	2	2	TRUE	FALSE	HIGH
+2	Virus2	NO_ABNORMALITIES	0	null	2	2	2	FALSE	FALSE	LOW
