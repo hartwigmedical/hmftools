@@ -164,9 +164,10 @@ public class VariantReadContextBuilder
 
         // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
         // TODO: NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
-        // TODO: QUESTION Do we need to account for padding?
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
+            boolean addLeftPadding = false;
+            boolean addRightPadding = false;
             while(true)
             {
                 int refCoreStartIndex = readCigarInfo.CorePositionStart - refSequence.Start;
@@ -180,17 +181,36 @@ public class VariantReadContextBuilder
                 boolean expandRight = readBases[readCoreEnd] == readBases[readCoreEnd + 1] || refSequence.Bases[refCoreEndIndex] == refSequence.Bases[refCoreEndIndex + 1];
                 if(!expandLeft && !expandRight)
                 {
-                    break;
+                    if(!addLeftPadding && !addRightPadding)
+                    {
+                        break;
+                    }
+
+                    if(addLeftPadding)
+                    {
+                        --readCoreStart;
+                        --readFlankStart;
+                        addLeftPadding = false;
+                    }
+
+                    if(addRightPadding)
+                    {
+                        ++readCoreEnd;
+                        ++readFlankEnd;
+                        addRightPadding = false;
+                    }
                 }
 
                 if(expandLeft)
                 {
+                    addLeftPadding = true;
                     --readCoreStart;
                     --readFlankStart;
                 }
 
                 if(expandRight)
                 {
+                    addRightPadding = true;
                     ++readCoreEnd;
                     ++readFlankEnd;
                 }
