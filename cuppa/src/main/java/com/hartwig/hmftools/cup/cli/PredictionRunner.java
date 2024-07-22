@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import java.io.File;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
@@ -39,10 +40,10 @@ public class PredictionRunner
 
     public void extractFeatures()
     {
-        if(!mPredictionConfig.FeaturesPath.isEmpty())
+        if(mPredictionConfig.FeaturesPath != null)
         {
             CUP_LOGGER.info("Using pre-extracted features at: " + mPredictionConfig.FeaturesPath);
-            mFeaturesPath =  mPredictionConfig.FeaturesPath;
+            mFeaturesPath = mPredictionConfig.FeaturesPath;
             return;
         }
 
@@ -57,14 +58,25 @@ public class PredictionRunner
         PythonInterpreter pythonInterpreter = new PythonInterpreter(mPredictionConfig.PythonPath)
                 .requirePackages(PYCUPPA_PKG_NAME);
 
-        ShellCommand command = pythonInterpreter.command(
-                "-m cuppa.predict",
-                "--sample_id", mPredictionConfig.SampleId,
-                "--classifier_path", mPredictionConfig.ClassifierPath,
-                "--output_dir", mPredictionConfig.OutputDir,
-                "--features_path", mFeaturesPath,
-                "--log_format", PYTHON_LOG_FORMAT
-        );
+        StringJoiner args = new StringJoiner(" ");
+
+        args.add("-m cuppa.predict");
+        args.add("--classifier_path").add(mPredictionConfig.ClassifierPath);
+        args.add("--features_path").add(mFeaturesPath);
+        args.add("--output_dir").add(mPrepConfig.OutputDir);
+
+        if(mPredictionConfig.SampleId != null)
+            args.add("--sample_id").add(mPredictionConfig.SampleId);
+
+        if(mPredictionConfig.ClfGroup != null)
+            args.add("--clf_group").add(mPredictionConfig.ClfGroup);
+
+        if(mPredictionConfig.CvPredictionsPath != null)
+            args.add("--cv_predictions_path").add(mPredictionConfig.CvPredictionsPath);
+
+        args.add("--log_format").add(PYTHON_LOG_FORMAT);
+
+        ShellCommand command = pythonInterpreter.command(args.toString());
         command.logLevel(Level.INFO);
         CUP_LOGGER.info("Predicting using command: {}", command);
         command.run();
