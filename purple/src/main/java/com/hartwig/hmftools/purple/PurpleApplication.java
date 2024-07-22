@@ -261,6 +261,8 @@ public class PurpleApplication
 
             purityPloidyFitter.run();
 
+            fittedRegions.addAll(purityPloidyFitter.fittedRegions());
+
             bestFit = purityPloidyFitter.finalFit();
 
             purityAdjuster = purityPloidyFitter.purityAdjuster();
@@ -272,7 +274,7 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
+            SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
