@@ -25,15 +25,16 @@ import org.pcollections.TreePVector;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// TODO: Integrate into classes where appropriate
+// TODO: LATER Integrate into classes where appropriate
 // TODO: Guard calling this against config
-// TODO: clean up unneeded functions.
+// TODO: LATER clean up unneeded functions.
+// TODO: LATER comprehensive unit tests.
 public class UltimaLocalRealigner
 {
     @VisibleForTesting
     public static class Homopolymer
     {
-        // TODO: Just use byte instead of char.
+        // TODO: LATER Just use byte instead of char.
         public final char Base;
         public final int Length;
 
@@ -77,7 +78,6 @@ public class UltimaLocalRealigner
         INDEL;
     }
 
-    // TODO: RENAME
     @VisibleForTesting
     public static interface HomopolymerPair
     {
@@ -101,7 +101,7 @@ public class UltimaLocalRealigner
 
         public HomopolymerMatch(final Homopolymer refHomopolymer, final Homopolymer readHomopolymer)
         {
-            // TODO:
+            // TODO: LATER remove.
             assert refHomopolymer != null && readHomopolymer != null && refHomopolymer.Base == readHomopolymer.Base;
 
             RefHomopolymer = refHomopolymer;
@@ -196,7 +196,7 @@ public class UltimaLocalRealigner
 
         public HomopolymerIndel(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers)
         {
-            // TODO:
+            // TODO: LATER remove
             assert refHomopolymers != null && readHomopolymers != null;
 
             RefHomopolymers = refHomopolymers;
@@ -274,7 +274,6 @@ public class UltimaLocalRealigner
         }
     }
 
-    // TODO: Avoid strings?
     private static List<Homopolymer> getHomopolymers(final String bases)
     {
         List<Homopolymer> homopolymers = Lists.newArrayList();
@@ -307,11 +306,11 @@ public class UltimaLocalRealigner
     public static boolean isVariantExplained(final VariantReadContext readContext)
     {
         final SimpleVariant variant = readContext.variant();
-        
-        // TODO: NEXT Test inserts
+
+        // TODO: Test inserts
         assert variant.indelLength() <= 0;
 
-        // TODO: NEXT consider mnv variants.
+        // TODO: consider mnv variants.
         assert !variant.isMNV();
 
         // TODO: Consider sandwiched SNV/MNV.
@@ -325,16 +324,16 @@ public class UltimaLocalRealigner
         // pair homopolymers between ref and read
         Set<List<HomopolymerPair>> homopolymerPairings = pairHomopolymers(refCoreHomopolymers, readCoreHomopolymers);
 
-        // TODO: remove this
-        // TODO: this might be the key to is variant explained.
+        // TODO: remove this?
+        // TODO: NEXT this might be the key to is variant explained.
 //        assert homopolymerPairings.size() == 1;
         List<HomopolymerPair> homopolymerPairs = homopolymerPairings.stream().findFirst().orElse(null);
 
-        // TODO: Understand ultima qual calculator. Compute qual. Only if variant still exists after re-alignment.
+        // TODO: NEXT Understand ultima qual calculator. Compute qual. Only if variant still exists after re-alignment.
         return isVariantExplainedHelper(readContext, homopolymerPairs);
     }
 
-    // TODO: Really need to come up with a better method.
+    // TODO: NEXT Really need to come up with a better method.
     private static boolean isVariantExplainedHelper(final VariantReadContext readContext, final List<HomopolymerPair> homopolymerPairs)
     {
         // TODO: Fix this.
@@ -463,7 +462,7 @@ public class UltimaLocalRealigner
 
     private static int getVariantRefIndex(final VariantReadContext readContext)
     {
-        // TODO: This is repetitive?
+        // TODO: LATER This is repetitive?
         String readCigar = readContext.readCigar();
         List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
         List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarElements);
@@ -505,7 +504,7 @@ public class UltimaLocalRealigner
         int varLength = readContext.variant().Ref.length();
 
         // TODO: Check that it isn't flanked by del or ins?
-        // TODO: START this is repeat code
+        // TODO: LATER START this is repeat code
         String readCigar = readContext.readCigar();
         List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
         List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarElements);
@@ -542,7 +541,7 @@ public class UltimaLocalRealigner
 
         assert collapsedFlankedVariantCigarOps.size() == 1;
         assert collapsedFlankedVariantCigarOps.stream().findFirst().orElse(null) == CigarOperator.M;
-        // TODO: END
+        // TODO: LATER END
 
         String flankedRef = new String(readContext.RefBases, varRefIndex - 1, varLength + 2);
         String flankedRead = new String(readContext.ReadBases, readContext.VarIndex - 1, varLength + 2);
@@ -862,7 +861,7 @@ public class UltimaLocalRealigner
         return coreCigarOps;
     }
 
-    // TODO: Use library method.
+    // TODO: LATER Use library method.
     public static List<CigarOperator> cigarStringToOps(final String readCigar)
     {
         List<CigarOperator> cigarOps= Lists.newArrayList();

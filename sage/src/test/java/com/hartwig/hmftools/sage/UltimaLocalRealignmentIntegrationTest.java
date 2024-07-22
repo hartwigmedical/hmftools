@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-// TODO: Move to better place.
+// TODO: LATER Move to better place.
 public class UltimaLocalRealignmentIntegrationTest
 {
     private static final int READ_DEPTH = 40;
@@ -34,7 +34,6 @@ public class UltimaLocalRealignmentIntegrationTest
     private static final int RANDOM_BASES_PADDING_LENGTH = 2 * READ_LENGTH;
     private static final String CHROMOSOME = CHR_1;
 
-    // TODO: Rename
     @Test
     public void testCoreExtensionToIncludeHomopolymers()
     {
@@ -85,7 +84,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(snvReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testSnvCandidate()
     {
@@ -102,9 +100,7 @@ public class UltimaLocalRealignmentIntegrationTest
         ChrBaseRegion region = new ChrBaseRegion(CHROMOSOME, 1, refBases.length());
 
         MutatedBasesBuilder mutatedBasesBuilder = new MutatedBasesBuilder(refBases);
-        // TODO: change this back once we get read base expansion working.
-        // mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
-        mutatedBasesBuilder.delBases(initRefBases.length() + 11, 1);
+        mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
         mutatedBasesBuilder.mutateBase(initRefBases.length() + 13, 'T');
         MutatedBases mutatedBases = mutatedBasesBuilder.build();
 
@@ -138,7 +134,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(snvReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testSingleBaseHomopolymerContractionInMiddle()
     {
@@ -155,8 +150,6 @@ public class UltimaLocalRealignmentIntegrationTest
         ChrBaseRegion region = new ChrBaseRegion(CHROMOSOME, 1, refBases.length());
 
         MutatedBasesBuilder mutatedBasesBuilder = new MutatedBasesBuilder(refBases);
-        // TODO: change this back once we get read base expansion working.
-        //            mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
         mutatedBasesBuilder.delBases(initRefBases.length() + 11, 1);
         mutatedBasesBuilder.mutateBase(initRefBases.length() + 13, 'T');
         MutatedBases mutatedBases = mutatedBasesBuilder.build();
@@ -191,7 +184,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(indelReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testSingleBaseHomopolymerContractionAtBoundary()
     {
@@ -242,7 +234,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(indelReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testMultiBaseHomopolymerContractionInMiddle()
     {
@@ -259,8 +250,6 @@ public class UltimaLocalRealignmentIntegrationTest
         ChrBaseRegion region = new ChrBaseRegion(CHROMOSOME, 1, refBases.length());
 
         MutatedBasesBuilder mutatedBasesBuilder = new MutatedBasesBuilder(refBases);
-        // TODO: change this back once we get read base expansion working.
-        //            mutatedBasesBuilder.delBases(initRefBases.length() + 10, 1);
         mutatedBasesBuilder.delBases(initRefBases.length() + 11, 3);
         mutatedBasesBuilder.mutateBase(initRefBases.length() + 15, 'T');
         MutatedBases mutatedBases = mutatedBasesBuilder.build();
@@ -275,7 +264,7 @@ public class UltimaLocalRealignmentIntegrationTest
         List<SAMRecord> reads = Lists.newArrayList();
         while(reads.size() < READ_DEPTH)
         {
-            // TODO: Different read name for each read. Other tests as well.
+            // TODO: LATER Different read name for each read. Other tests as well.
             reads.add(read);
         }
 
@@ -296,7 +285,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(indelReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testMultiBaseHomopolymerContractionAtBoundary()
     {
@@ -327,7 +315,6 @@ public class UltimaLocalRealignmentIntegrationTest
         List<SAMRecord> reads = Lists.newArrayList();
         while(reads.size() < READ_DEPTH)
         {
-            // TODO: Different read name for each read. Other tests as well.
             reads.add(read);
         }
 
@@ -348,7 +335,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(indelReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testSingleHomopolymerDeletion()
     {
@@ -399,7 +385,6 @@ public class UltimaLocalRealignmentIntegrationTest
         assertTrue(UltimaLocalRealigner.isVariantExplained(indelReadContext));
     }
 
-    // TODO: Rename
     @Test
     public void testMultipleHomopolymerDeletion()
     {
