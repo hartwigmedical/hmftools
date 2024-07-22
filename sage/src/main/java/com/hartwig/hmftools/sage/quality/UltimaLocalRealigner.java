@@ -82,6 +82,15 @@ public class UltimaLocalRealigner
     public static interface HomopolymerPair
     {
         public HomopolymerPairType type();
+
+        public int refBasesCount();
+        public int readBasesCount();
+
+        Character firstRefBase();
+        int firstRefIndelLength();
+
+        public Character lastRefBase();
+        int lastRefIndelLength();
     }
 
     @VisibleForTesting
@@ -141,6 +150,42 @@ public class UltimaLocalRealigner
         {
             return HomopolymerPairType.MATCH;
         }
+
+        @Override
+        public int refBasesCount()
+        {
+            return RefHomopolymer.Length;
+        }
+
+        @Override
+        public int readBasesCount()
+        {
+            return ReadHomopolymer.Length;
+        }
+
+        @Override
+        public Character firstRefBase()
+        {
+            return RefHomopolymer.Base;
+        }
+
+        @Override
+        public int firstRefIndelLength()
+        {
+            return indelLength();
+        }
+
+        @Override
+        public Character lastRefBase()
+        {
+            return RefHomopolymer.Base;
+        }
+
+        @Override
+        public int lastRefIndelLength()
+        {
+            return indelLength();
+        }
     }
 
     @VisibleForTesting
@@ -191,6 +236,42 @@ public class UltimaLocalRealigner
         {
             return HomopolymerPairType.INDEL;
         }
+
+        @Override
+        public int refBasesCount()
+        {
+            return RefHomopolymers.stream().mapToInt(x -> x.Length).sum();
+        }
+
+        @Override
+        public int readBasesCount()
+        {
+            return ReadHomopolymers.stream().mapToInt(x -> x.Length).sum();
+        }
+
+        @Override
+        public Character firstRefBase()
+        {
+            return RefHomopolymers.isEmpty() ? null : RefHomopolymers.get(0).Base;
+        }
+
+        @Override
+        public int firstRefIndelLength()
+        {
+            return RefHomopolymers.isEmpty() ? 0 : -RefHomopolymers.get(0).Length;
+        }
+
+        @Override
+        public Character lastRefBase()
+        {
+            return RefHomopolymers.isEmpty() ? null : RefHomopolymers.get(RefHomopolymers.size() - 1).Base;
+        }
+
+        @Override
+        public int lastRefIndelLength()
+        {
+            return RefHomopolymers.isEmpty() ? 0 : -RefHomopolymers.get(RefHomopolymers.size() - 1).Length;
+        }
     }
 
     // TODO: Avoid strings?
@@ -226,8 +307,7 @@ public class UltimaLocalRealigner
     public static boolean isVariantExplained(final VariantReadContext readContext)
     {
         final SimpleVariant variant = readContext.variant();
-
-        // TODO: NEXT Test longer dels
+        
         // TODO: NEXT Test inserts
         assert variant.indelLength() <= 0;
 
@@ -237,34 +317,17 @@ public class UltimaLocalRealigner
         // TODO: Consider sandwiched SNV/MNV.
         assert !isSandwichedNonIndel(readContext, getVariantRefIndex(readContext));
 
-        // TODO: Extend so that read base count matches core length modulo indel size, plus one base padding.
-        // TODO: Extend read bases and core to cover full homopolymers.
         // TODO: Mask sandwich snvs/mvns.
 
         List<Homopolymer> refCoreHomopolymers = getHomopolymers(readContext.refBases());
         List<Homopolymer> readCoreHomopolymers = getHomopolymers(readContext.coreStr());
 
-        // Construct read cigar in core
-        String readCigar = readContext.readCigar();
-        List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarElements);
-//        List<CigarElement> coreCigarElements = collapseCigarOps(coreCigarOps);
-
-        // TODO: Check core length.
-        int actualCoreLength = readContext.coreLength();
-        int expectedCoreLength = coreCigarOps.stream().mapToInt(op -> op.consumesReadBases() ? 1 : 0).sum();
-        assert actualCoreLength == expectedCoreLength;
-
-        // TODO: Check ref bases length.
-        int actualRefBasesLength = readContext.RefBases.length;
-        int expectedRefBasesLength = coreCigarOps.stream().mapToInt(op -> op.consumesReferenceBases() ? 1 : 0).sum();
-        assert actualRefBasesLength == expectedRefBasesLength;
-
         // pair homopolymers between ref and read
         Set<List<HomopolymerPair>> homopolymerPairings = pairHomopolymers(refCoreHomopolymers, readCoreHomopolymers);
 
         // TODO: remove this
-        assert homopolymerPairings.size() == 1;
+        // TODO: this might be the key to is variant explained.
+//        assert homopolymerPairings.size() == 1;
         List<HomopolymerPair> homopolymerPairs = homopolymerPairings.stream().findFirst().orElse(null);
 
         // TODO: Understand ultima qual calculator. Compute qual. Only if variant still exists after re-alignment.
@@ -274,8 +337,7 @@ public class UltimaLocalRealigner
     // TODO: Really need to come up with a better method.
     private static boolean isVariantExplainedHelper(final VariantReadContext readContext, final List<HomopolymerPair> homopolymerPairs)
     {
-        // TODO:
-        assert false;
+        // TODO: Fix this.
         return true;
 
 //        SimpleVariant variant = readContext.variant();
@@ -294,89 +356,109 @@ public class UltimaLocalRealigner
 //            int readBasesConsumed = 0;
 //            while(readBasesConsumed < varCoreIndex)
 //            {
-//                Homopolymer readHomopolymer = homopolymerPairs.get(++varHomopolymerPairIndex).ReadHomopolymer;
-//                if(readHomopolymer != null)
-//                {
-//                    readBasesConsumed += readHomopolymer.Length;
-//                }
+//                readBasesConsumed += homopolymerPairs.get(++varHomopolymerPairIndex).readBasesCount();
 //            }
 //
 //            HomopolymerPair varHomopolymerPair = homopolymerPairs.get(varHomopolymerPairIndex);
 //            HomopolymerPair beforeHomopolymerPair = varHomopolymerPairIndex == 0 ? null : homopolymerPairs.get(varHomopolymerPairIndex - 1);
 //            HomopolymerPair afterHomopolymerPair = varHomopolymerPairIndex == homopolymerPairs.size() - 1 ? null : homopolymerPairs.get(varHomopolymerPairIndex + 1);
 //
-//            if (varHomopolymerPair.base() != variant.Alt.charAt(0) || varHomopolymerPair.indelLength() != 1)
+//            if(varHomopolymerPair.type() == HomopolymerPairType.MATCH)
 //            {
-//                return false;
+//                // TODO:
+//                assert false;
+//
+//                HomopolymerMatch varMatch = (HomopolymerMatch) varHomopolymerPair;
+//
+//                if (varMatch.base() != variant.Alt.charAt(0) || varMatch.indelLength() != 1)
+//                {
+//                    return false;
+//                }
+//            }
+//            else
+//            {
+//                HomopolymerIndel varIndel = (HomopolymerIndel) varHomopolymerPair;
+//
+//                if(varIndel.ReadHomopolymers.isEmpty())
+//                {
+//                    return false;
+//                }
+//
+//
 //            }
 //
 //            // check var pair and before pair
 //            if(beforeHomopolymerPair != null
-//                    && beforeHomopolymerPair.base() == variant.Ref.charAt(0)
-//                    && beforeHomopolymerPair.indelLength() == -1)
+//                    && beforeHomopolymerPair.refBasesCount() >= 1
+//                    && beforeHomopolymerPair.lastRefBase() == variant.Ref.charAt(0)
+//                    && beforeHomopolymerPair.lastRefIndelLength() == -1)
 //            {
 //                return true;
 //            }
 //
 //            // check var pair and after pair
 //            if(afterHomopolymerPair != null
-//                    && afterHomopolymerPair.base() == variant.Ref.charAt(0)
-//                    && afterHomopolymerPair.indelLength() == -1)
+//                    && afterHomopolymerPair.refBasesCount() >= 1
+//                    && afterHomopolymerPair.firstRefBase() == variant.Ref.charAt(0)
+//                    && afterHomopolymerPair.firstRefIndelLength() == -1)
 //            {
 //                return true;
 //            }
-//
-//            return false;
 //        }
 //        else if(variant.indelLength() <= -1)
 //        {
-//            String deletedBases = variant.Ref.substring(1);
-//            List<Homopolymer> deletedAsHomopolymers = getHomopolymers(deletedBases);
+//            // TODO:
+//            assert false;
 //
-//            char deletedBase = deletedBases.charAt(0);
-//            int matchingPairCount = 0;
-//            for(int i = 0; i < homopolymerPairs.size(); ++i)
-//            {
-//                boolean matches = true;
-//                for(int j = 0; j < deletedAsHomopolymers.size(); ++j)
-//                {
-//                    Homopolymer deleted = deletedAsHomopolymers.get(j);
-//                    HomopolymerPair pair = homopolymerPairs.get(i + j);
-//                    if(deleted.Base != pair.base())
-//                    {
-//                        matches = false;
-//                        break;
-//                    }
-//
-//                    if(-deleted.Length != pair.indelLength())
-//                    {
-//                        matches = false;
-//                        break;
-//                    }
-//
-//                    if(j > 0 && j < deletedAsHomopolymers.size() - 1 && pair.ReadHomopolymer != null)
-//                    {
-//                        matches = false;
-//                        break;
-//                    }
-//                }
-//
-//                if(matches)
-//                {
-//                    ++matchingPairCount;
-//                }
-//            }
-//
-//            // TODO: not more than one match.
-//            assert matchingPairCount <= 1;
-//
-//            return matchingPairCount == 1;
+////            String deletedBases = variant.Ref.substring(1);
+////            List<Homopolymer> deletedAsHomopolymers = getHomopolymers(deletedBases);
+////
+////            char deletedBase = deletedBases.charAt(0);
+////            int matchingPairCount = 0;
+////            for(int i = 0; i < homopolymerPairs.size(); ++i)
+////            {
+////                boolean matches = true;
+////                for(int j = 0; j < deletedAsHomopolymers.size(); ++j)
+////                {
+////                    Homopolymer deleted = deletedAsHomopolymers.get(j);
+////                    HomopolymerPair pair = homopolymerPairs.get(i + j);
+////                    if(deleted.Base != pair.base())
+////                    {
+////                        matches = false;
+////                        break;
+////                    }
+////
+////                    if(-deleted.Length != pair.indelLength())
+////                    {
+////                        matches = false;
+////                        break;
+////                    }
+////
+////                    if(j > 0 && j < deletedAsHomopolymers.size() - 1 && pair.ReadHomopolymer != null)
+////                    {
+////                        matches = false;
+////                        break;
+////                    }
+////                }
+////
+////                if(matches)
+////                {
+////                    ++matchingPairCount;
+////                }
+////            }
+////
+////            // TODO: not more than one match.
+////            assert matchingPairCount <= 1;
+////
+////            return matchingPairCount == 1;
 //        }
 //        else
 //        {
 //            // TODO:
 //            throw new RuntimeException("TODO");
 //        }
+//
+//        return false;
     }
 
     private static int getVariantRefIndex(final VariantReadContext readContext)
@@ -757,7 +839,7 @@ public class UltimaLocalRealigner
         return cigarElements;
     }
 
-    private static List<CigarOperator> getCoreCigarOps(final VariantReadContext readContext, final List<CigarOperator> cigarElements)
+    public static List<CigarOperator> getCoreCigarOps(final VariantReadContext readContext, final List<CigarOperator> cigarElements)
     {
         int cigarIndex = 0;
         int readIndex = 0;
@@ -781,7 +863,7 @@ public class UltimaLocalRealigner
     }
 
     // TODO: Use library method.
-    private static List<CigarOperator> cigarStringToOps(final String readCigar)
+    public static List<CigarOperator> cigarStringToOps(final String readCigar)
     {
         List<CigarOperator> cigarOps= Lists.newArrayList();
         int count = 0;

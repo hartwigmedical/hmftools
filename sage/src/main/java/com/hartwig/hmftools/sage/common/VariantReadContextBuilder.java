@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -17,8 +18,11 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 
 import htsjdk.samtools.CigarElement;
@@ -26,11 +30,19 @@ import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextBuilder
 {
+    @Nullable
+    private final SageConfig mConfig;
     private final int mFlankSize;
+
+    public VariantReadContextBuilder(final SageConfig config, int flankSize)
+    {
+        mConfig = config;
+        mFlankSize = flankSize;
+    }
 
     public VariantReadContextBuilder(int flankSize)
     {
-        mFlankSize = flankSize;
+        this(null, flankSize);
     }
 
     public VariantReadContext createContext(
@@ -95,7 +107,6 @@ public class VariantReadContextBuilder
 
         if(variant.isIndel())
         {
-            // TODO: Cover indel case.
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
             int refBaseLength = read.getReadBases().length - varIndexInRead;
@@ -120,7 +131,6 @@ public class VariantReadContextBuilder
         }
         else
         {
-            // TODO: Expand core to cover holopolymers, but indel etc.
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE;
             readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
         }
@@ -130,11 +140,13 @@ public class VariantReadContextBuilder
 
         final byte[] readBases = read.getReadBases();
 
+        // NOTE: Now expand to find repeat boundaries.
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
         readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
         readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
 
+        // NOTE: Add flanks.
         int readFlankStart = readCoreStart - mFlankSize;
         int readFlankEnd = readCoreEnd + mFlankSize;
 
@@ -149,6 +161,53 @@ public class VariantReadContextBuilder
 
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
+
+        // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
+        // NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
+        // TODO: Do we need to account for padding?
+        if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
+        {
+            while(true)
+            {
+                int refCoreStartIndex = readCigarInfo.CorePositionStart - refSequence.Start;
+                int refCoreEndIndex = readCigarInfo.CorePositionEnd - refSequence.Start;
+                if(readCoreStart <= 0 || readCoreEnd >= readBases.length - 1 || refCoreStartIndex <= 0 || refCoreEndIndex >= refSequence.Bases.length - 1)
+                {
+                    return null;
+                }
+
+                boolean expandLeft = readBases[readCoreStart] == readBases[readCoreStart - 1] || refSequence.Bases[refCoreStartIndex] == refSequence.Bases[refCoreStartIndex - 1];
+                boolean expandRight = readBases[readCoreEnd] == readBases[readCoreEnd + 1] || refSequence.Bases[refCoreEndIndex] == refSequence.Bases[refCoreEndIndex + 1];
+                if(!expandLeft && !expandRight)
+                {
+                    break;
+                }
+
+                if(expandLeft)
+                {
+                    --readCoreStart;
+                    --readFlankStart;
+                }
+
+                if(expandRight)
+                {
+                    ++readCoreEnd;
+                    ++readFlankEnd;
+                }
+
+                if(readFlankStart < 0 || readFlankEnd >= read.getReadBases().length)
+                    return null;
+
+                // TODO: Do we need to rebuild the whole cigar each time?
+                readCigarInfo = ReadCigarInfo.buildReadCigar(
+                        softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
+                        softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
+                        readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+
+                if(readCigarInfo == null || !readCigarInfo.isValid())
+                    return null;
+            }
+        }
 
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
@@ -197,7 +256,7 @@ public class VariantReadContextBuilder
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
-                readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
+                readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd, refSequence, mConfig);
     }
 
     private class SoftClipReadAdjustment
