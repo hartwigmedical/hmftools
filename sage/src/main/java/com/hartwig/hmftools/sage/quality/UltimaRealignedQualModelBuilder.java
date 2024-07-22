@@ -29,6 +29,7 @@ import htsjdk.samtools.CigarOperator;
 // TODO: Guard calling this against config
 // TODO: clean up unneeded functions.
 // TODO: LATER comprehensive unit tests.
+// TODO: Test on actual sample.
 public class UltimaRealignedQualModelBuilder
 {
     @VisibleForTesting
