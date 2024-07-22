@@ -565,7 +565,7 @@ public class PhaseSetBuilder
 
                 assembly.candidateSupport().stream()
                         .filter(x -> !x.hasJunctionMate())
-                        .filter(x -> remoteRegion.readIds().contains(x.id()))
+                        .filter(x -> remoteRegion.containsReadId(x.id()))
                         .forEach(x -> localReadIds.add(x.id()));
 
                 AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReadIds);

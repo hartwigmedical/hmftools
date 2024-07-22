@@ -74,6 +74,8 @@ public class RemoteRegion extends ChrBaseRegion
         return mOrientation == otherOrientation && overlaps(otherChr, otherPosStart, otherPosEnd);
     }
 
+    public boolean containsReadId(final String fullReadId) { return mReadIds.stream().anyMatch(x -> fullReadId.contains(x)); }
+
     public String toString()
     {
         return format("%s orient(%s) reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
