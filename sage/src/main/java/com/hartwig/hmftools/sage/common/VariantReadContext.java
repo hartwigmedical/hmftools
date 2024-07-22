@@ -2,23 +2,17 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
-import static com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.cigarStringToOps;
-import static com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.getCoreCigarOps;
 
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContext
 {
@@ -54,11 +48,7 @@ public class VariantReadContext
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
             final byte[] readBases, final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
-            final int corePositionStart, final int corePositionEnd,
-            // TODO: remove these
-            final RefSequence refSequence,
-            final SageConfig config
-            )
+            final int corePositionStart, final int corePositionEnd)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -81,50 +71,6 @@ public class VariantReadContext
         mUltimaQualModel = null;
         mMaxRefRepeat = null;
         mExtendedRefBases = null;
-
-        validate(config, refSequence);
-    }
-
-    // TODO: Remove this.
-    private void validate(final SageConfig config, final RefSequence refSequence)
-    {
-        if(refSequence == null)
-        {
-            return;
-        }
-
-        if(config == null || config.Sequencing.Type != ULTIMA)
-        {
-            return;
-        }
-
-        // check read core doesn't cut off a homopolymer.
-        assert ReadBases[CoreIndexStart] != ReadBases[CoreIndexStart - 1];
-        assert ReadBases[CoreIndexEnd] != ReadBases[CoreIndexEnd + 1];
-
-        // check that ref core doesn't cut off a homopolymer.
-        int refStartIndex = CorePositionStart - refSequence.Start;
-        int refEndIndex = CorePositionEnd - refSequence.Start;
-
-        assert refBases().equals(new String(refSequence.Bases, refStartIndex, refEndIndex - refStartIndex + 1));
-        assert refSequence.Bases[refStartIndex] != refSequence.Bases[refStartIndex - 1];
-        assert refSequence.Bases[refEndIndex] != refSequence.Bases[refEndIndex + 1];
-
-        // Check base counts are what they should be.
-        // Construct read cigar in core
-        String readCigar = readCigar();
-        List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(this, cigarElements);
-
-        // check core length.
-        int actualCoreLength = coreLength();
-        int expectedCoreLength = coreCigarOps.stream().mapToInt(op -> op.consumesReadBases() ? 1 : 0).sum();
-        assert actualCoreLength == expectedCoreLength;
-
-        // check ref bases length.
-        int actualRefBasesLength = RefBases.length;
-        int expectedRefBasesLength = coreCigarOps.stream().mapToInt(op -> op.consumesReferenceBases() ? 1 : 0).sum();
-        assert actualRefBasesLength == expectedRefBasesLength;
     }
 
     // read context methods

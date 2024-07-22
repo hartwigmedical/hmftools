@@ -1,24 +1,12 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.pairHomopolymers;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-import java.util.Set;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.Homopolymer;
-import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.HomopolymerIndel;
-import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.HomopolymerMatch;
-import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner.HomopolymerPair;
-
-import org.junit.Test;
-
+// TODO: re-align class name.
 public class UltimaLocalRealignerTest
 {
-    // TODO: LATER re-enable tests.
+    // TODO: re-enable tests.
 
 //    @Test
 //    public void testPairHomopolymersEmpty()

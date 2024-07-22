@@ -276,7 +276,7 @@ public class VariantReadContextBuilder
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
-                readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd, refSequence, mConfig);
+                readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 
     private class SoftClipReadAdjustment
