@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
 
 import com.google.common.collect.Lists;
 import org.jetbrains.annotations.Nullable;

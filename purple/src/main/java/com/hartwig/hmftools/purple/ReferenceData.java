@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
+import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
 
 import java.io.File;

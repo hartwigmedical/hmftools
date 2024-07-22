@@ -8,7 +8,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.signum;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
+import static com.hartwig.hmftools.purple.PurpleConstants.BAF_PNT_5;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.purple.config.FittingConfig;
+import com.hartwig.hmftools.purple.FittingConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.region.PloidyDeviation;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;

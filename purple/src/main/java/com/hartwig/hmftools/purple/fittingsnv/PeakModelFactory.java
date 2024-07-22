@@ -3,11 +3,11 @@ package com.hartwig.hmftools.purple.fittingsnv;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_UNEXPLAINED_WEIGHT_PERCENT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_CLONAL_PLOIDY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_MIN_AVERAGE_WEIGHT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_UNEXPLAINED_WEIGHT_PERCENT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PEAK_BIN_CLONAL_PLOIDY;
+import static com.hartwig.hmftools.purple.PurpleConstants.PEAK_BIN_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PEAK_BIN_MIN_AVERAGE_WEIGHT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PEAK_BIN_WIDTH;
 
 import java.util.List;
 import java.util.Map;

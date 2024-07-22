@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.AMBER_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.COBALT_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.ESVEE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PAVE_GERMLINE_DIR;
@@ -15,10 +16,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-
-import htsjdk.variant.vcf.VCFFileReader;
 
 public class SampleDataFiles
 {
@@ -75,14 +73,30 @@ public class SampleDataFiles
         else
             CobaltDirectory = null;
 
-        SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.filtered.somatic.vcf.gz");
-        GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, GRIPSS_GERMLINE_DIR, sampleId, ".gripss.filtered.germline.vcf.gz");
+        String somaticGripssVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.filtered.somatic.vcf.gz");
+        String germlineGripssVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, GRIPSS_GERMLINE_DIR, sampleId, ".gripss.filtered.germline.vcf.gz");
+
+        String somaticEsveeVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, ESVEE_DIR, sampleId, ".esvee.somatic.vcf.gz");
+        String germlineEsveeVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, ESVEE_DIR, sampleId, ".esvee.germline.vcf.gz");
+
+        if(Files.exists(Paths.get(somaticGripssVcfFile)) | Files.exists(Paths.get(germlineGripssVcfFile)))
+        {
+            SomaticSvVcfFile = somaticGripssVcfFile;
+            GermlineSvVcfFile = germlineGripssVcfFile;
+        }
+        else
+        {
+            SomaticSvVcfFile = somaticEsveeVcfFile;
+            GermlineSvVcfFile = germlineEsveeVcfFile;
+        }
 
         RecoveredSvVcfFile = getFilename(configBuilder, SV_RECOVERY_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.somatic.vcf.gz");
 
         SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");
         GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.germline.vcf.gz");
     }
+
+    public boolean usesGridssSVs() { return SomaticSvVcfFile.contains("gridss") || GermlineSvVcfFile.contains("gridss"); }
 
     public boolean hasValidSampleNames(final PurpleConfig config)
     {

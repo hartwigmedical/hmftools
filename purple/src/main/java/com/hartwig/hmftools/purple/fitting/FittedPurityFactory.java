@@ -21,8 +21,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
-import com.hartwig.hmftools.purple.config.FittingConfig;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.FittingConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fittingsnv.SomaticDeviation;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;

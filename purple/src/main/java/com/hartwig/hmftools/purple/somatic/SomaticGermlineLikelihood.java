@@ -7,12 +7,12 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_V
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD_DESC;
-import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH;
-import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW;
+import static com.hartwig.hmftools.purple.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH;
+import static com.hartwig.hmftools.purple.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW;
 
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFHeader;

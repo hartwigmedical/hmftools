@@ -8,20 +8,18 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.INVALID_PURITY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAPPABILITY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.SNV_FITTING_MAPPABILITY;
+import static com.hartwig.hmftools.purple.PurpleConstants.SNV_FITTING_MAX_REPEATS;
+import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticKernelDensityPeaks.findMatchedFittedPurity;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticReadjustmentFit.calcReadjustmentPurity;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static java.lang.String.format;
 
@@ -6,27 +6,27 @@ import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDe
 import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigInteger;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_PLOIDY_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_PURITY_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PLOIDY_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PURITY_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_FACTOR_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_MIN_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.PURITY_INCREMENT_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_GC_RATIO_EXPONENT_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_PLOIDY_PENALTY_MIN_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PLOIDY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PLOIDY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_MIN_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_GC_RATIO_EXPONENT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_MIN_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

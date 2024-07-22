@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
+import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
 
@@ -36,10 +36,10 @@ import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;

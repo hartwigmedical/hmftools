@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.pcf.PCFSource.TUMOR_BAF;
 import static com.hartwig.hmftools.common.utils.pcf.PCFSource.TUMOR_RATIO;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.REF_SAMPLE_ID;
@@ -11,9 +10,8 @@ import static com.hartwig.hmftools.purple.PurpleTestUtils.createAmberBaf;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createCobaltRatio;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createObservedRegion;
 import static com.hartwig.hmftools.purple.PurpleTestUtils.createSegmentation;
-import static com.hartwig.hmftools.purple.config.FittingConfig.MAX_PLOIDY;
-import static com.hartwig.hmftools.purple.config.FittingConfig.MIN_PLOIDY;
-import static com.hartwig.hmftools.purple.config.FittingConfig.PURITY_INCREMENT;
+import static com.hartwig.hmftools.purple.FittingConfig.MAX_PLOIDY;
+import static com.hartwig.hmftools.purple.FittingConfig.PURITY_INCREMENT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,11 +33,11 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.PurpleTestUtils;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.config.SampleData;
+import com.hartwig.hmftools.purple.AmberData;
+import com.hartwig.hmftools.purple.CobaltData;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.SampleData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;

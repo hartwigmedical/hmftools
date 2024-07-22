@@ -50,7 +50,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class StructuralVariantFactory
+public class StructuralVariantFactory implements SvFactoryInterface
 {
     private final Map<String,VariantContext> mUnmatchedVariants;
     private final List<StructuralVariant> mCompleteVariants;

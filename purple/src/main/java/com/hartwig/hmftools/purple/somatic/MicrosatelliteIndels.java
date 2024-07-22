@@ -5,13 +5,13 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.config.TargetRegionsData;
+import com.hartwig.hmftools.purple.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

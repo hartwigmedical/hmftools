@@ -51,6 +51,7 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.SvFactoryInterface;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
@@ -64,7 +65,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class GridssSvFactory
+public class GridssSvFactory implements SvFactoryInterface
 {
     // Must match the small deldup threshold in Gripss
     private static final int SMALL_DELDUP_SIZE = 1000;

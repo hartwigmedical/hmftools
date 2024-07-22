@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
+import static com.hartwig.hmftools.purple.PurpleConstants.BAF_PNT_5;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 

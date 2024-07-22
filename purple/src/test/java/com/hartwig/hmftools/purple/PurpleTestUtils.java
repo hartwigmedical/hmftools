@@ -3,8 +3,6 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -17,12 +15,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.Segmentation;
-
-import org.jetbrains.annotations.NotNull;
 
 public class PurpleTestUtils
 {

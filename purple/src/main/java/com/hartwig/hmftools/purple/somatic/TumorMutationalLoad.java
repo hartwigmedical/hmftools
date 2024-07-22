@@ -10,13 +10,13 @@ import static com.hartwig.hmftools.common.variant.SomaticLikelihood.MEDIUM;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
-import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
+import static com.hartwig.hmftools.purple.PurpleConstants.CODING_BASES_PER_GENOME;
+import static com.hartwig.hmftools.purple.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.config.TargetRegionsData;
+import com.hartwig.hmftools.purple.TargetRegionsData;
 
 public class TumorMutationalLoad
 {

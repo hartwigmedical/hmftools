@@ -7,7 +7,7 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CDKN2A_DELETION_REGION;
+import static com.hartwig.hmftools.purple.PurpleConstants.CDKN2A_DELETION_REGION;
 import static com.hartwig.hmftools.purple.copynumber.ExtendUtils.populateUnknown;
 
 import java.util.List;

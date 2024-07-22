@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import java.io.File;
 

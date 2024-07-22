@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;

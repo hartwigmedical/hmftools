@@ -6,10 +6,8 @@ import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
-import com.hartwig.hmftools.purple.config.ChartConfig;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.purple.ChartConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 
 public class RCharts
 {

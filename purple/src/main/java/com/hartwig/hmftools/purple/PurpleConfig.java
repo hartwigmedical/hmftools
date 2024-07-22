@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
@@ -45,6 +45,7 @@ public class PurpleConfig
     // debug only
     public final boolean FilterSomaticsOnGene;
     public final boolean WriteAllSomatics;
+    public final boolean UseGridssSVs;
     public final SpecificRegions SpecificChrRegions;
 
     private boolean mIsValid;
@@ -109,6 +110,7 @@ public class PurpleConfig
         DriversOnly = configBuilder.hasFlag(DRIVERS_ONLY);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
+        UseGridssSVs = SampleFiles.usesGridssSVs();
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",

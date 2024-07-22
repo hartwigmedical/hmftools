@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
+import com.hartwig.hmftools.purple.AmberData;
+import com.hartwig.hmftools.purple.CobaltData;
 
 public final class PCFPositionsSupplier
 {

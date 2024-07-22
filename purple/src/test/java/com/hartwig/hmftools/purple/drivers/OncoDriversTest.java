@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.drivers;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
 
 import static org.junit.Assert.assertEquals;
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
+import static com.hartwig.hmftools.purple.PurpleConstants.BAF_PNT_5;
 import static com.hartwig.hmftools.purple.fitting.RegionFitCalculator.estimateMinMaxBaf;
 
 import static org.junit.Assert.assertEquals;
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.purple.config.FittingConfig;
+import com.hartwig.hmftools.purple.FittingConfig;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 

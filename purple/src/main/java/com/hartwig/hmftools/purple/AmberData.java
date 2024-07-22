@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.amber.AmberGender.determineGender;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 
 import java.io.File;
 import java.io.IOException;

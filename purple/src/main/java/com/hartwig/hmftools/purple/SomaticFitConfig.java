@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.purple.config;
+package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_SPREAD_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_VARIANTS_DEFAULT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_PENALTY_WEIGHT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_PURITY_SPREAD_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_VARIANTS_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_PENALTY_WEIGHT_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
