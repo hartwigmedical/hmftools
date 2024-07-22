@@ -67,6 +67,18 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
+    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    {
+        // TODO: QUESTION Consider sandwiched SNV/MNV.
+        // TODO: QUESTION Mask sandwich snvs/mvns.
+
+        List<Homopolymer> refHomopolymers = getHomopolymers(readContext.refBases());
+        List<Homopolymer> readHomopolymers = getHomopolymers(readContext.coreStr());
+        List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, refHomopolymers, readHomopolymers);
+        List<SimpleVariant> qualVariants = getQualVariants(readContext, realignedVariants);
+        return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
+    }
+
     private static List<Homopolymer> getHomopolymers(final String bases)
     {
         List<Homopolymer> homopolymers = Lists.newArrayList();
@@ -95,196 +107,6 @@ public class UltimaRealignedQualModelBuilder
         return homopolymers;
     }
 
-    private static int getVariantRefIndex(final VariantReadContext readContext)
-    {
-        // TODO: LATER This is repetitive?
-        String readCigar = readContext.readCigar();
-        List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarElements);
-
-        int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart;
-
-        int refIndex = 0;
-        int readIndex = 0;
-        for(CigarOperator op : coreCigarOps)
-        {
-            if(readIndex == varCoreIndex)
-            {
-                break;
-            }
-
-            if(op.consumesReferenceBases())
-            {
-                ++refIndex;
-            }
-
-            if(op.consumesReadBases())
-            {
-                ++readIndex;
-            }
-        }
-
-        return refIndex;
-    }
-
-    private static boolean isSandwichedNonIndel(final VariantReadContext readContext, int varRefIndex)
-    {
-        if(readContext.variant().isIndel())
-        {
-            return false;
-        }
-
-        int varLength = readContext.variant().Ref.length();
-
-        // TODO: Check that it isn't flanked by del or ins?
-        // TODO: LATER START this is repeat code
-        String readCigar = readContext.readCigar();
-        List<CigarOperator> cigarElements = cigarStringToOps(readCigar);
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarElements);
-
-        int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart;
-
-        int cigarIndex = 0;
-        int readIndex = 0;
-        for(CigarOperator op : coreCigarOps)
-        {
-            if(readIndex == varCoreIndex)
-            {
-                break;
-            }
-
-            if(op.consumesReadBases())
-            {
-                ++readIndex;
-            }
-
-            ++cigarIndex;
-        }
-
-        final List<CigarOperator> flankedVariantCigarOperators = coreCigarOps
-                .subList(cigarIndex - 1, (cigarIndex - 1) + varLength + 2);
-
-        assert flankedVariantCigarOperators.size() == varLength + 2;
-
-        Set<CigarOperator> collapsedFlankedVariantCigarOps = flankedVariantCigarOperators
-                .stream()
-                .collect(Collectors.toCollection(() -> EnumSet.noneOf(CigarOperator.class)));
-
-        assert collapsedFlankedVariantCigarOps.size() == 1;
-        assert collapsedFlankedVariantCigarOps.stream().findFirst().orElse(null) == CigarOperator.M;
-        // TODO: LATER END
-
-        String flankedRef = new String(readContext.RefBases, varRefIndex - 1, varLength + 2);
-        String flankedRead = new String(readContext.ReadBases, readContext.VarIndex - 1, varLength + 2);
-
-        assert flankedRef.charAt(0) == flankedRead.charAt(0);
-        assert flankedRef.charAt(flankedRef.length() - 1) == flankedRead.charAt(flankedRead.length() - 1);
-
-        if(flankedRef.charAt(0) != flankedRef.charAt(flankedRef.length() - 1))
-        {
-            return false;
-        }
-
-        char flankBase = flankedRef.charAt(0);
-        String ref = readContext.variant().Ref;
-        String alt = readContext.variant().Alt;
-        String repeatedFlankBase = String.valueOf(flankBase).repeat(varLength);
-
-        return ref.equals(repeatedFlankBase) || alt.equals(repeatedFlankBase);
-    }
-
-    public static List<CigarOperator> getCoreCigarOps(final VariantReadContext readContext, final List<CigarOperator> cigarElements)
-    {
-        int cigarIndex = 0;
-        int readIndex = 0;
-        List<CigarOperator> coreCigarOps = Lists.newArrayList();
-        while(readIndex <= readContext.CoreIndexEnd)
-        {
-            CigarOperator op = cigarElements.get(cigarIndex++);
-            boolean inCore = readIndex >= readContext.CoreIndexStart;
-            if(inCore)
-            {
-                coreCigarOps.add(op);
-            }
-
-            if(op.consumesReadBases())
-            {
-                ++readIndex;
-            }
-        }
-
-        return coreCigarOps;
-    }
-
-    // TODO: LATER Use library method.
-    public static List<CigarOperator> cigarStringToOps(final String readCigar)
-    {
-        List<CigarOperator> cigarOps= Lists.newArrayList();
-        int count = 0;
-        for(int i = 0; i < readCigar.length(); ++i)
-        {
-            char c = readCigar.charAt(i);
-            if('0' <= c && c <= '9')
-            {
-                count = 10*count + (int)c - (int)'0';
-                continue;
-            }
-
-            if(count == 0)
-            {
-                throw new RuntimeException("TODO: Count should not be zero");
-            }
-
-            CigarOperator op;
-            switch(c)
-            {
-                case 'M':
-                    op = CigarOperator.M;
-                    break;
-                case 'D':
-                    op = CigarOperator.D;
-                    break;
-                default:
-                    throw new RuntimeException("TODO: Cigar operator not recognized");
-            }
-
-            for(; count > 0; --count)
-            {
-                cigarOps.add(op);
-            }
-        }
-
-        if(count > 0)
-        {
-            throw new RuntimeException("TODO: Count should be zero");
-        }
-
-        return cigarOps;
-    }
-
-    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
-    {
-        final SimpleVariant variant = readContext.variant();
-
-        // TODO: Test inserts
-        assert variant.indelLength() <= 0;
-
-        // TODO: consider mnv variants.
-        assert !variant.isMNV();
-
-        // TODO: Consider sandwiched SNV/MNV.
-        assert !isSandwichedNonIndel(readContext, getVariantRefIndex(readContext));
-
-        // TODO: Mask sandwich snvs/mvns.
-
-        List<Homopolymer> refHomopolymers = getHomopolymers(readContext.refBases());
-        List<Homopolymer> readHomopolymers = getHomopolymers(readContext.coreStr());
-        List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, refHomopolymers, readHomopolymers);
-        List<SimpleVariant> qualVariants = getQualVariants(readContext, realignedVariants);
-        return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
-    }
-
-    @NotNull
     private static List<SimpleVariant> getRealignedVariants(final VariantReadContext readContext, final List<Homopolymer> refHomopolymers,
             final List<Homopolymer> readHomopolymers)
     {
@@ -385,17 +207,9 @@ public class UltimaRealignedQualModelBuilder
         return realignedVariants;
     }
 
-    @NotNull
     private static List<SimpleVariant> getQualVariants(final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
     {
         SimpleVariant variant = readContext.variant();
-
-        if(isSandwichedNonIndel(readContext, getVariantRefIndex(readContext)))
-        {
-            // TODO: Consider sandwiched SNV/MNV.
-            assert false;
-            return null;
-        }
 
         if(variant.isIndel())
         {
