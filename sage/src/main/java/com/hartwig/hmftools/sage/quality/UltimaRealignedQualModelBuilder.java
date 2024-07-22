@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
+import org.jetbrains.annotations.NotNull;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
@@ -284,9 +285,16 @@ public class UltimaRealignedQualModelBuilder
 
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.refBases());
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.coreStr());
+        List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, refHomopolymers, readHomopolymers);
+        List<SimpleVariant> qualVariants = getQualVariants(readContext, realignedVariants);
+        return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
+    }
 
-        // TODO: extract method?
-        // construct realigned indel variants
+    @NotNull
+    private static List<SimpleVariant> getRealignedVariants(final VariantReadContext readContext, final List<Homopolymer> refHomopolymers,
+            final List<Homopolymer> readHomopolymers)
+    {
+        SimpleVariant variant = readContext.variant();
         List<SimpleVariant> realignedVariants = Lists.newArrayList();
         int refIndex = 0;
         int readIndex = 0;
@@ -379,9 +387,15 @@ public class UltimaRealignedQualModelBuilder
 
             ++readIndex;
         }
+        
+        return realignedVariants;
+    }
 
-        // TODO: extract method?
-        // collect variants that contribute to final qual score
+    @NotNull
+    private static List<SimpleVariant> getQualVariants(final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
+    {
+        SimpleVariant variant = readContext.variant();
+
         if(isSandwichedNonIndel(readContext, getVariantRefIndex(readContext)))
         {
             // TODO: Consider sandwiched SNV/MNV.
@@ -389,7 +403,6 @@ public class UltimaRealignedQualModelBuilder
             return null;
         }
 
-        List<SimpleVariant> qualVariants = Lists.newArrayList();
         if(variant.isIndel())
         {
             int indelLength = variant.indelLength();
@@ -443,171 +456,169 @@ public class UltimaRealignedQualModelBuilder
 
             if(variantIndex == -1)
             {
-                qualVariants = realignedVariants;
+                return realignedVariants;
             }
-            else
+
+            // TODO: QUESTION q_seq in indel context?
+            List<SimpleVariant> qualVariants = Lists.newArrayList();
+            qualVariants.add(realignedVariants.get(variantIndex));
+            if(leftIndelBalance > 0)
             {
-                // TODO: QUESTION q_seq in indel context?
-                qualVariants.add(realignedVariants.get(variantIndex));
-                if(leftIndelBalance > 0)
-                {
-                    qualVariants.addAll(leftInserts);
-                }
-
-                if(leftIndelBalance < 0)
-                {
-                    qualVariants.addAll(leftDels);
-                }
-
-                if(rightIndelBalance > 0)
-                {
-                    qualVariants.addAll(rightInserts);
-                }
-
-                if(rightIndelBalance < 0)
-                {
-                    qualVariants.addAll(rightDels);
-                }
+                qualVariants.addAll(leftInserts);
             }
+
+            if(leftIndelBalance < 0)
+            {
+                qualVariants.addAll(leftDels);
+            }
+
+            if(rightIndelBalance > 0)
+            {
+                qualVariants.addAll(rightInserts);
+            }
+
+            if(rightIndelBalance < 0)
+            {
+                qualVariants.addAll(rightDels);
+            }
+
+            return qualVariants;
         }
-        else
+
+        // snv/mnv case
+        List<Homopolymer> delHomopolymers = getHomopolymers(variant.Ref);
+        List<Homopolymer> insertHomopolymers = getHomopolymers(variant.Alt);
+
+        // TODO: LATER lots of repetition in terms of left/right indels.
+        List<SimpleVariant> seqVariants = null;
+        List<SimpleVariant> leftInserts = Lists.newArrayList();
+        List<SimpleVariant> leftDels = Lists.newArrayList();
+        int leftIndelBalance = 0;
+        List<SimpleVariant> rightInserts = Lists.newArrayList();
+        List<SimpleVariant> rightDels = Lists.newArrayList();
+        int rightIndelBalance = 0;
+        for(int i = 0; i < realignedVariants.size();)
         {
-            List<Homopolymer> delHomopolymers = getHomopolymers(variant.Ref);
-            List<Homopolymer> insertHomopolymers = getHomopolymers(variant.Alt);
-
-            // TODO: LATER lots of repetition in terms of left/right indels.
-            List<SimpleVariant> seqVariants = null;
-            List<SimpleVariant> leftInserts = Lists.newArrayList();
-            List<SimpleVariant> leftDels = Lists.newArrayList();
-            int leftIndelBalance = 0;
-            List<SimpleVariant> rightInserts = Lists.newArrayList();
-            List<SimpleVariant> rightDels = Lists.newArrayList();
-            int rightIndelBalance = 0;
-            for(int i = 0; i < realignedVariants.size();)
+            SimpleVariant realignedVariant = realignedVariants.get(i);
+            if(seqVariants == null && i + delHomopolymers.size() + insertHomopolymers.size() - 1 < realignedVariants.size())
             {
-                SimpleVariant realignedVariant = realignedVariants.get(i);
-                if(seqVariants == null && i + delHomopolymers.size() + insertHomopolymers.size() - 1 < realignedVariants.size())
+                seqVariants = Lists.newArrayList();
+                int delIndex = 0;
+                int insertIndex = 0;
+                while(true)
                 {
-                    seqVariants = Lists.newArrayList();
-                    int delIndex = 0;
-                    int insertIndex = 0;
-                    while(true)
+                    SimpleVariant currentVariant = realignedVariants.get(i + delIndex + insertIndex);
+                    if(currentVariant.isInsert())
                     {
-                        SimpleVariant currentVariant = realignedVariants.get(i + delIndex + insertIndex);
-                        if(currentVariant.isInsert())
+                        if(insertIndex == insertHomopolymers.size())
                         {
-                            if(insertIndex == insertHomopolymers.size())
-                            {
-                                seqVariants = null;
-                                break;
-                            }
+                            seqVariants = null;
+                            break;
+                        }
 
-                            Homopolymer currentInsert = insertHomopolymers.get(insertIndex);
-                            if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == currentInsert.Base)
-                            {
-                                seqVariants.add(currentVariant);
-                                ++insertIndex;
-                            }
-                            else
-                            {
-                                seqVariants = null;
-                                break;
-                            }
+                        Homopolymer currentInsert = insertHomopolymers.get(insertIndex);
+                        if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == currentInsert.Base)
+                        {
+                            seqVariants.add(currentVariant);
+                            ++insertIndex;
                         }
                         else
                         {
-                            if(delIndex == delHomopolymers.size())
-                            {
-                                seqVariants = null;
-                                break;
-                            }
-
-                            Homopolymer currentDel = delHomopolymers.get(delIndex);
-                            if(currentVariant.indelLengthAbs() == currentDel.Length && currentVariant.Ref.charAt(1) == currentDel.Base)
-                            {
-                                seqVariants.add(currentVariant);
-                                ++delIndex;
-                            }
-                            else
-                            {
-                                seqVariants = null;
-                                break;
-                            }
+                            seqVariants = null;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if(delIndex == delHomopolymers.size())
+                        {
+                            seqVariants = null;
+                            break;
                         }
 
-                        if(insertIndex == insertHomopolymers.size() && delIndex == delHomopolymers.size())
+                        Homopolymer currentDel = delHomopolymers.get(delIndex);
+                        if(currentVariant.indelLengthAbs() == currentDel.Length && currentVariant.Ref.charAt(1) == currentDel.Base)
                         {
+                            seqVariants.add(currentVariant);
+                            ++delIndex;
+                        }
+                        else
+                        {
+                            seqVariants = null;
                             break;
                         }
                     }
 
-                    if(seqVariants != null)
+                    if(insertIndex == insertHomopolymers.size() && delIndex == delHomopolymers.size())
                     {
-                        i += seqVariants.size();
-                        continue;
+                        break;
                     }
                 }
 
-                if(seqVariants == null)
+                if(seqVariants != null)
                 {
-                    leftIndelBalance += realignedVariant.indelLength();
-                    if(realignedVariant.isInsert())
-                    {
-                        leftInserts.add(realignedVariant);
-                    }
-                    else
-                    {
-                        leftDels.add(realignedVariant);
-                    }
-
-                    ++i;
+                    i += seqVariants.size();
                     continue;
                 }
-
-                rightIndelBalance += realignedVariant.indelLength();
-                if(realignedVariant.isInsert())
-                {
-                    rightInserts.add(realignedVariant);
-                }
-                else
-                {
-                    rightDels.add(realignedVariant);
-                }
-
-                ++i;
             }
 
             if(seqVariants == null)
             {
-                qualVariants = realignedVariants;
+                leftIndelBalance += realignedVariant.indelLength();
+                if(realignedVariant.isInsert())
+                {
+                    leftInserts.add(realignedVariant);
+                }
+                else
+                {
+                    leftDels.add(realignedVariant);
+                }
+
+                ++i;
+                continue;
+            }
+
+            rightIndelBalance += realignedVariant.indelLength();
+            if(realignedVariant.isInsert())
+            {
+                rightInserts.add(realignedVariant);
             }
             else
             {
-                // TODO: QUESTION q_seq in MNV context?
-                qualVariants.addAll(seqVariants);
-                if(leftIndelBalance > 0)
-                {
-                    qualVariants.addAll(leftInserts);
-                }
-
-                if(leftIndelBalance < 0)
-                {
-                    qualVariants.addAll(leftDels);
-                }
-
-                if(rightIndelBalance > 0)
-                {
-                    qualVariants.addAll(rightInserts);
-                }
-
-                if(rightIndelBalance < 0)
-                {
-                    qualVariants.addAll(rightDels);
-                }
+                rightDels.add(realignedVariant);
             }
+
+            ++i;
         }
 
-        // turn variants into a qual model
-        return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
+        if(seqVariants == null)
+        {
+            return realignedVariants;
+        }
+
+        // TODO: QUESTION q_seq in MNV context?
+        List<SimpleVariant> qualVariants = Lists.newArrayList();
+        qualVariants.addAll(seqVariants);
+        if(leftIndelBalance > 0)
+        {
+            qualVariants.addAll(leftInserts);
+        }
+
+        if(leftIndelBalance < 0)
+        {
+            qualVariants.addAll(leftDels);
+        }
+
+        if(rightIndelBalance > 0)
+        {
+            qualVariants.addAll(rightInserts);
+        }
+
+        if(rightIndelBalance < 0)
+        {
+            qualVariants.addAll(rightDels);
+        }
+
+        return qualVariants;
     }
 }
