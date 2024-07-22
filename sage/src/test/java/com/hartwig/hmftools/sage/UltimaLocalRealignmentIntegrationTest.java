@@ -34,6 +34,8 @@ public class UltimaLocalRealignmentIntegrationTest
     private static final int RANDOM_BASES_PADDING_LENGTH = 2 * READ_LENGTH;
     private static final String CHROMOSOME = CHR_1;
 
+    // TODO: test the base expansion via Thomas's example.
+
     @Test
     public void testCoreExtensionToIncludeHomopolymers()
     {
