@@ -59,7 +59,7 @@ public class RefContextConsumer
         mBounds = regionBounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
-        mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
+        mReadContextBuilder = new VariantReadContextBuilder(config, config.ReadContextFlankLength);
         mConfig = config;
 
         mHotspotPositions = Sets.newHashSet();

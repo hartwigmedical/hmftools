@@ -89,7 +89,7 @@ public final class VariantUtils
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
-                coreIndexEnd, null, null, Collections.emptyList(), corePositionStart, corePositionEnd);
+                coreIndexEnd, null, null, Collections.emptyList(), corePositionStart, corePositionEnd, null, null);
     }
 
     // Read context counter
