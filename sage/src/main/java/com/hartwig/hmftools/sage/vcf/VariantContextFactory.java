@@ -114,9 +114,10 @@ public final class VariantContextFactory
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
         builder.attribute(MAP_QUAL_FACTOR, primaryRcCounter.mapQualFactor());
 
-        if(primaryRcCounter.ultimaQualModel() != null)
+        if(primaryRcCounter.realignedUltimaQualModels() != null)
         {
-            builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
+            // TODO: QUESTION What should this be now?
+            builder.attribute(QUAL_MODEL_TYPE, "REALIGNED_ULTIMA");
         }
 
         final VariantContext context = builder.make();

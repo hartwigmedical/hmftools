@@ -234,7 +234,7 @@ public class ReadContextCounter
     public JitterData jitter() { return mJitterData; }
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
-    public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }
+    public List<UltimaQualModel> realignedUltimaQualModels() { return mReadContext.realignedUltimaQualModels(); }
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }

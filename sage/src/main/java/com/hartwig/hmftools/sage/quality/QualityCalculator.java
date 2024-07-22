@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -19,7 +21,6 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -53,9 +54,9 @@ public class QualityCalculator
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
 
-    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
+    public List<UltimaQualModel> createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
-        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
+        return mUltimaQualCalculator != null ? UltimaRealignedQualModelBuilder.buildRealignedUltimaQualModels(readContext, mUltimaQualCalculator) : null;
     }
 
     public static int modifiedMapQuality(
@@ -80,7 +81,7 @@ public class QualityCalculator
         double baseQuality;
 
         if(readContextCounter.isIndel() || readContextCounter.artefactContext() != null
-        || (readContextCounter.ultimaQualModel() != null && calcBaseQuality != ULTIMA_MAX_QUAL))
+        || (readContextCounter.realignedUltimaQualModels() != null && calcBaseQuality != ULTIMA_MAX_QUAL))
         {
             baseQuality = calcBaseQuality;
         }
@@ -112,8 +113,11 @@ public class QualityCalculator
 
     public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        if(readContextCounter.ultimaQualModel() != null)
-            return readContextCounter.ultimaQualModel().calculateQual(record, readIndex);
+        if(readContextCounter.realignedUltimaQualModels() != null)
+        {
+            // TODO: NEXT double check against spec.
+            return readContextCounter.realignedUltimaQualModels().stream().mapToInt(model -> (int) model.calculateQual(record, readIndex)).min().orElse(0);
+        }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?
                 readContextCounter.artefactContext().findApplicableBaseQual(record, readIndex) : INVALID_BASE_QUAL;
