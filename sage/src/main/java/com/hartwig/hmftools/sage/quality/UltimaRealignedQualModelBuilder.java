@@ -5,32 +5,26 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.NotNull;
-import org.pcollections.PVector;
-import org.pcollections.TreePVector;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
 // TODO: LATER Move to a better location.
-// TODO: Guard calling this against config
 // TODO: clean up unneeded functions.
 // TODO: LATER comprehensive unit tests.
 // TODO: Test on actual sample.
+// TODO: LATER performance testing.
 public class UltimaRealignedQualModelBuilder
 {
     @VisibleForTesting
@@ -268,7 +262,7 @@ public class UltimaRealignedQualModelBuilder
         return cigarOps;
     }
 
-    public static List<UltimaQualModel> buildUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
         final SimpleVariant variant = readContext.variant();
 
@@ -387,7 +381,7 @@ public class UltimaRealignedQualModelBuilder
 
             ++readIndex;
         }
-        
+
         return realignedVariants;
     }
 

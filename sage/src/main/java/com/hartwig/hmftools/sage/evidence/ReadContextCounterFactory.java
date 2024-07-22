@@ -34,7 +34,7 @@ public class ReadContextCounterFactory
         for(Candidate candidate : candidates)
         {
             if(qualityCalculator.ultimaEnabled())
-                candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant()));
+                candidate.readContext().setRealignedUltimaQualModels(qualityCalculator.createRealignedUltimaQualModels(candidate.readContext()));
 
             try
             {
