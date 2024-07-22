@@ -2,29 +2,10 @@ package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.common.TestUtils.findInitialCandidates;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
-import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.UltimaLocalRealigner;
-import com.hartwig.hmftools.sage.testutil.MutatedBases;
-import com.hartwig.hmftools.sage.testutil.MutatedBasesBuilder;
-
-import org.junit.Test;
-
-import htsjdk.samtools.SAMRecord;
 
 // TODO: LATER Move to better place.
 public class UltimaLocalRealignmentIntegrationTest
@@ -34,9 +15,9 @@ public class UltimaLocalRealignmentIntegrationTest
     private static final int RANDOM_BASES_PADDING_LENGTH = 2 * READ_LENGTH;
     private static final String CHROMOSOME = CHR_1;
 
-    // TODO: LATER test the base expansion via Thomas's example.
+    // TODO: test the base expansion via Thomas's example.
 
-    // TODO: LATER re-enable tests.
+    // TODO: re-enable tests.
 //    @Test
 //    public void testCoreExtensionToIncludeHomopolymers()
 //    {
