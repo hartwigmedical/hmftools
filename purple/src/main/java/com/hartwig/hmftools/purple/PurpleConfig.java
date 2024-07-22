@@ -112,6 +112,11 @@ public class PurpleConfig
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
         UseGridssSVs = SampleFiles.usesGridssSVs();
 
+        if(UseGridssSVs)
+        {
+            PPL_LOGGER.info("using deprecated Gridss/Gripss VCFs");
+        }
+
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
                 TargetRegionsMode ? "running on target-regions only" : "");

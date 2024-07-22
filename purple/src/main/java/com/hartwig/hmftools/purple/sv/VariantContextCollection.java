@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.purple.sv.SomaticSvCache.buildSvFactory;
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
 
 import java.util.Collections;
 import java.util.Iterator;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.sv;
 
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
@@ -99,18 +100,6 @@ public class SomaticSvCache
         vcfReader.close();
 
         PPL_LOGGER.info("loaded {} somatic SVs from {}", variants().size(), inputVcf);
-    }
-
-    public static SvFactoryInterface buildSvFactory(final boolean useGridssVcf, final VariantContextFilter filter)
-    {
-        if(useGridssVcf)
-        {
-            return GridssSvFactory.build(filter);
-        }
-        else
-        {
-            return StructuralVariantFactory.build(filter);
-        }
     }
 
     public void addVariant(final VariantContext variantContext)

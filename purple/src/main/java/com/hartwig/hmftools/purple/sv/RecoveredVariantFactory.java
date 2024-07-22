@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.sv;
 
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_LENGTH;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_PLOIDY;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_PLOIDY_PERC;
-import static com.hartwig.hmftools.purple.sv.SomaticSvCache.buildSvFactory;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
