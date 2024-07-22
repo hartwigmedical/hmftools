@@ -140,13 +140,13 @@ public class VariantReadContextBuilder
 
         final byte[] readBases = read.getReadBases();
 
-        // NOTE: Now expand to find repeat boundaries.
+        // TODO: NOTE: Now expand to find repeat boundaries.
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
         readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
         readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
 
-        // NOTE: Add flanks.
+        // TODO: NOTE: Add flanks.
         int readFlankStart = readCoreStart - mFlankSize;
         int readFlankEnd = readCoreEnd + mFlankSize;
 
@@ -163,8 +163,8 @@ public class VariantReadContextBuilder
             return null;
 
         // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
-        // NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
-        // TODO: Do we need to account for padding?
+        // TODO: NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
+        // TODO: QUESTION Do we need to account for padding?
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
             while(true)
@@ -198,7 +198,7 @@ public class VariantReadContextBuilder
                 if(readFlankStart < 0 || readFlankEnd >= read.getReadBases().length)
                     return null;
 
-                // TODO: Do we need to rebuild the whole cigar each time?
+                // TODO: LATER Do we need to rebuild the whole cigar each time?
                 readCigarInfo = ReadCigarInfo.buildReadCigar(
                         softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                         softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
