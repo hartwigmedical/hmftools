@@ -119,4 +119,8 @@ public class UltimaLocalRealignerTest
 //
 //        assertEquals(expectedPairs, actualPairs);
 //    }
+
+    // TODO: Test inserts
+    // TODO: test mnv variants.
+    // TODO: test sandwiched snv/mnv variants.
 }
