@@ -196,8 +196,9 @@ public class BamToFastq
                 BT_LOGGER.info("start merging fastqs by read groups");
                 for(SAMReadGroupRecord readGroup : ToFastqUtils.getReadGroups(mConfig))
                 {
-                    // we need to store all the read group details in the file name, but use space instead of tab
-                    String filePrefix = mConfig.OutputDir + readGroup.getSAMString().replace('\t', ' ');
+                    // we need to store all the read group details in the file name, but use slash-t instead of tab
+                    // this is what BWA -R flag expects
+                    String filePrefix = mConfig.OutputDir + readGroup.getSAMString().replace("\t", "\\t");
                     String r1Fastq = formFilename(filePrefix, R1);
                     String r2Fastq = formFilename(filePrefix, R2);
                     String unpairedFastq = formFilename(filePrefix, UNPAIRED);
