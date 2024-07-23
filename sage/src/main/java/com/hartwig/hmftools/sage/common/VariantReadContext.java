@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.List;
@@ -9,10 +10,12 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class VariantReadContext
 {
@@ -33,6 +36,7 @@ public class VariantReadContext
     public final int CorePositionEnd;
 
     public final byte[] RefBases; // captured for the core
+    public final byte RefBaseBeforeCore;
 
     private final SimpleVariant mVariant;
 
@@ -45,7 +49,7 @@ public class VariantReadContext
     private byte[] mExtendedRefBases;
 
     public VariantReadContext(
-            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
+            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, byte refBaseBeforeCore,
             final byte[] readBases, final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
             final int corePositionStart, final int corePositionEnd)
@@ -54,6 +58,7 @@ public class VariantReadContext
         AlignmentStart = alignmentStart;
         AlignmentEnd = alignmentEnd;
         RefBases = refBases;
+        RefBaseBeforeCore = refBaseBeforeCore;
         ReadBases = readBases;
         CoreIndexStart = coreIndexStart;
         VarIndex = varIndex;
@@ -114,6 +119,15 @@ public class VariantReadContext
 
     public String readBases() { return new String(ReadBases); }
     public String refBases() { return new String(RefBases); }
+    public byte refBase(int indexInCore)
+    {
+        if(indexInCore == -1)
+        {
+            return RefBaseBeforeCore;
+        }
+
+        return RefBases[indexInCore];
+    }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }
     public int maxRepeatCount() { return MaxRepeat != null ? MaxRepeat.Count : 0; }

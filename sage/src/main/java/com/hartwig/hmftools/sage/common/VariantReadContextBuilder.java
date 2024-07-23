@@ -251,6 +251,7 @@ public class VariantReadContextBuilder
 
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
+        byte refBaseBeforeCore = refSequence.base(corePositionStart - 1);
 
         RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;
@@ -275,7 +276,7 @@ public class VariantReadContextBuilder
         }
 
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
+                variant, alignmentStart, alignmentEnd, refBases, refBaseBeforeCore, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 

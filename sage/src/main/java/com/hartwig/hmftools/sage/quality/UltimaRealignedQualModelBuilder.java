@@ -160,7 +160,7 @@ public class UltimaRealignedQualModelBuilder
                 // first create novel del from ref homopolymer
                 int variantPos = refPos - 1;
                 int refBasesIndex = refPos - readContext.CorePositionStart;
-                char baseBefore = (char) readContext.RefBases[refBasesIndex - 1];
+                char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
                 String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
                 String alt = String.valueOf(baseBefore);
                 realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
@@ -183,7 +183,7 @@ public class UltimaRealignedQualModelBuilder
                 // create novel del from ref homopolymer
                 int variantPos = refPos - 1;
                 int refBasesIndex = refPos - readContext.CorePositionStart;
-                char baseBefore = (char) readContext.RefBases[refBasesIndex - 1];
+                char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
                 String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
                 String alt = String.valueOf(baseBefore);
                 realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
@@ -196,7 +196,7 @@ public class UltimaRealignedQualModelBuilder
             // create novel ins from read homopolymer
             int variantPos = refPos - 1;
             int refBasesIndex = refPos - readContext.CorePositionStart;
-            char baseBefore = (char) readContext.RefBases[refBasesIndex - 1];
+            char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
             String ref = String.valueOf(baseBefore);
             String alt = String.valueOf(baseBefore) + String.valueOf(readHomopolyer.Base).repeat(readHomopolyer.Length);
             realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));

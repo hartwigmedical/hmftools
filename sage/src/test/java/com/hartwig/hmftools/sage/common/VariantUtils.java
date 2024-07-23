@@ -88,7 +88,7 @@ public final class VariantUtils
         int corePositionEnd = variant.Position + rightCore.length();
 
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases.getBytes(), readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
+                variant, alignmentStart, alignmentEnd, refBases.getBytes(), (byte)'X', readBases.getBytes(), readCigar, coreIndexStart, varReadIndex,
                 coreIndexEnd, null, null, Collections.emptyList(), corePositionStart, corePositionEnd);
     }
 
