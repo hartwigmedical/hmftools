@@ -107,7 +107,7 @@ public class QualityControlChapter implements ReportChapter
     {
         int unsupportedSegments = report.purple().fit().qc().unsupportedCopyNumberSegments();
         return unsupportedSegments + " (" + percent(
-                (double) unsupportedSegments / report.purple().fit().qc().totalCopyNumberSegments() * 100) + ")";
+                (double) unsupportedSegments / report.purple().fit().qc().totalCopyNumberSegments()) + ")";
     }
 
     private void addPurplePurityFitPlot(@NotNull Document document)
