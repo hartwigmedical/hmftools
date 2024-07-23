@@ -37,14 +37,13 @@ public class MsiJitterCalcs
 
         if(jitterParamsDir != null)
         {
-            msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir);
+            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir))
+                return msiJitterCalcs;
         }
-        else
+
+        for(String sampleId : sampleIds)
         {
-            for(String sampleId : sampleIds)
-            {
-                msiJitterCalcs.setSampleParams(sampleId, DEFAULT_JITTER_PARAMS);
-            }
+            msiJitterCalcs.setSampleParams(sampleId, DEFAULT_JITTER_PARAMS);
         }
 
         return msiJitterCalcs;
@@ -73,10 +72,11 @@ public class MsiJitterCalcs
                 mSampleParams.put(sampleId, modelParams);
             }
 
-            SG_LOGGER.debug("loaded {} fitter param files", sampleIds.size());
+            SG_LOGGER.debug("loaded {} jitter param files", sampleIds.size());
         }
         catch(Exception e)
         {
+            SG_LOGGER.error("missing jitter param file: {}", e.toString());
             return false;
         }
 
