@@ -80,14 +80,25 @@ public class QualityCalculator
     {
         double baseQuality;
 
-        if(readContextCounter.isIndel() || readContextCounter.artefactContext() != null
-        || (readContextCounter.realignedUltimaQualModels() != null && calcBaseQuality != ULTIMA_MAX_QUAL))
+        // && (readContextCounter.realignedUltimaQualModels() == null || !readContextCounter.isSnv())
+
+        boolean recalibrateBaseQuality;
+        if(readContextCounter.realignedUltimaQualModels() == null)
         {
-            baseQuality = calcBaseQuality;
+            recalibrateBaseQuality = !(readContextCounter.isIndel() || readContextCounter.artefactContext() != null);
         }
         else
         {
+            recalibrateBaseQuality = readContextCounter.isSnv() && readContextCounter.artefactContext() == null;
+        }
+
+        if(recalibrateBaseQuality)
+        {
             baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+        }
+        else
+        {
+            baseQuality = calcBaseQuality;
         }
 
         int mapQuality = record.getMappingQuality();
@@ -115,8 +126,8 @@ public class QualityCalculator
     {
         if(readContextCounter.realignedUltimaQualModels() != null)
         {
-            // TODO: NEXT double check against spec.
-            return readContextCounter.realignedUltimaQualModels().stream().mapToInt(model -> (int) model.calculateQual(record, readIndex)).min().orElse(0);
+            return readContextCounter.realignedUltimaQualModels().stream()
+                    .mapToInt(model -> (int) model.calculateQual(record, readIndex)).min().orElse(ULTIMA_MAX_QUAL);
         }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?
