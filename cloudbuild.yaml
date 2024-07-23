@@ -3,7 +3,10 @@ steps:
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
-
+  - id: 'Publish Docker image'
+    name: 'eu.gcr.io/hmf-build/docker-tag'
+    entrypoint: sh
+    args: ['/workspace/docker.sh']
 logsBucket: 'gs://hmf-build-logs'
 timeout: 1800s
 images:
