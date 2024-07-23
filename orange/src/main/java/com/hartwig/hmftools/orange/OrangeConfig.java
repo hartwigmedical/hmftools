@@ -99,6 +99,7 @@ public interface OrangeConfig
 
         configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
+        configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
