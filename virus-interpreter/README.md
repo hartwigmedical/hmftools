@@ -56,7 +56,7 @@ The following fields are stored for each detected virus:
 
 ## Version History and Download Links
  - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.5):
-   - Add blacklist option
+   - Add blacklist option in order to blacklist HIV
  - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.3)
    - Use latest virus enumerations
  - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
