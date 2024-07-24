@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
@@ -60,7 +61,7 @@ public class QualityCalculator
     public static int modifiedMapQuality(
             final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
-        if(config.isHighlyPolymorphic(position))
+        if(isHighlyPolymorphic(position))
         {
             return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedMapQualPenalty);
         }

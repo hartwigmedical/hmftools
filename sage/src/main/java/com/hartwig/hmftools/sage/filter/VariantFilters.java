@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
@@ -41,9 +42,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -76,11 +75,6 @@ public class VariantFilters
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
         mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
-    }
-
-    public static boolean isHighlyPolymorphic(final BasePosition position)
-    {
-        return HlaCommon.containsPosition(position);
     }
 
     public int readEdgeDistanceThreshold(final VariantTier tier)
@@ -288,7 +282,7 @@ public class VariantFilters
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
-        if(VariantFilters.isHighlyPolymorphic(primaryTumor.variant()))
+        if(isHighlyPolymorphic(primaryTumor.variant()))
         {
             avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, avgAltMapQual);
         }
