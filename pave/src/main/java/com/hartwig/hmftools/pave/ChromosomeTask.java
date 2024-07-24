@@ -243,7 +243,7 @@ public class ChromosomeTask implements Callable
 
         if(hotspotOrPathogenic)
         {
-            if(belowPonThreshold(variant.ponSampleCount(), repeatCount))
+            if(variant.ponSampleCount() == 0 || belowPonThreshold(variant.ponSampleCount(), repeatCount))
             {
                 ponFilter = false;
             }
@@ -283,7 +283,7 @@ public class ChromosomeTask implements Callable
         Double gnmoadFrequency = variant.gnomadFrequency();
         double gnomadThreshold = hotspotOrPathogenic ? GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD : GNMOAD_FILTER_THRESHOLD;
 
-        if(gnmoadFrequency != null && gnmoadFrequency > gnomadThreshold)
+        if(gnmoadFrequency != null && gnmoadFrequency >= gnomadThreshold)
         {
             variant.addFilter(PON_GNOMAD_FILTER);
         }

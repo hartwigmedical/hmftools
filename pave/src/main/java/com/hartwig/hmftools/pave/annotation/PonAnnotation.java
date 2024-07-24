@@ -153,7 +153,7 @@ public class PonAnnotation extends AnnotationData implements Callable
         if(ponData == null)
             return;
 
-        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
+        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.TotalSampleReads / ponData.Samples);
     }
 
     public boolean filterOnTierCriteria(final VariantTier tier, final int ponSampleCount, final int ponMaxSampleReads)

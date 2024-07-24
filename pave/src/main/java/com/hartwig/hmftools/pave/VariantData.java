@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttri
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
@@ -186,6 +188,14 @@ public class VariantData
                 variantContext.getAttributeAsString(REPEAT_SEQUENCE, Strings.EMPTY),
                 variantContext.getAttributeAsInt(REPEAT_COUNT, 0));
 
+        String rcRepeatSequence = variantContext.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
+        String indelBases = variant.isInsert() ? alt.substring(1) : ref.substring(1);
+        int rcRepeatCount = variantContext.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
+        if(variant.repeatCount() == 0 && rcRepeatCount > 0 && indelBases.startsWith(rcRepeatSequence))
+        {
+            variant.mRepeatSequence = rcRepeatSequence;
+            variant.mRepeatCount = rcRepeatCount - variant.baseDiff() / rcRepeatSequence.length();
+        }
         return variant;
     }
 
@@ -342,7 +352,7 @@ public class VariantData
 
     public int ponSampleCount() { return mPonSampleCount; }
     public int ponMaxReadCount() { return mPonMaxReadCount; }
-    public int ponMeanReadCount() { return mPonMaxReadCount; }
+    public int ponMeanReadCount() { return mPonMeanReadCount; }
 
     public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount)
     {
