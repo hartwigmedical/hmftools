@@ -248,8 +248,6 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        primaryTumor.setTumorQualProbability(prob);
-
         double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
 
         primaryTumor.setTumorQualProbability(prob);

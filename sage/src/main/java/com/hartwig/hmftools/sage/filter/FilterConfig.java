@@ -19,11 +19,13 @@ public class FilterConfig
     public final boolean DisableSoftFilter;
     public final int HardMinTumorQual;
     public final double HardMinTumorVaf;
-    public final int HardMinTumorRawAltSupport;
     public final int FilteredMaxGermlineAltSupport;
     public final int MinAvgBaseQual;
     public final int MinAvgBaseQualHotspot;
     public final int ReferenceSampleCount;
+
+    // static since accessed directly by alt candidates
+    public static int HardMinTumorRawAltSupport = DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 
     public final SoftFilterConfig SoftHotspotFilter;
     public final SoftFilterConfig SoftPanelFilter;
@@ -64,7 +66,6 @@ public class FilterConfig
         DisableSoftFilter = false;
         HardMinTumorQual = DEFAULT_HARD_MIN_TUMOR_QUAL;
         HardMinTumorVaf = DEFAULT_HARD_MIN_TUMOR_VAF;
-        HardMinTumorRawAltSupport = DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
         SoftHotspotFilter = DEFAULT_HOTSPOT_FILTER;
         SoftPanelFilter = DEFAULT_PANEL_FILTER;
         SoftHighConfidenceFilter = DEFAULT_HIGH_CONFIDENCE_FILTER;

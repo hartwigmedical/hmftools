@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GEN
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
-import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -31,7 +30,6 @@ public class QualityCalculator
     private final BqrRecordMap mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
-    private final boolean mUseReadType;
     private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
 
@@ -42,7 +40,6 @@ public class QualityCalculator
             final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
-        mUseReadType = useReadType(config);
         mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
@@ -158,7 +155,7 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        BqrReadType readType = mUseReadType ? extractReadType(record, mSequencingType) : BqrReadType.NONE;
+        BqrReadType readType = extractReadType(record, mSequencingType);
 
         if(readContextCounter.isSnv())
         {

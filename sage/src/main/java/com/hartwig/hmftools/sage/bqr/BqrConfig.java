@@ -80,8 +80,6 @@ public class BqrConfig
         UsePanel = false;
     }
 
-    public static boolean useReadType(final SageConfig config) { return true; }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addFlag(DISABLE_BQR, "Disable Base Quality Recalibration");
