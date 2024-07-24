@@ -164,9 +164,8 @@ def build_and_release(raw_tag: str):
     Maven.deploy_all(module_pom, *dependencies_pom)
 
     Docker(module, version).build()
-    token = open("/workspace/github.token", "r").read()
-    Release(f"{module} v{tag}", [open(f"target/{module}-{version}-jar-with-dependencies.jar", "rb")], token).create()
-
+    Release(f"{module} v{tag}", [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
+            open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
     main()
