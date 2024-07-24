@@ -135,15 +135,6 @@ public class UnmappedBaseExtender
         mBases = new byte[newExtensionLength];
         mBaseQuals = new byte[newExtensionLength];
 
-        // adjust the extension base index for existing unmapped reads
-        if(mJunctionOrientation.isReverse())
-        {
-            for(SupportRead read : mSupportReads)
-            {
-                read.setJunctionAssemblyIndex(read.junctionAssemblyIndex() + baseOffset);
-            }
-        }
-
         for(int i = 0; i < newExtensionLength; ++i)
         {
             if(mJunctionOrientation.isForward())
@@ -180,7 +171,7 @@ public class UnmappedBaseExtender
         int mismatchCount = 0;
 
         // add in new bases to the extension sequence
-        int readIndexStart, readIndexEnd, junctionIndexOffset, extBaseIndex;
+        int readIndexStart, readIndexEnd, junctionReadStartDistance, extBaseIndex;
 
         Read read = readSequenceMatch.Read;
 
@@ -189,7 +180,7 @@ public class UnmappedBaseExtender
             readIndexStart = readSequenceMatch.ReadSeqStart + readSequenceMatch.Overlap;
             readIndexEnd = read.basesLength() - 1;
             extBaseIndex = readSequenceMatch.ExtensionBaseSeqStart + readSequenceMatch.Overlap;
-            junctionIndexOffset = -readSequenceMatch.ExtensionBaseSeqStart;
+            junctionReadStartDistance = -readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
         }
         else
         {
@@ -205,7 +196,7 @@ public class UnmappedBaseExtender
 
             // say 0-9 is extension and junction index = 10
             // if extBaseIndex (read start vs extension bases) is 4, then junc index in read is
-            junctionIndexOffset = mBases.length - extBaseIndex;
+            junctionReadStartDistance = mBases.length - readSequenceMatch.ExtensionBaseSeqStart - 1 - readSequenceMatch.ReadSeqStart;
         }
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
@@ -246,8 +237,7 @@ public class UnmappedBaseExtender
         if(mismatchCount <= permittedMismatches)
         {
             int matchedCount = readBaseOverlap - mismatchCount;
-            SupportRead supportRead = new SupportRead(read, SupportType.EXTENSION, junctionIndexOffset, matchedCount, mismatchCount);
-            supportRead.setJunctionAssemblyIndex(extBaseIndex);
+            SupportRead supportRead = new SupportRead(read, SupportType.EXTENSION, junctionReadStartDistance, matchedCount, mismatchCount);
             mSupportReads.add(supportRead);
         }
     }

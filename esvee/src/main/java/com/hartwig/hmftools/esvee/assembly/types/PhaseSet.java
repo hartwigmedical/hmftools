@@ -12,6 +12,7 @@ public class PhaseSet
 {
     private int mId;
     private final List<AssemblyLink> mAssemblyLinks;
+    private final List<AssemblyLink> mSecondaryLinks;
     private final List<JunctionAssembly> mAssemblies;
 
     public PhaseSet(final AssemblyLink link)
@@ -19,6 +20,7 @@ public class PhaseSet
         mId = -1;
         mAssemblyLinks = Lists.newArrayList();
         mAssemblies = Lists.newArrayList();
+        mSecondaryLinks = Lists.newArrayList();
         addAssemblyLink(link, 0);
     }
 
@@ -27,6 +29,7 @@ public class PhaseSet
 
     public void addAssemblyLinkStart(final AssemblyLink link) { addAssemblyLink(link, 0); }
     public void addAssemblyLinkEnd(final AssemblyLink link) { addAssemblyLink(link, mAssemblyLinks.size()); }
+    public void addSecondaryLinkEnd(final AssemblyLink link) { mSecondaryLinks.add(link); }
 
     private void addAssemblyLink(final AssemblyLink link, int index)
     {
@@ -52,6 +55,16 @@ public class PhaseSet
         }
     }
 
+    public List<JunctionAssembly> assemblies() { return mAssemblies; }
+
+    public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
+    public List<AssemblyLink> secondaryLinks() { return mSecondaryLinks; }
+
+    public boolean hasAssembly(final JunctionAssembly assembly)
+    {
+        return mAssemblies.contains(assembly);
+    }
+
     public List<AssemblyLink> findAssemblyLinks(final JunctionAssembly assembly)
     {
         return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).collect(Collectors.toList());
@@ -62,42 +75,7 @@ public class PhaseSet
         return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
     }
 
-    public boolean hasAssembly(final JunctionAssembly assembly)
-    {
-        return mAssemblies.contains(assembly);
-    }
-
-    public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
-    public List<JunctionAssembly> assemblies() { return mAssemblies; }
-    public int linkCount() { return mAssemblyLinks.size(); }
-
-    public int assemblyIndex(final JunctionAssembly assembly)
-    {
-        for(int i = 0; i < mAssemblies.size(); ++i)
-        {
-            if(mAssemblies.get(i) == assembly)
-                return i;
-
-        }
-
-        return -1;
-    }
-
-    public Orientation assemblyOrientation(final JunctionAssembly assembly)
-    {
-        // the first assembly is defined as forward, meaning facing up the chain and each successive junction is alternating
-        Orientation assemblyOrientation = Orientation.FORWARD;
-
-        for(int i = 0; i < mAssemblies.size(); ++i)
-        {
-            if(mAssemblies.get(i) == assembly)
-                return assemblyOrientation;
-
-            assemblyOrientation = assemblyOrientation.opposite();
-        }
-
-        return null;
-    }
+    public boolean hasFacingLinks() { return mAssemblyLinks.stream().anyMatch(x -> x.type() == LinkType.FACING); }
 
     public boolean assembliesFaceInPhaseSet(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
@@ -148,4 +126,34 @@ public class PhaseSet
     }
 
     public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
+
+    /*
+    public int assemblyIndex(final JunctionAssembly assembly)
+    {
+        for(int i = 0; i < mAssemblies.size(); ++i)
+        {
+            if(mAssemblies.get(i) == assembly)
+                return i;
+
+        }
+
+        return -1;
+    }
+
+    public Orientation assemblyOrientation(final JunctionAssembly assembly)
+    {
+        // the first assembly is defined as forward, meaning facing up the chain and each successive junction is alternating
+        Orientation assemblyOrientation = Orientation.FORWARD;
+
+        for(int i = 0; i < mAssemblies.size(); ++i)
+        {
+            if(mAssemblies.get(i) == assembly)
+                return assemblyOrientation;
+
+            assemblyOrientation = assemblyOrientation.opposite();
+        }
+
+        return null;
+    }
+    */
 }

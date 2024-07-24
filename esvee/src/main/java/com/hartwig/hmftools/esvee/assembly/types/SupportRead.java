@@ -60,11 +60,12 @@ public class SupportRead
     private final int mTrimCount;
     private final boolean mHasIndel;
 
-    // TODO: make this the distance from the read's start (ie index not position) to the assembly junction index
-    private final int mJunctionReadIndex;
+    // the distance from the read's start (ie index not position) to the assembly junction index
+    // if the read start is before the junction index then the value is negative
+    private final int mJunctionReadStartDistance;
 
-    private int mJunctionAssemblyIndex; // index within this read's junction assembly of the read's start position
-    private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
+    private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) if the read's start position
+    private Orientation mFullAssemblyOrientation;
     private int mInferredFragmentLength;
 
     // those past the junction
@@ -74,7 +75,7 @@ public class SupportRead
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
-    public SupportRead(final Read read, final SupportType type, final int junctionReadIndex, final int matches, final int mismatches)
+    public SupportRead(final Read read, final SupportType type, final int junctReadStartDistance, final int matches, final int mismatches)
     {
         mType = type;
 
@@ -108,9 +109,9 @@ public class SupportRead
         mJunctionMismatches = mismatches;
         mReferenceMismatches = 0;
 
-        mJunctionReadIndex = junctionReadIndex;
-        mJunctionAssemblyIndex = -1;
-        mLinkedAssemblyIndex = -1;
+        mJunctionReadStartDistance = junctReadStartDistance;
+        mFullAssemblyIndex = -1;
+        mFullAssemblyOrientation = null;
         mInferredFragmentLength = -1;
 
         mRead = read;
@@ -154,6 +155,32 @@ public class SupportRead
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
 
+    public int mismatchCount() { return mJunctionMismatches + mReferenceMismatches; }
+    public int junctionMismatches() { return mJunctionMismatches; }
+    public int junctionMatches() { return mJunctionMatches; }
+    public int referenceMismatches() { return mReferenceMismatches; }
+    public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
+
+    @Nullable
+    public Read cachedRead() { return mRead; }
+
+    public void clearCachedRead() { mRead = null; }
+
+    public int junctionReadStartDistance() { return mJunctionReadStartDistance; }
+
+    public void setFullAssemblyInfo(int assemblyIndex, final Orientation orientation)
+    {
+        mFullAssemblyIndex = assemblyIndex;
+        mFullAssemblyOrientation = orientation;
+    }
+
+    public int fullAssemblyIndexStart() { return mFullAssemblyIndex; }
+    public int fullAssemblyIndexEnd() { return mFullAssemblyIndex + mBaseLength - 1; }
+    public Orientation fullAssemblyOrientation() { return mFullAssemblyOrientation; }
+
+    public int inferredFragmentLength() { return mInferredFragmentLength; }
+    public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
+
     public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
     {
         if(!mId.equals(other.id()))
@@ -169,28 +196,6 @@ public class SupportRead
 
         return allowReadMatch || mFlags != other.getFlags();
     }
-
-    public void clearCachedRead() { mRead = null; }
-
-    @Nullable
-    public Read cachedRead() { return mRead; }
-
-    public int junctionReadIndex() { return mJunctionReadIndex; }
-
-    public void setJunctionAssemblyIndex(int index) { mJunctionAssemblyIndex = index; }
-    public int junctionAssemblyIndex() { return mJunctionAssemblyIndex; }
-
-    public void setLinkedAssemblyIndex(int index) { mLinkedAssemblyIndex = index; }
-    public int linkedAssemblyIndex() { return mLinkedAssemblyIndex; }
-
-    public int mismatchCount() { return mJunctionMismatches + mReferenceMismatches; }
-    public int junctionMismatches() { return mJunctionMismatches; }
-    public int junctionMatches() { return mJunctionMatches; }
-    public int referenceMismatches() { return mReferenceMismatches; }
-    public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
-
-    public int inferredFragmentLength() { return mInferredFragmentLength; }
-    public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
 
     public static boolean hasFragmentOtherRead(final List<SupportRead> support, final SupportRead read)
     {
@@ -214,8 +219,9 @@ public class SupportRead
 
     public String toString()
     {
-        return format("type(%s) read(%s %s:%d-%d %s %d) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
-                mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadIndex,
-                mJunctionAssemblyIndex, mLinkedAssemblyIndex, mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
+        return format("type(%s) read(%s %s:%d-%d %s %d) index(juncDist=%d asm=%d:%d) hqMatch(%d) mismatch(junc=%d ref=%d)",
+                mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadStartDistance,
+                mFullAssemblyIndex, mFullAssemblyOrientation != null ? mFullAssemblyOrientation.asByte() : 0,
+                mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
     }
 }

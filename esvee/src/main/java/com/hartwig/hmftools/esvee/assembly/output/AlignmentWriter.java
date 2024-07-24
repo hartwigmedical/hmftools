@@ -67,9 +67,6 @@ public class AlignmentWriter
 
             sj.add(FLD_ASSEMBLY_IDS);
             sj.add(FLD_ASSEMLY_INFO);
-            sj.add("SvType");
-            sj.add("SvLength");
-            sj.add("RefBaseLength");
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
 
@@ -104,9 +101,6 @@ public class AlignmentWriter
 
             sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
-            sj.add(String.valueOf(assemblyAlignment.svType()));
-            sj.add(String.valueOf(assemblyAlignment.svLength()));
-            sj.add(String.valueOf(assemblyAlignment.refBaseLength()));
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
 

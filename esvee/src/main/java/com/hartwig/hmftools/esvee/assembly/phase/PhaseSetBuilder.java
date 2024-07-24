@@ -60,11 +60,11 @@ public class PhaseSetBuilder
     // references from phase group
     private final List<JunctionAssembly> mAssemblies;
     private final List<PhaseSet> mPhaseSets; // final proposed phase sets
+    private final List<AssemblyLink> mSecondarySplitLinks;
 
     // working cache only
     private final List<AssemblyLink> mSplitLinks;
     private final List<AssemblyLink> mFacingLinks;
-    private final List<AssemblyLink> mSecondarySplitLinks;
 
     public PhaseSetBuilder(
             final RefGenomeInterface refGenome, final RemoteRegionAssembler remoteRegionAssembler, final PhaseGroup phaseGroup)
@@ -682,6 +682,13 @@ public class PhaseSetBuilder
         for(PhaseSet phaseSet : mPhaseSets)
         {
             phaseSet.assemblies().forEach(x -> x.setOutcome(LINKED));
+
+            // gather in secondaries
+            for(AssemblyLink link : mSecondarySplitLinks)
+            {
+                if(phaseSet.hasAssembly(link.first()) || phaseSet.hasAssembly(link.second()))
+                    phaseSet.addSecondaryLinkEnd(link);
+            }
         }
     }
 

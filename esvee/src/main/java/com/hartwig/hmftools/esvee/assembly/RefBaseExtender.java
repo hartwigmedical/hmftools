@@ -424,16 +424,16 @@ public class RefBaseExtender
 
     public static boolean checkAddRefBaseRead(final JunctionAssembly assembly, final Read read, final SupportType supportType)
     {
-        ReadAssemblyIndices readIndexInfo = getRefReadIndices(assembly, assembly.refBasePosition(), read);
+        ReadAssemblyIndices readAssemblyIndices = getRefReadIndices(assembly, assembly.refBasePosition(), read);
 
-        if(readIndexInfo == null)
+        if(readAssemblyIndices == null)
             return false;
 
-        int readStartIndex = readIndexInfo.ReadIndexStart;
+        int readStartIndex = readAssemblyIndices.ReadIndexStart;
         final byte[] assemblyBases = assembly.bases();
         final byte[] assemblyBaseQuals = assembly.baseQuals();
 
-        boolean canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readIndexInfo);
+        boolean canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices);
 
         if(!canAddRead && readStartIndex < read.getBases().length - REF_READ_SEARCH_LENGTH)
         {
@@ -454,8 +454,8 @@ public class RefBaseExtender
 
             if(assemblyStartIndex >= 0)
             {
-                readIndexInfo = new ReadAssemblyIndices(readStartIndex, readIndexInfo.ReadIndexEnd, assemblyStartIndex);
-                canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readIndexInfo);
+                readAssemblyIndices = new ReadAssemblyIndices(readStartIndex, readAssemblyIndices.ReadIndexEnd, assemblyStartIndex);
+                canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices);
             }
         }
 
@@ -464,15 +464,17 @@ public class RefBaseExtender
             // junction mate reads are added as support even if their ref bases don't match
             if(supportType == SupportType.JUNCTION_MATE)
             {
+                int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(assembly.junctionIndex());
+
                 SupportRead supportRead = new SupportRead(
-                        read, supportType, INVALID_INDEX, 0, ASSEMBLY_EXTENSION_BASE_MISMATCH + 1);
+                        read, supportType, junctionReadStartDistance, 0, ASSEMBLY_EXTENSION_BASE_MISMATCH + 1);
                 assembly.support().add(supportRead);
             }
 
             return false;
         }
 
-        assembly.addRead(read, readIndexInfo, supportType, null);
+        assembly.addRead(read, readAssemblyIndices, supportType, null);
 
         return true;
     }

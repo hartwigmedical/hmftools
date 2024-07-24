@@ -330,8 +330,10 @@ public class RemoteRegionAssembler
 
             int matchLength = read.basesLength();
 
+            int junctionReadStartDistance = remoteJunctionPosition - read.unclippedStart();
+
             SupportRead support = new SupportRead(
-                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT, 0, matchLength, 0);
+                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT, junctionReadStartDistance, matchLength, 0);
 
             remoteSupport.add(support);
         }

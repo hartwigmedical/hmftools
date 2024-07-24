@@ -170,13 +170,17 @@ public class BreakendBuilder
         // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
         IndelCoords indelCoords = null;
 
-        StructuralVariantType svType = mAssemblyAlignment.svType();
-
-        if(svType == DEL || svType == DUP || svType == INS)
+        if(mAssemblyAlignment.phaseSet() != null)
         {
-            int svLength = mAssemblyAlignment.svLength();
-            CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-            indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
+            AssemblyLink assemblyLink = mAssemblyAlignment.phaseSet().assemblyLinks().get(0);
+            StructuralVariantType svType = assemblyLink.svType();
+
+            if(svType == DEL || svType == DUP || svType == INS)
+            {
+                int svLength = assemblyLink.length();
+                CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
+                indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
+            }
         }
 
         // if no match was found, just take the longest
@@ -356,14 +360,25 @@ public class BreakendBuilder
             Orientation breakendOrientation = segmentOrientation(alignment, true);
             int breakendPosition = alignment.isForward() ? alignment.RefLocation.end() : alignment.RefLocation.start();
 
+            AlignData nextAlignment = alignments.get(i + 1);
+
+            Orientation nextOrientation = segmentOrientation(nextAlignment, false);
+            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
+
+            // first check for facing links rather than an SV
+            if(areFacingBreakends(
+                    alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation,
+                    nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation))
+            {
+                continue;
+            }
+
             HomologyData homology = null;
             String insertedBases = "";
 
-            AlignData nextAlignment = alignments.get(i + 1);
-
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                String assemblyOverlapBases = mAssemblyAlignment.overlapBases();
+                String assemblyOverlapBases = mAssemblyAlignment.overlapBases(alignment.sequenceEnd());
 
                 if(assemblyOverlapBases.isEmpty())
                 {
@@ -378,9 +393,6 @@ public class BreakendBuilder
                 int insertSeqEnd = nextAlignment.sequenceStart();
                 insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
             }
-
-            Orientation nextOrientation = segmentOrientation(nextAlignment, false);
-            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
             HomologyData firstHomology = homology;
             HomologyData nextHomology = homology;
@@ -446,6 +458,35 @@ public class BreakendBuilder
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);
+
+        // finally look for any facing breakends
+        for(int i = 0; i < mAssemblyAlignment.breakends().size() - 1; ++i)
+        {
+            Breakend breakend = mAssemblyAlignment.breakends().get(i);
+            Breakend nextBreakend = mAssemblyAlignment.breakends().get(i + 1);
+
+            if(areFacingBreakends(
+                    breakend.Chromosome, breakend.Position, breakend.Orient,
+                    nextBreakend.Chromosome, nextBreakend.Position, nextBreakend.Orient))
+            {
+                breakend.addFacingBreakend(nextBreakend);
+                nextBreakend.addFacingBreakend(breakend);
+            }
+        }
+    }
+
+    private static boolean areFacingBreakends(
+            final String chrFirst, final int positionFirst, final Orientation orientFirst,
+            final String chrSecond, final int positionSecond, final Orientation orientSecond)
+    {
+        // order is maintained ie the first must face the second
+        if(orientFirst == orientSecond || !chrFirst.equals(chrSecond))
+            return false;
+
+        if(orientFirst.isReverse())
+            return positionFirst < positionSecond && positionSecond - positionFirst <= PHASED_ASSEMBLY_MAX_TI;
+        else
+            return positionFirst > positionSecond && positionFirst - positionSecond <= PHASED_ASSEMBLY_MAX_TI;
     }
 
     protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)
@@ -482,93 +523,5 @@ public class BreakendBuilder
         relatedAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
 
         return altAlignments;
-    }
-
-    public static void formBreakendFacingLinks(final List<Breakend> breakends)
-    {
-        // may move this logic within breakend formation if assembly sequences cover chains of links
-        for(int i = 0; i < breakends.size() - 1; ++i)
-        {
-            Breakend breakend = breakends.get(i);
-
-            if(!breakend.passing())
-                continue;
-
-            for(int j = i + 1; j < breakends.size(); ++j)
-            {
-                Breakend nextBreakend = breakends.get(j);
-
-                if(!nextBreakend.passing())
-                    continue;
-
-                if(nextBreakend.otherBreakend() == breakend) // to avoid DUP breakends also being considered facing
-                    continue;
-
-                if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position - breakend.Position > PHASED_ASSEMBLY_MAX_TI)
-                    break;
-
-                if(inFacingLink(breakend, nextBreakend))
-                {
-                    breakend.addFacingBreakend(nextBreakend);
-                    nextBreakend.addFacingBreakend(breakend);
-                }
-            }
-        }
-    }
-
-    private static boolean inFacingLink(final Breakend lowerBreakend, final Breakend upperBreakend)
-    {
-        if(lowerBreakend.Orient.isForward() || upperBreakend.Orient.isReverse())
-            return false;
-
-        PhaseSet lowerPhaseSet = lowerBreakend.assembly().assemblies().get(0).phaseSet();
-        PhaseSet upperPhaseSet = upperBreakend.assembly().assemblies().get(0).phaseSet();
-
-        if(lowerPhaseSet == null || lowerPhaseSet != upperPhaseSet)
-            return false;
-
-        // must have overlapping aligned segments
-        boolean foundOverlap = false;
-
-        for(BreakendSegment lowerSegment : lowerBreakend.segments())
-        {
-            for(BreakendSegment upperSegment : upperBreakend.segments())
-            {
-                if(lowerSegment.Alignment.RefLocation.overlaps(upperSegment.Alignment.RefLocation))
-                {
-                    foundOverlap = true;
-                    break;
-                }
-            }
-
-            if(foundOverlap)
-                break;
-        }
-
-        if(!foundOverlap)
-            return false;
-
-        boolean foundMatchingLink = false;
-
-        for(AssemblyLink assemblyLink : lowerPhaseSet.assemblyLinks())
-        {
-            if(assemblyLink.type() == FACING)
-            {
-                // facing link must overlap this region
-                Junction firstJunction = assemblyLink.first().junction();
-                Junction secondJunction = assemblyLink.second().junction();
-
-                int lowerLinkPosition = min(firstJunction.Position, secondJunction.Position);
-                int upperLinkPosition = max(firstJunction.Position, secondJunction.Position);
-
-                if(positionsOverlap(lowerBreakend.Position, upperBreakend.Position, lowerLinkPosition, upperLinkPosition))
-                {
-                    foundMatchingLink = true;
-                    break;
-                }
-            }
-        }
-
-        return foundMatchingLink;
     }
 }

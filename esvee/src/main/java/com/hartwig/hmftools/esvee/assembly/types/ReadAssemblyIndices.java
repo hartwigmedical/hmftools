@@ -31,6 +31,13 @@ public class ReadAssemblyIndices
 
     public boolean isValid() { return ReadIndexStart == INVALID_INDEX; }
 
+    public int junctionReadStartDistance(int assemblyJunctionIndex)
+    {
+        // positive if the read's start is lower than then assembly's junction index, so will always be positive for junction reads
+        // will only be negative for discordant reads and junction mates on -ve orientation assemblies
+        return assemblyJunctionIndex - AssemblyIndexStart - ReadIndexStart;
+    }
+
     public String toString()
     {
         return format("read(%d-%d) assembly(%d junc=%d)",

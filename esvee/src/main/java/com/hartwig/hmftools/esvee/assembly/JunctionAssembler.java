@@ -304,7 +304,7 @@ public class JunctionAssembler
     private void extendRefBasesWithJunctionRead(final JunctionAssembly assembly, final Read read, final SupportRead existingSupport)
     {
         ReadAssemblyIndices readAssemblyIndices = ReadAssemblyIndices.getJunctionReadRefBaseIndices(
-                mJunction, assembly.junctionIndex(), read, existingSupport.junctionReadIndex());
+                mJunction, assembly.junctionIndex(), read, existingSupport.junctionReadStartDistance());
 
         assembly.addRead(read, readAssemblyIndices, existingSupport.type(), existingSupport);
     }

@@ -169,6 +169,18 @@ public class JunctionAssembly
     public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
 
+    public void addCandidateSupport(final Read read)
+    {
+        mCandidateSupport.add(read);
+        ++mStats.CandidateSupportCount;
+    }
+
+    public List<Read> candidateSupport() { return mCandidateSupport; }
+    public void clearCandidateSupport() { mCandidateSupport.clear(); }
+
+    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
+    public List<Read> unmappedReads() { return mUnmappedCandidates; }
+
     public AssemblyStats stats() { return mStats; }
 
     public int mismatchReadCount() { return mMismatchReadCount; }
@@ -231,7 +243,8 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            addSupport(read, type, readAssemblyIndices.JunctionIndex, highQualMatchCount, mismatchCount, 0);
+            int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(mJunctionIndex);
+            addSupport(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount, 0);
         }
         else
         {
@@ -240,11 +253,11 @@ public class JunctionAssembly
     }
 
     public void addSupport(
-            final Read read, final SupportType type, int readJunctionIndex, int matches, int mismatches, int refMismatches)
+            final Read read, final SupportType type, int junctionReadStartDistance, int matches, int mismatches, int refMismatches)
     {
         boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
         SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
-        SupportRead support = new SupportRead(read, adjustedType, readJunctionIndex, matches, mismatches);
+        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matches, mismatches);
         support.setReferenceMismatches(refMismatches);
 
         mSupport.add(support);
@@ -509,37 +522,6 @@ public class JunctionAssembly
     public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
     public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
 
-    public void setReadIndices()
-    {
-        for(SupportRead read : mSupport)
-        {
-            if(read.type().isSplitSupport() || read.type() == EXTENSION)
-            {
-                // say assembly junc index = 100, junction index in read = 70, then read's start index in assembly is 100 - 70 = 30
-                // for an extension read (where the junction position isn't in the read)
-                int assemblyIndex = mJunctionIndex - read.junctionReadIndex();
-                read.setJunctionAssemblyIndex(assemblyIndex);
-            }
-            else
-            {
-                // TODO: use read junction offset instead of calculating from scratch
-
-                // set based on the relative positions
-                if(isForwardJunction())
-                {
-                    int assemblyIndex = read.unclippedStart() - mRefBasePosition;
-                    read.setJunctionAssemblyIndex(assemblyIndex);
-                }
-                else
-                {
-                    int junctionOffset = read.unclippedStart() - mJunction.Position;
-                    int assemblyIndex = mJunctionIndex + junctionOffset;
-                    read.setJunctionAssemblyIndex(assemblyIndex);
-                }
-            }
-        }
-    }
-
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
             final List<SupportRead> initialSupport)
@@ -621,18 +603,6 @@ public class JunctionAssembly
         mOutcome = UNSET;
         mAlignmentOutcome = NO_SET;
     }
-
-    public void addCandidateSupport(final Read read)
-    {
-        mCandidateSupport.add(read);
-        ++mStats.CandidateSupportCount;
-    }
-
-    public List<Read> candidateSupport() { return mCandidateSupport; }
-    public void clearCandidateSupport() { mCandidateSupport.clear(); }
-
-    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
-    public List<Read> unmappedReads() { return mUnmappedCandidates; }
 
     public String toString()
     {
@@ -753,9 +723,10 @@ public class JunctionAssembly
     @VisibleForTesting
     public void addJunctionRead(final Read read)
     {
-        int junctionReadIndex = mJunction.Position - read.unclippedStart();
+        // positive if on the lower side of the junction
+        int junctionReadStartDistance = mJunction.Position - read.unclippedStart();
 
-        SupportRead support = new SupportRead(read, JUNCTION, junctionReadIndex, read.basesLength(), 0);
+        SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, read.basesLength(), 0);
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
     }

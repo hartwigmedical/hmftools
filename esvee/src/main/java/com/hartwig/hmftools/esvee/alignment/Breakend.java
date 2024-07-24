@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.FilterType;
-import com.hartwig.hmftools.esvee.common.QualCalcs;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -47,7 +46,8 @@ public class Breakend implements Comparable<Breakend>
     private List<BreakendSegment> mSegments;
 
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
-    private int mAverageFragmentLength;
+    private int mFragmentLengthTotal;
+    private int mFragmentLengthCount;
     private final Set<FilterType> mFilters;
 
     public Breakend(
@@ -72,13 +72,14 @@ public class Breakend implements Comparable<Breakend>
         mAlternativeAlignments = null;
 
         mFilters = Sets.newHashSet();
-        mAverageFragmentLength = 0;
+        mFragmentLengthTotal = 0;
+        mFragmentLengthCount = 0;
     }
 
     public int id() { return mId; }
     public void setId(int id) { mId = id; }
 
-    public AssemblyAlignment assembly() { return mAssembly; }
+    public AssemblyAlignment assembly() { return mAssembly; } // only used in VCF
 
     public Breakend otherBreakend() { return mOtherBreakend; }
     public void setOtherBreakend(final Breakend breakend) { mOtherBreakend = breakend; }
@@ -94,8 +95,32 @@ public class Breakend implements Comparable<Breakend>
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 
-    public int averageFragmentLength() { return mAverageFragmentLength; }
-    public void setAverageInferredFragmentLength(final int length) { mAverageFragmentLength = length; }
+    public void updateBreakendSupport(int sampleIndex, boolean isSplitFragment, int forwardReads, int reverseReads)
+    {
+        if(sampleIndex < mBreakendSupport.size())
+        {
+            BreakendSupport breakendSupport = mBreakendSupport.get(sampleIndex);
+
+            if(isSplitFragment)
+                ++breakendSupport.SplitFragments;
+            else
+                ++breakendSupport.DiscordantFragments;
+
+            breakendSupport.ForwardReads += forwardReads;
+            breakendSupport.ReverseReads += reverseReads;
+        }
+    }
+
+    public int averageFragmentLength()
+    {
+        return mFragmentLengthCount > 0 ? (int)round(mFragmentLengthTotal / (double)mFragmentLengthCount) : 0;
+    }
+
+    public void addInferredFragmentLength(final int length)
+    {
+        ++mFragmentLengthCount;
+        mFragmentLengthTotal += length;
+    }
 
     public boolean isSingle() { return mOtherBreakend == null; }
 
@@ -164,39 +189,6 @@ public class Breakend implements Comparable<Breakend>
     public boolean passing() { return mFilters.isEmpty(); }
     public void addFilter(final FilterType filterType) { mFilters.add(filterType); }
 
-    public boolean readSpansJunction(final SupportRead read, boolean isAlternativeAlignment)
-    {
-        if(!isAlternativeAlignment)
-        {
-            // first an aligned junction read
-            if(read.unclippedStart() < Position && read.unclippedEnd() > Position)
-                return true;
-
-            return false;
-        }
-        else
-        {
-            // next a misaligned junction read - crossing the segment boundary
-            int readSeqStartIndex = read.linkedAssemblyIndex();
-            int readSeqEndIndex = read.linkedAssemblyIndex() + read.baseLength() - 1;
-
-            // look for a read crossing a segment boundary
-            for(BreakendSegment segment : mSegments)
-            {
-                int segmentIndexStart = segment.Alignment.sequenceStart();
-                int segmentIndexEnd = segment.Alignment.sequenceEnd();
-
-                if(segmentIndexStart > 0 && readSeqStartIndex < segmentIndexStart && readSeqEndIndex > segmentIndexStart)
-                    return true;
-
-                if(segmentIndexEnd < segment.SequenceLength - 1 && readSeqStartIndex < segmentIndexEnd && readSeqEndIndex > segmentIndexEnd)
-                    return true;
-            }
-
-            return false;
-        }
-    }
-
     public boolean matches(final String chromosome, final int position, final Orientation orientation)
     {
         if(!Chromosome.equals(chromosome) || Orient != orientation)
@@ -206,23 +198,6 @@ public class Breakend implements Comparable<Breakend>
             return positionWithin(position, Position + Homology.InexactStart, Position + Homology.InexactEnd);
         else
             return Position == position;
-    }
-
-    public boolean isRelatedDiscordantRead(final int readStart, final int readEnd, final Orientation readOrientation)
-    {
-        if(readOrientation != Orient)
-            return false;
-
-        if(Orient.isForward())
-        {
-            int maxPosition = max(maxPosition(), Position);
-            return readEnd <= maxPosition && readStart >= Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
-        }
-        else
-        {
-            int minPosition = min(minPosition(), Position);
-            return readStart >= minPosition && readEnd <= Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
-        }
     }
 
     public String toString()

@@ -70,7 +70,7 @@ public class Alignment
         if(mAligner == null && !mAlignmentCache.enabled())
             return;
 
-        int singleAssemblies = (int)assemblyAlignments.stream().filter(x -> x.svType() == SGL).count();
+        int singleAssemblies = (int) assemblyAlignments.stream().filter(x -> x.assemblies().size() == 1).count();
         int linkedAssemblies = assemblyAlignments.size() - singleAssemblies;
 
         SV_LOGGER.info("running alignment for {} assemblies, linked({}) single({})",
@@ -95,7 +95,7 @@ public class Alignment
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        SV_LOGGER.debug("requeried supp alignments({})", alignerTasks.stream().mapToInt(x ->x.requeriedSuppCount()).sum());
+        SV_LOGGER.debug("requeried supp alignments({})", alignerTasks.stream().mapToInt(x -> x.requeriedSuppCount()).sum());
 
         SV_LOGGER.info("alignment complete");
 
@@ -300,9 +300,10 @@ public class Alignment
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
 
-            allocateSupport(assemblyAlignment);
+            // allocateSupport(assemblyAlignment);
         }
 
+        /* TODO: remove old code
         private void allocateSupport(final AssemblyAlignment assemblyAlignment)
         {
             List<String> combinedSampleIds = mConfig.combinedSampleIds();
@@ -321,6 +322,8 @@ public class Alignment
                 {
                     for(SupportRead read : assembly.support())
                     {
+                        // junction mates are skipped since their junction split mate reads are checked
+                        // extension (unmapped) reads are skipped since their junction split or discordant mates are checked
                         if(read.type() == SupportType.JUNCTION_MATE || read.type() == SupportType.EXTENSION)
                             continue;
 
@@ -419,5 +422,7 @@ public class Alignment
         }
 
         public String toString() { return format("%d: %s breakends(%d)", SampleIndex, IsSplit ? "split" : "disc", Breakends.size()); }
+    }
+    */
     }
 }

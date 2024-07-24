@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
@@ -72,9 +71,9 @@ public class AssemblyReadWriter
             sj.add("SuppData");
 
             sj.add("InferredFragLength");
-            sj.add("ReadJunctionIndex");
-            sj.add("JunctionAssemblyIndex");
-            sj.add("LinkedAssemblyIndex");
+            sj.add("JunctionReadStartDistance");
+            sj.add("fullAssemblyIndex");
+            sj.add("fullAssemblyOrientation");
 
             sj.add("Matches");
             sj.add("Mismatches");
@@ -142,9 +141,9 @@ public class AssemblyReadWriter
                 }
 
                 sj.add(String.valueOf(support.inferredFragmentLength()));
-                sj.add(String.valueOf(support.junctionReadIndex()));
-                sj.add(String.valueOf(support.junctionAssemblyIndex()));
-                sj.add(String.valueOf(support.linkedAssemblyIndex()));
+                sj.add(String.valueOf(support.junctionReadStartDistance()));
+                sj.add(String.valueOf(support.fullAssemblyIndexStart()));
+                sj.add(String.valueOf(support.fullAssemblyOrientation() != null ? support.fullAssemblyOrientation().asByte() : 0));
 
                 sj.add(String.valueOf(support.junctionMatches()));
                 sj.add(String.valueOf(support.mismatchCount()));
