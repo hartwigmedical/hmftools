@@ -162,7 +162,7 @@ public class UltimaRealignedQualModelBuilder
                 int refBasesIndex = refPos - readContext.CorePositionStart;
                 char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
                 String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
-                String alt = String.valueOf(baseBefore);
+                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
                 realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
 
                 refPos += refHomopolymer.Length;
@@ -185,7 +185,7 @@ public class UltimaRealignedQualModelBuilder
                 int refBasesIndex = refPos - readContext.CorePositionStart;
                 char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
                 String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
-                String alt = String.valueOf(baseBefore);
+                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
                 realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
 
                 ++refIndex;
@@ -198,7 +198,8 @@ public class UltimaRealignedQualModelBuilder
             int refBasesIndex = refPos - readContext.CorePositionStart;
             char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
             String ref = String.valueOf(baseBefore);
-            String alt = String.valueOf(baseBefore) + String.valueOf(readHomopolyer.Base).repeat(readHomopolyer.Length);
+            String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1])
+                    + String.valueOf(readHomopolyer.Base).repeat(readHomopolyer.Length);
             realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
 
             ++readIndex;
