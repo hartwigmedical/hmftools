@@ -55,8 +55,10 @@ The following fields are stored for each detected virus:
 | driverLikelihood       | The driver likelihood of the virus as annotated in the reporting db                                                                                       |
 
 ## Version History and Download Links
- - Upcoming:
-   - Add blacklist option 
+ - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.5):
+   - Add blacklist option in order to blacklist HIV
+ - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.3)
+   - Use latest virus enumerations
  - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
    - Annotate the viruses with a driver likelihood
    - Version built on java11 JDK

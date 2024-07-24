@@ -260,7 +260,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming:
+- [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
   - Add unreported reason to fusions in ORANGE
   - Add etiology information to signatures and sort by allocation
   - Add percentage of unsupported segments to Quality control page
