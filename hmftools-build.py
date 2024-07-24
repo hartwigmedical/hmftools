@@ -77,7 +77,7 @@ class Release:
                 "generate_release_notes": True
         }
         headers = {"Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {token}",
+                "Authorization": f"Bearer {self.token}",
                 "X-GitHub-Api-Version": "2022-11-28"
         }
 
@@ -90,7 +90,7 @@ class Release:
     def _upload_artifacts(self, id):
         print(f"Uploading artifacts to release {id}")
         headers = {"Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {token}",
+                "Authorization": f"Bearer {self.token}",
                 "X-GitHub-Api-Version": "2022-11-28",
                 "Content-Type": "application/octet-stream"
         }
