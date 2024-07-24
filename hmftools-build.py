@@ -16,6 +16,8 @@ Example:
 """
 import re
 import subprocess
+import requests
+import os.path
 from xml.etree import ElementTree
 from argparse import ArgumentParser
 
