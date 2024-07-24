@@ -80,8 +80,6 @@ public class QualityCalculator
     {
         double baseQuality;
 
-        // && (readContextCounter.realignedUltimaQualModels() == null || !readContextCounter.isSnv())
-
         boolean recalibrateBaseQuality;
         if(readContextCounter.realignedUltimaQualModels() == null)
         {
@@ -92,9 +90,13 @@ public class QualityCalculator
             recalibrateBaseQuality = readContextCounter.isSnv() && readContextCounter.artefactContext() == null;
         }
 
-        if(recalibrateBaseQuality)
+        if(recalibrateBaseQuality && readContextCounter.realignedUltimaQualModels() == null)
         {
             baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+        }
+        else if(recalibrateBaseQuality)
+        {
+            baseQuality = min(calcBaseQuality, recalibratedBaseQuality(readContextCounter, readBaseIndex, record, 1));
         }
         else
         {
