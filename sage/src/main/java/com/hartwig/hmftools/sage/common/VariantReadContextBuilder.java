@@ -50,10 +50,10 @@ public class VariantReadContextBuilder
             // ref bases are extended for long inserts for partial ref matching
             if(isLongInsert(variant))
             {
-                readContext.setExtendedRefBases(refSequence.positionBases(
-                        readContext.CorePositionEnd + 1, readContext.CorePositionEnd + 11));
-                readContext.setExtendedBackwardRefBases(refSequence.positionBases(
-                        readContext.CorePositionStart - readContext.leftFlankLength(), readContext.CorePositionStart - 1));
+                byte[] extendedRefBases = refSequence.baseRange(
+                        readContext.CorePositionStart - readContext.leftFlankLength(),
+                        readContext.CorePositionEnd + readContext.rightFlankLength() + 1);
+                readContext.setExtendedRefBases(extendedRefBases);
             }
 
             readContext.setArtefactContext(ArtefactContext.buildContext(readContext));

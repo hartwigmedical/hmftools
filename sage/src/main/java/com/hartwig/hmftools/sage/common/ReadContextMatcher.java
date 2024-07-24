@@ -63,6 +63,7 @@ public class ReadContextMatcher
             mIndexOffset = 0;
         }
 
+        public int indexOffset() { return mIndexOffset; }
         public void setIndexOffset(int offset) { mIndexOffset = offset; }
 
         public boolean coversIndex(int index)
@@ -257,11 +258,10 @@ public class ReadContextMatcher
         {
             if(mIsReference && isLongInsert(mContext.variant()))
             {
-                String fullyExtendedRefBases = mContext.extendedBackwardRefBases() + mContext.refBases() + mContext.extendedRefBases();
+                int extendedRefIndexStart = mContext.variantRefIndex() + mContext.leftFlankLength() + mLowQualExclusionRead.indexOffset();
 
                 int[] refReadMatches = countRefAndReadDifferences(
-                        readBases, mContext.ReadBases, fullyExtendedRefBases.getBytes(), readVarIndex, mContext.VarIndex,
-                        mContext.variantRefIndex() + mContext.leftFlankLength() + this.mLowQualExclusionRead.mIndexOffset);
+                        readBases, mContext.ReadBases, mContext.extendedRefBases(), readVarIndex, mContext.VarIndex, extendedRefIndexStart);
 
                 if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
                     return PARTIAL_CORE;
@@ -534,7 +534,7 @@ public class ReadContextMatcher
         int readContextMatches = 0;
         int refMatches = 0;
 
-        int i = Math.max(-refIndexStart, 0);
+        int i = max(-refIndexStart, 0); // ref index can be negative for realigned checks
 
         while(true)
         {
