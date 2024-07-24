@@ -89,9 +89,11 @@ public class CandidateCreationTest
         // the read's alignment start with the first base of the read context
         SAMRecord read = buildSamRecord(100, cigar, readBases);
         read.setMappingQuality(60);
+        SAMRecord readClone = buildSamRecord(100, cigar, readBases);
+        readClone.setMappingQuality(60);
 
         refContextConsumer.processRead(read);
-        refContextConsumer.processRead(read); // repeat to add support
+        refContextConsumer.processRead(readClone); // repeat to add support
 
         readBases = refBases.substring(100, 117) + variant.alt() + "T" + refBases.substring(118, 135);
 
@@ -99,9 +101,11 @@ public class CandidateCreationTest
 
         read = buildSamRecord(100, cigar, readBases);
         read.setMappingQuality(60);
+        readClone = buildSamRecord(100, cigar, readBases);
+        readClone.setMappingQuality(60);
 
         refContextConsumer.processRead(read);
-        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(readClone);
 
         List<AltContext> altContexts = refContextCache.altContexts();
         assertEquals(2, altContexts.size());

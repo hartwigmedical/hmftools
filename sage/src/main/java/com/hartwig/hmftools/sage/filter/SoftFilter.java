@@ -8,6 +8,7 @@ public enum SoftFilter
 {
     MIN_TUMOR_QUAL("minTumorQual", "min_tumor_qual", true, false, "Insufficient tumor quality"),
     MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false, "Insufficient tumor VAF"),
+    MIN_TUMOR_SUPPORT("minTumorSupport", "min_tumor_support", true, false, "Insufficient tumor strong support"),
     MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true, "Insufficient germline depth"),
     MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true, "Excess germline VAF"),
     MAX_GERMLINE_RELATIVE_QUAL(

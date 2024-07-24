@@ -137,7 +137,7 @@ public class RealignmentTest
         // index   0123456789012345678901234567890123456789
         // pos     20        30        40
 
-        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+        RefSequence refSequence = new RefSequence(0, (refBases + REF_BASES_200.substring(50, 100)).getBytes());
 
         String insertedBases = "TTTCTTTC";
 
@@ -206,7 +206,7 @@ public class RealignmentTest
         // index   0123456789012345678901234567890123456789
         // pos     20        30        40
 
-        refSequence = new RefSequence(0, refBases.getBytes());
+        refSequence = new RefSequence(0, (refBases + REF_BASES_200.substring(60, 110)).getBytes());
 
         varPosition = 33;
         ref = refBases.substring(varPosition, varPosition + 1);

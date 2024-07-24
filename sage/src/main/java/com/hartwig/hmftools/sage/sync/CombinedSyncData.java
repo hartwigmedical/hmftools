@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -275,6 +276,9 @@ public class CombinedSyncData
         int firstReadIndex = findFragmentReadIndexStart(first, mFirstEffectivePosStart);
         int secondReadIndex = findFragmentReadIndexStart(second, mSecondEffectivePosStart);
 
+        CigarState firstCigar = new CigarState(first.getCigar().getCigarElements());
+        CigarState secondCigar = new CigarState(second.getCigar().getCigarElements());
+
         final byte[] firstBaseQualities = first.getBaseQualities();
         final byte[] firstBases = first.getReadBases();
         final int firstLength = first.getReadLength();
@@ -295,17 +299,26 @@ public class CombinedSyncData
             {
                 if(firstReadIndex >= 0 && firstReadIndex < firstLength && secondReadIndex >= 0 && secondReadIndex < secondLength)
                 {
+                    boolean firstInSoftclip = firstReadIndex < firstCigar.softClipStart() || firstReadIndex >= firstLength - firstCigar.softClipEnd();
+                    boolean secondInSoftclip = secondReadIndex < secondCigar.softClipStart() || secondReadIndex >= secondLength - secondCigar.softClipEnd();
+                    int cappedFirstQual = firstBaseQualities[firstReadIndex];
+                    int cappedSecondQual = secondBaseQualities[secondReadIndex];
+                    if(firstInSoftclip && !secondInSoftclip)
+                        cappedFirstQual = MATCHING_BASE_QUALITY;
+                    else if(!firstInSoftclip && secondInSoftclip)
+                        cappedSecondQual = MATCHING_BASE_QUALITY;
+
                     if(firstBases[firstReadIndex] == secondBases[secondReadIndex])
                     {
                         mCombinedBases[combinedReadIndex] = firstBases[firstReadIndex];
                         mCombinedBaseQualities[combinedReadIndex] =
-                                (byte)max(firstBaseQualities[firstReadIndex], secondBaseQualities[secondReadIndex]);
+                                (byte)max(cappedFirstQual, cappedSecondQual);
                     }
                     else
                     {
                         byte[] baseAndQual = getCombinedBaseAndQual(
-                                firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
-                                secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
+                                firstBases[firstReadIndex], (byte)cappedFirstQual,
+                                secondBases[secondReadIndex], (byte)cappedSecondQual);
 
                         mCombinedBases[combinedReadIndex] = baseAndQual[0];
                         mCombinedBaseQualities[combinedReadIndex] = BaseQualAdjustment.adjustBaseQual(baseAndQual[1]);

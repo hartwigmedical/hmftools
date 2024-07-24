@@ -52,6 +52,8 @@ public class VariantReadContextBuilder
             {
                 readContext.setExtendedRefBases(refSequence.positionBases(
                         readContext.CorePositionEnd + 1, readContext.CorePositionEnd + 11));
+                readContext.setExtendedBackwardRefBases(refSequence.positionBases(
+                        readContext.CorePositionStart - readContext.leftFlankLength(), readContext.CorePositionStart - 1));
             }
 
             readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
@@ -81,26 +83,30 @@ public class VariantReadContextBuilder
 
         int readCoreStart, readCoreEnd;
         Microhomology homology = null;
+        Microhomology refHomology = null;
         SoftClipReadAdjustment softClipReadAdjustment = null;
 
         if(variant.isIndel())
         {
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
+            int refBaseLength = read.getReadBases().length - varIndexInRead;
+            byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
 
             softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
 
             if(softClipReadAdjustment != null)
             {
-                int refBaseLength = read.getReadBases().length - varIndexInRead;
-                byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
                 homology = Microhomology.findHomology(variant, homologyRefBases, 0, false);
             }
             else
             {
-                homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead, true);
+                homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead, variant.isInsert());
+                refHomology = Microhomology.findHomology(variant, homologyRefBases, 0, variant.isDelete());
             }
 
+            if(refHomology != null && (homology == null || refHomology.Length  > homology.Length))
+                homology = refHomology;
             if(homology != null)
                 readCoreEnd += homology.Length;
         }

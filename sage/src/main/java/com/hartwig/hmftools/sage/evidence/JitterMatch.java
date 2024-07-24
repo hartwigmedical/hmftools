@@ -10,11 +10,13 @@ import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
+import java.util.HashSet;
 
 public enum JitterMatch
 {
     SHORTENED,
     LENGTHENED,
+    BOTH,
     NONE;
 
     public static JitterMatch checkJitter(
@@ -25,6 +27,7 @@ public enum JitterMatch
 
         final byte[] readBases = record.getReadBases();
         final byte[] readQuals = record.getBaseQualities();
+        HashSet<JitterMatch> nonIndelJitter = new HashSet<>();
         boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= DOUBLE_JITTER_REPEAT_COUNT;
 
         // try each repeat covering the read context in turn
@@ -49,7 +52,10 @@ public enum JitterMatch
                                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
                                 jitterType, isIndelOffset, jitterAtStart, 1))
                         {
-                            return jitterType;
+                            if(isIndelOffset)
+                                return jitterType;
+                            else
+                                nonIndelJitter.add(jitterType);
                         }
 
                         if(isIndelOffset && checkDoubleJitter)
@@ -57,7 +63,7 @@ public enum JitterMatch
                             // for contexts with long repeats, test double jitter
                             if(hasJitterMatchType(
                                     repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
-                                    jitterType, isIndelOffset, jitterAtStart, 2))
+                                    jitterType, true, jitterAtStart, 2))
                             {
                                 return jitterType;
                             }
@@ -66,8 +72,10 @@ public enum JitterMatch
                 }
             }
         }
-
-        return JitterMatch.NONE;
+        if(nonIndelJitter.size() < 2)
+            return JitterMatch.NONE;
+        else
+            return JitterMatch.BOTH;
     }
 
     @VisibleForTesting
@@ -152,7 +160,7 @@ public enum JitterMatch
                 }
                 else
                 {
-                    if((jitterType == SHORTENED && readContextIndex == repeatEndIndex)
+                    if((jitterType == SHORTENED && readContextIndex == repeatEndIndex - repeatLength + 1)
                     || (jitterType == LENGTHENED && readContextIndex == repeatEndIndex + 1))
                     {
                         altAdjusted = true;

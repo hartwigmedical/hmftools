@@ -55,6 +55,8 @@ public class Realignment
             return RealignedType.SHORTENED;
         else if(jitterMatch == JitterMatch.LENGTHENED)
             return RealignedType.LENGTHENED;
+        else if(jitterMatch == JitterMatch.BOTH)
+            return RealignedType.BOTH;
 
         return RealignedType.NONE;
     }

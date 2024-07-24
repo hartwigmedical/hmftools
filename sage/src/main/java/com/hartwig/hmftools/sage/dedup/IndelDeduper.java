@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_INDEL;
 
 import java.util.Collections;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
@@ -32,11 +34,13 @@ public class IndelDeduper
     private final RefGenomeInterface mRefGenome;
     private int mGroupIterations;
     private final int mReadEdgeDistanceThreshold;
+    private final int mReadEdgeDistanceThresholdPanel;
 
     public IndelDeduper(final RefGenomeInterface refGenome, int readLength)
     {
         mRefGenome = refGenome;
         mReadEdgeDistanceThreshold = (int)(readLength * MAX_READ_EDGE_DISTANCE_PERC);
+        mReadEdgeDistanceThresholdPanel = (int)(readLength * MAX_READ_EDGE_DISTANCE_PERC_PANEL);
         mGroupIterations = 0;
     }
 
@@ -262,8 +266,9 @@ public class IndelDeduper
             if(positionWithin(variant.position(), indel.FlankPosStart, indel.FlankPosEnd))
                 return true;
         }
-
-        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() < mReadEdgeDistanceThreshold)
+        int thresholdToUse = variant.Variant.tier() == VariantTier.HOTSPOT || variant.Variant.tier() == VariantTier.PANEL
+                ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
+        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() < thresholdToUse)
             return true;
 
         return false;

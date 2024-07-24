@@ -213,8 +213,7 @@ public class JitterTest
         SAMRecord read1 = buildSamRecord(1, readCigar, readBases);
 
         JitterMatch jitterMatch = checkJitter(readContext, matcher, read1, 29);
-        assertEquals(SHORTENED, jitterMatch);
-        // assertEquals(JitterMatch.NONE, jitterMatch); // TODO: matches since skips shortened bases
+         assertEquals(JitterMatch.NONE, jitterMatch);
 
         readBases = refBases.substring(1, 30) + "TTCC" + variant.alt() + refBases.substring(31, 71);
         readCigar = buildCigarString(readBases.length());
@@ -381,16 +380,16 @@ public class JitterTest
         msiJitterCalcs.setSampleParams(sampleId, List.of(jitterParams1, jitterParams2, jitterParams3));
 
         SimpleVariant variant = createSimpleVariant(100, "TA", "T");
-        VariantReadContext readContext = createReadContext(variant, "GT", "AAAAT");
+        VariantReadContext readContext = createReadContext(variant, "GT", "AAAAAAAAAT");
 
         double errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(5.87e-8, errorRate, 1e-9);
+        assertEquals(2.09e-2, errorRate, 1e-4);
 
-        variant = createSimpleVariant(100, "T", "TAAAA");
-        readContext = createReadContext(variant, "GT", "AAAAT");
+        variant = createSimpleVariant(100, "T", "TAA");
+        readContext = createReadContext(variant, "GT", "AAAAAAAAAAAAT");
 
         errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(1.69e-35, errorRate, 1e-35);
+        assertEquals(2.81e-3, errorRate, 1e-5);
 
         // too many repeats changing
         variant = createSimpleVariant(100, "T", "TAAAAAAA");
@@ -400,11 +399,11 @@ public class JitterTest
         assertEquals(0, errorRate, 0.001);
 
         // 4-base repeat
-        variant = createSimpleVariant(100, "ACGTACGTA", "A");
+        variant = createSimpleVariant(100, "ACGTA", "A");
         readContext = createReadContext(variant, "GT", "CGTACGTACGTACGTACGTGG");
 
         errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
-        assertEquals(1.80e-7, errorRate, 1e-8);
+        assertEquals(1.99e-4, errorRate, 1e-6);
     }
 
     @Test

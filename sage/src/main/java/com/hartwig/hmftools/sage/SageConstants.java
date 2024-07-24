@@ -87,6 +87,7 @@ public class SageConstants
     public static final double MQ_RATIO_SMOOTHING = 3;
 
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
+    public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
     public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
@@ -100,10 +101,16 @@ public class SageConstants
     public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
     public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
+    public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
     public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
-    public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_1 = 2;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_2 = 3;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_1 = 3;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_2 = 5;
+    public static final int REQUIRED_STRONG_SUPPORT = 3;
+    public static final int REQUIRED_STRONG_SUPPORT_HOTSPOT = 2;
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -128,21 +135,20 @@ public class SageConstants
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 1e-3, 1e-3, 0.01,
-            0, 0, 0.1);
+            "hotspot", 1e-2, -6, 0.01,
+            0, 0, 0.1, 0.25);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 1e-5, 1e-5, 0.02,
-            0, 0,0.04);
+            "panel", 1e-5, -6, 0.02,
+            0, 0, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "high_confidence", 1e-8, 1e-8, 0.025,
-            10, 6,0.04);
+            "high_confidence", 1e-8, 0, 0.025,
+            10, 6, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "low_confidence", 1e-14, 1e-14, 0.025,
-            10, 6,
-            0.04);
+            "low_confidence", 1e-14, 0, 0.025,
+            10, 6, 0.04, 0.04);
 
     public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP = new JitterModelParams(
             "A/C/G/T", 0.05, 0.09, 0.13, 0.04,

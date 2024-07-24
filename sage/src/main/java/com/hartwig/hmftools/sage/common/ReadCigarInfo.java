@@ -54,7 +54,7 @@ public class ReadCigarInfo
     public boolean isValid()
     {
         return FlankIndexStart >= 0 && FlankIndexEnd > FlankIndexStart
-            && CorePositionStart < CorePositionEnd && CorePositionStart > FlankPositionStart && CorePositionEnd < FlankPositionEnd;
+            && CorePositionStart < CorePositionEnd && CorePositionStart >= FlankPositionStart && CorePositionEnd <= FlankPositionEnd;
     }
 
     public String toString()

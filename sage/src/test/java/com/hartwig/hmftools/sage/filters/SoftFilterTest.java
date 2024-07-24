@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
@@ -128,10 +130,10 @@ public class SoftFilterTest
         readContextCounter.processRead(read2, 1, null);
         readContextCounter.processRead(read2, 1, null);
 
-        // factor in soft-clipped bases
+        // factor in soft-clipped bases and use a FULL match rather than CORE
         SAMRecord read3 = createSamRecord(
                 TEST_READ_ID, CHR_1, 46,
-                REF_BASES.substring(43, position) + altBase + REF_BASES.substring(position + 1, 80), "3S30M4S");
+                TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK, "8S13M4S");
 
         readContextCounter.processRead(read3, 1, null);
 
@@ -139,7 +141,7 @@ public class SoftFilterTest
         SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
         readContextCounter.processRead(read4, 1, null);
 
-        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
+        assertEquals(4, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
         assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromEdge());
 
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
@@ -186,6 +188,10 @@ public class SoftFilterTest
         mate2.setReadNegativeStrandFlag(true);
 
         readContextCounter.processRead(read2, 1, new FragmentData(read2, mate2));
+        readContextCounter.processRead(read2, 1, new FragmentData(read2, mate2));
+        readContextCounter.processRead(read2, 1, new FragmentData(read2, mate2));
+        readContextCounter.processRead(read2, 1, new FragmentData(read2, mate2));
+
 
         assertEquals(1, readContextCounter.fragmentCoords().lowerCount());
         assertEquals(2, readContextCounter.fragmentCoords().upperCount());

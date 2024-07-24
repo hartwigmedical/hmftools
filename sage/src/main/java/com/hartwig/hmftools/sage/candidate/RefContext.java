@@ -31,7 +31,7 @@ public class RefContext extends BasePosition
             final VariantReadContextBuilder readContextBuilder, final RefSequence refSequence)
     {
         final AltContext altContext = getOrCreateAltContext(ref, alt);
-        altContext.incrementAltRead();
+        altContext.incrementAltRead(read.getReadName());
 
         altContext.addReadContext(numberOfEvents, read, variantReadIndex, readContextBuilder, refSequence);
     }

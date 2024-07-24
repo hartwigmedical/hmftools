@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +32,7 @@ public class AltContext extends SimpleVariant
     private final List<ReadContextCandidate> mReadContextCandidates;
 
     private int mRawSupportAlt;
+    private final Set<String> mRawFragmentNames;
     private ReadContextCandidate mCandidate;
     private AltContext mSecondCandidate; // relevant if has a different read context and sufficient support
 
@@ -39,22 +42,24 @@ public class AltContext extends SimpleVariant
         RefContext = refContext;
 
         mReadContextCandidates = Lists.newArrayList();
+        mRawFragmentNames = new HashSet<>();
         mCandidate = null;
         mSecondCandidate = null;
     }
 
     public AltContext(
-            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate, int rawSupportAlt)
+            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate, int rawSupportAlt, Set<String> rawFragmentNames)
     {
         super(refContext.Chromosome, refContext.Position, ref, alt);
         RefContext = refContext;
 
         mCandidate = candidate;
         mRawSupportAlt = rawSupportAlt;
+        mRawFragmentNames = rawFragmentNames;
         mReadContextCandidates = null;
     }
 
-    public void incrementAltRead() { mRawSupportAlt++; }
+    public void incrementAltRead(final String readName) { mRawFragmentNames.add(readName); }
 
     public void addReadContext(
             int numberOfEvents, final SAMRecord read, final int variantReadIndex,
@@ -136,7 +141,7 @@ public class AltContext extends SimpleVariant
                 if(coreStr.contains(topCore) || topCore.contains(coreStr))
                     continue;
 
-                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt);
+                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt, mRawFragmentNames);
                 break;
             }
         }
@@ -158,7 +163,7 @@ public class AltContext extends SimpleVariant
     @Override
     public int position() { return RefContext.position(); }
 
-    public int rawAltSupport() { return mRawSupportAlt; }
+    public int rawAltSupport() { return mRawFragmentNames.size(); }
 
     @Override
     public boolean equals(@Nullable Object another)

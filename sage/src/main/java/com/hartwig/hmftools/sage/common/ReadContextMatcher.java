@@ -257,10 +257,11 @@ public class ReadContextMatcher
         {
             if(mIsReference && isLongInsert(mContext.variant()))
             {
-                String extendedRefBases = mContext.refBases() + mContext.extendedRefBases();
+                String fullyExtendedRefBases = mContext.extendedBackwardRefBases() + mContext.refBases() + mContext.extendedRefBases();
 
                 int[] refReadMatches = countRefAndReadDifferences(
-                        readBases, mContext.ReadBases, extendedRefBases.getBytes(), readVarIndex, mContext.VarIndex, mContext.variantRefIndex());
+                        readBases, mContext.ReadBases, fullyExtendedRefBases.getBytes(), readVarIndex, mContext.VarIndex,
+                        mContext.variantRefIndex() + mContext.leftFlankLength() + this.mLowQualExclusionRead.mIndexOffset);
 
                 if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
                     return PARTIAL_CORE;
@@ -533,7 +534,7 @@ public class ReadContextMatcher
         int readContextMatches = 0;
         int refMatches = 0;
 
-        int i = 0;
+        int i = Math.max(-refIndexStart, 0);
 
         while(true)
         {

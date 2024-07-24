@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_QUAL_BOOST_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_HARD_FILTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_TRINUC_ERROR_RATE;
 
 import java.util.List;
 
@@ -35,9 +36,9 @@ public class JitterData
 
     public void update(final JitterMatch jitterMatch)
     {
-        if(jitterMatch == JitterMatch.LENGTHENED)
+        if(jitterMatch == JitterMatch.LENGTHENED || jitterMatch == JitterMatch.BOTH)
             mLengthened++;
-        else if(jitterMatch == JitterMatch.SHORTENED)
+        else if(jitterMatch == JitterMatch.SHORTENED || jitterMatch == JitterMatch.BOTH)
             mShortened++;
     }
 
@@ -60,7 +61,7 @@ public class JitterData
 
         JitterNoiseOutcome noiseOutcome = calcNoiseOutcome(
                 msiJitterCalcs, readContextCounter.sampleId(), readContextCounter.readContext().MaxRepeat,
-                fullSupport, mShortened, mLengthened);
+                readContextCounter.readContext().AllRepeats, fullSupport, mShortened, mLengthened);
 
         if(noiseOutcome == null)
             return;
@@ -102,7 +103,7 @@ public class JitterData
 
     private JitterNoiseOutcome calcNoiseOutcome(
             final MsiJitterCalcs msiJitterCalcs, final String sampleId, final RepeatInfo maxRepeat,
-            int fullSupport, int shortened, int lengthened)
+            final List<RepeatInfo> allRepeats, int fullSupport, int shortened, int lengthened)
     {
         List<MsiModelParams> allParams = msiJitterCalcs.getSampleParams(sampleId);
 
@@ -110,6 +111,7 @@ public class JitterData
             return null;
 
         int repeatCount = maxRepeat.Count;
+        boolean trinucRepeat = allRepeats.stream().anyMatch(x -> x.Bases.length() == 3);
         double shortenedErrorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount - 1, 1);
         double lengthenedErrorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount + 1, -1);
 
@@ -117,7 +119,7 @@ public class JitterData
 
         if(shortened > fullSupport)
         {
-            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, shortened, shortenedErrorRate);
+            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, shortened, shortenedErrorRate, trinucRepeat);
 
             if(filterOutcome != JitterNoiseOutcome.NOISE)
                 return filterOutcome;
@@ -127,13 +129,13 @@ public class JitterData
             double errorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount, -1);
 
             // note the values are swapped here - ie asking if full support looks like jitter vs the shortened jitter count
-            if(calcNoiseOutcome(shortened, fullSupport, errorRate) != JitterNoiseOutcome.NOISE)
+            if(calcNoiseOutcome(shortened, fullSupport, errorRate, trinucRepeat) != JitterNoiseOutcome.NOISE)
                 outcome = JitterNoiseOutcome.SHORTENED_NOISE;
         }
 
         if(lengthened > fullSupport)
         {
-            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, lengthened, lengthenedErrorRate);
+            JitterNoiseOutcome filterOutcome = calcNoiseOutcome(fullSupport, lengthened, lengthenedErrorRate, trinucRepeat);
 
             if(filterOutcome != JitterNoiseOutcome.NOISE)
                 return filterOutcome;
@@ -142,7 +144,7 @@ public class JitterData
         {
             double errorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount, 1);
 
-            if(calcNoiseOutcome(lengthened, fullSupport, errorRate) != JitterNoiseOutcome.NOISE)
+            if(calcNoiseOutcome(lengthened, fullSupport, errorRate, trinucRepeat) != JitterNoiseOutcome.NOISE)
                 outcome = outcome == JitterNoiseOutcome.SHORTENED_NOISE ? JitterNoiseOutcome.BOTH_NOISE : JitterNoiseOutcome.LENGTHENED_NOISE;
         }
 
@@ -168,12 +170,13 @@ public class JitterData
         return outcome;
     }
 
-    private JitterNoiseOutcome calcNoiseOutcome(int fullSupport, int jitterCount, double errorRate)
+    private JitterNoiseOutcome calcNoiseOutcome(int fullSupport, int jitterCount, double errorRate, boolean trinucRepeat)
     {
         // checks whether the jitter count can be explained as noise vs the full count
 
         // test a p-value of jitter vs the full support counts
-        BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRate);
+        double errorRateToUse = trinucRepeat ? Math.max(MSI_JITTER_MIN_TRINUC_ERROR_RATE, errorRate) : errorRate;
+        BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRateToUse);
 
         double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);
 
@@ -184,7 +187,7 @@ public class JitterData
 
         // a low full count relative to the total will be classified as within noise
         double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
-        if(jitterRatio < 2 * errorRate)
+        if(jitterRatio < 2 * errorRateToUse)
             return JitterNoiseOutcome.FILTER_VARIANT;
 
         return JitterNoiseOutcome.NOISE;

@@ -16,7 +16,12 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_2;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
@@ -33,6 +38,7 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.BOTH;
 import static com.hartwig.hmftools.sage.evidence.Realignment.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDel;
@@ -112,7 +118,7 @@ public class ReadContextCounter
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
     private final int mMaxPositionVsReadStart;
-
+    private int mNonAltNmCountTotal;
     private List<Integer> mLocalPhaseSets;
     private List<Integer> mLpsCounts;
     private int[] mUmiTypeCounts;
@@ -172,7 +178,7 @@ public class ReadContextCounter
         mLpsCounts = null;
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
-        mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
+        mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
 
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
@@ -208,7 +214,7 @@ public class ReadContextCounter
 
     public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
     public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
-
+    public long nonAltNmCountTotal() { return mNonAltNmCountTotal; }
     public double vaf()
     {
         return mCounts.Total == 0 ? 0d : mCounts.altSupport() / (double)mCounts.Total;
@@ -266,7 +272,23 @@ public class ReadContextCounter
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
-    public boolean belowMinFragmentCoords() { return mFragmentCoords != null && !mFragmentCoords.atCapacity(); }
+    public boolean belowMinStrongSupport()
+    {
+        return strongAltSupport() < (tier() == VariantTier.HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT);
+    }
+
+    public boolean belowMinFragmentCoords()
+    {
+        if(mFragmentCoords == null)
+            return false;
+
+        int minUnique = 1;
+        if(altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_2)
+            minUnique = REQUIRED_UNIQUE_FRAG_COORDS_2;
+        else if(altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
+            minUnique = REQUIRED_UNIQUE_FRAG_COORDS_1;
+        return min(mFragmentCoords.lowerCount(), mFragmentCoords.upperCount()) < minUnique;
+    }
 
     public String toString()
     {
@@ -391,7 +413,7 @@ public class ReadContextCounter
 
                 mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
-                mReadEdgeDistance.update(record, fragmentData, true);
+                mReadEdgeDistance.update(record, fragmentData, matchType.FullAltSupport);
 
                 addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
@@ -436,8 +458,11 @@ public class ReadContextCounter
 
                     mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
+                    mReadEdgeDistance.update(record, fragmentData, true);
+
                     addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                     logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
+                    countAltSupportMetrics(record, fragmentData);
 
                     return ALT_SUPPORT;
                 }
@@ -446,6 +471,8 @@ public class ReadContextCounter
                     mJitterData.update(JitterMatch.SHORTENED);
                 else if(realignedType == LENGTHENED)
                     mJitterData.update(JitterMatch.LENGTHENED);
+                else if(realignedType == BOTH)
+                    mJitterData.update(JitterMatch.BOTH);
             }
             else if(!coreCovered || readVarIndex < 0)
             {
@@ -486,6 +513,7 @@ public class ReadContextCounter
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
+        mNonAltNmCountTotal += numberOfEvents;
 
         return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }

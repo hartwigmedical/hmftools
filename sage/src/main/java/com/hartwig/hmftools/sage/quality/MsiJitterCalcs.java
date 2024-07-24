@@ -89,24 +89,37 @@ public class MsiJitterCalcs
             return 0;
 
         int repeatIndexStart = readContext.variantRefIndex() + 1;
+        int readRepeatIndexStart = readContext.VarIndex + 1;
 
         RepeatInfo refRepeat = RepeatInfo.findMaxRepeat(
                 readContext.RefBases, repeatIndexStart, repeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
                 false, repeatIndexStart);
 
-        if(refRepeat == null)
-            return 0;
+        RepeatInfo inferredRefRepeat = RepeatInfo.findMaxRepeat(
+                readContext.ReadBases, readRepeatIndexStart, readRepeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
+                false, readRepeatIndexStart);
 
-        // check if the alt adjusts the repeat by +/- one unit
         String altBases = readContext.variant().isInsert() ?
                 readContext.variant().Alt.substring(1) : readContext.variant().Ref.substring(1);
 
-        int impliedAltChange = altBases.length() / refRepeat.repeatLength();
+        RepeatInfo repeatToUse;
+        if(inferredRefRepeat == null || !altBases.startsWith(inferredRefRepeat.Bases))
+        {
+            repeatToUse = refRepeat;
+        }
+        else
+        {
+            int refRepeatCount = refRepeat == null ? 0 : refRepeat.Count;
+            int inferredRefRepeatCount = inferredRefRepeat.Count - getImpliedAltChange(readContext, altBases, inferredRefRepeat);
+            repeatToUse = new RepeatInfo(inferredRefRepeat.Index, inferredRefRepeat.Bases, Math.max(refRepeatCount, inferredRefRepeatCount));
+        }
 
-        if(readContext.variant().isDelete())
-            impliedAltChange *= -1;
+        if(repeatToUse == null)
+            return 0;
 
-        if(impliedAltChange > MSI_JITTER_MAX_REPEAT_CHANGE)
+        int impliedAltChange = getImpliedAltChange(readContext, altBases, repeatToUse);
+
+        if(impliedAltChange > MSI_JITTER_MAX_REPEAT_CHANGE || impliedAltChange == 0)
             return 0;
 
         List<MsiModelParams> allParams = mSampleParams.get(sampleId);
@@ -114,14 +127,23 @@ public class MsiJitterCalcs
         if(allParams == null)
             return 0;
 
-        MsiModelParams varParams = findApplicableParams(allParams, refRepeat.Bases);
+        MsiModelParams varParams = findApplicableParams(allParams, repeatToUse.Bases);
 
         if(varParams == null)
             return 0;
 
-        Double fixedScale = getScaleParam(varParams.params(), refRepeat.Count);
+        Double fixedScale = getScaleParam(varParams.params(), repeatToUse.Count);
 
-        return varParams.calcErrorRate(refRepeat.Count, impliedAltChange, fixedScale);
+        return varParams.calcErrorRate(repeatToUse.Count, impliedAltChange, fixedScale);
+    }
+
+    private static int getImpliedAltChange(VariantReadContext readContext, String altBases, RepeatInfo repeat)
+    {
+        int impliedAltChange = altBases.length() / repeat.repeatLength();
+
+        if(readContext.variant().isDelete())
+            impliedAltChange *= -1;
+        return impliedAltChange;
     }
 
     private Double getScaleParam(final JitterModelParams params, int repeatCount)
