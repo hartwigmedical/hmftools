@@ -23,6 +23,9 @@ import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DE
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
+import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
+import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
@@ -64,8 +67,8 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
-        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
-        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC_PANEL);
+        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
+        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
     }
 
@@ -74,9 +77,19 @@ public class VariantFilters
         return HlaCommon.containsPosition(position);
     }
 
+    public int readEdgeDistanceThreshold(final VariantTier tier)
+    {
+        return tier == HOTSPOT || tier == PANEL ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
+    }
+
+    private static double readEdgeDistanceThresholdPerc(final VariantTier tier)
+    {
+        return tier == HOTSPOT || tier == PANEL ? MAX_READ_EDGE_DISTANCE_PERC_PANEL : MAX_READ_EDGE_DISTANCE_PERC;
+    }
+
     public boolean passesHardFilters(final ReadContextCounter readCounter)
     {
-        if(readCounter.tier().equals(VariantTier.HOTSPOT))
+        if(readCounter.tier().equals(HOTSPOT))
             return true;
 
         if(readCounter.altSupport() < mConfig.HardMinTumorRawAltSupport)
@@ -187,7 +200,7 @@ public class VariantFilters
             filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
         }
 
-        if(tier != VariantTier.HOTSPOT)
+        if(tier != HOTSPOT)
         {
             if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
             {
@@ -214,7 +227,7 @@ public class VariantFilters
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return tier == VariantTier.HOTSPOT
+        return tier == HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
                 && primaryTumor.altBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
@@ -222,7 +235,7 @@ public class VariantFilters
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return (tier == VariantTier.HOTSPOT || tier == VariantTier.PANEL)
+        return (tier == HOTSPOT || tier == VariantTier.PANEL)
                 && primaryTumor.isIndel() && !primaryTumor.useMsiErrorRate()
                 && primaryTumor.jitter().lengthened() + primaryTumor.jitter().shortened() == 0
                 && (double)primaryTumor.nonAltNmCountTotal() / (primaryTumor.depth() - primaryTumor.altSupport()) < 0.75;
@@ -298,8 +311,9 @@ public class VariantFilters
         double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
         double edgeDistancePenalty = 0;
 
-        double thresholdToUse = tier == VariantTier.HOTSPOT || tier == VariantTier.PANEL ? MAX_READ_EDGE_DISTANCE_PERC_PANEL : MAX_READ_EDGE_DISTANCE_PERC;
-        if(avgAltEdgeDistance / avgEdgeDistance < 2 * thresholdToUse)
+        double readEdgeDistanceThresholdPerc = readEdgeDistanceThresholdPerc(tier);
+
+        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc)
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
         }
@@ -343,7 +357,7 @@ public class VariantFilters
 
         double pValue = 1.0 - distribution.cumulativeProbability(adjustedAltSupportCount - 1);
 
-        if(primaryTumor.tier() == VariantTier.HOTSPOT)
+        if(primaryTumor.tier() == HOTSPOT)
             return pValue > VAF_PROBABILITY_THRESHOLD_HOTSPOT;
         else
             return pValue > VAF_PROBABILITY_THRESHOLD;
@@ -354,7 +368,7 @@ public class VariantFilters
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(tier == VariantTier.HOTSPOT)
+        if(tier == HOTSPOT)
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
@@ -374,9 +388,10 @@ public class VariantFilters
             return false;
 
         int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
-        int thresholdToUse = tier == VariantTier.HOTSPOT || tier == VariantTier.PANEL ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
 
-        if(altMed >= thresholdToUse)
+        int readEdgeDistanceThreshold = readEdgeDistanceThreshold(tier);
+
+        if(altMed >= readEdgeDistanceThreshold)
             return false;
 
         int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
@@ -472,7 +487,7 @@ public class VariantFilters
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)
     {
-        if(tier == VariantTier.HOTSPOT)
+        if(tier == HOTSPOT)
             return false;
 
         if(refCounter.variant().isMNV() || refCounter.isLongInsert())
@@ -485,7 +500,7 @@ public class VariantFilters
         return false;
     }
 
-    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(HOTSPOT, VariantTier.PANEL);
 
     public static boolean checkFinalFilters(
             final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config, boolean panelOnly)
@@ -499,7 +514,7 @@ public class VariantFilters
         if(config.Filter.DisableHardFilter)
             return true;
 
-        if(variant.tier() == VariantTier.HOTSPOT)
+        if(variant.tier() == HOTSPOT)
             return true;
 
         // Its not always 100% transparent what's happening with the mixed germline dedup logic unless we keep all the associated records

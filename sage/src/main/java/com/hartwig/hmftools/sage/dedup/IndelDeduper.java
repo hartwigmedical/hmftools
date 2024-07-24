@@ -28,19 +28,18 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
+import com.hartwig.hmftools.sage.filter.VariantFilters;
 
 public class IndelDeduper
 {
     private final RefGenomeInterface mRefGenome;
     private int mGroupIterations;
-    private final int mReadEdgeDistanceThreshold;
-    private final int mReadEdgeDistanceThresholdPanel;
+    private final VariantFilters mFilters;
 
-    public IndelDeduper(final RefGenomeInterface refGenome, int readLength)
+    public IndelDeduper(final RefGenomeInterface refGenome, final VariantFilters filters)
     {
         mRefGenome = refGenome;
-        mReadEdgeDistanceThreshold = (int)(readLength * MAX_READ_EDGE_DISTANCE_PERC);
-        mReadEdgeDistanceThresholdPanel = (int)(readLength * MAX_READ_EDGE_DISTANCE_PERC_PANEL);
+        mFilters = filters;
         mGroupIterations = 0;
     }
 
@@ -266,9 +265,10 @@ public class IndelDeduper
             if(positionWithin(variant.position(), indel.FlankPosStart, indel.FlankPosEnd))
                 return true;
         }
-        int thresholdToUse = variant.Variant.tier() == VariantTier.HOTSPOT || variant.Variant.tier() == VariantTier.PANEL
-                ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
-        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() < thresholdToUse)
+
+        int readEdgeDistanceThreshold = mFilters.readEdgeDistanceThreshold(variant.Variant.tier());
+
+        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() < readEdgeDistanceThreshold)
             return true;
 
         return false;

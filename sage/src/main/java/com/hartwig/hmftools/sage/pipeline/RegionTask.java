@@ -48,6 +48,8 @@ public class RegionTask
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
+
+    private final VariantFilters mVariantFilters;
     private final VariantDeduper mVariantDeduper;
 
     private final List<SageVariant> mSageVariants;
@@ -78,7 +80,9 @@ public class RegionTask
         mEvidenceStage = new EvidenceStage(
                 config.Common, refGenome, qualityRecalibrationMap, msiJitterCalcs, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength(), mConfig.Common.Filter);
+        mVariantFilters = new VariantFilters(mConfig.Common);
+
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.Filter, mVariantFilters);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -145,8 +149,6 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            VariantFilters filters = new VariantFilters(mConfig.Common);
-
             // combine reference and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
             Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
@@ -165,8 +167,8 @@ public class RegionTask
                 mSageVariants.add(sageVariant);
 
                 // apply filters
-                if(filters.enabled())
-                    filters.applySoftFilters(sageVariant);
+                if(mVariantFilters.enabled())
+                    mVariantFilters.applySoftFilters(sageVariant);
 
                 if(sageVariant.isPassing())
                     passingTumorReadCounters.add(tumorReadCounters.get(0));

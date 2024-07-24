@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.sage.common.VariantUtils;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
+import com.hartwig.hmftools.sage.filter.VariantFilters;
 
 import org.junit.Test;
 
@@ -41,7 +43,7 @@ public class IndelDedupTest
     public IndelDedupTest()
     {
         mRefGenome = new MockRefGenome();
-        mIndelDeduper = new IndelDeduper(mRefGenome, DEFAULT_READ_LENGTH);
+        mIndelDeduper = new IndelDeduper(mRefGenome, new VariantFilters(TEST_CONFIG));
 
         mRefGenome.RefGenomeMap.put(CHR_1, TEST_REF_BASES);
     }
