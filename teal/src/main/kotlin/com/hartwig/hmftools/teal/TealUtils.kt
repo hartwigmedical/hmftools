@@ -5,6 +5,7 @@ import java.lang.ThreadLocal
 import com.hartwig.hmftools.teal.telbam.TelbamParams
 import htsjdk.samtools.SamReader
 import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.ValidationStringency
 import org.apache.commons.lang3.StringUtils
 import java.io.File
 import java.util.regex.Pattern
@@ -102,7 +103,7 @@ object TealUtils
 
     fun openSamReader(config: TelbamParams): SamReader
     {
-        var factory = SamReaderFactory.makeDefault()
+        var factory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT)
         if (config.refGenomeFile != null && !config.refGenomeFile!!.isEmpty())
         {
             factory = factory.referenceSequence(File(config.refGenomeFile!!))
