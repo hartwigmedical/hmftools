@@ -39,6 +39,11 @@ public class CombinedSyncData
     private int mFirstEffectivePosStart;
     private int mSecondEffectivePosStart;
 
+    private int mFirstSoftClipStart;
+    private int mFirstSoftClipEnd;
+    private int mSecondSoftClipStart;
+    private int mSecondSoftClipEnd;
+
     private byte[] mCombinedBases;
     private byte[] mCombinedBaseQualities;
     private final List<CigarElement> mCombinedCigar;
@@ -52,6 +57,10 @@ public class CombinedSyncData
         mFragmentEnd = 0;
         mFirstEffectivePosStart = 0;
         mSecondEffectivePosStart = 0;
+        mFirstSoftClipStart = 0;
+        mFirstSoftClipEnd = 0;
+        mSecondSoftClipStart = 0;
+        mSecondSoftClipEnd = 0;
         mCombinedEffectiveStart = 0;
     }
 
@@ -134,10 +143,14 @@ public class CombinedSyncData
         CigarState secondCigar = new CigarState(second.getCigar().getCigarElements());
 
         // work out boundaries and lengths
-        mFirstEffectivePosStart = firstPosStart - firstCigar.softClipStart();
-        mSecondEffectivePosStart = secondPosStart - secondCigar.softClipStart();
-        int firstEffectivePosEnd = firstPosEnd + firstCigar.softClipEnd();
-        int secondEffectivePosEnd = secondPosEnd + secondCigar.softClipEnd();
+        mFirstSoftClipStart = firstCigar.softClipStart();
+        mFirstSoftClipEnd = firstCigar.softClipEnd();
+        mSecondSoftClipStart = secondCigar.softClipStart();
+        mSecondSoftClipEnd = secondCigar.softClipEnd();
+        mFirstEffectivePosStart = firstPosStart - mFirstSoftClipStart;
+        mSecondEffectivePosStart = secondPosStart - mSecondSoftClipStart;
+        int firstEffectivePosEnd = firstPosEnd + mFirstSoftClipEnd;
+        int secondEffectivePosEnd = secondPosEnd + mSecondSoftClipEnd;
 
         int combinedEffectiveEnd;
 
@@ -276,9 +289,6 @@ public class CombinedSyncData
         int firstReadIndex = findFragmentReadIndexStart(first, mFirstEffectivePosStart);
         int secondReadIndex = findFragmentReadIndexStart(second, mSecondEffectivePosStart);
 
-        CigarState firstCigar = new CigarState(first.getCigar().getCigarElements());
-        CigarState secondCigar = new CigarState(second.getCigar().getCigarElements());
-
         final byte[] firstBaseQualities = first.getBaseQualities();
         final byte[] firstBases = first.getReadBases();
         final int firstLength = first.getReadLength();
@@ -299,8 +309,10 @@ public class CombinedSyncData
             {
                 if(firstReadIndex >= 0 && firstReadIndex < firstLength && secondReadIndex >= 0 && secondReadIndex < secondLength)
                 {
-                    boolean firstInSoftclip = firstReadIndex < firstCigar.softClipStart() || firstReadIndex >= firstLength - firstCigar.softClipEnd();
-                    boolean secondInSoftclip = secondReadIndex < secondCigar.softClipStart() || secondReadIndex >= secondLength - secondCigar.softClipEnd();
+                    boolean firstInSoftclip = firstReadIndex < mFirstSoftClipStart || firstReadIndex >= firstLength - mFirstSoftClipEnd;
+                    boolean secondInSoftclip = secondReadIndex < mSecondSoftClipStart || secondReadIndex >= secondLength - mSecondSoftClipEnd;
+
+                    // use qual from aligned over soft-clipped bases
                     int cappedFirstQual = firstBaseQualities[firstReadIndex];
                     int cappedSecondQual = secondBaseQualities[secondReadIndex];
                     if(firstInSoftclip && !secondInSoftclip)
@@ -311,14 +323,12 @@ public class CombinedSyncData
                     if(firstBases[firstReadIndex] == secondBases[secondReadIndex])
                     {
                         mCombinedBases[combinedReadIndex] = firstBases[firstReadIndex];
-                        mCombinedBaseQualities[combinedReadIndex] =
-                                (byte)max(cappedFirstQual, cappedSecondQual);
+                        mCombinedBaseQualities[combinedReadIndex] = (byte)max(cappedFirstQual, cappedSecondQual);
                     }
                     else
                     {
                         byte[] baseAndQual = getCombinedBaseAndQual(
-                                firstBases[firstReadIndex], (byte)cappedFirstQual,
-                                secondBases[secondReadIndex], (byte)cappedSecondQual);
+                                firstBases[firstReadIndex], (byte)cappedFirstQual, secondBases[secondReadIndex], (byte)cappedSecondQual);
 
                         mCombinedBases[combinedReadIndex] = baseAndQual[0];
                         mCombinedBaseQualities[combinedReadIndex] = BaseQualAdjustment.adjustBaseQual(baseAndQual[1]);

@@ -28,7 +28,6 @@ public class CigarState
     }
 
     public boolean exhausted() { return CurrentElement == null; }
-    public int remainingElementBases() { return CurrentElement.getLength() - ElementBaseIndex; }
     public CigarOperator currentOperator() { return CurrentElement != null ? CurrentElement.getOperator() : null; }
 
     public int softClipStart() { return Elements.get(0).getOperator() == S ? Elements.get(0).getLength() : 0; }
