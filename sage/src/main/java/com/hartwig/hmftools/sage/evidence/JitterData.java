@@ -36,9 +36,10 @@ public class JitterData
 
     public void update(final JitterMatch jitterMatch)
     {
-        if(jitterMatch == JitterMatch.LENGTHENED || jitterMatch == JitterMatch.BOTH)
+        // CHECK: how to handle BOTH if that type is used
+        if(jitterMatch == JitterMatch.LENGTHENED)
             mLengthened++;
-        else if(jitterMatch == JitterMatch.SHORTENED || jitterMatch == JitterMatch.BOTH)
+        else if(jitterMatch == JitterMatch.SHORTENED)
             mShortened++;
     }
 

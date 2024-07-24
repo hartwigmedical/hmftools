@@ -471,8 +471,8 @@ public class ReadContextCounter
                     mJitterData.update(JitterMatch.SHORTENED);
                 else if(realignedType == LENGTHENED)
                     mJitterData.update(JitterMatch.LENGTHENED);
-                else if(realignedType == BOTH)
-                    mJitterData.update(JitterMatch.BOTH);
+                // else if(realignedType == BOTH)
+                //    mJitterData.update(JitterMatch.BOTH);
             }
             else if(!coreCovered || readVarIndex < 0)
             {

@@ -16,7 +16,7 @@ public enum JitterMatch
 {
     SHORTENED,
     LENGTHENED,
-    BOTH,
+    // BOTH, may reintroduce after discussion
     NONE;
 
     public static JitterMatch checkJitter(
@@ -27,7 +27,6 @@ public enum JitterMatch
 
         final byte[] readBases = record.getReadBases();
         final byte[] readQuals = record.getBaseQualities();
-        HashSet<JitterMatch> nonIndelJitter = new HashSet<>();
         boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= DOUBLE_JITTER_REPEAT_COUNT;
 
         // try each repeat covering the read context in turn
@@ -52,10 +51,13 @@ public enum JitterMatch
                                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
                                 jitterType, isIndelOffset, jitterAtStart, 1))
                         {
+                            return jitterType;
+                            /*
                             if(isIndelOffset)
                                 return jitterType;
                             else
                                 nonIndelJitter.add(jitterType);
+                            */
                         }
 
                         if(isIndelOffset && checkDoubleJitter)
@@ -72,10 +74,15 @@ public enum JitterMatch
                 }
             }
         }
+
+        return JitterMatch.NONE;
+
+        /*
         if(nonIndelJitter.size() < 2)
             return JitterMatch.NONE;
         else
             return JitterMatch.BOTH;
+        */
     }
 
     @VisibleForTesting
