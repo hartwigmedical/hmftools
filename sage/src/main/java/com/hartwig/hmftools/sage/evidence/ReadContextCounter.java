@@ -16,12 +16,7 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_1;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_1;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_2;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
@@ -90,7 +85,6 @@ public class ReadContextCounter
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
-    private final boolean mIsReferenceSample;
     private final int mMaxCoverage;
     private final VariantVis mVariantVis;
 
@@ -139,7 +133,6 @@ public class ReadContextCounter
         mMaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
         mSample = sampleId;
-        mIsReferenceSample = isReferenceSample;
         mQualityCalculator = qualityCalculator;
         mConfig = config;
 
@@ -271,24 +264,6 @@ public class ReadContextCounter
     public FragmentLengthCounts fragmentLengths() { return mFragmentLengthData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
-
-    public boolean belowMinStrongSupport()
-    {
-        return strongAltSupport() < (tier() == VariantTier.HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT);
-    }
-
-    public boolean belowMinFragmentCoords()
-    {
-        if(mFragmentCoords == null)
-            return false;
-
-        int minUnique = 1;
-        if(altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_2)
-            minUnique = REQUIRED_UNIQUE_FRAG_COORDS_2;
-        else if(altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
-            minUnique = REQUIRED_UNIQUE_FRAG_COORDS_1;
-        return min(mFragmentCoords.lowerCount(), mFragmentCoords.upperCount()) < minUnique;
-    }
 
     public String toString()
     {

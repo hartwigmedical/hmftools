@@ -37,9 +37,6 @@ public class SageConstants
     public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
     public static final int BQR_NON_DUAL_AD = 3;
 
-    // dual (illumina)/balanced (ultima): sites where [(AF<1% or AD<3) and AF <7.5%]
-    // other: sites where [(AF<5% or AD<4) and AF <12.5%]
-
     public static final int BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
@@ -63,7 +60,15 @@ public class SageConstants
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
 
     public static final int CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
-    
+
+    public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
+    public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
+    public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
+    public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
+    public static final double MSI_JITTER_NOISE_RATE = 0.00025;
+    public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
+
+
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
@@ -91,26 +96,21 @@ public class SageConstants
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
     public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
-    // variant deduplication
-    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
-
-    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
-    public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
-    public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.25;
-
-    public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
-    public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
-    public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
-    public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
-    public static final double MSI_JITTER_NOISE_RATE = 0.00025;
-    public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
-
     public static final int REQUIRED_UNIQUE_FRAG_COORDS_1 = 2;
     public static final int REQUIRED_UNIQUE_FRAG_COORDS_2 = 3;
     public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_1 = 3;
     public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_2 = 5;
     public static final int REQUIRED_STRONG_SUPPORT = 3;
     public static final int REQUIRED_STRONG_SUPPORT_HOTSPOT = 2;
+
+    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
+    public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
+    public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.25;
+
+
+    // variant deduplication
+    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
+
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;

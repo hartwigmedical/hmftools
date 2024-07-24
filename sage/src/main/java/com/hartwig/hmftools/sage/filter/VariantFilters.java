@@ -15,6 +15,12 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_2;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
@@ -187,15 +193,18 @@ public class VariantFilters
         {
             filters.add(SoftFilter.MAX_EDGE_DISTANCE);
         }
+
         if(exceedsAltVsRefMapQual(primaryTumor))
         {
             filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
-        if(primaryTumor.belowMinFragmentCoords())
+
+        if(belowMinFragmentCoords(primaryTumor))
         {
             filters.add(SoftFilter.FRAGMENT_COORDS);
         }
-        if(primaryTumor.belowMinStrongSupport())
+
+        if(belowMinStrongSupport(primaryTumor))
         {
             filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
         }
@@ -414,6 +423,26 @@ public class VariantFilters
         double avgAltMapQuality = primaryTumor.altMapQualityTotal() / altSupport;
 
         return avgMapQuality - avgAltMapQuality > MAX_MAP_QUAL_ALT_VS_REF;
+    }
+
+    private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
+    {
+        int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
+        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+    }
+
+    private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)
+    {
+        if(primaryTumor.fragmentCoords() == null)
+            return false;
+
+        int minRequiredUniqueFrags = 1;
+        if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_2)
+            minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_2;
+        else if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
+            minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_1;
+
+        return min(primaryTumor.fragmentCoords().lowerCount(), primaryTumor.fragmentCoords().upperCount()) < minRequiredUniqueFrags;
     }
 
     // germline and paired tumor-germline tests
