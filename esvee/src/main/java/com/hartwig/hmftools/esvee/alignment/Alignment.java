@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
@@ -11,24 +9,18 @@ import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCoun
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -182,6 +174,9 @@ public class Alignment
 
             processAlignmentResults(assemblyAlignment, alignments);
 
+            AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
+            alignmentFragments.allocateBreakendSupport();
+
             if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
                 AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
 
@@ -273,8 +268,7 @@ public class Alignment
             return convertedAlignments;
         }
 
-        private void processAlignmentResults(
-                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
+        private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
@@ -299,130 +293,6 @@ public class Alignment
 
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
-
-            // allocateSupport(assemblyAlignment);
         }
-
-        /* TODO: remove old code
-        private void allocateSupport(final AssemblyAlignment assemblyAlignment)
-        {
-            List<String> combinedSampleIds = mConfig.combinedSampleIds();
-
-            // build up a map of read ID to the set of breakends it supports, and the top type of support (split then discordant)
-            Map<String,BreakendFragmentSupport> fragmentSupportMap = Maps.newHashMap();
-
-            for(Breakend breakend : assemblyAlignment.breakends())
-            {
-                // rather than use the genome position of a read vs the aligned breakend position, use its position in the assembly
-                List<BreakendSupport> sampleSupport = breakend.sampleSupport();
-
-                combinedSampleIds.forEach(x -> sampleSupport.add(new BreakendSupport()));
-
-                for(JunctionAssembly assembly : assemblyAlignment.assemblies())
-                {
-                    for(SupportRead read : assembly.support())
-                    {
-                        // junction mates are skipped since their junction split mate reads are checked
-                        // extension (unmapped) reads are skipped since their junction split or discordant mates are checked
-                        if(read.type() == SupportType.JUNCTION_MATE || read.type() == SupportType.EXTENSION)
-                            continue;
-
-                        if(!breakend.Chromosome.equals(read.chromosome()))
-                            continue;
-
-                        boolean isSplitFragment = false;
-                        boolean isDiscFragment = false;
-
-                        BreakendSupport support = sampleSupport.get(read.sampleIndex());
-
-                        if(breakend.readSpansJunction(read, false))
-                        {
-                            isSplitFragment = true;
-                        }
-                        else if(breakend.isRelatedDiscordantRead(read.alignmentStart(), read.alignmentEnd(), read.orientation()))
-                        {
-                            isDiscFragment = true;
-                        }
-
-                        if(!isSplitFragment && !isDiscFragment)
-                            continue;
-
-                        if(read.orientation().isForward())
-                            ++support.ForwardReads;
-                        else
-                            ++support.ReverseReads;
-
-                        BreakendFragmentSupport fragmentSupport = fragmentSupportMap.get(read.id());
-
-                        if(fragmentSupport == null)
-                        {
-                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend);
-                            fragmentSupportMap.put(read.id(), fragmentSupport);
-                        }
-                        else
-                        {
-                            fragmentSupport.Breakends.add(breakend);
-                            fragmentSupport.IsSplit |= isSplitFragment;
-                        }
-                    }
-                }
-            }
-
-            // count fragments to both breakends if it is in either
-            for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
-            {
-                Set<Breakend> processed = Sets.newHashSet();
-
-                for(Breakend breakend : fragmentSupport.Breakends)
-                {
-                    if(processed.contains(breakend) || (!breakend.isSingle() && processed.contains(breakend.otherBreakend())))
-                        continue;
-
-                    processed.add(breakend);
-
-                    boolean allowDiscordantSupport = !breakend.isShortLocalDelDupIns();
-
-                    BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
-
-                    if(fragmentSupport.IsSplit)
-                        ++support.SplitFragments;
-                    else if(allowDiscordantSupport)
-                        ++support.DiscordantFragments;
-
-                    if(breakend.isSingle())
-                        continue;
-
-                    Breakend otherBreakend = breakend.otherBreakend();
-
-                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
-
-                    processed.add(otherBreakend);
-
-                    // assign each read preferably as split over discordant
-                    if(fragmentSupport.IsSplit)
-                        ++otherSupport.SplitFragments;
-                    else if(allowDiscordantSupport)
-                        ++otherSupport.DiscordantFragments;
-                }
-            }
-        }
-    }
-
-    private class BreakendFragmentSupport
-    {
-        public final int SampleIndex;
-        public boolean IsSplit;
-        public final Set<Breakend> Breakends;
-
-        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
-        {
-            SampleIndex = sampleIndex;
-            IsSplit = isSplit;
-            Breakends = Sets.newHashSet(breakend);
-        }
-
-        public String toString() { return format("%d: %s breakends(%d)", SampleIndex, IsSplit ? "split" : "disc", Breakends.size()); }
-    }
-    */
     }
 }

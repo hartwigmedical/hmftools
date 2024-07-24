@@ -126,34 +126,4 @@ public class PhaseSet
     }
 
     public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
-
-    /*
-    public int assemblyIndex(final JunctionAssembly assembly)
-    {
-        for(int i = 0; i < mAssemblies.size(); ++i)
-        {
-            if(mAssemblies.get(i) == assembly)
-                return i;
-
-        }
-
-        return -1;
-    }
-
-    public Orientation assemblyOrientation(final JunctionAssembly assembly)
-    {
-        // the first assembly is defined as forward, meaning facing up the chain and each successive junction is alternating
-        Orientation assemblyOrientation = Orientation.FORWARD;
-
-        for(int i = 0; i < mAssemblies.size(); ++i)
-        {
-            if(mAssemblies.get(i) == assembly)
-                return assemblyOrientation;
-
-            assemblyOrientation = assemblyOrientation.opposite();
-        }
-
-        return null;
-    }
-    */
 }

@@ -28,7 +28,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
-import com.hartwig.hmftools.esvee.alignment.AlignmentFragments;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
@@ -173,12 +172,6 @@ public class AssemblyApplication
             for(int i = 0; i < breakends.size(); ++i)
             {
                 breakends.get(i).setId(i);
-            }
-
-            for(AssemblyAlignment assemblyAlignment : assemblyAlignments)
-            {
-                AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
-                alignmentFragments.allocateBreakendSupport();
             }
 
             Deduplication.deduplicateBreakends(breakends);
@@ -339,23 +332,6 @@ public class AssemblyApplication
                 {
                     AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, phaseSet);
                     assemblyAlignments.add(assemblyAlignment);
-
-                    /*
-                    List<AssemblyAlignment> phaseSetAlignments = Lists.newArrayList();
-
-                    for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
-                    {
-                        if(assemblyLink.type() != FACING)
-                        {
-                            AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assemblyLink);
-                            assemblyAlignments.add(assemblyAlignment);
-                            phaseSetAlignments.add(assemblyAlignment);
-                        }
-                    }
-
-                    if(!phaseSetAlignments.isEmpty())
-                        assemblyAlignmentGroups.add(phaseSetAlignments);
-                    */
                 }
 
                 // and then add any assemblies not in a phase set into their own for alignment
@@ -365,7 +341,6 @@ public class AssemblyApplication
                     {
                         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assembly);
                         assemblyAlignments.add(assemblyAlignment);
-                        // assemblyAlignmentGroups.add(List.of(assemblyAlignment));
                     }
                 }
             }

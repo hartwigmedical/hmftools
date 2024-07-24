@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -14,7 +11,6 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
-import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -34,8 +30,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
