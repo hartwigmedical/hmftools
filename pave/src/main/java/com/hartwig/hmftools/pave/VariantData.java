@@ -182,20 +182,27 @@ public class VariantData
 
         List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
 
+        String repeatSequence = variantContext.getAttributeAsString(REPEAT_SEQUENCE, Strings.EMPTY);
+        int repeatCount = variantContext.getAttributeAsInt(REPEAT_COUNT, 0);
+
+        // use the read context repeat context if the ref is't set for some reason
+        if(repeatCount == 0)
+        {
+            String rcRepeatSequence = variantContext.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
+            int rcRepeatCount = variantContext.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
+            String indelBases = variant.isInsert() ? alt.substring(1) : ref.substring(1);
+
+            if(rcRepeatCount > 0 && indelBases.startsWith(rcRepeatSequence))
+            {
+                repeatSequence = rcRepeatSequence;
+                repeatCount = rcRepeatCount - variant.baseDiff() / rcRepeatSequence.length();
+            }
+        }
+
         variant.setVariantDetails(
                 !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET,
-                variantContext.getAttributeAsString(MICROHOMOLOGY, Strings.EMPTY),
-                variantContext.getAttributeAsString(REPEAT_SEQUENCE, Strings.EMPTY),
-                variantContext.getAttributeAsInt(REPEAT_COUNT, 0));
+                variantContext.getAttributeAsString(MICROHOMOLOGY, Strings.EMPTY), repeatSequence, repeatCount);
 
-        String rcRepeatSequence = variantContext.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
-        String indelBases = variant.isInsert() ? alt.substring(1) : ref.substring(1);
-        int rcRepeatCount = variantContext.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
-        if(variant.repeatCount() == 0 && rcRepeatCount > 0 && indelBases.startsWith(rcRepeatSequence))
-        {
-            variant.mRepeatSequence = rcRepeatSequence;
-            variant.mRepeatCount = rcRepeatCount - variant.baseDiff() / rcRepeatSequence.length();
-        }
         return variant;
     }
 
