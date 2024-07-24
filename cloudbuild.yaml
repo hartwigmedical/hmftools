@@ -1,4 +1,8 @@
 steps:
+  - id: 'Fetch token for github'
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: 'bash'
+    args: [ '-c', "gcloud secrets versions access latest --secret=hmftools-github-release-token --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/github.token" ]
   - id: 'Tag, release, build'
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'

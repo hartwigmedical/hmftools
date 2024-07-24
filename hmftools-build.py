@@ -55,6 +55,58 @@ class Docker:
             output.write(f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}\n')
             output.write(f'docker push {self.internal_image}\n')
 
+
+class Release:
+    def __init__(self, release_name, artifact_files, token):
+        self.release_name = release_name
+        self.artifact_files = artifact_files
+        self.token = token
+
+    def create(self):
+        id = self._create_release()
+        print(f"Created release with id {id}")
+        self._upload_artifacts(id)
+
+    def _create_release(self):
+        print(f"Creating release {self.release_name}")
+        request = {"tag_name": self.release_name,
+                "target_commitish": "master",
+                "name": self.release_name,
+                "body": f"Description of release {self.release_name}",
+                "prerelease": False,
+                "generate_release_notes": True
+        }
+        headers = {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {token}",
+                "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+        response = requests.post(self._construct_url("api"),
+                json = request,
+                headers = headers)
+        response.raise_for_status()
+        return response.json()["id"]
+
+    def _upload_artifacts(self, id):
+        print(f"Uploading artifacts to release {id}")
+        headers = {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+                "Content-Type": "application/octet-stream"
+        }
+        base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
+        for artifact in self.artifact_files:
+            response = requests.post(f"{base_url}={os.path.basename(artifact.name)}",
+                    headers = headers,
+                    data = artifact.read())
+            response.raise_for_status()
+            print(f"Uploaded {artifact.name}")
+        print("Artifacts uploaded")
+
+    def _construct_url(self, prefix):
+        return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
+
+
 def extract_hmftools_dependencies(pom_path):
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
     # First, obtain a list of all modules defined in the parent
@@ -110,7 +162,10 @@ def build_and_release(raw_tag: str):
     module_pom.set_version(version)
 
     Maven.deploy_all(module_pom, *dependencies_pom)
+
     Docker(module, version).build()
+    token = open("/workspace/github.token", "r").read()
+    Release(f"{module} v{tag}", [open(f"target/{module}-{version}-jar-with-dependencies.jar", "rb")], token).create()
 
 
 if __name__ == '__main__':
