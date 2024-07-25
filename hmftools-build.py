@@ -70,7 +70,7 @@ class Release:
         self._upload_artifacts(id)
 
     def _create_release(self):
-        print(f"Creating release {self.release_name}")
+        print(f"Creating release [{self.release_name}]")
         request = {"tag_name": self.release_name,
                 "target_commitish": "master",
                 "name": self.release_name,
@@ -86,6 +86,7 @@ class Release:
         response = requests.post(self._construct_url("api"),
                 json = request,
                 headers = headers)
+        print(f"Response: {response.text}")
         response.raise_for_status()
         return response.json()["id"]
 
@@ -166,7 +167,7 @@ def build_and_release(raw_tag: str):
     Maven.deploy_all(module_pom, *dependencies_pom)
 
     Docker(module, version).build()
-    Release(f"{module} v{tag}", [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
+    Release(f"{module} v{version}", [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
             open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
