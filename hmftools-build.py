@@ -59,11 +59,11 @@ class Docker:
 
 
 class Release:
-    def __init__(self, tag_name, module, version, artifact_files, token):
+    def __init__(self, tag_name, module, version, artifact_file, token):
         self.tag_name = tag_name
         self.module = module
         self.version = version
-        self.artifact_files = artifact_files
+        self.artifact_file = artifact_file
         self.token = token
         self.release_name = f"{module} v{version}"
 
@@ -94,20 +94,16 @@ class Release:
         return response.json()["id"]
 
     def _upload_artifacts(self, id):
-        print(f"Uploading artifacts to release {id}")
+        print(f"Uploading artifact to release {id}")
         headers = {"Accept": "application/vnd.github+json",
                 "Authorization": f"Bearer {self.token}",
                 "X-GitHub-Api-Version": "2022-11-28",
                 "Content-Type": "application/octet-stream"
         }
         base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
-        for artifact in self.artifact_files:
-            response = requests.post(f"{base_url}={self.module}_v{self.version}.jar",
-                    headers = headers,
-                    data = artifact.read())
-            response.raise_for_status()
-            print(f"Uploaded {artifact.name}")
-        print("Artifacts uploaded")
+        response = requests.post(f"{base_url}={self.module}_v{self.version}.jar", headers = headers, data = artifact_file.read())
+        response.raise_for_status()
+        print(f"Uploaded {artifact.name}")
 
     def _construct_url(self, prefix):
         return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
@@ -170,7 +166,7 @@ def build_and_release(raw_tag: str):
     Maven.deploy_all(module_pom, *dependencies_pom)
 
     Docker(module, version).build()
-    Release(raw_tag, module, version, [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
+    Release(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
             open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
