@@ -101,28 +101,24 @@ public class SomaticPurityEnrichment
     private static double probabilityLoh(double minorAlleleCopyNumber)
     {
         double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE * (minorAlleleCopyNumber - 0.5)));
-
         return probabilityLoh;
     }
 
     private static double probabilityNoLoh(double probabilityLoh)
     {
         double probabilityNoLoh = 1 - probabilityLoh;
-
         return probabilityNoLoh;
     }
 
     private static double vcnThresholdForNoWildtype(double copyNumber)
     {
         double vcnThresholdForNoWildtype = min(copyNumber - 0.5, max(BIALLELIC_THRESHOLD_PARAMETER_I, copyNumber - BIALLELIC_THRESHOLD_PARAMETER_II));
-
         return vcnThresholdForNoWildtype;
     }
 
     private static double readCountAtThreshold(double threshold, double variantCopyNumber, int alleleReadCount)
     {
         double readCountAtThreshold = (threshold / variantCopyNumber) * alleleReadCount;
-
         return readCountAtThreshold;
     }
 
@@ -136,10 +132,10 @@ public class SomaticPurityEnrichment
         return conditionalProbNoWildtypeAssumeLoh;
     }
 
-    private static double conditionalProbNoWildtypeAssumeNoLoh(double conditionalProbNoWildtypeAssumeLoh, double probabilityLoh)
+    private static double conditionalProbNoWildtypeAssumeNoLoh(double probNoWildtypeAssumeLoh, double probabilityLoh)
     {
         double conditionalProbNoWildtypeAssumeNoLOH =
-                max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - conditionalProbNoWildtypeAssumeLoh)
+                max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE) / ((1 - probNoWildtypeAssumeLoh)
                         + max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE));
 
         if(Double.isNaN(conditionalProbNoWildtypeAssumeNoLOH))
@@ -150,22 +146,24 @@ public class SomaticPurityEnrichment
         return conditionalProbNoWildtypeAssumeNoLOH;
     }
 
-    private static double probabilityNoWildtype(double probabilityLoh, double probabilityNoLoh, double conditionalProbNoWildtypeAssumeLoh,
-            double conditionalProbNoWildtypeAssumeNoLoh)
+    private static double probabilityNoWildtype(
+            double probabilityLoh, double probabilityNoLoh, double probNoWildtypeAssumeLoh, double probNoWildtypeAssumeNoLoh)
     {
-        double probabilityNoWildtype =
-                probabilityLoh * conditionalProbNoWildtypeAssumeLoh + probabilityNoLoh * conditionalProbNoWildtypeAssumeNoLoh;
+        double probabilityNoWildtype = probabilityLoh * probNoWildtypeAssumeLoh + probabilityNoLoh * probNoWildtypeAssumeNoLoh;
 
         return probabilityNoWildtype;
     }
 
     public static double calculateBiallelic(final PurpleCopyNumber purpleCopyNumber, final SomaticVariant variant)
     {
-        // inputs
+        int alleleReadCount = variant.alleleReadCount();
+
+        if(alleleReadCount == 0)
+            return 0;
+
         double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
         double variantCopyNumber = variant.decorator().variantCopyNumber();
-        int alleleReadCount = variant.alleleReadCount();
 
         // part 1
         double probabilityLoh = probabilityLoh(minorAlleleCopyNumber);
@@ -176,13 +174,14 @@ public class SomaticPurityEnrichment
         double readCountAtThreshold = readCountAtThreshold(vcnThresholdForNoWildtype, variantCopyNumber, alleleReadCount);
 
         // part 3
-        double conditionalProbNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(readCountAtThreshold, alleleReadCount);
-        double conditionalProbNoWildtypeAssumeNoLoh =
-                conditionalProbNoWildtypeAssumeNoLoh(conditionalProbNoWildtypeAssumeLoh, probabilityLoh);
+        double probNoWildtypeAssumeLoh = conditionalProbNoWildtypeAssumeLoh(readCountAtThreshold, alleleReadCount);
+
+        double probNoWildtypeAssumeNoLoh = conditionalProbNoWildtypeAssumeNoLoh(probNoWildtypeAssumeLoh, probabilityLoh);
 
         // Final calculation
-        double probabilityNoWildtype =
-                probabilityNoWildtype(probabilityLoh, probabilityNoLoh, conditionalProbNoWildtypeAssumeLoh, conditionalProbNoWildtypeAssumeNoLoh);
+        double probabilityNoWildtype = probabilityNoWildtype(
+                probabilityLoh, probabilityNoLoh, probNoWildtypeAssumeLoh, probNoWildtypeAssumeNoLoh);
+
         return probabilityNoWildtype;
     }
 
