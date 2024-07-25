@@ -1,20 +1,23 @@
 package com.hartwig.hmftools.datamodel.purple;
 
+import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TumorStats {
+public interface TumorStats
+{
     // TODO better attribute names
-    public abstract int numberHotspotMutations();
+    int numberHotspotMutations();
 
-    public abstract int numberHotspotSVs();
+    int numberHotspotSVs();
 
-    public abstract int sumSNPAlleleReadCounts();
+    int sumSNPAlleleReadCounts();
 
-    public abstract int sumTumorVariantFragmentCountsExclSGL();
+    int sumTumorVariantFragmentCountsExclSGL();
 
-    public abstract int sumBafCount();
+    int sumBafCount();
 }

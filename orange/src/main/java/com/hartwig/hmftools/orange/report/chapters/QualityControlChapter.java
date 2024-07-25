@@ -262,29 +262,35 @@ public class QualityControlChapter implements ReportChapter
     {
         Cells cells = new Cells(reportResources);
         Table tumorStats = Tables.createContent(contentWidth(),
-                new float[] { 1, 1 },
+                new float[] { 2, 1, 1 },
                 new Cell[] {
-                        cells.createHeader(Strings.EMPTY),
-                        cells.createHeader("Count"),
+                        cells.createHeader("Measure"),
+                        cells.createHeader("Minimum count"),
+                        cells.createHeader("Observed count"),
                 });
 
-        tumorStats.addCell(cells.createContent("Number of hotspot mutations (should be >0)"));
+        tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
+        tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotMutations())));
 
-        tumorStats.addCell(cells.createContent("Number of hotspot SVs (should be >0):"));
+        tumorStats.addCell(cells.createContent("Number of hotspot SVs"));
+        tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotSVs())));
 
-        tumorStats.addCell(cells.createContent("SNV sum(allele read count) (should be >1000)"));
+        tumorStats.addCell(cells.createContent("SNV sum(allele read count)"));
+        tumorStats.addCell(cells.createContent("1000"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumSNPAlleleReadCounts())));
 
         tumorStats.addCell(cells.createContent("SV sum(start tumor fragment count) excl SGL (should be >1000)"));
+        tumorStats.addCell(cells.createContent("1000"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumTumorVariantFragmentCountsExclSGL())));
 
         tumorStats.addCell(cells.createContent(
-                "Sum of bafCount when observedTumorRatio in DIPLOID regions for <0.8 or >1.2 (should be >3000)"));
+                "Sum of bafCount when observedTumorRatio in DIPLOID regions for <0.8 or >1.2"));
+        tumorStats.addCell(cells.createContent("3000"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumBafCount())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
-                "Presence of tumor stats (at least one should be met to indicate presence of tumor)"));
+                "Presence of tumor stats (at least one measure should meet minimum)"));
     }
 }
