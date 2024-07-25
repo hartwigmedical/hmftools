@@ -245,7 +245,7 @@ If provided, passing (or unfiltered) variants enhance the purity and ploidy fit 
 Firstly, each solution receives a penalty for the proportion of somatic variants which have implied variant copy numbers that are inconsistent with the minor and major allele copy number. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
-For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
+For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) and 'DP' (Depth) fields in the vcf.
 High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit.    [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller.
 
 If a similar VCF of germline SNV and INDEL variants is provided, PURPLE will annotate them with additional fields described [here](#11-germline-enrichment).
