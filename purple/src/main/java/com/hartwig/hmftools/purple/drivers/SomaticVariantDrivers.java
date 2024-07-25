@@ -81,7 +81,7 @@ public class SomaticVariantDrivers
 
     protected static boolean isReportable(final ReportablePredicate predicate, final SomaticVariant variant)
     {
-        return predicate.isReportable(variant.variantImpact(), variant.type(), variant.decorator().repeatCount(), variant.isHotspot());
+        return predicate.isReportable(variant.variantImpact(), variant.type(), variant.isHotspot());
     }
 
     public static boolean hasTranscriptCodingEffect(final VariantImpact variantImpact, final VariantType variantType, final String transcript)

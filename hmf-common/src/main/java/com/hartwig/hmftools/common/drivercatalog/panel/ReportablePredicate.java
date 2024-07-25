@@ -16,9 +16,6 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 public class ReportablePredicate
 {
-    public static final int MAX_ONCO_REPEAT_COUNT = 7;
-
-    private final int mMaxRepeatCount;
     private final Map<String, DriverGene> mDriverGeneMap;
 
     public ReportablePredicate(final DriverCategory type, final List<DriverGene> driverGenes)
@@ -26,14 +23,12 @@ public class ReportablePredicate
         mDriverGeneMap = driverGenes.stream()
                 .filter(x -> x.likelihoodType().equals(type) && x.reportSomatic())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
-
-        mMaxRepeatCount = type == DriverCategory.ONCO ? MAX_ONCO_REPEAT_COUNT : -1;
     }
 
-    public boolean isReportable(final VariantImpact variantImpact, final VariantType type, int repeatCount, boolean isHotspot)
+    public boolean isReportable(final VariantImpact variantImpact, final VariantType type, boolean isHotspot)
     {
         if(isReportable(
-            variantImpact.GeneName, type, repeatCount, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+            variantImpact.GeneName, type, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
         {
             return true;
         }
@@ -44,19 +39,16 @@ public class ReportablePredicate
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
 
         return altTransEffects.stream().anyMatch(x ->
-                isReportable(variantImpact.GeneName, type, repeatCount, isHotspot, x.Effect, x.Effects));
+                isReportable(variantImpact.GeneName, type, isHotspot, x.Effect, x.Effects));
     }
 
     public boolean isReportable(
-            final String gene, final VariantType type, int repeatCount, boolean isHotspot,
+            final String gene, final VariantType type, boolean isHotspot,
             final CodingEffect codingEffect, final String effects)
     {
         final DriverGene driverGene = mDriverGeneMap.get(gene);
 
         if(driverGene == null)
-            return false;
-
-        if(type.equals(VariantType.INDEL) && mMaxRepeatCount > 0 && repeatCount > mMaxRepeatCount)
             return false;
 
         if(isHotspot && driverGene.reportSomaticHotspot())
