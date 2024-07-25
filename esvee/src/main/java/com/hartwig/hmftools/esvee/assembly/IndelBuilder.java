@@ -3,9 +3,8 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import static htsjdk.samtools.CigarOperator.I;
 

@@ -181,7 +181,6 @@ public class Read
     public Orientation orientation() { return mRecord.getReadNegativeStrandFlag() ? REVERSE : FORWARD; }
 
     public boolean firstInPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
-    public boolean secondInPair() { return mRecord.getReadPairedFlag() && mRecord.getSecondOfPairFlag(); }
 
     public int mappingQuality() { return mRecord.getMappingQuality(); }
 

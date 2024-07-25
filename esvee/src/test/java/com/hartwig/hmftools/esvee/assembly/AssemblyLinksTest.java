@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
-import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 

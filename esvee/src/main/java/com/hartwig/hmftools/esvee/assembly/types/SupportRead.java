@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
+import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.READ_PAIRED;
@@ -148,6 +149,7 @@ public class SupportRead
     public int flags() { return mFlags; }
     public boolean isSupplementary() { return isFlagSet(SUPPLEMENTARY_ALIGNMENT); }
     public boolean isPairedRead() { return isFlagSet(READ_PAIRED); }
+    public boolean firstInPair() { return isFlagSet(FIRST_OF_PAIR); }
     public boolean isUnmapped() { return isFlagSet(READ_UNMAPPED); }
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
     public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }

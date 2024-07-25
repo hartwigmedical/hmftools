@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -50,6 +52,9 @@ public class AlignmentFragments
                 if(read.isSupplementary())
                     continue;
 
+                if(processedFragments.contains(read.id()))
+                    continue;
+
                 SupportRead firstRead = mFragmentMap.remove(read.id());
 
                 if(firstRead == null)
@@ -58,26 +63,24 @@ public class AlignmentFragments
                     continue;
                 }
 
-                if(processedFragments.contains(read.id()))
-                    continue;
-
+                // only process a fragment once even if it belongs to multiple assemblies
                 processedFragments.add(read.id());
 
                 // find associated breakends
-                ReadBreakendMatch firstBreakendMatch = findReadBreakendMatch(firstRead);
-                ReadBreakendMatch secondBreakendMatch = findReadBreakendMatch(read);
+                List<ReadBreakendMatch> firstBreakendMatches = findReadBreakendMatch(firstRead);
+                List<ReadBreakendMatch> secondBreakendMatches = findReadBreakendMatch(read);
 
-                if(firstBreakendMatch != null && secondBreakendMatch != null)
+                if(!firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty())
                 {
-                    processCompleteFragment(firstRead, read, firstBreakendMatch, secondBreakendMatch);
+                    processCompleteFragment(firstRead, read, firstBreakendMatches, secondBreakendMatches);
                 }
-                else if(firstBreakendMatch != null)
+                else if(firstBreakendMatches != null)
                 {
-                    processSoloRead(firstRead, firstBreakendMatch);
+                    processSoloRead(firstRead, firstBreakendMatches);
                 }
-                else if(secondBreakendMatch != null)
+                else if(secondBreakendMatches != null)
                 {
-                    processSoloRead(read, secondBreakendMatch);
+                    processSoloRead(read, secondBreakendMatches);
                 }
             }
         }
@@ -85,16 +88,16 @@ public class AlignmentFragments
         // handle single reads
         for(SupportRead read : mFragmentMap.values())
         {
-            ReadBreakendMatch readBreakendMatch = findReadBreakendMatch(read);
+            List<ReadBreakendMatch> readBreakendMatches = findReadBreakendMatch(read);
 
-            if(readBreakendMatch != null)
-                processSoloRead(read, readBreakendMatch);
+            if(!readBreakendMatches.isEmpty())
+                processSoloRead(read, readBreakendMatches);
         }
     }
 
     private void processCompleteFragment(
             final SupportRead firstRead, final SupportRead secondRead,
-            final ReadBreakendMatch firstBreakendMatch, final ReadBreakendMatch secondBreakendMatch)
+            final List<ReadBreakendMatch> firstBreakendMatches, final List<ReadBreakendMatch> secondBreakendMatches)
     {
         int lowerIndex = min(firstRead.fullAssemblyIndexStart(), secondRead.fullAssemblyIndexStart());
         int upperIndex = max(firstRead.fullAssemblyIndexEnd(), secondRead.fullAssemblyIndexEnd());
@@ -102,8 +105,6 @@ public class AlignmentFragments
         int fragmentLength = upperIndex - lowerIndex + 1;
         firstRead.setInferredFragmentLength(fragmentLength);
         secondRead.setInferredFragmentLength(fragmentLength);
-
-        boolean isSplitSupport = firstBreakendMatch.IsSplit || secondBreakendMatch.IsSplit;
 
         int forwardReads = 0;
         int reverseReads = 0;
@@ -118,22 +119,43 @@ public class AlignmentFragments
         else
             ++reverseReads;
 
-        Set<Breakend> breakends = Sets.newHashSet(firstBreakendMatch.Breakend, secondBreakendMatch.Breakend);
+        Set<Breakend> breakends = Sets.newHashSet();
 
-        if(!firstBreakendMatch.Breakend.isSingle())
-            breakends.add(firstBreakendMatch.Breakend.otherBreakend());
-
-        if(!secondBreakendMatch.Breakend.isSingle())
-            breakends.add(secondBreakendMatch.Breakend.otherBreakend());
+        // add each breakend and its pair only once to ensure they are both updated with the same split/discordant status
+        addUniqueBreakends(breakends, firstBreakendMatches);
+        addUniqueBreakends(breakends, secondBreakendMatches);
 
         for(Breakend breakend : breakends)
         {
+            boolean isSplitSupport = firstBreakendMatches.stream().anyMatch(x -> x.IsSplit)
+                    || secondBreakendMatches.stream().anyMatch(x -> x.IsSplit);
+
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength);
+
+            if(!breakend.isSingle())
+            {
+                breakend.otherBreakend().updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+                breakend.otherBreakend().addInferredFragmentLength(fragmentLength);
+            }
         }
     }
 
-    private void processSoloRead(final SupportRead read, final ReadBreakendMatch readBreakendMatch)
+    private static void addUniqueBreakends(final Set<Breakend> breakends, final List<ReadBreakendMatch> readBreakendMatches)
+    {
+        for(ReadBreakendMatch breakendMatch : readBreakendMatches)
+        {
+            if(breakends.contains(breakendMatch.Breakend))
+                continue;
+
+            if(!breakendMatch.Breakend.isSingle() && breakends.contains(breakendMatch.Breakend.otherBreakend()))
+                continue;
+
+            breakends.add(breakendMatch.Breakend);
+        }
+    }
+
+    private void processSoloRead(final SupportRead read, final List<ReadBreakendMatch> readBreakendMatches)
     {
         int forwardReads = 0;
         int reverseReads = 0;
@@ -143,14 +165,19 @@ public class AlignmentFragments
         else
             ++reverseReads;
 
-        Breakend firstBreakend = readBreakendMatch.Breakend;
+        Set<Breakend> breakends = Sets.newHashSet();
+        addUniqueBreakends(breakends, readBreakendMatches);
 
-        firstBreakend.updateBreakendSupport(read.sampleIndex(), readBreakendMatch.IsSplit, forwardReads, reverseReads);
-
-        if(firstBreakend.otherBreakend() != null)
+        for(Breakend breakend : breakends)
         {
-            Breakend otherBreakend = firstBreakend.otherBreakend();
-            otherBreakend.updateBreakendSupport(read.sampleIndex(), readBreakendMatch.IsSplit, forwardReads, reverseReads);
+            boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
+
+            breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+
+            if(!breakend.isSingle())
+            {
+                breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+            }
         }
     }
 
@@ -164,31 +191,41 @@ public class AlignmentFragments
             IsSplit = isSplit;
             Breakend = breakend;
         }
+
+        public String toString() { return format("%s breakend(%s)", IsSplit ? "split" : "disc", Breakend); }
     }
 
-    private ReadBreakendMatch findReadBreakendMatch(final SupportRead read)
+    private List<ReadBreakendMatch> findReadBreakendMatch(final SupportRead read)
     {
         Breakend closestDiscordantBreakend = null;
-        int closestDiscordantJunctionDistance = INVALID_DISCORANT_DISTANCE;
+        int closestDiscJunctionDistance = INVALID_DISCORANT_DISTANCE;
+
+        List<ReadBreakendMatch> breakendMatches = Lists.newArrayListWithCapacity(2);
 
         for(Breakend breakend : mAssemblyAlignment.breakends())
         {
             if(readSpansJunction(breakend, read))
-                return new ReadBreakendMatch(breakend, true);
+            {
+                breakendMatches.add(new ReadBreakendMatch(breakend, true));
+                continue;
+            }
 
             int discordantDistance = readDiscordantBreakendDistance(breakend, read);
 
             if(discordantDistance != INVALID_DISCORANT_DISTANCE)
             {
-                if(closestDiscordantJunctionDistance == INVALID_DISCORANT_DISTANCE || discordantDistance < closestDiscordantJunctionDistance)
+                if(closestDiscJunctionDistance == INVALID_DISCORANT_DISTANCE || discordantDistance < closestDiscJunctionDistance)
                 {
-                    closestDiscordantJunctionDistance = discordantDistance;
+                    closestDiscJunctionDistance = discordantDistance;
                     closestDiscordantBreakend = breakend;
                 }
             }
         }
 
-        return closestDiscordantBreakend != null ? new ReadBreakendMatch(closestDiscordantBreakend, false) : null;
+        if(closestDiscordantBreakend != null)
+            breakendMatches.add(new ReadBreakendMatch(closestDiscordantBreakend, false));
+
+        return breakendMatches;
     }
 
     private static boolean readSpansJunction(final Breakend breakend, final SupportRead read)

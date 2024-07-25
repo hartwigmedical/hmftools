@@ -13,6 +13,30 @@ public final class ReadUtils
         return CommonUtils.isDiscordantFragment(read.bamRecord(), DISCORDANT_FRAGMENT_LENGTH, read.supplementaryData());
     }
 
+    public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)
+    {
+        // cannot cross the junction since will already have considered all junction candidate reads
+        // and must read in the direction of the junction. Also cannot be soft-clipped prior to the junction.
+        if(isForwardJunction)
+        {
+            if(read.negativeStrand() || read.isRightClipped())
+                return false;
+
+            if(read.alignmentEnd() > junctionPosition)
+                return false;
+        }
+        else
+        {
+            if(read.positiveStrand() || read.isLeftClipped())
+                return false;
+
+            if(read.alignmentStart() < junctionPosition)
+                return false;
+        }
+
+        return true;
+    }
+
     public static final int INVALID_INDEX = -1;
 
     public static int getReadIndexAtReferencePosition(final Read read, final int refPosition, boolean allowExtrapolation)

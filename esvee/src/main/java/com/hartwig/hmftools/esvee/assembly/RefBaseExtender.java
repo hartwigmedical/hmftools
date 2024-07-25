@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLI
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
@@ -174,30 +175,6 @@ public class RefBaseExtender
         {
             return format("%s: %s", type(), mRead);
         }
-    }
-
-    public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)
-    {
-        // cannot cross the junction since will already have considered all junction candidate reads
-        // and must read in the direction of the junction
-        if(isForwardJunction)
-        {
-            if(read.negativeStrand())
-                return false;
-
-            if(read.alignmentEnd() > junctionPosition)
-                return false;
-        }
-        else
-        {
-            if(read.positiveStrand())
-                return false;
-
-            if(read.alignmentStart() < junctionPosition)
-                return false;
-        }
-
-        return true;
     }
 
     private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)

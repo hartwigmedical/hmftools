@@ -72,8 +72,8 @@ public class AssemblyReadWriter
 
             sj.add("InferredFragLength");
             sj.add("JunctionReadStartDistance");
-            sj.add("fullAssemblyIndex");
-            sj.add("fullAssemblyOrientation");
+            sj.add("AlignmentIndex");
+            sj.add("AlignmentOrientation");
 
             sj.add("Matches");
             sj.add("Mismatches");
