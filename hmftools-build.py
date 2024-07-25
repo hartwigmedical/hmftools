@@ -105,7 +105,7 @@ class Release:
                 headers = headers, 
                 data = self.artifact_file.read())
         response.raise_for_status()
-        print(f"Uploaded {artifact.name}")
+        print(f"Uploaded {self.artifact_file.name}")
 
     def _construct_url(self, prefix):
         return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
