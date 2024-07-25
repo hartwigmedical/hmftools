@@ -10,13 +10,14 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_FITTING_MAPPABILITY;
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
-import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_MIN_VAF;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
@@ -243,7 +244,7 @@ public class SomaticPurityFitter
         return somaticFitPurity;
     }
 
-    public static boolean useTumorOnlySomaticMode(final FittedPurity normalPurityFit)
+    public static boolean forceSomaticFit(final FittedPurity normalPurityFit)
     {
         return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
             && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
@@ -251,7 +252,7 @@ public class SomaticPurityFitter
     }
 
     @Nullable
-    public FittedPurity fromTumorOnlySomatics(
+    public FittedPurity fitFromSomatics(
             final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
     {
         List<Double> variantVafs = Lists.newArrayList();
@@ -280,8 +281,10 @@ public class SomaticPurityFitter
                     continue;
             }
 
-            if(variant.alleleFrequency() > SOMATIC_FIT_TUMOR_ONLY_MIN_VAF)
-                variantVafs.add(variant.alleleFrequency());
+            double vaf = variant.alleleFrequency();
+
+            if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                variantVafs.add(vaf);
         }
 
         if(variantVafs.isEmpty())

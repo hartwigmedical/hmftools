@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.purple.PurpleConstants.CODING_BASES_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF;
 import static com.hartwig.hmftools.purple.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -56,6 +57,9 @@ public class TumorMutationalLoad
 
     public void processVariant(final SomaticVariant variant)
     {
+        if(variant.alleleFrequency() < TUMOR_MSI_LOAD_MIN_VAF)
+            return;
+
         if(mTargetRegions.hasTargetRegions())
         {
             processTargetedRegionVariant(variant);

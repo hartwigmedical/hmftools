@@ -111,9 +111,9 @@ public class VariantPurityFitter
         return mSomaticPurityFitter.fromSomatics(mFittingSomatics, diploidCandidates, copyNumbers);
     }
 
-    public FittedPurity tumorOnlySomaticFit(final List<FittedPurity> allCandidates)
+    public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
     {
-        return mSomaticPurityFitter.fromTumorOnlySomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
+        return mSomaticPurityFitter.fitFromSomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
     }
 
     public static boolean somaticFitIsWorse(final FittedPurity lowestScore, final FittedPurity somaticFit, final SomaticFitConfig config)

@@ -150,8 +150,6 @@ public class PurpleConfig
     public boolean runTumor() { return !germlineMode(); }
     public boolean runGermline() { return !tumorOnlyMode(); }
 
-    public boolean fitWithSomatics() { return !germlineMode(); }
-
     public RunMode runMode()
     {
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);

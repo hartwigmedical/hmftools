@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 
@@ -63,6 +64,11 @@ public class MicrosatelliteIndels
         if(refLength >= MAX_REF_ALT_LENGTH || altLength >= MAX_REF_ALT_LENGTH)
             return;
 
+        double vaf = variant.alleleFrequency();
+
+        if(vaf < TUMOR_MSI_LOAD_MIN_VAF)
+            return;
+
         if(mTargetRegions.hasTargetRegions())
         {
             if(!mTargetRegions.isTargetRegionsMsiIndel(variant.chromosome(), variant.position()))
@@ -70,7 +76,7 @@ public class MicrosatelliteIndels
 
             if(altLength > refLength)
             {
-                if(variant.alleleFrequency() < mTargetRegions.msi4BaseAF())
+                if(vaf < mTargetRegions.msi4BaseAF())
                     return;
             }
             else
@@ -80,12 +86,12 @@ public class MicrosatelliteIndels
 
                 if(refLength <= 4)
                 {
-                    if(variant.alleleFrequency() < mTargetRegions.msi23BaseAF())
+                    if(vaf < mTargetRegions.msi23BaseAF())
                         return;
                 }
                 else
                 {
-                    if(variant.alleleFrequency() < mTargetRegions.msi4BaseAF())
+                    if(vaf < mTargetRegions.msi4BaseAF())
                         return;
                 }
             }
@@ -99,7 +105,7 @@ public class MicrosatelliteIndels
 
         if(mTargetRegions.hasTargetRegions() && PPL_LOGGER.isTraceEnabled())
         {
-            PPL_LOGGER.trace(format("indel(%s) af(%.2f) included in target-regions TMB", variant, variant.alleleFrequency()));
+            PPL_LOGGER.trace(format("indel(%s) af(%.2f) included in target-regions TMB", variant, vaf));
         }
 
         mIndelCount++;
@@ -118,11 +124,5 @@ public class MicrosatelliteIndels
     static boolean repeatContextIsRelevant(int repeatCount, String sequence)
     {
         return repeatContextIsRelevant(repeatCount, sequence.length());
-    }
-
-    @NotNull
-    private static String alt(final VariantContext context)
-    {
-        return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
 }

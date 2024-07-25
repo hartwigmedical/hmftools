@@ -13,6 +13,7 @@ public class PurpleConstants
     // TMB calcs
     public static final double MB_PER_GENOME = 2859;
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
+    public static final double TUMOR_MSI_LOAD_MIN_VAF = 0.02;
 
     // no-tumor
     public static final int NO_TUMOR_BAF_TOTAL = 3000;
@@ -21,7 +22,6 @@ public class PurpleConstants
 
     // target regions
     public static final int TARGET_REGIONS_MAX_DELETED_GENES = 1500;
-    public static final double ASSUMED_BIALLELIC_FRACTION = 0.2;
 
     // purity fitting
     public static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
@@ -82,7 +82,8 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN = 0.92;
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN = 1.8;
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX = 2.2;
-    public static final double SOMATIC_FIT_TUMOR_ONLY_MIN_VAF = 0.04;
+    public static final double SOMATIC_FIT_TUMOR_ONLY_VAF_MIN = 0.04;
+    public static final double SOMATIC_FIT_TUMOR_ONLY_VAF_MAX = 0.35;
 
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;
@@ -148,4 +149,5 @@ public class PurpleConstants
     public static final double BIALLELIC_THRESHOLD_PARAMETER_I = 1.4;
     public static final double BIALLELIC_THRESHOLD_PARAMETER_II = 0.8;
     public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.02;
+    public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
 }

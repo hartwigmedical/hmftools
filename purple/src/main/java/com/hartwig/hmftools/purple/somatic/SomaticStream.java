@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
+import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_ASSUMED_FRACTION;
 import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
@@ -139,8 +139,8 @@ public class SomaticStream
             variantTypeCounts.put(VariantType.INDEL, inferredIndelCount);
 
             Map<VariantType,Integer> variantTypeCountsbiallelic = Maps.newHashMap();
-            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * ASSUMED_BIALLELIC_FRACTION));
-            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * ASSUMED_BIALLELIC_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * BIALLELIC_ASSUMED_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * BIALLELIC_ASSUMED_FRACTION));
 
             PPL_LOGGER.debug("target-regions inferred driver variant counts snv({}) indel({})",
                     inferredSnvCount, inferredIndelCount);
