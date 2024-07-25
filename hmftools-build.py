@@ -59,10 +59,13 @@ class Docker:
 
 
 class Release:
-    def __init__(self, release_name, artifact_files, token):
-        self.release_name = release_name
+    def __init__(self, tag_name, module, version, artifact_files, token):
+        self.tag_name = tag_name
+        self.module = module
+        self.version = version
         self.artifact_files = artifact_files
         self.token = token
+        self.release_name = f"{module} v{version}"
 
     def create(self):
         id = self._create_release()
@@ -71,7 +74,7 @@ class Release:
 
     def _create_release(self):
         print(f"Creating release [{self.release_name}]")
-        request = {"tag_name": self.release_name,
+        request = {"tag_name": self.tag_name,
                 "target_commitish": "master",
                 "name": self.release_name,
                 "body": f"Description of release {self.release_name}",
@@ -167,7 +170,7 @@ def build_and_release(raw_tag: str):
     Maven.deploy_all(module_pom, *dependencies_pom)
 
     Docker(module, version).build()
-    Release(f"{module} v{version}", [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
+    Release(raw_tag, module, version, [open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb")], 
             open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
