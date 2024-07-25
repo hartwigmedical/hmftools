@@ -14,6 +14,7 @@ import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
@@ -93,6 +94,9 @@ public interface OrangeRecord
 
     @NotNull
     OrangePlots plots();
+
+    @NotNull
+    TumorStats tumorStats();
 
     default boolean tumorOnlyMode()
     {

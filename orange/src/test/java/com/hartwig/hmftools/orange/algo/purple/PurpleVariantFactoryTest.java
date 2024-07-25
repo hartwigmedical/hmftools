@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
@@ -62,6 +63,7 @@ public class PurpleVariantFactoryTest
                 .spliceRegion(true)
                 .worstCodingEffect(CodingEffect.UNDEFINED)
                 .otherImpacts(otherImpacts)
+                .tier(VariantTier.HOTSPOT)
                 .hotspot(Hotspot.HOTSPOT)
                 .reported(true)
                 .rnaDepth(null)

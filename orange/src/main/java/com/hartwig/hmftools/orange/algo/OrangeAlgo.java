@@ -55,11 +55,14 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
+import com.hartwig.hmftools.orange.algo.gripss.GripssData;
+import com.hartwig.hmftools.orange.algo.gripss.GripssDataLoader;
 import com.hartwig.hmftools.orange.algo.immuno.ImmuneEscapeInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -74,6 +77,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.purple.TumorStatsFactory;
 import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
@@ -198,6 +202,7 @@ public class OrangeAlgo
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
+        GripssData gripssData = loadGripssData(config);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
@@ -210,6 +215,8 @@ public class OrangeAlgo
         PurpleInterpreter purpleInterpreter =
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, germlineLOHFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
+
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, gripssData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
@@ -261,6 +268,7 @@ public class OrangeAlgo
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
+                .tumorStats(tumorStats)
                 .build();
 
         verifyPlots(report.plots(), linxData);
@@ -633,6 +641,12 @@ public class OrangeAlgo
         LOGGER.info(" Loaded {} signature allocations from {}", sigsAllocations.size(), sigsAllocationTsv);
 
         return sigsAllocations;
+    }
+
+    @NotNull
+    private static GripssData loadGripssData(@NotNull OrangeConfig config) throws IOException
+    {
+        return GripssDataLoader.load(config.tumorSampleId(), config.gripssSomaticDataDirectory());
     }
 
     @NotNull

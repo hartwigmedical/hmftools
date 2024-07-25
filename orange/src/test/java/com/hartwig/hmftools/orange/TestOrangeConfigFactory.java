@@ -56,6 +56,7 @@ public final class TestOrangeConfigFactory
     private static final String CUPPA_SUMMARY_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa.vis.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
+    private static final String GRIDSS_SOMATIC_DIRECTORY = RUN_DIRECTORY + "/gripss_somatic";
 
     @NotNull
     public static OrangeConfig createMinimalConfig()
@@ -81,6 +82,7 @@ public final class TestOrangeConfigFactory
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
                 .lilacResultTsv(LILAC_RESULT_TSV)
                 .lilacQcTsv(LILAC_QC_TSV)
+                .gripssSomaticDataDirectory(GRIDSS_SOMATIC_DIRECTORY)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .addDisclaimer(false)

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.FLAGSTAT_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LILAC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
@@ -80,6 +81,10 @@ public interface OrangeConfig
     String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
     String TUMOR_SAMPLE_FLAGSTAT_FILE = "tumor_sample_flagstat_file";
 
+    // Tool dirs in CommonConfig
+    String GRIPSS_SOMATIC_DIR_CFG = "gripss_somatic_dir";
+    String GRIPSS_SOMATIC_DIR_DESC = "Path to GRIPSS somatic directory";
+
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
@@ -122,6 +127,7 @@ public interface OrangeConfig
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
+        configBuilder.addPath(GRIPSS_SOMATIC_DIR_CFG, false, GRIPSS_SOMATIC_DIR_DESC);
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
@@ -207,6 +213,9 @@ public interface OrangeConfig
     @NotNull
     String lilacQcTsv();
 
+    @NotNull
+    String gripssSomaticDataDirectory();
+
     boolean convertGermlineToSomatic();
 
     boolean limitJsonOutput();
@@ -284,6 +293,7 @@ public interface OrangeConfig
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
                 .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, LINX_SOMATIC_DIR))
                 .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR)))
+                .gripssSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(GRIPSS_SOMATIC_DIR_CFG, GRIPSS_SOMATIC_DIR))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);

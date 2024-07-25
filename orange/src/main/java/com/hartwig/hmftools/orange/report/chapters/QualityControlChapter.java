@@ -69,6 +69,7 @@ public class QualityControlChapter implements ReportChapter
         addExcludedPercentages(document);
         addPurpleQCPlots(document);
         addSageBQRPlots(document);
+        addTumorStats(document);
     }
 
     private void addKeyQC(@NotNull Document document)
@@ -255,5 +256,35 @@ public class QualityControlChapter implements ReportChapter
         tumorImage.setMaxWidth(contentWidth());
         tumorImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(tumorImage);
+    }
+
+    private void addTumorStats(@NotNull Document document)
+    {
+        Cells cells = new Cells(reportResources);
+        Table tumorStats = Tables.createContent(contentWidth(),
+                new float[] { 1, 1 },
+                new Cell[] {
+                        cells.createHeader(Strings.EMPTY),
+                        cells.createHeader("Count"),
+                });
+
+        tumorStats.addCell(cells.createContent("Number of hotspot mutations (should be >0)"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotMutations())));
+
+        tumorStats.addCell(cells.createContent("Number of hotspot SVs (should be >0):"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotSVs())));
+
+        tumorStats.addCell(cells.createContent("SNV sum(allele read count) (should be >1000)"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumSNPAlleleReadCounts())));
+
+        tumorStats.addCell(cells.createContent("SV sum(start tumor fragment count) excl SGL (should be >1000)"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumTumorVariantFragmentCountsExclSGL())));
+
+        tumorStats.addCell(cells.createContent(
+                "Sum of bafCount when observedTumorRatio in DIPLOID regions for <0.8 or >1.2 (should be >3000)"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumBafCount())));
+
+        document.add(new Tables(reportResources).createWrapping(tumorStats,
+                "Presence of tumor stats (at least one should be met to indicate presence of tumor)"));
     }
 }

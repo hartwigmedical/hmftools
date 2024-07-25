@@ -41,7 +41,9 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -82,6 +84,7 @@ public final class TestOrangeReportFactory
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
+                .tumorStats(createEmptyTumorStats())
                 .plots(createMinimalOrangePlots());
     }
 
@@ -107,6 +110,7 @@ public final class TestOrangeReportFactory
                 .immuneEscape(createTestImmuneEscapeRecord())
                 .virusInterpreter(createTestVirusInterpreterData())
                 .peach(createTestPeachData())
+                .tumorStats(createTestTumorStats())
                 .build();
     }
 
@@ -337,5 +341,29 @@ public final class TestOrangeReportFactory
     private static Set<PeachGenotype> createTestPeachData()
     {
         return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").allele("allele").build()));
+    }
+
+    @NotNull
+    private static TumorStats createEmptyTumorStats()
+    {
+        return ImmutableTumorStats.builder()
+                .numberHotspotMutations(0)
+                .numberHotspotSVs(0)
+                .sumSNPAlleleReadCounts(0)
+                .sumTumorVariantFragmentCountsExclSGL(0)
+                .sumBafCount(0)
+                .build();
+    }
+
+    @NotNull
+    private static TumorStats createTestTumorStats()
+    {
+        return ImmutableTumorStats.builder()
+                .numberHotspotMutations(5)
+                .numberHotspotSVs(1)
+                .sumSNPAlleleReadCounts(1500)
+                .sumTumorVariantFragmentCountsExclSGL(1100)
+                .sumBafCount(5000)
+                .build();
     }
 }
