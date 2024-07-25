@@ -103,7 +103,7 @@ class Release:
         base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
         response = requests.post(f"{base_url}={self.module}_v{self.version}.jar", 
                 headers = headers, 
-                data = this.artifact_file.read())
+                data = self.artifact_file.read())
         response.raise_for_status()
         print(f"Uploaded {artifact.name}")
 
