@@ -70,6 +70,7 @@ public class PurityConfig
     public final double GcRatioMin;
     public final int BqrQualThreshold;
     public final boolean SkipSubclonalFilter;
+    public final boolean ApplyRefVariantFilters;
     public final boolean WriteAllSummaryMethods;
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
@@ -94,6 +95,7 @@ public class PurityConfig
     private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
     private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
     private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
+    private static final String APPLY_REF_VARIANT_FILTERS = "apply_ref_variant_filters";
     private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
 
@@ -142,6 +144,7 @@ public class PurityConfig
         BqrQualThreshold = configBuilder.getInteger(BQR_QUAL_THRESHOLD);
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
         SkipSubclonalFilter = configBuilder.hasFlag(SKIP_SUBCLONAL_FILTER);
+        ApplyRefVariantFilters = configBuilder.hasFlag(APPLY_REF_VARIANT_FILTERS);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
         DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
 
@@ -289,6 +292,7 @@ public class PurityConfig
 
         configBuilder.addInteger(BQR_QUAL_THRESHOLD, "BQR qual threshold", DEFAULT_BQR_MIN_QUAL);
         configBuilder.addFlag(SKIP_SUBCLONAL_FILTER, "Skip subclonal filter for somatics");
+        configBuilder.addFlag(APPLY_REF_VARIANT_FILTERS, "For externally validated variants, only apply qual-per-AD and chip filteres");
         configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
         configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
 

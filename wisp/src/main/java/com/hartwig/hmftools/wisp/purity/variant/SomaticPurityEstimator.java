@@ -44,8 +44,7 @@ public class SomaticPurityEstimator
     }
 
     public SomaticPurityResult calculatePurity(
-            final String sampleId, final PurityContext purityContext, final List<SomaticVariant> variants,
-            final int totalVariantCount, final int chipVariants)
+            final String sampleId, final List<SomaticVariant> variants, final int totalVariantCount, final int chipVariants)
     {
         FragmentTotals fragmentTotals = new FragmentTotals();
 
