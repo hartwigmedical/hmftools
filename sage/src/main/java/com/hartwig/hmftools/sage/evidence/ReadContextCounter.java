@@ -327,9 +327,9 @@ public class ReadContextCounter
             return IN_SPLIT;
         }
 
-        boolean coreCovered = coversVariant(record, readVarIndex, splitReadSegment);
+        boolean variantCovered = coversVariant(record, readVarIndex, splitReadSegment);
 
-        if(!coreCovered && !checkRealigned)
+        if(!variantCovered && !checkRealigned)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return NON_CORE;
@@ -353,7 +353,7 @@ public class ReadContextCounter
         double modifiedQuality = 0;
         QualityScores qualityScores = null;
 
-        if(coreCovered)
+        if(variantCovered)
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
@@ -446,7 +446,7 @@ public class ReadContextCounter
                 else if(realignedType == LENGTHENED)
                     mJitterData.update(JitterMatch.LENGTHENED);
             }
-            else if(!coreCovered || readVarIndex < 0)
+            else if(!variantCovered || readVarIndex < 0)
             {
                 // exit if would have earlier but for the realignment test
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);

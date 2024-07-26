@@ -7,9 +7,11 @@ import static java.lang.String.format;
 import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.safeQualLookup;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
@@ -246,8 +248,17 @@ public class UltimaQualCalculator
             }
 
             final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
-            byte qual1 = t0Values[varReadIndex + mStraddleIndexStart];
-            byte qual2 = t0Values[varReadIndex + mStraddleIndexEnd];
+            byte qual1 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexStart);
+            if(qual1 == ULTIMA_INVALID_QUAL)
+            {
+                return ULTIMA_INVALID_QUAL;
+            }
+
+            byte qual2 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexEnd);
+            if(qual2 == ULTIMA_INVALID_QUAL)
+            {
+                return ULTIMA_INVALID_QUAL;
+            }
 
             return max(qual1, qual2);
         }
@@ -293,8 +304,14 @@ public class UltimaQualCalculator
             byte lowerQual = calcTpBaseQual(
                     record, varReadIndex + mLowerHpStartIndex, varReadIndex + mLowerHpEndIndex, mLowerRefAdjustCount);
 
+            if(lowerQual == ULTIMA_INVALID_QUAL)
+                return ULTIMA_INVALID_QUAL;
+
             byte upperQual = calcTpBaseQual(
                     record, varReadIndex + mUpperHpStartIndex, varReadIndex + mUpperHpEndIndex, mUpperRefAdjustCount);
+
+            if(upperQual == ULTIMA_INVALID_QUAL)
+                return ULTIMA_INVALID_QUAL;
 
             return (byte)(lowerQual + upperQual);
         }
@@ -437,7 +454,7 @@ public class UltimaQualCalculator
             {
                 // any HP deletion can just use the SNV base itself
                 final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
-                return t0Values[varReadIndex];
+                return safeQualLookup(t0Values, varReadIndex);
             }
 
             int leftQual = mLeftAdjust != null ?
