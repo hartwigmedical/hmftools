@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.purple.fittingsnv;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -21,7 +20,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
-import static com.hartwig.hmftools.purple.fittingsnv.SomaticKernelDensityPeaks.findMatchedFittedPurity;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticReadjustmentFit.calcReadjustmentPurity;
 
 import java.util.Collections;
@@ -249,6 +247,14 @@ public class SomaticPurityFitter
         return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
             && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
             && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+    }
+
+    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates, final double epsilon)
+    {
+        return allCandidates.stream()
+                .filter(x -> abs(x.purity() - purity) < epsilon)
+                .filter(x -> abs(x.ploidy() - 2.0) < epsilon) // assumes ploidy 2 as well since is looking a highly diploid solutions
+                .findFirst().orElse(null);
     }
 
     @Nullable

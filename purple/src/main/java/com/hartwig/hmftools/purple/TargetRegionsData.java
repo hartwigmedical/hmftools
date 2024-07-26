@@ -164,7 +164,7 @@ public class TargetRegionsData
                     positions.add(position);
                 }
 
-                PPL_LOGGER.info("loaded {} MSI INDELs from file({})",
+                PPL_LOGGER.info("loaded {} MSI indels from file({})",
                         mTargetRegionsMsiIndels.values().stream().mapToInt(x -> x.size()).sum(), filename);
             }
             catch(IOException e)
