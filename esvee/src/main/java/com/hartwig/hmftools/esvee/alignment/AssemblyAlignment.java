@@ -2,23 +2,33 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.util.CigarUtil;
 
 public class AssemblyAlignment
 {
@@ -137,9 +147,23 @@ public class AssemblyAlignment
         // and if they don't match then also start with the forward orientation
         // the exception being if both ends have outer SGLs (ie -ve to +ve orientation assemblies)
 
-        int assemblyCount = mAssemblies.size();
-        JunctionAssembly first = mAssemblies.get(0);
-        JunctionAssembly last = mAssemblies.get(assemblyCount - 1);
+        List<JunctionAssembly> assemblies = mAssemblies;
+        List<AssemblyLink> assemblyLinks = mPhaseSet.assemblyLinks();
+
+        int assemblyCount = assemblies.size();
+        int linkCount = assemblyLinks.size();
+
+        // for a chain which starts with a facing link, reverse the order in which the sequence is added so as to start with ref bases
+        if(assemblyLinks.get(0).type() == LinkType.FACING && assemblyLinks.get(linkCount - 1).type() != LinkType.FACING)
+        {
+            assemblies = Lists.newArrayList(assemblies);
+            assemblyLinks = Lists.newArrayList(assemblyLinks);
+            Collections.reverse(assemblies);
+            Collections.reverse(assemblyLinks);
+        }
+
+        JunctionAssembly first = assemblies.get(0);
+        JunctionAssembly last = assemblies.get(assemblyCount - 1);
 
         boolean startReversed, hasOuterExtensions;
 
@@ -158,16 +182,17 @@ public class AssemblyAlignment
                 mAssemblies.size(), startReversed, hasOuterExtensions);
 
         StringBuilder fullSequence = new StringBuilder();
-        StringBuilder sequenceCigar = new StringBuilder();
 
         boolean lastAddedReversed = false;
         int currentSeqLength = 0;
         boolean nextIsFacing = false;
 
+        List<CigarElement> sequenceCigar = Lists.newArrayList();
+
         for(int i = 0; i < assemblyCount - 1; ++i)
         {
-            AssemblyLink link = mPhaseSet.assemblyLinks().get(i);
-            JunctionAssembly assembly = mPhaseSet.assemblies().get(i);
+            AssemblyLink link = assemblyLinks.get(i);
+            JunctionAssembly assembly = assemblies.get(i);
 
             boolean assemblyReversed;
 
@@ -184,26 +209,25 @@ public class AssemblyAlignment
 
                     setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length(), 0);
 
+                    logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+
                     currentSeqLength = assemblyExtensionBases.length();
 
-                    sequenceCigar.append(format("%dS", assemblyExtensionBases.length()));
-                }
-                else
-                {
-                    String assemblyRefBases = startReversed ?
-                            Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
-
-                    fullSequence.append(assemblyRefBases);
-
-                    setAssemblyReadIndices(assembly, assemblyReversed, 0, assemblyRefBases.length());
-
-                    currentSeqLength = assemblyRefBases.length();
-
-                    sequenceCigar.append(format("%dM", assemblyRefBases.length()));
+                    buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
                 }
 
-                SV_LOGGER.trace("{}: newLength({}) added assembly({}) {}",
-                        i, currentSeqLength, assembly.junction().coords(), assemblyReversed ? "rev" : "fwd");
+                String assemblyRefBases = startReversed ?
+                        Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
+
+                fullSequence.append(assemblyRefBases);
+
+                setAssemblyReadIndices(assembly, assemblyReversed, 0, assemblyRefBases.length());
+
+                currentSeqLength += assemblyRefBases.length();
+
+                buildSequenceCigar(sequenceCigar, M, assemblyRefBases.length());
+
+                logBuildInfo(assembly, currentSeqLength, assemblyRefBases.length(), assemblyReversed, "ref-bases");
             }
             else
             {
@@ -212,7 +236,7 @@ public class AssemblyAlignment
                     nextIsFacing = false;
 
                     // ref bases for this segment have already been added so only set assembly indices
-                    JunctionAssembly nextAssembly = mPhaseSet.assemblies().get(i + 1);
+                    JunctionAssembly nextAssembly = assemblies.get(i + 1);
 
                     setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength, 0);
                     continue;
@@ -231,10 +255,10 @@ public class AssemblyAlignment
 
                 currentSeqLength += insertedBases.length();
 
-                sequenceCigar.append(format("%dI", insertedBases.length()));
+                buildSequenceCigar(sequenceCigar, I, insertedBases.length());
             }
 
-            JunctionAssembly nextAssembly = mPhaseSet.assemblies().get(i + 1);
+            JunctionAssembly nextAssembly = assemblies.get(i + 1);
             boolean nextReversed = (assembly.junction().Orient == nextAssembly.junction().Orient && !assemblyReversed);
 
             String nextAssemblyRefBases = nextReversed ?
@@ -249,18 +273,17 @@ public class AssemblyAlignment
 
             setAssemblyReadIndices(nextAssembly, nextReversed, currentSeqLength, nextAssemblyRefBases.length());
 
-            currentSeqLength += nextAssemblyRefBases.length();
+            logBuildInfo(nextAssembly, currentSeqLength, nextAssemblyRefBases.length(), assemblyReversed, "ref-bases");
 
-            SV_LOGGER.trace("{}: newLength({}) added assembly({}) {} refBaseLen({})",
-                    i, currentSeqLength, assembly.junction().coords(), assemblyReversed ? "rev" : "fwd", nextAssemblyRefBases.length());
+            currentSeqLength += nextAssemblyRefBases.length();
 
             if(overlapLength > 0)
             {
-                sequenceCigar.append(format("%dI", overlapLength));
+                buildSequenceCigar(sequenceCigar, I, overlapLength);
                 mSequenceOverlaps.put(currentSeqLength - 1, link.overlapBases());
             }
 
-            sequenceCigar.append(format("%dM", nextAssembly.refBaseLength()));
+            buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
 
             if(hasOuterExtensions && i == assemblyCount - 1)
             {
@@ -271,9 +294,11 @@ public class AssemblyAlignment
 
                 setAssemblyReadIndices(assembly, assemblyReversed, currentSeqLength, 0);
 
+                logBuildInfo(nextAssembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+
                 currentSeqLength = assemblyExtensionBases.length();
 
-                sequenceCigar.append(format("%dS", assemblyExtensionBases.length()));
+                buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
             }
 
             lastAddedReversed = nextReversed;
@@ -281,9 +306,43 @@ public class AssemblyAlignment
             nextIsFacing = true;
         }
 
-        mSequenceCigar = sequenceCigar.toString();
+        mSequenceCigar = cigarElementsToStr(sequenceCigar);
 
         return fullSequence.toString();
+    }
+
+    private static void logBuildInfo(
+            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
+    {
+        if(SV_LOGGER.isTraceEnabled())
+        {
+            SV_LOGGER.trace("seqLength({} -> {}) adding assembly({}) {} {}",
+                    currentSeqLength, currentSeqLength + assemblyBaseLength,
+                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
+        }
+    }
+
+    private static void buildSequenceCigar(final List<CigarElement> elements, final CigarOperator operator, int length)
+    {
+        if(length == 0)
+            return;
+
+        if(elements.isEmpty())
+        {
+            elements.add(new CigarElement(length, operator));
+            return;
+        }
+
+        int lastIndex = elements.size() - 1;
+        CigarElement lastElement = elements.get(lastIndex);
+
+        if(lastElement.getOperator() != operator)
+        {
+            elements.add(new CigarElement(length, operator));
+            return;
+        }
+
+        elements.set(lastIndex, new CigarElement(lastElement.getLength() + length, operator));
     }
 
     private void setAssemblyReadIndices(
@@ -304,16 +363,18 @@ public class AssemblyAlignment
 
         boolean includeAssemblyRefBaseLength = assembly.isForwardJunction() == !isReversed;
 
+        int currentSeqEndIndex = existingSequenceLength - 1;
+
+        if(includeAssemblyRefBaseLength)
+            currentSeqEndIndex += assemblyRefBaseLength;
+
         for(SupportRead read : assembly.support())
         {
             int juncReadStartDistance = read.junctionReadStartDistance();
 
             Orientation fullSeqOrientation = isReversed ? Orientation.REVERSE : Orientation.FORWARD;
 
-            int fullSeqIndex = existingSequenceLength;
-
-            if(includeAssemblyRefBaseLength)
-                fullSeqIndex += assemblyRefBaseLength;
+            int fullSeqIndex = currentSeqEndIndex;
 
             if(!isReversed)
             {

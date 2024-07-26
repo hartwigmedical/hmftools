@@ -4,9 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -19,7 +18,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.SAMRecord;
 
 public class ReadCigarInfo
 {
@@ -60,7 +58,7 @@ public class ReadCigarInfo
     public String toString()
     {
         return format("%s flankPos(%d-%d) corePos(%d-%d) flankIndex(%d-%d)",
-                cigarStringFromElements(Cigar), FlankPositionStart, FlankPositionEnd, CorePositionStart, CorePositionEnd,
+                cigarElementsToStr(Cigar), FlankPositionStart, FlankPositionEnd, CorePositionStart, CorePositionEnd,
                 FlankIndexStart, FlankIndexEnd);
     }
 

@@ -57,7 +57,7 @@ public final class CigarUtils
         return new Cigar(cigarElementsFromStr(cigarStr));
     }
 
-    public static String cigarStringFromElements(final List<CigarElement> elements)
+    public static String cigarElementsToStr(final List<CigarElement> elements)
     {
         return elements.stream().map(x -> format("%d%s", x.getLength(), x.getOperator())).collect(Collectors.joining());
     }

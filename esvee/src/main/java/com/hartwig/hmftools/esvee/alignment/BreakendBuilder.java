@@ -359,14 +359,6 @@ public class BreakendBuilder
             Orientation nextOrientation = segmentOrientation(nextAlignment, false);
             int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
-            // first check for facing links rather than an SV
-            if(areFacingBreakends(
-                    alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation,
-                    nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation))
-            {
-                continue;
-            }
-
             HomologyData homology = null;
             String insertedBases = "";
 

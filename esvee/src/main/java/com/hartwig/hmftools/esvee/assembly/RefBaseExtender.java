@@ -199,6 +199,9 @@ public class RefBaseExtender
                 Comparator.comparingInt(x -> isForwardJunction ? -x.alignmentEnd() : x.alignmentStart()));
 
         // capture RSSC from these new candidate reads
+        // NOTE: this is only done once per assembly linking and extension for now to avoid repeated consideration of branching
+        boolean considerRefSideSoftClips = candidateSupport.stream().anyMatch(x -> x.hasJunctionMate());
+
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
         List<Read> nonJunctionSupport = Lists.newArrayListWithExpectedSize(candidateSupport.size());
 
@@ -215,7 +218,8 @@ public class RefBaseExtender
 
             nonJunctionSupport.add(read);
 
-            RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
+            if(considerRefSideSoftClips)
+                RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
         }
 
         if(nonJunctionSupport.isEmpty())
@@ -223,9 +227,10 @@ public class RefBaseExtender
 
         int nonSoftClipRefPosition = newRefBasePosition;
 
-        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
+        if(considerRefSideSoftClips)
+            purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
 
-        if(refSideSoftClips.isEmpty())
+        if(!considerRefSideSoftClips || refSideSoftClips.isEmpty())
         {
             // most common scenario
             extendAssemblyRefBases(assembly, nonSoftClipRefPosition, nonJunctionSupport, refGenome, false);

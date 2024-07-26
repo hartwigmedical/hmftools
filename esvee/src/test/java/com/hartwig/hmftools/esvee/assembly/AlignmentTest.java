@@ -42,7 +42,6 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AlignmentTest
@@ -83,7 +82,6 @@ public class AlignmentTest
         assembly.addJunctionRead(read);
     }
 
-    @Ignore
     @Test
     public void testAlignmentSequence()
     {
@@ -98,7 +96,6 @@ public class AlignmentTest
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
-        // TODO
         assertEquals(80, assembly1.support().get(0).fullAssemblyIndexStart());
         assertEquals(40, assembly1.support().get(1).fullAssemblyIndexStart());
 
@@ -121,12 +118,11 @@ public class AlignmentTest
         String extBases2 = REF_BASES_400.substring(151, 201);
         String assemblyBases2 = extBases2 + refBases2;
         JunctionAssembly assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, extBases2.length());
+
         addAssemblyRead(assembly2, -30);
-        // assertEquals(20, assembly2.support().get(0).junctionAssemblyIndex());
-        assertEquals(20, assembly2.support().get(0).junctionReadStartDistance());
+        assertEquals(30, assembly2.support().get(0).junctionReadStartDistance());
         addAssemblyRead(assembly2, 10);
-        assertEquals(60, assembly2.support().get(1).junctionReadStartDistance());
-        // assertEquals(60, assembly2.support().get(1).junctionAssemblyIndex());
+        assertEquals(-10, assembly2.support().get(1).junctionReadStartDistance());
 
         AssemblyLink assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", "");
 
@@ -134,8 +130,8 @@ public class AlignmentTest
         String fullSequence = refBases1 + refBases2;
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
-        assertEquals(70, assembly2.support().get(0).fullAssemblyIndexStart());
-        assertEquals(110, assembly2.support().get(1).fullAssemblyIndexStart());
+        assertEquals(69, assembly2.support().get(0).fullAssemblyIndexStart());
+        assertEquals(109, assembly2.support().get(1).fullAssemblyIndexStart());
 
         // with overlap
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", refBases2.substring(0, 30));
@@ -186,7 +182,6 @@ public class AlignmentTest
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
     }
 
-    @Ignore
     @Test
     public void testBasicSvTypes()
     {
@@ -214,7 +209,7 @@ public class AlignmentTest
         assertEquals(250, second.Position);
         assertEquals(REVERSE, second.Orient);
 
-        // test again for a DUP with inserted bases and SGLs on both ends
+        // test again for a DUP with inserted bases
         assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 100, REVERSE, CHR_1, 350, FORWARD, "AAAA");
 

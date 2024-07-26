@@ -62,7 +62,7 @@ public class VariantReadContext
         MaxRepeat = maxRepeat;
         AllRepeats = allRepeats;
 
-        mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
+        mReadCigarStr = CigarUtils.cigarElementsToStr(readCigar);
 
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
