@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.utils;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
@@ -24,6 +22,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.gridss.GridssVcfTags;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -44,13 +43,15 @@ public class GridssAssemblyReadsWriter
     private final List<Variant> mVariants = new ArrayList<>();
     private final Map<String, Read> mAssemblies = new HashMap<>();
     private final BufferedWriter mWriter;
+    int mReadsWritten = 0;
 
     // For all gridss sam tags, see:
     // https://github.com/PapenfussLab/gridss/blob/master/src/main/java/au/edu/wehi/idsv/sam/SamTags.java
     private static final String SAM_TAG_READ_IDS = "ef";
-    private static final String VCF_TAG_SV_TYPE = "EVENTTYPE";
 
-    private static final String DELIMITER = TSV_DELIM;
+    private static final String VCF_TAG_SV_TYPE = "EVENTTYPE";
+    private static final String VCF_TAG_SV_ID = "EVENT";
+    private static final String VCF_TAG_CIPOS = "CIPOS";
 
     private static final String BAM_FILE = "bam_file";
     private static final String VCF_FILE = "vcf_file";
@@ -70,16 +71,27 @@ public class GridssAssemblyReadsWriter
         public final int Position;
         public final byte Orientation;
         public final String Type;
+        public final int CiLower;
+        public final int CiUpper;
+        public final String SvId;
+        public final String BreakendId;
         public final List<String> AssemblyIds;
 
         public String IntersectingAssemblyId;
 
-        public Variant(final String chromosome, final int position, final byte orientation, String type, final List<String> assemblyIds)
+        public Variant(final String chromosome, final int position, final byte orientation, String type,
+                final int ciLower, final int ciUpper,
+                String svId, String breakendId,
+                final List<String> assemblyIds)
         {
             Chromosome = chromosome;
             Position = position;
             Orientation = orientation;
             Type = type;
+            CiLower = ciLower;
+            CiUpper = ciUpper;
+            SvId = svId;
+            BreakendId = breakendId;
             AssemblyIds = assemblyIds;
 
             IntersectingAssemblyId = null;
@@ -106,21 +118,35 @@ public class GridssAssemblyReadsWriter
             if(!filter.test(variantContext))
                 continue;
 
-            Object assemblyIds = variantContext.getAttribute(GridssVcfTags.BEID);
+            //
+            List<String> cipos = (List<String>) variantContext.getAttribute(VCF_TAG_CIPOS);
+            int ciLower = 0;
+            int ciUpper = 0;
+            if(cipos != null)
+            {
+                ciLower = Integer.parseInt( cipos.get(0) );
+                ciUpper = Integer.parseInt( cipos.get(1) );
+            }
 
+            //
+            Object assemblyIds = variantContext.getAttribute(GridssVcfTags.BEID);
             List<String> parsedAssemblyIds;
             if(assemblyIds == null)
                 parsedAssemblyIds = new ArrayList<>();
             else if(assemblyIds instanceof String)
                 parsedAssemblyIds = List.of((String) assemblyIds);
             else
-                parsedAssemblyIds = (ArrayList<String>) assemblyIds;
+                parsedAssemblyIds = (List<String>) assemblyIds;
 
             Variant variant = new Variant(
                     variantContext.getContig(),
                     variantContext.getStart(),
                     StructuralVariantFactory.parseSvOrientation(variantContext),
                     (String) variantContext.getAttribute(VCF_TAG_SV_TYPE),
+                    ciLower,
+                    ciUpper,
+                    (String) variantContext.getAttribute(VCF_TAG_SV_ID),
+                    variantContext.getID(),
                     parsedAssemblyIds
             );
 
@@ -202,9 +228,6 @@ public class GridssAssemblyReadsWriter
                 }
             }
 
-            // if(intersectingAssemblyId == null)
-            //     SV_LOGGER.warn("variant({}) type({}) had no intersecting assemblies: {}", variant, variant.Type, String.join(", ", variant.AssemblyIds));
-
             variant.IntersectingAssemblyId = intersectingAssemblyId;
         }
     }
@@ -213,11 +236,16 @@ public class GridssAssemblyReadsWriter
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(mOutputFile, false);
+            BufferedWriter writer = FileWriterUtils.createBufferedWriter(mOutputFile, false);
 
-            String[] columnNames = { "VariantInfo", "VariantType", "ReadId", "AssemblyId", "IsIntersectingAssembly" };
+            String[] columnNames = {
+                    "Chromosome", "Position", "Orientation", "VariantType",
+                    "CiLower", "CiUpper",
+                    "SvId", "BreakendId",
+                    "ReadId", "AssemblyId", "IsIntersectingAssembly"
+            };
 
-            StringJoiner header = new StringJoiner(DELIMITER);
+            StringJoiner header = new StringJoiner(TSV_DELIM);
             for(String columnName : columnNames)
                 header.add(columnName);
 
@@ -245,16 +273,25 @@ public class GridssAssemblyReadsWriter
 
             for(String readId : uniqueReadIds)
             {
-                String line = new StringJoiner(DELIMITER)
-                        .add(variant.toString())
-                        .add(variant.Type)
-                        .add(readId)
-                        .add(assembly.id())
-                        .add(String.valueOf(isIntersectingAssembly))
-                        .toString();
+                String line = String.join(
+                        TSV_DELIM,
+                        variant.Chromosome,
+                        String.valueOf(variant.Position),
+                        String.valueOf(variant.Orientation),
+                        variant.Type,
+                        String.valueOf(variant.CiLower),
+                        String.valueOf(variant.CiUpper),
+                        variant.SvId,
+                        variant.BreakendId,
+                        readId,
+                        assembly.id(),
+                        String.valueOf(isIntersectingAssembly)
+                );
 
                 mWriter.write(line);
                 mWriter.newLine();
+
+                mReadsWritten++;
             }
         }
         catch(IOException e)
@@ -268,11 +305,15 @@ public class GridssAssemblyReadsWriter
     private void writeAssemblyReads()
     {
         SV_LOGGER.debug("Writing assembly reads to file: {}", mOutputFile);
+
+        int variantsIntersectingAssembly = 0;
+
         for(Variant variant : mVariants)
         {
             if(variant.IntersectingAssemblyId != null)
             {
                 writeVariantAssemblyReads(variant, variant.IntersectingAssemblyId, true);
+                variantsIntersectingAssembly++;
             }
             else
             {
@@ -281,6 +322,9 @@ public class GridssAssemblyReadsWriter
                     writeVariantAssemblyReads(variant, assemblyId, false);
             }
         }
+
+        SV_LOGGER.info("Found {} / {} variants intersecting one or more assemblies", variantsIntersectingAssembly, mVariants.size());
+        SV_LOGGER.info("Wrote {} reads to file: {}", mReadsWritten, mOutputFile);
     }
 
     public void run()
@@ -304,7 +348,7 @@ public class GridssAssemblyReadsWriter
         }
         finally
         {
-            closeBufferedWriter(mWriter);
+            FileWriterUtils.closeBufferedWriter(mWriter);
         }
     }
 
