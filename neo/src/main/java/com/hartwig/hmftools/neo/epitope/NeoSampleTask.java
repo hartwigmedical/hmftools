@@ -28,8 +28,6 @@ import static com.hartwig.hmftools.neo.epitope.PointMutationData.checkVariantEff
 import static com.hartwig.hmftools.neo.epitope.PointMutationData.isRelevantMutation;
 import static com.hartwig.hmftools.neo.epitope.SvNeoEpitope.svIsNonDisruptiveInCodingTranscript;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
