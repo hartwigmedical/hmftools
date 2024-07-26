@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.calculateDeletedDepthWindows;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.validateCopyNumbers;
 import static com.hartwig.hmftools.purple.fitting.VariantPurityFitter.somaticFitIsWorse;
-import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.forceSomaticFit;
+import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.highlyDiploidSomaticOrPanel;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -176,21 +176,22 @@ public class PurityPloidyFitter
     {
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
-            mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
-
-            if(mSomaticPurityFit != null)
+            if(highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
             {
-                mFinalPurityFit = mSomaticPurityFit;
-                mFitMethod = FittedPurityMethod.SOMATIC;
-                return;
-            }
+                mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
-            if(forceSomaticFit(mCopyNumberPurityFit))
-            {
-                mFinalPurityFit = ImmutableFittedPurity.builder()
-                        .purity(MIN_PURITY_DEFAULT).ploidy(2)
-                        .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
-                mFitMethod = FittedPurityMethod.NO_TUMOR;
+                if(mSomaticPurityFit != null)
+                {
+                    mFinalPurityFit = mSomaticPurityFit;
+                    mFitMethod = FittedPurityMethod.SOMATIC;
+                }
+                else
+                {
+                    mFinalPurityFit = ImmutableFittedPurity.builder()
+                            .purity(MIN_PURITY_DEFAULT).ploidy(2)
+                            .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
+                    mFitMethod = FittedPurityMethod.NO_TUMOR;
+                }
             }
             else
             {

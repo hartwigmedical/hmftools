@@ -244,7 +244,7 @@ public class SomaticPurityFitter
         return somaticFitPurity;
     }
 
-    public static boolean forceSomaticFit(final FittedPurity normalPurityFit)
+    public static boolean highlyDiploidSomaticOrPanel(final FittedPurity normalPurityFit)
     {
         return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
             && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
@@ -305,7 +305,7 @@ public class SomaticPurityFitter
         }
 
         double somaticPurity = medianVaf * 2;
-        PPL_LOGGER.info("tumor-only somatic purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
+        PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
         FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);
 
