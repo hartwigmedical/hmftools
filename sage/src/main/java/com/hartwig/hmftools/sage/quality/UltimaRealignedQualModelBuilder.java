@@ -107,103 +107,140 @@ public class UltimaRealignedQualModelBuilder
         return homopolymers;
     }
 
+    private static void createRealignedVariants(final List<SimpleVariant> realignedVariants, final VariantReadContext readContext,
+            final StringBuilder delBases, final StringBuilder insBases, final int lastMatchedRefPos, final char lastMatchedBase)
+    {
+        SimpleVariant variant = readContext.variant();
+        if(delBases.length() > 0)
+        {
+            if(lastMatchedRefPos == -1)
+            {
+                int variantPos = readContext.CorePositionStart - 1;
+                String ref = String.valueOf((char) readContext.RefBaseBeforeCore) + delBases.toString();
+                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
+                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+            }
+            else
+            {
+                String ref = String.valueOf(lastMatchedBase) + delBases.toString();
+                String alt = String.valueOf(lastMatchedBase);
+                realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
+            }
+        }
+
+        if(insBases.length() > 0)
+        {
+            if(lastMatchedRefPos == -1)
+            {
+                int variantPos = readContext.CorePositionStart - 1;
+                String ref = String.valueOf((char) readContext.RefBaseBeforeCore);
+                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]) + insBases.toString();
+                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+            }
+            else
+            {
+                String ref = String.valueOf(lastMatchedBase);
+                String alt = String.valueOf(lastMatchedBase) + insBases.toString();
+                realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
+            }
+        }
+    }
+
     private static List<SimpleVariant> getRealignedVariants(final VariantReadContext readContext, final List<Homopolymer> refHomopolymers,
             final List<Homopolymer> readHomopolymers)
     {
         SimpleVariant variant = readContext.variant();
         List<SimpleVariant> realignedVariants = Lists.newArrayList();
+
+        char lastMatchedBase = (char) 0;
+        int lastMatchedRefPos = -1;
         int refIndex = 0;
         int readIndex = 0;
         int refPos = readContext.CorePositionStart;
+        StringBuilder delBases = new StringBuilder();
+        StringBuilder insBases = new StringBuilder();
         while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
-            Homopolymer readHomopolyer = readHomopolymers.get(readIndex);
+            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
 
-            if(refHomopolymer.Base == readHomopolyer.Base && refHomopolymer.Length == readHomopolyer.Length)
+            if(refHomopolymer.Base == readHomopolymer.Base && refHomopolymer.Length == readHomopolymer.Length)
             {
+                createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
+
+                lastMatchedBase = refHomopolymer.Base;
                 ++refIndex;
                 ++readIndex;
                 refPos += refHomopolymer.Length;
+                lastMatchedRefPos = refPos - 1;
+                delBases = new StringBuilder();
+                insBases = new StringBuilder();
                 continue;
             }
 
-            if(refHomopolymer.Base == readHomopolyer.Base)
+            if(refHomopolymer.Base == readHomopolymer.Base)
             {
-                if(refHomopolymer.Length < readHomopolyer.Length)
+                createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
+
+                lastMatchedBase = refHomopolymer.Base;
+                ++refIndex;
+                ++readIndex;
+                lastMatchedRefPos = refPos + min(refHomopolymer.Length, readHomopolymer.Length) - 1;
+                refPos += refHomopolymer.Length;
+                delBases = new StringBuilder();
+                insBases = new StringBuilder();
+
+                if(refHomopolymer.Length < readHomopolymer.Length)
                 {
-                    // ins
-                    int variantPos = refPos + refHomopolymer.Length - 1;
-                    String ref = String.valueOf(refHomopolymer.Base);
-                    String alt = ref.repeat(readHomopolyer.Length - refHomopolymer.Length + 1);
-                    realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+                    insBases.append(String.valueOf(refHomopolymer.Base).repeat(readHomopolymer.Length - refHomopolymer.Length));
                 }
                 else
                 {
-                    // del
-                    int variantPos = refPos + readHomopolyer.Length - 1;
-                    String alt = String.valueOf(refHomopolymer.Base);
-                    String ref = alt.repeat(refHomopolymer.Length - readHomopolyer.Length + 1);
-                    realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+                    delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length - readHomopolymer.Length));
                 }
 
-                ++refIndex;
-                ++readIndex;
-                refPos += refHomopolymer.Length;
                 continue;
             }
 
             int refHomopolymersLeft = refHomopolymers.size() - refIndex - 1;
             int readHomopolymersLeft = readHomopolymers.size() - readIndex - 1;
-            if(refHomopolymersLeft == readHomopolymersLeft)
+            if(refHomopolymersLeft > readHomopolymersLeft)
             {
-                // first create novel del from ref homopolymer
-                int variantPos = refPos - 1;
-                int refBasesIndex = refPos - readContext.CorePositionStart;
-                char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
-                String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
-                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-
-                refPos += refHomopolymer.Length;
-
-                // now create novel insert from read homopolymer
-                variantPos = refPos - 1;
-                ref = String.valueOf(refHomopolymer.Base);
-                alt = String.valueOf(refHomopolymer.Base) + String.valueOf(readHomopolyer.Base).repeat(readHomopolyer.Length);
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-
+                delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length));
                 ++refIndex;
+                refPos += refHomopolymer.Length;
+                continue;
+            }
+
+            if(refHomopolymersLeft < readHomopolymersLeft)
+            {
+                insBases.append(String.valueOf(readHomopolymer.Base).repeat(readHomopolymer.Length));
                 ++readIndex;
                 continue;
             }
 
-            if(refHomopolymersLeft > readHomopolymersLeft)
-            {
-                // create novel del from ref homopolymer
-                int variantPos = refPos - 1;
-                int refBasesIndex = refPos - readContext.CorePositionStart;
-                char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
-                String ref = String.valueOf(baseBefore) + String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length);
-                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+            delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length));
+            insBases.append(String.valueOf(readHomopolymer.Base).repeat(readHomopolymer.Length));
+            ++refIndex;
+            ++readIndex;
+            refPos += refHomopolymer.Length;
+        }
 
-                ++refIndex;
-                refPos += refHomopolymer.Length;
-                continue;
-            }
+        while(refIndex < refHomopolymers.size())
+        {
+            Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
+            delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length));
+            ++refIndex;
+        }
 
-            // create novel ins from read homopolymer
-            int variantPos = refPos - 1;
-            int refBasesIndex = refPos - readContext.CorePositionStart;
-            char baseBefore = (char) readContext.refBase(refBasesIndex - 1);
-            String ref = String.valueOf(baseBefore);
-            String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1])
-                    + String.valueOf(readHomopolyer.Base).repeat(readHomopolyer.Length);
-            realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-
+        while(readIndex < readHomopolymers.size())
+        {
+            Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
+            insBases.append(String.valueOf(readHomopolymer.Base).repeat(readHomopolymer.Length));
             ++readIndex;
         }
+
+        createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
 
         return realignedVariants;
     }

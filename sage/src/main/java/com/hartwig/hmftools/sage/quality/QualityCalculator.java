@@ -128,8 +128,13 @@ public class QualityCalculator
     {
         if(readContextCounter.realignedUltimaQualModels() != null)
         {
-            return readContextCounter.realignedUltimaQualModels().stream()
+            int ultimaQual = readContextCounter.realignedUltimaQualModels().stream()
                     .mapToInt(model -> (int) model.calculateQual(record, readIndex)).min().orElse(ULTIMA_MAX_QUAL);
+
+            if(ultimaQual < 0)
+                return INVALID_BASE_QUAL;
+
+            return ultimaQual;
         }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?

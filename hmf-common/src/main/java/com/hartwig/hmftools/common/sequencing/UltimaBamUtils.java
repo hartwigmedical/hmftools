@@ -90,7 +90,13 @@ public final class UltimaBamUtils
         {
             // if bases aren't found, use middle base(s) as: min(40, Q + 6 * abs(required_tp – T))
             int middleIndex = indexStart + (indexEnd - indexStart) / 2;
-            qualValue1 = record.getBaseQualities()[middleIndex];
+            final byte[] baseQualities = record.getBaseQualities();
+            if(middleIndex < 0 || middleIndex >= baseQualities.length)
+            {
+                return ULTIMA_INVALID_QUAL;
+            }
+
+            qualValue1 = baseQualities[middleIndex];
             byte tpValue = tpValues[middleIndex];
 
             return (byte)min(ULTIMA_MAX_QUAL, qualValue1 + 6 * abs(tpSearchValue - tpValue));
@@ -137,5 +143,13 @@ public final class UltimaBamUtils
     {
         Object value = record.getAttribute(tag);
         return value != null ? (Integer)value : defaultValue;
+    }
+
+    public static byte safeQualLookup(final byte[] qualityArray, int index)
+    {
+        if(index < 0 || index >= qualityArray.length)
+            return ULTIMA_INVALID_QUAL;
+
+        return qualityArray[index];
     }
 }
