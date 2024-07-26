@@ -56,6 +56,9 @@ public class VariantReadContextBuilder
                 readContext.setExtendedRefBases(extendedRefBases);
             }
 
+            // set max ref repeat for use in MSI calcs and VCF output
+            setMaxRefRepeat(readContext);
+
             readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
 
             return readContext;
@@ -263,5 +266,17 @@ public class VariantReadContextBuilder
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+    }
+
+    public static void setMaxRefRepeat(final VariantReadContext readContext)
+    {
+        // set max ref repeat for use in MSI calcs and VCF output
+        int refRepeatIndex = readContext.variant().isIndel() ? readContext.variantRefIndex() + 1 : readContext.variantRefIndex();
+
+        RepeatInfo maxRefRepeat = RepeatInfo.findMaxRepeat(
+                readContext.RefBases, refRepeatIndex, refRepeatIndex, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
+                false, refRepeatIndex);
+
+        readContext.setRefMaxRepeat(maxRefRepeat);
     }
 }

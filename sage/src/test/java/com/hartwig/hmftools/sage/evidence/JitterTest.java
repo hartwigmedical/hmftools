@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.setMaxRefRepeat;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
@@ -385,6 +386,7 @@ public class JitterTest
 
         SimpleVariant variant = createSimpleVariant(100, "TA", "T");
         VariantReadContext readContext = createReadContext(variant, "GT", "AAAAAAAAAT");
+        setMaxRefRepeat(readContext);
 
         double errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
         assertEquals(2.09e-2, errorRate, 1e-4);
