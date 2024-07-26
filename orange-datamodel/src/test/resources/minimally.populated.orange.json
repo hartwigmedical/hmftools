@@ -316,7 +316,14 @@
         "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
       }
-    ]
+    ],
+    "tumorStats": {
+      "hotspotMutationCount": 0,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantCount": 0,
+      "structuralVariantsCount": 0,
+      "sumBafCounts": 0
+    }
   },
   "linx": {
     "allSomaticStructuralVariants": [
@@ -595,12 +602,5 @@
     "purpleVariantCopyNumberPlot": "",
     "purplePurityRangePlot": "",
     "purpleKataegisPlot": ""
-  },
-  "tumorStats": {
-    "numberHotspotMutations": 0,
-    "numberHotspotSVs": 0,
-    "sumSNPAlleleReadCounts": 0,
-    "sumTumorVariantFragmentCountsExclSGL": 0,
-    "sumBafCount": 0
   }
 }

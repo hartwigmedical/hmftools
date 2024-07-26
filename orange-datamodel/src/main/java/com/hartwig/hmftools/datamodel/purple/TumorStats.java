@@ -10,14 +10,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface TumorStats
 {
-    // TODO better attribute names
-    int numberHotspotMutations();
+    int hotspotMutationCount();
 
-    int numberHotspotSVs();
+    int hotspotStructuralVariantCount();
 
-    int sumSNPAlleleReadCounts();
+    int smallVariantCount();
 
-    int sumTumorVariantFragmentCountsExclSGL();
+    int structuralVariantsCount();
 
-    int sumBafCount();
+    int sumBafCounts();
 }

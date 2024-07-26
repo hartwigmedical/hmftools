@@ -271,24 +271,24 @@ public class QualityControlChapter implements ReportChapter
 
         tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
         tumorStats.addCell(cells.createContent("1"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotMutations())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotMutationCount())));
 
-        tumorStats.addCell(cells.createContent("Number of hotspot SVs"));
+        tumorStats.addCell(cells.createContent("Number of hotspot structural variants"));
         tumorStats.addCell(cells.createContent("1"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().numberHotspotSVs())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
 
-        tumorStats.addCell(cells.createContent("SNV sum(allele read count)"));
+        tumorStats.addCell(cells.createContent("Number of small variants)"));
         tumorStats.addCell(cells.createContent("1000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumSNPAlleleReadCounts())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantCount())));
 
-        tumorStats.addCell(cells.createContent("SV sum(start tumor fragment count) excl SGL (should be >1000)"));
+        tumorStats.addCell(cells.createContent("Number of structural variants"));
         tumorStats.addCell(cells.createContent("1000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumTumorVariantFragmentCountsExclSGL())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantsCount())));
 
         tumorStats.addCell(cells.createContent(
-                "Sum of bafCount when observedTumorRatio in DIPLOID regions for <0.8 or >1.2"));
+                "Sum of B allele frequency counts"));
         tumorStats.addCell(cells.createContent("3000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.tumorStats().sumBafCount())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().sumBafCounts())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
                 "Presence of tumor stats (at least one measure should meet minimum)"));

@@ -729,7 +729,14 @@
     ],
     "reportableGermlineFullLosses": [],
     "allGermlineLossOfHeterozygosities": [],
-    "reportableGermlineLossOfHeterozygosities": []
+    "reportableGermlineLossOfHeterozygosities": [],
+    "tumorStats": {
+      "hotspotMutationCount": 3,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantCount": 2273132,
+      "structuralVariantsCount": 4874,
+      "sumBafCounts": 675344
+    }
   },
   "linx": {
     "somaticDrivers": [
@@ -1510,12 +1517,5 @@
     "cuppaSummaryPlot": "plot/tumor_sample.cuppa.vis.png",
     "cuppaFeaturePlot": null,
     "cuppaChartPlot": null
-  },
-  "tumorStats": {
-    "numberHotspotMutations": 3,
-    "numberHotspotSVs": 0,
-    "sumSNPAlleleReadCounts": 2273132,
-    "sumTumorVariantFragmentCountsExclSGL": 4874,
-    "sumBafCount": 675344
   }
 }
