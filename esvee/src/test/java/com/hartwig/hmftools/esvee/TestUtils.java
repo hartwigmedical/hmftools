@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
@@ -69,6 +70,14 @@ public class TestUtils
           + "TGTAGCTGATCGCAGGTCGAACCTGGTGATCGATGTCGATCGACTGATGTAGTAGCTGATCGGATGCATGCGTAGCGATGCTAGCTGATCGATTGGCTAA"
           + "GTCGCTTCCGGTATTTGCGTTCCGGGTTTTTTCCGAGCCTACCCCAGTTGGTTAAAAGGATATTATATATATGGCGGCTATATATGCGGTGTGTGTAACC";
 
+    public static String REF_BASES_600 =
+            "ATCATCGAATGGAATGGAATGGAACAGTCAATGAACTCGAATGGAATCATCATTGAATGGAATCGAATGGAATCATCGAGTGGAATCGAATGGAATTATG"
+    //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+    // index 0         10        20        30        40        50        60        70        80        90
+          + "ATCAAATGGAATCGAATGTAATCATCATCAAATGGAATCAAAAATAACCATAATATGGTCTTTAAAGAAGCAATCTAGCTAAAATGAAATCATTAATCCA"
+          + "ATAGGACTAACATCCTTATGAGAAGACAAGATTAGGACACAGGCATGAACTGGGGGAAGACCATGTAAAGACACTCAAAGAACTGACCGTACCACCCCCT"
+          + "TCGAATGAATTGAATGCAATCATCGAATGGTCTCGAATGGAATCATCTTCTAATGTAAAGAAGCATTGAGCTATTTACATAGAAATCTCATTTAACTGTG";
+
     public static final MockRefGenome REF_GENOME = new MockRefGenome();
 
     public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
@@ -89,6 +98,8 @@ public class TestUtils
 
         if(mateReversed)
             record.setMateNegativeStrandFlag(true);
+
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, format("%dM", readBases.length()));
 
         return new Read(record);
     }

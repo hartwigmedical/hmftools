@@ -415,7 +415,6 @@ public class AlignmentTest
         assertEquals(43, validAlignments.get(0).adjustedAlignment());
         assertEquals(29, validAlignments.get(1).adjustedAlignment());
         assertEquals(47, validAlignments.get(2).adjustedAlignment());
-
     }
 
     private AssemblyAlignment createAssemblyAlignment(

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.hasAssemblyLink;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
@@ -614,11 +615,5 @@ public class AssemblyLinksTest
         assertEquals(1, getSupportTypeCount(assembly4, DISCORDANT));
         assertEquals(0, getSupportTypeCount(assembly5, DISCORDANT));
         assertEquals(1, getSupportTypeCount(assembly6, DISCORDANT));
-    }
-
-    private static boolean hasAssemblyLink(
-            final List<AssemblyLink> links, final JunctionAssembly assembly1, final JunctionAssembly assembly2, final LinkType linkType)
-    {
-        return links.stream().anyMatch(x -> x.type() == linkType && x.hasAssembly(assembly1) && x.hasAssembly(assembly2));
     }
 }

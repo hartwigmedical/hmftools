@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -168,5 +170,11 @@ public class AssemblyTestUtils
         // note: as per BWA conventions 1 will be subtracted from the segment end
         return new AlignData(
                 new ChrBaseRegion(chromosome, posStart, posEnd), segStart, segEnd, mapQual,score, flags, cigar, DEFAULT_NM, xaTag, mdTag);
+    }
+
+    public static boolean hasAssemblyLink(
+            final List<AssemblyLink> links, final JunctionAssembly assembly1, final JunctionAssembly assembly2, final LinkType linkType)
+    {
+        return links.stream().anyMatch(x -> x.type() == linkType && x.hasAssembly(assembly1) && x.hasAssembly(assembly2));
     }
 }

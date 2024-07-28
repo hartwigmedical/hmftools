@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLI
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
@@ -80,6 +79,8 @@ public class RefBaseExtender
             if(support.cachedRead().hasSupplementary())
                 suppJunctionReads.add(support.cachedRead());
 
+            assembly.checkAddRefSideSoftClip(support.cachedRead()); // a junction read can be soft-clipped on both sides
+
             if(isDiscordantFragment(support.cachedRead()))
             {
                 remoteJunctionMates.add(support.cachedRead());
@@ -89,10 +90,13 @@ public class RefBaseExtender
             // look to extend from local mates on the ref side of the junction
             Read mateRead = support.cachedRead().mateRead();
 
-            if(mateRead == null || discordantReads.contains(mateRead))
+            if(mateRead == null)
                 continue;
 
             mateRead.markJunctionMate();
+
+            if(discordantReads.contains(mateRead))
+                continue;
 
             if(!mateRead.isUnmapped())
             {
@@ -133,22 +137,25 @@ public class RefBaseExtender
         {
             Read read = nonJuncRead.read();
 
+            boolean exceedsDiscGap = false;
+
             if(isForwardJunction)
             {
-                if(read.alignmentEnd() < newRefBasePosition + ASSEMBLY_REF_SIDE_OVERLAP_BASES)
-                    break;
-
-                newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
+                if(!read.hasJunctionMate() && read.alignmentEnd() < newRefBasePosition - ASSEMBLY_REF_BASE_MAX_GAP)
+                    exceedsDiscGap = true;
+                else
+                    newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
             }
             else
             {
-                if(read.alignmentStart() > newRefBasePosition - ASSEMBLY_REF_SIDE_OVERLAP_BASES)
-                    break;
-
-                newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
+                if(!read.hasJunctionMate() && read.alignmentStart() > newRefBasePosition + ASSEMBLY_REF_BASE_MAX_GAP)
+                    exceedsDiscGap = true;
+                else
+                    newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
             }
 
-            assembly.checkAddRefSideSoftClip(read);
+            if(!exceedsDiscGap)
+                assembly.checkAddRefSideSoftClip(read);
         }
 
         findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
@@ -189,7 +196,6 @@ public class RefBaseExtender
             return;
 
         // find the maximal ref base extension point and make note of any recurrent soft-clip points including possible branched assemblies
-
         boolean isForwardJunction = assembly.junction().isForward();
         int initialRefPosition = assembly.refBasePosition();
         int newRefBasePosition = initialRefPosition;

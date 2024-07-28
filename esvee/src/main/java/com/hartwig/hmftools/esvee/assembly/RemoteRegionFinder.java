@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;

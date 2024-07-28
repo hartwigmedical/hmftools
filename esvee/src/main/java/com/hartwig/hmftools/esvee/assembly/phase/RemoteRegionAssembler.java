@@ -85,6 +85,9 @@ public class RemoteRegionAssembler
 
     public static boolean assemblyOverlapsRemoteRegion(final JunctionAssembly assembly, final RemoteRegion remoteRegion)
     {
+        if(!assembly.junction().Chromosome.equals(remoteRegion.Chromosome))
+            return false;
+
         if(assembly.isForwardJunction())
             return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
         else
@@ -96,21 +99,24 @@ public class RemoteRegionAssembler
     {
         mRemoteRegion = remoteRegion;
 
-        SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
-
-        mMatchedRemoteReads.clear();
         mSourceReadIds.clear();
+        mSourceReadIds.addAll(sourceReadIds);
 
         mTotalRemoteReadsSearch += sourceReadIds.size();
 
-        mSourceReadIds.addAll(sourceReadIds);
+        if(mBamReader != null)
+        {
+            mMatchedRemoteReads.clear();
 
-        mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
+            SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
 
-        SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
-                mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
+            mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
-        mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
+            SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
+                    mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
+
+            mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
+        }
 
         if(mMatchedRemoteReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return null;
