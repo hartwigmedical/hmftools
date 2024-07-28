@@ -16,9 +16,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-import org.jetbrains.annotations.NotNull;
-
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.TextCigarCodec;
 
 // TODO: LATER Move to a better location.
 // TODO: clean up unneeded functions.
@@ -27,6 +27,8 @@ import htsjdk.samtools.CigarOperator;
 // TODO: LATER performance testing.
 public class UltimaRealignedQualModelBuilder
 {
+    private static byte MISSING_BASE = -1;
+
     @VisibleForTesting
     public static class Homopolymer
     {
@@ -442,7 +444,6 @@ public class UltimaRealignedQualModelBuilder
             return realignedVariants;
         }
 
-        // TODO: QUESTION q_seq in MNV context?
         List<SimpleVariant> qualVariants = Lists.newArrayList();
         qualVariants.addAll(seqVariants);
         if(leftIndelBalance > 0)
@@ -466,5 +467,238 @@ public class UltimaRealignedQualModelBuilder
         }
 
         return qualVariants;
+    }
+
+    // TODO: HERE
+    private static int getVariantRefBasesIndex(final VariantReadContext readContext)
+    {
+        // TODO: LATER This is repetitive?
+        String readCigar = readContext.readCigar();
+        List<CigarOperator> cigarOps = expandCigarElements(TextCigarCodec.decode(readCigar).getCigarElements());
+        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarOps);
+
+        int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart;
+
+        int refIndex = 0;
+        int readIndex = 0;
+        for(CigarOperator op : coreCigarOps)
+        {
+            if(readIndex == varCoreIndex)
+            {
+                break;
+            }
+
+            if(op.consumesReferenceBases())
+            {
+                ++refIndex;
+            }
+
+            if(op.consumesReadBases())
+            {
+                ++readIndex;
+            }
+        }
+
+        return refIndex;
+    }
+
+    // TODO: rewrite
+    private static enum State
+    {
+        INITIAL,
+        REF_STREAK,
+        READ_STREAK;
+    }
+
+    private static boolean maskSandwichedSnvMnv(final VariantReadContext readContext, final byte[] coreRefBases, final byte[] coreReadBases)
+    {
+        // TODO: We are repeating the computation a lot.
+        String readCigar = readContext.readCigar();
+        List<CigarOperator> cigarOps = expandCigarElements(TextCigarCodec.decode(readCigar).getCigarElements());
+        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarOps);
+
+        // align the bases
+        List<Byte> alignedRefBases = Lists.newArrayList();
+        List<Byte> alignedReadBases = Lists.newArrayList();
+        int refIndex = 0;
+        int readIndex = 0;
+        for(CigarOperator op : coreCigarOps)
+        {
+            if(op.consumesReferenceBases())
+            {
+                alignedRefBases.add(coreRefBases[refIndex++]);
+            }
+            else
+            {
+                alignedRefBases.add(MISSING_BASE);
+            }
+
+            if(op.consumesReadBases())
+            {
+                alignedReadBases.add(coreReadBases[readIndex++]);
+            }
+            else
+            {
+                alignedReadBases.add(MISSING_BASE);
+            }
+        }
+
+        // mask bases in sandwiched snvs/mnvs
+        State state = State.INITIAL;
+        for(int i = 1; i < alignedRefBases.size(); ++i)
+        {
+            byte prevRefBase = alignedRefBases.get(i - 1);
+            byte prevReadBase = alignedReadBases.get(i - 1);
+            byte refBase = alignedRefBases.get(i);
+            byte readBase = alignedReadBases.get(i);
+
+            if(refBase == MISSING_BASE || readBase == MISSING_BASE || prevRefBase == MISSING_BASE || prevReadBase == MISSING_BASE)
+            {
+                state = State.INITIAL;
+                continue;
+            }
+
+            if(state == State.INITIAL)
+            {
+                if(refBase == readBase)
+                {
+                    continue;
+                }
+
+                if(prevRefBase != prevReadBase)
+                {
+                    continue;
+                }
+
+                if(refBase == prevRefBase)
+                {
+                    state = State.REF_STREAK;
+                }
+
+                if(readBase == prevReadBase)
+                {
+                    state = State.READ_STREAK;
+                }
+
+                continue;
+            }
+
+            if(state == State.REF_STREAK && refBase != prevRefBase)
+            {
+                state = State.INITIAL;
+                continue;
+            }
+
+            if(state == State.READ_STREAK && readBase != prevReadBase)
+            {
+                state = State.INITIAL;
+                continue;
+            }
+
+            if(refBase == readBase)
+            {
+                byte maskBase = refBase;
+                for(int j = i - 1; !alignedRefBases.get(j).equals(alignedReadBases.get(j)); --j)
+                {
+                    alignedRefBases.set(j, maskBase);
+                    alignedReadBases.set(j, maskBase);
+                }
+
+                state = State.INITIAL;
+            }
+        }
+
+        // write output bases
+        refIndex = 0;
+        readIndex = 0;
+        for(int i = 0; i < alignedRefBases.size(); ++i)
+        {
+            byte refBase = alignedRefBases.get(i);
+            byte readBase = alignedReadBases.get(i);
+            if(refBase != MISSING_BASE)
+            {
+                coreRefBases[refIndex++] = refBase;
+            }
+
+            if(readBase != MISSING_BASE)
+            {
+                coreReadBases[readIndex++] = readBase;
+            }
+        }
+
+        // TODO: return whether variant is a sandwhich snv/mvn
+        return false;
+    }
+
+    public static List<CigarOperator> getCoreCigarOps(final VariantReadContext readContext, final List<CigarOperator> cigarElements)
+    {
+        int cigarIndex = 0;
+        int readIndex = 0;
+        List<CigarOperator> coreCigarOps = Lists.newArrayList();
+        while(readIndex <= readContext.CoreIndexEnd)
+        {
+            CigarOperator op = cigarElements.get(cigarIndex++);
+            boolean inCore = readIndex >= readContext.CoreIndexStart;
+            if(inCore)
+            {
+                coreCigarOps.add(op);
+            }
+
+            if(op.consumesReadBases())
+            {
+                ++readIndex;
+            }
+        }
+
+        return coreCigarOps;
+    }
+
+    // TODO: Necessary? Move to library class?
+    private static List<CigarElement> collapseCigarOps(final List<CigarOperator> cigarOps)
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList();
+        CigarOperator currentOp = null;
+        int length = 0;
+        for(CigarOperator op : cigarOps)
+        {
+            if(currentOp == null)
+            {
+                currentOp = op;
+                length = 1;
+                continue;
+            }
+
+            if(currentOp == op)
+            {
+                ++length;
+                continue;
+            }
+
+            cigarElements.add(new CigarElement(length, currentOp));
+            currentOp = op;
+            length = 1;
+        }
+
+        if(length >= 1)
+        {
+            cigarElements.add(new CigarElement(length, currentOp));
+        }
+
+        return cigarElements;
+    }
+
+    // TODO: Necessary? Move to library class?
+    private static List<CigarOperator> expandCigarElements(final List<CigarElement> cigarElems)
+    {
+        List<CigarOperator> cigarOps = Lists.newArrayList();
+        for(CigarElement elem : cigarElems)
+        {
+            for(int i = 0; i < elem.getLength(); ++i)
+            {
+                cigarOps.add(elem.getOperator());
+            }
+        }
+
+        return cigarOps;
     }
 }
