@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
-import static com.hartwig.hmftools.common.basequal.jitter.RefGenomeMicrosatellite.filterMicrosatellites;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +77,7 @@ public class JitterAnalyser
         mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
 
         filterSpecificRegions(refGenomeMicrosatellites);
-        refGenomeMicrosatellites = filterMicrosatellites(refGenomeMicrosatellites, mConfig.MaxSitesPerType);
+        // refGenomeMicrosatellites = filterMicrosatellites(refGenomeMicrosatellites, mConfig.MaxSitesPerType);
 
         return refGenomeMicrosatellites;
     }
