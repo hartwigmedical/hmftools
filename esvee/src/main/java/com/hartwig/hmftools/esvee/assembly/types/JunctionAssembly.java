@@ -364,7 +364,7 @@ public class JunctionAssembly
         byte[] existingBases = copyArray(mBases);
         byte[] existingQuals = copyArray(mBaseQuals);
 
-        int newExtensionLength = extensionBases.length - 1; // since the extension bases include the junction index
+        int newExtensionLength = extensionBases.length;
         int baseLengthChange = newExtensionLength - extensionLength();
         int existingBaseLength = mBases.length;
         int newBaseLength = existingBaseLength + baseLengthChange;
@@ -389,8 +389,10 @@ public class JunctionAssembly
                 {
                     mBases[i] = extensionBases[newExtBaseIndex];
                     mBaseQuals[i] = extensionBaseQuals[newExtBaseIndex];
-                    ++newExtBaseIndex;
                 }
+
+                if(i > mJunctionIndex) // start iterating through the new extension bases once past the junction index
+                    ++newExtBaseIndex;
             }
             else
             {

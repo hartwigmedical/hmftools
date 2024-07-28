@@ -647,34 +647,34 @@ public class PhaseSetBuilder
     private void formPhaseSets()
     {
         // use split and facing links to assign assemblies to phase sets
-        while(!mSplitLinks.isEmpty())
+        while(!mSplitLinks.isEmpty() || !mFacingLinks.isEmpty())
         {
-            AssemblyLink splitLink = mSplitLinks.remove(0);
+            AssemblyLink assemblyLink = !mSplitLinks.isEmpty() ? mSplitLinks.remove(0) : mFacingLinks.remove(0);
 
-            PhaseSet phaseSet = new PhaseSet(splitLink);
+            PhaseSet phaseSet = new PhaseSet(assemblyLink);
             mPhaseSets.add(phaseSet);
 
             // look for facing and then splits links for this phase set
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 // check start and then end links of this phase set
-                JunctionAssembly linkingAssembly = (se == SE_START) ? splitLink.first() : splitLink.second();
-                boolean findSplit = false;
+                JunctionAssembly linkingAssembly = (se == SE_START) ? assemblyLink.first() : assemblyLink.second();
+                boolean findSplit = assemblyLink.type() == LinkType.FACING;
 
                 while(true)
                 {
-                    AssemblyLink newLink = findLinkedAssembly(linkingAssembly, findSplit);
+                    AssemblyLink nextLink = findLinkedAssembly(linkingAssembly, findSplit);
 
-                    if(newLink == null)
+                    if(nextLink == null)
                         break;
 
                     if(se == SE_START)
-                        phaseSet.addAssemblyLinkStart(newLink);
+                        phaseSet.addAssemblyLinkStart(nextLink);
                     else
-                        phaseSet.addAssemblyLinkEnd(newLink);
+                        phaseSet.addAssemblyLinkEnd(nextLink);
 
                     findSplit = !findSplit;
-                    linkingAssembly = newLink.otherAssembly(linkingAssembly);
+                    linkingAssembly = nextLink.otherAssembly(linkingAssembly);
                 }
             }
         }

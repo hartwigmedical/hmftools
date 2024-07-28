@@ -46,15 +46,16 @@ public class UnmappedBaseExtender
 
         int extensionIndexStart, extensionIndexEnd;
 
+        // do not include the junction (ref) bases from the assembly, only the unmapped extension bases
         if(mJunctionOrientation.isForward())
         {
-            extensionIndexStart = assembly.junctionIndex();
+            extensionIndexStart = assembly.junctionIndex() + 1;
             extensionIndexEnd = assembly.baseLength() - 1;
         }
         else
         {
             extensionIndexStart = 0;
-            extensionIndexEnd = assembly.junctionIndex();
+            extensionIndexEnd = assembly.junctionIndex() - 1;
         }
 
         mBases = subsetArray(assembly.bases(), extensionIndexStart, extensionIndexEnd);
@@ -66,7 +67,7 @@ public class UnmappedBaseExtender
     }
 
     public byte[] extensionBases() { return mBases; }
-    public int extensionBaseLength() { return mBases.length - 1; }
+    public int extensionBaseLength() { return mBases.length; }
     public byte[] baseQualities() { return mBaseQuals; }
     public List<SupportRead> supportReads() { return mSupportReads; }
 
@@ -116,7 +117,9 @@ public class UnmappedBaseExtender
         // build out extension bases from these overlapping reads
         int newExtensionLength = readSequenceMatches.stream().mapToInt(x -> x.maxReadExtension()).max().orElse(0);
         int baseOffset = newExtensionLength - mBases.length;
-        extendBases(newExtensionLength);
+
+        if(baseOffset > 0)
+            extendBases(newExtensionLength);
 
         // now add reads to extend the new bases
         readSequenceMatches.forEach(x -> addRead(x, baseOffset));
@@ -177,9 +180,9 @@ public class UnmappedBaseExtender
 
         if(mJunctionOrientation.isForward())
         {
-            readIndexStart = readSequenceMatch.ReadSeqStart + readSequenceMatch.Overlap;
+            readIndexStart = readSequenceMatch.ReadSeqStart;
             readIndexEnd = read.basesLength() - 1;
-            extBaseIndex = readSequenceMatch.ExtensionBaseSeqStart + readSequenceMatch.Overlap;
+            extBaseIndex = readSequenceMatch.ExtensionBaseSeqStart;
             junctionReadStartDistance = -readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
         }
         else
@@ -196,7 +199,10 @@ public class UnmappedBaseExtender
 
             // say 0-9 is extension and junction index = 10
             // if extBaseIndex (read start vs extension bases) is 4, then junc index in read is
-            junctionReadStartDistance = mBases.length - readSequenceMatch.ExtensionBaseSeqStart - 1 - readSequenceMatch.ReadSeqStart;
+            junctionReadStartDistance = mBases.length - readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
+
+            // add the extension length since the read sequence match was prior to extension
+            junctionReadStartDistance += baseOffset;
         }
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
@@ -262,9 +268,9 @@ public class UnmappedBaseExtender
             // say extension bases = 0-99 (100 in length), ext base match start = 50, corresponds to read index of 0, and read length = 151
             // then max read extension = 50 + 151 - 0 - 1 = 200
             if(mJunctionOrientation.isForward())
-                return ExtensionBaseSeqStart + Read.basesLength() - ReadSeqStart - 1;
+                return ExtensionBaseSeqStart + Read.basesLength() - ReadSeqStart;
             else
-                return (mBases.length - ExtensionBaseSeqStart - 1) + ReadSeqStart;
+                return mBases.length - ExtensionBaseSeqStart + ReadSeqStart;
         }
 
         public String toString()
@@ -320,5 +326,10 @@ public class UnmappedBaseExtender
         }
 
         return null;
+    }
+
+    public String toString()
+    {
+        return format("junc(%s) extLen(%d) support(%d)", mJunctionAssembly.junction().coords(), mBases.length, mSupportReads.size());
     }
 }

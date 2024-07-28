@@ -207,7 +207,8 @@ public class AssemblyAlignment
 
                     fullSequence.append(assemblyExtensionBases);
 
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length(), 0);
+                    // add the extra base since the junction index itself is not included in these extension bases
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length() + 1, 0);
 
                     logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
 
@@ -215,19 +216,21 @@ public class AssemblyAlignment
 
                     buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
                 }
+                else
+                {
+                    String assemblyRefBases = startReversed ?
+                            Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
 
-                String assemblyRefBases = startReversed ?
-                        Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
+                    fullSequence.append(assemblyRefBases);
 
-                fullSequence.append(assemblyRefBases);
+                    setAssemblyReadIndices(assembly, assemblyReversed, 0, assemblyRefBases.length());
 
-                setAssemblyReadIndices(assembly, assemblyReversed, 0, assemblyRefBases.length());
+                    currentSeqLength += assemblyRefBases.length();
 
-                currentSeqLength += assemblyRefBases.length();
+                    buildSequenceCigar(sequenceCigar, M, assemblyRefBases.length());
 
-                buildSequenceCigar(sequenceCigar, M, assemblyRefBases.length());
-
-                logBuildInfo(assembly, currentSeqLength, assemblyRefBases.length(), assemblyReversed, "ref-bases");
+                    logBuildInfo(assembly, currentSeqLength, assemblyRefBases.length(), assemblyReversed, "ref-bases");
+                }
             }
             else
             {
@@ -285,14 +288,14 @@ public class AssemblyAlignment
 
             buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
 
-            if(hasOuterExtensions && i == assemblyCount - 1)
+            if(hasOuterExtensions && i == assemblyCount - 2)
             {
                 // add on the extension sequence for the last assembly
                 String assemblyExtensionBases = nextAssembly.formJunctionSequence();
 
                 fullSequence.append(assemblyExtensionBases);
 
-                setAssemblyReadIndices(assembly, assemblyReversed, currentSeqLength, 0);
+                // setAssemblyReadIndices(assembly, assemblyReversed, currentSeqLength, 0);
 
                 logBuildInfo(nextAssembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
 

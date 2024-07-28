@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -15,8 +18,10 @@ import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.hasAssemblyLink;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -24,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -34,11 +40,145 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteReadType;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import org.junit.Test;
 
 public class SpecificAlignmentsTest
 {
+    @Test
+    public void testUnamppedSglPair()
+    {
+        // two facing SGLs which both have unmapped reads which form consistent extension sequences
+
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_400);
+
+        String refBases1 = refGenome.getBaseString(CHR_1, 200, 300);
+        String extBases1 = REF_BASES_600.substring(420, 500);
+        String assemblyBases1 = extBases1 + refBases1;
+
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 200, REVERSE, assemblyBases1, extBases1.length());
+
+        String refBases2 = refGenome.getBaseString(CHR_1, 200, 300);
+        String extBases2 = REF_BASES_600.substring(100, 180);
+        String assemblyBases2 = refBases2 + extBases2;
+
+        JunctionAssembly assembly2 = createAssembly(CHR_1, 300, FORWARD, assemblyBases2, refBases2.length() - 1);
+
+        List<Read> candidates1 = Lists.newArrayList();
+        List<Read> candidates2 = Lists.newArrayList();
+
+        // a pair of mate junction reads
+        Read juncRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, assemblyBases1.substring(0, 100), "50S50M",
+                CHR_1, 251, true);
+        juncRead1.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, "50M50S");
+
+        Read juncRead2 = createRead(
+                juncRead1.id(), CHR_1, 251, assemblyBases2.substring(51), "50M50S",
+                CHR_1, 200, false);
+        juncRead2.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, "50S50M");
+        juncRead2.bamRecord().setSecondOfPairFlag(true);
+        juncRead2.bamRecord().setFirstOfPairFlag(false);
+
+        assembly1.addJunctionRead(juncRead1);
+        assembly2.addJunctionRead(juncRead2);
+        juncRead1.setMateRead(juncRead2);
+        juncRead2.setMateRead(juncRead1);
+        candidates1.add(juncRead2);
+        candidates2.add(juncRead1);
+
+        // a shared junction read with mate unmapped on the first assembly side
+        String readBases = extBases1.substring(40) + refBases1 + extBases1.substring(0, 10);
+        Read sharedRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, "10S101M10S",
+                NO_CHROMOSOME_NAME, NO_POSITION, true);
+        sharedRead1.bamRecord().setMateUnmappedFlag(true);
+
+        assembly1.addJunctionRead(sharedRead1);
+        assembly2.addJunctionRead(sharedRead1);
+
+        // more junction reads whose mates extend out the unmapped sequence
+        Read juncRead1b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, assemblyBases1.substring(0, 100), "50S50M",
+                NO_CHROMOSOME_NAME, NO_POSITION, true);
+        juncRead1b.bamRecord().setMateUnmappedFlag(true);
+        juncRead1b.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, NO_CIGAR);
+
+        readBases = REF_BASES_600.substring(400, 480); // extends the extension seq 20 bases further back
+        Read unmappedRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, NO_CIGAR, CHR_1, 200, false);
+        unmappedRead1.bamRecord().setReadUnmappedFlag(true);
+
+        assembly1.addJunctionRead(juncRead1b);
+        candidates1.add(unmappedRead1);
+        juncRead1b.setMateRead(unmappedRead1);
+        unmappedRead1.setMateRead(juncRead1b);
+
+        Read juncRead2b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 251, assemblyBases2.substring(51), "50M50S",
+                NO_CHROMOSOME_NAME, NO_POSITION, true);
+        juncRead2b.bamRecord().setMateUnmappedFlag(true);
+        juncRead2b.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, NO_CIGAR);
+
+        readBases = REF_BASES_600.substring(120, 200); // was 100-180, so extends 20 bases further out
+        Read unmappedRead2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 251, readBases, NO_CIGAR, CHR_1, 251, false);
+        unmappedRead2.bamRecord().setReadUnmappedFlag(true);
+
+        assembly2.addJunctionRead(juncRead2b);
+        candidates2.add(unmappedRead2);
+        juncRead2b.setMateRead(unmappedRead2);
+        unmappedRead2.setMateRead(juncRead2b);
+
+
+        RefBaseExtender refBaseExtender = new RefBaseExtender();
+        refBaseExtender.findAssemblyCandidateExtensions(assembly1, candidates1);
+        refBaseExtender.findAssemblyCandidateExtensions(assembly2, candidates2);
+
+        PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
+
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+        phaseSetBuilder.buildPhaseSets();
+
+        // first check unmapped extensions
+        assertEquals(5, assembly1.supportCount());
+        assertEquals(4, assembly2.supportCount());
+
+        assertEquals(100, assembly1.extensionLength());
+        assertEquals(REF_BASES_600.substring(400, 500), assembly1.formJunctionSequence());
+        assertEquals(100, assembly2.extensionLength());
+        assertEquals(REF_BASES_600.substring(100, 200), assembly2.formJunctionSequence());
+
+        SupportRead supportRead1 = assembly1.support().stream()
+                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead1);
+        assertEquals(100, supportRead1.junctionReadStartDistance());
+
+        SupportRead supportRead2 = assembly2.support().stream()
+                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead2.id())).findFirst().orElse(null);
+        assertNotNull(supportRead2);
+        assertEquals(-20, supportRead2.junctionReadStartDistance());
+
+        assertEquals(1, phaseGroup.phaseSets().size());
+        PhaseSet phaseSet = phaseGroup.phaseSets().get(0);
+
+        assertEquals(1, phaseSet.assemblyLinks().size());
+        assertEquals(2, phaseSet.assemblies().size());
+
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly1, assembly2, LinkType.FACING);
+
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
+
+        assertEquals(301, assemblyAlignment.fullSequenceLength());
+        assertEquals(0, supportRead1.fullAssemblyIndexStart());
+        assertEquals(99 + 101 + 20, supportRead2.fullAssemblyIndexStart());
+
+        String fullSequence = REF_BASES_600.substring(400, 500) + refBases1 + REF_BASES_600.substring(100, 200);
+        assertEquals(fullSequence, assemblyAlignment.fullSequence());
+    }
+
     @Test
     public void testChr363Chain()
     {
