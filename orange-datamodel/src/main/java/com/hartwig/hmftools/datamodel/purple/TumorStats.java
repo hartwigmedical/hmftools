@@ -14,9 +14,9 @@ public interface TumorStats
 
     int hotspotStructuralVariantCount();
 
-    int smallVariantCount();
+    int smallVariantAlleleReadCount();
 
-    int structuralVariantsCount();
+    int structuralVariantTumorFragmentCount();
 
-    int sumBafCounts();
+    int bafCount();
 }

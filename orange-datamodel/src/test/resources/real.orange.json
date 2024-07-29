@@ -733,9 +733,9 @@
     "tumorStats": {
       "hotspotMutationCount": 3,
       "hotspotStructuralVariantCount": 0,
-      "smallVariantCount": 2273132,
-      "structuralVariantsCount": 4874,
-      "sumBafCounts": 675344
+      "smallVariantAlleleReadCount": 2273132,
+      "structuralVariantTumorFragmentCount": 4874,
+      "bafCount": 675344
     }
   },
   "linx": {

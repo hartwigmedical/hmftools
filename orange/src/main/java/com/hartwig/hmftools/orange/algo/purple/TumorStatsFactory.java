@@ -22,13 +22,13 @@ public class TumorStatsFactory
         return ImmutableTumorStats.builder()
                 .hotspotMutationCount(hotspotMutationCount(purpleData))
                 .hotspotStructuralVariantCount(hotspotStructuralVariants(purpleData))
-                .smallVariantCount(smallVariantCount(purpleData))
-                .structuralVariantsCount(structuralVariantCount(purpleData))
-                .sumBafCounts(sumBafCounts(purpleData))
+                .smallVariantAlleleReadCount(smallVariantAlleleReadCount(purpleData))
+                .structuralVariantTumorFragmentCount(structuralVariantTumorFragmentCount(purpleData))
+                .bafCount(bafCount(purpleData))
                 .build();
     }
 
-    private static int structuralVariantCount(@NotNull PurpleData purpleData)
+    private static int structuralVariantTumorFragmentCount(@NotNull PurpleData purpleData)
     {
         List<EnrichedStructuralVariant> enrichedVariants =
                 new EnrichedStructuralVariantFactory().enrich(purpleData.allSomaticStructuralVariants());
@@ -43,7 +43,7 @@ public class TumorStatsFactory
                 .sum();
     }
 
-    private static int smallVariantCount(@NotNull PurpleData purpleData)
+    private static int smallVariantAlleleReadCount(@NotNull PurpleData purpleData)
     {
         return purpleData.allSomaticVariants().stream()
                 .filter(variant -> variant.type() == VariantType.SNP)
@@ -58,7 +58,7 @@ public class TumorStatsFactory
                 .count();
     }
 
-    private static int sumBafCounts(@NotNull PurpleData purpleData)
+    private static int bafCount(@NotNull PurpleData purpleData)
     {
 
         return purpleData.segments().stream()

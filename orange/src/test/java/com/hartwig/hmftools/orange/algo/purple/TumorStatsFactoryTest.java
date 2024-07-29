@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.TumorStats;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class TumorStatsFactoryTest
@@ -28,13 +29,7 @@ public class TumorStatsFactoryTest
     public void canComputeZeroStatsFromMinimalPurpleData()
     {
         PurpleData purpleData = createMinimalTestPurpleData();
-        TumorStats expectedStats = ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(0)
-                .structuralVariantsCount(0)
-                .sumBafCounts(0)
-                .build();
+        TumorStats expectedStats = createMinimalTumorStatsBuilder().build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
@@ -57,12 +52,8 @@ public class TumorStatsFactoryTest
                 .addAllSomaticStructuralVariants(sv1, sv2)
                 .build();
 
-        TumorStats expectedStats = ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(0)
-                .structuralVariantsCount(8)
-                .sumBafCounts(0)
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
+                .structuralVariantTumorFragmentCount(8)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -91,12 +82,8 @@ public class TumorStatsFactoryTest
                 .addAllSomaticStructuralVariants(hotspotSV, nonHotspotSV1, nonHotspotSV2)
                 .build();
 
-        TumorStats expectedStats = ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
                 .hotspotStructuralVariantCount(1)
-                .smallVariantCount(0)
-                .structuralVariantsCount(0)
-                .sumBafCounts(0)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -122,12 +109,8 @@ public class TumorStatsFactoryTest
                 .addAllSomaticVariants(hostpotVariant, otherVariant1, otherVariant2)
                 .build();
 
-        TumorStats expectedStats = ImmutableTumorStats.builder()
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
                 .hotspotMutationCount(1)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(0)
-                .structuralVariantsCount(0)
-                .sumBafCounts(0)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -135,7 +118,7 @@ public class TumorStatsFactoryTest
     }
 
     @Test
-    public void canComputeSmallVariantCount()
+    public void canComputeSmallVariantAlleleReadCount()
     {
         PurpleVariantContext snpVariant = TestPurpleVariantFactory.contextBuilder()
                 .type(VariantType.SNP)
@@ -156,12 +139,8 @@ public class TumorStatsFactoryTest
                 .addAllSomaticVariants(snpVariant, otherVariant1, otherVariant2)
                 .build();
 
-        TumorStats expectedStats = ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(2)
-                .structuralVariantsCount(0)
-                .sumBafCounts(0)
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
+                .smallVariantAlleleReadCount(2)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -169,7 +148,7 @@ public class TumorStatsFactoryTest
     }
 
     @Test
-    public void canComputeSumBafCounts()
+    public void canComputeBafCount()
     {
         List<Segment> segments = List.of(
                 ImmutableSegment.builder().germlineStatus(
@@ -198,12 +177,8 @@ public class TumorStatsFactoryTest
                 .segments(segments)
                 .build();
 
-        TumorStats expectedStats = ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(0)
-                .structuralVariantsCount(0)
-                .sumBafCounts(5)
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
+                .bafCount(5)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -217,5 +192,16 @@ public class TumorStatsFactoryTest
                 .start(ImmutableStructuralVariantLegImpl.builder().from(variant.start())
                         .tumorVariantFragmentCount(count).build())
                 .build();
+    }
+
+    @NotNull
+    public static ImmutableTumorStats.Builder createMinimalTumorStatsBuilder()
+    {
+        return ImmutableTumorStats.builder()
+                .hotspotMutationCount(0)
+                .hotspotStructuralVariantCount(0)
+                .smallVariantAlleleReadCount(0)
+                .structuralVariantTumorFragmentCount(0)
+                .bafCount(0);
     }
 }

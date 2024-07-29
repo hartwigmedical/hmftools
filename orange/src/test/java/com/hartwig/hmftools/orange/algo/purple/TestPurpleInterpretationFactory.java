@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
+
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
-import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
@@ -13,7 +14,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
-import com.hartwig.hmftools.datamodel.purple.TumorStats;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,7 @@ public final class TestPurpleInterpretationFactory
         return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
                 .characteristics(createMinimalTestCharacteristicsData())
-                .tumorStats(createMinimalTumorStats());
+                .tumorStats(createMinimalTumorStatsBuilder().build());
     }
 
     @NotNull
@@ -70,30 +70,6 @@ public final class TestPurpleInterpretationFactory
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
-                .build();
-    }
-
-    @NotNull
-    private static TumorStats createMinimalTumorStats()
-    {
-        return ImmutableTumorStats.builder()
-                .hotspotMutationCount(0)
-                .hotspotStructuralVariantCount(0)
-                .smallVariantCount(0)
-                .structuralVariantsCount(0)
-                .sumBafCounts(0)
-                .build();
-    }
-
-    @NotNull
-    private static TumorStats createTestTumorStats()
-    {
-        return ImmutableTumorStats.builder()
-                .hotspotMutationCount(5)
-                .hotspotStructuralVariantCount(1)
-                .smallVariantCount(1500)
-                .structuralVariantsCount(1100)
-                .sumBafCounts(5000)
                 .build();
     }
 }

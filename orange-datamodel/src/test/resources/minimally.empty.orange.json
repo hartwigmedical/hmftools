@@ -82,9 +82,9 @@
     "tumorStats": {
       "hotspotMutationCount": 0,
       "hotspotStructuralVariantCount": 0,
-      "smallVariantCount": 0,
-      "structuralVariantsCount": 0,
-      "sumBafCounts": 0
+      "smallVariantAlleleReadCount": 0,
+      "structuralVariantTumorFragmentCount": 0,
+      "bafCount": 0
     }
   },
   "linx": {

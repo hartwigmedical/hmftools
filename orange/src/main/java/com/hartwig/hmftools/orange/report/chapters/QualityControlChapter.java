@@ -277,18 +277,18 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
 
-        tumorStats.addCell(cells.createContent("Number of small variants"));
+        tumorStats.addCell(cells.createContent("Sum of small variants allele read counts"));
         tumorStats.addCell(cells.createContent("1000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantCount())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantAlleleReadCount())));
 
-        tumorStats.addCell(cells.createContent("Number of structural variants"));
+        tumorStats.addCell(cells.createContent("Sum of structural variant tumor fragment counts"));
         tumorStats.addCell(cells.createContent("1000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantsCount())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantTumorFragmentCount())));
 
         tumorStats.addCell(cells.createContent(
                 "Sum of B allele frequency counts"));
         tumorStats.addCell(cells.createContent("3000"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().sumBafCounts())));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
                 "Presence of tumor stats (at least one measure should meet minimum)"));
