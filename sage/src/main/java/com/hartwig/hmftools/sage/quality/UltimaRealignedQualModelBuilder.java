@@ -511,7 +511,7 @@ public class UltimaRealignedQualModelBuilder
     }
 
     @VisibleForTesting
-    public static boolean maskSandwichedSnvMnv(final List<CigarOperator> coreCigarOps, final byte[] coreRefBases, final byte[] coreReadBases)
+    public static boolean maskSandwichedSnvMnv(final VariantReadContext readContext, final List<CigarOperator> coreCigarOps, final byte[] coreRefBases, final byte[] coreReadBases)
     {
         // align the bases
         List<Byte> alignedRefBases = Lists.newArrayList();
@@ -540,13 +540,26 @@ public class UltimaRealignedQualModelBuilder
         }
 
         // mask bases in sandwiched snvs/mnvs
+        boolean variantIsMaskedSnvMnv = false;
         State state = State.INITIAL;
+        refIndex = 0;
+        readIndex = 0;
         for(int i = 1; i < alignedRefBases.size(); ++i)
         {
             byte prevRefBase = alignedRefBases.get(i - 1);
             byte prevReadBase = alignedReadBases.get(i - 1);
             byte refBase = alignedRefBases.get(i);
             byte readBase = alignedReadBases.get(i);
+
+            if(prevRefBase != MISSING_BASE)
+            {
+                ++refIndex;
+            }
+
+            if(prevReadBase != MISSING_BASE)
+            {
+                ++readIndex;
+            }
 
             if(refBase == MISSING_BASE || readBase == MISSING_BASE || prevRefBase == MISSING_BASE || prevReadBase == MISSING_BASE)
             {
@@ -596,6 +609,12 @@ public class UltimaRealignedQualModelBuilder
                 byte maskBase = refBase;
                 for(int j = i - 1; !alignedRefBases.get(j).equals(alignedReadBases.get(j)); --j)
                 {
+                    int adjReadIndex = readIndex - (i - j);
+                    if(!readContext.variant().isIndel() && adjReadIndex == readContext.VarIndex - readContext.CoreIndexStart)
+                    {
+                        variantIsMaskedSnvMnv = true;
+                    }
+
                     alignedRefBases.set(j, maskBase);
                     alignedReadBases.set(j, maskBase);
                 }
@@ -622,8 +641,7 @@ public class UltimaRealignedQualModelBuilder
             }
         }
 
-        // TODO: return whether variant is a sandwich snv/mvn
-        return false;
+        return variantIsMaskedSnvMnv;
     }
 
     public static List<CigarOperator> getCoreCigarOps(final VariantReadContext readContext, final List<CigarOperator> cigarElements)

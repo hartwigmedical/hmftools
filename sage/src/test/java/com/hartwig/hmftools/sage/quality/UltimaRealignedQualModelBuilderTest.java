@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.maskSandwichedSnvMnv;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -14,6 +16,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
 import org.junit.Test;
 
@@ -25,13 +30,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvNoSandwichesSnv()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 5, 4, 4};
         byte[] coreReadBases = new byte[] {5, 5, 2, 4, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         assertArrayEquals(coreRefBases, coreRefBasesOut);
         assertArrayEquals(coreReadBases, coreReadBasesOut);
@@ -40,13 +48,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvNoSandwichesInsert()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 4, 4};
         byte[] coreReadBases = new byte[] {5, 5, 2, 4, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, I, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         assertArrayEquals(coreRefBases, coreRefBasesOut);
         assertArrayEquals(coreReadBases, coreReadBasesOut);
@@ -55,13 +66,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvNoSandwichesDelete()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 5, 4, 4};
         byte[] coreReadBases = new byte[] {5, 5, 4, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, D, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         assertArrayEquals(coreRefBases, coreRefBasesOut);
         assertArrayEquals(coreReadBases, coreReadBasesOut);
@@ -70,13 +84,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvSandwichedSnv()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 5, 5, 4};
         byte[] coreReadBases = new byte[] {5, 5, 2, 5, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         assertArrayEquals(coreRefBases, coreRefBasesOut);
         assertArrayEquals(new byte[] {5, 5, 5, 5, 4}, coreReadBasesOut);
@@ -85,13 +102,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvSandwichedMnv()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 2, 3, 2, 5, 4};
         byte[] coreReadBases = new byte[] {5, 5, 5, 5, 5, 5, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         assertArrayEquals(new byte[] {5, 5, 5, 5, 5, 5, 4}, coreRefBasesOut);
         assertArrayEquals(coreReadBases, coreReadBasesOut);
@@ -100,13 +120,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvSandwichedMultiple()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 5, 5, 5, 1, 2, 3, 5, 5};
         byte[] coreReadBases = new byte[] {5, 2, 5, 5, 5, 5, 5, 5, 5, 5};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M, M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         byte[] expectedOut = new byte[] {5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
         assertArrayEquals(expectedOut, coreRefBasesOut);
@@ -116,13 +139,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvBreakOfRepeat()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 2, 3, 2, 5, 4, 4, 4};
         byte[] coreReadBases = new byte[] {5, 5, 5, 4, 5, 5, 4, 2, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         // TODO: created expectedFoo variables.
         assertArrayEquals(new byte[] {5, 5, 2, 3, 2, 5, 4, 4, 4}, coreRefBasesOut);
@@ -131,7 +157,7 @@ public class UltimaRealignedQualModelBuilderTest
         // TODO: reverse case
         coreRefBasesOut = Arrays.copyArray(coreRefBases);
         coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreReadBasesOut, coreRefBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreReadBasesOut, coreRefBasesOut));
 
         // TODO: created expectedFoo variables.
         assertArrayEquals(new byte[] {5, 5, 2, 3, 2, 5, 4, 4, 4}, coreRefBasesOut);
@@ -141,13 +167,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvSandwichedMissingBaseInRef()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 2, 2, 5, 4, 4, 4};
         byte[] coreReadBases = new byte[] {5, 5, 5, 5, 5, 5, 4, 2, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, I, M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         // TODO: created expectedFoo variables.
         assertArrayEquals(new byte[] {5, 5, 2, 2, 5, 4, 4, 4}, coreRefBasesOut);
@@ -157,13 +186,16 @@ public class UltimaRealignedQualModelBuilderTest
     @Test
     public void testMaskSandwichedSnvMnvSandwichedMissingBaseInRead()
     {
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1, "A", "AA");
+        VariantReadContext readContext = new VariantReadContext(variant, 0, 0, null, (byte) 0, null, Lists.newArrayList(), 0, 0, 0, null, null, null, 0, 0);
+
         byte[] coreRefBases = new byte[] {5, 5, 5, 5, 5, 5, 4, 2, 4};
         byte[] coreReadBases = new byte[] {5, 5, 2, 2, 5, 4, 4, 4};
         List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, D, M, M, M, M, M);
 
         byte[] coreRefBasesOut = Arrays.copyArray(coreRefBases);
         byte[] coreReadBasesOut = Arrays.copyArray(coreReadBases);
-        maskSandwichedSnvMnv(coreCigarOps, coreRefBasesOut, coreReadBasesOut);
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
 
         // TODO: created expectedFoo variables.
         assertArrayEquals(new byte[] {5, 5, 5, 5, 5, 5, 4, 4, 4}, coreRefBasesOut);
