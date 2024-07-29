@@ -202,6 +202,80 @@ public class UltimaRealignedQualModelBuilderTest
         assertArrayEquals(new byte[] {5, 5, 2, 2, 5, 4, 4, 4}, coreReadBasesOut);
     }
 
+    @Test
+    public void testMaskSandwichedSnvMnvVariantIsNotSandwichedSnv()
+    {
+        String coreRef = "AAATT";
+        String coreRead = "AAGTT";
+        List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M);
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 102, "A", "G");
+        VariantReadContext readContext = new VariantReadContext(variant, 1, 200, null, (byte) 0, null, Lists.newArrayList(), 0, 2, 4, null, null, null, 100, 104);
+
+        byte[] coreRefBasesOut = coreRef.getBytes();
+        byte[] coreReadBasesOut = coreRead.getBytes();
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
+
+        assertArrayEquals(coreRef.getBytes(), coreRefBasesOut);
+        assertArrayEquals(coreRead.getBytes(), coreReadBasesOut);
+    }
+
+    @Test
+    public void testMaskSandwichedSnvMnvVariantIsSandwichedSnv()
+    {
+        String coreRef = "AAAAA";
+        String coreRead = "AAGAA";
+        List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M);
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 102, "A", "G");
+        VariantReadContext readContext = new VariantReadContext(variant, 1, 200, null, (byte) 0, null, Lists.newArrayList(), 0, 2, 4, null, null, null, 100, 104);
+
+        byte[] coreRefBasesOut = coreRef.getBytes();
+        byte[] coreReadBasesOut = coreRead.getBytes();
+        assertTrue(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
+
+        // TODO: expected output variables.
+        assertArrayEquals(coreRef.getBytes(), coreRefBasesOut);
+        assertArrayEquals(coreRef.getBytes(), coreReadBasesOut);
+    }
+
+    @Test
+    public void testMaskSandwichedSnvMnvVariantIsNotSandwichedMnv()
+    {
+        String coreRef = "AAACATT";
+        String coreRead = "AAGTGTT";
+        List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M, M, M);
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 102, "ACA", "GTG");
+        VariantReadContext readContext = new VariantReadContext(variant, 1, 200, null, (byte) 0, null, Lists.newArrayList(), 0, 2, 6, null, null, null, 100, 106);
+
+        byte[] coreRefBasesOut = coreRef.getBytes();
+        byte[] coreReadBasesOut = coreRead.getBytes();
+        assertFalse(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
+
+        assertArrayEquals(coreRef.getBytes(), coreRefBasesOut);
+        assertArrayEquals(coreRead.getBytes(), coreReadBasesOut);
+    }
+
+    @Test
+    public void testMaskSandwichedSnvMnvVariantIsSandwichedMnv()
+    {
+        String coreRef = "AAGTGAA";
+        String coreRead = "AAAAAAA";
+        List<CigarOperator> coreCigarOps = Lists.newArrayList(M, M, M, M, M, M, M);
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 102, "GTG","ACA");
+        VariantReadContext readContext = new VariantReadContext(variant, 1, 200, null, (byte) 0, null, Lists.newArrayList(), 0, 2, 6, null, null, null, 100, 106);
+
+        byte[] coreRefBasesOut = coreRef.getBytes();
+        byte[] coreReadBasesOut = coreRead.getBytes();
+        assertTrue(maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBasesOut, coreReadBasesOut));
+
+        // TODO: expected output variables.
+        assertArrayEquals(coreRead.getBytes(), coreRefBasesOut);
+        assertArrayEquals(coreRead.getBytes(), coreReadBasesOut);
+    }
+
     // TODO: re-enable tests.
 
 //    @Test
