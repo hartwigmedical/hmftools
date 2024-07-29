@@ -5,6 +5,5 @@ public enum RealignedType
     NONE,
     EXACT,
     LENGTHENED,
-    SHORTENED,
-    BOTH
+    SHORTENED
 }

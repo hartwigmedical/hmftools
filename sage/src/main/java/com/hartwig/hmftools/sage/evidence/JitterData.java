@@ -9,9 +9,11 @@ import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_TRINUC_ERROR_RATE;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
+import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.MsiModelParams;
 
@@ -36,7 +38,6 @@ public class JitterData
 
     public void update(final JitterMatch jitterMatch)
     {
-        // CHECK: how to handle BOTH if that type is used
         if(jitterMatch == JitterMatch.LENGTHENED)
             mLengthened++;
         else if(jitterMatch == JitterMatch.SHORTENED)
@@ -51,6 +52,29 @@ public class JitterData
     public boolean hardFilterOnNoise() { return mHardFilterOnNoise; }
     public boolean filterOnNoise() { return mFilterOnNoise; }
 
+    public boolean isNonTrinucIndel(final ReadContextCounter readContextCounter)
+    {
+        if(!readContextCounter.variant().isIndel())
+            return false;
+
+        String indelBases = readContextCounter.variant().isInsert() ?
+        readContextCounter.alt().substring(1):  readContextCounter.ref().substring(1);
+
+        List<RepeatInfo> nonTrinucRepeats = readContextCounter.readContext().AllRepeats.stream()
+                .filter(x -> x.repeatLength() != 3).collect(Collectors.toList());
+
+        for(RepeatInfo nonTriNucRepeat : nonTrinucRepeats)
+        {
+            int numRepeats = indelBases.length() / nonTriNucRepeat.Bases.length();
+            String expectedIndelBases = nonTriNucRepeat.Bases.repeat(numRepeats);
+
+            if(indelBases.equals(expectedIndelBases))
+                return true;
+        }
+
+        return false;
+    }
+
     public String toString() { return format("short(%d) long(%d)", mShortened, mLengthened); }
 
     public void setJitterQualFilterState(final MsiJitterCalcs msiJitterCalcs, final ReadContextCounter readContextCounter)
@@ -60,9 +84,15 @@ public class JitterData
 
         int fullSupport = readContextCounter.readSupportCounts().Full;
 
+        boolean isPanelVariant = readContextCounter.tier() == VariantTier.PANEL || readContextCounter.tier() == VariantTier.HOTSPOT;
+
+        boolean hasAnyTriNucRepeat = readContextCounter.readContext().AllRepeats.stream().anyMatch(x -> x.repeatLength() == 3);
+
+        boolean trinucRepeat = isPanelVariant && hasAnyTriNucRepeat && !isNonTrinucIndel(readContextCounter);
+
         JitterNoiseOutcome noiseOutcome = calcNoiseOutcome(
                 msiJitterCalcs, readContextCounter.sampleId(), readContextCounter.readContext().MaxRepeat,
-                readContextCounter.readContext().AllRepeats, fullSupport, mShortened, mLengthened);
+                trinucRepeat, fullSupport, mShortened, mLengthened);
 
         if(noiseOutcome == null)
             return;
@@ -104,7 +134,7 @@ public class JitterData
 
     private JitterNoiseOutcome calcNoiseOutcome(
             final MsiJitterCalcs msiJitterCalcs, final String sampleId, final RepeatInfo maxRepeat,
-            final List<RepeatInfo> allRepeats, int fullSupport, int shortened, int lengthened)
+            final boolean trinucRepeat, int fullSupport, int shortened, int lengthened)
     {
         List<MsiModelParams> allParams = msiJitterCalcs.getSampleParams(sampleId);
 
@@ -112,7 +142,6 @@ public class JitterData
             return null;
 
         int repeatCount = maxRepeat.Count;
-        boolean trinucRepeat = allRepeats.stream().anyMatch(x -> x.Bases.length() == 3);
         double shortenedErrorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount - 1, 1);
         double lengthenedErrorRate = msiJitterCalcs.getErrorRate(allParams, maxRepeat.Bases, repeatCount + 1, -1);
 

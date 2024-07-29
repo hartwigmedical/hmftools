@@ -66,74 +66,34 @@ public class JitterTest
 
         ReadContextMatcher matcher = new ReadContextMatcher(readContext, true, true);
 
-        // test jitter without indication of a indel
+        // low-qual base mismatches are permitted within the core in specific locations (only one) and outside the core
 
-        // test 1: shortened at start
-        String readBases = variantReadBases.substring(0, 11) + "G" + variantReadBases.substring(12);
-
-        assertTrue(hasJitterMatchType(
-                repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                15, readBases.getBytes(), readQuals, SHORTENED, false, true, 1));
-
-        // test 2: shortened at end
-        readBases = variantReadBases.substring(0, 20) + "G" + variantReadBases.substring(21);
-
-        assertTrue(hasJitterMatchType(
-                repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                15, readBases.getBytes(), readQuals, SHORTENED, false, false, 1));
-
-        // test 3: lengthened at start
-        readBases = variantReadBases.substring(0, 10) + "A" + variantReadBases.substring(11);
-
-        assertTrue(hasJitterMatchType(
-                repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                15, readBases.getBytes(), readQuals, LENGTHENED, false, true, 1));
-
-        // test 4: lengthened at end
-        readBases = variantReadBases.substring(0, 21) + "A" + variantReadBases.substring(22);
-
-        assertTrue(hasJitterMatchType(
-                repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                15, readBases.getBytes(), readQuals, LENGTHENED, false, false, 1));
-
-
-        // test 5: low-qual base mismatches are permitted outside the core and within the core in specific locations
-
-        String readMismatches = "G" + readBases.substring(1, 22) + "G" + readBases.substring(23);
+        String readMismatches = "T" + variantReadBases.substring(1, 11) + "A" + variantReadBases.substring(11, 22) + "G" + variantReadBases.substring(23);
         readQuals[0] = 11;
-        readQuals[22] = 11;
+        readQuals[23] = 11;
 
         assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
+                repeat, readContext, 16, matcher.altIndexLower(), matcher.altIndexUpper(),
+                readMismatches.getBytes(), readQuals, LENGTHENED, false, 1));
 
-        // 1 mismatch is permitted in the core outside the critical range
+        // 2 core mismatches are not permitted
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
-        readMismatches = readBases.substring(0, 12) + "T" + readBases.substring(13);
-        readQuals[12] = 11;
-
-        assertTrue(hasJitterMatchType(
-                repeat, readContext, 15, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
-
-        // 2 mismatches are not permitted
-        readQuals = buildDefaultBaseQuals(variantReadBases.length());
-        readMismatches = readBases.substring(0, 12) + "TT" + readBases.substring(14);
+        readMismatches = variantReadBases.substring(0, 11) + "ATT" + variantReadBases.substring(13);
         readQuals[12] = 11;
         readQuals[13] = 11;
 
         assertFalse(hasJitterMatchType(
-                repeat, readContext, 15, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
+                repeat, readContext, 16, matcher.altIndexLower(), matcher.altIndexUpper(),
+                readMismatches.getBytes(), readQuals, LENGTHENED,  false, 1));
 
         // and not within the critical range
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
-        readMismatches = readBases.substring(0, 15) + "T" + readBases.substring(16);
-        readQuals[15] = 11;
+        readMismatches = variantReadBases.substring(0, 11) + "A" + variantReadBases.substring(11, 15) + "T" + variantReadBases.substring(16);
+        readQuals[16] = 11;
 
         assertFalse(hasJitterMatchType(
-                repeat, readContext, 15, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED, false, false, 1));
+                repeat, readContext, 16, matcher.altIndexLower(), matcher.altIndexUpper(),
+                readMismatches.getBytes(), readQuals, LENGTHENED,  false, 1));
     }
 
     @Test
@@ -171,19 +131,19 @@ public class JitterTest
 
         assertTrue(hasJitterMatchType(
                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                varIndex + 1, readBases.getBytes(), readQuals, LENGTHENED, true, true, 1));
+                varIndex + 1, readBases.getBytes(), readQuals, LENGTHENED, true, 1));
 
         readBases = variantReadBases.substring(0, 16) + "AA" + variantReadBases.substring(16);
 
         assertTrue(hasJitterMatchType(
                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                varIndex + 2, readBases.getBytes(), readQuals, LENGTHENED, true, true, 2));
+                varIndex + 2, readBases.getBytes(), readQuals, LENGTHENED, true, 2));
 
         readBases = variantReadBases.substring(0, 16) + variantReadBases.substring(18);
 
         assertTrue(hasJitterMatchType(
                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                varIndex - 2, readBases.getBytes(), readQuals, SHORTENED, true, true, 2));
+                varIndex - 2, readBases.getBytes(), readQuals, SHORTENED,  true, 2));
     }
 
     @Test
@@ -213,12 +173,10 @@ public class JitterTest
 
         SAMRecord read1 = buildSamRecord(1, readCigar, readBases);
 
-        JitterMatch jitterMatch = JitterMatch.NONE;
+        JitterMatch jitterMatch;
 
-        /* CHECK: relies on a jitter match of type BOTH
         jitterMatch = checkJitter(readContext, matcher, read1, 29);
         assertEquals(JitterMatch.NONE, jitterMatch);
-        */
 
         readBases = refBases.substring(1, 30) + "TTCC" + variant.alt() + refBases.substring(31, 71);
         readCigar = buildCigarString(readBases.length());

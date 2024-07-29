@@ -33,7 +33,6 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.BOTH;
 import static com.hartwig.hmftools.sage.evidence.Realignment.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
 import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDel;
@@ -446,8 +445,6 @@ public class ReadContextCounter
                     mJitterData.update(JitterMatch.SHORTENED);
                 else if(realignedType == LENGTHENED)
                     mJitterData.update(JitterMatch.LENGTHENED);
-                // else if(realignedType == BOTH)
-                //    mJitterData.update(JitterMatch.BOTH);
             }
             else if(!coreCovered || readVarIndex < 0)
             {

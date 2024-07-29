@@ -282,11 +282,15 @@ public class VariantFilters
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
-        if(isHighlyPolymorphic(primaryTumor.variant()))
+
+        boolean highlyPolymorphicSite = isHighlyPolymorphic(primaryTumor.variant());
+
+        if(highlyPolymorphicSite)
         {
             avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, avgAltMapQual);
         }
-        double mapQualDiffPenalty = avgMapQual > avgAltMapQual ? 2 * (avgMapQual - avgAltMapQual) : 0;
+
+        double mapQualDiffPenalty = avgMapQual > avgAltMapQual && !highlyPolymorphicSite ? 2 * (avgMapQual - avgAltMapQual) : 0;
 
         double readStrandBiasPenalty;
         StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
@@ -316,7 +320,7 @@ public class VariantFilters
 
         double readEdgeDistanceThresholdPerc = readEdgeDistanceThresholdPerc(tier);
 
-        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc)
+        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc && !highlyPolymorphicSite)
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
         }
