@@ -510,13 +510,9 @@ public class UltimaRealignedQualModelBuilder
         READ_STREAK;
     }
 
-    private static boolean maskSandwichedSnvMnv(final VariantReadContext readContext, final byte[] coreRefBases, final byte[] coreReadBases)
+    @VisibleForTesting
+    public static boolean maskSandwichedSnvMnv(final List<CigarOperator> coreCigarOps, final byte[] coreRefBases, final byte[] coreReadBases)
     {
-        // TODO: We are repeating the computation a lot.
-        String readCigar = readContext.readCigar();
-        List<CigarOperator> cigarOps = expandCigarElements(TextCigarCodec.decode(readCigar).getCigarElements());
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarOps);
-
         // align the bases
         List<Byte> alignedRefBases = Lists.newArrayList();
         List<Byte> alignedReadBases = Lists.newArrayList();
@@ -626,7 +622,7 @@ public class UltimaRealignedQualModelBuilder
             }
         }
 
-        // TODO: return whether variant is a sandwhich snv/mvn
+        // TODO: return whether variant is a sandwich snv/mvn
         return false;
     }
 
