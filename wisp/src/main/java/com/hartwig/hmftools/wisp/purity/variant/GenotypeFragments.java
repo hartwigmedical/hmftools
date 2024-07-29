@@ -14,7 +14,7 @@ public class GenotypeFragments
     // where UMI counts are available then the Depth and AlleleCount are just the total from these, otherwise they are standard DP and AD
     public final UmiTypeCounts UmiCounts;
 
-    private double mBqrErrorRate;
+    private double mBqrErrorRate; // only used for output data
 
     public GenotypeFragments(final String sampleName, final int alleleCount, final int depth, final double qualTotal,
             final UmiTypeCounts umiCounts)
@@ -28,10 +28,7 @@ public class GenotypeFragments
         mBqrErrorRate = 0;
     }
 
-    public double qualPerAlleleFragment()
-    {
-        return AlleleCount > 0 ? QualTotal / AlleleCount : 0;
-    }
+    public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / (double)AlleleCount : 0; }
 
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
 

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
@@ -60,7 +61,7 @@ public class SomaticPurityEstimator
 
             fragmentTotals.addVariantData(
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
-                    tumorFragData.Depth, sampleFragData.Depth, sampleFragData.QualTotal);
+                    tumorFragData.Depth, sampleFragData.Depth);
 
             umiTypeCounts.add(sampleFragData.UmiCounts);
             sampleDualDP += sampleFragData.UmiCounts.TotalDual;
@@ -202,30 +203,38 @@ public class SomaticPurityEstimator
         FragmentTotals fragmentTotals = new FragmentTotals();
 
         double depthWeightedErrorRate = 0;
+        double sampleDepthTotal = 0;
 
         for(SomaticVariant variant : variants)
         {
-            if(!hasVariantContext(filteredBqrData, variant.TriNucContext, variant.Alt))
-                continue;
+            boolean useBqrData = variant.Type == VariantType.SNP;
 
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-            double varBqrErrorRate = getBqrErrorRate(variant);
-            sampleFragData.setBqrErrorRate(varBqrErrorRate);
+            if(useBqrData)
+            {
+                if(!hasVariantContext(filteredBqrData, variant.TriNucContext, variant.Alt))
+                    continue;
 
-            depthWeightedErrorRate += varBqrErrorRate * sampleFragData.Depth;
+                double varBqrErrorRate = getBqrErrorRate(variant);
+                sampleFragData.setBqrErrorRate(varBqrErrorRate);
+
+                depthWeightedErrorRate += varBqrErrorRate * sampleFragData.Depth;
+
+                sampleDepthTotal += sampleFragData.Depth;
+            }
 
             GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
             fragmentTotals.addVariantData(
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
-                    tumorFragData.Depth, sampleFragData.Depth, sampleFragData.QualTotal);
+                    tumorFragData.Depth, sampleFragData.Depth);
         }
 
         if(fragmentTotals.sampleDepthTotal() == 0)
             return null;
 
-        double bqrErrorRate = depthWeightedErrorRate / fragmentTotals.sampleDepthTotal();
+        double bqrErrorRate = depthWeightedErrorRate / sampleDepthTotal;
 
         double probability = estimatedProbability(fragmentTotals, bqrErrorRate);
 

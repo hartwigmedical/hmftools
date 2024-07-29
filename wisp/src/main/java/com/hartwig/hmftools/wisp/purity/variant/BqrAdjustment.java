@@ -125,8 +125,8 @@ public class BqrAdjustment
 
             if(key.Ref != key.Alt)
             {
-                BqrContextData bqrErrorRate = getOrCreate(key.TrinucleotideContext, key.Alt);
-                bqrErrorRate.AltCount += bqrRecord.Count;
+                BqrContextData bqrContextData = getOrCreate(key.TrinucleotideContext, key.Alt);
+                bqrContextData.AltCount += bqrRecord.Count;
             }
         }
 

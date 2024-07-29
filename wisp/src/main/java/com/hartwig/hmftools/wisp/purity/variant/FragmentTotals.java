@@ -53,8 +53,7 @@ public class FragmentTotals
     }
 
     public void addVariantData(
-            double copyNumber, double variantCopyNumber,
-            int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth, double sampleQualTotal)
+            double copyNumber, double variantCopyNumber, int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth)
     {
         ++mVariantCount;
         mTumorFragsTotal += tumorAlleleFrags;
