@@ -5,8 +5,11 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_GENOME;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.trimAssemblyRefBases;
 
@@ -24,6 +27,66 @@ import org.junit.Test;
 
 public class RefBaseExtensionTest
 {
+    @Test
+    public void testJunctionIndelReadRefBaseBuilding()
+    {
+        // test how ref bases are built when there are indels in the junction read's ref bases
+
+        Junction junction = new Junction(CHR_1, 200, FORWARD);
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
+
+        String extBases = REF_BASES_200.substring(100, 150);
+
+        // first an assembly with inserts in the ref bases
+        String insertedBases = "AGAGAGAGAG";
+        String readBases = REF_BASES_400.substring(161, 181) + insertedBases + REF_BASES_400.substring(181, 201) + extBases;
+        String readCigar = "20M10I20M50S";
+
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 161, readBases, readCigar);
+
+        List<Read> junctionReads = Lists.newArrayList(
+                read, cloneRead(read, READ_ID_GENERATOR.nextId()), cloneRead(read, READ_ID_GENERATOR.nextId()));
+
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
+
+        assertEquals(1, assemblies.size());
+
+        JunctionAssembly assembly = assemblies.get(0);
+
+        // the inserted bases are included but the extension sequence is not extended to include all the ref bases to the lowest start pos
+        assertEquals(50, assembly.extensionLength());
+        assertEquals(161, assembly.refBasePosition());
+        assertEquals(40, assembly.refBaseLength());
+
+        String assemblyRefBases = readBases.substring(10, 50);
+        assertEquals(assemblyRefBases, assembly.formRefBaseSequence());
+
+
+        // repeat for a series of junction reads with a delete in their ref bases
+        readBases = REF_BASES_400.substring(161, 171) + REF_BASES_400.substring(181, 201) + extBases;
+        readCigar = "10M10D20M50S";
+
+        read = createRead(READ_ID_GENERATOR.nextId(), 161, readBases, readCigar);
+
+        junctionReads = Lists.newArrayList(
+                read, cloneRead(read, READ_ID_GENERATOR.nextId()), cloneRead(read, READ_ID_GENERATOR.nextId()));
+
+        assemblies = junctionAssembler.processJunction(junctionReads);
+
+        assertEquals(1, assemblies.size());
+
+        assembly = assemblies.get(0);
+
+        // the inserted bases are included but the extension sequence is not extended to include all the ref bases to the lowest start pos
+        assertEquals(50, assembly.extensionLength());
+        assertEquals(171, assembly.refBasePosition());
+        assertEquals(30, assembly.refBaseLength());
+
+        assemblyRefBases = REF_BASES_400.substring(161, 171) + REF_BASES_400.substring(181, 201);
+        assertEquals(assemblyRefBases, assembly.formRefBaseSequence());
+    }
+
     @Test
     public void testBasicRefBaseExtension()
     {

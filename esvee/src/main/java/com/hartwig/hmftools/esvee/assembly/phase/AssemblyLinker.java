@@ -354,6 +354,13 @@ public final class AssemblyLinker
             }
         }
 
+        // if the first assembly's bases have matched further into the second's ref bases than its own length then the link is uninformative
+        if(junctionOffsetDiff < 0)
+        {
+            if(abs(junctionOffsetDiff) >= first.refBaseLength() || abs(junctionOffsetDiff) >= second.refBaseLength())
+                return null;
+        }
+
         String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
         String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
 
