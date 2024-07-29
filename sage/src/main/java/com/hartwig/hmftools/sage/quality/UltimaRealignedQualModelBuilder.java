@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.lang.System.arraycopy;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -71,13 +73,19 @@ public class UltimaRealignedQualModelBuilder
 
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
-        // TODO: QUESTION Consider sandwiched SNV/MNV.
-        // TODO: QUESTION Mask sandwich snvs/mvns.
+        byte[] coreRefBases = Arrays.copyArray(readContext.RefBases);
+        byte[] coreReadBases = new byte[readContext.coreLength()];
+        arraycopy(readContext.ReadBases, readContext.CoreIndexStart, coreReadBases, 0, coreReadBases.length);
 
-        List<Homopolymer> refHomopolymers = getHomopolymers(readContext.refBases());
-        List<Homopolymer> readHomopolymers = getHomopolymers(readContext.coreStr());
+        List<CigarOperator> cigarOps = expandCigarElements(TextCigarCodec.decode(readContext.readCigar()).getCigarElements());
+        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarOps);
+        boolean variantIsSandwichedSnvMnv = maskSandwichedSnvMnv(readContext, coreCigarOps, coreRefBases, coreReadBases);
+
+        // TODO: Stop switching between bytes array and string.
+        List<Homopolymer> refHomopolymers = getHomopolymers(new String(coreRefBases));
+        List<Homopolymer> readHomopolymers = getHomopolymers(new String(coreReadBases));
         List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, refHomopolymers, readHomopolymers);
-        List<SimpleVariant> qualVariants = getQualVariants(readContext, realignedVariants);
+        List<SimpleVariant> qualVariants = getQualVariants(variantIsSandwichedSnvMnv, readContext, realignedVariants);
         return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
     }
 
@@ -247,9 +255,70 @@ public class UltimaRealignedQualModelBuilder
         return realignedVariants;
     }
 
-    private static List<SimpleVariant> getQualVariants(final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
+    private static List<SimpleVariant> getQualVariants(boolean variantIsSandwichedSnvMnv, final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
     {
         SimpleVariant variant = readContext.variant();
+
+        // TODO: remove this repetition.
+        if(variantIsSandwichedSnvMnv)
+        {
+            List<SimpleVariant> leftInserts = Lists.newArrayList();
+            List<SimpleVariant> leftDels = Lists.newArrayList();
+            int leftIndelBalance = 0;
+            List<SimpleVariant> rightInserts = Lists.newArrayList();
+            List<SimpleVariant> rightDels = Lists.newArrayList();
+            int rightIndelBalance = 0;
+            for(SimpleVariant realignedVariant : realignedVariants)
+            {
+                if(realignedVariant.position() < variant.position())
+                {
+                    leftIndelBalance += realignedVariant.indelLength();
+                    if(realignedVariant.isInsert())
+                    {
+                        leftInserts.add(realignedVariant);
+                    }
+                    else
+                    {
+                        leftDels.add(realignedVariant);
+                    }
+
+                    continue;
+                }
+
+                rightIndelBalance += realignedVariant.indelLength();
+                if(realignedVariant.isInsert())
+                {
+                    rightInserts.add(realignedVariant);
+                }
+                else
+                {
+                    rightDels.add(realignedVariant);
+                }
+            }
+
+            List<SimpleVariant> qualVariants = Lists.newArrayList();
+            if(leftIndelBalance > 0)
+            {
+                qualVariants.addAll(leftInserts);
+            }
+
+            if(leftIndelBalance < 0)
+            {
+                qualVariants.addAll(leftDels);
+            }
+
+            if(rightIndelBalance > 0)
+            {
+                qualVariants.addAll(rightInserts);
+            }
+
+            if(rightIndelBalance < 0)
+            {
+                qualVariants.addAll(rightDels);
+            }
+
+            return qualVariants;
+        }
 
         if(variant.isIndel())
         {
@@ -467,39 +536,6 @@ public class UltimaRealignedQualModelBuilder
         }
 
         return qualVariants;
-    }
-
-    // TODO: HERE
-    private static int getVariantRefBasesIndex(final VariantReadContext readContext)
-    {
-        // TODO: LATER This is repetitive?
-        String readCigar = readContext.readCigar();
-        List<CigarOperator> cigarOps = expandCigarElements(TextCigarCodec.decode(readCigar).getCigarElements());
-        List<CigarOperator> coreCigarOps = getCoreCigarOps(readContext, cigarOps);
-
-        int varCoreIndex = readContext.VarIndex - readContext.CoreIndexStart;
-
-        int refIndex = 0;
-        int readIndex = 0;
-        for(CigarOperator op : coreCigarOps)
-        {
-            if(readIndex == varCoreIndex)
-            {
-                break;
-            }
-
-            if(op.consumesReferenceBases())
-            {
-                ++refIndex;
-            }
-
-            if(op.consumesReadBases())
-            {
-                ++readIndex;
-            }
-        }
-
-        return refIndex;
     }
 
     // TODO: rewrite
