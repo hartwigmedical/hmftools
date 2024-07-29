@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -35,18 +33,18 @@ public class TumorStatsFactory
         List<EnrichedStructuralVariant> enrichedVariants =
                 new EnrichedStructuralVariantFactory().enrich(purpleData.allSomaticStructuralVariants());
 
-        // also check the need for PASS filtering here
-
         return enrichedVariants.stream()
-                .filter(variant -> variant.filter().equals(PASS) && variant.type() != StructuralVariantType.SGL)
-                .mapToInt(variant -> variant.start().tumorVariantFragmentCount())
+                .filter(variant -> !variant.isFiltered() && variant.type() != StructuralVariantType.SGL)
+                .mapToInt(variant ->
+                {
+                    Integer count = variant.start().tumorVariantFragmentCount();
+                    return count != null ? count : 0;
+                })
                 .sum();
     }
 
     private static int smallVariantCount(@NotNull PurpleData purpleData)
     {
-        // TODO verify these are already filtered for PASS?
-
         return purpleData.allSomaticVariants().stream()
                 .filter(variant -> variant.type() == VariantType.SNP)
                 .mapToInt(variant -> variant.allelicDepth().AlleleReadCount)
@@ -75,10 +73,8 @@ public class TumorStatsFactory
         List<EnrichedStructuralVariant> enrichedVariants =
                 new EnrichedStructuralVariantFactory().enrich(purpleData.allSomaticStructuralVariants());
 
-        // also check the need for PASS filtering here
-
         return (int) enrichedVariants.stream()
-                .filter(variant -> variant.filter().equals(PASS) && variant.hotspot())
+                .filter(variant -> !variant.isFiltered() && variant.hotspot())
                 .count();
     }
 }
