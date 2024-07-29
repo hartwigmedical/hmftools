@@ -109,7 +109,7 @@ public class JunctionGroupAssembler extends ThreadTask
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
 
-                stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
 
                 if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
                 {

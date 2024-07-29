@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ESVEE_VERSION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
@@ -29,6 +30,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
@@ -52,6 +54,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.toVcfTag;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 
 import java.util.ArrayList;
@@ -64,6 +67,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
@@ -126,7 +130,7 @@ public class VcfWriter implements AutoCloseable
             String vcfFilename = mConfig.outputFilename(WriteType.VCF);
             final RefGenomeSource refGenomeSource = (RefGenomeSource) config.RefGenome;
 
-            final SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
+            SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
 
             mWriter = new VariantContextWriterBuilder()
                     .setOutputFile(vcfFilename)
@@ -135,7 +139,7 @@ public class VcfWriter implements AutoCloseable
                     .setReferenceDictionary(sequenceDictionary)
                     .build();
 
-            writeHeader();
+            writeHeader(sequenceDictionary);
         }
         else
         {
@@ -143,9 +147,12 @@ public class VcfWriter implements AutoCloseable
         }
     }
 
-    private void writeHeader()
+    private void writeHeader(final SAMSequenceDictionary sequenceDictionary)
     {
         Set<VCFHeaderLine> metaData = Sets.newHashSet();
+
+        VersionInfo versionInfo = fromAppName(APP_NAME);
+        metaData.add(new VCFHeaderLine(ESVEE_VERSION, versionInfo.version()));
 
         metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
 
@@ -192,7 +199,9 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFFormatHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
         metaData.add(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
 
-        final VCFHeader header = new VCFHeader(metaData, mSampleNames);
+        VCFHeader header = new VCFHeader(metaData, mSampleNames);
+
+        header.setSequenceDictionary(sequenceDictionary);
 
         mWriter.writeHeader(header);
     }

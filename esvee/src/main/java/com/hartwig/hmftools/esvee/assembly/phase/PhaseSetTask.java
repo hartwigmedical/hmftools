@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
@@ -104,7 +106,7 @@ public class PhaseSetTask extends ThreadTask
                     phaseSet.setId(phaseSetId++);
                 }
 
-                stopCheckLog(phaseGroup.toString(), mConfig.PerfLogTime);
+                stopCheckLog(format("phaseGroupId(%d) assemblies(%d)", phaseGroup.id(), phaseGroup.assemblyCount()), mConfig.PerfLogTime);
 
                 if(processedCount > 0 && (processedCount % PHASE_GROUP_LOG_COUNT) == 0)
                 {

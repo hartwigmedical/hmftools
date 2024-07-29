@@ -105,7 +105,7 @@ public class RemoteGroupBuilder extends ThreadTask
                     findRemotePhasedAssemblies(junctionGroup, assembly);
                 }
 
-                stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {

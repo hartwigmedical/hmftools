@@ -90,6 +90,7 @@ public class ExtensionSeqBuilder
     }
 
     public byte[] extensionBases() { return mBases; }
+    public int extensionLength() { return mBases.length - 1; } // since includes the first ref base
     public byte[] baseQualities() { return mBaseQuals; }
     public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }

@@ -327,6 +327,9 @@ public class RefBaseExtender
         {
             Set<String> excludedReads = excludedReadIdsList.get(i);
 
+            List<Read> nonExcludedNonJunctionSupport = nonJunctionSupport.stream()
+                    .filter(x -> excludedReads.stream().noneMatch(y -> x.id().contains(y))).collect(Collectors.toList());
+
             JunctionAssembly junctionAssembly = null;
 
             if(i == 0)
@@ -336,7 +339,7 @@ public class RefBaseExtender
                 // first remove support from the main assembly
                 originalAssembly.removeSupportReads(excludedReads);
 
-                extendAssemblyRefBases(originalAssembly, nonSoftClipRefPosition, nonJunctionSupport, refGenome, false);
+                extendAssemblyRefBases(originalAssembly, nonSoftClipRefPosition, nonExcludedNonJunctionSupport, refGenome, false);
             }
             else
             {
@@ -358,10 +361,9 @@ public class RefBaseExtender
                 List<SupportRead> newSupport = initialSupport.stream().filter(x -> !excludedReads.contains(x.id())).collect(Collectors.toList());
 
                 junctionAssembly = new JunctionAssembly(originalAssembly, refSideSoftClip, newRefBaseLength, newSupport);
-                extendAssemblyRefBases(junctionAssembly, refSideSoftClip.Position, nonJunctionSupport, refGenome, true);
-            }
 
-            checkAddRefBaseSupport(junctionAssembly, nonJunctionSupport, excludedReads);
+                extendAssemblyRefBases(junctionAssembly, refSideSoftClip.Position, nonExcludedNonJunctionSupport, refGenome, true);
+            }
 
             // only add branched assemblies if they have sufficient support
             if(junctionAssembly != originalAssembly)

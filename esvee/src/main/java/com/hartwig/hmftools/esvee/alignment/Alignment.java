@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
@@ -135,7 +136,9 @@ public class Alignment
                         SV_LOGGER.debug("processed {} assembly alignments", processedCount);
                     }
 
-                    stopCheckLog(assemblyAlignment.info(), mConfig.PerfLogTime);
+                    stopCheckLog(
+                            format("alignment count(%d) assemblies(%s)", assemblyAlignment.assemblies().size(), assemblyAlignment.info()),
+                            mConfig.PerfLogTime);
                 }
                 catch(NoSuchElementException e)
                 {
@@ -152,6 +155,12 @@ public class Alignment
 
         private void processAssembly(final AssemblyAlignment assemblyAlignment)
         {
+            if(!assemblyAlignment.isValid())
+            {
+                SV_LOGGER.warn("assembly alignment({}) invalid, skipping", assemblyAlignment);
+                return;
+            }
+
             List<AlignData> alignments;
             List<AlignData> requeriedAlignments;
 

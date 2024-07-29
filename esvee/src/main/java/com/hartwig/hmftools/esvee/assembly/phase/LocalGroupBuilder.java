@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
@@ -74,7 +76,7 @@ public class LocalGroupBuilder extends ThreadTask
 
                 formLocalPhaseGroups(junctionGroup);
 
-                stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {

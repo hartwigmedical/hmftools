@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.sv;
 public final class SvVcfTags
 {
     // set by Esvee
+    public static final String ESVEE_VERSION = "EsveeVersion";
+
     public static final String SVTYPE = "SVTYPE";
     public static final String SVTYPE_DESC = "Type of structural variant";
 

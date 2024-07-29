@@ -98,7 +98,7 @@ public class JunctionAssembler
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
-        if(!extensionSeqBuilder.isValid())
+        if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
             return Collections.emptyList();
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();

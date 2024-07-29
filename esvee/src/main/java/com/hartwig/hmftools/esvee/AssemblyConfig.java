@@ -235,8 +235,8 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
-        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 

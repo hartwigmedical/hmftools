@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.hasUnsetBases;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -67,16 +68,22 @@ public class AssemblyAlignment
 
         mSequenceCigar = "";
         mSequenceOverlaps = Maps.newHashMap();
-
         mFragmentReadsMap = Maps.newHashMap();
-
-        mFullSequence = buildSequenceData();
-        mFragmentReadsMap.clear();
-        mFullSequenceLength = mFullSequence != null ? mFullSequence.length() : 0;
-
         mBreakends = Lists.newArrayList();
 
         mAssemblies.forEach(x -> x.setAssemblyAlignmentInfo(info())); // set for output TSV only
+
+        if(mAssemblies.stream().noneMatch(x -> hasUnsetBases(x)))
+        {
+            mFullSequence = buildSequenceData();
+            mFragmentReadsMap.clear();
+        }
+        else
+        {
+            mFullSequence = null;
+        }
+
+        mFullSequenceLength = mFullSequence != null ? mFullSequence.length() : 0;
     }
 
     public int id() { return mId; }
