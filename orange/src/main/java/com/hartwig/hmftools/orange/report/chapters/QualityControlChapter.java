@@ -264,7 +264,7 @@ public class QualityControlChapter implements ReportChapter
         Table tumorStats = Tables.createContent(contentWidth(),
                 new float[] { 2, 1, 1 },
                 new Cell[] {
-                        cells.createHeader("Measure"),
+                        cells.createHeader(Strings.EMPTY),
                         cells.createHeader("Minimum count"),
                         cells.createHeader("Observed count"),
                 });
@@ -277,7 +277,7 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
 
-        tumorStats.addCell(cells.createContent("Number of small variants)"));
+        tumorStats.addCell(cells.createContent("Number of small variants"));
         tumorStats.addCell(cells.createContent("1000"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantCount())));
 
