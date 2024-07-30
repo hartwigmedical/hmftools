@@ -22,27 +22,5 @@ public enum StructuralVariantType
         return StructuralVariantType.valueOf(svType);
     }
 
-    public static int typeAsInt(@NotNull StructuralVariantType type)
-    {
-        // ordered alphabetically
-        switch(type)
-        {
-            case BND:
-                return 0;
-            case DEL:
-                return 1;
-            case DUP:
-                return 2;
-            case INF:
-                return 3;
-            case INS:
-                return 4;
-            case INV:
-                return 5;
-            case SGL:
-                return 6;
-        }
-
-        return 0;
-    }
+    public static int typeAsInt(StructuralVariantType type) { return type.ordinal(); }
 }
