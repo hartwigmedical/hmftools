@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
@@ -15,10 +16,14 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_600;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
+import static com.hartwig.hmftools.esvee.TestUtils.setSecondInPair;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyLinksTest.checkSupportReadSequenceIndices;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.hasAssemblyLink;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -86,6 +91,7 @@ public class SpecificAlignmentsTest
         assembly2.addJunctionRead(juncRead2);
         juncRead1.setMateRead(juncRead2);
         juncRead2.setMateRead(juncRead1);
+        setSecondInPair(juncRead2.bamRecord());
         candidates1.add(juncRead2);
         candidates2.add(juncRead1);
 
@@ -108,13 +114,14 @@ public class SpecificAlignmentsTest
 
         readBases = REF_BASES_600.substring(400, 480); // extends the extension seq 20 bases further back
         Read unmappedRead1 = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, NO_CIGAR, CHR_1, 200, false);
+                juncRead1b.id(), CHR_1, 200, readBases, NO_CIGAR, CHR_1, 200, false);
         unmappedRead1.bamRecord().setReadUnmappedFlag(true);
 
         assembly1.addJunctionRead(juncRead1b);
         candidates1.add(unmappedRead1);
         juncRead1b.setMateRead(unmappedRead1);
         unmappedRead1.setMateRead(juncRead1b);
+        setSecondInPair(unmappedRead1.bamRecord());
 
         Read juncRead2b = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 251, assemblyBases2.substring(51), "50M50S",
@@ -124,13 +131,14 @@ public class SpecificAlignmentsTest
 
         readBases = REF_BASES_600.substring(120, 200); // was 100-180, so extends 20 bases further out
         Read unmappedRead2 = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 251, readBases, NO_CIGAR, CHR_1, 251, false);
+                juncRead2b.id(), CHR_1, 251, readBases, NO_CIGAR, CHR_1, 251, false);
         unmappedRead2.bamRecord().setReadUnmappedFlag(true);
 
         assembly2.addJunctionRead(juncRead2b);
         candidates2.add(unmappedRead2);
         juncRead2b.setMateRead(unmappedRead2);
         unmappedRead2.setMateRead(juncRead2b);
+        setSecondInPair(unmappedRead2.bamRecord());
 
 
         RefBaseExtender refBaseExtender = new RefBaseExtender();
@@ -172,11 +180,40 @@ public class SpecificAlignmentsTest
         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
 
         assertEquals(301, assemblyAlignment.fullSequenceLength());
-        assertEquals(0, supportRead1.fullAssemblyIndexStart());
-        assertEquals(99 + 101 + 20, supportRead2.fullAssemblyIndexStart());
 
         String fullSequence = REF_BASES_600.substring(400, 500) + refBases1 + REF_BASES_600.substring(100, 200);
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
+
+        // confirm full seq read indices
+        SupportRead supportRead = assembly1.support().stream()
+                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(50, supportRead.fullAssemblyIndexStart());
+
+        supportRead = assembly1.support().stream()
+                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(sharedRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(90, supportRead.fullAssemblyIndexStart());
+
+        supportRead = assembly1.support().stream()
+                .filter(x -> x.type() == JUNCTION_MATE && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(151, supportRead.fullAssemblyIndexStart());
+
+        supportRead = assembly2.support().stream()
+                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(151, supportRead.fullAssemblyIndexStart());
+
+        supportRead = assembly2.support().stream()
+                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(sharedRead1.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(90, supportRead.fullAssemblyIndexStart());
+
+        supportRead = assembly2.support().stream()
+                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead2.id())).findFirst().orElse(null);
+        assertNotNull(supportRead);
+        assertEquals(221, supportRead.fullAssemblyIndexStart());
     }
 
     @Test
@@ -193,21 +230,24 @@ public class SpecificAlignmentsTest
         refGenome.RefGenomeMap.put(CHR_2, REF_BASES_600);
 
         // chr1:100:-1 - has reads soft-clipping at 200 and others going out further and soft-clipping at 300
-        String refBases1 = REF_BASES_400.substring(100, 150);
+        String refBases1Old = REF_BASES_400.substring(100, 150);
+        String refBases1 = refGenome.getBaseString(CHR_1, 100, 150);
         String extBases1 = refGenome.getBaseString(CHR_2, 100, 200);
         String assemblyBases1 = Nucleotides.reverseComplementBases(extBases1) + refBases1;
 
         JunctionAssembly assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
         // chr1:200:1
-        String refBases2 = REF_BASES_400.substring(100, 201);
+        String refBases2Old = REF_BASES_400.substring(100, 201);
+        String refBases2 = refGenome.getBaseString(CHR_1, 100, 200);
         String extBases2 = refGenome.getBaseString(CHR_1, 251, 301);
         String assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(extBases2);
 
         JunctionAssembly assembly2 = createAssembly(CHR_1, 200, FORWARD, assemblyBases2, refBases2.length() - 1);
 
         // chr1:300:1
-        String refBases3 = REF_BASES_400.substring(251, 301);
+        String refBases3Old = REF_BASES_400.substring(251, 301);
+        String refBases3 = refGenome.getBaseString(CHR_1, 251, 300);
         String extBases3 = refGenome.getBaseString(CHR_1, 151, 201);
         String assemblyBases3 = refBases3 + Nucleotides.reverseComplementBases(extBases3);
 
@@ -241,6 +281,7 @@ public class SpecificAlignmentsTest
 
         juncRead1d.setMateRead(mate1d);
         mate1d.setMateRead(juncRead1d);
+        setSecondInPair(mate1d.bamRecord());
 
         assembly1.addJunctionRead(juncRead1d);
         candidates1.add(mate1d);
@@ -291,6 +332,7 @@ public class SpecificAlignmentsTest
 
         juncRead1c.setMateRead(juncRead2c);
         juncRead2c.setMateRead(juncRead1c);
+        setSecondInPair(juncRead2c.bamRecord());
         candidates1.add(juncRead2c);
         candidates2.add(juncRead1c);
 
@@ -319,6 +361,7 @@ public class SpecificAlignmentsTest
 
         juncRead3b.setMateRead(juncRead1b);
         juncRead1b.setMateRead(juncRead3b);
+        setSecondInPair(juncRead3b.bamRecord());
 
         assembly3.addJunctionRead(juncRead3b);
         candidates1.add(juncRead3b);
@@ -362,6 +405,7 @@ public class SpecificAlignmentsTest
 
         mate2.setMateRead(juncRead2b);
         juncRead2b.setMateRead(mate2);
+        setSecondInPair(mate2.bamRecord());
 
         candidates2.add(mate2);
         candidates3.add(mate2);
@@ -416,6 +460,19 @@ public class SpecificAlignmentsTest
         assertEquals(0, getSupportTypeCount(assembly2, DISCORDANT));
         */
 
-        // TODO: extend to test full alignment building and interpretation of alignments
+        String fullSequence = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 249))
+                + refGenome.getBaseString(CHR_1, 100, 300) + "C"
+                + Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
+
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
+
+        assertEquals(fullSequence, assemblyAlignment.fullSequence());
+
+        /*
+        checkSupportReadSequenceIndices(assembly1, 0, 150, FORWARD);
+        checkSupportReadSequenceIndices(assembly2, 0, 150, FORWARD);
+        checkSupportReadSequenceIndices(assembly3, 0, 150, FORWARD);
+        */
+
     }
 }

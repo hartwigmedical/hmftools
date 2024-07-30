@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.hasUnsetBases;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -130,11 +131,11 @@ public class AssemblyAlignment
 
         if(assembly.isForwardJunction())
         {
-            setAssemblyReadIndices(assembly, false, 0, refBaseLength);
+            setAssemblyReadIndices(assembly, false, refBaseLength - 1);
         }
         else
         {
-            setAssemblyReadIndices(assembly, false, extensionLength, refBaseLength);
+            setAssemblyReadIndices(assembly, false, extensionLength);
         }
 
         if(assembly.isForwardJunction())
@@ -161,7 +162,7 @@ public class AssemblyAlignment
         int linkCount = assemblyLinks.size();
 
         // for a chain which starts with a facing link, reverse the order in which the sequence is added so as to start with ref bases
-        if(assemblyLinks.get(0).type() == LinkType.FACING && assemblyLinks.get(linkCount - 1).type() != LinkType.FACING)
+        if(assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() != FACING)
         {
             assemblies = Lists.newArrayList(assemblies);
             assemblyLinks = Lists.newArrayList(assemblyLinks);
@@ -174,7 +175,7 @@ public class AssemblyAlignment
 
         boolean startReversed, hasOuterExtensions;
 
-        if(!first.isForwardJunction() && last.isForwardJunction() && mPhaseSet.hasFacingLinks())
+        if(first.isReverseJunction() && last.isForwardJunction() && mPhaseSet.hasFacingLinks())
         {
             startReversed = false;
             hasOuterExtensions = true;
@@ -215,7 +216,7 @@ public class AssemblyAlignment
                     fullSequence.append(assemblyExtensionBases);
 
                     // add the extra base since the junction index itself is not included in these extension bases
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length() + 1, 0);
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length());
 
                     logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
 
@@ -230,7 +231,7 @@ public class AssemblyAlignment
 
                     fullSequence.append(assemblyRefBases);
 
-                    setAssemblyReadIndices(assembly, assemblyReversed, 0, assemblyRefBases.length());
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyRefBases.length() - 1);
 
                     currentSeqLength += assemblyRefBases.length();
 
@@ -248,7 +249,7 @@ public class AssemblyAlignment
                     // ref bases for this segment have already been added so only set assembly indices
                     JunctionAssembly nextAssembly = assemblies.get(i + 1);
 
-                    setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength, 0);
+                    setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength);
                     continue;
                 }
 
@@ -269,7 +270,9 @@ public class AssemblyAlignment
             }
 
             JunctionAssembly nextAssembly = assemblies.get(i + 1);
-            boolean nextReversed = (assembly.junction().Orient == nextAssembly.junction().Orient && !assemblyReversed);
+
+            // typically reverse any assemblies which come in on the +ve side, unless this is a facing link (from outer extensions)
+            boolean nextReversed = nextAssembly.isForwardJunction() && link.type() != FACING;
 
             String nextAssemblyRefBases = nextReversed ?
                     Nucleotides.reverseComplementBases(nextAssembly.formRefBaseSequence()) : nextAssembly.formRefBaseSequence();
@@ -281,7 +284,8 @@ public class AssemblyAlignment
 
             currentSeqLength -= overlapLength;
 
-            setAssemblyReadIndices(nextAssembly, nextReversed, currentSeqLength, nextAssemblyRefBases.length());
+            int nextAssemblyJunctionIndex = link.type() != FACING ? currentSeqLength : currentSeqLength + nextAssemblyRefBases.length();
+            setAssemblyReadIndices(nextAssembly, nextReversed, nextAssemblyJunctionIndex);
 
             logBuildInfo(nextAssembly, currentSeqLength, nextAssemblyRefBases.length(), assemblyReversed, "ref-bases");
 
@@ -355,8 +359,7 @@ public class AssemblyAlignment
         elements.set(lastIndex, new CigarElement(lastElement.getLength() + length, operator));
     }
 
-    private void setAssemblyReadIndices(
-            final JunctionAssembly assembly, boolean isReversed, int existingSequenceLength, int assemblyRefBaseLength)
+    private void setAssemblyReadIndices(final JunctionAssembly assembly, boolean isReversed, int assemblyJunctionSeqIndex)
     {
         // for reads with forward orientation, their full sequence index is just the full sequence start offset + the read's junction distance
         // for reads in reversed assemblies, define their assembly index from the read's end index then going forward to the read start index
@@ -371,12 +374,7 @@ public class AssemblyAlignment
         // reverse assemblies, reversed: eg a -ve inversion has the first assembly reversed and added to the start
         //      RI = E + AR - 'JRSD
 
-        boolean includeAssemblyRefBaseLength = assembly.isForwardJunction() == !isReversed;
-
-        int currentSeqEndIndex = existingSequenceLength - 1;
-
-        if(includeAssemblyRefBaseLength)
-            currentSeqEndIndex += assemblyRefBaseLength;
+        int currentSeqEndIndex = assemblyJunctionSeqIndex;
 
         for(SupportRead read : assembly.support())
         {

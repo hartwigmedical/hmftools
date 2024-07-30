@@ -144,6 +144,26 @@ public class TestUtils
         return sb.toString();
     }
 
+    public static void setSecondInPair(final SAMRecord record)
+    {
+        record.setSecondOfPairFlag(true);
+        record.setFirstOfPairFlag(false);
+    }
+
+    public static void flipFirstInPair(final SAMRecord record)
+    {
+        if(record.getFirstOfPairFlag())
+        {
+            record.setSecondOfPairFlag(true);
+            record.setFirstOfPairFlag(false);
+        }
+        else
+        {
+            record.setSecondOfPairFlag(false);
+            record.setFirstOfPairFlag(true);
+        }
+    }
+
     public static List<SAMRecord> createJunctionReads(
             final MockRefGenome refGenome, final String readId, int anchorLength,
             final String chrStart, int junctionPosStart, Orientation junctionOrientStart,

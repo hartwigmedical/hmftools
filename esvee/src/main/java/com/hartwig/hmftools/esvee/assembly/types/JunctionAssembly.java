@@ -138,6 +138,7 @@ public class JunctionAssembly
 
     public Junction junction() { return mJunction; }
     public boolean isForwardJunction() { return mJunction.isForward(); }
+    public boolean isReverseJunction() { return mJunction.isReverse(); }
 
     public boolean indel() { return mJunction.IndelBased; }
 

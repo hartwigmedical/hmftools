@@ -130,8 +130,8 @@ public class AlignmentTest
         String fullSequence = refBases1 + refBases2;
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
-        assertEquals(69, assembly2.support().get(0).fullAssemblyIndexStart());
-        assertEquals(109, assembly2.support().get(1).fullAssemblyIndexStart());
+        assertEquals(70, assembly2.support().get(0).fullAssemblyIndexStart());
+        assertEquals(110, assembly2.support().get(1).fullAssemblyIndexStart());
 
         // with overlap
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", refBases2.substring(0, 30));
