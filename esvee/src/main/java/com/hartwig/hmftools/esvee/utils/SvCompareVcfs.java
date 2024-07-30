@@ -9,8 +9,11 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
@@ -58,8 +61,8 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -83,8 +86,8 @@ public class SvCompareVcfs
 
     private final BufferedWriter mWriter;
 
+    private final VcfType mOriginalVcfType;
     private final boolean mCompareFilters; // only relevant for the same caller (ie Esvee or Gridss)
-    private final boolean mOriginalIsGridss;
     private final boolean mIgnorePonDiff;
 
     private final List<VcfCompareField> mVcfCheckFields;
@@ -121,7 +124,7 @@ public class SvCompareVcfs
         mNewChrBreakendMap = Maps.newHashMap();
         mRefGenomeVersion = null;
 
-        mOriginalIsGridss = mOriginalVcf.contains("gridss") || mOriginalVcf.contains("gripss");
+        mOriginalVcfType = VcfType.fromVcfPath(mOriginalVcf);
         mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
         mCompareFilters = configBuilder.hasFlag(COMPARE_FILTERS);
 
@@ -136,19 +139,22 @@ public class SvCompareVcfs
 
     private void addComparisonFields()
     {
-        mVcfCheckFields.add(new VcfCompareField(
-                REF_DEPTH, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        if(mOriginalVcfType == VcfType.ESVEE || mOriginalVcfType == VcfType.GRIDSS)
+        {
+            mVcfCheckFields.add(new VcfCompareField(
+                    REF_DEPTH, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        mVcfCheckFields.add(new VcfCompareField(
-                REF_DEPTH_PAIR, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(
+                    REF_DEPTH_PAIR, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        mVcfCheckFields.add(new VcfCompareField(
-                STRAND_BIAS, FieldType.DECIMAL, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(
+                    STRAND_BIAS, FieldType.DECIMAL, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        mVcfCheckFields.add(new VcfCompareField(
-                IHOMPOS, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
+            mVcfCheckFields.add(new VcfCompareField(
+                    IHOMPOS, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
+        }
 
-        if(!mOriginalIsGridss)
+        if(mOriginalVcfType == VcfType.ESVEE)
         {
             mVcfCheckFields.add(new VcfCompareField(
                     QUAL, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
@@ -158,6 +164,22 @@ public class SvCompareVcfs
 
             mVcfCheckFields.add(new VcfCompareField(
                     DISC_FRAGS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        }
+
+        if(mOriginalVcfType == VcfType.TRUTH)
+        {
+            // Use assembly id 'comparison' to force all breakends to be outputted, regardless of diff or no diff
+            mVcfCheckFields.add(new VcfCompareField(
+                    ASMID, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    BEOR, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    CIPOS, FieldType.STRING, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    HOMSEQ, FieldType.STRING, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
         }
 
         /*
@@ -492,7 +514,9 @@ public class SvCompareVcfs
             return;
         }
 
-        String origVcfTag = mOriginalIsGridss ? mapToGridssVcfTag(compareField.VcfTag, origBreakend.isSingle()) : compareField.VcfTag;
+        String origVcfTag = mOriginalVcfType == VcfType.GRIDSS ?
+                mapToGridssVcfTag(compareField.VcfTag, origBreakend.isSingle()) :
+                compareField.VcfTag;
 
         if(compareField.Scope == GenotypeScope.COMBINED)
         {
@@ -545,11 +569,6 @@ public class SvCompareVcfs
                             origBreakend, newBreakend, compareField,
                             getGenotypeAttributeAsDouble(origGenotype, origVcfTag, 0),
                             getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0));
-                }
-
-                if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
-                {
-                    writeDiffs(origBreakend, newBreakend, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
                 }
             }
         }
@@ -776,6 +795,23 @@ public class SvCompareVcfs
         STRING,
         INTEGER,
         DECIMAL;
+    }
+
+    private enum VcfType {
+        ESVEE,
+        GRIDSS,
+        TRUTH;
+
+        private static VcfType fromVcfPath(String path)
+        {
+            if(path.contains("gridss") || path.contains("gripss"))
+                return GRIDSS;
+
+            if(path.contains("truth"))
+                return TRUTH;
+
+            return ESVEE;
+        }
     }
 
     private class VcfCompareField
