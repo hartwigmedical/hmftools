@@ -74,21 +74,21 @@ public class RefBaseExtender
         List<Read> suppJunctionReads = Lists.newArrayList();
 
         // add any junction mates in the same window
-        for(SupportRead support : assembly.support())
+        for(SupportRead read : assembly.support())
         {
-            if(support.cachedRead().hasSupplementary())
-                suppJunctionReads.add(support.cachedRead());
+            if(read.cachedRead().hasSupplementary())
+                suppJunctionReads.add(read.cachedRead());
 
-            assembly.checkAddRefSideSoftClip(support.cachedRead()); // a junction read can be soft-clipped on both sides
+            assembly.checkAddRefSideSoftClip(read.cachedRead()); // a junction read can be soft-clipped on both sides
 
-            if(isDiscordantFragment(support.cachedRead()))
+            if(isDiscordantFragment(read.cachedRead()))
             {
-                remoteJunctionMates.add(support.cachedRead());
+                remoteJunctionMates.add(read.cachedRead());
                 continue;
             }
 
             // look to extend from local mates on the ref side of the junction
-            Read mateRead = support.cachedRead().mateRead();
+            Read mateRead = read.cachedRead().mateRead();
 
             if(mateRead == null)
                 continue;

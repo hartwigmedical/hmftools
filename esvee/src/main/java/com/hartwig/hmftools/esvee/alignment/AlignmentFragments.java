@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
 import java.util.List;
@@ -14,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -55,13 +62,19 @@ public class AlignmentFragments
                 if(processedFragments.contains(read.id()))
                     continue;
 
-                SupportRead firstRead = mFragmentMap.remove(read.id());
+                SupportRead firstRead = mFragmentMap.get(read.id());
 
                 if(firstRead == null)
                 {
                     mFragmentMap.put(read.id(), read);
                     continue;
                 }
+                else if(firstRead.flags() == read.flags())
+                {
+                    continue;
+                }
+
+                mFragmentMap.remove(read.id());
 
                 // only process a fragment once even if it belongs to multiple assemblies
                 processedFragments.add(read.id());
@@ -168,15 +181,39 @@ public class AlignmentFragments
         Set<Breakend> breakends = Sets.newHashSet();
         addUniqueBreakends(breakends, readBreakendMatches);
 
+        int inferredFragmentLength = -1;
+
+        if(!read.isDiscordant() && breakends.size() <= 2)
+        {
+            StructuralVariantType svType = readBreakendMatches.get(0).Breakend.svType();
+            int svLength = readBreakendMatches.get(0).Breakend.svLength();
+
+            if((svType == DEL || svType == DUP || svType == INS) && svLength <= PROXIMATE_DEL_LENGTH)
+            {
+                inferredFragmentLength = abs(read.insertSize());
+
+                if(svType == DUP)
+                    inferredFragmentLength += svLength;
+
+                read.setInferredFragmentLength(inferredFragmentLength);
+            }
+        }
+
         for(Breakend breakend : breakends)
         {
             boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
 
+            if(inferredFragmentLength > 0)
+                breakend.addInferredFragmentLength(inferredFragmentLength);
+
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+
+                if(inferredFragmentLength > 0)
+                    breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength);
             }
         }
     }

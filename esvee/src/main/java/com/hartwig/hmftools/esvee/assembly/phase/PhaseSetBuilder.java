@@ -397,6 +397,8 @@ public class PhaseSetBuilder
                 assembly.expandExtensionBases(
                         unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
             }
+
+            assembly.unmappedReads().clear(); // no longer required
         }
     }
 
@@ -627,21 +629,6 @@ public class PhaseSetBuilder
                 facingAssemblies.add(assembly2);
             }
         }
-    }
-
-    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        // tests matching reads in both the junction reads and any extension reads (ie discordant)
-        for(SupportRead support : first.support())
-        {
-            if(support.type() == JUNCTION_MATE)
-                continue;
-
-            if(hasMatchingFragmentRead(second.support(), support))
-                return true;
-        }
-
-        return false;
     }
 
     private void formPhaseSets()
