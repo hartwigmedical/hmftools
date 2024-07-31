@@ -20,6 +20,7 @@ public class TumorStatsFactory
     public static TumorStats compute(@NotNull PurpleData purpleData)
     {
         return ImmutableTumorStats.builder()
+                .maxDiploidProportion(purpleData.purityContext().score().maxDiploidProportion())
                 .hotspotMutationCount(hotspotMutationCount(purpleData))
                 .hotspotStructuralVariantCount(hotspotStructuralVariants(purpleData))
                 .smallVariantAlleleReadCount(smallVariantAlleleReadCount(purpleData))

@@ -731,6 +731,7 @@
     "allGermlineLossOfHeterozygosities": [],
     "reportableGermlineLossOfHeterozygosities": [],
     "tumorStats": {
+      "maxDiploidProportion": 0.0211,
       "hotspotMutationCount": 3,
       "hotspotStructuralVariantCount": 0,
       "smallVariantAlleleReadCount": 2273132,

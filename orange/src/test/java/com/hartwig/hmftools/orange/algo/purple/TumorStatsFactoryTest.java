@@ -198,6 +198,7 @@ public class TumorStatsFactoryTest
     public static ImmutableTumorStats.Builder createMinimalTumorStatsBuilder()
     {
         return ImmutableTumorStats.builder()
+                .maxDiploidProportion(0)
                 .hotspotMutationCount(0)
                 .hotspotStructuralVariantCount(0)
                 .smallVariantAlleleReadCount(0)

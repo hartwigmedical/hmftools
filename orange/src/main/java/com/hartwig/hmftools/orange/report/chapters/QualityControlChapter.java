@@ -262,35 +262,31 @@ public class QualityControlChapter implements ReportChapter
     {
         Cells cells = new Cells(reportResources);
         Table tumorStats = Tables.createContent(contentWidth(),
-                new float[] { 2, 1, 1 },
+                new float[] { 3, 1 },
                 new Cell[] {
                         cells.createHeader(Strings.EMPTY),
-                        cells.createHeader("Minimum count"),
-                        cells.createHeader("Observed count"),
+                        cells.createHeader(Strings.EMPTY),
                 });
 
+        tumorStats.addCell(cells.createContent("Tumor maximum diploid proportion"));
+        tumorStats.addCell(cells.createContent(formatPercentage(report.purple().tumorStats().maxDiploidProportion())));
+
         tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
-        tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotMutationCount())));
 
         tumorStats.addCell(cells.createContent("Number of hotspot structural variants"));
-        tumorStats.addCell(cells.createContent("1"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
 
         tumorStats.addCell(cells.createContent("Sum of small variants allele read counts"));
-        tumorStats.addCell(cells.createContent("1000"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantAlleleReadCount())));
 
-        tumorStats.addCell(cells.createContent("Sum of structural variant tumor fragment counts"));
-        tumorStats.addCell(cells.createContent("1000"));
+        tumorStats.addCell(cells.createContent("Sum of structural variant tumor fragment counts (excluding single breakends)"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantTumorFragmentCount())));
 
-        tumorStats.addCell(cells.createContent(
-                "Sum of B allele frequency counts"));
-        tumorStats.addCell(cells.createContent("3000"));
+        tumorStats.addCell(cells.createContent("Sum of B-allele frequency points in germline diploid regions regions with tumor ratio < 0.8 OR > 1.2"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
-                "Presence of tumor stats (at least one measure should meet minimum)"));
+                "Detection of tumor"));
     }
 }
