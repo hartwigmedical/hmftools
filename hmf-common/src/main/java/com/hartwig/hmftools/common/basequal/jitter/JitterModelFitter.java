@@ -169,7 +169,7 @@ public class JitterModelFitter
 
         // assign the params
         mJitterModelParams = new JitterModelParams(
-                mStatsTable.repeatUnit,
+                mStatsTable.RepeatUnit,
                 optimalScaleRepeat4, optimalScaleRepeat5, optimalScaleRepeat6,
                 scaleFitGradient, scaleFitIntercept, microsatelliteSkew);
     }

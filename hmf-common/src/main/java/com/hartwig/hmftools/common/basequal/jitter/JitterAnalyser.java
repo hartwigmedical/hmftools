@@ -58,14 +58,14 @@ public class JitterAnalyser
         MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers);
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
-        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);
+        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
 
         // draw a chart of the 9 ms profiles
         if(mConfig.WritePlots)
             drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
-        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers);
+        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers, mConfig.MaxSingleSiteAltContribution);
 
         JitterModelParamsFile.write(JitterModelParamsFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), jitterModelParamsList);
     }
@@ -82,8 +82,9 @@ public class JitterAnalyser
         return refGenomeMicrosatellites;
     }
 
-    private static void writeMicrosatelliteStatsTable(@NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
-            final String filename)
+    private static void writeMicrosatelliteStatsTable(
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final String filename,
+            final JitterAnalyserConfig config)
     {
         // write two tables, one with real variant filter, one without
 
@@ -91,7 +92,8 @@ public class JitterAnalyser
 
         for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(s.unitName(),
+            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                    s.unitName(), config.MaxSingleSiteAltContribution,
                     microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
             msStatsTables.add(msStatsTable);
         }
@@ -119,7 +121,7 @@ public class JitterAnalyser
     }
 
     private static List<JitterModelParams> fitJitterModels(
-            @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final double maxSingleSiteAltContribution)
     {
         // create nine summary / pivot table
         // {A/T, C/G, AT/TA, AG/GA/CT/TC, AC/CA/GT/TG, CG/GC, any 3 base, any 4 base, any 5 base}
@@ -136,8 +138,10 @@ public class JitterAnalyser
 
         for(MicrosatelliteSelector selector : selectors)
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(selector.unitName(),
+            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                    selector.unitName(), maxSingleSiteAltContribution,
                     microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
+
             JitterModelFitter fitter = new JitterModelFitter(msStatsTable);
             fitter.performFit();
             fittedParams.add(fitter.getJitterModelParams());

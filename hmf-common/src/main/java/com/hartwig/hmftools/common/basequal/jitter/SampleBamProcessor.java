@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 // For performance reasons, this class is not decoupled from the threading
@@ -60,7 +61,8 @@ public class SampleBamProcessor
 
     public void queryBam(final JitterAnalyserConfig config, ExecutorService executorService) throws InterruptedException
     {
-        SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.BamStringency);
+        SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(ValidationStringency.SILENT);
+
         if(config.RefGenomeFile != null)
         {
             readerFactory = readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomeFile)));

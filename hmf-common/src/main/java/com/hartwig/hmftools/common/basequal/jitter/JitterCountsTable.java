@@ -50,23 +50,26 @@ public class JitterCountsTable
             return jitterCounts.getOrDefault(jitter, 0);
         }
 
-        String getRepeatUnit() { return repeatUnit; }
+        String getRepeatUnit() { return RepeatUnit; }
     }
 
-    public final String repeatUnit;
+    public final String RepeatUnit;
 
     // ref num unit to rows
     private final List<Row> mRows = new ArrayList<>();
 
-    JitterCountsTable(final String repeatUnit)
+    private final double mMaxSingleAltSiteContributionPerc;
+
+    JitterCountsTable(final String repeatUnit, final double maxSingleAltSiteContributionPerc)
     {
-        this.repeatUnit = repeatUnit;
+        RepeatUnit = repeatUnit;
+        mMaxSingleAltSiteContributionPerc = maxSingleAltSiteContributionPerc;
     }
 
     // summarise the data from
     static JitterCountsTable summariseFrom(
-            final String repeatUnit,
-            @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
+            final String repeatUnit, final double maxSingleAltSiteContributionPerc,
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
     {
         // In order to filter out outliers, we perform the stats summation in a loop
         // We create a table of all read stats, then use that table to filter out outliers and create a
@@ -77,7 +80,7 @@ public class JitterCountsTable
 
         while(true)
         {
-            JitterCountsTable newTable = new JitterCountsTable(repeatUnit);
+            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, maxSingleAltSiteContributionPerc);
 
             for(MicrosatelliteSiteAnalyser microsatelliteSiteAnalyser : microsatelliteSiteAnalysers)
             {
@@ -150,13 +153,13 @@ public class JitterCountsTable
             int siteJitterReadCount = entry.getValue();
             int allJitterReadCount = getJitterReadCount(siteCounts.refNumUnits, jitter);
 
-            if(siteJitterReadCount >= JitterAnalyserConstants.MIN_SITE_READS_BEFORE_OUTLIER_CHECK &&
-                    siteJitterReadCount >= allJitterReadCount * JitterAnalyserConstants.MAX_SINGLE_SITE_ALT_CONTRIBUTION)
+            if(siteJitterReadCount >= JitterAnalyserConstants.MIN_SITE_READS_BEFORE_OUTLIER_CHECK
+            && siteJitterReadCount >= allJitterReadCount * mMaxSingleAltSiteContributionPerc)
             {
                 sLogger.trace("{} x unit({}), site jitter({}) read count({}) > all sites jitter read count({}) * {}, filtering",
                         siteCounts.refNumUnits,
                         siteCounts.getRepeatUnit(),
-                        jitter, siteJitterReadCount, allJitterReadCount, JitterAnalyserConstants.MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+                        jitter, siteJitterReadCount, allJitterReadCount, mMaxSingleAltSiteContributionPerc);
                 return true;
             }
         }

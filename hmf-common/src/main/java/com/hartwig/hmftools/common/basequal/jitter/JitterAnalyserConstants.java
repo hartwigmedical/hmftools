@@ -16,5 +16,5 @@ public class JitterAnalyserConstants
     public static final double MAX_REJECTED_READ_FRACTION = 0.2;
 
     public static final double MIN_SITE_READS_BEFORE_OUTLIER_CHECK = 3;
-    public static final double MAX_SINGLE_SITE_ALT_CONTRIBUTION = 0.8;
+    public static final double DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION = 0.8;
 }

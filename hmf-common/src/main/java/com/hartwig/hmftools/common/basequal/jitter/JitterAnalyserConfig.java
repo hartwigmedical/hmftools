@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -40,9 +41,9 @@ public class JitterAnalyserConfig
     public final int MinMappingQuality;
 
     public final int MaxSitesPerType;
+    public final double MaxSingleSiteAltContribution;
 
     public final int PartitionSize;
-    public final ValidationStringency BamStringency;
     public final int Threads;
     public final boolean WritePlots;
 
@@ -56,6 +57,7 @@ public class JitterAnalyserConfig
 
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String PARTITION_SIZE = "partition_size";
+    private static final String MAX_SINGLE_SITE_ALT_CONTRIBUTION = "max_site_alt_contribution";
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
@@ -73,7 +75,7 @@ public class JitterAnalyserConfig
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        BamStringency = BamUtils.validationStringency(configBuilder);
+        MaxSingleSiteAltContribution = configBuilder.getDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION);
         WritePlots = true;
         SpecificRegions = loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
     }
@@ -91,7 +93,7 @@ public class JitterAnalyserConfig
         MinMappingQuality = minMappingQuality;
         MaxSitesPerType = maxSitesPerType;
         PartitionSize = DEFAULT_PARTITION_SIZE;
-        BamStringency = ValidationStringency.STRICT;
+        MaxSingleSiteAltContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         Threads = threads;
         WritePlots = writePlots;
         SpecificRegions = null;
@@ -113,6 +115,10 @@ public class JitterAnalyserConfig
                 MIN_MAP_QUALITY, "Minimum mapping quality for an alignment to be used", DEFAULT_MIN_MAPPING_QUALITY);
 
         configBuilder.addInteger(JITTER_MAX_SITES_PER_TYPE, JITTER_MAX_SITES_PER_TYPE_DESC, DEFAULT_NUM_SITES_PER_TYPE);
+
+        configBuilder.addDecimal(
+                MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Max percentage a single alt site can contribute",
+                DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         configBuilder.addInteger(PARTITION_SIZE, "size of the partitions/jobs processed by worker threads", DEFAULT_PARTITION_SIZE);
 
