@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
@@ -159,7 +160,7 @@ public class BreakendBuilder
         }
     }
 
-    private boolean formIndelBreakends(final AlignData alignment)
+        private boolean formIndelBreakends(final AlignData alignment)
     {
         // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
         IndelCoords indelCoords = null;
@@ -186,6 +187,13 @@ public class BreakendBuilder
 
         int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.RefLocation.start();
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
+
+        // the indel must have sufficient bases either side of it to be called
+        int leftAnchorLength = indelSeqStart + 1;
+        int rightAnchorLength = alignment.segmentLength() - indelSeqEnd - 1;
+
+        if(leftAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH || rightAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH)
+            return false;
 
         String insertedBases = "";
         HomologyData homology = null;

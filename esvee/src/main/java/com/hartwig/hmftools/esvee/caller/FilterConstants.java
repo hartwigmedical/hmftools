@@ -57,6 +57,8 @@ public class FilterConstants
     public static final double SGL_MAX_STRAND_BIAS = 0.95;
     public static final double MAX_STRAND_BIAS = 0.95;
 
+    public static final int MIN_TRIMMED_ANCHOR_LENGTH = 50;
+
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 

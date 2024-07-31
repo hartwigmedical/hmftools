@@ -162,7 +162,7 @@ public class AlignData
 
     public double calcModifiedMapQual()
     {
-        double lengthFactor = pow(mAdjustedAlignment/ 100.0, 2);
+        double lengthFactor = pow(mAdjustedAlignment/ (double)max(100, mAlignedBases), 2);
         return (int)round(MapQual * min(1, lengthFactor));
 
     }

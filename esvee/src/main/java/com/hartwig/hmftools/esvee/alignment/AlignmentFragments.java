@@ -248,6 +248,9 @@ public class AlignmentFragments
                 continue;
             }
 
+            if(breakend.isShortLocalDelDupIns()) // do not check / allow discordant support for short local DELs and DUPs
+                continue;
+
             int discordantDistance = readDiscordantBreakendDistance(breakend, read);
 
             if(discordantDistance != INVALID_DISCORANT_DISTANCE)

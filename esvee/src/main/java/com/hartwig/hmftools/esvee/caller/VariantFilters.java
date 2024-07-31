@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
@@ -55,6 +59,9 @@ public class VariantFilters
 
         if(belowMinLength(var))
             var.addFilter(MIN_LENGTH);
+
+        if(belowMinAnchorLength(var))
+            var.addFilter(MIN_ANCHOR_LENGTH);
 
         if(belowMinFragmentLength(var))
             var.addFilter(SHORT_FRAG_LENGTH);
@@ -121,6 +128,24 @@ public class VariantFilters
             return var.length() + var.insertSequence().length() + 1 < mFilterConstants.MinLength;
         else
             return false;
+    }
+
+    private boolean belowMinAnchorLength(final Variant var)
+    {
+        if(var.breakendStart().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH)
+            return true;
+
+        if(var.isSgl())
+        {
+            String insertSequence = var.insertSequence();
+
+            List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence.getBytes());
+            int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length() - 1, repeats);
+
+            return trimmedSequenceLength < MIN_TRIMMED_ANCHOR_LENGTH;
+        }
+        else
+            return var.breakendEnd().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
     }
 
     private boolean belowMinFragmentLength(final Variant var)

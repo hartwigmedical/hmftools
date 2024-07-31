@@ -334,7 +334,7 @@ public class AlignmentTest
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
         // homology at pos 13 and 40
-        alignment = createAlignment(CHR_1, 100, 250, 0, 100, "33M57D60M");
+        alignment = createAlignment(CHR_1, 80, 250, 0, 120, "53M57D60M");
 
         alignments = Lists.newArrayList(alignment);
 

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
@@ -138,6 +139,11 @@ public class Breakend
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
+
+    public int anchorLength()
+    {
+        return Context.getAttributeAsInt(SEGRL, 0);
+    }
 
     public String toString()
     {
