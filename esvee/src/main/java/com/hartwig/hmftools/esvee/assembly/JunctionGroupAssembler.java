@@ -154,7 +154,6 @@ public class JunctionGroupAssembler extends ThreadTask
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
         RefBaseExtender refBaseExtender = new RefBaseExtender();
-        DiscordantReads discordantReads = new DiscordantReads();
 
         // now pass applicable reads to each junction assembler - any read overlapping the junction
         // due to SvPrep filtering, most reads crossing the junction will have met soft-clip criteria
@@ -177,13 +176,8 @@ public class JunctionGroupAssembler extends ThreadTask
             if(candidateReads.isEmpty())
                 continue;
 
-            if(junction.DiscordantOnly)
-            {
-                if(mConfig.ProcessDiscordant)
-                    discordantReads.processReads(junction, candidateReads);
-
+            if(junction.DiscordantOnly) // ignored for now, requires new functionality to handle without split reads
                 continue;
-            }
 
             List<JunctionAssembly> candidateAssemblies = null;
 
@@ -217,12 +211,6 @@ public class JunctionGroupAssembler extends ThreadTask
                 refBaseExtender.findAssemblyCandidateExtensions(assembly, junctionAssembler.nonJunctionReads());
                 junctionGroupAssemblies.add(assembly);
             }
-        }
-
-        if(!discordantReads.groups().isEmpty())
-        {
-            discordantReads.mergeGroups();
-            junctionGroup.addDiscordantGroups(discordantReads.groups());
         }
 
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);

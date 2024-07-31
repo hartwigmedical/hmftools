@@ -19,6 +19,7 @@ import com.hartwig.hmftools.esvee.AssemblyConfig;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class BamReader implements AutoCloseable
 {
@@ -43,7 +44,7 @@ public class BamReader implements AutoCloseable
             String bamFile = combinedBamFiles.get(i);
 
             SamReader samReader = SamReaderFactory.makeDefault()
-                            .validationStringency(mConfig.BamStringency)
+                            .validationStringency(ValidationStringency.SILENT)
                             .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFile));
 
             samReader.getFileHeader().setAttribute(BAM_HEADER_SAMPLE_INDEX_TAG, i);

@@ -99,8 +99,7 @@ public class AssemblyApplication
 
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
-                    junctionFile, mConfig.SpecificChrRegions, mConfig.ProcessDiscordant);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
 
             if(newJunctionsMap == null)
                 return false;

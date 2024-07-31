@@ -83,11 +83,8 @@ public class AssemblyConfig
     public final String RefGenomeImageFile;
     public final String DecoyGenome;
 
-    public final ValidationStringency BamStringency;
-
     public final List<WriteType> WriteTypes;
 
-    public final boolean ProcessDiscordant;
     public final boolean RunAlignment;
 
     public final String OutputDir;
@@ -120,7 +117,6 @@ public class AssemblyConfig
     private static final String WRITE_TYPES = "write_types";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
-    private static final String PROCESS_DISCORDANT = "discordant_pairs";
     private static final String RUN_ALIGNMENT = "run_alignment";
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
@@ -202,9 +198,6 @@ public class AssemblyConfig
 
         if(RunAlignment || DecoyGenome != null)
             loadAlignerLibrary(bwaLibPath);
-
-        ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
-        BamStringency = ValidationStringency.STRICT;
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -302,7 +295,6 @@ public class AssemblyConfig
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
-        configBuilder.addFlag(PROCESS_DISCORDANT, "Proces discordant-only groups");
         configBuilder.addFlag(RUN_ALIGNMENT, "Run assembly alignment");
         configBuilder.addPath(BWA_LIB_PATH, false, "Path to BWA library");
 
@@ -356,10 +348,7 @@ public class AssemblyConfig
         RefGenomeImageFile = null;
         DecoyGenome = null;
 
-        ProcessDiscordant = true;
         RunAlignment = true;
-
-        BamStringency = ValidationStringency.SILENT;
 
         WriteTypes = Collections.emptyList();
 
