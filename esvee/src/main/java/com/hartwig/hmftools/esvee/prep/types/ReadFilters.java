@@ -3,10 +3,13 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -239,11 +242,12 @@ public class ReadFilters
 
     public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength)
     {
+        // at least one junction supporting read with [AS - Len + TrimmedLen] * (AS/SUM(M))^2 > 50
         int readIndex = 0;
 
         int alignedLength = read.cigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-        if(alignedLength == 0)
+        if(alignedLength < minLength)
             return false;
 
         byte[] alignedBases = new byte[alignedLength];
@@ -263,8 +267,33 @@ public class ReadFilters
 
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases);
 
-        int repeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length - 1, repeats);
+        int repeatReduction = 0;
 
-        return repeatTrimmedLength >= minLength;
+        if(repeats != null)
+        {
+            for(RepeatInfo repeatInfo : repeats)
+            {
+                // each repeat only counts twice at most and other bases will detract the aligned score
+                repeatReduction += max(repeatInfo.Count - 2, 0) * repeatInfo.Bases.length();
+            }
+        }
+
+        int alignmentScore = 0;
+
+        if(read.record().hasAttribute(ALIGNMENT_SCORE_ATTRIBUTE))
+        {
+            alignmentScore = read.record().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE).intValue();
+        }
+        else
+        {
+            alignmentScore = alignedLength;
+
+            if(read.record().hasAttribute(NUM_MUTATONS_ATTRIBUTE))
+                alignmentScore -= read.record().getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue();
+        }
+
+        double adjustedAlignmentScore = (alignmentScore - repeatReduction) * pow(alignmentScore / (double)alignedLength, 2);
+
+        return adjustedAlignmentScore >= minLength;
     }
 }

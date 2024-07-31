@@ -87,11 +87,11 @@ public class AlignmentFragments
                 {
                     processCompleteFragment(firstRead, read, firstBreakendMatches, secondBreakendMatches);
                 }
-                else if(firstBreakendMatches != null)
+                else if(!firstBreakendMatches.isEmpty())
                 {
                     processSoloRead(firstRead, firstBreakendMatches);
                 }
-                else if(secondBreakendMatches != null)
+                else if(!secondBreakendMatches.isEmpty())
                 {
                     processSoloRead(read, secondBreakendMatches);
                 }
@@ -183,6 +183,7 @@ public class AlignmentFragments
 
         int inferredFragmentLength = -1;
 
+        // since these reads are missing a mate, manually calculate their fragment length factoring in the simple SV type if they are local
         if(!read.isDiscordant() && breakends.size() <= 2)
         {
             StructuralVariantType svType = readBreakendMatches.get(0).Breakend.svType();
