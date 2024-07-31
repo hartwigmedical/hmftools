@@ -65,6 +65,12 @@ public final class UltimaBamUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
+        // TODO: Look into this rare corner case.
+        if(indexStart < 0)
+        {
+            return ULTIMA_INVALID_QUAL;
+        }
+
         byte[] tpValues = extractTpValues(record);
 
         int qualValue1 = -1;

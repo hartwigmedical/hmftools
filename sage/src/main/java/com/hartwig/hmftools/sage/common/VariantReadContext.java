@@ -36,6 +36,7 @@ public class VariantReadContext
     public final int CorePositionEnd;
 
     public final byte[] RefBases; // captured for the core
+    // TODO: Do I need this, am I using this correctly?
     public final byte RefBaseBeforeCore;
 
     private final SimpleVariant mVariant;

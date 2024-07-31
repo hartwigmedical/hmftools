@@ -162,6 +162,7 @@ public class VariantReadContextBuilder
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
 
+        // TODO: Better place for this?
         // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
         // TODO: NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
