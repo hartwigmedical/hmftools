@@ -162,7 +162,12 @@ public class AssemblyAlignment
         int linkCount = assemblyLinks.size();
 
         // for a chain which starts with a facing link, reverse the order in which the sequence is added so as to start with ref bases
-        if(assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() != FACING)
+        boolean hasOuterExtensions = mPhaseSet.hasFacingLinks()
+                && assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() == FACING;
+
+        boolean reverseLinks = assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() != FACING;
+
+        if(reverseLinks)
         {
             assemblies = Lists.newArrayList(assemblies);
             assemblyLinks = Lists.newArrayList(assemblyLinks);
@@ -170,21 +175,7 @@ public class AssemblyAlignment
             Collections.reverse(assemblyLinks);
         }
 
-        JunctionAssembly first = assemblies.get(0);
-        JunctionAssembly last = assemblies.get(assemblyCount - 1);
-
-        boolean startReversed, hasOuterExtensions;
-
-        if(first.isReverseJunction() && last.isForwardJunction() && mPhaseSet.hasFacingLinks())
-        {
-            startReversed = false;
-            hasOuterExtensions = true;
-        }
-        else
-        {
-            startReversed = first.junction().isReverse();
-            hasOuterExtensions = false;
-        }
+        boolean startReversed = hasOuterExtensions ? false : assemblies.get(0).junction().isReverse();
 
         SV_LOGGER.trace("building full alignment from {} assemblies, startRev({}) hasOuter({})",
                 mAssemblies.size(), startReversed, hasOuterExtensions);
