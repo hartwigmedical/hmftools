@@ -330,7 +330,8 @@ public class VariantFilters
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1
         && primaryTumor.readContext().MaxRepeat.repeatLength() * primaryTumor.readContext().MaxRepeat.Count >= 15)
         {
-            repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, 24);
+            int maxPenalty = primaryTumor.isIndel() ? 18 : 24;
+            repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
         double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
