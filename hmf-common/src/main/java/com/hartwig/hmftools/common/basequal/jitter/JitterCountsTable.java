@@ -97,7 +97,7 @@ public class JitterCountsTable
                 }
 
                 // get all the read counts into a row object
-                Row row = newTable.new Row(microsatelliteSiteAnalyser.refGenomeMicrosatellite.numRepeat);
+                Row row = newTable.new Row(microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat);
 
                 for(MicrosatelliteRead microsatelliteRead : microsatelliteSiteAnalyser.getPassingReadRepeatMatches())
                 {

@@ -23,18 +23,18 @@ public class MicrosatelliteSelector
     {
         if(mUnits != null)
         {
-            return mUnits.contains(microsatelliteSiteAnalyser.refGenomeMicrosatellite.unitString());
+            return mUnits.contains(microsatelliteSiteAnalyser.refGenomeMicrosatellite().unitString());
         }
         else if(mUnitLengthMin != null)
         {
             if(mUnitLengthMax == null)
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite.unit.length == mUnitLengthMin;
+                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length == mUnitLengthMin;
             }
             else
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite.unit.length >= mUnitLengthMin &&
-                        microsatelliteSiteAnalyser.refGenomeMicrosatellite.unit.length <= mUnitLengthMax;
+                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length >= mUnitLengthMin &&
+                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length <= mUnitLengthMax;
             }
         }
         return false;
@@ -61,7 +61,7 @@ public class MicrosatelliteSelector
         return "";
     }
 
-    public static MicrosatelliteSelector fromUnits(@NotNull List<String> units)
+    public static MicrosatelliteSelector fromUnits(List<String> units)
     {
         return new MicrosatelliteSelector(units, null, null);
     }

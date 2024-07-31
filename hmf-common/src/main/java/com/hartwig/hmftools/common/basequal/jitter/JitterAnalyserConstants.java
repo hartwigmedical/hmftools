@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
+import java.util.List;
+
 public class JitterAnalyserConstants
 {
     public static final int MIN_FLANKING_BASE_MATCHES = 5;
@@ -17,4 +19,11 @@ public class JitterAnalyserConstants
 
     public static final double MIN_SITE_READS_BEFORE_OUTLIER_CHECK = 3;
     public static final double DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION = 0.8;
+
+    public static final List<String> SINGLE_BASE_1 = List.of("A", "T");
+    public static final List<String> SINGLE_BASE_2 = List.of("C", "G");
+    public static final List<String> DUAL_BASE_1 = List.of("AT", "TA");
+    public static final List<String> DUAL_BASE_2 = List.of("AC", "CA", "GT", "TG");
+    public static final List<String> DUAL_BASE_3 = List.of("AC", "CA", "GT", "TG");
+    public static final List<String> DUAL_BASE_4 = List.of("CG", "GC");
 }

@@ -31,7 +31,6 @@ import htsjdk.samtools.ValidationStringency;
 public class JitterAnalyserConfig
 {
     public final String SampleId;
-    public final String BamPath;
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
@@ -43,8 +42,6 @@ public class JitterAnalyserConfig
     public final int MaxSitesPerType;
     public final double MaxSingleSiteAltContribution;
 
-    public final int PartitionSize;
-    public final int Threads;
     public final boolean WritePlots;
 
     public final List<ChrBaseRegion> SpecificRegions;
@@ -56,25 +53,20 @@ public class JitterAnalyserConfig
     public static final String JITTER_MAX_SITES_PER_TYPE_DESC = "Max number of sites per microsatellite unit / length type";
 
     private static final String MIN_MAP_QUALITY = "min_map_quality";
-    private static final String PARTITION_SIZE = "partition_size";
     private static final String MAX_SINGLE_SITE_ALT_CONTRIBUTION = "max_site_alt_contribution";
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
-    public static final int DEFAULT_PARTITION_SIZE = 1_000_000;
 
     public JitterAnalyserConfig(final ConfigBuilder configBuilder) throws ParseException
     {
         SampleId = configBuilder.getValue(SAMPLE);
-        BamPath = configBuilder.getValue("bam");
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenomeMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
         OutputDir = parseOutputDir(configBuilder);
-        Threads = parseThreads(configBuilder);
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
-        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         MaxSingleSiteAltContribution = configBuilder.getDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION);
         WritePlots = true;
         SpecificRegions = loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
@@ -82,19 +74,16 @@ public class JitterAnalyserConfig
 
     public JitterAnalyserConfig(
             final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
-            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType, int threads, boolean writePlots)
+            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType,boolean writePlots)
     {
         SampleId = sampleId;
-        BamPath = null;
         RefGenVersion = refGenVersion;
         RefGenomeFile = refGenomeFile;
         RefGenomeMsiFile = refGenomeMsiFile;
         OutputDir = outputDir;
         MinMappingQuality = minMappingQuality;
         MaxSitesPerType = maxSitesPerType;
-        PartitionSize = DEFAULT_PARTITION_SIZE;
         MaxSingleSiteAltContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
-        Threads = threads;
         WritePlots = writePlots;
         SpecificRegions = null;
     }
@@ -102,7 +91,6 @@ public class JitterAnalyserConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, "sample id");
-        configBuilder.addPath("bam", true, "path to bam file");
 
         addRefGenomeVersion(configBuilder);
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC + ", required when using CRAM files");
@@ -119,14 +107,6 @@ public class JitterAnalyserConfig
         configBuilder.addDecimal(
                 MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Max percentage a single alt site can contribute",
                 DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
-
-        configBuilder.addInteger(PARTITION_SIZE, "size of the partitions/jobs processed by worker threads", DEFAULT_PARTITION_SIZE);
-
-        addThreadOptions(configBuilder);
-        addValidationStringencyOption(configBuilder);
-        addLoggingOptions(configBuilder);
-
-        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
     public boolean isValid()

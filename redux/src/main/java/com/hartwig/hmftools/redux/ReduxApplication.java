@@ -65,7 +65,7 @@ public class ReduxApplication
         {
             JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY, mConfig.JitterMaxSitesPerType, mConfig.Threads, false);
+                    JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY, mConfig.JitterMaxSitesPerType, false);
 
             jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER);
         }
@@ -211,7 +211,7 @@ public class ReduxApplication
 
         logPerformanceStats(combinedPerfCounters, partitionDataStore);
 
-        RD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
+        RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private long writeUnmappedReads(final FileWriterCache fileWriterCache)

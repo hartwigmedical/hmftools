@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
@@ -18,6 +17,8 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
+import com.hartwig.hmftools.common.basequal.jitter.SampleReadProcessor;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -33,12 +34,8 @@ public class SampleBamProcessor
     private final SampleReadProcessor mSampleReadProcessor;
     private final List<ChrBaseRegion> mPartitions;
 
-    public Collection<MicrosatelliteSiteAnalyser> getMicrosatelliteSiteAnalysers()
-    {
-        return mSampleReadProcessor.getMicrosatelliteSiteAnalysers();
-    }
-
-    public SampleBamProcessor(final JitterAnalyserConfig config, final BamSlicerFilter bamSlicerFilter,
+    public SampleBamProcessor(
+            final JitterAnalyserConfig config, final int partitionSize, final BamSlicerFilter bamSlicerFilter,
             final SampleReadProcessor sampleReadProcessor)
     {
         mBamSlicerFilter = bamSlicerFilter;
@@ -48,18 +45,19 @@ public class SampleBamProcessor
         SortedSet<String> chromosomes = mSampleReadProcessor
                 .getMicrosatelliteSiteAnalysers()
                 .stream()
-                .map(x -> x.refGenomeMicrosatellite.chromosome())
+                .map(x -> x.refGenomeMicrosatellite().chromosome())
                 .collect(Collectors.toCollection(() -> Sets.newTreeSet(Comparator.comparingInt(HumanChromosome::chromosomeRank)
                         .thenComparing(Function.identity()))));
 
         mPartitions = new ArrayList<>();
         for(String chromosome : chromosomes)
         {
-            mPartitions.addAll(partitionChromosome(chromosome, config.RefGenVersion, config.PartitionSize));
+            mPartitions.addAll(partitionChromosome(chromosome, config.RefGenVersion, partitionSize));
         }
     }
 
-    public void queryBam(final JitterAnalyserConfig config, ExecutorService executorService) throws InterruptedException
+    public void queryBam(
+            final JitterAnalyserConfig config, final ExecutorService executorService, final String bamPath) throws InterruptedException
     {
         SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(ValidationStringency.SILENT);
 
@@ -70,7 +68,8 @@ public class SampleBamProcessor
 
         BamSlicer bamSlicer = new BamSlicer(mBamSlicerFilter);
 
-        CompletableFuture<Void> bamSliceTasks = bamSlicer.queryAsync(new File(config.BamPath), readerFactory, mPartitions,
+        CompletableFuture<Void> bamSliceTasks = bamSlicer.queryAsync(
+                new File(bamPath), readerFactory, mPartitions,
                 false, executorService, mSampleReadProcessor::processRead);
         try
         {
