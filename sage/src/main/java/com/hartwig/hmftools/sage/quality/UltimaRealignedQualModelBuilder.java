@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.lang.System.arraycopy;
 
 import java.util.List;
 import java.util.Objects;
@@ -13,11 +12,10 @@ import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.Nullable;
 
 // TODO: LATER Move to a better location.
 // TODO: clean up unneeded functions.
@@ -66,15 +64,13 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
-    // TODO: NOW Masked bases is the variant.
-
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(refHomopolymers, readHomopolymers);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, mergedHomopolymers.RefHomopolymers, mergedHomopolymers.ReadHomopolymers);
-        List<SimpleVariant> qualVariants = getQualVariants(readContext, realignedVariants);
+        List<SimpleVariant> qualVariants = getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants);
         return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
     }
 
@@ -135,22 +131,35 @@ public class UltimaRealignedQualModelBuilder
     {
         public final List<Homopolymer> RefHomopolymers;
         public final List<Homopolymer> ReadHomopolymers;
+        private boolean VariantInMergedHomopolymers;
 
-        private MergedHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers)
+        private MergedHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers, boolean variantInMergedHomopolymers)
         {
             RefHomopolymers = refHomopolymers;
             ReadHomopolymers = readHomopolymers;
+            VariantInMergedHomopolymers = variantInMergedHomopolymers;
         }
 
         public MergedHomopolymers()
         {
-            this(Lists.newArrayList(), Lists.newArrayList());
+            this(Lists.newArrayList(), Lists.newArrayList(), false);
+        }
+
+        public void setVariantInMergedHomopolymers()
+        {
+            VariantInMergedHomopolymers = true;
+        }
+
+        public boolean variantInMergedHomopolymers()
+        {
+            return VariantInMergedHomopolymers;
         }
     }
 
     // TODO: Simplify this.
     @VisibleForTesting
-    public static MergedHomopolymers mergeSandwichedHomopolymers(final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0)
+    public static MergedHomopolymers mergeSandwichedHomopolymers(@Nullable final VariantReadContext readContext,
+            final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0)
     {
         List<Homopolymer> refHomopolymers = Lists.newArrayList(refHomopolymers0);
         List<Homopolymer> readHomopolymers = Lists.newArrayList(readHomopolymers0);
@@ -158,6 +167,7 @@ public class UltimaRealignedQualModelBuilder
         MergedHomopolymers mergedHomopolymers = new MergedHomopolymers();
         int refIndex = 0;
         int readIndex = 0;
+        int readBasesConsumed = 0;
         while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
@@ -178,7 +188,7 @@ public class UltimaRealignedQualModelBuilder
                     {
                         int extraRefIndex = 1;
                         Homopolymer forwardRefHompolymer = refHomopolymers.get(refIndex + extraRefIndex);
-                        int refBasesConsumed = forwardRefHompolymer.Length;
+                        int extraRefBasesConsumed = forwardRefHompolymer.Length;
                         int refCycleCount = cycleCount(refHomopolymers, refIndex);
                         int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
@@ -192,9 +202,19 @@ public class UltimaRealignedQualModelBuilder
                                     refHomopolymers.remove(refIndex + 1);
                                 }
                                 contracted = true;
+
+                                if(readContext != null && !readContext.variant().isIndel())
+                                {
+                                    int varIndexInCore = readContext.VarIndex - readContext.CoreIndexStart;
+                                    if(varIndexInCore >= readBasesConsumed && varIndexInCore < readBasesConsumed + readHomopolymer.Length)
+                                    {
+                                        mergedHomopolymers.setVariantInMergedHomopolymers();
+                                    }
+                                }
+
                                 break;
                             }
-                            else if(refBasesConsumed >= netLength)
+                            else if(extraRefBasesConsumed >= netLength)
                             {
                                 break;
                             }
@@ -206,7 +226,7 @@ public class UltimaRealignedQualModelBuilder
                             }
 
                             forwardRefHompolymer = refHomopolymers.get(refIndex + extraRefIndex);
-                            refBasesConsumed += forwardRefHompolymer.Length;
+                            extraRefBasesConsumed += forwardRefHompolymer.Length;
                         }
                     }
 
@@ -216,6 +236,7 @@ public class UltimaRealignedQualModelBuilder
                         mergedHomopolymers.ReadHomopolymers.add(readHomopolymer);
                         refIndex++;
                         readIndex++;
+                        readBasesConsumed += readHomopolymer.Length;
                     }
                 }
                 else if(netLength <= -2)
@@ -228,7 +249,7 @@ public class UltimaRealignedQualModelBuilder
                     {
                         int extraReadIndex = 1;
                         Homopolymer forwardReadHompolymer = readHomopolymers.get(readIndex + extraReadIndex);
-                        int readBasesConsumed = forwardReadHompolymer.Length;
+                        int extraReadBasesConsumed = forwardReadHompolymer.Length;
                         int refCycleCount = cycleCount(refHomopolymers, refIndex);
                         int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
@@ -242,9 +263,19 @@ public class UltimaRealignedQualModelBuilder
                                     readHomopolymers.remove(readIndex + 1);
                                 }
                                 contracted = true;
+
+                                if(readContext != null && !readContext.variant().isIndel())
+                                {
+                                    int varIndexInCore = readContext.VarIndex - readContext.CoreIndexStart;
+                                    if(varIndexInCore >= readBasesConsumed && varIndexInCore < readBasesConsumed + mergedLength)
+                                    {
+                                        mergedHomopolymers.setVariantInMergedHomopolymers();
+                                    }
+                                }
+
                                 break;
                             }
-                            else if(readBasesConsumed >= -netLength)
+                            else if(extraReadBasesConsumed >= -netLength)
                             {
                                 break;
                             }
@@ -256,7 +287,7 @@ public class UltimaRealignedQualModelBuilder
                             }
 
                             forwardReadHompolymer = readHomopolymers.get(readIndex + extraReadIndex);
-                            readBasesConsumed += forwardReadHompolymer.Length;
+                            extraReadBasesConsumed += forwardReadHompolymer.Length;
                         }
                     }
 
@@ -266,6 +297,7 @@ public class UltimaRealignedQualModelBuilder
                         mergedHomopolymers.ReadHomopolymers.add(readHomopolymer);
                         refIndex++;
                         readIndex++;
+                        readBasesConsumed += readHomopolymer.Length;
                     }
                 }
                 else
@@ -274,6 +306,7 @@ public class UltimaRealignedQualModelBuilder
                     mergedHomopolymers.ReadHomopolymers.add(readHomopolymer);
                     refIndex++;
                     readIndex++;
+                    readBasesConsumed += readHomopolymer.Length;
                 }
             }
             else if(readRemaining <= refRemaining)
@@ -287,6 +320,7 @@ public class UltimaRealignedQualModelBuilder
                 // novel insert
                 mergedHomopolymers.ReadHomopolymers.add(readHomopolymer);
                 readIndex++;
+                readBasesConsumed += readHomopolymer.Length;
             }
         }
 
@@ -431,11 +465,76 @@ public class UltimaRealignedQualModelBuilder
         return realignedVariants;
     }
 
-
-    // TODO: boolean variantIsSandwichedSnvMnv,
-    private static List<SimpleVariant> getQualVariants(final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
+    private static List<SimpleVariant> getQualVariants(boolean variantInMergedHomopolymers, final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
     {
         SimpleVariant variant = readContext.variant();
+
+        // TODO: remove this repetition.
+        if(variantInMergedHomopolymers)
+        {
+            // sandwiched snv/mnv case
+            // TODO: LATER lots of repetition in terms of left/right indels.
+            List<SimpleVariant> leftInserts = Lists.newArrayList();
+            List<SimpleVariant> leftDels = Lists.newArrayList();
+            int leftIndelBalance = 0;
+            List<SimpleVariant> rightInserts = Lists.newArrayList();
+            List<SimpleVariant> rightDels = Lists.newArrayList();
+            int rightIndelBalance = 0;
+            for(int i = 0; i < realignedVariants.size();)
+            {
+                SimpleVariant realignedVariant = realignedVariants.get(i);
+                if(realignedVariant.position() < variant.position())
+                {
+                    leftIndelBalance += realignedVariant.indelLength();
+                    if(realignedVariant.isInsert())
+                    {
+                        leftInserts.add(realignedVariant);
+                    }
+                    else
+                    {
+                        leftDels.add(realignedVariant);
+                    }
+
+                    ++i;
+                    continue;
+                }
+
+                rightIndelBalance += realignedVariant.indelLength();
+                if(realignedVariant.isInsert())
+                {
+                    rightInserts.add(realignedVariant);
+                }
+                else
+                {
+                    rightDels.add(realignedVariant);
+                }
+
+                ++i;
+            }
+
+            List<SimpleVariant> qualVariants = Lists.newArrayList();
+            if(leftIndelBalance > 0)
+            {
+                qualVariants.addAll(leftInserts);
+            }
+
+            if(leftIndelBalance < 0)
+            {
+                qualVariants.addAll(leftDels);
+            }
+
+            if(rightIndelBalance > 0)
+            {
+                qualVariants.addAll(rightInserts);
+            }
+
+            if(rightIndelBalance < 0)
+            {
+                qualVariants.addAll(rightDels);
+            }
+
+            return qualVariants;
+        }
 
         // TODO: remove this repetition.
         if(variant.isIndel())
@@ -519,7 +618,7 @@ public class UltimaRealignedQualModelBuilder
             return qualVariants;
         }
 
-        // snv/mnv case
+        // non-sandwiched snv/mnv case
         List<Homopolymer> delHomopolymers = getHomopolymers(variant.Ref.getBytes(), 0, variant.Ref.length() - 1);
         List<Homopolymer> insertHomopolymers = getHomopolymers(variant.Alt.getBytes(), 0, variant.Alt.length() - 1);
 
