@@ -6,6 +6,7 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -120,18 +121,18 @@ public class VariantFilters
 
     private boolean belowMinLength(final Variant var)
     {
-        if(var.type() == DEL)
-            return var.length() + var.insertSequence().length() - 1 < mFilterConstants.MinLength;
-        else if(var.type() == DUP)
-            return var.length() + var.insertSequence().length() < mFilterConstants.MinLength;
-        else if(var.type() == INS)
-            return var.length() + var.insertSequence().length() + 1 < mFilterConstants.MinLength;
-        else
-            return false;
+        if(var.type() == DEL || var.type() == DUP || var.type() == INS)
+            return var.adjustedLength() < mFilterConstants.MinLength;
+
+        return false;
     }
 
     private boolean belowMinAnchorLength(final Variant var)
     {
+        // skip for chained breakends
+        if(var.breakendStart().Context.hasAttribute(ASM_LINKS))
+            return false;
+
         if(var.breakendStart().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH)
             return true;
 

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
@@ -78,8 +78,8 @@ public class Breakend
             InexactHomology = new Interval();
         }
 
-        if(context.hasAttribute(ASSEMBLY_LINKS))
-            mLinkedAssemblyIds = context.getAttributeAsStringList(ASSEMBLY_LINKS, "");
+        if(context.hasAttribute(ASM_LINKS))
+            mLinkedAssemblyIds = context.getAttributeAsStringList(ASM_LINKS, "");
         else
             mLinkedAssemblyIds = Collections.emptyList();
 
@@ -142,7 +142,7 @@ public class Breakend
 
     public int anchorLength()
     {
-        return Context.getAttributeAsInt(SEGRL, 0);
+        return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
 
     public String toString()

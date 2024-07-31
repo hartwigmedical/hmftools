@@ -85,8 +85,9 @@ public class VcfWriter
 
     private String formVcfFilename(final String sampleId, final String fileId)
     {
-        String vcfFileId = ESVEE_FILE_ID + FILE_NAME_DELIM + fileId;
-        return formOutputFile(mConfig.OutputDir, sampleId, vcfFileId, VCF_ZIP_EXTENSION.substring(1), mConfig.OutputId);
+        // write in format: SAMPLE_ID.esvee.run_id.somatic.vcf.gz (or without output ID if not in config)
+        String outputId = mConfig.OutputId != null ? mConfig.OutputId + FILE_NAME_DELIM + fileId : fileId;
+        return formOutputFile(mConfig.OutputDir, sampleId, ESVEE_FILE_ID, VCF_ZIP_EXTENSION.substring(1), outputId);
     }
 
     private VariantContextWriter initialiseWriter(final VCFHeader vcfHeader, final String esveeVersion, final String vcfFilename)

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.sv;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.SvUtils.SMALL_DELDUP_SIZE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
@@ -271,7 +271,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
                 .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
                 .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event("")
-                .startLinkedBy(context.getAttributeAsString(ASSEMBLY_LINKS, ""))
+                .startLinkedBy(context.getAttributeAsString(ASM_LINKS, ""))
                 .endLinkedBy("")
                 .imprecise(false)
                 .qualityScore(qualityScore)
@@ -311,7 +311,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
         builder.startOffset(ciLeft);
         builder.endOffset(ciRight);
 
-        List<Integer> alignedSegmentLengths = context.getAttributeAsIntList(SEGALEN, 0);
+        List<Integer> alignedSegmentLengths = context.getAttributeAsIntList(SEG_ALIGN_LENGTH, 0);
         int maxAnchorLength = alignedSegmentLengths.stream().mapToInt(x -> x.intValue()).max().orElse(0);
         builder.anchoringSupportDistance(maxAnchorLength);
 

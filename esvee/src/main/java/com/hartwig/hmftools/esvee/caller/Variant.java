@@ -131,14 +131,20 @@ public class Variant
         return type == INS || type == INV || type == DEL || type == DUP;
     }
 
-    public int length() { return hasLength(mType) ? posEnd() - posStart() : 0; }
-
-    public static int length(final StructuralVariant sv)
+    public int adjustedLength()
     {
-        if(hasLength(sv.type()))
-            return (sv.position(false) - sv.position(true));
+        if(!hasLength(mType))
+            return 0;
 
-        return 0;
+        if(mType == INS)
+            return mInsertSequence.length();
+
+        int positionLength = posEnd() - posStart();
+
+        if(mType == DUP)
+            ++positionLength;
+
+        return positionLength + mInsertSequence.length();
     }
 
     public int averageFragmentLength() { return contextStart().getAttributeAsInt(AVG_FRAG_LENGTH, 0); }

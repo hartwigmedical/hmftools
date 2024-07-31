@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ORIENT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
@@ -170,10 +170,10 @@ public class SvCompareVcfs
         {
             // Use assembly id 'comparison' to force all breakends to be outputted, regardless of diff or no diff
             mVcfCheckFields.add(new VcfCompareField(
-                    ASMID, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
+                    ASM_ID, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
 
             mVcfCheckFields.add(new VcfCompareField(
-                    BEOR, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
+                    BE_ORIENT, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
 
             mVcfCheckFields.add(new VcfCompareField(
                     CIPOS, FieldType.STRING, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
