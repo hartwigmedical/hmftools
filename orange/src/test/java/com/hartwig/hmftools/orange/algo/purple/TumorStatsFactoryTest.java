@@ -31,7 +31,7 @@ public class TumorStatsFactoryTest
         PurpleData purpleData = createMinimalTestPurpleData();
         TumorStats expectedStats = createMinimalTumorStatsBuilder().build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -56,7 +56,7 @@ public class TumorStatsFactoryTest
                 .structuralVariantTumorFragmentCount(8)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -86,7 +86,7 @@ public class TumorStatsFactoryTest
                 .hotspotStructuralVariantCount(1)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -94,6 +94,10 @@ public class TumorStatsFactoryTest
     public void canComputeHotspotMutationCount()
     {
         PurpleVariantContext hostpotVariant = TestPurpleVariantFactory.contextBuilder()
+                .tier(VariantTier.HOTSPOT)
+                .build();
+
+        PurpleVariantContext germlineHotspotVariant = TestPurpleVariantFactory.contextBuilder()
                 .tier(VariantTier.HOTSPOT)
                 .build();
 
@@ -107,13 +111,46 @@ public class TumorStatsFactoryTest
 
         PurpleData purpleData = createMinimalTestPurpleDataBuilder()
                 .addAllSomaticVariants(hostpotVariant, otherVariant1, otherVariant2)
+                .addAllGermlineVariants(germlineHotspotVariant)
                 .build();
 
         TumorStats expectedStats = createMinimalTumorStatsBuilder()
                 .hotspotMutationCount(1)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
+        assertEquals(expectedStats, tumorStats);
+    }
+
+    @Test
+    public void canConvertGermlineToSomaticForHotspotMutationCount()
+    {
+        PurpleVariantContext hostpotVariant = TestPurpleVariantFactory.contextBuilder()
+                .tier(VariantTier.HOTSPOT)
+                .build();
+
+        PurpleVariantContext germlineHotspotVariant = TestPurpleVariantFactory.contextBuilder()
+                .tier(VariantTier.HOTSPOT)
+                .build();
+
+        PurpleVariantContext otherVariant1 = TestPurpleVariantFactory.contextBuilder()
+                .tier(VariantTier.HIGH_CONFIDENCE)
+                .build();
+
+        PurpleVariantContext otherVariant2 = TestPurpleVariantFactory.contextBuilder()
+                .tier(VariantTier.LOW_CONFIDENCE)
+                .build();
+
+        PurpleData purpleData = createMinimalTestPurpleDataBuilder()
+                .addAllSomaticVariants(hostpotVariant, otherVariant1, otherVariant2)
+                .addAllGermlineVariants(germlineHotspotVariant)
+                .build();
+
+        TumorStats expectedStats = createMinimalTumorStatsBuilder()
+                .hotspotMutationCount(2)
+                .build();
+
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, true);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -143,7 +180,7 @@ public class TumorStatsFactoryTest
                 .smallVariantAlleleReadCount(2)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -181,7 +218,7 @@ public class TumorStatsFactoryTest
                 .bafCount(5)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
         assertEquals(expectedStats, tumorStats);
     }
 
