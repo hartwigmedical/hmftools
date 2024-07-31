@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
+import static com.hartwig.hmftools.redux.ReduxConfig.PARTITION_SIZE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.ParseException;
 
-public class JitterAnalyserApp
+public class GenerateMsiJitterParams
 {
     private final JitterAnalyserConfig mConfig;
 
@@ -28,11 +29,10 @@ public class JitterAnalyserApp
     private final int mPartitionSize;
 
     private static final String BAM_FILE = "bam";
-    private static final String PARTITION_SIZE = "partition_size";
 
     public static final int DEFAULT_PARTITION_SIZE = 1_000_000;
 
-    public JitterAnalyserApp(final ConfigBuilder configBuilder) throws ParseException
+    public GenerateMsiJitterParams(final ConfigBuilder configBuilder) throws ParseException
     {
         mConfig = new JitterAnalyserConfig(configBuilder);
 
@@ -41,7 +41,7 @@ public class JitterAnalyserApp
         mThreads = parseThreads(configBuilder);
     }
 
-    public int run() throws InterruptedException, IOException
+    public void run() throws InterruptedException, IOException
     {
         long startTimeMs = System.currentTimeMillis();
 
@@ -52,7 +52,7 @@ public class JitterAnalyserApp
         if(!mConfig.isValid())
         {
             RD_LOGGER.error(" invalid config, exiting");
-            return 1;
+            System.exit(1);
         }
 
         JitterAnalyser jitterAnalyser = new JitterAnalyser(mConfig, RD_LOGGER);
@@ -68,8 +68,6 @@ public class JitterAnalyserApp
         jitterAnalyser.writeAnalysisOutput();
 
         RD_LOGGER.info("Redux MSi jitter site analysis complete, mins({})", runTimeMinsStr(startTimeMs));
-
-        return 0;
     }
 
     public static void main(final String... args) throws InterruptedException, IOException, ParseException
@@ -85,16 +83,7 @@ public class JitterAnalyserApp
 
         configBuilder.checkAndParseCommandLine(args);
 
-        // set all thread exception handler
-        // if we do not do this, exception thrown in other threads will not be handled and results
-        // in the program hanging
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            RD_LOGGER.error("[{}]: uncaught exception: {}", t, e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
 
-        System.exit(new JitterAnalyserApp(configBuilder).run());
+        new GenerateMsiJitterParams(configBuilder).run();
     }
 }

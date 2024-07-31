@@ -119,7 +119,7 @@ public class ReduxConfig
     private static final String INPUT_BAM = "input_bam";
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_BAM = "output_bam";
-    private static final String PARTITION_SIZE = "partition_size";
+    public static final String PARTITION_SIZE = "partition_size";
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
     private static final String NO_MATE_CIGAR = "no_mate_cigar";

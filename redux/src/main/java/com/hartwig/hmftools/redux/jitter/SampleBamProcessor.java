@@ -26,8 +26,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
-// For performance reasons, this class is not decoupled from the threading
-// We want to avoid locks, queues as much as possible
+// For performance reasons this class is not decoupled from the threading to avoid locks, queues as much as possible
 public class SampleBamProcessor
 {
     private final BamSlicerFilter mBamSlicerFilter;
