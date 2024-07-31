@@ -824,3 +824,7 @@ every sample in the training set. These probabilities were then used to calculat
 number of samples correctly predicted per cancer type).
 
 <img src="src/main/python/pycuppa/doc/diagrams/training_and_cross_validation.jpg" width="600"/>
+
+### Performance (as determined by cross-validation)
+Confusion matrices showing the performance of the COMBINED, DNA_COMBINED, and RNA_COMBINED (GRCh37) classifiers can be found at: 
+[pycuppa/doc/performance/](src/main/python/pycuppa/doc/performance/).
