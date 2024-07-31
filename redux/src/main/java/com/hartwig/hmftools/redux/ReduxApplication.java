@@ -65,7 +65,7 @@ public class ReduxApplication
         {
             JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY, mConfig.JitterMaxSitesPerType, false);
+                    mConfig.JitterMsiMaxSitePercContribution);
 
             jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER);
         }

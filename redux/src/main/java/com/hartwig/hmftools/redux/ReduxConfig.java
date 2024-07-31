@@ -4,11 +4,9 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.DEFAULT_NUM_SITES_PER_TYPE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MAX_SITES_PER_TYPE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MAX_SITES_PER_TYPE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -107,7 +105,7 @@ public class ReduxConfig
     public final int WriteReadBaseLength;
 
     public final String JitterMsiFile;
-    public final int JitterMaxSitesPerType;
+    public final double JitterMsiMaxSitePercContribution;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -129,6 +127,8 @@ public class ReduxConfig
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
+
+    private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
     // debug
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -246,7 +246,7 @@ public class ReduxConfig
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
         JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
+        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         if(RunChecks)
         {
@@ -306,7 +306,10 @@ public class ReduxConfig
         UmiConfig.addConfig(configBuilder);
 
         configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
-        configBuilder.addInteger(JITTER_MAX_SITES_PER_TYPE, JITTER_MAX_SITES_PER_TYPE_DESC, DEFAULT_NUM_SITES_PER_TYPE);
+
+        configBuilder.addDecimal(
+                JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
+                DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
@@ -353,7 +356,7 @@ public class ReduxConfig
         UnmapRegions = new ReadUnmapper(Maps.newHashMap());
 
         JitterMsiFile = null;
-        JitterMaxSitesPerType = 0;
+        JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 
         WriteBam = false;
         MultiBam = false;

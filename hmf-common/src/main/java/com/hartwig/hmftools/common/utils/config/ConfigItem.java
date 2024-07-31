@@ -16,8 +16,8 @@ public class ConfigItem
     private String mDefaultValue;
     private String mPathPrefixConfig;
 
-    public ConfigItem(final ConfigItemType type, final String name, final boolean required, final String description,
-            final String defaultValue)
+    public ConfigItem(
+            final ConfigItemType type, final String name, final boolean required, final String description, final String defaultValue)
     {
         Type = type;
         Name = name;

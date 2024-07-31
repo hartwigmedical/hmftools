@@ -3,10 +3,12 @@ package com.hartwig.hmftools.common.basequal.jitter;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -38,7 +40,7 @@ public class JitterAnalyserConfig
     public final List<ChrBaseRegion> SpecificRegions;
 
     public static final String JITTER_MSI_SITES_FILE = "ref_genome_msi_file";
-    public static final String JITTER_MSI_SITES_FILE_DESC = "Path to ref genome MSI sitesΩ tsv";
+    public static final String JITTER_MSI_SITES_FILE_DESC = "Path to ref genome MSI sites file";
 
     public static final String JITTER_MAX_SITES_PER_TYPE = "max_sites_per_type";
     public static final String JITTER_MAX_SITES_PER_TYPE_DESC = "Max number of sites per microsatellite unit / length type";
@@ -65,26 +67,25 @@ public class JitterAnalyserConfig
 
     public JitterAnalyserConfig(
             final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
-            final String refGenomeMsiFile, final String outputDir, int minMappingQuality, int maxSitesPerType,boolean writePlots)
+            final String refGenomeMsiFile, final String outputDir, double maxSingleSiteAltContribution)
     {
         SampleId = sampleId;
         RefGenVersion = refGenVersion;
         RefGenomeFile = refGenomeFile;
         RefGenomeMsiFile = refGenomeMsiFile;
         OutputDir = outputDir;
-        MinMappingQuality = minMappingQuality;
-        MaxSitesPerType = maxSitesPerType;
-        MaxSingleSiteAltContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
-        WritePlots = writePlots;
+        MinMappingQuality = JitterAnalyserConfig.DEFAULT_MIN_MAPPING_QUALITY;
+        MaxSitesPerType = DEFAULT_NUM_SITES_PER_TYPE;
+        MaxSingleSiteAltContribution = maxSingleSiteAltContribution;
+        WritePlots = false;
         SpecificRegions = null;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, true, "sample id");
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
 
-        addRefGenomeVersion(configBuilder);
-        configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC + ", required when using CRAM files");
+        addRefGenomeConfig(configBuilder, true);
 
         configBuilder.addPath(JITTER_MSI_SITES_FILE, true, JITTER_MSI_SITES_FILE_DESC);
 
