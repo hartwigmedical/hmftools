@@ -41,26 +41,25 @@ class Maven:
     @staticmethod
     def deploy_all(*modules):
         module_str = ','.join([m.name for m in modules])
-        #subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
-        subprocess.run(['mvn', 'install', '-B', '-pl', module_str, '-am'], check=True)
+        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
 
 
 class Docker:
     def __init__(self, module, version):
         self.module = module
         self.version = version
-        self.private_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
-        self.public_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
+        self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
+        self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
     def build(self):
         with open("/workspace/docker.sh", "w") as output:
-            output.write(f'docker build {self.module} -t {self.private_image} -t {self.public_image} --build-arg VERSION={self.version}\n')
-            output.write(f'docker push {self.private_image}\n')
+            output.write(f'docker build {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker push {self.internal_image}\n')
             output.write(f'docker login -u hartwigmedicalfoundation -p $(cat /workspace/dockerhub.password)\n')
-            output.write(f'docker push {self.public_image}\n')
+            output.write(f'docker push {self.external_image}\n')
 
 
-class Release:
+class GithubRelease:
     def __init__(self, tag_name, module, version, artifact_file, token):
         self.tag_name = tag_name
         self.module = module
@@ -170,7 +169,7 @@ def build_and_release(raw_tag: str):
     Maven.deploy_all(module_pom, *dependencies_pom)
 
     Docker(module, version).build()
-    Release(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
+    GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
             open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
