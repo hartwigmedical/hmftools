@@ -67,15 +67,15 @@ public final class RemoteRegionFinder
 
         addOrCreateRemoteRegion(
                 remoteRegions, read, isJunctionRead ? JUNCTION_MATE : DISCORDANT,
-                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd(), read.mateOrientation());
+                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
     }
 
     private static RemoteRegion addOrCreateRemoteRegion(
             final List<RemoteRegion> remoteRegions, final Read read, final RemoteReadType readType,
-            final String remoteChr, final int remotePosStart, final int remotePosEnd, final Orientation remoteOrientation)
+            final String remoteChr, final int remotePosStart, final int remotePosEnd)
     {
         RemoteRegion matchedRegion = remoteRegions.stream()
-                .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd, remoteOrientation)).findFirst().orElse(null);
+                .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
 
         if(matchedRegion != null)
         {
@@ -85,7 +85,7 @@ public final class RemoteRegionFinder
         else
         {
             RemoteRegion newRegion = new RemoteRegion(
-                    new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.orientation(), read.id(), readType);
+                    new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.id(), readType);
             remoteRegions.add(newRegion);
             return newRegion;
         }
@@ -100,14 +100,8 @@ public final class RemoteRegionFinder
 
         int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
 
-        /*
-        SV_LOGGER.debug("asmJunction({}) read({} flags={}) supp({})",
-                mAssembly.junction(), read.getName(), read.getFlags(), suppData);
-        */
-
         RemoteRegion region = addOrCreateRemoteRegion(
-                remoteRegions, read, SUPPLEMENTARY, suppData.Chromosome, suppData.Position,
-                remotePosEnd, Orientation.fromByte(suppData.orientation()));
+                remoteRegions, read, SUPPLEMENTARY, suppData.Chromosome, suppData.Position, remotePosEnd);
 
         region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }

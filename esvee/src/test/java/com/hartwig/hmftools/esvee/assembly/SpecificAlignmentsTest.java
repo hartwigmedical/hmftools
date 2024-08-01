@@ -426,8 +426,7 @@ public class SpecificAlignmentsTest
                 CHR_1, sharedRead1.alignmentStart(), sharedRead1.negativeStrand());
 
         RemoteRegion remoteRegion = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, remoteRead1.alignmentStart(), remoteRead1.alignmentEnd()),
-                REVERSE, remoteRead1.id(), RemoteReadType.DISCORDANT);
+                new ChrBaseRegion(CHR_2, remoteRead1.alignmentStart(), remoteRead1.alignmentEnd()), remoteRead1.id(), RemoteReadType.DISCORDANT);
 
         remoteRegion.addReadDetails(remoteRead2.id(), remoteRead2.alignmentStart(), remoteRead2.alignmentEnd(), RemoteReadType.DISCORDANT);
 

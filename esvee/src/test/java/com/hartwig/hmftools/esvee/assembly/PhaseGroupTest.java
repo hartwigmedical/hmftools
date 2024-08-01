@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.setMateCigar;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
@@ -65,6 +66,7 @@ public class PhaseGroupTest
 
         JunctionAssembly negAssembly1 = new JunctionAssembly(negJunction1, assemblyBases.getBytes(), baseQuals, 50);
         Read read2 = createConcordantRead(READ_ID_GENERATOR.nextId(), 200, assemblyBases, "50S50M", 10);
+        setMateCigar(read2, "50M");
         negAssembly1.addJunctionRead(read2);
 
         JunctionAssembly posAssembly2 = new JunctionAssembly(posJunction2, assemblyBases.getBytes(), baseQuals, 50);
@@ -77,15 +79,17 @@ public class PhaseGroupTest
 
         JunctionAssembly negAssembly3 = new JunctionAssembly(negJunction3, assemblyBases.getBytes(), baseQuals, 50);
         Read read4 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4200, assemblyBases, "50S50M", 3500);
+        setMateCigar(read4, "100M");
         negAssembly3.addJunctionRead(read4);
 
         JunctionAssembly posAssembly4 = new JunctionAssembly(posJunction4, assemblyBases.getBytes(), baseQuals, 50);
 
-        Read read5 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4550, assemblyBases, "50M50S", 4200);
+        Read read5 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4550, assemblyBases, "50M50S", 3800);
         posAssembly4.addJunctionRead(read5);
 
         JunctionAssembly negAssembly4 = new JunctionAssembly(negJunction4, assemblyBases.getBytes(), baseQuals, 50);
-        Read read6 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4500, assemblyBases, "50S50M", 4200);
+        Read read6 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4500, assemblyBases, "50S50M", 3800);
+        setMateCigar(read6, "100M");
         negAssembly4.addJunctionRead(read6);
 
         Queue<JunctionGroup> junctionGroups = new ConcurrentLinkedQueue<>();
@@ -189,11 +193,11 @@ public class PhaseGroupTest
 
         // sufficient linking criteria
         RemoteRegion region1 = new RemoteRegion(
-                new ChrBaseRegion(CHR_1, 6000, 6200), FORWARD, readId1, DISCORDANT);
+                new ChrBaseRegion(CHR_1, 6000, 6200), readId1, DISCORDANT);
         region1.addReadDetails(readId2, 6000, 6100, JUNCTION_MATE);
 
         RemoteRegion region1b = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 6000, 6100), FORWARD, readId3, DISCORDANT);
+                new ChrBaseRegion(CHR_2, 6000, 6100), readId3, DISCORDANT);
         assembly1.addRemoteRegions(List.of(region1, region1b));
 
         assembly4.addJunctionRead(createRead(readId1, 6000, assemblyBases, "50M"));
@@ -209,7 +213,7 @@ public class PhaseGroupTest
         String readId7 = READ_ID_GENERATOR.nextId();
 
         RemoteRegion region2 = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 4000, 4200), FORWARD, readId4, DISCORDANT);
+                new ChrBaseRegion(CHR_2, 4000, 4200), readId4, DISCORDANT);
         region2.addReadDetails(readId5, 4000, 4100, JUNCTION_MATE);
         assembly3.addRemoteRegions(List.of(region2));
 
@@ -217,7 +221,7 @@ public class PhaseGroupTest
         assembly8.addJunctionRead(createRead(readId5, 6000, assemblyBases, "50M"));
 
         RemoteRegion region3 = new RemoteRegion(
-                new ChrBaseRegion(CHR_1, 450, 600), FORWARD, readId6, DISCORDANT);
+                new ChrBaseRegion(CHR_1, 450, 600), readId6, DISCORDANT);
         region3.addReadDetails(readId7, 450, 600, JUNCTION_MATE);
         assembly8.addRemoteRegions(List.of(region3));
 

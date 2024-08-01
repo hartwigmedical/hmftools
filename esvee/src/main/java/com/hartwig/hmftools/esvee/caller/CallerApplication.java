@@ -53,6 +53,8 @@ public class CallerApplication
         String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.SampleId);
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
+        SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
+
         mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds);
 
         mProcessedVariants = 0;

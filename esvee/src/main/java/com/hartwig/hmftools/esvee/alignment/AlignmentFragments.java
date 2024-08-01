@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +45,7 @@ public class AlignmentFragments
 
     public void allocateBreakendSupport()
     {
-        Map<String,SupportRead> mFragmentMap = Maps.newHashMap();
+        Map<String,List<SupportRead>> mFragmentMap = Maps.newHashMap();
 
         Set<String> processedFragments = Sets.newHashSet();
 
@@ -52,27 +53,34 @@ public class AlignmentFragments
         {
             for(SupportRead read : assembly.support())
             {
-                // only check split status and fragment length from the primary pair
-                // if a junction assembly were formed only from supplementaries then this would miss their support, but the expectation
-                // is that the primary also forms a junction assembly and that the two of them have formed a link, so the primary's
-                // support for the link will be captured
-                if(read.isSupplementary())
-                    continue;
-
+                // only check split status and fragment length from the primary pair, but take a supplementary where the primary wasn't captured
+                // the expectation is that the primary also forms a junction assembly and that the two of them have formed a link,
+                // so the primary's support for the link will be captured
                 if(processedFragments.contains(read.id()))
                     continue;
 
-                SupportRead firstRead = mFragmentMap.get(read.id());
+                List<SupportRead> reads = mFragmentMap.get(read.id());
 
-                if(firstRead == null)
+                if(reads == null)
                 {
-                    mFragmentMap.put(read.id(), read);
+                    reads = Lists.newArrayListWithExpectedSize(3);
+                    reads.add(read);
+                    mFragmentMap.put(read.id(), reads);
                     continue;
                 }
-                else if(firstRead.flags() == read.flags())
-                {
+
+                // ignore seeing the same read from another assembly
+                if(reads.stream().anyMatch(x -> x.flags() == read.flags()))
                     continue;
-                }
+
+                // process if both R1 and R2 primaries are now present
+                reads.add(read);
+
+                SupportRead firstRead = findSpecificRead(reads, true, false);
+                SupportRead secondRead = findSpecificRead(reads, false, false);
+
+                if(firstRead == null || secondRead == null)
+                    continue;
 
                 mFragmentMap.remove(read.id());
 
@@ -80,32 +88,50 @@ public class AlignmentFragments
                 processedFragments.add(read.id());
 
                 // find associated breakends
-                List<ReadBreakendMatch> firstBreakendMatches = findReadBreakendMatch(firstRead);
-                List<ReadBreakendMatch> secondBreakendMatches = findReadBreakendMatch(read);
-
-                if(!firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty())
-                {
-                    processCompleteFragment(firstRead, read, firstBreakendMatches, secondBreakendMatches);
-                }
-                else if(!firstBreakendMatches.isEmpty())
-                {
-                    processSoloRead(firstRead, firstBreakendMatches);
-                }
-                else if(!secondBreakendMatches.isEmpty())
-                {
-                    processSoloRead(read, secondBreakendMatches);
-                }
+                processSupportReads(firstRead, secondRead);
             }
         }
 
         // handle single reads
-        for(SupportRead read : mFragmentMap.values())
+        for(List<SupportRead> reads : mFragmentMap.values())
         {
-            List<ReadBreakendMatch> readBreakendMatches = findReadBreakendMatch(read);
+            SupportRead firstRead = findSpecificRead(reads, true, true);
+            SupportRead secondRead = findSpecificRead(reads, false, true);
 
-            if(!readBreakendMatches.isEmpty())
-                processSoloRead(read, readBreakendMatches);
+            processSupportReads(firstRead, secondRead);
         }
+    }
+
+    private void processSupportReads(final SupportRead firstRead, final SupportRead secondRead)
+    {
+        List<ReadBreakendMatch> firstBreakendMatches = firstRead != null ? findReadBreakendMatch(firstRead) : Collections.emptyList();
+        List<ReadBreakendMatch> secondBreakendMatches = secondRead != null ? findReadBreakendMatch(secondRead) : Collections.emptyList();
+
+        if(!firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty())
+        {
+            processCompleteFragment(firstRead, secondRead, firstBreakendMatches, secondBreakendMatches);
+        }
+        else if(!firstBreakendMatches.isEmpty())
+        {
+            processSoloRead(firstRead, firstBreakendMatches);
+        }
+        else if(!secondBreakendMatches.isEmpty())
+        {
+            processSoloRead(secondRead, secondBreakendMatches);
+        }
+    }
+
+    private static SupportRead findSpecificRead(final List<SupportRead> reads, boolean getFirst, boolean useSupplementaries)
+    {
+        SupportRead read = reads.stream().filter(x -> x.firstInPair() == getFirst && !x.isSupplementary()).findFirst().orElse(null);
+
+        if(read != null)
+            return read;
+
+        if(!useSupplementaries)
+            return null;
+
+        return reads.stream().filter(x -> x.firstInPair() == getFirst).findFirst().orElse(null);
     }
 
     private void processCompleteFragment(

@@ -111,6 +111,11 @@ public class TestUtils
         return new Read(record);
     }
 
+    public static void setMateCigar(final Read read, final String mateCigar)
+    {
+        read.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
+    }
+
     public static Read createConcordantRead(
             final String readId, int readStart, final String readBases, final String cigar, final int mateStart)
     {

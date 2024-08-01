@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
@@ -21,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -160,12 +163,24 @@ public class RemoteRegionAssembler
     public AssemblyLink tryAssemblyRemoteRefOverlap(
             final JunctionAssembly assembly, final int remoteRegionStart, final int remoteRegionEnd, final byte[] refGenomeBases)
     {
+        AssemblyLink assemblyLink = tryAssemblyRemoteRefOverlap(assembly, remoteRegionStart, remoteRegionEnd, refGenomeBases, FORWARD);
+
+        if(assemblyLink == null)
+            assemblyLink = tryAssemblyRemoteRefOverlap(assembly, remoteRegionStart, remoteRegionEnd, refGenomeBases, REVERSE);
+
+        return assemblyLink;
+    }
+
+    private AssemblyLink tryAssemblyRemoteRefOverlap(
+            final JunctionAssembly assembly, final int remoteRegionStart, final int remoteRegionEnd, final byte[] refGenomeBases,
+            final Orientation remoteOrientation)
+    {
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
 
         boolean assemblyReversed = false;
         boolean remoteReversed = false;
 
-        if(assembly.junction().Orient == mRemoteRegion.orientation())
+        if(assembly.junction().Orient == remoteOrientation)
         {
             if(assembly.junction().isForward())
                 remoteReversed = true;
@@ -175,7 +190,7 @@ public class RemoteRegionAssembler
 
         JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, 0, -1);
 
-        JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, mRemoteRegion.orientation(), remoteReversed);
+        JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, remoteOrientation, remoteReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstJunctionSequence = assemblySeq.junctionSequence();
@@ -187,8 +202,8 @@ public class RemoteRegionAssembler
         if(remoteSeqIndexInRef >= 0)
         {
             return formLinkWithRemote(
-                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
-                    assemblySeq.junctionSeqStartIndex(), remoteSeqIndexInRef);
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd, remoteOrientation,
+                    assemblySeq.junctionSeqStartIndex());
         }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
@@ -237,8 +252,8 @@ public class RemoteRegionAssembler
             // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
             // the implied junction position in the remote can be determined
             return formLinkWithRemote(
-                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
-                    firstIndexStart, secondIndexStart);
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd, remoteOrientation,
+                    firstIndexStart);
         }
 
         return null;
@@ -246,8 +261,8 @@ public class RemoteRegionAssembler
 
     private AssemblyLink formLinkWithRemote(
             final JunctionAssembly assembly, final JunctionSequence assemblySeq, final JunctionSequence initialRemoteRefSeq,
-            final byte[] refGenomeBases, final int remoteRegionStart, final  int remoteRegionEnd,
-            int firstJuncSeqIndexStart, int secondIndexStart)
+            final byte[] refGenomeBases, final int remoteRegionStart, final  int remoteRegionEnd, final Orientation remoteOrientation,
+            int firstJuncSeqIndexStart)
     {
         // use the start position of the match to infer where the junction may be in the remote location despite there not being any junction
         // spanning reads at that position
@@ -257,7 +272,7 @@ public class RemoteRegionAssembler
 
         int inferredRemoteJunctionPosition;
 
-        if(mRemoteRegion.isForward())
+        if(remoteOrientation.isForward())
         {
             remoteJunctionPosition = remoteRegionEnd;
             remoteJunctionIndex = refGenomeBases.length - 1;
@@ -283,7 +298,7 @@ public class RemoteRegionAssembler
             // test if these bases match the assembly's extension sequence
             int inferredStart, inferredEnd;
 
-            if(mRemoteRegion.isForward())
+            if(remoteOrientation.isForward())
             {
                 inferredStart = remoteRegionEnd;
                 inferredEnd = remoteRegionEnd + assemblyMatchJunctionOffset;
@@ -304,20 +319,15 @@ public class RemoteRegionAssembler
 
             if(secondIndexInFirst >= 0)
             {
-                firstJuncSeqIndexStart = assemblySeq.junctionSeqStartIndex();
-
-                if(!mRemoteRegion.isForward())
-                    secondIndexStart = 0;
-
-                int adjustedRemoteStart = mRemoteRegion.isForward() ? remoteRegionStart : inferredRemoteJunctionPosition;
-                int adjustedRemoteEnd = mRemoteRegion.isForward() ? inferredRemoteJunctionPosition : remoteRegionEnd;
+                int adjustedRemoteStart = remoteOrientation.isForward() ? remoteRegionStart : inferredRemoteJunctionPosition;
+                int adjustedRemoteEnd = remoteOrientation.isForward() ? inferredRemoteJunctionPosition : remoteRegionEnd;
 
                 byte[] remoteRefBases = mRefGenome.getBases(mRemoteRegion.Chromosome, adjustedRemoteStart, adjustedRemoteEnd);
                 byte[] remoteRefBaseQuals = createMinBaseQuals(remoteRefBases.length);
 
-                remoteRefSeq = new JunctionSequence(remoteRefBases, remoteRefBaseQuals, mRemoteRegion.orientation(), initialRemoteRefSeq.Reversed);
+                remoteRefSeq = new JunctionSequence(remoteRefBases, remoteRefBaseQuals, remoteOrientation, initialRemoteRefSeq.Reversed);
 
-                if(mRemoteRegion.isForward())
+                if(remoteOrientation.isForward())
                     remoteJunctionIndex = remoteRefBases.length - 1;;
             }
         }
@@ -347,7 +357,7 @@ public class RemoteRegionAssembler
         // TODO: consider adjusting the start pos and sequence to the inferred remote junction, or let reads from other remote locations
         // fill in this gap?
 
-        Junction remoteJunction = new Junction(mRemoteRegion.Chromosome, remoteJunctionPosition, mRemoteRegion.orientation());
+        Junction remoteJunction = new Junction(mRemoteRegion.Chromosome, remoteJunctionPosition, remoteOrientation);
 
         JunctionAssembly remoteAssembly = new JunctionAssembly(
                 remoteJunction, remoteRefSeq.originalBases(), remoteRefSeq.originalBaseQuals(), remoteSupport, Lists.newArrayList());

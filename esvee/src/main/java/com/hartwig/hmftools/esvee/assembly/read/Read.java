@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
@@ -199,6 +200,10 @@ public class Read
             return mMateRead.alignmentEnd();
 
         mMateAlignmentEnd = getMateAlignmentEnd(mRecord);
+
+        if(mMateAlignmentEnd == NO_POSITION)
+            mMateAlignmentEnd = mateAlignmentStart() + basesLength() - 1;
+
         return mMateAlignmentEnd;
     }
 

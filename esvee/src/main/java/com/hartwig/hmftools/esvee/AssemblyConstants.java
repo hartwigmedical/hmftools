@@ -48,6 +48,7 @@ public final class AssemblyConstants
 
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;
+    public static final int REMOTE_REGION_MERGE_MARGIN = 100;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;

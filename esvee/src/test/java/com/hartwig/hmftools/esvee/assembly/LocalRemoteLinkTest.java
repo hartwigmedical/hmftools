@@ -88,8 +88,6 @@ public class LocalRemoteLinkTest
         assertTrue(localAssembly.junction().Orient.isForward());
         assertEquals(50, localAssembly.extensionLength());
 
-        // assertEquals(localRefSequence.substring(300, 350), localAssembly.formJunctionSequence());
-
         localSequence = refGenome.getBaseString(CHR_1,401, 450) + refGenome.getBaseString(CHR_1,300, 349);
         assertEquals(localSequence, localAssembly.formFullSequence());
     }
@@ -126,7 +124,7 @@ public class LocalRemoteLinkTest
         Read remoteRead = createRead(READ_ID_GENERATOR.nextId(), 200, refGenome.getBaseString(CHR_2, 200, 300), "100M");
 
         RemoteRegion remoteRegion = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 200, 300), REVERSE, remoteRead.id(), DISCORDANT);
+                new ChrBaseRegion(CHR_2, 200, 300), remoteRead.id(), DISCORDANT);
 
         remoteRegionAssembler.addMatchedReads(List.of(remoteRead), remoteRegion);
 
