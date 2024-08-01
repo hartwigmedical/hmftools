@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
 
 import java.util.StringJoiner;
 
@@ -269,7 +270,7 @@ public class QualityControlChapter implements ReportChapter
                 });
 
         tumorStats.addCell(cells.createContent("Tumor maximum diploid proportion"));
-        tumorStats.addCell(cells.createContent(formatPercentage(report.purple().tumorStats().maxDiploidProportion())));
+        tumorStats.addCell(cells.createContent(formatTwoDigitDecimal(report.purple().tumorStats().maxDiploidProportion())));
 
         tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotMutationCount())));
@@ -287,6 +288,8 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
-                "Detection of tumor"));
+                "Tumor detection requirements\n"
+                        + "At least one requirement needs to be met to indicate detection of tumor, "
+                        + "in case of highly diploid candidate solutions (proportion >=0.97)"));
     }
 }
