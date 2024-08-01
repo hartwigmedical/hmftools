@@ -46,7 +46,7 @@ public class TumorStatsFactory
 
     private static int smallVariantAlleleReadCount(@NotNull PurpleData purpleData)
     {
-        return purpleData.allSomaticVariants().stream()
+        return purpleData.reportableSomaticVariants().stream()
                 .filter(variant -> variant.type() == VariantType.SNP)
                 .mapToInt(variant -> variant.allelicDepth().AlleleReadCount)
                 .sum();
@@ -54,14 +54,13 @@ public class TumorStatsFactory
 
     private static int hotspotMutationCount(@NotNull PurpleData purpleData, boolean convertGermlineToSomatic)
     {
-
         int count = (int) purpleData.allSomaticVariants().stream()
                 .filter(variant -> variant.tier() == VariantTier.HOTSPOT)
                 .count();
 
-        if(convertGermlineToSomatic && purpleData.allGermlineVariants() != null)
+        if(convertGermlineToSomatic && purpleData.reportableGermlineVariants() != null)
         {
-            count += (int) purpleData.allGermlineVariants().stream()
+            count += (int) purpleData.reportableGermlineVariants().stream()
                     .filter(variant -> variant.tier() == VariantTier.HOTSPOT)
                     .count();
         }
@@ -71,7 +70,6 @@ public class TumorStatsFactory
 
     private static int bafCount(@NotNull PurpleData purpleData)
     {
-
         return purpleData.segments().stream()
                 .filter(segment -> segment.germlineStatus() == GermlineStatus.DIPLOID)
                 .filter(segment -> segment.observedTumorRatio() < 0.8 || segment.observedTumorRatio() > 1.2)
