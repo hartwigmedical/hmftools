@@ -46,7 +46,7 @@ public class TumorStatsFactory
 
     private static int smallVariantAlleleReadCount(@NotNull PurpleData purpleData)
     {
-        return purpleData.reportableSomaticVariants().stream()
+        return purpleData.allSomaticVariants().stream()
                 .filter(variant -> variant.type() == VariantType.SNP)
                 .mapToInt(variant -> variant.allelicDepth().AlleleReadCount)
                 .sum();

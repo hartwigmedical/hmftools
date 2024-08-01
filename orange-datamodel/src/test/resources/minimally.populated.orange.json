@@ -318,12 +318,12 @@
       }
     ],
     "tumorStats": {
-      "maxDiploidProportion": 0,
-      "hotspotMutationCount": 0,
+      "maxDiploidProportion": 0.0211,
+      "hotspotMutationCount": 3,
       "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 0,
-      "structuralVariantTumorFragmentCount": 0,
-      "bafCount": 0
+      "smallVariantAlleleReadCount": 2273132,
+      "structuralVariantTumorFragmentCount": 4874,
+      "bafCount": 675344
     }
   },
   "linx": {

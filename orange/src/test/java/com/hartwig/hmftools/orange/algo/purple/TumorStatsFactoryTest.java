@@ -114,7 +114,7 @@ public class TumorStatsFactoryTest
     public void canComputeSmallVariantAlleleReadCount()
     {
         List<PurpleVariantContext> somaticVariants = List.of(
-                purpleVariantContext(VariantType.SNP, true, 2),
+                purpleVariantContext(VariantType.SNP, true, 1),
                 purpleVariantContext(VariantType.SNP, false, 2),
                 purpleVariantContext(VariantType.MNP, true, 4),
                 purpleVariantContext(VariantType.INDEL, true, 8)
@@ -123,7 +123,7 @@ public class TumorStatsFactoryTest
         PurpleData purpleData = createTestPurpleData(somaticVariants, List.of());
 
         TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .smallVariantAlleleReadCount(2)
+                .smallVariantAlleleReadCount(3)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
