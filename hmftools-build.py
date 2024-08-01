@@ -56,6 +56,7 @@ class Docker:
         with open("/workspace/docker.sh", "w") as output:
             output.write(f'docker build {self.module} -t {self.private_image} -t {self.public_image} --build-arg VERSION={self.version}\n')
             output.write(f'docker push {self.private_image}\n')
+            output.write(f'docker login -u hartwigmedicalfoundation -p $(cat /workspace/dockerhub.password)\n')
             output.write(f'docker push {self.public_image}\n')
 
 
