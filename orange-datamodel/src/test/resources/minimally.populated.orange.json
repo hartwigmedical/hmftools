@@ -321,8 +321,8 @@
       "maxDiploidProportion": 0.0211,
       "hotspotMutationCount": 3,
       "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2273132,
-      "structuralVariantTumorFragmentCount": 4874,
+      "smallVariantAlleleReadCount": 2273196,
+      "structuralVariantTumorFragmentCount": 4908,
       "bafCount": 675344
     }
   },
