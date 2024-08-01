@@ -49,13 +49,14 @@ class Docker:
     def __init__(self, module, version):
         self.module = module
         self.version = version
-        self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
-        self.external_image = f'europe-west4-docker.pkg.dev/hmf-build/build-registry-docker/{self.module}:{self.version}'
+        self.private_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
+        self.public_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
     def build(self):
         with open("/workspace/docker.sh", "w") as output:
-            output.write(f'docker build {self.module} -t {self.internal_image} --build-arg VERSION={self.version}\n')
-            output.write(f'docker push {self.internal_image}\n')
+            output.write(f'docker build {self.module} -t {self.private_image} -t {self.public_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker push {self.private_image}\n')
+            output.write(f'docker push {self.public_image}\n')
 
 
 class Release:
