@@ -78,7 +78,9 @@ public final class ReadUtils
         {
             if(!element.getOperator().consumesReferenceBases())
             {
-                readIndex += element.getLength();
+                if(element.getOperator().consumesReadBases())
+                    readIndex += element.getLength();
+
                 continue;
             }
 
