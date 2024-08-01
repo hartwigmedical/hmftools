@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -335,17 +337,33 @@ public class ExtensionSeqBuilder
     private void determineFinalBases()
     {
         int maxValidExtensionLength = 0;
+        int validExtensionReadCount = 0;
 
         for(ReadState read : mReads)
         {
             if(read.exceedsMaxMismatches())
                 continue;
 
+            // check for extensions comprised only of short indels, even if they started with some soft-clipped reads
+            if((mJunction.isForward() && read.read().rightClipLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+            || (mJunction.isReverse() && read.read().leftClipLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH))
+            {
+                ++validExtensionReadCount;
+            }
+            else if(read.read().indelCoords() != null && read.read().indelCoords().Length >= MIN_INDEL_LENGTH)
+            {
+                ++validExtensionReadCount;
+            }
+            else
+            {
+                continue;
+            }
+
             // note the read's extension length does not include the junction base itself, hence the +1
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0)
+        if(maxValidExtensionLength == 0 || validExtensionReadCount < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
         {
             mIsValid = false;
             return;

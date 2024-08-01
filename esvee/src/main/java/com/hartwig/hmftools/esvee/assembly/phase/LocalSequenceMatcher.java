@@ -112,44 +112,60 @@ public class LocalSequenceMatcher
         return null;
     }
 
-    private AssemblyLink formLocalLink(final JunctionAssembly assembly, final int localRegionStart, int localRefIndexStart)
+    private AssemblyLink formLocalLink(
+            final JunctionAssembly assembly, final int localRegionStart, int localRefIndexStart)
     {
-        // create a simple local assembly to contain this link info? depends perhaps on whether this will become an SV or not
+        // create a simple local assembly to contain this link info
         int localRefJunctionPos = localRegionStart + localRefIndexStart;
 
-        int localRefSeqStart, localRefSeqEnd, localRefJunctionIndex;
+        int localRefJunctionIndex;
         Orientation localRefOrientation;
 
         int extensionBaseLength = assembly.extensionLength();
+
+        // the local assembly will set the ref bases to the original assembly's extension bases, and take a fixed amount of its ref bases
+        // for its extension bases
+        int fixedAssemblyRefBaseLength = 50;
+        String assemblyRefBases = assembly.formRefBaseSequence(fixedAssemblyRefBaseLength);
+        String assemblyExtBases = assembly.formJunctionSequence();
 
         if(assembly.isForwardJunction())
         {
             // the local assembly has the opposite, so in this case negative orientation
             localRefOrientation = REVERSE;
-            localRefSeqStart = localRefJunctionPos;
-            localRefSeqEnd = localRefJunctionPos + extensionBaseLength - 1;
-            localRefJunctionIndex = 0;
+            localRefJunctionIndex = assemblyRefBases.length();
         }
         else
         {
             localRefOrientation = FORWARD;
-            localRefSeqStart = localRefJunctionPos - extensionBaseLength + 1;
-            localRefSeqEnd = localRefJunctionPos;
-            localRefJunctionIndex = extensionBaseLength - 1;
+
+            // add the assembly's extension base length to get to the local of the junction in this local sequence
+            localRefJunctionPos += extensionBaseLength - 1;
+            localRefJunctionIndex = assemblyExtBases.length() - 1;
         }
 
         Junction localRefJunction = new Junction(assembly.junction().Chromosome, localRefJunctionPos, localRefOrientation);
 
         // trim the local ref sequence to 100 bases from the junction - no point in storing and writing 1000 bases
 
-        byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRefSeqStart, localRefSeqEnd);
-        byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
+        String localAssemblySequence;
+
+        if(localRefOrientation.isForward())
+            localAssemblySequence = assemblyExtBases + assemblyRefBases;
+        else
+            localAssemblySequence = assemblyRefBases + assemblyExtBases;
+
+        byte[] localAssemblyBases = localAssemblySequence.getBytes();
+        byte[] localAssemblyQuals = createMinBaseQuals(localAssemblyBases.length);
 
         JunctionAssembly localRefAssembly = new JunctionAssembly(
-                localRefJunction, refGenomeBases, refBaseQuals, Lists.newArrayList(), Lists.newArrayList());
+                localRefJunction, localAssemblyBases, localAssemblyQuals, Lists.newArrayList(), Lists.newArrayList());
 
         localRefAssembly.setJunctionIndex(localRefJunctionIndex);
 
-        return new AssemblyLink(assembly, localRefAssembly, LinkType.SPLIT, "", "");
+        if(assembly.isForwardJunction())
+            return new AssemblyLink(assembly, localRefAssembly, LinkType.SPLIT, "", "");
+        else
+            return new AssemblyLink(localRefAssembly, assembly, LinkType.SPLIT, "", "");
     }
 }

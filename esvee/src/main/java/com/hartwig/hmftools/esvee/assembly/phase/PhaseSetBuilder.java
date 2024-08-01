@@ -169,7 +169,10 @@ public class PhaseSetBuilder
     private void formSplitLinks()
     {
         if(mAssemblies.size() == 1)
+        {
+            formsLocalLink(mAssemblies.get(0));
             return;
+        }
 
         if(mAssemblies.size() == 2)
         {

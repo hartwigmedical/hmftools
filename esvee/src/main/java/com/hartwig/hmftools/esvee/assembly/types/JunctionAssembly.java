@@ -613,7 +613,7 @@ public class JunctionAssembly
                 mSupport.size(), mMismatchReadCount);
     }
 
-    public String formFullSequence() { return formJunctionSequence(refBaseLength()); }
+    public String formFullSequence() { return new String(mBases); }
 
     public String formJunctionSequence()
     {

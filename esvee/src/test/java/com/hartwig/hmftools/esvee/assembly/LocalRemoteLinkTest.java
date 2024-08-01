@@ -44,7 +44,7 @@ public class LocalRemoteLinkTest
         // must be long enough to test the local ref genome sequence but not repetitive
         String localRefSequence = formTestRefSequence(600);
 
-        MockRefGenome refGenome = new MockRefGenome(false);
+        MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, localRefSequence);
 
         LocalSequenceMatcher localSequenceMatcher = new LocalSequenceMatcher(refGenome, 200);
@@ -52,8 +52,8 @@ public class LocalRemoteLinkTest
         // first a basic exact match junction
         Junction posJunction = new Junction(CHR_1, 300, FORWARD);
 
-        String assemblyRefBases = localRefSequence.substring(201, 301);
-        String assemblyExtensionBases = localRefSequence.substring(400, 450);
+        String assemblyRefBases = refGenome.getBaseString(CHR_1, 200, 300);
+        String assemblyExtensionBases = refGenome.getBaseString(CHR_1, 400, 449);
         String assemblyBases = assemblyRefBases + assemblyExtensionBases;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
 
@@ -62,13 +62,18 @@ public class LocalRemoteLinkTest
         AssemblyLink assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
         assertNotNull(assemblyLink);
         assertEquals(DEL, assemblyLink.svType());
-        assertEquals(400, assemblyLink.second().junction().Position);
-        assertEquals(50, assemblyLink.second().refBaseLength());
+        JunctionAssembly localAssembly = assemblyLink.second();
+
+        assertEquals(400, localAssembly.junction().Position);
+        assertTrue(localAssembly.junction().Orient.isReverse());
+        assertEquals(50, localAssembly.extensionLength());
+        String localSequence = refGenome.getBaseString(CHR_1, 251, 300) + refGenome.getBaseString(CHR_1, 400, 449);
+        assertEquals(localSequence, localAssembly.formFullSequence());
 
         Junction negJunction = new Junction(CHR_1, 300, REVERSE);
 
-        assemblyRefBases = localRefSequence.substring(300, 400);
-        assemblyExtensionBases = localRefSequence.substring(400, 450);
+        assemblyRefBases = refGenome.getBaseString(CHR_1,300, 400);
+        assemblyExtensionBases = refGenome.getBaseString(CHR_1,401, 450);
         assemblyBases = assemblyExtensionBases + assemblyRefBases;
         baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
 
@@ -77,8 +82,16 @@ public class LocalRemoteLinkTest
         assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
         assertNotNull(assemblyLink);
         assertEquals(DUP, assemblyLink.svType());
-        assertEquals(400, assemblyLink.second().junction().Position);
-        assertEquals(50, assemblyLink.second().refBaseLength());
+
+        localAssembly = assemblyLink.first();
+        assertEquals(450, localAssembly.junction().Position);
+        assertTrue(localAssembly.junction().Orient.isForward());
+        assertEquals(50, localAssembly.extensionLength());
+
+        // assertEquals(localRefSequence.substring(300, 350), localAssembly.formJunctionSequence());
+
+        localSequence = refGenome.getBaseString(CHR_1,401, 450) + refGenome.getBaseString(CHR_1,300, 349);
+        assertEquals(localSequence, localAssembly.formFullSequence());
     }
 
     @Test
