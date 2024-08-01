@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_IN
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
@@ -336,6 +337,12 @@ public class Read
             {
                 CigarElement element = mCigarElements.get(0);
 
+                if(element.getOperator() == H)
+                {
+                    mCigarElements.remove(0);
+                    continue;
+                }
+
                 if(element.getLength() <= remainingBases)
                 {
                     mCigarElements.remove(0);
@@ -364,6 +371,12 @@ public class Read
             {
                 int lastIndex = mCigarElements.size() - 1;
                 CigarElement element = mCigarElements.get(lastIndex);
+
+                if(element.getOperator() == H)
+                {
+                    mCigarElements.remove(lastIndex);
+                    continue;
+                }
 
                 if(element.getLength() <= remainingBases)
                 {

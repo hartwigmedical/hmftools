@@ -139,7 +139,9 @@ public class Breakend implements Comparable<Breakend>
         if(mOtherBreakend == null || !mOtherBreakend.Chromosome.equals(Chromosome))
             return 0;
 
-        return abs(Position - mOtherBreakend.Position);
+        int posLength = abs(Position - mOtherBreakend.Position);
+
+        return svType() == DUP ? posLength + 1 : posLength;
     }
 
     public boolean isShortLocalDelDupIns()
