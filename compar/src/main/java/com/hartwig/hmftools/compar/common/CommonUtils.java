@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
@@ -13,12 +15,17 @@ import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -38,6 +45,8 @@ import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
+
+import org.jetbrains.annotations.Nullable;
 
 public class CommonUtils
 {
@@ -141,6 +150,11 @@ public class CommonUtils
             if(config.mSourceFormat == SourceFormat.MYSQL)
             {
                 items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName), sourceName);
+            }
+            else if(config.mSourceFormat == SourceFormat.ORANGE_JSON)
+            {
+                JsonObject json = loadJsonFromFile(convertWildcardSamplePath(config.OrangeJsonPaths.get(sourceName), sampleId));
+                items = comparer.loadFromOrangeJson(json);
             }
             else if(config.mSourceFormat == SourceFormat.FILES)
             {
@@ -250,5 +264,21 @@ public class CommonUtils
         }
 
         return new BasePosition(chromosome, position);
+    }
+
+    private static @Nullable JsonObject loadJsonFromFile(final String jsonPath)
+    {
+        JsonObject json;
+        try
+        {
+            String jsonText = Files.readString(Paths.get(jsonPath));
+            json = JsonParser.parseString(jsonText).getAsJsonObject();
+        }
+        catch(IOException e)
+        {
+            CMP_LOGGER.warn("failed to load JSON from path: {}", jsonPath);
+            json = null;
+        }
+        return json;
     }
 }

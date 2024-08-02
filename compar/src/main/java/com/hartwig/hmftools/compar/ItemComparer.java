@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar;
 
 import java.util.List;
 
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -15,6 +16,8 @@ public interface ItemComparer
     boolean processSample(final String sampleId, final List<Mismatch> mismatches);
 
     List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName);
+
+    List<ComparableItem> loadFromOrangeJson(final JsonObject json);
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 

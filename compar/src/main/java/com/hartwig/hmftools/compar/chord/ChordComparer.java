@@ -12,8 +12,12 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
+import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -63,6 +67,24 @@ public class ChordComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         comparableItems.add(new ChordComparData(chordData));
         return Lists.newArrayList();
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        final JsonObject chordJson = json.getAsJsonObject("chord");
+        ChordData chordData = ImmutableChordData.builder()
+                .BRCA1Value(chordJson.get("BRCA1Value").getAsDouble())
+                .BRCA2Value(chordJson.get("BRCA2Value").getAsDouble())
+                .hrdType(chordJson.get("hrdType").getAsString())
+                .hrdValue(chordJson.get("hrdValue").getAsDouble())
+                .hrStatus(ChordStatus.valueOf(chordJson.get("hrStatus").getAsString()))
+                .remarksHrdType("")  // unavailable in JSON
+                .remarksHrStatus("")  // unavailable in JSON
+                .build();
+        final List<ComparableItem> comparableItems = Lists.newArrayList();
+        comparableItems.add(new ChordComparData(chordData));
+        return comparableItems;
     }
 
     @Override
