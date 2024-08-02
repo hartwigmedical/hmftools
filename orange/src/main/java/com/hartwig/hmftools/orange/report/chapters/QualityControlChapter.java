@@ -22,6 +22,7 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
+import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -262,12 +263,7 @@ public class QualityControlChapter implements ReportChapter
     private void addTumorStats(@NotNull Document document)
     {
         Cells cells = new Cells(reportResources);
-        Table tumorStats = Tables.createContent(contentWidth(),
-                new float[] { 3, 1 },
-                new Cell[] {
-                        cells.createHeader(Strings.EMPTY),
-                        cells.createHeader(Strings.EMPTY),
-                });
+        Table tumorStats = new Table(UnitValue.createPercentArray(new float[] { 3, 1 })).setWidth(contentWidth());
 
         tumorStats.addCell(cells.createContent("Tumor maximum diploid proportion"));
         tumorStats.addCell(cells.createContent(formatTwoDigitDecimal(report.purple().tumorStats().maxDiploidProportion())));
@@ -288,8 +284,6 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
         document.add(new Tables(reportResources).createWrapping(tumorStats,
-                "Tumor detection requirements\n"
-                        + "At least one requirement needs to be met to indicate detection of tumor, "
-                        + "in case of highly diploid candidate solutions (proportion >=0.97)"));
+                "Tumor detection requirements", "At least one requirement needs to be met to indicate detection of tumor, in case of highly diploid candidate solutions (proportion >=0.97)\n\n"));
     }
 }

@@ -64,11 +64,17 @@ public class Tables
     @NotNull
     public Table createWrapping(@NotNull Table contentTable)
     {
-        return createWrapping(contentTable, null);
+        return createWrapping(contentTable, null, null);
     }
 
     @NotNull
-    public Table createWrapping(@NotNull Table contentTable, @Nullable String title)
+    public Table createWrapping(@NotNull Table contentTable, @NotNull String title)
+    {
+        return createWrapping(contentTable, title, null);
+    }
+
+    @NotNull
+    public Table createWrapping(@NotNull Table contentTable, @Nullable String title, @Nullable String subtitle)
     {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                         .setPaddingTop(5)
@@ -88,6 +94,12 @@ public class Tables
             table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                     .setPadding(0)
                     .add(new Paragraph(title).addStyle(reportResources.tableTitleStyle())));
+        }
+        if(subtitle != null)
+        {
+            table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
+                    .setPadding(0)
+                    .add(new Paragraph(subtitle).addStyle(reportResources.subTextStyle())));
         }
 
         table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
