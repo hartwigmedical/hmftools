@@ -42,7 +42,6 @@ public class Breakend
 
     private final Variant mVariant;
     private final List<String> mLinkedAssemblyIds;
-    public double mAllelicFrequency;
     private int mChrLocationIndex;
 
     public Breakend(
