@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Queue;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -27,22 +26,22 @@ import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 public class RemoteGroupBuilder extends ThreadTask
 {
     private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
-    private final Queue<JunctionGroup> mJunctionGroups;
+    private final TaskQueue mJunctionGroups;
     private final Map<String, List<JunctionGroup>> mJunctionGroupMap;
 
     private final Set<PhaseGroup> mPhaseGroupsSets;
     private final List<PhaseGroup> mRemovedPhaseGroups;
-    private final int mJunctionGroupCount;
 
     private final RemoteBuildStats mBuildStats;
 
     public RemoteGroupBuilder(
-            final AssemblyConfig config, final Queue<JunctionGroup> junctionGroups,
+            final AssemblyConfig config, final TaskQueue junctionGroups,
             final Map<String,List<JunctionGroup>> junctionGroupMap, final PhaseGroupBuildWriter writer)
     {
         super("RemotePhaseGroups");
@@ -52,7 +51,6 @@ public class RemoteGroupBuilder extends ThreadTask
         mJunctionGroups = junctionGroups;
         mJunctionGroupMap = junctionGroupMap;
 
-        mJunctionGroupCount = junctionGroups.size();
         mPhaseGroupsSets = Sets.newHashSet();
         mRemovedPhaseGroups = Lists.newArrayList();
         mBuildStats = new RemoteBuildStats();
@@ -86,19 +84,9 @@ public class RemoteGroupBuilder extends ThreadTask
         {
             try
             {
-                int remainingCount = mJunctionGroups.size();
-                int processedCount = mJunctionGroupCount - remainingCount;
-
                 mPerfCounter.start();
 
-                ++processedCount;
-
-                JunctionGroup junctionGroup = mJunctionGroups.remove();
-
-                if((processedCount % LOG_COUNT) == 0)
-                {
-                    SV_LOGGER.debug("processed {} junction groups into phase groups", processedCount, mPhaseGroupsSets.size());
-                }
+                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
 
                 for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                 {
@@ -106,6 +94,8 @@ public class RemoteGroupBuilder extends ThreadTask
                 }
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
+
+                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

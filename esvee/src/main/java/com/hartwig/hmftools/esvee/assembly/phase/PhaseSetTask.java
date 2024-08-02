@@ -16,22 +16,21 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 public class PhaseSetTask extends ThreadTask
 {
     private final AssemblyConfig mConfig;
-    private final Queue<PhaseGroup> mPhaseGroups;
-    private final int mPhaseGroupCount;
+    private final TaskQueue mPhaseGroups;
 
     private final RemoteRegionAssembler mRemoteRegionAssembler;
 
-    public PhaseSetTask(final AssemblyConfig config, final BamReader bamReader, final Queue<PhaseGroup> phaseGroups)
+    public PhaseSetTask(final AssemblyConfig config, final BamReader bamReader, TaskQueue phaseGroups)
     {
         super("PhaseSets");
 
         mConfig = config;
         mPhaseGroups = phaseGroups;
-        mPhaseGroupCount = mPhaseGroups.size();
 
         mRemoteRegionAssembler = new RemoteRegionAssembler(config.RefGenome, bamReader);
     }
@@ -45,9 +44,11 @@ public class PhaseSetTask extends ThreadTask
         Queue<PhaseGroup> phaseGroupQueue = new ConcurrentLinkedQueue<>();
         phaseGroupQueue.addAll(phaseGroups);
 
+        TaskQueue taskQueue = new TaskQueue(phaseGroupQueue, "phase groups", 10000);
+
         for(int i = 0; i < taskCount; ++i)
         {
-            PhaseSetTask phaseSetTask = new PhaseSetTask(config, bamReaders.get(i), phaseGroupQueue);
+            PhaseSetTask phaseSetTask = new PhaseSetTask(config, bamReaders.get(i), taskQueue);
             phaseSetTasks.add(phaseSetTask);
             threadTasks.add(phaseSetTask);
         }
@@ -60,8 +61,6 @@ public class PhaseSetTask extends ThreadTask
         return phaseSetTasks;
     }
 
-    private static final int PHASE_GROUP_LOG_COUNT = 10000;
-
     @Override
     public void run()
     {
@@ -69,10 +68,7 @@ public class PhaseSetTask extends ThreadTask
         {
             try
             {
-                int remainingCount = mPhaseGroups.size();
-                int processedCount = mPhaseGroupCount - remainingCount;
-
-                PhaseGroup phaseGroup = mPhaseGroups.remove();
+                PhaseGroup phaseGroup = (PhaseGroup)mPhaseGroups.removeItem();
 
                 if(mConfig.PhaseProcessingLimit > 0 && phaseGroup.assemblyCount() > mConfig.PhaseProcessingLimit)
                     continue;
@@ -108,10 +104,7 @@ public class PhaseSetTask extends ThreadTask
 
                 stopCheckLog(format("phaseGroupId(%d) assemblies(%d)", phaseGroup.id(), phaseGroup.assemblyCount()), mConfig.PerfLogTime);
 
-                if(processedCount > 0 && (processedCount % PHASE_GROUP_LOG_COUNT) == 0)
-                {
-                    SV_LOGGER.debug("processed {} phase groups, remaining({})", processedCount, remainingCount);
-                }
+                mPhaseGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

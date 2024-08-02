@@ -23,6 +23,7 @@ import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
@@ -68,8 +69,9 @@ public class Alignment
                 assemblyAlignments.size(), linkedAssemblies, singleAssemblies);
 
         Queue<AssemblyAlignment> assemblyAlignmentQueue = new ConcurrentLinkedQueue<>();
-
         assemblyAlignments.forEach(x -> assemblyAlignmentQueue.add(x));
+
+        TaskQueue taskQueue = new TaskQueue(assemblyAlignmentQueue, "assembly alignments", 10000);
 
         List<Thread> threadTasks = new ArrayList<>();
         List<AssemblerAlignerTask> alignerTasks = Lists.newArrayList();
@@ -78,7 +80,7 @@ public class Alignment
 
         for(int i = 0; i < taskCount; ++i)
         {
-            AssemblerAlignerTask assemblerAlignerTask = new AssemblerAlignerTask(assemblyAlignmentQueue);
+            AssemblerAlignerTask assemblerAlignerTask = new AssemblerAlignerTask(taskQueue);
             alignerTasks.add(assemblerAlignerTask);
             threadTasks.add(assemblerAlignerTask);
         }
@@ -95,19 +97,15 @@ public class Alignment
 
     private class AssemblerAlignerTask extends ThreadTask
     {
-        private final Queue<AssemblyAlignment> mAssemblyAlignments;
-        private final int mAssemblyAlignmentCount;
+        private final TaskQueue mAssemblyAlignments;
         private int mRequeriedSuppCount;
 
-        public AssemblerAlignerTask(final Queue<AssemblyAlignment> assemblyAlignments)
+        public AssemblerAlignerTask(final TaskQueue assemblyAlignments)
         {
             super("AssemblerAlignment");
             mAssemblyAlignments = assemblyAlignments;
-            mAssemblyAlignmentCount = assemblyAlignments.size();
             mRequeriedSuppCount = 0;
         }
-
-        private static final int LOG_COUNT = 10000;
 
         public int requeriedSuppCount() { return mRequeriedSuppCount; }
 
@@ -118,25 +116,17 @@ public class Alignment
             {
                 try
                 {
-                    int remainingCount = mAssemblyAlignments.size();
-                    int processedCount = mAssemblyAlignmentCount - remainingCount;
-
                     mPerfCounter.start();
 
-                    ++processedCount;
-
-                    AssemblyAlignment assemblyAlignment = mAssemblyAlignments.remove();
+                    AssemblyAlignment assemblyAlignment = (AssemblyAlignment)mAssemblyAlignments.removeItem();
 
                     processAssembly(assemblyAlignment);
-
-                    if((processedCount % LOG_COUNT) == 0)
-                    {
-                        SV_LOGGER.debug("processed {} assembly alignments", processedCount);
-                    }
 
                     stopCheckLog(
                             format("alignment count(%d) assemblies(%s)", assemblyAlignment.assemblies().size(), assemblyAlignment.info()),
                             mConfig.PerfLogTime);
+
+                    mAssemblyAlignments.checkRemainingCount();
                 }
                 catch(NoSuchElementException e)
                 {

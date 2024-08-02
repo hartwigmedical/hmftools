@@ -36,6 +36,7 @@ import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
 import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 import org.junit.Test;
 
@@ -110,7 +111,7 @@ public class PhaseGroupTest
 
         junctionGroups.add(junctionGroup);
 
-        LocalGroupBuilder builder = new LocalGroupBuilder(TEST_CONFIG, junctionGroups, writer);
+        LocalGroupBuilder builder = new LocalGroupBuilder(TEST_CONFIG, new TaskQueue(junctionGroups), writer);
 
         builder.run();
 
@@ -177,7 +178,7 @@ public class PhaseGroupTest
 
         junctionGroupMap.values().stream().forEach(x -> junctionGroups.addAll(x));
 
-        RemoteGroupBuilder remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, junctionGroups, junctionGroupMap, writer);
+        RemoteGroupBuilder remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, new TaskQueue(junctionGroups), junctionGroupMap, writer);
 
         remoteGroupBuilder.run();
 
@@ -230,7 +231,7 @@ public class PhaseGroupTest
 
 
         junctionGroupMap.values().stream().forEach(x -> junctionGroups.addAll(x));
-        remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, junctionGroups, junctionGroupMap, writer);
+        remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, new TaskQueue(junctionGroups), junctionGroupMap, writer);
         remoteGroupBuilder.run();
 
         phaseGroups = remoteGroupBuilder.phaseGroups();

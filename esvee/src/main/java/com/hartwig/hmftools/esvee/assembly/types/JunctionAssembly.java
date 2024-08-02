@@ -514,8 +514,10 @@ public class JunctionAssembly
 
     public void setOutcome(final AssemblyOutcome outcome)
     {
-        if(mOutcome != LOCAL_INDEL) // persist classification for now
-            mOutcome = outcome;
+        if(mOutcome.ordinal() <= outcome.ordinal()) // only override if a stronger type of link
+            return;
+
+        mOutcome = outcome;
     }
 
     public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }

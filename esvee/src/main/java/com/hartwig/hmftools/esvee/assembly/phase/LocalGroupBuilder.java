@@ -11,30 +11,28 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 public class LocalGroupBuilder extends ThreadTask
 {
-    private final Queue<JunctionGroup> mJunctionGroups;
+    private final TaskQueue mJunctionGroups;
     private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
 
     private final Set<PhaseGroup> mPhaseGroupsSets;
-    private final int mJunctionGroupCount;
 
-    public LocalGroupBuilder(final AssemblyConfig config, final Queue<JunctionGroup> junctionGroups, final PhaseGroupBuildWriter writer)
+    public LocalGroupBuilder(final AssemblyConfig config, final TaskQueue junctionGroups, final PhaseGroupBuildWriter writer)
     {
         super("LocalPhaseGroups");
 
@@ -42,7 +40,6 @@ public class LocalGroupBuilder extends ThreadTask
         mWriter = writer;
         mJunctionGroups = junctionGroups;
 
-        mJunctionGroupCount = junctionGroups.size();
         mPhaseGroupsSets = Sets.newHashSet();
     }
 
@@ -51,8 +48,6 @@ public class LocalGroupBuilder extends ThreadTask
         return mPhaseGroupsSets;
     }
 
-    private static final int LOG_COUNT = 10000;
-
     @Override
     public void run()
     {
@@ -60,23 +55,15 @@ public class LocalGroupBuilder extends ThreadTask
         {
             try
             {
-                int remainingCount = mJunctionGroups.size();
-                int processedCount = mJunctionGroupCount - remainingCount;
-
                 mPerfCounter.start();
 
-                ++processedCount;
-
-                JunctionGroup junctionGroup = mJunctionGroups.remove();
-
-                if((processedCount % LOG_COUNT) == 0)
-                {
-                    SV_LOGGER.debug("processed {} junction groups into {} local phase groups", processedCount, mPhaseGroupsSets.size());
-                }
+                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
 
                 formLocalPhaseGroups(junctionGroup);
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
+
+                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

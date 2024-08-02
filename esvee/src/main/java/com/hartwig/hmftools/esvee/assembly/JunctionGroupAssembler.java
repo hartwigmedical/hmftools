@@ -29,6 +29,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -36,8 +37,7 @@ public class JunctionGroupAssembler extends ThreadTask
 {
     private final AssemblyConfig mConfig;
 
-    private final Queue<JunctionGroup> mJunctionGroups;
-    private final int mJunctionCount;
+    private final TaskQueue mJunctionGroups;
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
@@ -48,13 +48,12 @@ public class JunctionGroupAssembler extends ThreadTask
     private final ReadStats mReadStats;
 
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
-        mJunctionCount = junctionGroups.size();
 
         mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome, resultsWriter.decoyMatchWriter());
 
@@ -73,13 +72,15 @@ public class JunctionGroupAssembler extends ThreadTask
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
         junctionGroupQueue.addAll(junctionGroups);
 
+        TaskQueue taskQueue = new TaskQueue(junctionGroupQueue, "junction groups", 10000);
+
         int junctionGroupCount = junctionGroups.size();
 
         for(int i = 0; i < taskCount; ++i)
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -101,20 +102,14 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             try
             {
-                int remainingCount = mJunctionGroups.size();
-                int processedCount = mJunctionCount - remainingCount;
-
-                JunctionGroup junctionGroup = mJunctionGroups.remove();
+                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
 
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
 
-                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
-                {
-                    SV_LOGGER.debug("processed {} junction groups, remaining({})", processedCount, remainingCount);
-                }
+                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {
