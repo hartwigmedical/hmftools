@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
@@ -70,6 +71,13 @@ public class DisruptionComparer implements ItemComparer
         final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
         final List<LinxBreakend> breakends = dbAccess.readBreakends(sampleId);
         return buildBreakends(svDataList, breakends, sourceName);
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override

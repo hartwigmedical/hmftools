@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -71,6 +72,13 @@ public class DriverComparer implements ItemComparer
         }
 
         return driverDataList;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override

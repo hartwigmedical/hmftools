@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.compar.common.Category;
@@ -63,6 +64,13 @@ public class CopyNumberComparer implements ItemComparer
         List<ComparableItem> items = Lists.newArrayList();
         copyNumbers.forEach(x -> items.add(new CopyNumberData(x)));
         return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override

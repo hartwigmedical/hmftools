@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.compar.common.Category;
@@ -79,6 +80,13 @@ public class GeneCopyNumberComparer implements ItemComparer
 
         copyNumbers.forEach(x -> items.add(new GeneCopyNumberData(x)));
         return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override

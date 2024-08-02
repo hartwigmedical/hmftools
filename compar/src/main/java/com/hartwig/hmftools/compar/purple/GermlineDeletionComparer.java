@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -62,6 +63,13 @@ public class GermlineDeletionComparer implements ItemComparer
         List<ComparableItem> items = Lists.newArrayList();
         germlineDeletions.forEach(x -> items.add(new GermlineDeletionData(x)));
         return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override

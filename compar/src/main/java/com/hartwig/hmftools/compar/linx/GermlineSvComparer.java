@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -66,6 +67,13 @@ public class GermlineSvComparer implements ItemComparer
     {
         // final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantGe(sampleId);
         // currently unsupported
+        return Lists.newArrayList();
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
         return Lists.newArrayList();
     }
 

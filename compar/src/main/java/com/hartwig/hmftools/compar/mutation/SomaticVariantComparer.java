@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -311,6 +312,13 @@ public class SomaticVariantComparer implements ItemComparer
         final List<ComparableItem> items = Lists.newArrayList();
         loadVariants(sampleId, dbAccess, sourceName).forEach(x -> items.add(x));
         return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)

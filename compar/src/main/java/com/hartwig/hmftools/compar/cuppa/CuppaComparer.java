@@ -12,8 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.compar.chord.ChordComparData;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -58,6 +63,13 @@ public class CuppaComparer implements ItemComparer
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         // currently unsupported
+        return Lists.newArrayList();
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
         return Lists.newArrayList();
     }
 

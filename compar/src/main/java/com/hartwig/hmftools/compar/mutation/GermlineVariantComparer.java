@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLIN
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -79,6 +80,13 @@ public class GermlineVariantComparer implements ItemComparer
         }
 
         return variants;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 
     @Override
