@@ -76,7 +76,7 @@ public class RemoteRegion extends ChrBaseRegion
     public String toString()
     {
         return format("%s reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
-                super.toString(), mReadIds.size(), mReadTypeCount[RemoteReadType.DISCORDANT.ordinal()],
+                super.toString(), mReadIds.size(), mReadTypeCount[JUNCTION_MATE.ordinal()],
                 mReadTypeCount[SUPPLEMENTARY.ordinal()], mReadTypeCount[DISCORDANT.ordinal()], mSoftClipMapQualTotal);
     }
 

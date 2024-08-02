@@ -514,7 +514,7 @@ public class JunctionAssembly
 
     public void setOutcome(final AssemblyOutcome outcome)
     {
-        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_INDEL) // persist classification for now
+        if(mOutcome != LOCAL_INDEL) // persist classification for now
             mOutcome = outcome;
     }
 

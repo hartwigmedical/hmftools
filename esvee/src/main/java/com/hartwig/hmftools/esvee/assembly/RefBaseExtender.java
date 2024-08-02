@@ -377,7 +377,6 @@ public class RefBaseExtender
                 if(!hasSufficientSecondRefSupport)
                     continue;
 
-                // junctionAssembly.buildRepeatInfo();
                 branchedAssemblies.add(junctionAssembly);
                 junctionAssembly.setOutcome(DUP_BRANCHED);
 

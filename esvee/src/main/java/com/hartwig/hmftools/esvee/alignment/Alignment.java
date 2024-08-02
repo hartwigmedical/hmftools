@@ -47,9 +47,7 @@ public class Alignment
     public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
         // apply filters on what to run alignment on
-        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
-        || assembly.outcome() == AssemblyOutcome.SECONDARY
-        || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
+        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED || assembly.outcome() == AssemblyOutcome.SECONDARY)
         {
             // since identical to or associated with other links
             return true;
