@@ -60,7 +60,7 @@ public class UltimaRealignedQualModelBuilder
         @Override
         public int hashCode()
         {
-            return Objects.hash(Base, Length);
+            return (int) Base + 31*Length;
         }
     }
 
@@ -422,11 +422,11 @@ public class UltimaRealignedQualModelBuilder
 
                 if(refHomopolymer.Length < readHomopolymer.Length)
                 {
-                    insBases.append(String.valueOf(refHomopolymer.Base).repeat(readHomopolymer.Length - refHomopolymer.Length));
+                    insBases.append(String.valueOf((char) refHomopolymer.Base).repeat(readHomopolymer.Length - refHomopolymer.Length));
                 }
                 else
                 {
-                    delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length - readHomopolymer.Length));
+                    delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length - readHomopolymer.Length));
                 }
 
                 continue;
@@ -436,27 +436,27 @@ public class UltimaRealignedQualModelBuilder
             int readHomopolymersLeft = readHomopolymers.size() - readIndex - 1;
             if(refHomopolymersLeft >= readHomopolymersLeft)
             {
-                delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length));
+                delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
                 ++refIndex;
                 refPos += refHomopolymer.Length;
                 continue;
             }
 
-            insBases.append(String.valueOf(readHomopolymer.Base).repeat(readHomopolymer.Length));
+            insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
             ++readIndex;
         }
 
         while(refIndex < refHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
-            delBases.append(String.valueOf(refHomopolymer.Base).repeat(refHomopolymer.Length));
+            delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
             ++refIndex;
         }
 
         while(readIndex < readHomopolymers.size())
         {
             Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
-            insBases.append(String.valueOf(readHomopolymer.Base).repeat(readHomopolymer.Length));
+            insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
             ++readIndex;
         }
 
@@ -650,7 +650,7 @@ public class UltimaRealignedQualModelBuilder
                         }
 
                         Homopolymer currentInsert = insertHomopolymers.get(insertIndex);
-                        if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == currentInsert.Base)
+                        if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == (char) currentInsert.Base)
                         {
                             seqVariants.add(currentVariant);
                             ++insertIndex;
@@ -670,7 +670,7 @@ public class UltimaRealignedQualModelBuilder
                         }
 
                         Homopolymer currentDel = delHomopolymers.get(delIndex);
-                        if(currentVariant.indelLengthAbs() == currentDel.Length && currentVariant.Ref.charAt(1) == currentDel.Base)
+                        if(currentVariant.indelLengthAbs() == currentDel.Length && currentVariant.Ref.charAt(1) == (char) currentDel.Base)
                         {
                             seqVariants.add(currentVariant);
                             ++delIndex;
