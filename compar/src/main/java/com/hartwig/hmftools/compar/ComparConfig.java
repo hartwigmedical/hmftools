@@ -67,6 +67,7 @@ public class ComparConfig
 
     public final SourceFormat mSourceFormat;
     public final Map<String,DatabaseAccess> DbConnections; // database access details keyed by source
+    public final Map<String,String> OrangeJsonPaths; // Orange JSON paths keyed by source
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
     public final boolean RequiresLiftover;
 
@@ -92,6 +93,7 @@ public class ComparConfig
     public static final String MATCH_LEVEL = "match_level";
 
     public static final String DB_SOURCE = "db_source";
+    public static final String ORANGE_JSON_SOURCE = "orange_json";
     public static final String THRESHOLDS = "thresholds";
 
     public static final String WRITE_DETAILED_FILES = "write_detailed";
@@ -153,12 +155,18 @@ public class ComparConfig
         RequiresLiftover = configBuilder.hasFlag(REQUIRES_LIFTOVER);
 
         DbConnections = Maps.newHashMap();
+        OrangeJsonPaths = Maps.newHashMap();
         FileSources = Maps.newHashMap();
 
         if(configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) && configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
         {
             loadDatabaseSources(configBuilder);
             mSourceFormat = SourceFormat.MYSQL;
+        }
+        else if(configBuilder.hasValue(formConfigSourceStr(ORANGE_JSON_SOURCE, REF_SOURCE)) && configBuilder.hasValue(formConfigSourceStr(ORANGE_JSON_SOURCE, NEW_SOURCE)))
+        {
+            loadOrangeSources(configBuilder);
+            mSourceFormat = SourceFormat.ORANGE_JSON;
         }
         else if(loadFileSources(configBuilder))
         {
@@ -347,6 +355,18 @@ public class ComparConfig
         }
     }
 
+    private void loadOrangeSources(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(formConfigSourceStr(ORANGE_JSON_SOURCE, REF_SOURCE)) || !configBuilder.hasValue(formConfigSourceStr(ORANGE_JSON_SOURCE, NEW_SOURCE)))
+            return;
+
+        for(String sourceName : SourceNames)
+        {
+            String orangeJsonPath =  configBuilder.getValue(formConfigSourceStr(ORANGE_JSON_SOURCE, sourceName));
+            OrangeJsonPaths.put(sourceName, orangeJsonPath);
+        }
+    }
+
     private boolean loadFileSources(final ConfigBuilder configBuilder)
     {
         for(String sourceName : SourceNames)
@@ -382,6 +402,8 @@ public class ComparConfig
 
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
+        configBuilder.addConfigItem(formConfigSourceStr(ORANGE_JSON_SOURCE, REF_SOURCE), false, "Path to Orange JSON for reference data");
+        configBuilder.addConfigItem(formConfigSourceStr(ORANGE_JSON_SOURCE, NEW_SOURCE), false, "Path to Orange JSON for new data");
 
         registerConfig(configBuilder);
 
@@ -408,6 +430,7 @@ public class ComparConfig
 
         mSourceFormat = SourceFormat.INVALID;
         DbConnections = Maps.newHashMap();
+        OrangeJsonPaths = Maps.newHashMap();
         FileSources = Maps.newHashMap();
         SourceNames = Lists.newArrayList();
 
