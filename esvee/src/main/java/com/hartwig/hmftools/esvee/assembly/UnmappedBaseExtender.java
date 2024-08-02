@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
@@ -20,6 +21,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -205,10 +208,14 @@ public class UnmappedBaseExtender
             junctionReadStartDistance += baseOffset;
         }
 
+        boolean readReversed = mJunctionOrientation.isForward();
+        int readBaseLength = read.basesLength();
+
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
         {
-            byte base = read.getBases()[i];
-            byte qual = read.getBaseQuality()[i];
+            int readIndex = readReversed ? readBaseLength - 1 - i : i;
+            byte base = read.getBases()[readIndex];
+            byte qual = read.getBaseQuality()[readIndex];
 
             if(extBaseIndex >= mBases.length)
                 break;
@@ -283,12 +290,14 @@ public class UnmappedBaseExtender
     {
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
 
-        // String readBases = new String(read.getBases());
         int readBaseCount = read.getBases().length;
+
+        byte[] readBases = mJunctionOrientation.isForward() ? reverseArray(read.getBases()) : read.getBases();
+        byte[] readBaseQuals = null;
 
         for(int readIndex = 0; readIndex + subsequenceLength < read.basesLength(); readIndex += subsequenceLength)
         {
-            String readSeqBases = new String(read.getBases(), readIndex, subsequenceLength);
+            String readSeqBases = new String(readBases, readIndex, subsequenceLength);
             int extBaseMatchIndex = mExtensionBases.indexOf(readSeqBases);
 
             if(extBaseMatchIndex < 0)
@@ -315,9 +324,12 @@ public class UnmappedBaseExtender
 
             int permittedMismatches = mismatchesPerComparisonLength(totalOverlap);
 
+            if(readBaseQuals == null)
+                readBaseQuals = mJunctionOrientation.isForward() ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
+
             int mismatchCount = compareSequences(
                     mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
-                    read.getBases(), read.getBaseQuality(), readIndexStart, readIndexEnd, Collections.emptyList(), permittedMismatches);
+                    readBases, readBaseQuals, readIndexStart, readIndexEnd, Collections.emptyList(), permittedMismatches);
 
             if(mismatchCount > permittedMismatches)
                 continue;

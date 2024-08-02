@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
@@ -130,6 +131,7 @@ public class SpecificAlignmentsTest
         juncRead2b.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, NO_CIGAR);
 
         readBases = REF_BASES_600.substring(120, 200); // was 100-180, so extends 20 bases further out
+        readBases = Strings.reverseString(readBases);
         Read unmappedRead2 = createRead(
                 juncRead2b.id(), CHR_1, 251, readBases, NO_CIGAR, CHR_1, 251, false);
         unmappedRead2.bamRecord().setReadUnmappedFlag(true);

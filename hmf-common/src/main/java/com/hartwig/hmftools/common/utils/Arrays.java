@@ -49,6 +49,18 @@ public final class Arrays
         return dest;
     }
 
+    public static byte[] reverseArray(final byte[] source)
+    {
+        byte[] dest = new byte[source.length];
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[source.length - 1 - i] = source[i];
+        }
+
+        return dest;
+    }
+
     public static byte[] addByteArray(final byte[] first, final byte[] second)
     {
         byte[] combined = new byte[first.length + second.length];
@@ -107,6 +119,7 @@ public final class Arrays
 
         return true;
     }
+
     public static void initialise(final byte[] array, final byte value)
     {
         for(int i = 0; i < array.length; ++i)
