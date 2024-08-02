@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.compar.common.SourceFormat;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -82,11 +83,11 @@ public class SomaticVariantComparer implements ItemComparer
 
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
 
-            if(!mConfig.DbConnections.isEmpty())
+            if(mConfig.mSourceFormat == SourceFormat.MYSQL)
             {
                 variants.addAll(loadVariants(sourceSampleId, mConfig.DbConnections.get(sourceName), sourceName));
             }
-            else
+            else if(mConfig.mSourceFormat == SourceFormat.FILES)
             {
                 FileSources fileSources = mConfig.FileSources.get(sourceName);
                 List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
@@ -96,6 +97,10 @@ public class SomaticVariantComparer implements ItemComparer
 
                 variants.addAll(fileVariants);
                 usesNonPurpleVcfs |= !fileSources.SomaticVcf.isEmpty();
+            }
+            else
+            {
+                throw new RuntimeException(String.format("Unrecognized source format: %s", mConfig.mSourceFormat));
             }
 
             if(sourceName.equals(REF_SOURCE))

@@ -138,14 +138,18 @@ public class CommonUtils
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
             List<ComparableItem> items = null;
 
-            if(!config.DbConnections.isEmpty())
+            if(config.mSourceFormat == SourceFormat.MYSQL)
             {
                 items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName), sourceName);
             }
-            else
+            else if(config.mSourceFormat == SourceFormat.FILES)
             {
                 FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
                 items = comparer.loadFromFile(sourceSampleId, fileSources);
+            }
+            else
+            {
+                throw new RuntimeException(String.format("Unrecognized source format: %s", config.mSourceFormat));
             }
 
             if(items != null)

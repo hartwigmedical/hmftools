@@ -51,6 +51,7 @@ import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.SourceFormat;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,6 +65,7 @@ public class ComparConfig
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 
+    public final SourceFormat mSourceFormat;
     public final Map<String,DatabaseAccess> DbConnections; // database access details keyed by source
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
     public final boolean RequiresLiftover;
@@ -156,14 +158,17 @@ public class ComparConfig
         if(configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) && configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
         {
             loadDatabaseSources(configBuilder);
+            mSourceFormat = SourceFormat.MYSQL;
+        }
+        else if(loadFileSources(configBuilder))
+        {
+            mSourceFormat = SourceFormat.FILES;
         }
         else
         {
-            if(!loadFileSources(configBuilder))
-            {
-                mIsValid = false;
-                CMP_LOGGER.error("missing DB or file source ref and new config");
-            }
+            mSourceFormat = SourceFormat.INVALID;
+            mIsValid = false;
+            CMP_LOGGER.error("missing DB or file source ref and new config");
         }
 
         Thresholds = new DiffThresholds();
@@ -401,6 +406,7 @@ public class ComparConfig
         WriteDetailed = false;
         Threads = 0;
 
+        mSourceFormat = SourceFormat.INVALID;
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
         SourceNames = Lists.newArrayList();
