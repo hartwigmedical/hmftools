@@ -193,8 +193,7 @@ public class TumorStatsFactoryTest
     }
 
     @NotNull
-    private static PurpleVariantContext purpleVariantContext(VariantType variantType, boolean reported,
-            int alleleReadCount)
+    private static PurpleVariantContext purpleVariantContext(VariantType variantType, boolean reported, int alleleReadCount)
     {
         return TestPurpleVariantFactory.contextBuilder()
                 .type(variantType)

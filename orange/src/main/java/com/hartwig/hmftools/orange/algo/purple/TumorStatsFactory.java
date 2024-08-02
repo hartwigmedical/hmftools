@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -31,17 +28,21 @@ public class TumorStatsFactory
 
     private static int structuralVariantTumorFragmentCount(@NotNull PurpleData purpleData)
     {
-        List<EnrichedStructuralVariant> enrichedVariants =
-                new EnrichedStructuralVariantFactory().enrich(purpleData.allSomaticStructuralVariants());
+        int svFragmentReadCount = 0;
+        for(StructuralVariant variant : purpleData.allSomaticStructuralVariants())
+        {
+            if(variant.isFiltered() || variant.type() == StructuralVariantType.SGL)
+            {
+                continue;
+            }
 
-        return enrichedVariants.stream()
-                .filter(variant -> !variant.isFiltered() && variant.type() != StructuralVariantType.SGL)
-                .mapToInt(variant ->
-                {
-                    Integer count = variant.start().tumorVariantFragmentCount();
-                    return count != null ? count : 0;
-                })
-                .sum();
+            Integer startTumorVariantFragmentCount = variant.start().tumorVariantFragmentCount();
+            if(variant.end() != null && startTumorVariantFragmentCount != null)
+            {
+                svFragmentReadCount += startTumorVariantFragmentCount;
+            }
+        }
+        return svFragmentReadCount;
     }
 
     private static int smallVariantAlleleReadCount(@NotNull PurpleData purpleData)
@@ -79,10 +80,7 @@ public class TumorStatsFactory
 
     private static int hotspotStructuralVariants(@NotNull PurpleData purpleData)
     {
-        List<EnrichedStructuralVariant> enrichedVariants =
-                new EnrichedStructuralVariantFactory().enrich(purpleData.allSomaticStructuralVariants());
-
-        return (int) enrichedVariants.stream()
+        return (int) purpleData.allSomaticStructuralVariants().stream()
                 .filter(variant -> !variant.isFiltered() && variant.hotspot())
                 .count();
     }
