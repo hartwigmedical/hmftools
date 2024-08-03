@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.bam.BamOperations;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -22,6 +21,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.StringUtil;
 
 public class SliceWriter
 {
@@ -80,6 +80,7 @@ public class SliceWriter
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",InsertSize,MateChr,MatePosStart,MapQual,SuppData,Flags");
             writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate");
+            writer.write(",ReadSequence");
 
             writer.newLine();
 
@@ -112,6 +113,9 @@ public class SliceWriter
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getProperPairFlag(), record.getReadUnmappedFlag(),
                     record.getMateUnmappedFlag(), record.getSupplementaryAlignmentFlag(), record.getDuplicateReadFlag()));
+
+            String readSequence = StringUtil.bytesToString(record.getReadBases());
+            mReadWriter.write(format(",%s", readSequence));
 
             mReadWriter.newLine();
         }
