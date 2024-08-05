@@ -26,6 +26,6 @@ public class JitterAnalyserConstants
     public static final List<String> SINGLE_BASE_2 = List.of("C", "G");
     public static final List<String> DUAL_BASE_1 = List.of("AT", "TA");
     public static final List<String> DUAL_BASE_2 = List.of("AC", "CA", "GT", "TG");
-    public static final List<String> DUAL_BASE_3 = List.of("AC", "CA", "GT", "TG");
+    public static final List<String> DUAL_BASE_3 = List.of("AG", "GA", "CT", "TC");
     public static final List<String> DUAL_BASE_4 = List.of("CG", "GC");
 }
