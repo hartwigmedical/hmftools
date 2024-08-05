@@ -27,10 +27,12 @@ public class TaskQueue<E extends Object>
 
     public E removeItem()
     {
+        checkRemainingCount();
+
         return mQueue.remove();
     }
 
-    public synchronized void checkRemainingCount()
+    private synchronized void checkRemainingCount()
     {
         --mRemainingCount;
         int processed = mInitialCount - mRemainingCount;

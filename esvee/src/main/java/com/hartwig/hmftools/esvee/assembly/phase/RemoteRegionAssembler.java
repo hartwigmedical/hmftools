@@ -98,7 +98,7 @@ public class RemoteRegionAssembler
     }
 
     public AssemblyLink tryRemoteAssemblyLink(
-            final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<String> sourceReadIds)
+            final JunctionAssembly assembly, final RemoteRegion remoteRegion, final Set<String> sourceReadIds)
     {
         mRemoteRegion = remoteRegion;
 

@@ -62,8 +62,6 @@ public class LocalGroupBuilder extends ThreadTask
                 formLocalPhaseGroups(junctionGroup);
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
-
-                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

@@ -12,6 +12,11 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_REF_MATCH;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.UNMAPPED;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
@@ -59,6 +64,7 @@ public class PhaseSetBuilder
     private final List<JunctionAssembly> mAssemblies;
     private final List<PhaseSet> mPhaseSets; // final proposed phase sets
     private final List<AssemblyLink> mSecondarySplitLinks;
+    private final List<ExtensionCandidate> mExtensionCandidates;
 
     // working cache only
     private final List<AssemblyLink> mSplitLinks;
@@ -76,12 +82,15 @@ public class PhaseSetBuilder
         mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
 
+        mExtensionCandidates = Lists.newArrayList();
         mSplitLinks = Lists.newArrayList();
         mFacingLinks = Lists.newArrayList();
     }
 
     public void buildPhaseSets()
     {
+        // findCandidateExtensions();
+
         formSplitLinks();
 
         findRemoteRefAssemblies();
@@ -97,6 +106,175 @@ public class PhaseSetBuilder
         addChainedSupport();
 
         cleanupAssemblies();
+    }
+
+    private void findCandidateExtensions()
+    {
+        findUnmappedExtensions();
+        findSplitLinkCandidates();
+        findRemoteRefCandidates();
+    }
+
+    private void findUnmappedExtensions()
+    {
+        // any assembly not in a link uses unmapped reads to extend out the extension sequence
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.unmappedReads().isEmpty())
+                continue;
+
+            UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
+            unmappedBaseExtender.processReads(assembly.unmappedReads());
+
+            if(!unmappedBaseExtender.supportReads().isEmpty())
+            {
+                mExtensionCandidates.add(new ExtensionCandidate(
+                        UNMAPPED, assembly, format("readSpan(%d)", unmappedBaseExtender.extensionBases().length),
+                                unmappedBaseExtender.supportReads().size()));
+            }
+        }
+    }
+
+    private void findSplitLinkCandidates()
+    {
+        for(int i = 0; i < mAssemblies.size(); ++i)
+        {
+            JunctionAssembly assembly1 = mAssemblies.get(i);
+
+            Set<JunctionAssembly> linkedAssemblies = Sets.newHashSet(assembly1);
+
+            for(int j = i + 1; j < mAssemblies.size(); ++j)
+            {
+                JunctionAssembly assembly2 = mAssemblies.get(j);
+
+                if(assembly1.indel() != assembly2.indel())
+                    continue;
+
+                boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+
+                Set<String> firstSupportReadIds = assembly1.support().stream().map(x -> x.fullReadId()).collect(Collectors.toSet());
+                Set<String> firstCandidateReadIds = assembly1.candidateSupport().stream().map(x -> x.id()).collect(Collectors.toSet());
+
+                int assembly1MatchedSupport = 0;
+                int assembly2MatchedSupport = 0;
+                int assembly1CandidateReads = 0;
+                int assembly2CandidateReads = 0;
+
+                for(SupportRead support : assembly2.support())
+                {
+                    if(firstSupportReadIds.contains(support.fullReadId()))
+                    {
+                        firstSupportReadIds.remove(support.fullReadId());
+                        ++assembly1MatchedSupport;
+                        ++assembly2MatchedSupport;
+                    }
+
+                    if(firstCandidateReadIds.contains(support.fullReadId()))
+                    {
+                        firstCandidateReadIds.remove(support.fullReadId());
+                        ++assembly1CandidateReads;
+                        ++assembly2MatchedSupport;
+                    }
+                }
+
+                for(Read read : assembly2.candidateSupport())
+                {
+                    if(firstSupportReadIds.contains(read.id()))
+                    {
+                        firstSupportReadIds.remove(read.id());
+                        ++assembly1MatchedSupport;
+                        ++assembly2CandidateReads;
+                    }
+
+                    if(firstCandidateReadIds.contains(read.id()))
+                    {
+                        firstCandidateReadIds.remove(read.id());
+                        ++assembly1CandidateReads;
+                        ++assembly2CandidateReads;
+                    }
+                }
+
+                AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
+
+                if(assemblyLink == null)
+                    continue;
+
+                ExtensionType type = isLocalLink ? LOCAL_DEL_DUP : SPLIT_LINK;
+
+                mExtensionCandidates.add(new ExtensionCandidate(
+                        type, assemblyLink, assembly1MatchedSupport, assembly1CandidateReads,
+                        assembly2MatchedSupport, assembly2CandidateReads, ""));
+
+                linkedAssemblies.add(assembly1);
+                linkedAssemblies.add(assembly2);
+            }
+
+            if(true | !linkedAssemblies.contains(assembly1))
+            {
+                // check local links
+                AssemblyLink localRefLink = mLocalSequenceMatcher.tryLocalAssemblyLink(assembly1);
+
+                if(localRefLink != null)
+                {
+                    mExtensionCandidates.add(new ExtensionCandidate(
+                            LOCAL_REF_MATCH, localRefLink, assembly1.supportCount(), 0,
+                            0, 0, ""));
+                }
+            }
+        }
+    }
+
+    private void findRemoteRefCandidates()
+    {
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
+                continue;
+
+            // collect remote regions which aren't only supplementaries nor which overlap another phase assembly
+            List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
+                    .filter(x -> !x.isSuppOnlyRegion())
+                    .filter(x -> x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
+                    .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
+                    .collect(Collectors.toList());
+
+            if(remoteRegions.isEmpty())
+                continue;
+
+            // evaluate by remote regions with most linked reads
+            Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.nonSuppReadCount()));
+
+            for(RemoteRegion remoteRegion : remoteRegions)
+            {
+                Set<String> localReadIds = assembly.support().stream()
+                        .filter(x -> remoteRegion.readIds().contains(x.id()))
+                        .map(x -> x.fullReadId())
+                        .collect(Collectors.toSet());
+
+                int supportCount = localReadIds.size();
+
+                assembly.candidateSupport().stream()
+                        .filter(x -> !x.hasJunctionMate())
+                        .filter(x -> remoteRegion.containsReadId(x.id()))
+                        .forEach(x -> localReadIds.add(x.id()));
+
+                int candidateCount = localReadIds.size() - supportCount;
+
+                if(localReadIds.size() < REMOTE_REGION_REF_MIN_READS)
+                    continue;
+
+                AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReadIds);
+
+                if(assemblyLink == null)
+                    continue;
+
+                JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+                mExtensionCandidates.add(new ExtensionCandidate(
+                        REMOTE_REF, assemblyLink, supportCount, candidateCount, 0, 0,
+                        format("readSpan(%d)", remoteAssembly.refBaseLength())));
+            }
+        }
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
@@ -155,11 +333,11 @@ public class PhaseSetBuilder
         {
             AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
-            if(assemblyLink != null)
+            if(assemblyLink != null && applySplitLinkSupport(assembly1, assembly2, false))
             {
                 // bypass the phase set building routine by forming one directly
                 mPhaseSets.add(new PhaseSet(assemblyLink));
-                applySplitLinkSupport(assembly1, assembly2, false);
+
             }
         }
     }
@@ -290,11 +468,15 @@ public class PhaseSetBuilder
                 if(assemblyLink == null)
                     continue;
 
-                mSplitLinks.add(assemblyLink);
-                linkedAssemblies.add(assembly1);
-                linkedAssemblies.add(assembly2);
                 boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
-                applySplitLinkSupport(assembly1, assembly2, allowBranching);
+
+                if(applySplitLinkSupport(assembly1, assembly2, allowBranching))
+                {
+                    mSplitLinks.add(assemblyLink);
+                    linkedAssemblies.add(assembly1);
+                    linkedAssemblies.add(assembly2);
+                }
+
                 continue;
             }
 
@@ -305,7 +487,7 @@ public class PhaseSetBuilder
             boolean allowSequenceMismatches = true; // was false for secondaries
             AssemblyLink assemblyLink = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2, allowSequenceMismatches);
 
-            if(assemblyLink != null)
+            if(assemblyLink != null && applySplitLinkSupport(assembly1, assembly2, false))
             {
                 mSecondarySplitLinks.add(assemblyLink);
 
@@ -313,8 +495,6 @@ public class PhaseSetBuilder
                     assembly1.setOutcome(SECONDARY);
                 else
                     assembly2.setOutcome(SECONDARY);
-
-                applySplitLinkSupport(assembly1, assembly2, false);
             }
         }
     }
@@ -401,10 +581,10 @@ public class PhaseSetBuilder
 
             for(RemoteRegion remoteRegion : remoteRegions)
             {
-                List<String> localReadIds = assembly.support().stream()
+                Set<String> localReadIds = assembly.support().stream()
                         .filter(x -> remoteRegion.readIds().contains(x.id()))
-                        .map(x -> x.id())
-                        .collect(Collectors.toList());
+                        .map(x -> x.fullReadId())
+                        .collect(Collectors.toSet());
 
                 assembly.candidateSupport().stream()
                         .filter(x -> !x.hasJunctionMate())
@@ -422,22 +602,22 @@ public class PhaseSetBuilder
                 JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(assembly);
 
                 remoteAssembly.setOutcome(REMOTE_REGION);
-                assembly.setOutcome(REMOTE_REGION);
-
                 mPhaseGroup.addDerivedAssembly(remoteAssembly);
 
                 if(!foundRemoteLink && !alreadyLinked)
                 {
                     // only form one remote link for each assembly
-                    foundRemoteLink = true;
-                    mSplitLinks.add(assemblyLink);
-
-                    applySplitLinkSupport(assembly, remoteAssembly, true);
+                    if(applySplitLinkSupport(assembly, remoteAssembly, true))
+                    {
+                        assembly.setOutcome(REMOTE_REGION);
+                        foundRemoteLink = true;
+                        mSplitLinks.add(assemblyLink);
+                    }
                 }
                 else
                 {
-                    mSecondarySplitLinks.add(assemblyLink);
-                    applySplitLinkSupport(assembly, remoteAssembly, false);
+                    if(applySplitLinkSupport(assembly, remoteAssembly, false))
+                        mSecondarySplitLinks.add(assemblyLink);
                 }
             }
         }
@@ -505,14 +685,8 @@ public class PhaseSetBuilder
         }
     }
 
-    private void applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
+    private boolean applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
     {
-        if(assembly1.outcome() == UNSET)
-            assembly1.setOutcome(LINKED);
-
-        if(assembly2.outcome() == UNSET)
-            assembly2.setOutcome(LINKED);
-
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
         List<Read> matchedCandidates2 = Lists.newArrayList();
@@ -548,9 +722,22 @@ public class PhaseSetBuilder
             refCandidates2.forEach(x -> matchedCandidates2.remove(x));
         }
 
+        /*
+        if(matchedCandidates1.isEmpty() || matchedCandidates2.isEmpty())
+            return false;
+        */
+
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
+
+        if(assembly1.outcome() == UNSET)
+            assembly1.setOutcome(LINKED);
+
+        if(assembly2.outcome() == UNSET)
+            assembly2.setOutcome(LINKED);
+
+        return true;
     }
 
     private static void checkMatchingCandidateSupport(

@@ -71,7 +71,10 @@ public class RemoteRegion extends ChrBaseRegion
         return super.overlaps(otherChr, otherPosStart, otherPosEnd);
     }
 
-    public boolean containsReadId(final String fullReadId) { return mReadIds.stream().anyMatch(x -> fullReadId.contains(x)); }
+    public boolean containsReadId(final String fullReadId)
+    {
+        return mReadIds.stream().anyMatch(x -> fullReadId.contains(x));
+    }
 
     public String toString()
     {

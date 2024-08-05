@@ -103,8 +103,6 @@ public class PhaseSetTask extends ThreadTask
                 }
 
                 stopCheckLog(format("phaseGroupId(%d) assemblies(%d)", phaseGroup.id(), phaseGroup.assemblyCount()), mConfig.PerfLogTime);
-
-                mPhaseGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

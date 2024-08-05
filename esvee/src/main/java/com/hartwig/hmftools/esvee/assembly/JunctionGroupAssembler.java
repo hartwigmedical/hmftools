@@ -108,8 +108,6 @@ public class JunctionGroupAssembler extends ThreadTask
                 processJunctionGroup(junctionGroup);
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
-
-                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

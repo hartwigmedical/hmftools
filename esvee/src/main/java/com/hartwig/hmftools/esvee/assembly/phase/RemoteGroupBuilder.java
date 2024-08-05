@@ -94,8 +94,6 @@ public class RemoteGroupBuilder extends ThreadTask
                 }
 
                 stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
-
-                mJunctionGroups.checkRemainingCount();
             }
             catch(NoSuchElementException e)
             {

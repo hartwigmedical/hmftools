@@ -125,8 +125,6 @@ public class Alignment
                     stopCheckLog(
                             format("alignment count(%d) assemblies(%s)", assemblyAlignment.assemblies().size(), assemblyAlignment.info()),
                             mConfig.PerfLogTime);
-
-                    mAssemblyAlignments.checkRemainingCount();
                 }
                 catch(NoSuchElementException e)
                 {
