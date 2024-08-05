@@ -66,6 +66,13 @@ public class JitterCountsTable
         mMaxSingleAltSiteContributionPerc = maxSingleAltSiteContributionPerc;
     }
 
+    public int repeatUnitLength()
+    {
+        if(this.RepeatUnit.contains("/"))
+            return this.RepeatUnit.split("/")[0].length();
+        return 3;
+    }
+
     // summarise the data from
     static JitterCountsTable summariseFrom(
             final String repeatUnit, final double maxSingleAltSiteContributionPerc,
@@ -91,7 +98,8 @@ public class JitterCountsTable
 
                 if(!microsatelliteSiteAnalyser.shouldKeepSite(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT,
                         JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
-                        JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION))
+                        JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION,
+                        JitterAnalyserConstants.MIN_PASSING_SITE_READS))
                 {
                     continue;
                 }
@@ -141,28 +149,28 @@ public class JitterCountsTable
 
     boolean isOutlier(Row siteCounts)
     {
-        for(Map.Entry<Integer, Integer> entry: siteCounts.jitterCounts.entrySet())
-        {
-            int jitter = entry.getKey();
-
-            if(jitter == 0)
-            {
-                continue;
-            }
-
-            int siteJitterReadCount = entry.getValue();
-            int allJitterReadCount = getJitterReadCount(siteCounts.refNumUnits, jitter);
-
-            if(siteJitterReadCount >= JitterAnalyserConstants.MIN_SITE_READS_BEFORE_OUTLIER_CHECK
-            && siteJitterReadCount >= allJitterReadCount * mMaxSingleAltSiteContributionPerc)
-            {
-                sLogger.trace("{} x unit({}), site jitter({}) read count({}) > all sites jitter read count({}) * {}, filtering",
-                        siteCounts.refNumUnits,
-                        siteCounts.getRepeatUnit(),
-                        jitter, siteJitterReadCount, allJitterReadCount, mMaxSingleAltSiteContributionPerc);
-                return true;
-            }
-        }
+//        for(Map.Entry<Integer, Integer> entry: siteCounts.jitterCounts.entrySet())
+//        {
+//            int jitter = entry.getKey();
+//
+//            if(jitter == 0)
+//            {
+//                continue;
+//            }
+//
+//            int siteJitterReadCount = entry.getValue();
+//            int allJitterReadCount = getJitterReadCount(siteCounts.refNumUnits, jitter);
+//
+//            if(siteJitterReadCount >= JitterAnalyserConstants.MIN_SITE_READS_BEFORE_OUTLIER_CHECK
+//            && siteJitterReadCount >= allJitterReadCount * mMaxSingleAltSiteContributionPerc)
+//            {
+//                sLogger.trace("{} x unit({}), site jitter({}) read count({}) > all sites jitter read count({}) * {}, filtering",
+//                        siteCounts.refNumUnits,
+//                        siteCounts.getRepeatUnit(),
+//                        jitter, siteJitterReadCount, allJitterReadCount, mMaxSingleAltSiteContributionPerc);
+//                return true;
+//            }
+//        }
         return false;
     }
 

@@ -81,7 +81,7 @@ public class MicrosatelliteSiteFile
             row.set(NUM_READS, repeatAnalyser.getReadRepeatMatches().size());
             row.set(NUM_READS_REJECTED, repeatAnalyser.getReadRepeatMatches().stream().filter(o -> o.shouldDropRead).count());
             row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT, JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
-                    JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION));
+                    JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION, JitterAnalyserConstants.MIN_PASSING_SITE_READS));
             int refNumRepeat = repeatAnalyser.refGenomeMicrosatellite().numRepeat;
             row.set(COUNT_p0, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat));
 
