@@ -2,8 +2,6 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

@@ -26,7 +26,7 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
@@ -40,7 +40,7 @@ public class RegionTask
     private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
     private final RegionResults mResults;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
@@ -65,7 +65,7 @@ public class RegionTask
             final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
+            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -227,7 +227,7 @@ public class RegionTask
                 for(int s = 0; s < mConfig.TumorIds.size(); ++s)
                 {
                     String sampleId = mConfig.TumorIds.get(s);
-                    FragmentLengthCounts fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
+                    FragmentLengthCounts fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengthCounts();
                     mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
             }

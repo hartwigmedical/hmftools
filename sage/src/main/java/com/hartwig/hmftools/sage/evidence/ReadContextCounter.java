@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
@@ -45,7 +46,6 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair
 
 import static htsjdk.samtools.CigarOperator.N;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -62,6 +62,7 @@ import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
+import com.hartwig.hmftools.sage.filter.FragmentLengths;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -117,6 +118,7 @@ public class ReadContextCounter
     private int[] mUmiTypeCounts;
     private FragmentLengthCounts mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
+    private final FragmentLengths mFragmentLengths;
 
     // info only for VCF
     private double mTumorQualProbability;
@@ -171,6 +173,7 @@ public class ReadContextCounter
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
+        mFragmentLengths = new FragmentLengths();
 
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
@@ -184,6 +187,7 @@ public class ReadContextCounter
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
     public boolean isLongInsert() { return SimpleVariant.isLongInsert(mVariant); }
+    public boolean isLongIndel() { return mVariant.indelLengthAbs() >= LONG_INSERT_LENGTH; }
     public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
@@ -237,6 +241,8 @@ public class ReadContextCounter
     public StrandBiasData fragmentStrandBiasNonAlt() { return mNonAltFragmentStrandBias; }
     public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
     public StrandBiasData readStrandBiasNonAlt() { return mNonAltReadStrandBias; }
+    public FragmentLengths fragmentLengths() { return mFragmentLengths; }
+
     public int improperPairCount() { return mImproperPairCount; }
 
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
@@ -260,7 +266,7 @@ public class ReadContextCounter
     public List<Integer> lpsCounts() { return mLpsCounts; }
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
-    public FragmentLengthCounts fragmentLengths() { return mFragmentLengthData; }
+    public FragmentLengthCounts fragmentLengthCounts() { return mFragmentLengthData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
@@ -357,6 +363,9 @@ public class ReadContextCounter
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
+            qualityScores = mQualityCalculator.calculateQualityScores(
+                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
+
             if(belowQualThreshold(calcBaseQuality))
             {
                 if(rawContext.PositionType != DELETED)
@@ -365,14 +374,13 @@ public class ReadContextCounter
 
                     if(matchType.SupportsAlt)
                         countAltSupportMetrics(record, fragmentData);
+
+                    mQualCounters.update(qualityScores, matchType);
                 }
 
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
                 return UNRELATED;
             }
-
-            qualityScores = mQualityCalculator.calculateQualityScores(
-                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
             modifiedQuality = qualityScores.ModifiedQuality;
 
@@ -482,6 +490,7 @@ public class ReadContextCounter
 
         registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
         mReadEdgeDistance.update(record, fragmentData, false);
+        mFragmentLengths.processRead(record, false);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
@@ -615,6 +624,8 @@ public class ReadContextCounter
             else
                 mFragmentCoords.addRead(record, null);
         }
+
+        mFragmentLengths.processRead(record, true);
     }
 
     public void applyMapQualityRatio()

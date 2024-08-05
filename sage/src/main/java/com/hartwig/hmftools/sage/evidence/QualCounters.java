@@ -44,6 +44,22 @@ public class QualCounters
         }
     }
 
+    public void update(final QualityScores qualityScores, final ReadContextMatch matchType)
+    {
+        // only updates base qual values
+        mBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+
+        if(matchType.FullAltSupport)
+        {
+            mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
+        }
+
+        if(matchType.SupportsAlt)
+        {
+            mAltBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+        }
+    }
+
     public int baseQualityTotal() { return mBaseQualityTotal; }
     public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
     public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }

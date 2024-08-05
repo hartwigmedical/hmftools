@@ -295,5 +295,22 @@ public class RealignmentTest
 
         readContextCounter.processRead(realignedRead, 0, null);
         assertEquals(1, readContextCounter.readCounts().Realigned);
+
+        // check low-qual base check has been shifted correctly
+        String readBasesWithError = readBases.substring(0, 2) + "A" + readBases.substring(3);
+        realignedRead = buildSamRecord(varPosition + deletedBases.length() + 1, readCigar, readBasesWithError);
+        realignedRead.getBaseQualities()[2] = 10;
+
+        // should fail since now a low-qual
+        readContextCounter.processRead(realignedRead, 0, null);
+        // assertEquals(2, readContextCounter.readCounts().Realigned);
+
+        readBasesWithError = readBases.substring(0, 1) + "A" + readBases.substring(2);
+        realignedRead = buildSamRecord(varPosition + deletedBases.length() + 1, readCigar, readBasesWithError);
+        realignedRead.getBaseQualities()[1] = 10;
+
+        // this one should be permitted as a low-qual pass
+        readContextCounter.processRead(realignedRead, 0, null);
+        // assertEquals(2, readContextCounter.readCounts().Realigned);
     }
 }

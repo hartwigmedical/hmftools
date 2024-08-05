@@ -6,7 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
@@ -63,7 +63,7 @@ public class QualityCalculator
     {
         if(isHighlyPolymorphic(position))
         {
-            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedMapQualPenalty);
+            return min(HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, mapQuality - config.FixedMapQualPenalty);
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
@@ -130,6 +130,8 @@ public class QualityCalculator
 
             if(readContextCounter.qualCache().usesMsiIndelErrorQual())
                 return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual());
+            else if(artefactAdjustedQual != INVALID_BASE_QUAL)
+                return min(avgCoreQuality, artefactAdjustedQual);
             else
                 return avgCoreQuality;
         }

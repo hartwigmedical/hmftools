@@ -54,7 +54,7 @@ public class SageConstants
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
 
-    public static final int LONG_GERMLINE_INSERT_LENGTH = 11;
+    public static final int LONG_INSERT_LENGTH = 11;
     public static final int LONG_GERMLINE_INSERT_READ_VS_REF_DIFF = 2;
 
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
@@ -107,6 +107,10 @@ public class SageConstants
     public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.25;
 
+    public static final double REALIGNED_MAX_PERC = 0.7;
+
+    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-3;
+
 
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
@@ -124,7 +128,8 @@ public class SageConstants
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
     public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
-    public static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
+    public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
+    public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
 
 
     // defaults when in high-depth mode

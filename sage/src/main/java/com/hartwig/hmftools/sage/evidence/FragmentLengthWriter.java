@@ -12,12 +12,12 @@ import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.sage.VariantFragmentLength;
 import com.hartwig.hmftools.sage.SageConfig;
 
-public class FragmentLengths
+public class FragmentLengthWriter
 {
     private final SageConfig mConfig;
     private final BufferedWriter mWriter;
 
-    public FragmentLengths(final SageConfig config)
+    public FragmentLengthWriter(final SageConfig config)
     {
         mConfig = config;
         mWriter = initialiseWriter();

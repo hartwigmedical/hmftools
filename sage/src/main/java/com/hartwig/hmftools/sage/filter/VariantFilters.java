@@ -7,15 +7,18 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_1;
@@ -28,7 +31,7 @@ import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
@@ -203,6 +206,16 @@ public class VariantFilters
             filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
         }
 
+        if(exceedsAltFragmentLength(primaryTumor))
+        {
+            filters.add(SoftFilter.FRAGMENT_LENGTH);
+        }
+
+        if(exceedsRealignedPercentage(primaryTumor))
+        {
+            filters.add(SoftFilter.REALIGNED_FREQ);
+        }
+
         if(tier != HOTSPOT)
         {
             if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
@@ -215,11 +228,11 @@ public class VariantFilters
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS);
             }
+        }
 
-            if(applyJitterFilter(primaryTumor))
-            {
-                filters.add(SoftFilter.JITTER);
-            }
+        if(applyJitterFilter(primaryTumor))
+        {
+            filters.add(SoftFilter.JITTER);
         }
 
         if(belowMinAverageBaseQuality(primaryTumor, tier))
@@ -283,14 +296,21 @@ public class VariantFilters
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
 
+        double mapQualDiffPenalty = 2 * (avgMapQual - avgAltMapQual);
+
         boolean highlyPolymorphicSite = isHighlyPolymorphic(primaryTumor.variant());
 
         if(highlyPolymorphicSite)
         {
-            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, avgAltMapQual);
-        }
+            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
 
-        double mapQualDiffPenalty = avgMapQual > avgAltMapQual && !highlyPolymorphicSite ? 2 * (avgMapQual - avgAltMapQual) : 0;
+            if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
+                mapQualDiffPenalty = 0;
+        }
+        else if(avgMapQual <= avgAltMapQual)
+        {
+            mapQualDiffPenalty = 0;
+        }
 
         double readStrandBiasPenalty;
         StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
@@ -444,6 +464,38 @@ public class VariantFilters
         return min(primaryTumor.fragmentCoords().lowerCount(), primaryTumor.fragmentCoords().upperCount()) < minRequiredUniqueFrags;
     }
 
+    private boolean exceedsRealignedPercentage(final ReadContextCounter primaryTumor)
+    {
+        if(!primaryTumor.isLongIndel())
+        {
+            int realignedSupport = primaryTumor.readCounts().Realigned;
+            int altSupport = primaryTumor.altSupport();
+
+            if(altSupport == 0)
+                return false;
+
+            double realignedPerc = primaryTumor.readCounts().Realigned / (double)altSupport;
+
+            if(realignedPerc > REALIGNED_MAX_PERC)
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean exceedsAltFragmentLength(final ReadContextCounter primaryTumor)
+    {
+        int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
+        double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
+        int altSupport = primaryTumor.altSupport();
+
+        if(avgNonAltLength == 0 || maxAltLength == 0 || maxAltLength >= avgNonAltLength)
+            return false;
+
+        double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);
+        return ratioFactor < ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
+    }
+
     // germline and paired tumor-germline tests
     public void applyTumorGermlineFilters(
             final VariantTier tier, final SoftFilterConfig config,
@@ -491,7 +543,7 @@ public class VariantFilters
 
         int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.simpleAltMatches();
 
-        if(refCounter.variant().indelLengthAbs() > LONG_GERMLINE_INSERT_LENGTH)
+        if(refCounter.isLongIndel())
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }

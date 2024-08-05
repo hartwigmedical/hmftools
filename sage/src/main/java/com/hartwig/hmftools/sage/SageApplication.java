@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.version.VersionInfo.appVersionFile;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -15,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
@@ -36,7 +35,7 @@ public class SageApplication implements AutoCloseable
 
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
 
     private SageApplication(final ConfigBuilder configBuilder)
     {
@@ -61,7 +60,7 @@ public class SageApplication implements AutoCloseable
 
         mVcfWriter = new VcfWriter(mConfig.Common, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome);
 
-        mFragmentLengths = new FragmentLengths(mConfig.Common);
+        mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
     }
