@@ -11,6 +11,8 @@ public class JitterAnalyserConstants
 
     public static final int MIN_ADJACENT_MICROSAT_DISTANCE = 5;
 
+    public static final int MIN_PASSING_SITE_READS = 20;
+
     public static final double ALT_COUNT_FRACTION_INIT = 0.3;
 
     public static final double ALT_COUNT_FRACTION_STEP = -0.05;

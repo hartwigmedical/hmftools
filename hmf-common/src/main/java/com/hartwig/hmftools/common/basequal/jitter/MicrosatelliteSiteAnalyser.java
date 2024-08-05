@@ -59,17 +59,25 @@ public class MicrosatelliteSiteAnalyser
 
     public boolean shouldKeepSite(final double altCountFractionInit,
             final double altCountFractionCutoffStep,
-            final double rejectedReadFractionCutoff)
+            final double rejectedReadFractionCutoff,
+            final int minPassingSiteReads)
     {
-        return !isRealVariant(altCountFractionInit, altCountFractionCutoffStep, rejectedReadFractionCutoff);
+        return !isRealVariant(altCountFractionInit, altCountFractionCutoffStep, rejectedReadFractionCutoff, minPassingSiteReads);
     }
 
     // have threshold for ALT site differ depending on INDEL length (e.g. 30% for INDEL=1, 25% for INDEL=2, ..., 10% for INDEL=5)
     public boolean isRealVariant(final double altCountFractionInit,
             final double altCountFractionCutoffStep,
-            final double rejectedReadFractionCutoff)
+            final double rejectedReadFractionCutoff,
+            final int minPassingSiteReads)
     {
         Validate.isTrue(altCountFractionCutoffStep <= 0.0);
+
+
+        if(getPassingReadRepeatMatches().size() < minPassingSiteReads)
+        {
+            return true;
+        }
 
         double fractionRejected = 1.0 - getPassingReadRepeatMatches().size() / (double)getReadRepeatMatches().size();
 
