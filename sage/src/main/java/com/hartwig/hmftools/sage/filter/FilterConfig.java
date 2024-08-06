@@ -90,7 +90,7 @@ public class FilterConfig
         configBuilder.addInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT,
                 "Hard minimum tumor raw alt support", DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT);
 
-        configBuilder.addInteger(MIN_AVG_BASE_QUAL, "Min average base qua", DEFAULT_MIN_AVG_BASE_QUALITY);
+        configBuilder.addInteger(MIN_AVG_BASE_QUAL, "Min average base qual", DEFAULT_MIN_AVG_BASE_QUALITY);
 
         configBuilder.addInteger(
                 MIN_AVG_BASE_QUAL_HOTSPOT,
