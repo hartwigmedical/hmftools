@@ -15,6 +15,7 @@ public class QualCounters
     private int mMapQualityTotal;
     private int mAltMapQualityTotal;
     private double mModifiedAltMapQualityTotal;
+    private int mLowQualAltSupportCount;
 
     public QualCounters()
     {
@@ -24,6 +25,7 @@ public class QualCounters
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
         mModifiedAltMapQualityTotal = 0;
+        mLowQualAltSupportCount = 0;
     }
 
     public void update(final QualityScores qualityScores, int mapQuality, final ReadContextMatch matchType)
@@ -44,20 +46,10 @@ public class QualCounters
         }
     }
 
-    public void update(final QualityScores qualityScores, final ReadContextMatch matchType)
+    public void update(final QualityScores qualityScores)
     {
-        // only updates base qual values
-        mBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
-
-        if(matchType.FullAltSupport)
-        {
-            mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
-        }
-
-        if(matchType.SupportsAlt)
-        {
-            mAltBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
-        }
+        mAltBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+        mLowQualAltSupportCount += 1;
     }
 
     public int baseQualityTotal() { return mBaseQualityTotal; }
@@ -66,6 +58,7 @@ public class QualCounters
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
     public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }
+    public int lowQualAltSupportCount() { return mLowQualAltSupportCount; }
 
     public String toString()
     {

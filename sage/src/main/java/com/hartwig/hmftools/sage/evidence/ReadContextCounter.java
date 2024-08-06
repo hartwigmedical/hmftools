@@ -254,7 +254,7 @@ public class ReadContextCounter
     public double averageAltBaseQuality()
     {
         // excludes realigned
-        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
         return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
     }
 
@@ -373,9 +373,10 @@ public class ReadContextCounter
                     matchType = determineReadContextMatch(record, readVarIndex, splitReadSegment);
 
                     if(matchType.SupportsAlt)
+                    {
                         countAltSupportMetrics(record, fragmentData);
-
-                    mQualCounters.update(qualityScores, matchType);
+                        mQualCounters.update(qualityScores);
+                    }
                 }
 
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
