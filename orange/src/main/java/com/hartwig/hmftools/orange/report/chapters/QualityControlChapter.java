@@ -71,7 +71,10 @@ public class QualityControlChapter implements ReportChapter
         addExcludedPercentages(document);
         addPurpleQCPlots(document);
         addSageBQRPlots(document);
-        addTumorStats(document);
+        if(!report.tumorOnlyMode())
+        {
+            addTumorStats(document);
+        }
     }
 
     private void addKeyQC(@NotNull Document document)
@@ -283,7 +286,6 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent("Sum of B-allele frequency points in germline diploid regions with tumor ratio < 0.8 OR > 1.2"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
-        document.add(new Tables(reportResources).createWrapping(tumorStats,
-                "Tumor detection requirements", "At least one requirement needs to be met to indicate detection of tumor, in case of highly diploid candidate solutions (proportion >=0.97)\n\n"));
+        document.add(new Tables(reportResources).createWrapping(tumorStats, "Tumor detection statistics"));
     }
 }
