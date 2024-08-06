@@ -101,6 +101,8 @@ public class BamReader
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         mPerfCounter.stop();
 
+        mPartitionStats.ProcessTime = mPerfCounter.getLastTime();
+
         // BT_LOGGER.debug("completed region({})", mRegion);
 
         postSliceProcess();

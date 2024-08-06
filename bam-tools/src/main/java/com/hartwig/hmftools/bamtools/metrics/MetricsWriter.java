@@ -300,6 +300,7 @@ public class MetricsWriter
             header.add("ChimericReads");
             header.add("InterPartition");
             header.add("UnmappedReads");
+            header.add("ProcessTime");
             writer.write(header.toString());
             writer.newLine();
             return writer;
@@ -326,6 +327,7 @@ public class MetricsWriter
             sj.add(String.valueOf(partitionStats.ChimericReads));
             sj.add(String.valueOf(partitionStats.InterPartition));
             sj.add(String.valueOf(partitionStats.UnmappedReads));
+            sj.add(format("%.3f", partitionStats.ProcessTime));
             mPartitionWriter.write(sj.toString());
             mPartitionWriter.newLine();
         }

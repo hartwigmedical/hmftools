@@ -13,6 +13,7 @@ public class PartitionStats
     public int ChimericReads;
     public int InterPartition;
     public int UnmappedReads;
+    public double ProcessTime;
 
     public PartitionStats()
     {
@@ -21,6 +22,7 @@ public class PartitionStats
         ChimericReads = 0;
         InterPartition = 0;
         UnmappedReads = 0;
+        ProcessTime = 0;
     }
 
     public void processRead(final SAMRecord read, final ChrBaseRegion partition, boolean isConsensusRead)
