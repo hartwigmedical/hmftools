@@ -14,11 +14,11 @@ public class TumorStatsFactory
 {
 
     @NotNull
-    public static TumorStats compute(@NotNull PurpleData purpleData, boolean convertGermlineToSomatic)
+    public static TumorStats compute(@NotNull PurpleData purpleData)
     {
         return ImmutableTumorStats.builder()
                 .maxDiploidProportion(purpleData.purityContext().score().maxDiploidProportion())
-                .hotspotMutationCount(hotspotMutationCount(purpleData, convertGermlineToSomatic))
+                .hotspotMutationCount(hotspotMutationCount(purpleData))
                 .hotspotStructuralVariantCount(hotspotStructuralVariants(purpleData))
                 .smallVariantAlleleReadCount(smallVariantAlleleReadCount(purpleData))
                 .structuralVariantTumorFragmentCount(structuralVariantTumorFragmentCount(purpleData))
@@ -53,20 +53,11 @@ public class TumorStatsFactory
                 .sum();
     }
 
-    private static int hotspotMutationCount(@NotNull PurpleData purpleData, boolean convertGermlineToSomatic)
+    private static int hotspotMutationCount(@NotNull PurpleData purpleData)
     {
-        int count = (int) purpleData.allSomaticVariants().stream()
+        return (int) purpleData.allSomaticVariants().stream()
                 .filter(variant -> variant.tier() == VariantTier.HOTSPOT)
                 .count();
-
-        if(convertGermlineToSomatic && purpleData.reportableGermlineVariants() != null)
-        {
-            count += (int) purpleData.reportableGermlineVariants().stream()
-                    .filter(variant -> variant.tier() == VariantTier.HOTSPOT)
-                    .count();
-        }
-
-        return count;
     }
 
     private static int bafCount(@NotNull PurpleData purpleData)

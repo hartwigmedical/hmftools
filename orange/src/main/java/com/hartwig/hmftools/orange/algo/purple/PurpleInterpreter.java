@@ -163,7 +163,7 @@ public class PurpleInterpreter
             LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purple, convertGermlineToSomatic);
+        TumorStats tumorStats = TumorStatsFactory.compute(purple);
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))

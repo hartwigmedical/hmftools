@@ -37,7 +37,7 @@ public class TumorStatsFactoryTest
                 .structuralVariantTumorFragmentCount(8)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -56,7 +56,7 @@ public class TumorStatsFactoryTest
                 .hotspotStructuralVariantCount(1)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -81,32 +81,7 @@ public class TumorStatsFactoryTest
                 .hotspotMutationCount(2)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
-        assertEquals(expectedStats, tumorStats);
-    }
-
-    @Test
-    public void canConvertGermlineToSomaticForHotspotMutationCount()
-    {
-        List<PurpleVariantContext> somaticVariants = List.of(
-                purpleVariantContext(VariantTier.HOTSPOT, true),
-                purpleVariantContext(VariantTier.HOTSPOT, false),
-                purpleVariantContext(VariantTier.HIGH_CONFIDENCE, true),
-                purpleVariantContext(VariantTier.LOW_CONFIDENCE, true)
-        );
-
-        List<PurpleVariantContext> germlineVariants = List.of(
-                purpleVariantContext(VariantTier.HOTSPOT, true),
-                purpleVariantContext(VariantTier.HOTSPOT, false)
-        );
-
-        PurpleData purpleData = createTestPurpleData(somaticVariants, germlineVariants);
-
-        TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .hotspotMutationCount(3)
-                .build();
-
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, true);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -126,7 +101,7 @@ public class TumorStatsFactoryTest
                 .smallVariantAlleleReadCount(3)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -164,7 +139,7 @@ public class TumorStatsFactoryTest
                 .bafCount(5)
                 .build();
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData, false);
+        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
     }
 
@@ -212,7 +187,7 @@ public class TumorStatsFactoryTest
     }
 
     @NotNull
-    static ImmutableTumorStats.Builder createMinimalTumorStatsBuilder()
+    public static ImmutableTumorStats.Builder createMinimalTumorStatsBuilder()
     {
         return ImmutableTumorStats.builder()
                 .maxDiploidProportion(0)
