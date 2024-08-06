@@ -39,5 +39,7 @@ public class FragmentLengths
     }
 
     public int maxAltLength() { return mMaxAltLength; }
+
+    public int nonAltCount() { return mNonAltCount; }
     public double averageNonAltLength() { return mNonAltCount > 0 ? mNonAltLengthTotal / (double)mNonAltCount : 0; }
 }

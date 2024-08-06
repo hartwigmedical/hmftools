@@ -296,7 +296,7 @@ public class VariantFilters
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
 
-        double mapQualDiffPenalty = 2 * (avgMapQual - avgAltMapQual);
+        double mapQualDiffPenalty = max(2 * (avgMapQual - avgAltMapQual), 0);
 
         boolean highlyPolymorphicSite = isHighlyPolymorphic(primaryTumor.variant());
 
@@ -306,10 +306,6 @@ public class VariantFilters
 
             if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
                 mapQualDiffPenalty = 0;
-        }
-        else if(avgMapQual <= avgAltMapQual)
-        {
-            mapQualDiffPenalty = 0;
         }
 
         double readStrandBiasPenalty;
@@ -468,7 +464,6 @@ public class VariantFilters
     {
         if(!primaryTumor.isLongIndel())
         {
-            int realignedSupport = primaryTumor.readCounts().Realigned;
             int altSupport = primaryTumor.altSupport();
 
             if(altSupport == 0)
@@ -488,8 +483,9 @@ public class VariantFilters
         int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
         double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
         int altSupport = primaryTumor.altSupport();
+        int nonAltCount = primaryTumor.fragmentLengths().nonAltCount();
 
-        if(avgNonAltLength == 0 || maxAltLength == 0 || maxAltLength >= avgNonAltLength)
+        if(avgNonAltLength == 0 || maxAltLength == 0 || nonAltCount < 10 || maxAltLength >= avgNonAltLength)
             return false;
 
         double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);

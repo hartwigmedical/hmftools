@@ -80,7 +80,7 @@ public class SliceWriter
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",InsertSize,MateChr,MatePosStart,MapQual,SuppData,Flags");
             writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate");
-            writer.write(",ReadSequence");
+            writer.write(",ReadSequence,BaseQual");
 
             writer.newLine();
 
@@ -115,7 +115,9 @@ public class SliceWriter
                     record.getMateUnmappedFlag(), record.getSupplementaryAlignmentFlag(), record.getDuplicateReadFlag()));
 
             String readSequence = StringUtil.bytesToString(record.getReadBases());
-            mReadWriter.write(format(",%s", readSequence));
+            String baseQualities = record.getBaseQualityString();
+
+            mReadWriter.write(format(",%s,%s", readSequence, baseQualities));
 
             mReadWriter.newLine();
         }
