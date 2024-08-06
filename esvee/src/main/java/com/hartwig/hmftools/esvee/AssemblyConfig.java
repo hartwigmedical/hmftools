@@ -220,7 +220,9 @@ public class AssemblyConfig
             Collections.sort(SpecificJunctions);
         }
 
-        if(WriteTypes.contains(ASSEMBLY_READ) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())
+        boolean hasFilters = SpecificChrRegions.hasFilters() || !SpecificJunctions.isEmpty();
+
+        if(WriteTypes.contains(ASSEMBLY_READ) && !hasFilters)
         {
             SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }
@@ -234,8 +236,7 @@ public class AssemblyConfig
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
         // limit the length of ref bases by config unless using filters
-        AssemblyRefBaseWriteMax = SpecificChrRegions.hasFilters() || !SpecificJunctions.isEmpty()
-                ? 0 : configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
+        AssemblyRefBaseWriteMax = hasFilters ? 0 : configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
 
         Threads = parseThreads(configBuilder);
 
@@ -243,7 +244,7 @@ public class AssemblyConfig
 
         ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
 
-        READ_ID_TRIMMER = new ReadIdTrimmer(true);
+        READ_ID_TRIMMER = new ReadIdTrimmer(!hasFilters);
     }
 
     public List<String> combinedSampleIds()

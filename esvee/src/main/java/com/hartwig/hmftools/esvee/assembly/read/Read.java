@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlign
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -42,6 +43,7 @@ public class Read
     private String mCigarString;
     private List<CigarElement> mCigarElements;
 
+    private String mId; // initialised and trimmed on demand
     private int mAlignmentStart;
     private int mAlignmentEnd;
     private int mUnclippedStart;
@@ -72,6 +74,8 @@ public class Read
     public Read(final SAMRecord record)
     {
         mRecord = record;
+
+        mId = null;
 
         mOrigCigarString = record.getCigarString();
         mCigarString = null;
@@ -146,7 +150,13 @@ public class Read
     public boolean hasJunctionMate() { return mHasJunctionMate; }
     public void markJunctionMate() { mHasJunctionMate = true; }
 
-    public String id() { return mRecord.getReadName(); }
+    public String id()
+    {
+        if(mId == null)
+            mId = READ_ID_TRIMMER.trim(mRecord.getReadName());
+
+        return mId;
+    }
 
     public String chromosome() { return mRecord.getReferenceName(); }
 

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
@@ -107,7 +108,7 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(assembly.id()));
                 sj.add(assemblyInfo);
 
-                sj.add(support.fullReadId());
+                sj.add(READ_ID_TRIMMER.restore(support.id()));
                 sj.add(support.type().toString());
                 sj.add(String.valueOf(support.isReference()));
                 sj.add(support.chromosome());

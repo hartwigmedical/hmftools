@@ -162,12 +162,12 @@ public class SpecificAlignmentsTest
         assertEquals(REF_BASES_600.substring(100, 200), assembly2.formJunctionSequence());
 
         SupportRead supportRead1 = assembly1.support().stream()
-                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == EXTENSION && x.id().equals(unmappedRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead1);
         assertEquals(100, supportRead1.junctionReadStartDistance());
 
         SupportRead supportRead2 = assembly2.support().stream()
-                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead2.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == EXTENSION && x.id().equals(unmappedRead2.id())).findFirst().orElse(null);
         assertNotNull(supportRead2);
         assertEquals(-20, supportRead2.junctionReadStartDistance());
 
@@ -188,32 +188,32 @@ public class SpecificAlignmentsTest
 
         // confirm full seq read indices
         SupportRead supportRead = assembly1.support().stream()
-                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == JUNCTION && x.id().equals(juncRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(50, supportRead.fullAssemblyIndexStart());
 
         supportRead = assembly1.support().stream()
-                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(sharedRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == JUNCTION && x.id().equals(sharedRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(90, supportRead.fullAssemblyIndexStart());
 
         supportRead = assembly1.support().stream()
-                .filter(x -> x.type() == JUNCTION_MATE && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == JUNCTION_MATE && x.id().equals(juncRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(151, supportRead.fullAssemblyIndexStart());
 
         supportRead = assembly2.support().stream()
-                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(juncRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == JUNCTION && x.id().equals(juncRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(151, supportRead.fullAssemblyIndexStart());
 
         supportRead = assembly2.support().stream()
-                .filter(x -> x.type() == JUNCTION && x.fullReadId().equals(sharedRead1.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == JUNCTION && x.id().equals(sharedRead1.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(90, supportRead.fullAssemblyIndexStart());
 
         supportRead = assembly2.support().stream()
-                .filter(x -> x.type() == EXTENSION && x.fullReadId().equals(unmappedRead2.id())).findFirst().orElse(null);
+                .filter(x -> x.type() == EXTENSION && x.id().equals(unmappedRead2.id())).findFirst().orElse(null);
         assertNotNull(supportRead);
         assertEquals(221, supportRead.fullAssemblyIndexStart());
     }

@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_MERGE_MARGIN;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RemoteRegion extends ChrBaseRegion
@@ -32,7 +30,7 @@ public class RemoteRegion extends ChrBaseRegion
     {
         super(region.Chromosome, region.start(), region.end());
 
-        mReadIds = Sets.newHashSet(READ_ID_TRIMMER.trim(readId));
+        mReadIds = Sets.newHashSet(readId);
 
         mReadTypeCount = new int[RemoteReadType.values().length];
         ++mReadTypeCount[readType.ordinal()];
@@ -45,7 +43,7 @@ public class RemoteRegion extends ChrBaseRegion
         setStart(min(start(), posStart));
         setEnd(max(end(), posEnd));
 
-        mReadIds.add(READ_ID_TRIMMER.trim(readId));
+        mReadIds.add(readId);
         ++mReadTypeCount[readType.ordinal()];
     }
 
@@ -71,9 +69,9 @@ public class RemoteRegion extends ChrBaseRegion
         return super.overlaps(otherChr, otherPosStart, otherPosEnd);
     }
 
-    public boolean containsReadId(final String fullReadId)
+    public boolean hasReadId(final String fullReadId)
     {
-        return mReadIds.stream().anyMatch(x -> fullReadId.contains(x));
+        return mReadIds.stream().anyMatch(x -> fullReadId.equals(x));
     }
 
     public String toString()

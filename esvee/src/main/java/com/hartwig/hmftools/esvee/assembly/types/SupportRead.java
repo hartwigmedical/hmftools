@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
@@ -33,7 +32,6 @@ public class SupportRead
 
     // inherited read properties & state
     private final String mId;
-    private final String mFullReadId;
 
     private final String mChromosome;
     private final int mAlignmentStart;
@@ -80,8 +78,7 @@ public class SupportRead
     {
         mType = type;
 
-        mFullReadId = read.id();
-        mId = READ_ID_TRIMMER.trim(mFullReadId);
+        mId = read.id();
 
         mChromosome = read.chromosome();
         mAlignmentStart = read.alignmentStart();
@@ -121,7 +118,6 @@ public class SupportRead
     public SupportType type() { return mType; }
 
     public String id() { return mId; }
-    public String fullReadId() { return mFullReadId; }
     public String chromosome() { return mChromosome; }
     public int alignmentStart() { return mAlignmentStart; }
     public int alignmentEnd() { return mAlignmentEnd; }
@@ -193,7 +189,7 @@ public class SupportRead
 
     public boolean matchesFragment(final Read other, boolean allowReadMatch)
     {
-        if(!mFullReadId.equals(other.id()))
+        if(!mId.equals(other.id()))
             return false;
 
         return allowReadMatch || mFlags != other.getFlags();

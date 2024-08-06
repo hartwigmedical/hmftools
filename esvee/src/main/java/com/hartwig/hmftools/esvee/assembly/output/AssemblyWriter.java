@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.output;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingInfo;
@@ -154,7 +155,7 @@ public class AssemblyWriter
                 sj.add(assembly.assemblyAlignmentInfo());
             }
 
-            sj.add(assembly.initialReadId());
+            sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
 
             sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
 

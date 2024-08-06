@@ -42,7 +42,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
-import com.hartwig.hmftools.esvee.assembly.UnmappedBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -152,7 +151,7 @@ public class PhaseSetBuilder
 
                 boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
 
-                Set<String> firstSupportReadIds = assembly1.support().stream().map(x -> x.fullReadId()).collect(Collectors.toSet());
+                Set<String> firstSupportReadIds = assembly1.support().stream().map(x -> x.id()).collect(Collectors.toSet());
                 Set<String> firstCandidateReadIds = assembly1.candidateSupport().stream().map(x -> x.id()).collect(Collectors.toSet());
 
                 int assembly1MatchedSupport = 0;
@@ -162,16 +161,16 @@ public class PhaseSetBuilder
 
                 for(SupportRead support : assembly2.support())
                 {
-                    if(firstSupportReadIds.contains(support.fullReadId()))
+                    if(firstSupportReadIds.contains(support.id()))
                     {
-                        firstSupportReadIds.remove(support.fullReadId());
+                        firstSupportReadIds.remove(support.id());
                         ++assembly1MatchedSupport;
                         ++assembly2MatchedSupport;
                     }
 
-                    if(firstCandidateReadIds.contains(support.fullReadId()))
+                    if(firstCandidateReadIds.contains(support.id()))
                     {
-                        firstCandidateReadIds.remove(support.fullReadId());
+                        firstCandidateReadIds.remove(support.id());
                         ++assembly1CandidateReads;
                         ++assembly2MatchedSupport;
                     }
@@ -248,14 +247,14 @@ public class PhaseSetBuilder
             {
                 Set<String> localReadIds = assembly.support().stream()
                         .filter(x -> remoteRegion.readIds().contains(x.id()))
-                        .map(x -> x.fullReadId())
+                        .map(x -> x.id())
                         .collect(Collectors.toSet());
 
                 int supportCount = localReadIds.size();
 
                 assembly.candidateSupport().stream()
                         .filter(x -> !x.hasJunctionMate())
-                        .filter(x -> remoteRegion.containsReadId(x.id()))
+                        .filter(x -> remoteRegion.hasReadId(x.id()))
                         .forEach(x -> localReadIds.add(x.id()));
 
                 int candidateCount = localReadIds.size() - supportCount;
@@ -376,7 +375,7 @@ public class PhaseSetBuilder
 
                 for(SupportRead support : assembly1.support())
                 {
-                    firstReadIds.add(support.fullReadId());
+                    firstReadIds.add(support.id());
                 }
 
                 // also check candidate reads
@@ -389,9 +388,9 @@ public class PhaseSetBuilder
 
                 for(SupportRead support : assembly2.support())
                 {
-                    if(firstReadIds.contains(support.fullReadId()))
+                    if(firstReadIds.contains(support.id()))
                     {
-                        firstReadIds.remove(support.fullReadId());
+                        firstReadIds.remove(support.id());
                         ++sharedCount;
                     }
                 }
@@ -583,12 +582,12 @@ public class PhaseSetBuilder
             {
                 Set<String> localReadIds = assembly.support().stream()
                         .filter(x -> remoteRegion.readIds().contains(x.id()))
-                        .map(x -> x.fullReadId())
+                        .map(x -> x.id())
                         .collect(Collectors.toSet());
 
                 assembly.candidateSupport().stream()
                         .filter(x -> !x.hasJunctionMate())
-                        .filter(x -> remoteRegion.containsReadId(x.id()))
+                        .filter(x -> remoteRegion.hasReadId(x.id()))
                         .forEach(x -> localReadIds.add(x.id()));
 
                 if(localReadIds.size() < REMOTE_REGION_REF_MIN_READS)
