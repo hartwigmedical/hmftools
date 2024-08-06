@@ -44,6 +44,7 @@ public class BamReader
     private final CombinedStats mCombinedStats;
     private final ReadCounts mReadCounts;
     private final FlagStats mFlagStats;
+    private final PartitionStats mPartitionStats;
 
     private final List<TargetRegionStats> mTargetRegionStats;
     private final OffTargetFragments mOffTargetFragments;
@@ -81,13 +82,16 @@ public class BamReader
         mReadCounts = new ReadCounts();
         mFlagStats = new FlagStats();
         mFragmentLengths = new FragmentLengths();
+        mPartitionStats = new PartitionStats();
 
         mPerfCounter = new PerformanceCounter("Slice");
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
+    public ChrBaseRegion region() { return mRegion; }
     public List<TargetRegionStats> targetRegionStats() { return mTargetRegionStats; }
     public OffTargetFragments offTargetFragments() { return mOffTargetFragments; }
+    public PartitionStats partitionStats() { return mPartitionStats; }
 
     public void run()
     {
@@ -158,8 +162,8 @@ public class BamReader
         }
 
         mFlagStats.processRead(read, isConsensusRead);
-
         mFragmentLengths.processRead(read);
+        mPartitionStats.processRead(read, mRegion, isConsensusRead);
 
         checkTargetRegions(read, isConsensusRead, isDualStrand, readMateEnd);
 

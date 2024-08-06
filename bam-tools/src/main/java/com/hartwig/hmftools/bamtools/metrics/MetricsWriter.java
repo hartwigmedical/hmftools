@@ -25,19 +25,26 @@ import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SINGLETON;
 import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.TOTAL;
 import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.writeOverlapCounts;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.metrics.ImmutableBamMetricsSummary;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class MetricsWriter
 {
+    private BufferedWriter mPartitionWriter;
     private BufferedWriter mTargetRegionsWriter;
     private BufferedWriter mOffTargetHighFragmentOverlapWriter;
 
@@ -45,15 +52,19 @@ public class MetricsWriter
     {
         mTargetRegionsWriter = !config.TargetRegions.isEmpty() ? TargetRegionStats.initialiseWriter(config) : null;
 
+        mPartitionWriter = !config.OnlyTargetRegions ? initialisePartitionWriter(config) : null;
+
         mOffTargetHighFragmentOverlapWriter = !config.TargetRegions.isEmpty() && config.HighFragmentOverlapThreshold > 0 ?
                 OffTargetFragments.initialiseEnrichedRegionWriter(config) : null;
     }
 
     public BufferedWriter targetRegionsWriter() { return mTargetRegionsWriter; }
+    public BufferedWriter partitionWriter() { return mPartitionWriter; }
     public BufferedWriter offTargetHighFragmentOverlapWriter() { return mOffTargetHighFragmentOverlapWriter; }
 
     public void close()
     {
+        closeBufferedWriter(mPartitionWriter);
         closeBufferedWriter(mTargetRegionsWriter);
         closeBufferedWriter(mOffTargetHighFragmentOverlapWriter);
     }
@@ -268,6 +279,59 @@ public class MetricsWriter
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write frag lengths file: {}", e.toString());
+        }
+    }
+
+    private BufferedWriter initialisePartitionWriter(final MetricsConfig config)
+    {
+        try
+        {
+            String filename = config.formFilename("partition_stats");
+
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            StringJoiner header = new StringJoiner(TSV_DELIM);
+
+            header.add(FLD_CHROMOSOME);
+            header.add(FLD_POSITION_START);
+            header.add(FLD_POSITION_END);
+            header.add("TotalReads");
+            header.add("DuplicateReads");
+            header.add("ChimericReads");
+            header.add("InterPartition");
+            header.add("UnmappedReads");
+            writer.write(header.toString());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to initialise partition stats file: {}", e.toString());
+            return null;
+        }
+    }
+
+    public synchronized void writePartitionStats(final ChrBaseRegion region, final PartitionStats partitionStats)
+    {
+        if(mPartitionWriter == null)
+            return;
+
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(region.Chromosome).add(String.valueOf(region.start())).add(String.valueOf(region.end()));
+            sj.add(String.valueOf(partitionStats.TotalReads));
+            sj.add(String.valueOf(partitionStats.DuplicateReads));
+            sj.add(String.valueOf(partitionStats.ChimericReads));
+            sj.add(String.valueOf(partitionStats.InterPartition));
+            sj.add(String.valueOf(partitionStats.UnmappedReads));
+            mPartitionWriter.write(sj.toString());
+            mPartitionWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to write partition stats file: {}", e.toString());
         }
     }
 }
