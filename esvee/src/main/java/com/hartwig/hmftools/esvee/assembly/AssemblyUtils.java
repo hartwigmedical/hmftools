@@ -72,7 +72,7 @@ public final class AssemblyUtils
                 || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
     }
 
-    public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second, boolean checkReads)
     {
         if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return false;
@@ -88,17 +88,20 @@ public final class AssemblyUtils
         if((isDelType && junctionDistance > PROXIMATE_DEL_LENGTH) || (!isDelType && junctionDistance > PROXIMATE_DUP_LENGTH))
             return false;
 
-        // must have concordant reads with mates crossing the other junction
-        JunctionAssembly lowerAssembly = firstIsLower ? first : second;
-        JunctionAssembly upperAssembly = !firstIsLower ? first : second;
-        Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
-        Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
+        if(checkReads)
+        {
+            // must have concordant reads with mates crossing the other junction
+            JunctionAssembly lowerAssembly = firstIsLower ? first : second;
+            JunctionAssembly upperAssembly = !firstIsLower ? first : second;
+            Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
+            Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
 
-        if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, upperJunction, false)))
-            return false;
+            if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, upperJunction, false)))
+                return false;
 
-        if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, lowerJunction, true)))
-            return false;
+            if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, lowerJunction, true)))
+                return false;
+        }
 
         return true;
     }

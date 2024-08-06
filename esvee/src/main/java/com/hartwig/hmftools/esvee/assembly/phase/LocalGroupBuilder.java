@@ -117,7 +117,7 @@ public class LocalGroupBuilder extends ThreadTask
                 if(posAssembly.phaseGroup() == null || negAssembly.phaseGroup() != posAssembly.phaseGroup())
                 {
                     // check local phasing criteria
-                    if(isLocalAssemblyCandidate(posAssembly, negAssembly) || isLocalFacingLinkCandidate(posAssembly, negAssembly))
+                    if(isLocalAssemblyCandidate(posAssembly, negAssembly, true) || isLocalFacingLinkCandidate(posAssembly, negAssembly))
                     {
                         PhaseGroupBuilder.linkToPhaseGroups(
                                 posAssembly.phaseGroup(), posAssembly, negAssembly, mPhaseGroupsSets, null,

@@ -313,6 +313,11 @@ public class Read
         return allowReadMatch || getFlags() != other.getFlags();
     }
 
+    public static boolean hasMatchingFragmentRead(final List<Read> support, final Read read)
+    {
+        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
+    }
+
     public static List<Read> findMatchingFragmentSupport(final List<Read> support, final Read read)
     {
         return support.stream().filter(x -> x.matchesFragment(read, false)).collect(Collectors.toList());

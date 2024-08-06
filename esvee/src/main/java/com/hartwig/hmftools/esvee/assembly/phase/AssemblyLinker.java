@@ -95,13 +95,14 @@ public final class AssemblyLinker
         return abs(assembly.refBasePosition() - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
     }
 
+    public static boolean isAssemblyIndelLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        return assembly1.indel() && assembly2.indel() && assembly1.indelCoords().matches(assembly2.indelCoords());
+    }
+
     public static AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        if(!assembly1.indel() || !assembly2.indel())
-            return null;
-
-        // have already confirmed they share reads, so now just check the indel coords match
-        if(!assembly1.indelCoords().matches(assembly2.indelCoords()))
+        if(!isAssemblyIndelLink(assembly1, assembly2))
             return null;
 
         String insertedBases = assembly1.indelCoords().insertedBases();
