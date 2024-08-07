@@ -12,11 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -27,6 +34,8 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.NotNull;
 
 public class DriverComparer implements ItemComparer
 {
@@ -77,8 +86,86 @@ public class DriverComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
-        // TODO: Implement
-        return Lists.newArrayList();
+        final List<ComparableItem> driverDataList = Lists.newArrayList();
+        for(DriverCatalog driver : loadDriversFromOrangeJson(json))
+        {
+            boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
+            driverDataList.add(new DriverData(driver, checkTranscript));
+        }
+        return driverDataList;
+    }
+
+    @NotNull
+    private static List<DriverCatalog> loadDriversFromOrangeJson(final JsonObject json)
+    {
+        final List<DriverCatalog> drivers = Lists.newArrayList();
+        for(JsonObject driverJson : extractPurpleDriversFromOrangeJson(json))
+        {
+            DriverCatalog driver = ImmutableDriverCatalog.builder()
+                    .driverLikelihood(driverJson.get("driverLikelihood").getAsDouble())
+                    .gene(driverJson.get("gene").getAsString())
+                    .isCanonical(driverJson.get("isCanonical").getAsBoolean())
+                    .likelihoodMethod(LikelihoodMethod.valueOf(driverJson.get("likelihoodMethod").getAsString()))
+                    .transcript(driverJson.get("transcript").getAsString())
+                    .driver(DriverType.valueOf(driverJson.get("type").getAsString()))
+                    .chromosome("")  // unavailable in JSON
+                    .chromosomeBand("")  // unavailable in JSON
+                    .category(DriverCategory.ONCO)  // unavailable in JSON
+                    .missense(-1)  // unavailable in JSON
+                    .nonsense(-1)  // unavailable in JSON
+                    .splice(-1)  // unavailable in JSON
+                    .inframe(-1)  // unavailable in JSON
+                    .frameshift(-1)  // unavailable in JSON
+                    .biallelic(false)  // unavailable in JSON
+                    .minCopyNumber(-1.)  // unavailable in JSON
+                    .maxCopyNumber(-1.)  // unavailable in JSON
+                    .build();
+            drivers.add(driver);
+        }
+
+        for(JsonElement driverJson : json.getAsJsonObject("linx").getAsJsonArray("somaticDrivers"))
+        {
+            String gene = driverJson.getAsJsonObject().get("gene").getAsString();
+            DriverType driverType = DriverType.valueOf(driverJson.getAsJsonObject().get("type").getAsString());
+            if(DRIVERS_LINX_SOMATIC.contains(driverType))
+            {
+                DriverCatalog driver = ImmutableDriverCatalog.builder()
+                        .gene(gene)
+                        .driver(driverType)
+                        .chromosome("")  // unavailable in JSON
+                        .chromosomeBand("")  // unavailable in JSON
+                        .transcript("")  // unavailable in JSON
+                        .isCanonical(true)  // unavailable in JSON
+                        .category(DriverCategory.ONCO)  // unavailable in JSON
+                        .likelihoodMethod(LikelihoodMethod.NONE)  // unavailable in JSON
+                        .driverLikelihood(-1.)  // unavailable in JSON
+                        .missense(-1)  // unavailable in JSON
+                        .nonsense(-1)  // unavailable in JSON
+                        .splice(-1)  // unavailable in JSON
+                        .inframe(-1)  // unavailable in JSON
+                        .frameshift(-1)  // unavailable in JSON
+                        .biallelic(false)  // unavailable in JSON
+                        .minCopyNumber(-1.)  // unavailable in JSON
+                        .maxCopyNumber(-1.)  // unavailable in JSON
+                        .build();
+                drivers.add(driver);
+            }
+        }
+        return drivers;
+    }
+
+    @NotNull
+    private static List<JsonObject> extractPurpleDriversFromOrangeJson(final JsonObject json)
+    {
+        final JsonArray somaticDriverJsons = json.getAsJsonObject("purple").getAsJsonArray("somaticDrivers");
+        final JsonArray germlineDriverJsons = json.getAsJsonObject("purple").getAsJsonArray("germlineDrivers");
+
+        final JsonArray combinedDriverJsons = somaticDriverJsons.deepCopy();
+        combinedDriverJsons.addAll(germlineDriverJsons);
+
+        return StreamSupport.stream(combinedDriverJsons.spliterator(), true)
+                .map(JsonElement::getAsJsonObject)
+                .collect(Collectors.toList());
     }
 
     @Override
