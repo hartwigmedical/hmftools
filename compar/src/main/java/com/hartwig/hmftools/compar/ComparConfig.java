@@ -299,7 +299,7 @@ public class ComparConfig
                     SampleIdMapping mapping = new SampleIdMapping(sampleId);
                     mSampleIdMappings.put(sampleId, mapping);
 
-                    if(refSampleId != null && SourceNames.size() >= 1);
+                    if(refSampleId != null && SourceNames.size() >= 1)
                         mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
 
                     if(newSampleId != null && SourceNames.size() >= 2)
