@@ -14,9 +14,14 @@ import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.common.hla.ImmutableLilacQcData;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.Category;
@@ -76,8 +81,48 @@ public class LilacComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
-        // TODO: Implement
-        return Lists.newArrayList();
+        JsonObject lilacJson = json.getAsJsonObject("lilac");
+        LilacQcData qcData = ImmutableLilacQcData.builder()
+                .status(lilacJson.get("qc").getAsString())
+                .totalFragments(-1)  // unavailable in JSON
+                .fittedFragments(-1)  // unavailable in JSON
+                .discardedIndels(-1)  // unavailable in JSON
+                .discardedAlignmentFragments(-1)  // unavailable in JSON
+                .hlaYAllele("")  // unavailable in JSON
+                .build();
+
+        List<LilacAllele> alleles = Lists.newArrayList();
+        final List<JsonObject> lilacAlleleJsons = StreamSupport.stream(lilacJson.getAsJsonArray("alleles").spliterator(), true)
+                .map(JsonElement::getAsJsonObject)
+                .collect(Collectors.toList());
+        for(JsonObject lilacAlleleJson : lilacAlleleJsons)
+        {
+            alleles.add(ImmutableLilacAllele.builder()
+                    .allele(lilacAlleleJson.get("allele").getAsString())
+                    .refFragments(lilacAlleleJson.get("refFragments").getAsInt())
+                    .tumorFragments(lilacAlleleJson.get("tumorFragments").getAsInt())
+                    .rnaFragments(lilacAlleleJson.get("rnaFragments").isJsonNull() ? -1 : lilacAlleleJson.get("rnaFragments").getAsInt())
+                    .tumorCopyNumber(lilacAlleleJson.get("tumorCopyNumber").getAsInt())
+                    .somaticMissense(lilacAlleleJson.get("somaticMissense").getAsInt())
+                    .somaticNonsenseOrFrameshift(lilacAlleleJson.get("somaticNonsenseOrFrameshift").getAsInt())
+                    .somaticSplice(lilacAlleleJson.get("somaticSplice").getAsInt())
+                    .somaticSynonymous(lilacAlleleJson.get("somaticSynonymous").getAsInt())
+                    .somaticInframeIndel(lilacAlleleJson.get("somaticInframeIndel").getAsInt())
+                    .refUnique(-1)  // unavailable in JSON
+                    .refShared(-1)  // unavailable in JSON
+                    .refWild(-1)  // unavailable in JSON
+                    .tumorUnique(-1)  // unavailable in JSON
+                    .tumorShared(-1)  // unavailable in JSON
+                    .tumorWild(-1)  // unavailable in JSON
+                    .rnaUnique(-1)  // unavailable in JSON
+                    .rnaShared(-1)  // unavailable in JSON
+                    .rnaWild(-1)  // unavailable in JSON
+                    .build());
+        }
+
+        List<ComparableItem> comparableItems = Lists.newArrayList();
+        comparableItems.add(new LilacData(qcData, alleles));
+        return comparableItems;
     }
 
     @Override
