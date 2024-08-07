@@ -17,7 +17,7 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName);
 
-    List<ComparableItem> loadFromOrangeJson(final JsonObject json);
+    List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json);
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 

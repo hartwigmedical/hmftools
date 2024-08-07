@@ -158,7 +158,7 @@ public class CommonUtils
             }
             else if(config.mSourceFormat == SourceFormat.ORANGE_JSON)
             {
-                items = comparer.loadFromOrangeJson(sourceNameToOrangeJson.get(sourceName));
+                items = comparer.loadFromOrangeJson(sourceSampleId, sourceNameToOrangeJson.get(sourceName));
             }
             else if(config.mSourceFormat == SourceFormat.FILES)
             {

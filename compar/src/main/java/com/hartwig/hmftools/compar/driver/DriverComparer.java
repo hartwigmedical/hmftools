@@ -75,7 +75,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
         // TODO: Implement
         return Lists.newArrayList();

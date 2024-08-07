@@ -405,7 +405,7 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
         final List<ComparableItem> items = Lists.newArrayList();
         loadVariants(json).forEach(x -> items.add(x));

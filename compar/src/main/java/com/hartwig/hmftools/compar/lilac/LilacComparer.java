@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.Category.LILAC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.DiffThresholds.DEFAULT_DIFF_PERC;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_REF_TOTAL;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_TOTAL;
@@ -75,7 +74,7 @@ public class LilacComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
         // TODO: Implement
         return Lists.newArrayList();

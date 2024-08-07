@@ -12,6 +12,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.cuppa.ClassifierGroup;
+import com.hartwig.hmftools.common.cuppa.ClassifierName;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.common.Category;
@@ -23,6 +25,8 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.apache.logging.log4j.util.Strings;
 
 public class CuppaComparer implements ItemComparer
 {
@@ -62,10 +66,41 @@ public class CuppaComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    public List<ComparableItem> loadFromOrangeJson(final String sampleId, final JsonObject json)
     {
-        // TODO: Implement
-        return Lists.newArrayList();
+        JsonObject bestPredictionJson = json.getAsJsonObject("cuppa").getAsJsonObject("bestPrediction");
+        String cancerType = bestPredictionJson.get("cancerType").getAsString();
+
+        final List<ComparableItem> comparableItems = new ArrayList<>();
+        comparableItems.add(createCuppaData(sampleId, ClassifierGroup.DNA, ClassifierName.GEN_POS, cancerType,
+                bestPredictionJson.get("genomicPositionClassifier").getAsDouble(), 3));
+        comparableItems.add(createCuppaData(sampleId, ClassifierGroup.DNA, ClassifierName.SNV96, cancerType,
+                bestPredictionJson.get("snvPairwiseClassifier").getAsDouble(), 4));
+        comparableItems.add(createCuppaData(sampleId, ClassifierGroup.DNA, ClassifierName.EVENT, cancerType,
+                bestPredictionJson.get("featureClassifier").getAsDouble(), 5));
+        if(bestPredictionJson.get("expressionPairwiseClassifier").isJsonNull())
+        {
+            comparableItems.add(createCuppaData(sampleId, ClassifierGroup.RNA, ClassifierName.DNA_COMBINED,  cancerType,
+                    bestPredictionJson.get("likelihood").getAsDouble(), 1));
+        }
+        else
+        {
+            comparableItems.add(createCuppaData(sampleId, ClassifierGroup.RNA, ClassifierName.COMBINED, cancerType,
+                    bestPredictionJson.get("likelihood").getAsDouble(), 1));
+            comparableItems.add(createCuppaData(sampleId, ClassifierGroup.RNA, ClassifierName.GENE_EXP, cancerType,
+                    bestPredictionJson.get("expressionPairwiseClassifier").getAsDouble(), 6));
+            comparableItems.add(createCuppaData(sampleId, ClassifierGroup.RNA, ClassifierName.ALT_SJ, cancerType,
+                    bestPredictionJson.get("altSjCohortClassifier").getAsDouble(), 7));
+        }
+        return comparableItems;
+    }
+
+    private static CuppaData createCuppaData(final String sampleId, final ClassifierGroup classifierGroup,
+            final ClassifierName classifierName, final String cancerType, final double value, final int rankGroup)
+    {
+        final CuppaPredictionEntry predictionEntry = new CuppaPredictionEntry(sampleId, PROB, classifierGroup, classifierName,
+                Strings.EMPTY, Double.NaN, cancerType, value, 1, rankGroup);
+        return new CuppaData(predictionEntry);
     }
 
     @Override
