@@ -79,7 +79,7 @@ class GithubRelease:
                 "target_commitish": "master",
                 "name": self.release_name,
                 "body": f"Description of release {self.release_name}",
-                "prerelease": False,
+                "prerelease": True,
                 "generate_release_notes": True
         }
         headers = {"Accept": "application/vnd.github+json",
