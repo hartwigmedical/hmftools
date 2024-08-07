@@ -13,7 +13,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
