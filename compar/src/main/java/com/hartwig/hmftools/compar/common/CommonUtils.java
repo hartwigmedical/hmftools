@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,7 @@ import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CommonUtils
@@ -142,6 +144,9 @@ public class CommonUtils
 
         Map<String,List<ComparableItem>> sourceItems = Maps.newHashMap();
 
+        Map<String, JsonObject> sourceNameToOrangeJson =
+                config.mSourceFormat == SourceFormat.ORANGE_JSON ? loadOrangeJsons(config, sampleId) : Collections.emptyMap();
+
         for(String sourceName : config.SourceNames)
         {
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
@@ -153,8 +158,7 @@ public class CommonUtils
             }
             else if(config.mSourceFormat == SourceFormat.ORANGE_JSON)
             {
-                JsonObject json = loadJsonFromFile(convertWildcardSamplePath(config.OrangeJsonPaths.get(sourceName), sampleId));
-                items = comparer.loadFromOrangeJson(json);
+                items = comparer.loadFromOrangeJson(sourceNameToOrangeJson.get(sourceName));
             }
             else if(config.mSourceFormat == SourceFormat.FILES)
             {
@@ -264,6 +268,19 @@ public class CommonUtils
         }
 
         return new BasePosition(chromosome, position);
+    }
+
+    @NotNull
+    private static Map<String, JsonObject> loadOrangeJsons(final ComparConfig config, final String sampleId)
+    {
+        Map<String, JsonObject> sourceNameToOrangeJson;
+        sourceNameToOrangeJson = new HashMap<>();
+        for(String sourceName : config.SourceNames)
+        {
+            JsonObject json = loadJsonFromFile(convertWildcardSamplePath(config.OrangeJsonPaths.get(sourceName), sampleId));
+            sourceNameToOrangeJson.put(sourceName, json);
+        }
+        return sourceNameToOrangeJson;
     }
 
     public static @Nullable JsonObject loadJsonFromFile(final String jsonPath)
