@@ -16,6 +16,8 @@ Example:
 """
 import re
 import subprocess
+import requests
+import os.path
 from xml.etree import ElementTree
 from argparse import ArgumentParser
 
@@ -40,6 +42,74 @@ class Maven:
     def deploy_all(*modules):
         module_str = ','.join([m.name for m in modules])
         subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
+
+
+class Docker:
+    def __init__(self, module, version):
+        self.module = module
+        self.version = version
+        self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
+        self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
+
+    def build(self):
+        with open("/workspace/docker.sh", "w") as output:
+            output.write(f'docker build {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker push {self.internal_image}\n')
+            output.write(f'docker login -u hartwigmedicalfoundation -p $(cat /workspace/dockerhub.password)\n')
+            output.write(f'docker push {self.external_image}\n')
+
+
+class GithubRelease:
+    def __init__(self, tag_name, module, version, artifact_file, token):
+        self.tag_name = tag_name
+        self.module = module
+        self.version = version
+        self.artifact_file = artifact_file
+        self.token = token
+        self.release_name = f"{module} v{version}"
+
+    def create(self):
+        id = self._create_release()
+        print(f"Created release with id {id}")
+        self._upload_artifacts(id)
+
+    def _create_release(self):
+        print(f"Creating release [{self.release_name}]")
+        request = {"tag_name": self.tag_name,
+                "target_commitish": "master",
+                "name": self.release_name,
+                "body": f"Description of release {self.release_name}",
+                "prerelease": True,
+                "generate_release_notes": True
+        }
+        headers = {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {self.token}",
+                "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+        response = requests.post(self._construct_url("api"),
+                json = request,
+                headers = headers)
+        print(f"Response: {response.text}")
+        response.raise_for_status()
+        return response.json()["id"]
+
+    def _upload_artifacts(self, id):
+        print(f"Uploading artifact to release {id}")
+        headers = {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {self.token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+                "Content-Type": "application/octet-stream"
+        }
+        base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
+        response = requests.post(f"{base_url}={self.module}_v{self.version}.jar", 
+                headers = headers, 
+                data = self.artifact_file.read())
+        response.raise_for_status()
+        print(f"Uploaded {self.artifact_file.name}")
+
+    def _construct_url(self, prefix):
+        return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
 
 
 def extract_hmftools_dependencies(pom_path):
@@ -98,6 +168,9 @@ def build_and_release(raw_tag: str):
 
     Maven.deploy_all(module_pom, *dependencies_pom)
 
+    Docker(module, version).build()
+    GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
+            open("/workspace/github.token", "r").read()).create()
 
 if __name__ == '__main__':
     main()
