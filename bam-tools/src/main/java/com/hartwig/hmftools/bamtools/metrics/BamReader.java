@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
@@ -48,6 +49,7 @@ public class BamReader
 
     private final List<TargetRegionStats> mTargetRegionStats;
     private final OffTargetFragments mOffTargetFragments;
+    private final ChrBaseRegion mExcludedRegion;
 
     private final PerformanceCounter mPerfCounter;
     private boolean mLogReadIds;
@@ -77,6 +79,9 @@ public class BamReader
         mOffTargetFragments = !mConfig.TargetRegions.isEmpty() ? new OffTargetFragments(mConfig.HighFragmentOverlapThreshold) : null;
 
         List<ChrBaseRegion> unmappableRegions = mConfig.UnmappableRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
+
+        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
+        mExcludedRegion = excludedRegion.overlaps(mRegion) ? excludedRegion : null;
 
         mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end(), unmappableRegions);
         mReadCounts = new ReadCounts();
@@ -118,6 +123,8 @@ public class BamReader
             processReadGroup(readGroup);
         }
 
+        mReadGroupMap.clear();
+
         CoverageMetrics metrics = mBaseCoverage.createMetrics();
 
         mCombinedStats.addStats(
@@ -158,6 +165,7 @@ public class BamReader
         else
         {
             ++mReadCounts.Total;
+            checkLogPartitionReadCount();
 
             if(read.getDuplicateReadFlag())
                 ++mReadCounts.Duplicates;
@@ -170,6 +178,12 @@ public class BamReader
         checkTargetRegions(read, isConsensusRead, isDualStrand, readMateEnd);
 
         if(read.isSecondaryAlignment())
+            return;
+
+        boolean inExcludedRegion = mExcludedRegion != null && positionsOverlap(
+                mExcludedRegion.start(), mExcludedRegion.end(), readStart, read.getAlignmentEnd());
+
+        if(inExcludedRegion)
             return;
 
         // finally handle base coverage (aka depth) - for this any overlaps between reads (including supplementaries) are only counted
@@ -198,6 +212,19 @@ public class BamReader
 
         // process this non-overlapping read immediately without caching
         mBaseCoverage.processRead(read, null, isConsensusRead);
+    }
+
+    private void checkLogPartitionReadCount()
+    {
+        if(mConfig.PartitionReadCountLog == 0)
+            return;
+
+        if(mPartitionStats.TotalReads > 0 && (mPartitionStats.TotalReads % mConfig.PartitionReadCountLog) == 0)
+        {
+            BT_LOGGER.debug("partition({}) reads(total={} chimeric={}, interpartition={}) readsMap({})",
+                    mRegion, mPartitionStats.TotalReads, mPartitionStats.ChimericReads, mPartitionStats.InterPartition,
+                    mReadGroupMap.size());
+        }
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand, int readMateEnd)

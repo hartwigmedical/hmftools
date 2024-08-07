@@ -74,6 +74,7 @@ public class MetricsConfig
     public final boolean ExcludeZeroCoverage;
     public final boolean WriteOffTarget;
     public final int HighFragmentOverlapThreshold;
+    public final int PartitionReadCountLog;
 
     public final String OutputDir;
     public final String OutputId;
@@ -96,6 +97,7 @@ public class MetricsConfig
 
     private static final String OFF_TARGET_FRAG_OVERLAP_THRESHOLD = "off_target_frag_overlap_threshold";
     private static final String WRITE_OFF_TARGET = "write_off_target";
+    private static final String PARTITION_READ_COUNT_LOG = "partition_read_count_log";
 
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
@@ -142,6 +144,7 @@ public class MetricsConfig
 
         TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
         OnlyTargetRegions = !TargetRegions.isEmpty() && configBuilder.hasFlag(ONLY_TARGET);
+        PartitionReadCountLog = configBuilder.getInteger(PARTITION_READ_COUNT_LOG);
 
         UnmappableRegions = Lists.newArrayList();
         loadUnmappableRegions();
@@ -213,6 +216,7 @@ public class MetricsConfig
         configBuilder.addInteger(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
         configBuilder.addInteger(BASE_QUAL_THRESHOLD, "Base quality threshold", DEFAULT_BASE_QUAL_THRESHOLD);
         configBuilder.addInteger(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
+        configBuilder.addInteger(PARTITION_READ_COUNT_LOG, "Partition read count log", 0);
 
         configBuilder.addFlag(ONLY_TARGET, "Only capture metrics within the specific regions file");
 
@@ -255,6 +259,7 @@ public class MetricsConfig
         UnmappableRegions = Collections.emptyList();
         TargetRegions = Maps.newHashMap();
         OnlyTargetRegions = false;
+        PartitionReadCountLog = 0;
 
         Threads = 0;
         PerfDebug = false;
