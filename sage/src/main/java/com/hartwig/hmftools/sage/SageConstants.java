@@ -109,7 +109,7 @@ public class SageConstants
 
     public static final double REALIGNED_MAX_PERC = 0.7;
 
-    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-3;
+    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
 
 
     // variant deduplication
