@@ -286,6 +286,6 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent("Sum of B-allele frequency points in germline diploid regions with tumor ratio < 0.8 OR > 1.2"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
 
-        document.add(new Tables(reportResources).createWrapping(tumorStats, "Tumor detection statistics"));
+        document.add(new Tables(reportResources).createWrapping(tumorStats, "Tumor Detection Statistics"));
     }
 }
