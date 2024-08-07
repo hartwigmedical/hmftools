@@ -255,7 +255,7 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
-        return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
+        return supportCount > 0 ? mQualCounters.altRawBaseQualityTotal() / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
