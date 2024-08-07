@@ -302,7 +302,10 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
             if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
             {
-                region.setEnd(nextRegion.end());
+                if(nextRegion.end() > region.end())
+                {
+                    region.setEnd(nextRegion.end());
+                }
                 regions.remove(index + 1);
             }
             else
