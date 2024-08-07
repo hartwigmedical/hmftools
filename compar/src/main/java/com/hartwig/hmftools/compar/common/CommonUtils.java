@@ -266,7 +266,7 @@ public class CommonUtils
         return new BasePosition(chromosome, position);
     }
 
-    private static @Nullable JsonObject loadJsonFromFile(final String jsonPath)
+    public static @Nullable JsonObject loadJsonFromFile(final String jsonPath)
     {
         JsonObject json;
         try

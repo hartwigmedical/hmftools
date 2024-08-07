@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
@@ -8,6 +9,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.common.CommonUtils.loadJsonFromFile;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -98,6 +100,11 @@ public class SomaticVariantComparer implements ItemComparer
 
                 variants.addAll(fileVariants);
                 usesNonPurpleVcfs |= !fileSources.SomaticVcf.isEmpty();
+            }
+            else if(mConfig.mSourceFormat == SourceFormat.ORANGE_JSON)
+            {
+                JsonObject json = loadJsonFromFile(convertWildcardSamplePath(mConfig.OrangeJsonPaths.get(sourceName), sampleId));
+                variants.addAll(loadVariants(json));
             }
             else
             {
@@ -314,13 +321,6 @@ public class SomaticVariantComparer implements ItemComparer
         return items;
     }
 
-    @Override
-    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
-    {
-        // TODO: Implement
-        return Lists.newArrayList();
-    }
-
     private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<SomaticVariantData> variants = Lists.newArrayList();
@@ -402,5 +402,19 @@ public class SomaticVariantComparer implements ItemComparer
         }
 
         return variants;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromOrangeJson(final JsonObject json)
+    {
+        final List<ComparableItem> items = Lists.newArrayList();
+        loadVariants(json).forEach(x -> items.add(x));
+        return items;
+    }
+
+    private List<SomaticVariantData> loadVariants(final JsonObject json)
+    {
+        // TODO: Implement
+        return Lists.newArrayList();
     }
 }
