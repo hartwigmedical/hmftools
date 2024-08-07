@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
@@ -74,10 +75,15 @@ public class JunctionAssembler
                     continue;
                 }
 
-                if(recordSoftClipsAtJunction(read, mJunction)
-                && readJunctionExtensionLength(read, mJunction) >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                if(recordSoftClipsAtJunction(read, mJunction))
                 {
-                    extensionReads.add(read);
+                    int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
+
+                    if(softClipJunctionExtension >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH
+                    || (read.hasLineTail() && softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH))
+                    {
+                        extensionReads.add(read);
+                    }
                 }
 
                 if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
@@ -99,7 +105,9 @@ public class JunctionAssembler
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
-        if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+        int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+
+        if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
             return Collections.emptyList();
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
@@ -110,6 +118,9 @@ public class JunctionAssembler
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
+
+        if(extensionSeqBuilder.hasLineSequence())
+            firstAssembly.markLineSequence();
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
@@ -145,6 +156,9 @@ public class JunctionAssembler
 
     private JunctionAssembly checkSecondAssembly(final List<Read> extensionReads, final JunctionAssembly firstAssembly)
     {
+        if(firstAssembly.hasLineSequence())
+            return null;
+
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())

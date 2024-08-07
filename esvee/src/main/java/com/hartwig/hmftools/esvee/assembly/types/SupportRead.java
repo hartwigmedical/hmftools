@@ -58,6 +58,7 @@ public class SupportRead
     private final int mInsertSize;
     private final int mTrimCount;
     private final boolean mHasIndel;
+    private final boolean mHasLineTail;
 
     // the distance from the read's start (ie index not position) to the assembly junction index
     // if the read start is before the junction index then the value is negative
@@ -102,6 +103,7 @@ public class SupportRead
         mMapQual = read.mappingQuality();
         mNumOfEvents = read.numOfEvents();
         mHasIndel = read.indelCoords() != null;
+        mHasLineTail = read.hasLineTail();
 
         mJunctionMatches = matches;
         mJunctionMismatches = mismatches;
@@ -138,6 +140,7 @@ public class SupportRead
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int mapQual() { return mMapQual; }
     public int numOfEvents() { return mNumOfEvents; }
+    public boolean hasLineTail() { return mHasLineTail; }
 
     public boolean isReference() { return mIsReference; }
     public int sampleIndex() { return mSampleIndex; }

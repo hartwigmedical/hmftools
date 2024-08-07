@@ -79,6 +79,7 @@ public class AssemblyReadWriter
             sj.add("Matches");
             sj.add("Mismatches");
             sj.add("TrimCount");
+            sj.add("LineTail");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -149,6 +150,7 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(support.junctionMatches()));
                 sj.add(String.valueOf(support.mismatchCount()));
                 sj.add(String.valueOf(support.trimCount()));
+                sj.add(String.valueOf(support.hasLineTail()));
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();

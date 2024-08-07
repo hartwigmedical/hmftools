@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.esvee.common.CommonUtils;
@@ -111,17 +115,50 @@ public final class ReadUtils
 
     public static int avgBaseQuality(final Read read) { return avgBaseQuality(read.getBaseQuality(), 0, read.basesLength() - 1); }
 
-    public static int avgBaseQuality(final byte[] baseQualities, final int startIndex, final int endIndex)
+    public static int avgBaseQuality(final byte[] baseQualities, final int indexStart, final int indexEnd)
     {
-        if(startIndex > endIndex || startIndex < 0 || endIndex >= baseQualities.length)
+        if(indexStart > indexEnd || indexStart < 0 || indexEnd >= baseQualities.length)
             return -1;
 
         int qualitySum = 0;
-        for(int i = startIndex; i <= endIndex; i++)
+        for(int i = indexStart; i <= indexEnd; i++)
         {
             qualitySum += baseQualities[i];
         }
 
-        return qualitySum / (endIndex - startIndex + 1);
+        return qualitySum / (indexEnd - indexStart + 1);
+    }
+
+    public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
+    {
+        int aCount = 0;
+        int tCount = 0;
+        int otherCount = 0;
+        for(int i = indexStart; i <= indexEnd; ++i)
+        {
+            if(bases[i] == LINE_BASE_A)
+            {
+                ++aCount;
+            }
+            else if(bases[i] == LINE_BASE_T)
+            {
+                ++tCount;
+            }
+            else
+            {
+                ++otherCount;
+
+                if(otherCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
+                    break;
+            }
+        }
+
+        if(aCount >= LINE_POLY_AT_REQ)
+            return LINE_BASE_A;
+
+        if(tCount >= LINE_POLY_AT_REQ)
+            return LINE_BASE_T;
+
+        return null;
     }
 }

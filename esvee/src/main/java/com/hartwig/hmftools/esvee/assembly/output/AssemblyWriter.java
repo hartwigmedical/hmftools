@@ -72,6 +72,7 @@ public class AssemblyWriter
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+            sj.add("IsLINE");
 
             addRemoteRegionHeader(sj);
 
@@ -146,6 +147,8 @@ public class AssemblyWriter
                 int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
+
+            sj.add(String.valueOf(assembly.hasLineSequence()));
 
             addRemoteRegionInfo(assembly, sj);
 

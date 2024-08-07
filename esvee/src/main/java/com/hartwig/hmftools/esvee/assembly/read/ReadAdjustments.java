@@ -1,9 +1,17 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
+import static com.hartwig.hmftools.common.sv.LineElements.isLineBase;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
@@ -104,12 +112,59 @@ public final class ReadAdjustments
         if(scBaseCount == 0)
             return false;
 
+        // first establish the 5' end of the soft-clip satisfies LINE criteria
+        int lineExclusionLength = 0;
+
+        if(scBaseCount >= LINE_POLY_AT_REQ)
+        {
+            int scIndexStart, scIndexEnd;
+            int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
+
+            if(fromStart)
+            {
+                scIndexEnd = scBaseCount - 1;
+                scIndexStart = scIndexEnd - lineTestLength + 1;
+            }
+            else
+            {
+                scIndexStart = read.basesLength() - scBaseCount;
+                scIndexEnd = scIndexStart + lineTestLength - 1;
+            }
+
+            Byte lineBase = findLineSequenceBase(read.getBases(), scIndexStart, scIndexEnd);
+
+            if(lineBase != null)
+            {
+                read.markLineTail();
+
+                lineExclusionLength = lineTestLength;
+
+                // find the most 3' index for the observed line base
+
+                int baseIndex = fromStart ? scIndexStart : scIndexEnd;
+                int baseCheck = lineTestLength - LINE_POLY_AT_REQ;
+
+                while(baseCheck > 0)
+                {
+                    if(read.getBases()[baseIndex] != lineBase)
+                        --lineExclusionLength;
+
+                    if(fromStart)
+                        ++baseIndex;
+                    else
+                        --baseIndex;
+
+                    --baseCheck;
+                }
+            }
+        }
+
         int baseIndex = fromStart ? 0 : read.basesLength() - 1;
 
         int lowQualCount = 0;
         int lastLowQualPercIndex = 0;
 
-        for(int i = 1; i <= scBaseCount; ++i)
+        for(int i = 1; i <= scBaseCount - lineExclusionLength; ++i)
         {
             if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
             {

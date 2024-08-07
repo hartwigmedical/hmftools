@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
@@ -55,6 +56,9 @@ public final class AssemblyConstants
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
     public static final int PROXIMATE_DUP_LENGTH = 500;
+
+    // LINE elements
+    public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
 
     // output
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact

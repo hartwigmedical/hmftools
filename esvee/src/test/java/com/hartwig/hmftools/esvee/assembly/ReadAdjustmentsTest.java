@@ -130,6 +130,63 @@ public class ReadAdjustmentsTest
         assertEquals("2S80M10S", read.cigarString());
     }
 
+    @Test
+    public void testLineLowQualTrimming()
+    {
+        String lineSequence = "AAAAAAAAAAAAAAAA";
+        String softClipBases = "GCTGCTGTCGTGTCC" + lineSequence;
+        String readBases = softClipBases + REF_BASES_RANDOM_100;
+
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        int lowQualLength = readBases.length() - 2;
+        byte lowQualBase = 10;
+        for(int i = 0; i < lowQualLength; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, softClipBases.length(), 0));
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(84, read.unclippedStart());
+        assertEquals("16S100M", read.cigarString());
+
+        // keep 2 extra bases since the non-line bases are further in
+        softClipBases = "GCTGCTGTCGTGT" + lineSequence + "CC";
+        readBases = softClipBases + REF_BASES_RANDOM_100;
+
+        read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, softClipBases.length(), 0));
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(82, read.unclippedStart());
+        assertEquals("18S100M", read.cigarString());
+
+
+        // test the other orientation
+        softClipBases = "CC" + lineSequence + "GCTGCTGTCGTGTCC";
+        readBases = REF_BASES_RANDOM_100 + softClipBases;
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        for(int i = 0; i < readBases.length(); ++i)
+        {
+            baseQualities[i] = lowQualBase;
+        }
+
+        read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(200, read.alignmentEnd());
+        assertEquals(218, read.unclippedEnd());
+        assertEquals("100M18S", read.cigarString());
+    }
+
     private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)
     {
         return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 6, 15);

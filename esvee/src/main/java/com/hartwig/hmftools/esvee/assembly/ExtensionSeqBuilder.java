@@ -5,12 +5,14 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
@@ -39,6 +41,7 @@ public class ExtensionSeqBuilder
 
     private List<RepeatInfo> mExtensionRepeats;
 
+    private boolean mHasLineSequence;
     private boolean mIsValid;
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
@@ -79,6 +82,7 @@ public class ExtensionSeqBuilder
         mExtensionRepeats = Lists.newArrayList();
 
         mIsValid = true;
+        mHasLineSequence = false;
 
         buildSequence();
 
@@ -339,14 +343,18 @@ public class ExtensionSeqBuilder
         int maxValidExtensionLength = 0;
         int validExtensionReadCount = 0;
 
+        checkLineSequence();
+
+        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+
         for(ReadState read : mReads)
         {
             if(read.exceedsMaxMismatches())
                 continue;
 
             // check for extensions comprised only of short indels, even if they started with some soft-clipped reads
-            if((mJunction.isForward() && read.read().rightClipLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
-            || (mJunction.isReverse() && read.read().leftClipLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH))
+            if((mJunction.isForward() && read.read().rightClipLength() >= reqExtensionLength)
+            || (mJunction.isReverse() && read.read().leftClipLength() >= reqExtensionLength))
             {
                 ++validExtensionReadCount;
             }
@@ -384,6 +392,27 @@ public class ExtensionSeqBuilder
 
         if(repeats != null)
             mExtensionRepeats.addAll(repeats);
+    }
+
+    public boolean hasLineSequence() { return mHasLineSequence; }
+
+    private void checkLineSequence()
+    {
+        int indexStart, indexEnd;
+
+        if(mIsForward)
+        {
+            indexStart = 1;
+            indexEnd = indexStart + mMinSupportLength - 1;
+
+        }
+        else
+        {
+            indexEnd = mBases.length - 2;
+            indexStart = indexEnd - mMinSupportLength + 1;
+        }
+
+        mHasLineSequence = findLineSequenceBase(mBases, indexStart, indexEnd) != null;
     }
 
     private class ReadState

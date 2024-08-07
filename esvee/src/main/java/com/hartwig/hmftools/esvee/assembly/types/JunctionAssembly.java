@@ -42,6 +42,7 @@ public class JunctionAssembly
     private final List<RefBaseIndel> mRefBaseIndels;
 
     private final IndelCoords mIndelCoords;
+    private boolean mHasLineSequence;
 
     private byte mBases[];
     private byte mBaseQuals[];
@@ -104,6 +105,7 @@ public class JunctionAssembly
         }
 
         mIndelCoords = indelCoords;
+        mHasLineSequence = false;
 
         mInitialReadId = maxJunctionBaseQualRead != null ? maxJunctionBaseQualRead.id() :
                 (!assemblySupport.isEmpty() ? assemblySupport.get(0).id() : "null");
@@ -163,6 +165,9 @@ public class JunctionAssembly
 
     public String initialReadId() { return mInitialReadId; }
     public IndelCoords indelCoords() { return mIndelCoords; }
+
+    public boolean hasLineSequence() { return mHasLineSequence; }
+    public void markLineSequence() { mHasLineSequence = true; }
 
     public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }

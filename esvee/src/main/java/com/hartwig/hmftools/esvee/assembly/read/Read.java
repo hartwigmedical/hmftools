@@ -69,6 +69,7 @@ public class Read
     private Integer mIndelImpliedUnclippedEnd;
 
     private boolean mIsReference;
+    private boolean mHasLineTail;
     private int mTrimCount;
 
     public Read(final SAMRecord record)
@@ -101,6 +102,7 @@ public class Read
         mIndelImpliedUnclippedStart = null;
         mIndelImpliedUnclippedEnd = null;
 
+        mHasLineTail = false;
         mTrimCount = 0;
     }
 
@@ -338,6 +340,10 @@ public class Read
 
     public boolean isReference() { return mIsReference; }
     public void markReference() { mIsReference = true; }
+
+    public boolean hasLineTail() { return mHasLineTail; }
+    public void markLineTail() { mHasLineTail = true; }
+
 
     @VisibleForTesting
     public String getBasesString() { return bytesToString(getBases()); }
