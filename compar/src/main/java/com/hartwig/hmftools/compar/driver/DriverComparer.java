@@ -125,12 +125,11 @@ public class DriverComparer implements ItemComparer
 
         for(JsonElement driverJson : json.getAsJsonObject("linx").getAsJsonArray("somaticDrivers"))
         {
-            String gene = driverJson.getAsJsonObject().get("gene").getAsString();
-            DriverType driverType = DriverType.valueOf(driverJson.getAsJsonObject().get("type").getAsString());
+            DriverType driverType = DriverType.checkConvertType(driverJson.getAsJsonObject().get("type").getAsString());
             if(DRIVERS_LINX_SOMATIC.contains(driverType))
             {
                 DriverCatalog driver = ImmutableDriverCatalog.builder()
-                        .gene(gene)
+                        .gene(driverJson.getAsJsonObject().get("gene").getAsString())
                         .driver(driverType)
                         .chromosome("")  // unavailable in JSON
                         .chromosomeBand("")  // unavailable in JSON
