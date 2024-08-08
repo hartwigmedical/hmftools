@@ -52,6 +52,7 @@ The following fields are stored for each detected virus:
 | meanCoverage           | The average coverage of the viral genome as reported by VIRUSBreakend  ("meanDepth" field of VIRUSBreakend)                                               |
 | expectedClonalCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA                                                                     |
 | reported               | A boolean indicating whether the detected viral presence is considered a driver                                                                           |
+| blacklisted            | A boolean indicating whether the virus should be blacklisted (true in case of HIV)                                                                        |
 | driverLikelihood       | The driver likelihood of the virus as annotated in the reporting db                                                                                       |
 
 ## Version History and Download Links
