@@ -75,8 +75,6 @@ public class RemoteGroupBuilder extends ThreadTask
         }
     }
 
-    private static final int LOG_COUNT = 10000;
-
     @Override
     public void run()
     {

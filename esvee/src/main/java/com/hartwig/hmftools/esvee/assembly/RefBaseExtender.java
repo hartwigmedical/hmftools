@@ -59,7 +59,6 @@ public class RefBaseExtender
         boolean isForwardJunction = assembly.junction().isForward();
         int junctionPosition = assembly.junction().Position;
 
-        // not keeping reads with unmapped mates since not sure how to incorporate their bases
         List<Read> discordantReads = unfilteredNonJunctionReads.stream()
                 .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition) || x.isMateUnmapped())
                 .filter(x -> !assembly.hasReadSupport(x.mateRead()))

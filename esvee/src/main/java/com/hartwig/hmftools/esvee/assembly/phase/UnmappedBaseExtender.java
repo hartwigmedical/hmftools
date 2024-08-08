@@ -5,9 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
@@ -20,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.utils.Strings;
@@ -208,13 +212,17 @@ public class UnmappedBaseExtender
             junctionReadStartDistance += baseOffset;
         }
 
-        boolean readReversed = mJunctionOrientation.isForward();
+        boolean reverseBases = reverseReadBases(read);
         int readBaseLength = read.basesLength();
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
         {
-            int readIndex = readReversed ? readBaseLength - 1 - i : i;
+            int readIndex = reverseBases ? readBaseLength - 1 - i : i;
             byte base = read.getBases()[readIndex];
+
+            if(reverseBases)
+                base = swapDnaBase(base);
+
             byte qual = read.getBaseQuality()[readIndex];
 
             if(extBaseIndex >= mBases.length)
@@ -292,7 +300,15 @@ public class UnmappedBaseExtender
 
         int readBaseCount = read.getBases().length;
 
-        byte[] readBases = mJunctionOrientation.isForward() ? reverseArray(read.getBases()) : read.getBases();
+        boolean reverseBases = reverseReadBases(read);
+        byte[] readBases = reverseBases ? reverseComplementBases(read.getBases()) : read.getBases();
+
+        /*
+        SV_LOGGER.debug("junc({}) readId({}) orient({} mate={}) bases({}) rawBases({})",
+                mJunctionAssembly.junction().coords(), read.id(), read.orientation().asByte(), read.mateOrientation().asByte(),
+                new String(readBases), new String(read.getBases()));
+        */
+
         byte[] readBaseQuals = null;
 
         for(int readIndex = 0; readIndex + subsequenceLength < read.basesLength(); readIndex += subsequenceLength)
@@ -322,10 +338,10 @@ public class UnmappedBaseExtender
             int extBaseIndexStart = extBaseMatchIndex - lowerOverlap;
             int extBaseIndexEnd = extBaseMatchIndex + upperOverlap - 1;
 
-            int permittedMismatches = mismatchesPerComparisonLength(totalOverlap);
+            int permittedMismatches = mismatchesPerComparisonLength(totalOverlap) + 2;
 
             if(readBaseQuals == null)
-                readBaseQuals = mJunctionOrientation.isForward() ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
+                readBaseQuals = reverseBases ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
 
             int mismatchCount = compareSequences(
                     mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
@@ -339,6 +355,8 @@ public class UnmappedBaseExtender
 
         return null;
     }
+
+    private boolean reverseReadBases(final Read read) { return read.orientation() == read.mateOrientation(); }
 
     public String toString()
     {

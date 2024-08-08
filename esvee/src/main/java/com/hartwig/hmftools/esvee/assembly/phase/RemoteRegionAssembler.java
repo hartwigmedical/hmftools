@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -95,6 +96,33 @@ public class RemoteRegionAssembler
             return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
         else
             return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
+    }
+
+    public List<Read> extractRemoteReads(final RemoteRegion remoteRegion, final Set<String> sourceReadIds)
+    {
+        mRemoteRegion = remoteRegion;
+
+        mSourceReadIds.clear();
+        mSourceReadIds.addAll(sourceReadIds);
+
+        mTotalRemoteReadsSearch += sourceReadIds.size();
+
+        if(mBamReader != null)
+        {
+            mMatchedRemoteReads.clear();
+
+            SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
+
+            mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
+
+            SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
+                    mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
+
+            mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
+        }
+
+        // ignore supplementaries since their bases provide no new assembly sequence information
+        return mMatchedRemoteReads.stream().filter(x -> !x.isSupplementary()).collect(Collectors.toList());
     }
 
     public AssemblyLink tryRemoteAssemblyLink(
@@ -193,48 +221,48 @@ public class RemoteRegionAssembler
         JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, remoteOrientation, remoteReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
-        String firstJunctionSequence = assemblySeq.junctionSequence();
-        int firstJunctionSeqLength = firstJunctionSequence.length();
+        String firstMatchSequence = assemblySeq.matchSequence();
+        int firstMatchSeqLength = firstMatchSequence.length();
 
         // first a simple local match
-        int remoteSeqIndexInRef = remoteRefSeq.FullSequence.indexOf(firstJunctionSequence);
+        int remoteSeqIndexInRef = remoteRefSeq.FullSequence.indexOf(firstMatchSequence);
 
         if(remoteSeqIndexInRef >= 0)
         {
             return formLinkWithRemote(
                     assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd, remoteOrientation,
-                    assemblySeq.junctionSeqStartIndex());
+                    assemblySeq.matchSeqStartIndex());
         }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
-        int juncSeqStartIndex = 0;
+        int matchSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
 
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
-        int subSeqIterations = (int)floor(firstJunctionSeqLength / subsequenceLength);
+        int subSeqIterations = (int)floor(firstMatchSeqLength / subsequenceLength);
 
         for(int i = 0; i < subSeqIterations; ++i)
         {
-            juncSeqStartIndex = i * subsequenceLength;
-            int juncSeqEndIndex = juncSeqStartIndex + subsequenceLength;
+            matchSeqStartIndex = i * subsequenceLength;
+            int matchSeqEndIndex = matchSeqStartIndex + subsequenceLength;
 
-            if(juncSeqEndIndex >= firstJunctionSeqLength)
+            if(matchSeqEndIndex >= firstMatchSeqLength)
                 break;
 
-            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + subsequenceLength);
+            String firstSubSequence = firstMatchSequence.substring(matchSeqStartIndex, matchSeqStartIndex + subsequenceLength);
 
             int secondSubSeqIndex = remoteRefSeq.FullSequence.indexOf(firstSubSequence);
 
             if(secondSubSeqIndex < 0)
                 continue;
 
-            alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+            alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 
             secondSubSeqIndex = remoteRefSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + subsequenceLength);
 
             while(secondSubSeqIndex >= 0)
             {
-                alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+                alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
                 secondSubSeqIndex = remoteRefSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + subsequenceLength);
             }
         }
@@ -266,7 +294,7 @@ public class RemoteRegionAssembler
     {
         // use the start position of the match to infer where the junction may be in the remote location despite there not being any junction
         // spanning reads at that position
-        int assemblyMatchJunctionOffset = firstJuncSeqIndexStart - assemblySeq.junctionSeqStartIndex();
+        int assemblyMatchJunctionOffset = firstJuncSeqIndexStart - assemblySeq.matchSeqStartIndex();
 
         int remoteJunctionPosition, remoteJunctionIndex;
 
@@ -313,7 +341,7 @@ public class RemoteRegionAssembler
             String inferredRefBases = mRefGenome.getBaseString(mRemoteRegion.Chromosome, inferredStart, inferredEnd);
 
             // check for a simple match at the assembly's junction
-            String assemblyJunctionSequence = assemblySeq.junctionSequence();
+            String assemblyJunctionSequence = assemblySeq.matchSequence();
 
             int secondIndexInFirst = assemblyJunctionSequence.indexOf(inferredRefBases);
 

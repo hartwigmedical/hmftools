@@ -142,46 +142,46 @@ public final class AssemblyLinker
         secondSeq = new JunctionSequence(second, secondReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
-        String firstJunctionSequence = firstSeq.junctionSequence();
-        int firstJunctionSeqLength = firstJunctionSequence.length();
+        String firstMatchSequence = firstSeq.matchSequence();
+        int firstMatchSeqLength = firstMatchSequence.length();
 
-        int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstJunctionSequence);
+        int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstMatchSequence);
 
         if(firstSeqIndexInSecond >= 0)
         {
             // simple sequence match, so can form a link between these 2 assemblies
-            return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond, 0);
+            return formLink(first, second, firstSeq, secondSeq, firstSeq.matchSeqStartIndex(), firstSeqIndexInSecond, 0);
         }
 
         if(!allowMismatches)
             return null;
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
-        int juncSeqStartIndex = 0;
+        int matchSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
-        int subSeqIterations = (int)floor(firstJunctionSeqLength / MATCH_SUBSEQUENCE_LENGTH);
+        int subSeqIterations = (int)floor(firstMatchSeqLength / MATCH_SUBSEQUENCE_LENGTH);
         for(int i = 0; i < subSeqIterations; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
-            juncSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
-            int juncSeqEndIndex = juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
+            matchSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
+            int matchSeqEndIndex = matchSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
 
-            if(juncSeqEndIndex >= firstJunctionSeqLength)
+            if(matchSeqEndIndex >= firstMatchSeqLength)
                 break;
 
-            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH);
+            String firstSubSequence = firstMatchSequence.substring(matchSeqStartIndex, matchSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
             if(secondSubSeqIndex < 0)
                 continue;
 
-            alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+            alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 
             secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             while(secondSubSeqIndex >= 0)
             {
-                alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+                alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
                 secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
             }
         }
@@ -212,7 +212,7 @@ public final class AssemblyLinker
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int firstJunctionSeqLength = firstSeq.junctionSequence().length();
+        int firstJunctionSeqLength = firstSeq.matchSequence().length();
 
         // take each of the subsequence match locations, build out a longer sequence around it and check for a match
         // then return the longest of these
@@ -246,8 +246,8 @@ public final class AssemblyLinker
             if(secondIndexEnd >= secondSeq.BaseLength)
                 continue;
 
-            int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
-            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
+            int firstIndexStart = firstJuncIndexStart + firstSeq.matchSeqStartIndex();
+            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.matchSeqStartIndex(), firstSeq.BaseLength - 1);
 
             int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
 

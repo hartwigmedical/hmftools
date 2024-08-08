@@ -117,6 +117,7 @@ public class SpecificAlignmentsTest
         Read unmappedRead1 = createRead(
                 juncRead1b.id(), CHR_1, 200, readBases, NO_CIGAR, CHR_1, 200, false);
         unmappedRead1.bamRecord().setReadUnmappedFlag(true);
+        unmappedRead1.bamRecord().setReadNegativeStrandFlag(true);
 
         assembly1.addJunctionRead(juncRead1b);
         candidates1.add(unmappedRead1);
@@ -131,7 +132,7 @@ public class SpecificAlignmentsTest
         juncRead2b.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, NO_CIGAR);
 
         readBases = REF_BASES_600.substring(120, 200); // was 100-180, so extends 20 bases further out
-        readBases = Strings.reverseString(readBases);
+        readBases = Nucleotides.reverseComplementBases(readBases);
         Read unmappedRead2 = createRead(
                 juncRead2b.id(), CHR_1, 251, readBases, NO_CIGAR, CHR_1, 251, false);
         unmappedRead2.bamRecord().setReadUnmappedFlag(true);

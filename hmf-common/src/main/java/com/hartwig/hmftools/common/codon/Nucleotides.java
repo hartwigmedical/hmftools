@@ -57,4 +57,16 @@ public final class Nucleotides
 
         return newBases.toString();
     }
+
+    public static byte[] reverseComplementBases(final byte[] bases)
+    {
+        byte[] newBases = new byte[bases.length];
+
+        for(int i = 0; i < bases.length; ++i)
+        {
+            newBases[i] = swapDnaBase(bases[bases.length - 1 - i]);
+        }
+
+        return newBases;
+    }
 }

@@ -65,6 +65,8 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mSecondarySplitLinks;
     private final List<ExtensionCandidate> mExtensionCandidates;
 
+    private boolean mHasLineExtensions;
+
     // working cache only
     private final Set<JunctionAssembly> mLocallyLinkedAssemblies;
     private final List<AssemblyLink> mSplitLinks;
@@ -81,6 +83,7 @@ public class PhaseSetBuilder
         mPhaseSets = mPhaseGroup.phaseSets();
         mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
+        mHasLineExtensions = mAssemblies.stream().anyMatch(x -> x.hasLineSequence());
 
         mExtensionCandidates = Lists.newArrayList();
         mSplitLinks = Lists.newArrayList();
@@ -93,14 +96,6 @@ public class PhaseSetBuilder
         findLocalLinks();
 
         findOtherLinksAndExtensions();
-
-        /*
-        formSplitLinks();
-
-        findRemoteRefAssemblies();
-
-        buildUnmappedExtensions();
-        */
 
         addUnlinkedAssemblyRefSupport();
 
@@ -116,6 +111,9 @@ public class PhaseSetBuilder
     private void findLocalLinks()
     {
         // find local candidate links
+        if(mHasLineExtensions)
+            findLineExtensions();
+
         findSplitLinkCandidates(true);
 
         // prioritise and capture local links
@@ -273,7 +271,9 @@ public class PhaseSetBuilder
 
     private void findOtherLinksAndExtensions()
     {
-        findUnmappedExtensions();
+        if(!mHasLineExtensions)
+            findUnmappedExtensions();
+
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
         findRemoteRefCandidates();
 
@@ -326,7 +326,7 @@ public class PhaseSetBuilder
 
     private void findUnmappedExtensions()
     {
-        // any assembly not in a link uses unmapped reads to extend out the extension sequence
+        // any assembly not in a link uses unmapped reads to try to extend the extension sequence
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.unmappedReads().isEmpty())
@@ -343,6 +343,42 @@ public class PhaseSetBuilder
                 extensionCandidate.ExtraInfo = format("readSpan(%d)", unmappedBaseExtender.extensionBases().length);
                 extensionCandidate.AssemblyCandidateReads = unmappedBaseExtender.supportReads().size();
                 mExtensionCandidates.add(extensionCandidate);
+            }
+        }
+    }
+
+    private void findLineExtensions()
+    {
+        List<Read> sharedUnmappedReads = Lists.newArrayList();
+
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            sharedUnmappedReads.addAll(assembly.unmappedReads());
+
+            List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
+                    .filter(x -> !x.isSuppOnlyRegion())
+                    .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
+                    .collect(Collectors.toList());
+
+            for(RemoteRegion remoteRegion : remoteRegions)
+            {
+                List<Read> remoteReads = mRemoteRegionAssembler.extractRemoteReads(remoteRegion, remoteRegion.readIds());
+                sharedUnmappedReads.addAll(remoteReads);
+            }
+        }
+
+        if(sharedUnmappedReads.isEmpty())
+            return;
+
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
+            unmappedBaseExtender.processReads(Lists.newArrayList(sharedUnmappedReads)); // list copied so it is given to all assemblies in full
+
+            if(!unmappedBaseExtender.supportReads().isEmpty())
+            {
+                assembly.expandExtensionBases(
+                        unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
             }
         }
     }
