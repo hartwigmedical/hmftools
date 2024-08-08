@@ -251,10 +251,17 @@ public class ReadContextCounter
     @Nullable
     public VariantVis variantVis() { return mVariantVis; }
 
-    public double averageAltBaseQuality()
+    public double averageRawAltBaseQuality()
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
+        return supportCount > 0 ? mQualCounters.altRawBaseQualityTotal() / (double)supportCount : 0;
+    }
+
+    public double averageAltBaseQuality()
+    {
+        // excludes realigned
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
         return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
     }
 

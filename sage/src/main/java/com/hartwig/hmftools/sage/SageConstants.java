@@ -84,7 +84,7 @@ public class SageConstants
     public static final double VAF_PROBABILITY_THRESHOLD = 1e-14;
     public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 1e-9;
 
-    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 28;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
     public static final int MAX_MAP_QUALITY = 60;
@@ -109,7 +109,7 @@ public class SageConstants
 
     public static final double REALIGNED_MAX_PERC = 0.7;
 
-    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-3;
+    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
 
 
     // variant deduplication

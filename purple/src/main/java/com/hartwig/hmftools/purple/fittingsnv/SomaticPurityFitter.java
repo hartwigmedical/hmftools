@@ -298,19 +298,33 @@ public class SomaticPurityFitter
 
         Collections.sort(variantVafs);
 
-        double medianVaf;
-        int medianIndex = variantVafs.size() / 2;
+        // replace median VAF with VAF at 75th percentile
+        
+//        double medianVaf;
+//        int medianIndex = variantVafs.size() / 2;
+//
+//        if((variantVafs.size() % 2) == 0)
+//        {
+//            medianVaf = (variantVafs.get(medianIndex - 1) + variantVafs.get(medianIndex)) * 0.5;
+//        }
+//        else
+//        {
+//            medianVaf = variantVafs.get(medianIndex);
+//        }
+//
+//        double somaticPurity = medianVaf * 2;
+        
+        double vaf75thPercentile;
+        double index75thPercentile = 0.75 * (variantVafs.size() + 1);
+        
+        int lowerIndex = (int) index75thPercentile;
+        int upperIndex = lowerIndex + 1;
 
-        if((variantVafs.size() % 2) == 0)
-        {
-            medianVaf = (variantVafs.get(medianIndex - 1) + variantVafs.get(medianIndex)) * 0.5;
-        }
-        else
-        {
-            medianVaf = variantVafs.get(medianIndex);
-        }
+        vaf75thPercentile = variantVafs.get(lowerIndex) + (index75thPercentile - lowerIndex) * (variantVafs.get(upperIndex) - variantVafs.get(lowerIndex));
 
-        double somaticPurity = medianVaf * 2;
+        double somaticPurity = vaf75thPercentile * 2;
+        
+        
         PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
         FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);

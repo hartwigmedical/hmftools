@@ -393,9 +393,9 @@ public class VariantFilters
             return false;
 
         if(tier == HOTSPOT)
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
+            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
+            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
