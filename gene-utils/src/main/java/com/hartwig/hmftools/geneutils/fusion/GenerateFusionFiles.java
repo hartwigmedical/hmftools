@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -41,7 +40,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 public class GenerateFusionFiles
 {
@@ -80,7 +78,7 @@ public class GenerateFusionFiles
 
                 if(ref1.isDuplicate(ref2))
                 {
-                    GU_LOGGER.error("duplicate fusion entry: {} {}-{}", ref1.toString());
+                    GU_LOGGER.error("duplicate fusion entry: {}", ref1.toString());
                     System.exit(1);
                 }
             }
@@ -93,7 +91,7 @@ public class GenerateFusionFiles
         GU_LOGGER.info("fusion reference file generation complete");
     }
 
-    public void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
+    private void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
     {
         // step 3: load Ensembl data cache files
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
@@ -197,7 +195,7 @@ public class GenerateFusionFiles
         }
     }
 
-    private class FusionBedData implements Comparable<FusionBedData>
+    private static class FusionBedData implements Comparable<FusionBedData>
     {
         public final String Name;
         public final String ChrUp;
@@ -458,7 +456,7 @@ public class GenerateFusionFiles
         }
     }
 
-    private class FusionRefData
+    private static class FusionRefData
     {
         public final KnownFusionType Type;
         public final String FiveGene;
