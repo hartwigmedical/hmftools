@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
@@ -402,14 +403,14 @@ public class ExtensionSeqBuilder
 
         if(mIsForward)
         {
-            indexStart = 1;
-            indexEnd = indexStart + mMinSupportLength - 1;
+            indexStart = 1; // skip the ref base at the start
+            indexEnd = min(indexStart + mMinSupportLength, mBases.length - 1);
 
         }
         else
         {
-            indexEnd = mBases.length - 2;
-            indexStart = indexEnd - mMinSupportLength + 1;
+            indexEnd = mBases.length - 2; // skip the ref base
+            indexStart = max(indexEnd - mMinSupportLength, 0);
         }
 
         mHasLineSequence = findLineSequenceBase(mBases, indexStart, indexEnd) != null;

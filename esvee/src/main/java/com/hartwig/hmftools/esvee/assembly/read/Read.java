@@ -71,6 +71,7 @@ public class Read
     private boolean mIsReference;
     private boolean mHasLineTail;
     private int mTrimCount;
+    private boolean mLowQualTrimmed;
 
     public Read(final SAMRecord record)
     {
@@ -104,6 +105,7 @@ public class Read
 
         mHasLineTail = false;
         mTrimCount = 0;
+        mLowQualTrimmed = false;
     }
 
     private void setBoundaries(int newReadStart)
@@ -204,9 +206,6 @@ public class Read
     {
         if(mMateAlignmentEnd != null)
             return mMateAlignmentEnd;
-
-        if(isMateUnmapped())
-            return alignmentEnd();
 
         if(mMateRead != null)
             return mMateRead.alignmentEnd();
@@ -429,6 +428,9 @@ public class Read
     }
 
     public int baseTrimCount() { return mTrimCount; }
+
+    public void markLowQualTrimmed() { mLowQualTrimmed = true; }
+    public boolean lowQualTrimmed() { return mLowQualTrimmed; }
 
     public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
     {

@@ -88,7 +88,12 @@ public class Alignment
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        SV_LOGGER.debug("requeried supp alignments({})", alignerTasks.stream().mapToInt(x -> x.requeriedSuppCount()).sum());
+        int requeriedCount = alignerTasks.stream().mapToInt(x -> x.requeriedSuppCount()).sum();
+
+        if(requeriedCount > 0)
+        {
+            SV_LOGGER.debug("requeried supp alignments({})", requeriedCount);
+        }
 
         SV_LOGGER.info("alignment complete");
 

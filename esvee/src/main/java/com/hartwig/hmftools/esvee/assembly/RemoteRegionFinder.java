@@ -57,7 +57,7 @@ public final class RemoteRegionFinder
 
     private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
     {
-        if(read.isMateUnmapped())
+        if(read.isMateUnmapped() || read.isSupplementary())
             return;
 
         String mateChr = read.mateChromosome();

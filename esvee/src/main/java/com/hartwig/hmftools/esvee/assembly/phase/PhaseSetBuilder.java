@@ -154,15 +154,18 @@ public class PhaseSetBuilder
 
         assembly.setOutcome(LOCAL_INDEL);
 
+        mLocallyLinkedAssemblies.add(assembly);
+
+        // seems no need to persist these synthetic junction assemblies for either alignment or the assemblies TSV
+
+        /*
         JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
 
         localRefAssembly.setOutcome(LOCAL_INDEL);
 
-        // TODO: check if want to persist these synthetic junction assemblies for either alignment or the assemblies TSV
         mPhaseGroup.addDerivedAssembly(localRefAssembly);
         mSplitLinks.add(localRefLink);
-
-        mLocallyLinkedAssemblies.add(assembly);
+        */
 
         // no need to build out the link with matching reads etc since only one assembly has read support
         return true;

@@ -2,8 +2,10 @@ package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
@@ -181,19 +183,23 @@ public final class ReadAdjustments
             return false;
 
         read.trimBases(lastLowQualPercIndex, fromStart);
-
         return true;
     }
 
-    public static boolean trimLowQualBases(final Read read)
+    public synchronized static void trimLowQualBases(final Read read)
     {
+        if(read.lowQualTrimmed())
+            return;
+
         boolean fromStart = read.negativeStrand();
 
-        int baseIndex = fromStart ? 0 : read.basesLength() - 1;
+        int baseLength = read.basesLength();
+        int baseIndex = fromStart ? 0 : baseLength - 1;
+        int halfLength = baseLength / 2; // at most half the read will be trimmed
 
         int lowQualCount = 0;
 
-        while(baseIndex != read.basesLength() / 2) // at most half the read
+        while(true)
         {
             if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
                 lowQualCount++;
@@ -201,16 +207,25 @@ public final class ReadAdjustments
                 break;
 
             if(fromStart)
+            {
                 ++baseIndex;
+
+                if(baseIndex >= halfLength)
+                    break;
+            }
             else
+            {
                 --baseIndex;
+
+                if(baseIndex <= halfLength)
+                    break;
+            }
         }
 
-        if(lowQualCount == 0)
-            return false;
-
-        read.trimBases(lowQualCount, fromStart);
-
-        return true;
+        if(lowQualCount > 0)
+        {
+            read.trimBases(lowQualCount, fromStart);
+            read.markLowQualTrimmed();
+        }
     }
 }

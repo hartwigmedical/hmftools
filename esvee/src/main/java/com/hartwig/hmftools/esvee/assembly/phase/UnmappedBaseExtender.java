@@ -331,6 +331,9 @@ public class UnmappedBaseExtender
     {
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
 
+        // apply qual trimming before a read is used
+        ReadAdjustments.trimLowQualBases(read);
+
         int readBaseCount = read.getBases().length;
 
         boolean reverseBases = reverseReadBases(read);
@@ -382,9 +385,6 @@ public class UnmappedBaseExtender
                     mJunctionAssembly.junction().coords(), read.id(), read.orientation().asByte(), read.mateOrientation().asByte(),
                     totalOverlap, mismatchCount, new String(readBases));
             */
-
-            // now apply qual trimming before a read is used
-            ReadAdjustments.trimLowQualBases(read);
 
             return new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount);
         }

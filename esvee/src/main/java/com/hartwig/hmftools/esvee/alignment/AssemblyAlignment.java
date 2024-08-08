@@ -86,7 +86,7 @@ public class AssemblyAlignment
 
     public int id() { return mId; }
 
-    public boolean isValid() { return mFullSequence != null; }
+    public boolean isValid() { return mFullSequence != null && mFullSequenceLength < 100000; }
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
