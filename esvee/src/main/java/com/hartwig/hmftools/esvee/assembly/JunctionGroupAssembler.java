@@ -235,7 +235,7 @@ public class JunctionGroupAssembler extends ThreadTask
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
 
-        if(ReadAdjustments.trimLowQualBases(read))
+        if(ReadAdjustments.trimLowQualSoftClipBases(read))
             ++mReadStats.LowBaseQualTrimmed;
 
         if(ReadAdjustments.convertEdgeIndelsToSoftClip(read))

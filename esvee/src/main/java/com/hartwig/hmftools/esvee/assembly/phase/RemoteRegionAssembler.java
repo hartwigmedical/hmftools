@@ -216,7 +216,7 @@ public class RemoteRegionAssembler
                 assemblyReversed = true;
         }
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, 0, -1);
+        JunctionSequence assemblySeq = JunctionSequence.formFullExtensionMatchSequence(assembly, assemblyReversed);
 
         JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, remoteOrientation, remoteReversed);
 

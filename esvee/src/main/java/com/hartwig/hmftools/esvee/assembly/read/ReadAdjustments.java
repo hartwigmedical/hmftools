@@ -2,11 +2,8 @@ package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
-import static com.hartwig.hmftools.common.sv.LineElements.isLineBase;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
@@ -104,7 +101,7 @@ public final class ReadAdjustments
         return true;
     }
 
-    public static boolean trimLowQualBases(final Read read)
+    public static boolean trimLowQualSoftClipBases(final Read read)
     {
         boolean fromStart = read.negativeStrand();
         int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
@@ -183,7 +180,36 @@ public final class ReadAdjustments
         if(lastLowQualPercIndex == 0)
             return false;
 
-        read.trimBases(lastLowQualPercIndex, read.negativeStrand());
+        read.trimBases(lastLowQualPercIndex, fromStart);
+
+        return true;
+    }
+
+    public static boolean trimLowQualBases(final Read read)
+    {
+        boolean fromStart = read.negativeStrand();
+
+        int baseIndex = fromStart ? 0 : read.basesLength() - 1;
+
+        int lowQualCount = 0;
+
+        while(baseIndex != read.basesLength() / 2) // at most half the read
+        {
+            if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
+                lowQualCount++;
+            else
+                break;
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
+        }
+
+        if(lowQualCount == 0)
+            return false;
+
+        read.trimBases(lowQualCount, fromStart);
 
         return true;
     }

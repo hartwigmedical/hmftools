@@ -35,13 +35,43 @@ public class JunctionSequence
     private byte[] mBases;
     private byte[] mBaseQuals;
 
+    /*
     public JunctionSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
     {
-        this(assembly, reverseCompliment, PHASED_ASSEMBLY_JUNCTION_OVERLAP, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+        this(assembly, reverseCompliment, 0, PHASED_ASSEMBLY_JUNCTION_OVERLAP * 2);
+    }
+    */
+
+    private enum MatchSequenceMode
+    {
+        STRADDLE,
+        FULL_EXTENSION,
+        OUTER_EXTENSION;
+    }
+
+    public static JunctionSequence formOuterExtensionMatchSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
+    {
+        return new JunctionSequence(
+                assembly, reverseCompliment, 0, PHASED_ASSEMBLY_JUNCTION_OVERLAP * 2,
+                MatchSequenceMode.OUTER_EXTENSION);
+    }
+
+    public static JunctionSequence formStraddlingMatchSequence(
+            final JunctionAssembly assembly, final boolean reverseCompliment, int maxMatchSeqRefBaseLength, int maxMatchSeqExtensionLength)
+    {
+        return new JunctionSequence(
+                assembly, reverseCompliment, maxMatchSeqRefBaseLength, maxMatchSeqExtensionLength, MatchSequenceMode.STRADDLE);
+    }
+
+    public static JunctionSequence formFullExtensionMatchSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
+    {
+        return new JunctionSequence(
+                assembly, reverseCompliment, 0, -1, MatchSequenceMode.FULL_EXTENSION);
     }
 
     public JunctionSequence(
-            final JunctionAssembly assembly, final boolean reverseCompliment, final int maxJuncSeqRefBaseLength, final int maxJuncSeqExtensionLength)
+            final JunctionAssembly assembly, final boolean reverseCompliment, int maxMatchSeqRefBaseLength, int maxMatchSeqExtensionLength,
+            final MatchSequenceMode matchSequenceMode)
     {
         mOriginalBases = assembly.bases();
         mOriginalBaseQuals = assembly.baseQuals();
@@ -68,20 +98,57 @@ public class JunctionSequence
         }
 
         // also make a shorter sequence centred around the junction
-        int matchSeqExtLength = maxJuncSeqExtensionLength > 0 ? min(ExtensionLength, maxJuncSeqExtensionLength) : ExtensionLength;
-        int matchSeqRefLength = min(RefBaseLength, maxJuncSeqRefBaseLength);
+        int matchSeqExtLength;
+        int matchSeqRefExtension = 0;
 
-        int matchIndexStart, matchIndexEnd;
-
-        if(assembly.isForwardJunction())
+        if(maxMatchSeqExtensionLength > 0)
         {
-            matchIndexStart = mJunctionIndex - matchSeqRefLength + 1;
-            matchIndexEnd = mJunctionIndex + matchSeqExtLength;
+            // if the specified extension length cannot be taken, then take additional length from ref bases
+            if(maxMatchSeqExtensionLength > ExtensionLength)
+            {
+                matchSeqExtLength = ExtensionLength;
+                matchSeqRefExtension = maxMatchSeqExtensionLength - ExtensionLength;
+            }
+            else
+            {
+                matchSeqExtLength = maxMatchSeqExtensionLength;
+            }
         }
         else
         {
-            matchIndexStart = mJunctionIndex - matchSeqExtLength;
-            matchIndexEnd = mJunctionIndex + matchSeqRefLength - 1;
+            matchSeqExtLength = ExtensionLength; // take the full length
+        }
+
+        // int matchSeqExtLength = maxMatchSeqExtensionLength > 0 ? min(ExtensionLength, maxMatchSeqExtensionLength) : ExtensionLength;
+        int matchSeqRefLength = min(RefBaseLength, maxMatchSeqRefBaseLength + matchSeqRefExtension);
+
+        int matchIndexStart, matchIndexEnd;
+
+        if(matchSequenceMode == MatchSequenceMode.OUTER_EXTENSION && matchSeqExtLength < ExtensionLength)
+        {
+            if(assembly.isForwardJunction())
+            {
+                matchIndexEnd = BaseLength - 1;
+                matchIndexStart = matchIndexEnd - matchSeqExtLength + 1;
+            }
+            else
+            {
+                matchIndexStart = 0;
+                matchIndexEnd = matchIndexStart + matchSeqExtLength - 1;
+            }
+        }
+        else
+        {
+            if(assembly.isForwardJunction())
+            {
+                matchIndexStart = mJunctionIndex - matchSeqRefLength + 1;
+                matchIndexEnd = mJunctionIndex + matchSeqExtLength;
+            }
+            else
+            {
+                matchIndexStart = mJunctionIndex - matchSeqExtLength;
+                matchIndexEnd = mJunctionIndex + matchSeqRefLength - 1;
+            }
         }
 
         if(!Reversed)

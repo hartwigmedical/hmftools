@@ -45,7 +45,7 @@ public final class AssemblyConstants
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 
     public static final int LOCAL_ASSEMBLY_MATCH_DISTANCE = 500;
-    public static final int MATCH_SUBSEQUENCE_LENGTH = 10;
+    public static final int MATCH_SUBSEQUENCE_LENGTH = 20;
 
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;

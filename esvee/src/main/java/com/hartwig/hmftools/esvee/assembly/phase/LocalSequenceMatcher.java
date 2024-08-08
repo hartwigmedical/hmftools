@@ -47,7 +47,8 @@ public class LocalSequenceMatcher
 
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
+        JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(
+                assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
 
         Orientation localRefOrientation = assembly.junction().Orient.opposite();
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);

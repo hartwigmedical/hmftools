@@ -91,12 +91,12 @@ public class ReadAdjustmentsTest
         Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertFalse(ReadAdjustments.trimLowQualBases(read)); // nothing without soft-clips
+        assertFalse(ReadAdjustments.trimLowQualSoftClipBases(read)); // nothing without soft-clips
 
         read = createRead(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(110, read.alignmentStart());
         assertEquals(189, read.alignmentEnd());
         assertEquals(191, read.unclippedEnd());
@@ -114,7 +114,7 @@ public class ReadAdjustmentsTest
         baseQualities[98] = lowQualBase;
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(110, read.alignmentStart());
         assertEquals(189, read.alignmentEnd());
         assertEquals(194, read.unclippedEnd());
@@ -124,7 +124,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setReadNegativeStrandFlag(true);
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(110, read.alignmentStart());
         assertEquals(108, read.unclippedStart());
         assertEquals("2S80M10S", read.cigarString());
@@ -150,7 +150,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(84, read.unclippedStart());
         assertEquals("16S100M", read.cigarString());
 
@@ -162,7 +162,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(82, read.unclippedStart());
         assertEquals("18S100M", read.cigarString());
 
@@ -181,7 +181,7 @@ public class ReadAdjustmentsTest
         read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(200, read.alignmentEnd());
         assertEquals(218, read.unclippedEnd());
         assertEquals("100M18S", read.cigarString());

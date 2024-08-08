@@ -138,8 +138,8 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
-        firstSeq = new JunctionSequence(first, firstReversed);
-        secondSeq = new JunctionSequence(second, secondReversed);
+        firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
+        secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstMatchSequence = firstSeq.matchSequence();
@@ -159,16 +159,22 @@ public final class AssemblyLinker
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int matchSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
+        Set<String> testedSequences = Sets.newHashSet();
         int subSeqIterations = (int)floor(firstMatchSeqLength / MATCH_SUBSEQUENCE_LENGTH);
         for(int i = 0; i < subSeqIterations; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
             matchSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
             int matchSeqEndIndex = matchSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
 
-            if(matchSeqEndIndex >= firstMatchSeqLength)
+            if(matchSeqEndIndex >= firstMatchSeqLength + 1)
                 break;
 
-            String firstSubSequence = firstMatchSequence.substring(matchSeqStartIndex, matchSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH);
+            String firstSubSequence = firstMatchSequence.substring(matchSeqStartIndex, matchSeqEndIndex);
+
+            if(testedSequences.contains(firstSubSequence))
+                continue;
+
+            testedSequences.add(firstSubSequence);
 
             int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
@@ -262,7 +268,7 @@ public final class AssemblyLinker
             if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
-            if(overlapLength > topMatchLength)
+            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
@@ -312,7 +318,7 @@ public final class AssemblyLinker
 
         int firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
-        // determine whether the junctions align exactly (junctionOffsetDiff = 0), or have an overlap (junctionOffsetDiff < 0)
+        // determine whether the junctions align exactly (junctionOffsetDiff = 0), or has an overlap (junctionOffsetDiff < 0)
         // or there are inserted bases (junctionOffsetDiff > 0)
         int junctionOffsetDiff = 0;
 
@@ -336,7 +342,7 @@ public final class AssemblyLinker
         if(junctionOffsetDiff != 0)
         {
             // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
-            // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
+            // around its junction index - with the exception being for when both assemblies are -ve orientation, in which case the
             // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
             extraBases = extractExtraBases(first, firstSeq.Reversed, junctionOffsetDiff);
 
@@ -383,7 +389,7 @@ public final class AssemblyLinker
             {
                 // an insert, so take bases from after the junction
                 extraBasesStartIndex = assembly.junctionIndex() + 1;
-                extraBasesEndIndex = assembly.junctionIndex() + junctionOffsetDiff;
+                extraBasesEndIndex = min(assembly.junctionIndex() + junctionOffsetDiff, assembly.baseLength() - 1);
             }
             else
             {
@@ -398,7 +404,7 @@ public final class AssemblyLinker
             if(junctionOffsetDiff > 0)
             {
                 extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;
-                extraBasesEndIndex = assembly.junctionIndex() - 1;
+                extraBasesEndIndex = min(assembly.junctionIndex() - 1, assembly.baseLength() - 1);
             }
             else
             {
