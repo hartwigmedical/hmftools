@@ -81,4 +81,15 @@ public final class CommonUtils
         }
     }
 
+    public static boolean createOutputDir(final String outputDir)
+    {
+        final File dir = new File(outputDir);
+        if(!dir.exists() && !dir.mkdirs())
+        {
+            GU_LOGGER.error("unable to write directory " + outputDir);
+            return false;
+        }
+
+        return true;
+    }
 }
