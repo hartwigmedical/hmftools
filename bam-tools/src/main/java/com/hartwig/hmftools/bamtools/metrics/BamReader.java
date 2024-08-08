@@ -4,6 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
@@ -27,6 +29,8 @@ import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -41,7 +45,7 @@ public class BamReader
 
     private final BaseCoverage mBaseCoverage;
     private final FragmentLengths mFragmentLengths;
-    private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
+    private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final CombinedStats mCombinedStats;
     private final ReadCounts mReadCounts;
     private final FlagStats mFlagStats;
@@ -53,6 +57,7 @@ public class BamReader
 
     private final PerformanceCounter mPerfCounter;
     private boolean mLogReadIds;
+    private int mLastFragmentMapReadCountCheck;
 
     public BamReader(
             final ChrBaseRegion region, final MetricsConfig config, final SamReader samReader, final BamSlicer bamSlicer,
@@ -91,6 +96,7 @@ public class BamReader
 
         mPerfCounter = new PerformanceCounter("Slice");
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
+        mLastFragmentMapReadCountCheck = 0;
     }
 
     public ChrBaseRegion region() { return mRegion; }
@@ -116,13 +122,6 @@ public class BamReader
     @VisibleForTesting
     protected void postSliceProcess()
     {
-        // process overlapping groups
-        for(ReadGroup readGroup : mReadGroupMap.values())
-        {
-            // determine overlapping bases and factor this into the coverage calcs
-            processReadGroup(readGroup);
-        }
-
         mReadGroupMap.clear();
 
         CoverageMetrics metrics = mBaseCoverage.createMetrics();
@@ -166,6 +165,7 @@ public class BamReader
         {
             ++mReadCounts.Total;
             checkLogPartitionReadCount();
+            purgeReadGroups(readStart);
 
             if(read.getDuplicateReadFlag())
                 ++mReadCounts.Duplicates;
@@ -187,44 +187,15 @@ public class BamReader
             return;
 
         // finally handle base coverage (aka depth) - for this any overlaps between reads (including supplementaries) are only counted
-        // once and so reads are temporarily cached until their mate is available, and then they can be analysed together
+        // once and so read coordinates are temporarily cached until any further overlapping reads for the same fragment have been processed
         ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
 
-        if(readGroup != null)
+        if(readGroup != null && readStart >= readGroup.MaxReadStart)
         {
-            readGroup.addRead(read);
-
-            if(readGroup.allReadsPresent())
-            {
-                processReadGroup(readGroup);
-                mReadGroupMap.remove(read.getReadName());
-            }
-
-            return;
+            mReadGroupMap.remove(read.getReadName());
         }
 
-        if(readHasOverlaps(read))
-        {
-            readGroup = new ReadGroup(read, isConsensusRead);
-            mReadGroupMap.put(readGroup.id(), readGroup);
-            return;
-        }
-
-        // process this non-overlapping read immediately without caching
-        mBaseCoverage.processRead(read, null, isConsensusRead);
-    }
-
-    private void checkLogPartitionReadCount()
-    {
-        if(mConfig.PartitionReadCountLog == 0)
-            return;
-
-        if(mPartitionStats.TotalReads > 0 && (mPartitionStats.TotalReads % mConfig.PartitionReadCountLog) == 0)
-        {
-            BT_LOGGER.debug("partition({}) reads(total={} chimeric={}, interpartition={}) readsMap({})",
-                    mRegion, mPartitionStats.TotalReads, mPartitionStats.ChimericReads, mPartitionStats.InterPartition,
-                    mReadGroupMap.size());
-        }
+        updateBaseCoverage(read, isConsensusRead, readGroup);
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand, int readMateEnd)
@@ -293,91 +264,57 @@ public class BamReader
             mOffTargetFragments.addRead(read, isLocalConcordantFragment, readMateEnd);
     }
 
-    private boolean readHasOverlaps(final SAMRecord read)
+    private int findOverlappingFragmentStart(final SAMRecord read)
     {
-        // check the mate and supplementaries for any overlapping bases
+        // check the mate and supplementaries for any overlapping bases - cache read if they are still expected
+        int maxGroupReadStart = 0;
+        int readStart = read.getAlignmentStart();
+        int readEnd = read.getAlignmentEnd();
+
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag() && read.getReferenceName().equals(read.getMateReferenceName()))
         {
-            int readLength = read.getReadBases().length;
-            int readStart = read.getAlignmentStart();
-            int readEnd = read.getAlignmentEnd();
-
             int mateStart = read.getMateAlignmentStart();
-            int mateEnd = mateStart + readLength - 1;
 
-            if(positionsOverlap(readStart, readEnd, mateStart, mateEnd))
-                return true;
+            if(mateStart >= readStart && positionWithin(mateStart, readStart, readEnd))
+                maxGroupReadStart = mateStart;
         }
 
-        if(!read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            return false;
+        if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
-        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+            if(suppData != null && suppData.Chromosome.equals(read.getReferenceName()))
+            {
+                if(suppData.Position >= suppData.Position && positionWithin(suppData.Position, readStart, readEnd))
+                    maxGroupReadStart = max(suppData.Position, maxGroupReadStart);
+            }
+        }
 
-        if(suppData == null)
-            return false;
+        if(maxGroupReadStart > 0 && mRegion.containsPosition(maxGroupReadStart))
+            return maxGroupReadStart;
 
-        if(!suppData.Chromosome.equals(read.getReferenceName()))
-            return false;
-
-        int suppReadEnd = suppData.Position + read.getReadBases().length - 1;
-        return positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), suppData.Position, suppReadEnd);
+        return -1;
     }
 
-    private void processReadGroup(final ReadGroup readGroup)
+    private void updateBaseCoverage(final SAMRecord read, final boolean isConsensus, @Nullable final ReadGroup readGroup)
     {
-        if(readGroup.size() == 1)
+        List<int[]> alignedBaseCoords = readGroup != null ? readGroup.CombinedAlignedBaseCoords : null;
+
+        mBaseCoverage.processRead(read, alignedBaseCoords, isConsensus);
+
+        if(readGroup == null)
         {
-            mBaseCoverage.processRead(readGroup.reads().get(0), null, readGroup.IsConsensus);
-            return;
+            int maxGroupReadStart = findOverlappingFragmentStart(read);
+
+            if(maxGroupReadStart <= 0)
+                return;
+
+            ReadGroup newReadGroup = new ReadGroup(read, maxGroupReadStart, isConsensus);
+            mReadGroupMap.put(read.getReadName(), newReadGroup);
+            alignedBaseCoords = newReadGroup.CombinedAlignedBaseCoords;
         }
 
-        // check for overlaps in the reads and if found, form a list of the aligned coordinates
-        boolean hasOverlaps = false;
-
-        for(int i = 0; i < readGroup.reads().size() - 1; ++i)
-        {
-            SAMRecord read1 = readGroup.reads().get(i);
-
-            for(int j = i + 1; j < readGroup.reads().size(); ++j)
-            {
-                SAMRecord read2 = readGroup.reads().get(j);
-
-                if(positionsOverlap(read1.getAlignmentStart(), read1.getAlignmentEnd(), read2.getAlignmentStart(), read2.getAlignmentEnd()))
-                {
-                    hasOverlaps = true;
-                    break;
-                }
-            }
-
-            if(hasOverlaps)
-                break;
-        }
-
-        if(!hasOverlaps)
-        {
-            readGroup.reads().forEach(x -> mBaseCoverage.processRead(x, null, readGroup.IsConsensus));
-            return;
-        }
-
-        List<int[]> combinedAlignedBaseCoords = Lists.newArrayList();
-
-        for(int i = 0; i < readGroup.reads().size(); ++i)
-        {
-            SAMRecord read = readGroup.reads().get(i);
-
-            if(i == 0)
-            {
-                mBaseCoverage.processRead(read, null, readGroup.IsConsensus);
-            }
-            else
-            {
-                mBaseCoverage.processRead(read, combinedAlignedBaseCoords, readGroup.IsConsensus);
-            }
-
-            if(i < readGroup.reads().size() - 1)
-                addAlignedCoords(read, combinedAlignedBaseCoords);
-        }
+        addAlignedCoords(read, alignedBaseCoords);
     }
 
     private static void addAlignedCoords(final SAMRecord read, final List<int[]> alignedBaseCoords)
@@ -394,7 +331,12 @@ public class BamReader
                     break;
 
                 case M:
-                    alignedBaseCoords.add(new int[] { position, position + element.getLength() - 1});
+                    int coordsStart = position;
+                    int coordsEnd = position + element.getLength() - 1;
+
+                    if(alignedBaseCoords.stream().noneMatch(x -> x[0] == coordsStart && x[1] == coordsEnd))
+                        alignedBaseCoords.add(new int[] { coordsStart, coordsEnd});
+
                     position += element.getLength();
                     break;
 
@@ -407,6 +349,46 @@ public class BamReader
                     break;
             }
         }
+    }
+
+    private void checkLogPartitionReadCount()
+    {
+        if(mConfig.PartitionReadCountCheck == 0)
+            return;
+
+        if(mPartitionStats.TotalReads > 0 && (mPartitionStats.TotalReads % mConfig.PartitionReadCountCheck) == 0)
+        {
+            BT_LOGGER.debug("partition({}) reads(total={} chimeric={}, interpartition={}) cachedFragments({})",
+                    mRegion, mPartitionStats.TotalReads, mPartitionStats.ChimericReads, mPartitionStats.InterPartition,
+                    mReadGroupMap.size());
+        }
+    }
+
+    private static final int FRAGMENT_MAP_SIZE_READ_COUNT_CHECK = 10000;
+    private static final int FRAGMENT_MAP_SIZE_THRESHOLD = 10000;
+
+    private void purgeReadGroups(final int currentReadStartPosition)
+    {
+        if(mReadGroupMap.size() < FRAGMENT_MAP_SIZE_THRESHOLD)
+            return;
+
+        if(mPartitionStats.TotalReads < mLastFragmentMapReadCountCheck + FRAGMENT_MAP_SIZE_READ_COUNT_CHECK)
+            return;
+
+        mLastFragmentMapReadCountCheck = mPartitionStats.TotalReads;
+
+        // a fall-back routine - remove
+        List<String> groupsToRemove = mReadGroupMap.entrySet().stream()
+                .filter(x -> x.getValue().MaxReadStart < currentReadStartPosition)
+                .map(x -> x.getKey()).collect(Collectors.toList());
+
+        if(groupsToRemove.isEmpty())
+            return;
+
+        groupsToRemove.forEach(x -> mReadGroupMap.remove(x));
+
+        BT_LOGGER.debug("partition({}) purged {} readGroups, cachedFragments({})",
+                mRegion, groupsToRemove.size(), mReadGroupMap.size());
     }
 
     @VisibleForTesting
