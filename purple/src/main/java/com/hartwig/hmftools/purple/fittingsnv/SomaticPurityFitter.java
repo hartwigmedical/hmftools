@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.purple.fittingsnv;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -298,29 +300,32 @@ public class SomaticPurityFitter
 
         Collections.sort(variantVafs);
 
-        // replace median VAF with VAF at 75th percentile
-        
-//        double medianVaf;
-//        int medianIndex = variantVafs.size() / 2;
-//
-//        if((variantVafs.size() % 2) == 0)
-//        {
-//            medianVaf = (variantVafs.get(medianIndex - 1) + variantVafs.get(medianIndex)) * 0.5;
-//        }
-//        else
-//        {
-//            medianVaf = variantVafs.get(medianIndex);
-//        }
-//
-//        double somaticPurity = medianVaf * 2;
-        
         double vaf75thPercentile;
-        double index75thPercentile = 0.75 * (variantVafs.size() + 1);
-        
-        int lowerIndex = (int) index75thPercentile;
-        int upperIndex = lowerIndex + 1;
 
-        vaf75thPercentile = variantVafs.get(lowerIndex) + (index75thPercentile - lowerIndex) * (variantVafs.get(upperIndex) - variantVafs.get(lowerIndex));
+        if(variantVafs.size() >= 4)
+        {
+            double index75thPercentile = 0.75 * (variantVafs.size() + 1);
+
+            int lowerIndex = min((int)floor(index75thPercentile), variantVafs.size() - 2);
+            int upperIndex = lowerIndex + 1;
+
+            double lowerVaf = variantVafs.get(lowerIndex);
+            double upperVaf = variantVafs.get(upperIndex);
+
+            vaf75thPercentile =  + (index75thPercentile - lowerIndex) * (upperVaf - lowerVaf);
+        }
+        else if(variantVafs.size() == 3)
+        {
+            vaf75thPercentile = variantVafs.get(1);
+        }
+        else if(variantVafs.size() == 2)
+        {
+            vaf75thPercentile = (variantVafs.get(0) + variantVafs.get(1)) * 0.5;
+        }
+        else
+        {
+            vaf75thPercentile = variantVafs.get(0);
+        }
 
         double somaticPurity = vaf75thPercentile * 2;
         
