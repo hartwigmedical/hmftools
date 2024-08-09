@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
@@ -387,7 +386,7 @@ public class BamReader
 
         groupsToRemove.forEach(x -> mReadGroupMap.remove(x));
 
-        BT_LOGGER.debug("partition({}) purged {} readGroups, cachedFragments({})",
+        BT_LOGGER.trace("partition({}) purged {} readGroups, cachedFragments({})",
                 mRegion, groupsToRemove.size(), mReadGroupMap.size());
     }
 
