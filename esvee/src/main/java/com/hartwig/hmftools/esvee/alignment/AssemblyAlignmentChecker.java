@@ -9,8 +9,6 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -25,41 +23,39 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 import htsjdk.samtools.Cigar;
 
-public class DecoyChecker
+public class AssemblyAlignmentChecker
 {
+    private final AssemblyConfig mConfig;
+    private final BwaMemAligner mDecoyAligner;
     private final BwaMemAligner mAligner;
     private int mSequenceCount;
     private int mSequenceMatched;
     private final BufferedWriter mWriter;
 
-    public DecoyChecker(final String decoyGenome, final BufferedWriter writer)
+    public AssemblyAlignmentChecker(final AssemblyConfig config, final BufferedWriter writer)
     {
+        mConfig = config;
         mSequenceCount = 0;
         mSequenceMatched = 0;
         mWriter = writer;
 
-        if(decoyGenome != null && Files.exists(Paths.get(decoyGenome)))
-        {
-            BwaMemIndex index = new BwaMemIndex(decoyGenome);
-            mAligner = new BwaMemAligner(index);
-        }
-        else
-        {
-            mAligner = null;
-        }
-    }
+        mAligner = config.AssemblyMapQualThreshold > 0 ? new BwaMemAligner(new BwaMemIndex(mConfig.RefGenomeImageFile)) : null;
 
-    public boolean enabled() { return mAligner != null;}
+        mDecoyAligner = config.DecoyGenome != null ? new BwaMemAligner(new BwaMemIndex(mConfig.DecoyGenome)) : null;
+    }
 
     public int sequenceCount() { return mSequenceCount; }
     public int sequenceMatched() { return mSequenceMatched; };
 
     public boolean matchesDecoy(final JunctionAssembly assembly)
     {
+        if(mDecoyAligner == null)
+            return false;
+
         ++mSequenceCount;
 
         String fullSequence = assembly.formFullSequence();
-        List<BwaMemAlignment> alignmentResults = mAligner.alignSeqs(List.of(fullSequence.getBytes())).get(0);
+        List<BwaMemAlignment> alignmentResults = mDecoyAligner.alignSeqs(List.of(fullSequence.getBytes())).get(0);
 
         if(alignmentResults.isEmpty())
             return false;
@@ -85,6 +81,33 @@ public class DecoyChecker
         }
 
         return false;
+    }
+
+    public boolean failsMappability(final JunctionAssembly assembly)
+    {
+        if(mAligner == null)
+            return false;
+
+        if(mConfig.AssemblyMapQualThreshold == 0 || assembly.stats().avgMapQual() >= mConfig.AssemblyMapQualThreshold)
+            return false;
+
+        // realign the ref base sequence and exclude if the results are too varied
+        String refBaseSequence = assembly.formRefBaseSequence();
+        List<BwaMemAlignment> alignmentResults = mAligner.alignSeqs(List.of(refBaseSequence.getBytes())).get(0);
+
+        if(alignmentResults.isEmpty())
+            return true;
+
+        for(BwaMemAlignment alignment : alignmentResults)
+        {
+            if(alignment.getMapQual() >= mConfig.AssemblyMapQualThreshold)
+                return false;
+
+            if(alignment.getXATag() != null)
+                return false;
+        }
+
+        return true;
     }
 
     public static BufferedWriter initialiseWriter(final AssemblyConfig config)

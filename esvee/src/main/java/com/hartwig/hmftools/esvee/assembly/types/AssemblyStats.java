@@ -198,6 +198,8 @@ public class AssemblyStats
         sj.add(statString(MapQualTotal, ReadCount));
     }
 
+    public double avgMapQual() { return ReadCount > 0 ? MapQualTotal / (double)ReadCount : 0; }
+
     private static String statString(int count, double readCount)
     {
         double avgValue = count/readCount;

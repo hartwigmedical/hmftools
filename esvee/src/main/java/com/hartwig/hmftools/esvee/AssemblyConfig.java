@@ -101,6 +101,7 @@ public class AssemblyConfig
 
     public final int AssemblyRefBaseWriteMax;
     public final int PhaseProcessingLimit;
+    public final int AssemblyMapQualThreshold;
 
     public final int Threads;
 
@@ -122,6 +123,7 @@ public class AssemblyConfig
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
+    private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
@@ -200,6 +202,8 @@ public class AssemblyConfig
             loadAlignerLibrary(bwaLibPath);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
+        AssemblyMapQualThreshold = configBuilder.getInteger(ASSEMBLY_MAP_QUAL_THRESHOLD);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -318,6 +322,9 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
+        configBuilder.addInteger(
+                ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",  1);
+
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
 
         TruthsetAnnotation.registerConfig(configBuilder);
@@ -365,6 +372,7 @@ public class AssemblyConfig
         mLogReadIds = Collections.emptyList();
         mCheckLogReadIds = false;
 
+        AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;
         PhaseProcessingLimit = 0;
         Threads = 0;
