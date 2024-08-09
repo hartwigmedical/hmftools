@@ -131,6 +131,9 @@ public final class ReadUtils
 
     public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
     {
+        if(indexEnd - indexStart + 1 < LINE_POLY_AT_REQ)
+            return null;
+
         int aCount = 0;
         int tCount = 0;
         int otherCount = 0;

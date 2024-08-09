@@ -3,12 +3,14 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -138,15 +141,39 @@ public class VariantFilters
 
         if(var.isSgl())
         {
-            String insertSequence = var.insertSequence();
+            byte[] insertSequence = var.insertSequence().getBytes();
 
-            List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence.getBytes());
-            int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length() - 1, repeats);
+            // skip if a line site
+            if(isLineInsertion(insertSequence, var.breakendStart().Orient))
+                return false;
+
+            List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence);
+            int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length - 1, repeats);
 
             return trimmedSequenceLength < MIN_TRIMMED_ANCHOR_LENGTH;
         }
         else
+        {
             return var.breakendEnd().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
+        }
+    }
+
+    private static boolean isLineInsertion(final byte[] insertSequence, final Orientation orientation)
+    {
+        int indexStart, indexEnd;
+
+        if(orientation.isForward())
+        {
+            indexStart = 0;
+            indexEnd = LINE_POLY_AT_TEST_LEN - 1;
+        }
+        else
+        {
+            indexEnd = insertSequence.length - 1;
+            indexStart = indexEnd - LINE_POLY_AT_TEST_LEN + 1;
+        }
+
+        return findLineSequenceBase(insertSequence, indexStart, indexEnd) != null;
     }
 
     private boolean belowMinFragmentLength(final Variant var)

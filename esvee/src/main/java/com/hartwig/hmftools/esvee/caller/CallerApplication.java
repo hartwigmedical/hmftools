@@ -3,6 +3,10 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
@@ -26,7 +30,10 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class CallerApplication
 {
@@ -95,6 +102,12 @@ public class CallerApplication
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
+        if(mConfig.ManualRefDepth > 0 && !vcfHeader.hasFormatLine(REF_DEPTH))
+        {
+            vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH, 1, VCFHeaderLineType.Integer, REF_DEPTH_DESC));
+            vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH_PAIR, 1, VCFHeaderLineType.Integer, REF_DEPTH_PAIR_DESC));
+        }
+
         SV_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
@@ -162,9 +175,9 @@ public class CallerApplication
         mSvDataCache.buildBreakendMap();
 
         SV_LOGGER.info("deduplication of paired end single breakends");
-        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
 
         /*
+        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
         // duplicateFinder.findDuplicateSVs(alternatePaths);
 
         SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
@@ -223,6 +236,24 @@ public class CallerApplication
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
             SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+        }
+
+        if(mConfig.ManualRefDepth > 0)
+        {
+            if(genotypeIds.hasReference())
+            {
+                if(!variant.getGenotype(genotypeIds.ReferenceId).hasExtendedAttribute(REF_DEPTH))
+                {
+                    variant.getGenotype(genotypeIds.ReferenceId).getExtendedAttributes().put(REF_DEPTH, mConfig.ManualRefDepth);
+                    variant.getGenotype(genotypeIds.ReferenceId).getExtendedAttributes().put(REF_DEPTH_PAIR, mConfig.ManualRefDepth);
+                }
+
+                if(!variant.getGenotype(genotypeIds.TumorId).hasExtendedAttribute(REF_DEPTH))
+                {
+                    variant.getGenotype(genotypeIds.TumorId).getExtendedAttributes().put(REF_DEPTH, mConfig.ManualRefDepth);
+                    variant.getGenotype(genotypeIds.TumorId).getExtendedAttributes().put(REF_DEPTH_PAIR, mConfig.ManualRefDepth);
+                }
+            }
         }
 
         mSvDataCache.processVariant(variant, genotypeIds);

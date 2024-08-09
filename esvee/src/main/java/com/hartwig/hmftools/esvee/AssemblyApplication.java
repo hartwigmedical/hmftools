@@ -240,7 +240,7 @@ public class AssemblyApplication
         ReadStats combinedReadStats = new ReadStats();
         primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies reads(junc={} candidate={})",
+        SV_LOGGER.info("created {} junction assemblies from reads(junc={} candidate={})",
                 assemblyCount, junctionReadCount, candidateReadCount);
 
         SV_LOGGER.info("extracted read stats: {}", combinedReadStats);
