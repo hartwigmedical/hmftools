@@ -50,6 +50,11 @@ public class JitterCountsTable
             return jitterCounts.getOrDefault(jitter, 0);
         }
 
+        void setJitterReadCount(int jitter, int count)
+        {
+            jitterCounts.put(jitter, count);
+        }
+
         String getRepeatUnit() { return RepeatUnit; }
     }
 

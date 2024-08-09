@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.jetbrains.annotations.NotNull;
@@ -92,5 +95,60 @@ public class JitterCountsTableFile
 				}
 			}
 		}
+	}
+
+	public static Collection<JitterCountsTable> read(final String filename) throws IOException
+	{
+		Collection<JitterCountsTable> jitterCountData = new ArrayList<>();
+
+		DelimFileReader reader = new DelimFileReader(filename);
+
+		for(DelimFileReader.Row row : reader)
+		{
+			String unit = row.get(JitterModelParamsFile.Column.unit);
+			JitterCountsTable unitData = null;
+			for(JitterCountsTable perUnitData : jitterCountData)
+			{
+				if(perUnitData.RepeatUnit.equals(unit))
+				{
+					unitData = perUnitData;
+					break;
+				}
+			}
+			boolean newUnit = unitData == null;
+			if(newUnit)
+			{
+				unitData = new JitterCountsTable(row.get(JitterModelParamsFile.Column.unit), 1.0);
+			}
+			JitterCountsTable.Row countRow = unitData.getOrCreateRow(row.getInt(NUM_UNITS));
+			countRow.totalReadCount = row.getInt(READ_COUNT);
+			countRow.setJitterReadCount(0, row.getInt(COUNT_p0));
+
+			countRow.setJitterReadCount(10, row.getInt(COUNT_p10));
+			countRow.setJitterReadCount(9, row.getInt(COUNT_p9));
+			countRow.setJitterReadCount(8, row.getInt(COUNT_p8));
+			countRow.setJitterReadCount(7, row.getInt(COUNT_p7));
+			countRow.setJitterReadCount(6, row.getInt(COUNT_p6));
+			countRow.setJitterReadCount(5, row.getInt(COUNT_p5));
+			countRow.setJitterReadCount(4, row.getInt(COUNT_p4));
+			countRow.setJitterReadCount(3, row.getInt(COUNT_p3));
+			countRow.setJitterReadCount(2, row.getInt(COUNT_p2));
+			countRow.setJitterReadCount(1, row.getInt(COUNT_p1));
+
+			countRow.setJitterReadCount(-10, row.getInt(COUNT_m10));
+			countRow.setJitterReadCount(-9, row.getInt(COUNT_m9));
+			countRow.setJitterReadCount(-8, row.getInt(COUNT_m8));
+			countRow.setJitterReadCount(-7, row.getInt(COUNT_m7));
+			countRow.setJitterReadCount(-6, row.getInt(COUNT_m6));
+			countRow.setJitterReadCount(-5, row.getInt(COUNT_m5));
+			countRow.setJitterReadCount(-4, row.getInt(COUNT_m4));
+			countRow.setJitterReadCount(-3, row.getInt(COUNT_m3));
+			countRow.setJitterReadCount(-2, row.getInt(COUNT_m2));
+			countRow.setJitterReadCount(-1, row.getInt(COUNT_m1));
+
+			if(newUnit) { jitterCountData.add(unitData); }
+		}
+
+		return jitterCountData;
 	}
 }
