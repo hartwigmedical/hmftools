@@ -160,7 +160,7 @@ public class BreakendBuilder
         }
     }
 
-        private boolean formIndelBreakends(final AlignData alignment)
+    private boolean formIndelBreakends(final AlignData alignment)
     {
         // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
         IndelCoords indelCoords = null;
@@ -174,7 +174,7 @@ public class BreakendBuilder
             {
                 int svLength = assemblyLink.length();
                 CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-                indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
+                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
             }
         }
 
