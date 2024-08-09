@@ -354,20 +354,24 @@ public class PhaseSetBuilder
     {
         List<Read> sharedUnmappedReads = Lists.newArrayList();
 
+        List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
+
         for(JunctionAssembly assembly : mAssemblies)
         {
             sharedUnmappedReads.addAll(assembly.unmappedReads());
 
-            List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
+            assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
                     .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
-                    .collect(Collectors.toList());
+                    .forEach(x -> combinedRemoteRegions.add(x));
+        }
 
-            for(RemoteRegion remoteRegion : remoteRegions)
-            {
-                List<Read> remoteReads = mRemoteRegionAssembler.extractRemoteReads(remoteRegion, remoteRegion.readIds());
-                sharedUnmappedReads.addAll(remoteReads);
-            }
+        RemoteRegion.mergeRegions(combinedRemoteRegions);
+
+        for(RemoteRegion remoteRegion : combinedRemoteRegions)
+        {
+            List<Read> remoteReads = mRemoteRegionAssembler.extractRemoteReads(remoteRegion);
+            sharedUnmappedReads.addAll(remoteReads);
         }
 
         if(sharedUnmappedReads.isEmpty())

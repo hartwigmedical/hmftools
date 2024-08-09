@@ -98,14 +98,14 @@ public class RemoteRegionAssembler
             return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
     }
 
-    public List<Read> extractRemoteReads(final RemoteRegion remoteRegion, final Set<String> sourceReadIds)
+    public List<Read> extractRemoteReads(final RemoteRegion remoteRegion)
     {
         mRemoteRegion = remoteRegion;
 
         mSourceReadIds.clear();
-        mSourceReadIds.addAll(sourceReadIds);
+        mSourceReadIds.addAll(remoteRegion.readIds());
 
-        mTotalRemoteReadsSearch += sourceReadIds.size();
+        mTotalRemoteReadsSearch += remoteRegion.readIds().size();
 
         if(mBamReader != null)
         {
