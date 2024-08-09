@@ -67,7 +67,7 @@ public class RegionAppendTask implements Callable
         SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
         samSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
 
-        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(config.Common.ReferenceIds, config.Common.JitterParamsDir);
+        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(config.Common.ReferenceIds, config.Common.JitterParamsDir, mConfig.Common.Quality.HighDepthMode);
 
         mEvidenceStage = new EvidenceStage(
                 config.Common, mRefGenome, qualityRecalibrationMap, msiJitterCalcs, new PhaseSetCounter(), samSlicerFactory);

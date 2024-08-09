@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.quality;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HD_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
@@ -10,11 +11,14 @@ import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHAN
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
+import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
@@ -31,19 +35,21 @@ public class MsiJitterCalcs
         mSampleParams = Maps.newHashMap();
     }
 
-    public static MsiJitterCalcs build(final List<String> sampleIds, @Nullable final String jitterParamsDir)
+    public static MsiJitterCalcs build(final List<String> sampleIds, @Nullable final String jitterParamsDir, final boolean highDepthMode)
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
+        List<JitterModelParams> jitterDefaults = highDepthMode ? DEFAULT_HD_JITTER_PARAMS : DEFAULT_JITTER_PARAMS;
+
         if(jitterParamsDir != null)
         {
-            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir))
+            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults))
                 return msiJitterCalcs;
         }
 
         for(String sampleId : sampleIds)
         {
-            msiJitterCalcs.setSampleParams(sampleId, DEFAULT_JITTER_PARAMS);
+            msiJitterCalcs.setSampleParams(sampleId, jitterDefaults);
         }
 
         return msiJitterCalcs;
@@ -56,20 +62,24 @@ public class MsiJitterCalcs
         mSampleParams.put(sampleId, params.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList()));
     }
 
-    public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir)
+    public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir, final List<JitterModelParams> defaultParams)
     {
         try
         {
             for(String sampleId : sampleIds)
             {
                 String jitterParamFile = JitterModelParamsFile.generateFilename(jitterParamsDir, sampleId);
+                String jitterCountFile = JitterCountsTableFile.generateFilename(jitterParamsDir, sampleId);
 
-                if(!Files.exists(Paths.get(jitterParamFile)))
+                if(!Files.exists(Paths.get(jitterParamFile)) || !Files.exists(Paths.get(jitterCountFile)))
                     return false;
 
                 List<JitterModelParams> rawParams = JitterModelParamsFile.read(jitterParamFile);
-                List<MsiModelParams> modelParams = rawParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
-                mSampleParams.put(sampleId, modelParams);
+                List<MsiModelParams> msiParams = rawParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
+                List<MsiModelParams> defaultMsiParams = defaultParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
+                Collection<JitterCountsTable> jitterCounts = JitterCountsTableFile.read(jitterCountFile);
+                boolean revertToDefaults = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts);
+                mSampleParams.put(sampleId, revertToDefaults ? defaultMsiParams : msiParams);
             }
 
             SG_LOGGER.debug("loaded {} jitter param files", sampleIds.size());
@@ -81,6 +91,35 @@ public class MsiJitterCalcs
         }
 
         return true;
+    }
+
+    public boolean shouldRevertToDefaults(List<MsiModelParams> msiParams, List<MsiModelParams> defaultParams, Collection<JitterCountsTable> jitterCounts)
+    {
+        double comparisonScore = 0;
+        for(JitterCountsTable unitParams : jitterCounts)
+        {
+            String repeatUnit = unitParams.RepeatUnit.split("/")[0];
+            MsiModelParams relevantMsiParams = findApplicableParams(msiParams, repeatUnit);
+            MsiModelParams relevantDefaultParams = findApplicableParams(defaultParams, repeatUnit);
+            relevantDefaultParams.params().MicrosatelliteSkew = relevantMsiParams.params().MicrosatelliteSkew;
+            for(JitterCountsTable.Row perRepeatData : unitParams.getRows())
+            {
+                int refLength = perRepeatData.refNumUnits;
+                for(Map.Entry<Integer, Integer> entry : perRepeatData.jitterCounts.entrySet())
+                {
+                    int jitterLength = entry.getKey();
+                    if(Math.abs(jitterLength) > MSI_JITTER_MAX_REPEAT_CHANGE || jitterLength == 0) { continue; }
+                    Double rawScale = getScaleParam(relevantMsiParams.params(), refLength);
+                    double rawErrorRate = relevantMsiParams.calcErrorRate(refLength, jitterLength, rawScale);
+                    double rawPhredScore = -10 * Math.log10(rawErrorRate);
+                    Double defaultScale = getScaleParam(relevantDefaultParams.params(), refLength);
+                    double defaultErrorRate = relevantDefaultParams.calcErrorRate(refLength, jitterLength, defaultScale);
+                    double defaultPhredScore = -10 * Math.log10(defaultErrorRate);
+                    comparisonScore += (rawPhredScore - defaultPhredScore) * entry.getValue();
+                }
+            }
+        }
+        return comparisonScore < 0;
     }
 
     public double calcErrorRate(final VariantReadContext readContext, final String sampleId)
