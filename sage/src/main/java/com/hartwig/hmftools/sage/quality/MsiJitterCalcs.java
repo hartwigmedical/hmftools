@@ -29,10 +29,12 @@ import org.jetbrains.annotations.Nullable;
 public class MsiJitterCalcs
 {
     private final Map<String,List<MsiModelParams>> mSampleParams;
+    private final Map<String, Boolean> mProbableMsiSample;
 
     public MsiJitterCalcs()
     {
         mSampleParams = Maps.newHashMap();
+        mProbableMsiSample = Maps.newHashMap();
     }
 
     public static MsiJitterCalcs build(final List<String> sampleIds, @Nullable final String jitterParamsDir, final boolean highDepthMode)
@@ -56,10 +58,12 @@ public class MsiJitterCalcs
     }
 
     public List<MsiModelParams> getSampleParams(final String sampleId) { return mSampleParams.get(sampleId); }
+    public boolean getProbableMsiStatus(final String sampleId) { return mProbableMsiSample.get(sampleId); }
 
     public void setSampleParams(final String sampleId, final List<JitterModelParams> params)
     {
         mSampleParams.put(sampleId, params.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList()));
+        mProbableMsiSample.put(sampleId, false);
     }
 
     public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir, final List<JitterModelParams> defaultParams)
@@ -80,6 +84,7 @@ public class MsiJitterCalcs
                 Collection<JitterCountsTable> jitterCounts = JitterCountsTableFile.read(jitterCountFile);
                 boolean revertToDefaults = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts);
                 mSampleParams.put(sampleId, revertToDefaults ? defaultMsiParams : msiParams);
+                mProbableMsiSample.put(sampleId, revertToDefaults);
             }
 
             SG_LOGGER.debug("loaded {} jitter param files", sampleIds.size());

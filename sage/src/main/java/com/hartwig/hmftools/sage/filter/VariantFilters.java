@@ -270,7 +270,8 @@ public class VariantFilters
         int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
-        byte qualPerReadFloored = (byte)max(qualPerRead, 15);
+        int minQualForTqp = primaryTumor.qualCache().isMsiVariantInProbableMsiSample() ? 20 : 15;
+        byte qualPerReadFloored = (byte)max(qualPerRead, minQualForTqp);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerReadFloored);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);

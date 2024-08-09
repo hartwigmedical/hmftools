@@ -24,15 +24,10 @@ public class Realignment
 
         ReadContextMatch match = NONE;
 
-        if(readIndex < 0)
-        {
-            if(!readContext.variant().isDelete())
-                return RealignedType.NONE;
+        if(readIndex < 0 && !readContext.variant().isDelete())
+            return RealignedType.NONE;
 
-            readIndex = readContext.variant().Position - record.getAlignmentStart();
-        }
-
-        int realignmentOffset = realignedReadIndex - readIndex;
+        int realignmentOffset = readContext.variant().isDelete() ? 0 : realignedReadIndex - readIndex;
 
         if(splitReadSegment != null)
         {
