@@ -77,4 +77,7 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
+
+    @NotNull
+    TumorStats tumorStats();
 }

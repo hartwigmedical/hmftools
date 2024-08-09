@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
@@ -81,6 +82,7 @@ public final class TestPurpleVariantFactory
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .spliceRegion(false)
                 .worstCodingEffect(CodingEffect.UNDEFINED)
+                .tier(VariantTier.UNKNOWN)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .reported(false)
                 .adjustedCopyNumber(0)

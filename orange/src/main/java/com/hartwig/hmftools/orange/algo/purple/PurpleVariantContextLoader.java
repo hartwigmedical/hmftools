@@ -153,6 +153,7 @@ public class PurpleVariantContextLoader
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .otherImpacts(otherImpacts)
+                .tier(contextDecorator.tier())
                 .hotspot(contextDecorator.hotspot())
                 .reported(contextDecorator.reported())
                 .rnaDepth(rnaDepth)

@@ -25,6 +25,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -43,6 +45,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,6 +80,7 @@ public final class GermlineConversion
         List<PurpleGainLoss> mergedAllSomaticGainsLosses;
         List<PurpleGainLoss> mergedReportableSomaticGainsLosses;
         List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumbersWithLOH;
+        TumorStats mergedTumorStats;
         if(containsTumorCells)
         {
             mergedDrivers =
@@ -86,6 +90,7 @@ public final class GermlineConversion
             mergedReportableSomaticGainsLosses =
                     mergeGermlineFullLosses(purple.reportableGermlineFullLosses(), purple.reportableSomaticGainsLosses());
             mergedSuspectGeneCopyNumbersWithLOH = mergeSuspectGeneCopyNumberWithLOH(purple);
+            mergedTumorStats = mergeTumorStats(purple);
         }
         else
         {
@@ -94,6 +99,7 @@ public final class GermlineConversion
             mergedAllSomaticGainsLosses = purple.allSomaticGainsLosses();
             mergedReportableSomaticGainsLosses = purple.reportableSomaticGainsLosses();
             mergedSuspectGeneCopyNumbersWithLOH = purple.suspectGeneCopyNumbersWithLOH();
+            mergedTumorStats = purple.tumorStats();
         }
 
         return ImmutablePurpleRecord.builder()
@@ -114,7 +120,30 @@ public final class GermlineConversion
                 .suspectGeneCopyNumbersWithLOH(mergedSuspectGeneCopyNumbersWithLOH)
                 .allGermlineLossOfHeterozygosities(null)
                 .reportableGermlineLossOfHeterozygosities(null)
+                .tumorStats(mergedTumorStats)
                 .build();
+    }
+
+    @NotNull
+    static TumorStats mergeTumorStats(PurpleRecord purple)
+    {
+        return ImmutableTumorStats.builder()
+                .from(purple.tumorStats())
+                .hotspotMutationCount(
+                        germlineHotspotCount(purple.reportableGermlineVariants()) + purple.tumorStats().hotspotMutationCount())
+                .build();
+    }
+
+    private static int germlineHotspotCount(@Nullable List<PurpleVariant> reportableGermlineVariants)
+    {
+        if(reportableGermlineVariants == null)
+        {
+            return 0;
+        }
+
+        return (int) reportableGermlineVariants.stream()
+                .filter(variant -> variant.hotspot() == HotspotType.HOTSPOT)
+                .count();
     }
 
     @NotNull
