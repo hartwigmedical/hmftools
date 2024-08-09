@@ -312,7 +312,7 @@ public class SomaticPurityFitter
             double lowerVaf = variantVafs.get(lowerIndex);
             double upperVaf = variantVafs.get(upperIndex);
 
-            vaf75thPercentile =  + (index75thPercentile - lowerIndex) * (upperVaf - lowerVaf);
+            vaf75thPercentile = lowerVaf + (index75thPercentile - lowerIndex) * (upperVaf - lowerVaf);
         }
         else if(variantVafs.size() == 3)
         {
@@ -328,8 +328,7 @@ public class SomaticPurityFitter
         }
 
         double somaticPurity = vaf75thPercentile * 2;
-        
-        
+
         PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
         FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);
