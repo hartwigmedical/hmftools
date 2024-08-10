@@ -48,10 +48,14 @@ public class CallerApplication
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
 
+    private final long mStartTimeMs;
+
     public CallerApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new CallerConfig(configBuilder);
         mFilterConstants = FilterConstants.from(configBuilder);
+
+        mStartTimeMs = System.currentTimeMillis();
 
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
@@ -89,11 +93,9 @@ public class CallerApplication
             System.exit(1);
         }
 
-        long startTimeMs = System.currentTimeMillis();
-
         processVcf(mConfig.VcfFile);
 
-        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(mStartTimeMs));
     }
 
     private void processVcf(final String vcfFile)

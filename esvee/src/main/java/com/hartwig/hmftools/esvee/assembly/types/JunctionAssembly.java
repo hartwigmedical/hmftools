@@ -49,6 +49,7 @@ public class JunctionAssembly
 
     private final List<SupportRead> mSupport;
     private final List<Read> mCandidateSupport;
+    private final List<Read> mConcordantCandidates; // mates of junction reads past the junction
     private final List<Read> mUnmappedCandidates;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
@@ -118,6 +119,7 @@ public class JunctionAssembly
         mRefBaseIndels = Lists.newArrayList();
         mSupport = Lists.newArrayList(assemblySupport);
         mCandidateSupport = Lists.newArrayList();
+        mConcordantCandidates = Lists.newArrayList();
         mUnmappedCandidates = Lists.newArrayList();
         mRepeatInfo = repeatInfo;
         mRefSideSoftClips = Lists.newArrayList();
@@ -179,10 +181,19 @@ public class JunctionAssembly
     }
 
     public List<Read> candidateSupport() { return mCandidateSupport; }
-    public void clearCandidateSupport() { mCandidateSupport.clear(); }
+
+    public void addConcordantCandidate(final Read read) { mConcordantCandidates.add(read); }
+    public List<Read> concordantCandidates() { return mConcordantCandidates; }
 
     public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
     public List<Read> unmappedReads() { return mUnmappedCandidates; }
+
+    public void clearCandidateSupport()
+    {
+        mCandidateSupport.clear();
+        mUnmappedCandidates.clear();
+        mConcordantCandidates.clear();
+    }
 
     public AssemblyStats stats() { return mStats; }
 
@@ -579,6 +590,7 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
+        mConcordantCandidates = Lists.newArrayList();
         mUnmappedCandidates = Lists.newArrayList();
 
         mRepeatInfo = Lists.newArrayList();
@@ -712,6 +724,7 @@ public class JunctionAssembly
         mBaseQuals = copyArray(quals);
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
+        mConcordantCandidates = Lists.newArrayList();
         mUnmappedCandidates = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRefBasesRepeatedTrimmed = "";

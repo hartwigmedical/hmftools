@@ -28,6 +28,8 @@ public final class AssemblyConstants
     public static final int PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP = 3;
     public static final int PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
 
+    public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
+
     // primary assembly deduplication
     public static final int PRIMARY_ASSEMBLY_READ_MAX_MISMATCH = mismatchesPerComparisonLength(500);
 

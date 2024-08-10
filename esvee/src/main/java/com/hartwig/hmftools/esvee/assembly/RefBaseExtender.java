@@ -99,18 +99,18 @@ public class RefBaseExtender
 
             if(!mateRead.isUnmapped())
             {
-                if(isForwardJunction)
+                boolean isPastJunction = (isForwardJunction && mateRead.alignmentEnd() >= junctionPosition)
+                        || (!isForwardJunction && mateRead.alignmentStart() <= junctionPosition);
+
+                if(isPastJunction)
                 {
-                    if(mateRead.alignmentEnd() >= junctionPosition)
-                        continue;
+                    if(!mateRead.isUnmapped() && !mateRead.isLeftClipped() && !mateRead.isRightClipped())
+                        assembly.addConcordantCandidate(mateRead);
                 }
                 else
                 {
-                    if(mateRead.alignmentStart() <= junctionPosition)
-                        continue;
+                    candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
                 }
-
-                candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
             }
             else
             {

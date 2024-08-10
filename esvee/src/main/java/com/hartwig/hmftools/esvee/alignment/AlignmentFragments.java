@@ -44,7 +44,7 @@ public class AlignmentFragments
     {
         Map<String,List<SupportRead>> mFragmentMap = Maps.newHashMap();
 
-        Set<String> processedFragments = Sets.newHashSet();
+        Map<String,Integer> processedFragmentLengths = Maps.newHashMap();
 
         for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
         {
@@ -53,8 +53,11 @@ public class AlignmentFragments
                 // only check split status and fragment length from the primary pair, but take a supplementary where the primary wasn't captured
                 // the expectation is that the primary also forms a junction assembly and that the two of them have formed a link,
                 // so the primary's support for the link will be captured
-                if(processedFragments.contains(read.id()))
+                if(processedFragmentLengths.containsKey(read.id()))
+                {
+                    read.setInferredFragmentLength(processedFragmentLengths.get(read.id()));
                     continue;
+                }
 
                 List<SupportRead> reads = mFragmentMap.get(read.id());
 
@@ -81,11 +84,15 @@ public class AlignmentFragments
 
                 mFragmentMap.remove(read.id());
 
-                // only process a fragment once even if it belongs to multiple assemblies
-                processedFragments.add(read.id());
-
                 // find associated breakends
                 processSupportReads(firstRead, secondRead);
+
+                // apply to all
+                int fragmentLength = reads.stream().mapToInt(x -> x.inferredFragmentLength()).max().orElse(-1);
+                reads.forEach(x -> x.setInferredFragmentLength(fragmentLength));
+
+                // only process a fragment once even if it belongs to multiple assemblies, and cache its length for subsequent supplementaries
+                processedFragmentLengths.put(read.id(), fragmentLength);
             }
         }
 
@@ -96,6 +103,9 @@ public class AlignmentFragments
             SupportRead secondRead = findSpecificRead(reads, false, true);
 
             processSupportReads(firstRead, secondRead);
+
+            int fragmentLength = reads.stream().mapToInt(x -> x.inferredFragmentLength()).max().orElse(-1);
+            reads.forEach(x -> x.setInferredFragmentLength(fragmentLength));
         }
     }
 
@@ -161,18 +171,24 @@ public class AlignmentFragments
         addUniqueBreakends(breakends, firstBreakendMatches);
         addUniqueBreakends(breakends, secondBreakendMatches);
 
+        boolean allowDiscordantOnlySupport = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
+
         for(Breakend breakend : breakends)
         {
             boolean isSplitSupport = firstBreakendMatches.stream().anyMatch(x -> x.IsSplit)
                     || secondBreakendMatches.stream().anyMatch(x -> x.IsSplit);
+
+            if(!isSplitSupport && !allowDiscordantOnlySupport)
+                continue;
 
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength);
 
             if(!breakend.isSingle())
             {
-                breakend.otherBreakend().updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-                breakend.otherBreakend().addInferredFragmentLength(fragmentLength);
+                Breakend otherBreakend = breakend.otherBreakend();
+                otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+                otherBreakend.addInferredFragmentLength(fragmentLength);
             }
         }
     }
@@ -218,10 +234,10 @@ public class AlignmentFragments
 
                 if(svType == DUP)
                     inferredFragmentLength += svLength;
-
-                read.setInferredFragmentLength(inferredFragmentLength);
             }
         }
+
+        read.setInferredFragmentLength(inferredFragmentLength);
 
         for(Breakend breakend : breakends)
         {
@@ -270,9 +286,6 @@ public class AlignmentFragments
                 breakendMatches.add(new ReadBreakendMatch(breakend, true));
                 continue;
             }
-
-            if(breakend.isShortLocalDelDupIns()) // do not check / allow discordant support for short local DELs and DUPs
-                continue;
 
             int discordantDistance = readDiscordantBreakendDistance(breakend, read);
 

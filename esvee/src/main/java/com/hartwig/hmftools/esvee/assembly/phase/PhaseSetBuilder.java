@@ -31,6 +31,8 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -501,8 +503,6 @@ public class PhaseSetBuilder
             assembly.expandExtensionBases(
                     unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
         }
-
-        assembly.unmappedReads().clear(); // no longer required??
     }
 
     private static boolean hasSharedFragments(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
@@ -574,6 +574,8 @@ public class PhaseSetBuilder
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
         List<Read> matchedCandidates2 = Lists.newArrayList();
+
+        addLocalMateSupport(assembly1, assembly2);
 
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
@@ -669,6 +671,38 @@ public class PhaseSetBuilder
             }
 
             ++index;
+        }
+    }
+
+    private void addLocalMateSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        if(!isLocalAssemblyCandidate(assembly1, assembly2, false))
+            return;
+
+        // look for concordant mate reads which are on the otherr side of the junction and so were initially excluded
+        for(int i = 0; i <= 1; ++i)
+        {
+            JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
+            JunctionAssembly otherAssembly = (i == 0) ? assembly2 : assembly1;
+
+            for(Read mateRead : assembly.concordantCandidates())
+            {
+                // check mate orientation and position vs the other assembly's junction
+                if(otherAssembly.isForwardJunction())
+                {
+                    if(mateRead.orientation().isForward() && mateRead.alignmentEnd() <= otherAssembly.junction().Position)
+                    {
+                        otherAssembly.addCandidateSupport(mateRead);
+                    }
+                }
+                else
+                {
+                    if(mateRead.orientation().isReverse() && mateRead.alignmentStart() >= otherAssembly.junction().Position)
+                    {
+                        otherAssembly.addCandidateSupport(mateRead);
+                    }
+                }
+            }
         }
     }
 
