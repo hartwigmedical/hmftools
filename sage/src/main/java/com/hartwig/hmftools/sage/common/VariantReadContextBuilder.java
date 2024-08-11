@@ -152,6 +152,9 @@ public class VariantReadContextBuilder
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
 
+        if(readFlankStart < 0 || readFlankEnd >= readBases.length)
+            return null;
+
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
 

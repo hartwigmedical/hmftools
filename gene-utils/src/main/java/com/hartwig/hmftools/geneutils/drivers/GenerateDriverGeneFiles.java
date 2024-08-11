@@ -235,7 +235,10 @@ public class GenerateDriverGeneFiles
                     {
                         GU_LOGGER.trace("gene({}) merged region({}) with next({})", region.GeneName, region, nextRegion);
 
-                        region.setEnd(nextRegion.end());
+                        if(nextRegion.end() > region.end())
+                        {
+                            region.setEnd(nextRegion.end());
+                        }
                         ++regionsRemoved;
                         chrPanelRegions.remove(nextIndex);
                     }
