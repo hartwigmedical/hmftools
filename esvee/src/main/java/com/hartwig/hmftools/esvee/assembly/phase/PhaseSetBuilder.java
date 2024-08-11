@@ -580,6 +580,9 @@ public class PhaseSetBuilder
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
+        addMatchingExtensionCandidates(assembly1, matchedCandidates1);
+        addMatchingExtensionCandidates(assembly2, matchedCandidates2);
+
         // remove any ref discordant candidates if their only criteria for inclusion is being long
         List<Read> refCandidates1 = Lists.newArrayList();
         boolean hasNonLocalTumorFragment = false;
@@ -668,6 +671,30 @@ public class PhaseSetBuilder
 
                     continue;
                 }
+            }
+
+            ++index;
+        }
+    }
+
+    private static void addMatchingExtensionCandidates(final JunctionAssembly assembly, final List<Read> matchedCandidates)
+    {
+        Set<String> extensionSupport = assembly.support().stream()
+                .filter(x -> x.type() == EXTENSION).map(x -> x.id()).collect(Collectors.toSet());
+
+        if(extensionSupport.isEmpty())
+            return;
+
+        int index = 0;
+        while(index < assembly.candidateSupport().size())
+        {
+            Read candidateRead = assembly.candidateSupport().get(index);
+
+            if(extensionSupport.remove(candidateRead.id()))
+            {
+                matchedCandidates.add(candidateRead);
+                assembly.candidateSupport().remove(index);
+                continue;
             }
 
             ++index;

@@ -80,7 +80,7 @@ public class RefBaseExtender
 
             assembly.checkAddRefSideSoftClip(read.cachedRead()); // a junction read can be soft-clipped on both sides
 
-            if(isDiscordantFragment(read.cachedRead()))
+            if(read.isDiscordant())
             {
                 remoteJunctionMates.add(read.cachedRead());
                 continue;
