@@ -291,7 +291,7 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
-            if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+            if(variant.isHotspot() || (vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX))
                 variantVafs.add(vaf);
         }
 
