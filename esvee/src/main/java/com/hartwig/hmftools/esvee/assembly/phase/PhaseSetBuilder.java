@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -38,6 +40,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -46,6 +49,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
@@ -74,6 +78,9 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mSplitLinks;
     private final List<AssemblyLink> mFacingLinks;
 
+    // performance tracking
+    private double mPerfLogTime;
+
     public PhaseSetBuilder(
             final RefGenomeInterface refGenome, final RemoteRegionAssembler remoteRegionAssembler, final PhaseGroup phaseGroup)
     {
@@ -91,13 +98,30 @@ public class PhaseSetBuilder
         mSplitLinks = Lists.newArrayList();
         mFacingLinks = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
+
+        mPerfLogTime = 0;
     }
+
+    public void setPerfLogTime(double perfLogTime) { mPerfLogTime = perfLogTime; }
 
     public void buildPhaseSets()
     {
+        long startTimeMs = System.currentTimeMillis();
+
+        if(mAssemblies.size() > 100)
+        {
+            SV_LOGGER.debug("pgId({}) assemblies({}) starting phase set building", mPhaseGroup.id(), mAssemblies.size());
+        }
+
         findLocalLinks();
 
+        checkLogPerfTime(startTimeMs, "findLocalLinks");
+        startTimeMs = System.currentTimeMillis();
+
         findOtherLinksAndExtensions();
+
+        checkLogPerfTime(startTimeMs, "findOtherLinksAndExtensions");
+        startTimeMs = System.currentTimeMillis();
 
         addUnlinkedAssemblyRefSupport();
 
@@ -108,6 +132,27 @@ public class PhaseSetBuilder
         addChainedSupport();
 
         cleanupAssemblies();
+
+        checkLogPerfTime(startTimeMs, "phaseSets");
+    }
+
+    private void checkLogPerfTime(long startTimeMs, final String stage)
+    {
+        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+        double seconds = timeTakenMs / 1000.0;
+
+        if(seconds >= mPerfLogTime)
+        {
+            StringJoiner sj = new StringJoiner(";");
+            for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
+            {
+                sj.add(mAssemblies.get(i).junction().coords());
+            }
+
+            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d isLine=%s remoteRefReads=%d)",
+                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(), mHasLineExtensions,
+                    mRemoteRegionAssembler != null ? mRemoteRegionAssembler.totalRemoteReadsSearch() : 0));
+        }
     }
 
     private void findLocalLinks()
@@ -358,10 +403,18 @@ public class PhaseSetBuilder
 
         List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
 
+        List<JunctionAssembly> lineAssemblies = mAssemblies.stream().filter(x -> x.hasLineSequence()).collect(Collectors.toList());
+
         for(JunctionAssembly assembly : mAssemblies)
         {
             sharedUnmappedReads.addAll(assembly.unmappedReads());
 
+            boolean isLineOrProximate = lineAssemblies.stream().anyMatch(x -> x == assembly || isProximateIndel(assembly, x));
+
+            if(!isLineOrProximate)
+                continue;
+
+            // collect remote regions if from LINE assemblies or those very close to a LINE assembly
             assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
                     .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
@@ -390,6 +443,13 @@ public class PhaseSetBuilder
                         unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
             }
         }
+    }
+
+    private static boolean isProximateIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        return assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome)
+        && assembly1.junction().Orient != assembly2.junction().Orient
+        && abs(assembly1.junction().Position - assembly2.junction().Position) < 100;
     }
 
     private void findRemoteRefCandidates()

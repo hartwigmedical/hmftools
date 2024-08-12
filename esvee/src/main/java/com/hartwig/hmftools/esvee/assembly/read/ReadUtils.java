@@ -131,6 +131,9 @@ public final class ReadUtils
 
     public static boolean isLineSequence(final byte[] bases, final int indexStart, final int indexEnd)
     {
+        if(indexStart < 0 || indexEnd >= bases.length)
+            return false;
+
         byte lineBase = bases[indexStart];
 
         if(lineBase != LINE_BASE_A && lineBase != LINE_BASE_T)
@@ -147,6 +150,9 @@ public final class ReadUtils
 
     public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
     {
+        if(indexStart < 0 || indexEnd >= bases.length)
+            return null;
+
         if(indexEnd - indexStart + 1 < LINE_POLY_AT_REQ)
             return null;
 
