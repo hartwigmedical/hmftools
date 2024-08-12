@@ -57,6 +57,7 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class VariantFilters
 {
+    private final boolean mIsGermline;
     private final FilterConfig mConfig;
     private final int mReadEdgeDistanceThreshold;
     private final int mReadEdgeDistanceThresholdPanel;
@@ -76,6 +77,7 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
+        mIsGermline = config.IsGermline;
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
         mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
@@ -156,10 +158,13 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
-            for(int i = 0; i < maxReferenceSamples; ++i)
+            if(!mIsGermline)
             {
-                ReadContextCounter referenceCounter = refReadCounters.get(i);
-                applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                for(int i = 0; i < maxReferenceSamples; ++i)
+                {
+                    ReadContextCounter referenceCounter = refReadCounters.get(i);
+                    applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                }
             }
 
             if(tumorFilters.isEmpty())
