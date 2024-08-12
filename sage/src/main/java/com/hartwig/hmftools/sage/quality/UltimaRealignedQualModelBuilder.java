@@ -71,7 +71,14 @@ public class UltimaRealignedQualModelBuilder
         MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, mergedHomopolymers.RefHomopolymers, mergedHomopolymers.ReadHomopolymers);
         List<SimpleVariant> qualVariants = getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants);
-        return qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
+        List<UltimaQualModel> realignedQualModels = qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
+
+        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
+        {
+            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
+        }
+
+        return realignedQualModels;
     }
 
     @VisibleForTesting
