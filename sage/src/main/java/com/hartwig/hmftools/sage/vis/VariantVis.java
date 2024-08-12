@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.vis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
@@ -270,6 +271,7 @@ public class VariantVis
                 body(
                         firstVis.renderVariantInfo(
                                 sageVariant.totalQuality(),
+                                Math.round((double)round(firstCounter.mapQualFactor() * 10d) / 10d),
                                 firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filtersStringSet()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, refReadCounters, tumorIds, referenceIds),
@@ -458,7 +460,7 @@ public class VariantVis
         records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mVariant.Position));
     }
 
-    private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge, final Set<String> filters)
+    private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, int maxDistanceFromEdge, final Set<String> filters)
     {
         CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
@@ -489,6 +491,8 @@ public class VariantVis
                 td("TIER = " + mVariantTier.name()),
                 td(horizontalSpacer),
                 td("QUAL = " + totalTumorQuality),
+                td(horizontalSpacer),
+                td("MQF = " + mapQualFactor),
                 td(horizontalSpacer),
                 td(repeatStr),
                 td(horizontalSpacer),
