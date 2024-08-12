@@ -1126,33 +1126,15 @@ public class JunctionTracker
                 return true;
         }
 
-        // boolean hasPassingMapQualRead = false;
         boolean hasPassingAlignedRead = false;
 
         for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
         {
             hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
-
-            // hasPassingMapQualRead |= read.mapQuality() >= mFilterConfig.MinMapQuality;
         }
 
         if(!hasPassingAlignedRead)
             return false;
-
-        /*
-        if(hasPassingMapQualRead && junctionFrags >= mFilterConfig.MinJunctionSupport)
-            return true;
-
-        // look in the exact matches for additional support
-        if(!hasPassingMapQualRead)
-        {
-            hasPassingMapQualRead = junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT).stream()
-                    .anyMatch(x -> x.mapQuality() > mFilterConfig.MinMapQuality);
-        }
-
-        if(!hasPassingMapQualRead)
-            return false;
-        */
 
         if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
             return true;

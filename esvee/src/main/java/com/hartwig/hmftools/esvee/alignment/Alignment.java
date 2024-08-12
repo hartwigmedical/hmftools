@@ -263,6 +263,8 @@ public class Alignment
                 convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
 
                 convertedAlignments.add(convertedAlignment);
+
+                alignData.markDroppedOnRequery();
             }
 
             return convertedAlignments;

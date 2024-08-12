@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
-import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -30,13 +29,11 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_
 
 import static htsjdk.samtools.CigarOperator.M;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
@@ -53,38 +50,39 @@ public class ReadFilters
 
     private static final int MIN_CHECK_SC_BASES = min(LINE_POLY_AT_REQ, POLY_G_LENGTH);
 
-    public int checkFilters(final SAMRecord record)
+    public boolean ignoreRead(final SAMRecord record)
+    {
+        // ignore local, non-chimeric fully-aligned reads
+        return record.getCigar().getCigarElements().size() == 1 && !isChimericRead(record, mConfig);
+    }
+
+    public void checkFilters(final SAMRecord record, final ReadState readState)
     {
         // check each filter type that would prevent a read being used to establish a junction
         // NOTE: must check all filters (ie no early) exits since the state of some are subsequently used (eg map-qual & poly-G)
-        int filters = 0;
-
-        final Cigar cigar = record.getCigar();
-        int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int alignedBases = readState.AlignedBaseLength;
 
         if(alignedBases < mConfig.MinAlignmentBases)
-            filters = ReadFilterType.set(filters, ReadFilterType.MIN_ALIGN_MATCH);
+            readState.addFilter(ReadFilterType.MIN_ALIGN_MATCH);
 
         if(record.getMappingQuality() < mConfig.MinMapQuality)
-            filters = ReadFilterType.set(filters, ReadFilterType.MIN_MAP_QUAL);
+            readState.addFilter(ReadFilterType.MIN_MAP_QUAL);
 
         if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
             if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
-                filters = ReadFilterType.set(filters, ReadFilterType.INSERT_MAP_OVERLAP);
+                readState.addFilter(ReadFilterType.INSERT_MAP_OVERLAP);
         }
 
         // check length and quality of soft-clipped bases if not an INDEL
-        int scLeft = leftSoftClipLength(record);
-        int scRight = rightSoftClipLength(record);
+        int scLeft = readState.SoftClipLengthLeft;
+        int scRight = readState.SoftClipLengthRight;
 
         // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        int maxIndelLength = maxIndelLength(record.getCigar().getCigarElements());
-
-        if(maxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-            filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LENGTH);
+        if(readState.MaxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+            readState.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
 
         // base qual in soft clip
         if(scLeft > 0 || scRight > 0)
@@ -96,40 +94,42 @@ public class ReadFilters
             int scLength = useLeftClip ? scLeft : scRight;
 
             int aboveQual = 0;
-            StringBuilder scStr = scLength >= MIN_CHECK_SC_BASES ? new StringBuilder() : null;
+            byte[] scBaseArray = scLength >= MIN_CHECK_SC_BASES ? new byte[scLength] : null;
+
+            int scIndex = 0;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
                 if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
                     ++aboveQual;
 
-                if(scStr != null)
-                    scStr.append((char)record.getReadBases()[i]);
+                if(scBaseArray != null)
+                    scBaseArray[scIndex++] = record.getReadBases()[i];
             }
 
             if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
             {
-                filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_BASE_QUAL);
+                readState.addFilter(ReadFilterType.SOFT_CLIP_BASE_QUAL);
 
                 // additional check to exclude a read from any use
                 int lowQualCount = scLength - aboveQual;
 
                 if(lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT)
-                    filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
+                    readState.addFilter(ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
             }
 
-            String scBases = scStr != null ? scStr.toString() : "";
+            String scBases = scBaseArray != null ? new String(scBaseArray) : "";
 
             // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
             if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
             {
-                filters = ReadFilterType.set(filters, ReadFilterType.POLY_G_SC);
+                readState.addFilter(ReadFilterType.POLY_G_SC);
             }
-            else if(!ReadFilterType.isSet(filters, ReadFilterType.SOFT_CLIP_LENGTH))
+            else if(!readState.hasFilter(ReadFilterType.SOFT_CLIP_LENGTH))
             {
                 if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
                 && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    filters = ReadFilterType.set(filters, ReadFilterType.BREAK_IN_REPEAT);
+                    readState.addFilter(ReadFilterType.BREAK_IN_REPEAT);
                 }
             }
             else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
@@ -140,26 +140,23 @@ public class ReadFilters
                 if(isMobileLineElement(orientation.asByte(), scBases)
                 && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    filters = ReadFilterType.unset(filters, ReadFilterType.SOFT_CLIP_LENGTH);
+                    readState.removefilter(ReadFilterType.SOFT_CLIP_LENGTH);
                 }
             }
         }
-
-        return filters;
     }
 
-    public boolean isCandidateSupportingRead(final SAMRecord record, final int filters)
+    public boolean isCandidateSupportingRead(final PrepRead read)
     {
         // exclude poly-G inserts
-        if(ReadFilterType.isSet(filters, ReadFilterType.POLY_G_SC))
+        if(read.hasFilter(ReadFilterType.POLY_G_SC))
             return false;
 
-        if(isChimericRead(record, mConfig))
+        if(isChimericRead(read.record(), mConfig))
             return true;
 
         // or with any amount of soft or hard clipping or a long INDEL
-        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped()
-                || maxIndelLength(record.getCigar().getCigarElements()) >= MIN_INDEL_SUPPORT_LENGTH;
+        return read.isLeftClipped() || read.isRightClipped() || read.maxIndelLength() >= MIN_INDEL_SUPPORT_LENGTH;
     }
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
@@ -245,7 +242,7 @@ public class ReadFilters
         // at least one junction supporting read with [AS - Len + TrimmedLen] * (AS/SUM(M))^2 > 50
         int readIndex = 0;
 
-        int alignedLength = read.cigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int alignedLength = read.alignedBaseLength();
 
         if(alignedLength < minLength)
             return false;

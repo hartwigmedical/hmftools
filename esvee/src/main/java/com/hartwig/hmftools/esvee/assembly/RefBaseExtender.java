@@ -479,7 +479,7 @@ public class RefBaseExtender
 
         for(int i = readIndexInfo.ReadIndexStart; i <= readIndexInfo.ReadIndexEnd; ++i, ++assemblyIndex)
         {
-            if(assemblyIndex >= assemblyBases.length)
+            if(i < 0 || assemblyIndex >= assemblyBases.length || i >= read.getBases().length)
                 break;
 
             if(assemblyBases[assemblyIndex] == 0)

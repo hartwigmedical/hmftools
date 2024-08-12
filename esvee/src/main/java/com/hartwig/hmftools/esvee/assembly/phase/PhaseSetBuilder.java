@@ -138,6 +138,9 @@ public class PhaseSetBuilder
 
     private void checkLogPerfTime(long startTimeMs, final String stage)
     {
+        if(mPerfLogTime == 0)
+            return;
+
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double seconds = timeTakenMs / 1000.0;
 
