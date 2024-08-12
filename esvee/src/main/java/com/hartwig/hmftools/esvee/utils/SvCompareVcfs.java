@@ -634,7 +634,7 @@ public class SvCompareVcfs
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            String header = String.join(TSV_DELIM, "OrigId", "NewId", "OrigCoords", "NewCoords", "MatchType", "SvType", "DiffType", "OrigValue", "NewValue");
+            String header = String.join(TSV_DELIM, "OrigId", "NewId", "OrigCoords", "NewCoords", "CoordMatchType", "SvType", "DiffType", "OrigValue", "NewValue");
             writer.write(header);
             writer.newLine();
 
