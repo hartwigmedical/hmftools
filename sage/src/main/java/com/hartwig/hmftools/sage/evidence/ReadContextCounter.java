@@ -369,8 +369,6 @@ public class ReadContextCounter
         if(variantCovered)
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
-
-            // TODO: NEXT Do othe stuff like below?
             if(calcBaseQuality < 0)
             {
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
