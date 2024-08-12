@@ -87,7 +87,7 @@ public class QualityCalculator
         }
         else
         {
-            recalibrateBaseQuality = readContextCounter.isSnv() && readContextCounter.artefactContext() == null;
+            recalibrateBaseQuality = readContextCounter.isSnv();
         }
 
         if(recalibrateBaseQuality && readContextCounter.realignedUltimaQualModels() == null)

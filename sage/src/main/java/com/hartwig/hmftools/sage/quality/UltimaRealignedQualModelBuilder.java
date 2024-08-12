@@ -124,7 +124,7 @@ public class UltimaRealignedQualModelBuilder
         homopolymers.add(new Homopolymer(currentBase, currentLength));
         return homopolymers;
     }
-    
+
     private static int cycleCount(final List<Homopolymer> homopolymers, int startIndex)
     {
         if(startIndex < 0 || startIndex >= homopolymers.size())
