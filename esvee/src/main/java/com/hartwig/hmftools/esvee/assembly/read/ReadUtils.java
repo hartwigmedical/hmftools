@@ -129,6 +129,22 @@ public final class ReadUtils
         return qualitySum / (indexEnd - indexStart + 1);
     }
 
+    public static boolean isLineSequence(final byte[] bases, final int indexStart, final int indexEnd)
+    {
+        byte lineBase = bases[indexStart];
+
+        if(lineBase != LINE_BASE_A && lineBase != LINE_BASE_T)
+            return false;
+
+        for(int i = indexStart + 1; i <= indexEnd; ++i)
+        {
+            if(bases[i] != lineBase)
+                return false;
+        }
+
+        return true;
+    }
+
     public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
     {
         if(indexEnd - indexStart + 1 < LINE_POLY_AT_REQ)

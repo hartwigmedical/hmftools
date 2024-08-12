@@ -61,6 +61,7 @@ public final class AssemblyConstants
 
     // LINE elements
     public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
+    public static final int LINE_REF_BASE_TEST_LENGTH = 8;
 
     // output
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact

@@ -399,6 +399,9 @@ public class ExtensionSeqBuilder
 
     private void checkLineSequence()
     {
+        if(mReads.stream().filter(x -> !x.exceedsMaxMismatches()).noneMatch(x -> x.read().hasLineTail()))
+            return;
+
         int indexStart, indexEnd;
 
         if(mIsForward)

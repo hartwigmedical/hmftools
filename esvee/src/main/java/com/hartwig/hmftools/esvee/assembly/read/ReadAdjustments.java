@@ -8,9 +8,11 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LINE_REF_BASE_TEST_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isLineSequence;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
@@ -116,21 +118,30 @@ public final class ReadAdjustments
 
         if(scBaseCount >= LINE_POLY_AT_REQ)
         {
-            int scIndexStart, scIndexEnd;
+            int scIndexStart, scIndexEnd, refIndexStart, refIndexEnd;
             int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
 
             if(fromStart)
             {
                 scIndexEnd = scBaseCount - 1;
                 scIndexStart = scIndexEnd - lineTestLength + 1;
+                refIndexStart = scIndexEnd + 1;
+                refIndexEnd = refIndexStart + LINE_REF_BASE_TEST_LENGTH - 1;
             }
             else
             {
                 scIndexStart = read.basesLength() - scBaseCount;
                 scIndexEnd = scIndexStart + lineTestLength - 1;
+                refIndexEnd = scIndexStart - 1;
+                refIndexStart = refIndexEnd - LINE_REF_BASE_TEST_LENGTH + 1;
             }
 
-            Byte lineBase = findLineSequenceBase(read.getBases(), scIndexStart, scIndexEnd);
+            Byte lineBase = null;
+
+            if(!isLineSequence(read.getBases(), refIndexStart, refIndexEnd))
+            {
+                lineBase = findLineSequenceBase(read.getBases(), scIndexStart, scIndexEnd);
+            }
 
             if(lineBase != null)
             {
