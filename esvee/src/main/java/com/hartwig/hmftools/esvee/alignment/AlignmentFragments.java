@@ -171,24 +171,24 @@ public class AlignmentFragments
         addUniqueBreakends(breakends, firstBreakendMatches);
         addUniqueBreakends(breakends, secondBreakendMatches);
 
-        boolean allowDiscordantOnlySupport = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
+        boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
 
         for(Breakend breakend : breakends)
         {
             boolean isSplitSupport = firstBreakendMatches.stream().anyMatch(x -> x.IsSplit)
                     || secondBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
-            if(!isSplitSupport && !allowDiscordantOnlySupport)
+            if(!isSplitSupport && isShortIndel)
                 continue;
 
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-            breakend.addInferredFragmentLength(fragmentLength);
+            breakend.addInferredFragmentLength(fragmentLength, true);
 
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-                otherBreakend.addInferredFragmentLength(fragmentLength);
+                otherBreakend.addInferredFragmentLength(fragmentLength, true);
             }
         }
     }
@@ -244,16 +244,12 @@ public class AlignmentFragments
             boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-
-            if(inferredFragmentLength > 0)
-                breakend.addInferredFragmentLength(inferredFragmentLength);
+            breakend.addInferredFragmentLength(inferredFragmentLength, false);
 
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-
-                if(inferredFragmentLength > 0)
-                    breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength);
+                breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, false);
             }
         }
     }

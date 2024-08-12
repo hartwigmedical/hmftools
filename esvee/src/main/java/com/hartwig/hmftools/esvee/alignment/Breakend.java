@@ -48,6 +48,7 @@ public class Breakend implements Comparable<Breakend>
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
+    private int mIncompleteFragmentCount;
     private final Set<FilterType> mFilters;
 
     public Breakend(
@@ -74,6 +75,7 @@ public class Breakend implements Comparable<Breakend>
         mFilters = Sets.newHashSet();
         mFragmentLengthTotal = 0;
         mFragmentLengthCount = 0;
+        mIncompleteFragmentCount = 0;
     }
 
     public int id() { return mId; }
@@ -116,10 +118,19 @@ public class Breakend implements Comparable<Breakend>
         return mFragmentLengthCount > 0 ? (int)round(mFragmentLengthTotal / (double)mFragmentLengthCount) : 0;
     }
 
-    public void addInferredFragmentLength(final int length)
+    public int incompleteFragmentCount() { return mIncompleteFragmentCount; }
+
+    public void addInferredFragmentLength(final int length, boolean isComplete)
     {
-        ++mFragmentLengthCount;
-        mFragmentLengthTotal += length;
+        if(isComplete && length > 0)
+        {
+            ++mFragmentLengthCount;
+            mFragmentLengthTotal += length;
+        }
+        else
+        {
+            ++mIncompleteFragmentCount;
+        }
     }
 
     public boolean isSingle() { return mOtherBreakend == null; }
