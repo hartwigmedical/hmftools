@@ -148,10 +148,6 @@ public class ReadFilters
 
     public boolean isCandidateSupportingRead(final PrepRead read)
     {
-        // exclude poly-G inserts
-        if(read.hasFilter(ReadFilterType.POLY_G_SC))
-            return false;
-
         if(isChimericRead(read.record(), mConfig))
             return true;
 

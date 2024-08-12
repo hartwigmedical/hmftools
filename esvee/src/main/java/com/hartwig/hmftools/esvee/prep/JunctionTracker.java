@@ -254,10 +254,6 @@ public class JunctionTracker
             if(readGroup.allNoSupport()) // ignore groups with only fully-filtered reads
                 continue;
 
-            // ignore any group with a poly-G insert
-            if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), POLY_G_SC)))
-                continue;
-
             // read groups can be assigned to more than one junction
             if(readGroup.hasReadType(ReadType.JUNCTION))
             {
