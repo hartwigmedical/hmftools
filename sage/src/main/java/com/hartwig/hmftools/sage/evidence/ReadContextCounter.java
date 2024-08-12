@@ -370,6 +370,13 @@ public class ReadContextCounter
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
+            // TODO: NEXT Do othe stuff like below?
+            if(calcBaseQuality < 0)
+            {
+                addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+                return UNRELATED;
+            }
+
             qualityScores = mQualityCalculator.calculateQualityScores(
                     this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
@@ -429,6 +436,11 @@ public class ReadContextCounter
             {
                 // recompute qual off this realigned index
                 calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, realignedReadIndex, record);
+                if(calcBaseQuality < 0)
+                {
+                    addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+                    return UNRELATED;
+                }
 
                 qualityScores = mQualityCalculator.calculateQualityScores(
                         this, realignedReadIndex, record, adjustedNumOfEvents, calcBaseQuality);
