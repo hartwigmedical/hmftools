@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.CYCLE_BASES;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -12,6 +15,8 @@ import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -24,6 +29,16 @@ import org.jetbrains.annotations.Nullable;
 // TODO: LATER performance testing.
 public class UltimaRealignedQualModelBuilder
 {
+    private static final HashMap<Byte, Integer> CYCLE_BASE_INDEX;
+    static
+    {
+        CYCLE_BASE_INDEX = Maps.newHashMap();
+        for(int i = 0; i < CYCLE_BASES.length; i++)
+        {
+            CYCLE_BASE_INDEX.put(CYCLE_BASES[i], i);
+        }
+    }
+
     @VisibleForTesting
     public static class Homopolymer
     {
@@ -109,7 +124,7 @@ public class UltimaRealignedQualModelBuilder
         homopolymers.add(new Homopolymer(currentBase, currentLength));
         return homopolymers;
     }
-
+    
     private static int cycleCount(final List<Homopolymer> homopolymers, int startIndex)
     {
         if(startIndex < 0 || startIndex >= homopolymers.size())
@@ -122,7 +137,7 @@ public class UltimaRealignedQualModelBuilder
         for(int i = startIndex + 1; i < homopolymers.size(); i++)
         {
             Homopolymer homopolymer = homopolymers.get(i);
-            if(homopolymer.Base > prev_homopolymer.Base)
+            if(CYCLE_BASE_INDEX.get(homopolymer.Base) < CYCLE_BASE_INDEX.get(prev_homopolymer.Base))
             {
                 count++;
             }
