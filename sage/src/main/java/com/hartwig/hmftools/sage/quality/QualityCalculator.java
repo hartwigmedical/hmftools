@@ -96,7 +96,9 @@ public class QualityCalculator
         }
         else if(recalibrateBaseQuality)
         {
-            baseQuality = min(calcBaseQuality, recalibratedBaseQuality(readContextCounter, readBaseIndex, record, 1));
+            BqrReadType readType = extractReadType(record, mSequencingType);
+            double bqr = readContextCounter.qualCache().getQual(ULTIMA_MAX_QUAL, readType, 0);
+            baseQuality = min(calcBaseQuality, bqr);
         }
         else
         {
