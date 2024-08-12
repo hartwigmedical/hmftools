@@ -8,7 +8,6 @@ import java.util.Map;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 public class ReadContextQualCache
 {
@@ -17,7 +16,7 @@ public class ReadContextQualCache
     private final Map<String,Double>[] mQualMapByIndex;
     private final QualityCalculator mQualityCalculator;
     private final double mMsiIndelErrorQual;
-    private final boolean mMsiVariantInProbableMsiSample;
+    private final boolean mIsMsiSampleAndVariant;
 
     public ReadContextQualCache(final VariantReadContext readContext, final QualityCalculator qualityCalculator, final String sampleId)
     {
@@ -28,7 +27,7 @@ public class ReadContextQualCache
 
         double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
         mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
-        mMsiVariantInProbableMsiSample = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
+        mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
 
         mQualMapByIndex = new HashMap[mVariantAlt.length()];
 
@@ -40,7 +39,7 @@ public class ReadContextQualCache
 
     public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
     public boolean usesMsiIndelErrorQual() { return mMsiIndelErrorQual != INVALID_BASE_QUAL; }
-    public boolean isMsiVariantInProbableMsiSample() { return mMsiVariantInProbableMsiSample; }
+    public boolean isMsiSampleAndVariant() { return mIsMsiSampleAndVariant; }
 
     public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
     {

@@ -365,7 +365,7 @@ public class VariantVis
             }
 
             columnElems.addAll(Lists.newArrayList(
-                    td(String.valueOf((int) counter.averageAltBaseQuality())),
+                    td(String.valueOf((int) counter.averageAltRecalibratedBaseQuality())),
                     td(format("%d", avgAltMapQuality)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),

@@ -12,12 +12,13 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_A
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
@@ -268,9 +269,12 @@ public class VariantFilters
             return true;
 
         int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
-        int minQualForTqp = primaryTumor.qualCache().isMsiVariantInProbableMsiSample() ? 20 : 15;
+
+        int minQualForTqp = primaryTumor.qualCache().isMsiSampleAndVariant() ? MIN_TQP_QUAL_MSI_VARIANT : MIN_TQP_QUAL;
+
         byte qualPerReadFloored = (byte)max(qualPerRead, minQualForTqp);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerReadFloored);
 
@@ -370,7 +374,7 @@ public class VariantFilters
 
         int supportCount = primaryTumor.strongAltSupport();
 
-        double altBaseQualAvg = primaryTumor.averageAltBaseQuality();
+        double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
 
         // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
@@ -394,9 +398,9 @@ public class VariantFilters
             return false;
 
         if(tier == HOTSPOT)
-            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else
-            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQual);
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)

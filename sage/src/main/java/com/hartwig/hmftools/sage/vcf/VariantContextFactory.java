@@ -134,7 +134,7 @@ public final class VariantContextFactory
         int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.altMapQualityTotal() / (double)altSupport) : 0;
         int avgBaseQuality = depth > 0 ? (int)round(qualCounters.baseQualityTotal() / (double)depth) : 0;
-        int avgAltBaseQuality = (int)round(counter.averageAltBaseQuality());
+        int avgAltBaseQuality = (int)round(counter.averageAltRecalibratedBaseQuality());
 
         int avgAltModifiedBaseQuality = strongSupport > 0 ? (int)round(qualCounters.modifiedAltBaseQualityTotal() / (double)strongSupport) : 0;
         int avgAltModifiedMapQuality = strongSupport > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)strongSupport) : 0;

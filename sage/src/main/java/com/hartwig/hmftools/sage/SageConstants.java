@@ -91,6 +91,9 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
+    public static final int MIN_TQP_QUAL = 15;
+    public static final int MIN_TQP_QUAL_MSI_VARIANT = 20;
+
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
     public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
@@ -155,7 +158,6 @@ public class SageConstants
             "low_confidence", 1e-14, 0, 0.025,
             10, 6, 0.04, 0.04);
 
-
     public static double DEFAULT_JITTER_SCALE_GRADIENT = 0.04;
     public static double DEFAULT_JITTER_SCALE_4_HP = 0.05;
     public static double DEFAULT_JITTER_SCALE_5_HP = 0.09;
@@ -169,6 +171,8 @@ public class SageConstants
     public static double DEFAULT_JITTER_SCALE_5_3P = 0.19;
     public static double DEFAULT_JITTER_SCALE_6_3P = 0.23;
     public static double DEFAULT_JITTER_SCALE_INTERCEPT_3P = DEFAULT_JITTER_SCALE_6_3P - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+
+    // high depth equivalents
     public static double DEFAULT_HD_JITTER_SCALE_GRADIENT = 0.06;
     public static double DEFAULT_HD_JITTER_SCALE_4_HP = 0.1;
     public static double DEFAULT_HD_JITTER_SCALE_5_HP = 0.15;

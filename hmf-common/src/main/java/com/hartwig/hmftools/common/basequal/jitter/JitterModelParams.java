@@ -3,12 +3,12 @@ package com.hartwig.hmftools.common.basequal.jitter;
 public class JitterModelParams
 {
     public final String RepeatUnit;
-    public double OptimalScaleRepeat4;
-    public double OptimalScaleRepeat5;
-    public double OptimalScaleRepeat6;
-    public double ScaleFitGradient;
-    public double ScaleFitIntercept;
-    public double MicrosatelliteSkew;
+    public final double OptimalScaleRepeat4;
+    public final double OptimalScaleRepeat5;
+    public final double OptimalScaleRepeat6;
+    public final double ScaleFitGradient;
+    public final double ScaleFitIntercept;
+    public final double MicrosatelliteSkew;
 
     private final int mRepeatUnitLength;
 
