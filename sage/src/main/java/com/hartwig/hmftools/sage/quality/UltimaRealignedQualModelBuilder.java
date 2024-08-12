@@ -456,7 +456,17 @@ public class UltimaRealignedQualModelBuilder
 
             int refHomopolymersLeft = refHomopolymers.size() - refIndex - 1;
             int readHomopolymersLeft = readHomopolymers.size() - readIndex - 1;
-            if(refHomopolymersLeft >= readHomopolymersLeft)
+            if(refHomopolymersLeft == readHomopolymersLeft)
+            {
+                delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
+                insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
+                ++refIndex;
+                ++readIndex;
+                refPos += refHomopolymer.Length;
+                continue;
+            }
+
+            if(refHomopolymersLeft > readHomopolymersLeft)
             {
                 delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
                 ++refIndex;
