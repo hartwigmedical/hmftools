@@ -85,6 +85,16 @@ public class UltimaRealignedQualModelBuilder
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         List<SimpleVariant> realignedVariants = getRealignedVariants(readContext, mergedHomopolymers.RefHomopolymers, mergedHomopolymers.ReadHomopolymers);
+
+        // TODO: Move this into a unit test.
+        for(int i = 1; i < realignedVariants.size(); i++)
+        {
+            if(realignedVariants.get(i).Position < realignedVariants.get(i - 1).Position)
+            {
+                throw new IllegalStateException("Realigned variants are out of order.");
+            }
+        }
+
         List<SimpleVariant> qualVariants = getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants);
         List<UltimaQualModel> realignedQualModels = qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
 
