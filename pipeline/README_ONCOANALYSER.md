@@ -12,7 +12,7 @@
 ## Overview
 
 The recommended way to run **hartwigmedical/hmftools** workflows or components is with
-[oncoanalyser](README_ONCOANALYSER.md), a Nextflow implementation of the HMF pipeline.
+[oncoanalyser](https://github.com/nf-core/oncoanalyser), a Nextflow implementation of the HMF pipeline.
 
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
 set of inputs. This is achieved through flexible predefined configuration for individual tools, prebuilt Docker images
