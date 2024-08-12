@@ -715,6 +715,7 @@ public class UltimaRealignedQualModelBuilder
                         }
 
                         Homopolymer currentInsert = insertHomopolymers.get(insertIndex);
+                        // TODO: Explain this to thomas?
                         if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == (char) currentInsert.Base)
                         {
                             seqVariants.add(currentVariant);
