@@ -81,6 +81,17 @@ public class UltimaRealignedQualModelBuilder
 
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
+        // TODO: No variants debug case.
+//        boolean debugVariant = readContext.variant().chromosome().equals("chr1");
+//        debugVariant = debugVariant && readContext.variant().Position == 10101838;
+//        debugVariant = debugVariant && readContext.variant().Ref.equals("A");
+//        debugVariant = debugVariant && readContext.variant().Alt.equals("AT");
+//
+//        if(!debugVariant)
+//        {
+//            return Lists.newArrayList();
+//        }
+
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
@@ -98,10 +109,11 @@ public class UltimaRealignedQualModelBuilder
         List<SimpleVariant> qualVariants = getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants);
         List<UltimaQualModel> realignedQualModels = qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
 
-        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
-        {
-            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
-        }
+        // TODO: Go back to this.
+//        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
+//        {
+//            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
+//        }
 
         return realignedQualModels;
     }
@@ -370,48 +382,59 @@ public class UltimaRealignedQualModelBuilder
     }
 
     private static void createRealignedVariants(final List<SimpleVariant> realignedVariants, final VariantReadContext readContext,
-            final StringBuilder delBases, final StringBuilder insBases, final int lastMatchedRefPos, final byte lastMatchedBase)
+            final List<Homopolymer> delHomopolymers, final List<Homopolymer> insHomopolymers, final int lastMatchedRefPos, final byte lastMatchedBase)
     {
         SimpleVariant variant = readContext.variant();
-        if(delBases.length() > 0)
+        if(lastMatchedRefPos == -1)
         {
-            if(lastMatchedRefPos == -1)
-            {
-                int variantPos = readContext.CorePositionStart - 1;
-                String ref = String.valueOf((char) readContext.RefBaseBeforeCore) + delBases.toString();
-                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-            }
-            else
-            {
-                String ref = String.valueOf((char) lastMatchedBase) + delBases.toString();
-                String alt = String.valueOf((char) lastMatchedBase);
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
-            }
+            // TODO: How do we reach back?
+            //                int variantPos = readContext.CorePositionStart - 1;
+            //                String ref = String.valueOf((char) readContext.RefBaseBeforeCore) + delBases.toString();
+            //                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
+            //                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
+            return;
         }
 
-        if(insBases.length() > 0)
+        for(int i = 0; i < delHomopolymers.size(); i++)
         {
-            if(lastMatchedRefPos == -1)
-            {
-                int variantPos = readContext.CorePositionStart - 1;
-                String ref = String.valueOf((char) readContext.RefBaseBeforeCore);
-                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]) + insBases.toString();
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-            }
-            else
-            {
-                String ref = String.valueOf((char) lastMatchedBase);
-                String alt = String.valueOf((char) lastMatchedBase) + insBases.toString();
-                realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
-            }
+            Homopolymer delHomopolymer = delHomopolymers.get(i);
+            String delBasesString = String.valueOf((char) delHomopolymer.Base).repeat(delHomopolymer.Length);
+            String ref = String.valueOf((char) lastMatchedBase) + delBasesString;
+            String alt = String.valueOf((char) lastMatchedBase);
+            realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
         }
+
+        for(int i = 0; i < insHomopolymers.size(); i++)
+        {
+            Homopolymer insHomopolymer = insHomopolymers.get(i);
+            String insBasesString = String.valueOf((char) insHomopolymer.Base).repeat(insHomopolymer.Length);
+            String ref = String.valueOf((char) lastMatchedBase);
+            String alt = String.valueOf((char) lastMatchedBase) + insBasesString;
+            realignedVariants.add(new SimpleVariant(variant.Chromosome, lastMatchedRefPos, ref, alt));
+        }
+    }
+
+    private static void extendHomopolymers(final List<Homopolymer> homopolymers, byte base, int length)
+    {
+        if(homopolymers.isEmpty())
+        {
+            homopolymers.add(new Homopolymer(base, length));
+            return;
+        }
+
+        Homopolymer lastHomopolymer = homopolymers.get(homopolymers.size() - 1);
+        if(lastHomopolymer.Base == base)
+        {
+            homopolymers.set(homopolymers.size() - 1, new Homopolymer(base, lastHomopolymer.Length + length));
+            return;
+        }
+
+        homopolymers.add(new Homopolymer(base, length));
     }
 
     private static List<SimpleVariant> getRealignedVariants(final VariantReadContext readContext, final List<Homopolymer> refHomopolymers,
             final List<Homopolymer> readHomopolymers)
     {
-        SimpleVariant variant = readContext.variant();
         List<SimpleVariant> realignedVariants = Lists.newArrayList();
 
         byte lastMatchedBase = 0;
@@ -419,8 +442,8 @@ public class UltimaRealignedQualModelBuilder
         int refIndex = 0;
         int readIndex = 0;
         int refPos = readContext.CorePositionStart;
-        StringBuilder delBases = new StringBuilder();
-        StringBuilder insBases = new StringBuilder();
+        List<Homopolymer> delHomopolymers = Lists.newArrayList();
+        List<Homopolymer> insHomopolymers = Lists.newArrayList();
         while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
@@ -428,37 +451,37 @@ public class UltimaRealignedQualModelBuilder
 
             if(refHomopolymer.Base == readHomopolymer.Base && refHomopolymer.Length == readHomopolymer.Length)
             {
-                createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
+                createRealignedVariants(realignedVariants, readContext, delHomopolymers, insHomopolymers, lastMatchedRefPos, lastMatchedBase);
 
                 lastMatchedBase = refHomopolymer.Base;
                 ++refIndex;
                 ++readIndex;
                 refPos += refHomopolymer.Length;
                 lastMatchedRefPos = refPos - 1;
-                delBases = new StringBuilder();
-                insBases = new StringBuilder();
+                delHomopolymers.clear();
+                insHomopolymers.clear();
                 continue;
             }
 
             if(refHomopolymer.Base == readHomopolymer.Base)
             {
-                createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
+                createRealignedVariants(realignedVariants, readContext, delHomopolymers, insHomopolymers, lastMatchedRefPos, lastMatchedBase);
 
                 lastMatchedBase = refHomopolymer.Base;
                 ++refIndex;
                 ++readIndex;
                 lastMatchedRefPos = refPos + min(refHomopolymer.Length, readHomopolymer.Length) - 1;
                 refPos += refHomopolymer.Length;
-                delBases = new StringBuilder();
-                insBases = new StringBuilder();
+                delHomopolymers.clear();
+                insHomopolymers.clear();
 
                 if(refHomopolymer.Length < readHomopolymer.Length)
                 {
-                    insBases.append(String.valueOf((char) refHomopolymer.Base).repeat(readHomopolymer.Length - refHomopolymer.Length));
+                    insHomopolymers.add(new Homopolymer(refHomopolymer.Base, readHomopolymer.Length - refHomopolymer.Length));
                 }
                 else
                 {
-                    delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length - readHomopolymer.Length));
+                    delHomopolymers.add(new Homopolymer(refHomopolymer.Base, refHomopolymer.Length - readHomopolymer.Length));
                 }
 
                 continue;
@@ -468,8 +491,8 @@ public class UltimaRealignedQualModelBuilder
             int readHomopolymersLeft = readHomopolymers.size() - readIndex - 1;
             if(refHomopolymersLeft == readHomopolymersLeft)
             {
-                delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
-                insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
+                extendHomopolymers(delHomopolymers, refHomopolymer.Base, refHomopolymer.Length);
+                extendHomopolymers(insHomopolymers, readHomopolymer.Base, readHomopolymer.Length);
                 ++refIndex;
                 ++readIndex;
                 refPos += refHomopolymer.Length;
@@ -478,31 +501,31 @@ public class UltimaRealignedQualModelBuilder
 
             if(refHomopolymersLeft > readHomopolymersLeft)
             {
-                delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
+                extendHomopolymers(delHomopolymers, refHomopolymer.Base, refHomopolymer.Length);
                 ++refIndex;
                 refPos += refHomopolymer.Length;
                 continue;
             }
 
-            insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
+            extendHomopolymers(insHomopolymers, readHomopolymer.Base, readHomopolymer.Length);
             ++readIndex;
         }
 
         while(refIndex < refHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
-            delBases.append(String.valueOf((char) refHomopolymer.Base).repeat(refHomopolymer.Length));
+            extendHomopolymers(delHomopolymers, refHomopolymer.Base, refHomopolymer.Length);
             ++refIndex;
         }
 
         while(readIndex < readHomopolymers.size())
         {
             Homopolymer readHomopolymer = readHomopolymers.get(readIndex);
-            insBases.append(String.valueOf((char) readHomopolymer.Base).repeat(readHomopolymer.Length));
+            extendHomopolymers(insHomopolymers, readHomopolymer.Base, readHomopolymer.Length);
             ++readIndex;
         }
 
-        createRealignedVariants(realignedVariants, readContext, delBases, insBases, lastMatchedRefPos, lastMatchedBase);
+        createRealignedVariants(realignedVariants, readContext, delHomopolymers, insHomopolymers, lastMatchedRefPos, lastMatchedBase);
 
         return realignedVariants;
     }
