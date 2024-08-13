@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -280,6 +281,33 @@ public class JunctionsTest
 
         assertEquals(241, mJunctionTracker.junctions().get(2).Position);
         assertEquals(242, mJunctionTracker.junctions().get(3).Position);
+    }
+
+    @Test
+    public void testShortTemplatedInsertions()
+    {
+        PrepRead read1 = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES_400.substring(0, 130), "32S66M32S"));
+
+        PrepRead read2 = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES_400.substring(0, 130), "32S66M32S"));
+
+        addRead(read1, JUNCTION);
+        addRead(read2, JUNCTION);
+
+        mJunctionTracker.assignFragments();
+
+        assertEquals(2, mJunctionTracker.junctions().size());
+
+        JunctionData junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 200).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(REVERSE, junctionData.Orient);
+        assertEquals(2, junctionData.junctionFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 265).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(FORWARD, junctionData.Orient);
+        assertEquals(2, junctionData.junctionFragmentCount());
     }
 
     @Test

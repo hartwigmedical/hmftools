@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_L
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -413,30 +413,38 @@ public class JunctionTracker
             if(indelCoords != null)
                 handleIndelJunction(readGroup, read, indelCoords);
 
-            ClippedSide scSide = ClippedSide.fromCigar(read.cigar(), false);
-
-            if(scSide == null || ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH) || scSide.Length < MIN_LINE_SOFT_CLIP_LENGTH)
+            if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH))
                 continue;
 
-            Orientation orientation = scSide.isLeft() ? REVERSE : FORWARD;
-            int position = scSide.isLeft() ? read.start() : read.end();
-
-            // junctions cannot fall in blacklist regions
-            if(positionInBlacklist(position))
-                continue;
-
-            if(!mRegion.containsPosition(position))
+            for(int i = 0; i <= 1; ++i)
             {
-                if(mConfig.TrackRemotes)
-                    RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
-            }
-            else
-            {
-                JunctionData junctionData = getOrCreateJunction(read, orientation);
-                junctionData.addReadType(read, ReadType.JUNCTION);
+                int scLength = (i == 0) ? read.leftClipLength() : read.rightClipLength();
 
-                if(!junctions.contains(junctionData))
-                    junctions.add(junctionData);
+                // check with the shorter LINE soft-clip length since the soft-clip filter has already been checked, which takes LINE into account
+                if(scLength < MIN_LINE_SOFT_CLIP_LENGTH)
+                    continue;
+
+                Orientation orientation = (i == 0) ? REVERSE : FORWARD;
+
+                int position = orientation.isReverse() ? read.start() : read.end();
+
+                // junctions cannot fall in blacklist regions
+                if(positionInBlacklist(position))
+                    continue;
+
+                if(!mRegion.containsPosition(position))
+                {
+                    if(mConfig.TrackRemotes)
+                        RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
+                }
+                else
+                {
+                    JunctionData junctionData = getOrCreateJunction(read, orientation);
+                    junctionData.addReadType(read, ReadType.JUNCTION);
+
+                    if(!junctions.contains(junctionData))
+                        junctions.add(junctionData);
+                }
             }
         }
 

@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
-import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;

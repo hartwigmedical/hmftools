@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep.types;
+package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -35,6 +35,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
+import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -118,8 +121,11 @@ public class ReadFilters
         int scRight = read.rightClipLength();
 
         // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        if(read.maxIndelLength() < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-            read.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
+        if(read.maxIndelLength() < mConfig.MinIndelLength)
+        {
+            if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+                read.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
+        }
 
         // base qual in soft clip
         if(scLeft > 0 || scRight > 0)
