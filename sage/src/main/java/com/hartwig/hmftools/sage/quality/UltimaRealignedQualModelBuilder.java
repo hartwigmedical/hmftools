@@ -22,12 +22,9 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.Nullable;
 
-// TODO: LATER Move to a better location.
 // TODO: clean up unneeded functions.
 // TODO: run "Reformat code"
-// TODO: LATER comprehensive unit tests.
-// TODO: Test on actual sample.
-// TODO: LATER performance testing.
+// TODO: comprehensive unit tests.
 public class UltimaRealignedQualModelBuilder
 {
     private static final HashMap<Byte, Integer> CYCLE_BASE_INDEX;
@@ -82,7 +79,7 @@ public class UltimaRealignedQualModelBuilder
 
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
-        // TODO: No variants debug case.
+        // TODO: Ignore this Thomas. No variants debug case.
 //        boolean debugVariant = readContext.variant().chromosome().equals("chr1");
 //        debugVariant = debugVariant && readContext.variant().Position == 10101838;
 //        debugVariant = debugVariant && readContext.variant().Ref.equals("A");
@@ -225,9 +222,7 @@ public class UltimaRealignedQualModelBuilder
                 int netLength = readHomopolymer.Length - refHomopolymer.Length;
                 if(netLength >= 2)
                 {
-                    // TODO: simplify this
                     // look forward in ref
-                    // TODO: Test case around this.
                     boolean contracted = false;
                     if(refIndex < refHomopolymers.size() - 1)
                     {
@@ -286,9 +281,7 @@ public class UltimaRealignedQualModelBuilder
                 }
                 else if(netLength <= -2)
                 {
-                    // TODO: simplify this
                     // look forward in ref
-                    // TODO: Test case around this.
                     boolean contracted = false;
                     if(readIndex < readHomopolymers.size() - 1)
                     {
@@ -531,15 +524,13 @@ public class UltimaRealignedQualModelBuilder
         return realignedVariants;
     }
 
+    // TODO: Simplify and remove repetition.
     private static List<SimpleVariant> getQualVariants(boolean variantInMergedHomopolymers, final VariantReadContext readContext, final List<SimpleVariant> realignedVariants)
     {
         SimpleVariant variant = readContext.variant();
-
-        // TODO: remove this repetition.
         if(variantInMergedHomopolymers)
         {
             // sandwiched snv/mnv case
-            // TODO: LATER lots of repetition in terms of left/right indels.
             List<SimpleVariant> leftInserts = Lists.newArrayList();
             List<SimpleVariant> leftDels = Lists.newArrayList();
             int leftIndelBalance = 0;
@@ -602,7 +593,6 @@ public class UltimaRealignedQualModelBuilder
             return qualVariants;
         }
 
-        // TODO: remove this repetition.
         if(variant.isIndel())
         {
             int indelLength = variant.indelLength();
@@ -688,7 +678,6 @@ public class UltimaRealignedQualModelBuilder
         List<Homopolymer> delHomopolymers = getHomopolymers(variant.Ref.getBytes(), 0, variant.Ref.length() - 1);
         List<Homopolymer> insertHomopolymers = getHomopolymers(variant.Alt.getBytes(), 0, variant.Alt.length() - 1);
 
-        // TODO: LATER lots of repetition in terms of left/right indels.
         List<SimpleVariant> seqVariants = null;
         List<SimpleVariant> leftInserts = Lists.newArrayList();
         List<SimpleVariant> leftDels = Lists.newArrayList();
@@ -716,7 +705,6 @@ public class UltimaRealignedQualModelBuilder
                         }
 
                         Homopolymer currentInsert = insertHomopolymers.get(insertIndex);
-                        // TODO: Explain this to thomas?
                         if(currentVariant.indelLengthAbs() == currentInsert.Length && currentVariant.Alt.charAt(1) == (char) currentInsert.Base)
                         {
                             seqVariants.add(currentVariant);

@@ -147,13 +147,11 @@ public class VariantReadContextBuilder
 
         final byte[] readBases = read.getReadBases();
 
-        // TODO: NOTE: Now expand to find repeat boundaries.
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
         readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
         readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
 
-        // TODO: NOTE: Add flanks.
         int readFlankStart = readCoreStart - mFlankSize;
         int readFlankEnd = readCoreEnd + mFlankSize;
 
@@ -171,7 +169,6 @@ public class VariantReadContextBuilder
 
         // TODO: Better place for this?
         // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
-        // TODO: NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
             UltimaCoreInfo ultimaCoreInfo = UltimaCoreExtender.extendCore(read, refSequence,
@@ -187,7 +184,6 @@ public class VariantReadContextBuilder
             readCigarInfo = ultimaCoreInfo.CigarInfo;
         }
 
-        // TODO: Why might have this changed?
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
@@ -198,7 +194,6 @@ public class VariantReadContextBuilder
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
 
-        // TODO: This is alignment start.
         int alignmentStart = max(readPositionStart, readCigarInfo.FlankPositionStart);
         int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.FlankPositionEnd);
 
