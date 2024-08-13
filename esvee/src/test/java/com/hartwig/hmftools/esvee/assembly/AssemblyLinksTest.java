@@ -749,13 +749,13 @@ public class AssemblyLinksTest
         assertEquals(5, assembly2.supportCount());
         assertEquals(6, assembly3.supportCount());
         assertEquals(5, assembly4.supportCount());
-        assertEquals(4, assembly5.supportCount());
+        assertEquals(3, assembly5.supportCount());
         assertEquals(3, assembly6.supportCount());
         assertEquals(1, getSupportTypeCount(assembly1, DISCORDANT));
         assertEquals(1, getSupportTypeCount(assembly2, DISCORDANT));
         assertEquals(1, getSupportTypeCount(assembly3, DISCORDANT));
         assertEquals(2, getSupportTypeCount(assembly4, DISCORDANT));
-        assertEquals(1, getSupportTypeCount(assembly5, DISCORDANT));
+        assertEquals(0, getSupportTypeCount(assembly5, DISCORDANT));
         assertEquals(2, getSupportTypeCount(assembly6, DISCORDANT));
 
         // check final sequence and read full sequence indices

@@ -235,7 +235,7 @@ public class Read
     public boolean isMateMapped()
     {
         if(mMateRead != null)
-            return mMateRead.isUnmapped();
+            return !mMateRead.isUnmapped();
 
         return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag();
     }

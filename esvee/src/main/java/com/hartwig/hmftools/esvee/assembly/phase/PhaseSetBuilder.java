@@ -78,6 +78,7 @@ public class PhaseSetBuilder
 
     // performance tracking
     private double mPerfLogTime;
+    private long mStartTimeMs;
 
     public PhaseSetBuilder(
             final RefGenomeInterface refGenome, final RemoteRegionAssembler remoteRegionAssembler, final PhaseGroup phaseGroup)
@@ -98,13 +99,14 @@ public class PhaseSetBuilder
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
         mPerfLogTime = 0;
+        mStartTimeMs = 0;
     }
 
     public void setPerfLogTime(double perfLogTime) { mPerfLogTime = perfLogTime; }
 
     public void buildPhaseSets()
     {
-        long startTimeMs = System.currentTimeMillis();
+        mStartTimeMs = System.currentTimeMillis();
 
         if(mAssemblies.size() > 100)
         {
@@ -113,13 +115,11 @@ public class PhaseSetBuilder
 
         findLocalLinks();
 
-        checkLogPerfTime(startTimeMs, "findLocalLinks");
-        startTimeMs = System.currentTimeMillis();
+        checkLogPerfTime("findLocalLinks");
 
         findOtherLinksAndExtensions();
 
-        checkLogPerfTime(startTimeMs, "findOtherLinksAndExtensions");
-        startTimeMs = System.currentTimeMillis();
+        checkLogPerfTime("findOtherLinksAndExtensions");
 
         addUnlinkedAssemblyRefSupport();
 
@@ -131,29 +131,7 @@ public class PhaseSetBuilder
 
         cleanupAssemblies();
 
-        checkLogPerfTime(startTimeMs, "phaseSets");
-    }
-
-    private void checkLogPerfTime(long startTimeMs, final String stage)
-    {
-        if(mPerfLogTime == 0)
-            return;
-
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double seconds = timeTakenMs / 1000.0;
-
-        if(seconds >= mPerfLogTime)
-        {
-            StringJoiner sj = new StringJoiner(";");
-            for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
-            {
-                sj.add(mAssemblies.get(i).junction().coords());
-            }
-
-            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d isLine=%s remoteRefReads=%d)",
-                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(), mHasLineExtensions,
-                    mRemoteRegionAssembler != null ? mRemoteRegionAssembler.totalRemoteReadsSearch() : 0));
-        }
+        checkLogPerfTime("phaseSets");
     }
 
     private void findLocalLinks()
@@ -672,10 +650,8 @@ public class PhaseSetBuilder
             refCandidates2.forEach(x -> matchedCandidates2.remove(x));
         }
 
-        /*
-        if(matchedCandidates1.isEmpty() || matchedCandidates2.isEmpty())
+        if(matchedCandidates1.isEmpty() && matchedCandidates2.isEmpty())
             return false;
-        */
 
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
@@ -1062,5 +1038,29 @@ public class PhaseSetBuilder
                 mPhaseGroup.derivedAssemblies().remove(branchedAssembly);
             }
         }
+    }
+
+    private void checkLogPerfTime(final String stage)
+    {
+        if(mPerfLogTime == 0)
+            return;
+
+        long timeTakenMs = System.currentTimeMillis() - mStartTimeMs;
+        double seconds = timeTakenMs / 1000.0;
+
+        if(seconds >= mPerfLogTime)
+        {
+            StringJoiner sj = new StringJoiner(";");
+            for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
+            {
+                sj.add(mAssemblies.get(i).junction().coords());
+            }
+
+            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d isLine=%s remoteRefReads=%d)",
+                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(), mHasLineExtensions,
+                    mRemoteRegionAssembler != null ? mRemoteRegionAssembler.totalRemoteReadsSearch() : 0));
+        }
+
+        mStartTimeMs = System.currentTimeMillis();
     }
 }
