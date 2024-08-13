@@ -156,7 +156,7 @@ public class RemoteReadHandler
     // Write all the unmapped reads into the hash bams
     public void cacheAllUnmappedReads(int numTasks, int taskId)
     {
-        BT_LOGGER.info("start writing unmapped reads to {} hash bams (task {} of {})",
+        BT_LOGGER.debug("start writing unmapped reads to {} hash bams (task {} of {})",
                 mHashBamWriter.numHashBams(), taskId, numTasks);
 
         try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
