@@ -36,8 +36,6 @@ public class VariantReadContext
     public final int CorePositionEnd;
 
     public final byte[] RefBases; // captured for the core
-    // TODO: Do I need this, am I using this correctly?
-    public final byte RefBaseBeforeCore;
 
     private final SimpleVariant mVariant;
 
@@ -50,7 +48,7 @@ public class VariantReadContext
     private byte[] mExtendedRefBases;
 
     public VariantReadContext(
-            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases, byte refBaseBeforeCore,
+            final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
             final byte[] readBases, final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
             final Microhomology homology, final RepeatInfo maxRepeat, final List<RepeatInfo> allRepeats,
             final int corePositionStart, final int corePositionEnd)
@@ -59,7 +57,6 @@ public class VariantReadContext
         AlignmentStart = alignmentStart;
         AlignmentEnd = alignmentEnd;
         RefBases = refBases;
-        RefBaseBeforeCore = refBaseBeforeCore;
         ReadBases = readBases;
         CoreIndexStart = coreIndexStart;
         VarIndex = varIndex;
@@ -120,15 +117,6 @@ public class VariantReadContext
 
     public String readBases() { return new String(ReadBases); }
     public String refBases() { return new String(RefBases); }
-    public byte refBase(int indexInCore)
-    {
-        if(indexInCore == -1)
-        {
-            return RefBaseBeforeCore;
-        }
-
-        return RefBases[indexInCore];
-    }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }
     public int maxRepeatCount() { return MaxRepeat != null ? MaxRepeat.Count : 0; }

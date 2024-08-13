@@ -11,18 +11,24 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
+import java.util.OptionalInt;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.UltimaCoreExtender.UltimaCoreInfo;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 
 import htsjdk.samtools.CigarElement;
@@ -89,7 +95,8 @@ public class VariantReadContextBuilder
         }
     }
 
-    private VariantReadContext buildContext(
+    @VisibleForTesting
+    public VariantReadContext buildContext(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final RefSequence refSequence)
     {
         /* Routine:
@@ -167,69 +174,20 @@ public class VariantReadContextBuilder
         // TODO: NOTE: Things have been expanding to include the largest repeat and homology so expanding more should not affect this.
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
-            boolean addLeftPadding = false;
-            boolean addRightPadding = false;
-            while(true)
-            {
-                int refCoreStartIndex = readCigarInfo.CorePositionStart - refSequence.Start;
-                int refCoreEndIndex = readCigarInfo.CorePositionEnd - refSequence.Start;
-                if(readCoreStart <= 0 || readCoreEnd >= readBases.length - 1 || refCoreStartIndex <= 0 || refCoreEndIndex >= refSequence.Bases.length - 1)
-                {
-                    return null;
-                }
+            UltimaCoreInfo ultimaCoreInfo = UltimaCoreExtender.extendCore(read, refSequence,
+                    softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
+                    softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
+                    readCoreStart, readCoreEnd, readCigarInfo, mFlankSize);
 
-                boolean expandLeft = readBases[readCoreStart] == readBases[readCoreStart - 1] || refSequence.Bases[refCoreStartIndex] == refSequence.Bases[refCoreStartIndex - 1];
-                boolean expandRight = readBases[readCoreEnd] == readBases[readCoreEnd + 1] || refSequence.Bases[refCoreEndIndex] == refSequence.Bases[refCoreEndIndex + 1];
-                if(!expandLeft && !expandRight)
-                {
-                    if(!addLeftPadding && !addRightPadding)
-                    {
-                        break;
-                    }
+            if(ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid())
+                return null;
 
-                    if(addLeftPadding)
-                    {
-                        --readCoreStart;
-                        --readFlankStart;
-                        addLeftPadding = false;
-                    }
-
-                    if(addRightPadding)
-                    {
-                        ++readCoreEnd;
-                        ++readFlankEnd;
-                        addRightPadding = false;
-                    }
-                }
-
-                if(expandLeft)
-                {
-                    addLeftPadding = true;
-                    --readCoreStart;
-                    --readFlankStart;
-                }
-
-                if(expandRight)
-                {
-                    addRightPadding = true;
-                    ++readCoreEnd;
-                    ++readFlankEnd;
-                }
-
-                if(readFlankStart < 0 || readFlankEnd >= read.getReadBases().length)
-                    return null;
-
-                // TODO: LATER Do we need to rebuild the whole cigar each time?
-                readCigarInfo = ReadCigarInfo.buildReadCigar(
-                        softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
-                        softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
-                        readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
-
-                if(readCigarInfo == null || !readCigarInfo.isValid())
-                    return null;
-            }
+            readCoreStart = ultimaCoreInfo.ReadCoreStart;
+            readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
+            readCigarInfo = ultimaCoreInfo.CigarInfo;
         }
 
+        // TODO: Why might have this changed?
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
@@ -240,6 +198,7 @@ public class VariantReadContextBuilder
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
 
+        // TODO: This is alignment start.
         int alignmentStart = max(readPositionStart, readCigarInfo.FlankPositionStart);
         int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.FlankPositionEnd);
 
@@ -252,7 +211,6 @@ public class VariantReadContextBuilder
 
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
-        byte refBaseBeforeCore = refSequence.base(corePositionStart - 1);
 
         RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;
@@ -277,7 +235,7 @@ public class VariantReadContextBuilder
         }
 
         return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, refBaseBeforeCore, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
+                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 
