@@ -225,10 +225,10 @@ public final class AssemblyLinker
         for(int[] indexStarts : alternativeIndexStarts)
         {
             // find a comparison range that falls within both sequence's index range around the junction
-            int firstJuncSeqMatchIndex = indexStarts[0];
+            int firstMatchSeqMatchIndex = indexStarts[0];
             int secondMatchIndex = indexStarts[1];
 
-            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
+            int matchOffset = secondMatchIndex - firstMatchSeqMatchIndex;
 
             // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
             if(testedOffsets.contains(matchOffset))
@@ -236,24 +236,28 @@ public final class AssemblyLinker
 
             testedOffsets.add(matchOffset);
 
-            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
+            int secondIndexStart = secondMatchIndex - firstMatchSeqMatchIndex;
             int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
 
-            int firstJuncIndexStart = 0;
-            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
+            int firstMatchIndexStart = 0;
+            int firstMatchIndexEnd = firstJunctionSeqLength - 1;
 
             if(secondIndexStart < 0)
             {
-                firstJuncIndexStart += -(secondIndexStart);
+                firstMatchIndexStart += -(secondIndexStart);
                 secondIndexStart = 0;
             }
 
-            // discount this match if the implied end of the match in the second sequence is past its ref base end
             if(secondIndexEnd >= secondSeq.BaseLength)
-                continue;
+            {
+                // trim the match end if the extension bases exceed the length of the second sequence's ref bases, as can happen for short TIs
+                int endReduction = secondIndexEnd - secondSeq.BaseLength + 1;
+                secondIndexEnd -= endReduction;
+                firstMatchIndexEnd -= endReduction;
+            }
 
-            int firstIndexStart = firstJuncIndexStart + firstSeq.matchSeqStartIndex();
-            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.matchSeqStartIndex(), firstSeq.BaseLength - 1);
+            int firstIndexStart = firstMatchIndexStart + firstSeq.matchSeqStartIndex();
+            int firstIndexEnd = min(firstMatchIndexEnd + firstSeq.matchSeqStartIndex(), firstSeq.BaseLength - 1);
 
             int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
 

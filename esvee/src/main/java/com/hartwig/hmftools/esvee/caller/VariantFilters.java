@@ -46,6 +46,12 @@ public class VariantFilters
 
     public void applyFilters(final Variant var)
     {
+        // keep existing filters eg from assembly
+        applyExistingFilters(var.breakendStart());
+
+        if(!var.isSgl())
+            applyExistingFilters(var.breakendEnd());
+
         if(mFilterConstants.FilterSGLs && var.isSgl())
             var.addFilter(SGL);
 
@@ -69,6 +75,19 @@ public class VariantFilters
 
         if(belowMinFragmentLength(var))
             var.addFilter(SHORT_FRAG_LENGTH);
+    }
+
+    private void applyExistingFilters(final Breakend breakend)
+    {
+        for(String filterStr : breakend.Context.getFilters())
+        {
+            try
+            {
+                FilterType filterType = FilterType.valueOf(filterStr);
+                breakend.sv().addFilter(filterType);
+            }
+            catch(Exception e) {}
+        }
     }
 
     private boolean belowMinSupport(final Variant var)

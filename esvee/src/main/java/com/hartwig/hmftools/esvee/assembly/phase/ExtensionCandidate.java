@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
-public class ExtensionCandidate
+public class ExtensionCandidate implements Comparable<ExtensionCandidate>
 {
     public final ExtensionType Type;
     public final JunctionAssembly Assembly;
@@ -64,6 +66,33 @@ public class ExtensionCandidate
         SecondAssemblyCandidateReads = 0;
     }
 
+    @Override
+    public int compareTo(final ExtensionCandidate other)
+    {
+        int support1 = totalSupport();
+        int support2 = other.totalSupport();
+
+        if(Type == other.Type && Type == ExtensionType.SPLIT_LINK)
+        {
+            int junctionDiff = max(Link.insertedBases().length(), Link.overlapBases().length());
+            int junctionDiffOther = max(other.Link.insertedBases().length(), other.Link.overlapBases().length());
+
+            if(junctionDiff > junctionDiffOther)
+                support2 += junctionDiff - junctionDiffOther;
+            else
+                support1 += junctionDiffOther - junctionDiff;
+        }
+
+        return Integer.compare(-support1, -support2);
+    }
+
+    private static boolean hasSignificantDifference(int value1, int value2, int diffThreshold, double diffThresholdPerc)
+    {
+        double diff = abs(value1 - value2);
+        double diffPerc = diff / (double) max(value1, value2);
+        return diff > diffThreshold && diffPerc > diffThresholdPerc;
+    }
+
     public int totalSupport()
     {
         return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
@@ -75,14 +104,14 @@ public class ExtensionCandidate
     {
         if(Link != null)
         {
-            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) %s",
+            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
                     Type, Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
-                    SecondAssemblyCandidateReads, ExtraInfo);
+                    SecondAssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
         else
         {
-            return format("%s assembly(%s) support(s=%d c=%d) %s",
-                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, ExtraInfo);
+            return format("%s assembly(%s) support(s=%d c=%d) total(%d) %s",
+                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
     }
 }

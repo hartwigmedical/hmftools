@@ -312,7 +312,7 @@ public class PhaseSetBuilder
                 .filter(x -> !mLocallyLinkedAssemblies.contains(x.Assembly) && !mLocallyLinkedAssemblies.contains(x.SecondAssembly))
                 .collect(Collectors.toList());
 
-        Collections.sort(remainingCandidates, Comparator.comparingInt(x -> -x.totalSupport()));
+        Collections.sort(remainingCandidates);
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
 
