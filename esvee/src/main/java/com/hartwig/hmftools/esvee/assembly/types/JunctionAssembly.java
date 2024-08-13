@@ -185,7 +185,12 @@ public class JunctionAssembly
     public void addConcordantCandidate(final Read read) { mConcordantCandidates.add(read); }
     public List<Read> concordantCandidates() { return mConcordantCandidates; }
 
-    public void addUnmappedRead(final Read read) { mUnmappedCandidates.add(read); }
+    public void addUnmappedRead(final Read read)
+    {
+        mUnmappedCandidates.add(read);
+        ++mStats.UnmappedReadCount;
+    }
+
     public List<Read> unmappedReads() { return mUnmappedCandidates; }
 
     public void clearCandidateSupport()

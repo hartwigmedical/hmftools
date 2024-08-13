@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -117,7 +118,9 @@ public class LocalGroupBuilder extends ThreadTask
                 if(posAssembly.phaseGroup() == null || negAssembly.phaseGroup() != posAssembly.phaseGroup())
                 {
                     // check local phasing criteria
-                    if(isLocalAssemblyCandidate(posAssembly, negAssembly, true) || isLocalFacingLinkCandidate(posAssembly, negAssembly))
+                    if(isLocalAssemblyCandidate(posAssembly, negAssembly, true)
+                    || isAssemblyIndelLink(posAssembly, negAssembly)
+                    || isLocalFacingLinkCandidate(posAssembly, negAssembly))
                     {
                         PhaseGroupBuilder.linkToPhaseGroups(
                                 posAssembly.phaseGroup(), posAssembly, negAssembly, mPhaseGroupsSets, null,

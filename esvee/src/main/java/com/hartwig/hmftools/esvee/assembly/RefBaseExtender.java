@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLI
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getRefReadIndices;
 import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.purgeRefSideSoftClips;
@@ -46,28 +45,33 @@ public class RefBaseExtender
 
     public void findAssemblyCandidateExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
     {
-        // first establish potential boundaries for extending the assembly on the non-junction side
-        if(assembly.indel())
-        {
-            // add junction mates only, could consider add reads
-            findIndelExtensions(assembly, unfilteredNonJunctionReads);
-            return;
-        }
-
+        // find all possible discordant reads and junction mate reads, and use them to extend the ref bases
+        // other applicable info such as soft-clips on the ref side and links to remote regions are also captured
         int newRefBasePosition = assembly.refBasePosition();
-
         boolean isForwardJunction = assembly.junction().isForward();
         int junctionPosition = assembly.junction().Position;
 
-        List<Read> discordantReads = unfilteredNonJunctionReads.stream()
-                .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition) || x.isMateUnmapped())
-                .filter(x -> !assembly.hasReadSupport(x.mateRead()))
-                .collect(Collectors.toList());
+        // difference for local cigar-based indels
+        boolean isIndelJunction = assembly.indel();
 
-        List<NonJunctionRead> candidateReads = discordantReads.stream()
-                .map(x -> new NonJunctionRead(x, DISCORDANT)).collect(Collectors.toList());
+        List<NonJunctionRead> candidateReads = Lists.newArrayList();
+        List<Read> discordantReads;
 
-        discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null).forEach(x -> assembly.addUnmappedRead(x.mateRead()));
+        if(isIndelJunction)
+        {
+            discordantReads = Collections.emptyList();
+        }
+        else
+        {
+            discordantReads = unfilteredNonJunctionReads.stream()
+                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition) || x.isMateUnmapped())
+                    .filter(x -> !assembly.hasReadSupport(x.mateRead()))
+                    .collect(Collectors.toList());
+
+            discordantReads.forEach(x -> candidateReads.add(new NonJunctionRead(x, DISCORDANT)));
+
+            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null).forEach(x -> assembly.addUnmappedRead(x.mateRead()));
+        }
 
         List<Read> remoteJunctionMates = Lists.newArrayList();
         List<Read> suppJunctionReads = Lists.newArrayList();
@@ -80,7 +84,7 @@ public class RefBaseExtender
 
             assembly.checkAddRefSideSoftClip(read.cachedRead()); // a junction read can be soft-clipped on both sides
 
-            if(read.isDiscordant())
+            if(!isIndelJunction && read.isDiscordant())
             {
                 remoteJunctionMates.add(read.cachedRead());
                 continue;
@@ -157,7 +161,9 @@ public class RefBaseExtender
                 assembly.checkAddRefSideSoftClip(read);
         }
 
-        findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
+        // consolidate all links to remote regions for later use in phase group building and assembly linking
+        if(!isIndelJunction)
+            findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
         purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);

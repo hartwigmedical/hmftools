@@ -223,6 +223,8 @@ public class AlignmentFragments
         int inferredFragmentLength = -1;
 
         // since these reads are missing a mate, manually calculate their fragment length factoring in the simple SV type if they are local
+        boolean setValidFragmentLength = false;
+
         if(!read.isDiscordant() && breakends.size() <= 2)
         {
             StructuralVariantType svType = readBreakendMatches.get(0).Breakend.svType();
@@ -234,6 +236,9 @@ public class AlignmentFragments
 
                 if(svType == DUP)
                     inferredFragmentLength += svLength;
+
+                if(mAssemblyAlignment.assemblies().size() == 2 && mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel()))
+                    setValidFragmentLength = true;
             }
         }
 
@@ -244,12 +249,12 @@ public class AlignmentFragments
             boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-            breakend.addInferredFragmentLength(inferredFragmentLength, false);
+            breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
 
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-                breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, false);
+                breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
             }
         }
     }

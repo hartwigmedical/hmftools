@@ -74,6 +74,7 @@ public class AssemblyWriter
             sj.add("IsLINE");
 
             sj.add("RefBaseCandidates");
+            sj.add("UnmappedCandidates");
             AssemblyStats.addReadTypeHeader(sj);
             addRemoteRegionHeader(sj);
 
@@ -148,6 +149,7 @@ public class AssemblyWriter
 
             sj.add(String.valueOf(assembly.hasLineSequence()));
             sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
+            sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
             assembly.stats().addReadTypeCounts(sj);
 
             addRemoteRegionInfo(assembly, sj);
