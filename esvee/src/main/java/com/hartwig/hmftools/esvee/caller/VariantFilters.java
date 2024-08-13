@@ -133,11 +133,8 @@ public class VariantFilters
     private boolean belowMinAnchorLength(final Variant var)
     {
         // skip for chained breakends
-        if(var.breakendStart().Context.hasAttribute(ASM_LINKS))
+        if(belowMinAnchorLength(var.breakendStart()))
             return false;
-
-        if(var.breakendStart().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH)
-            return true;
 
         if(var.isSgl())
         {
@@ -154,8 +151,16 @@ public class VariantFilters
         }
         else
         {
-            return var.breakendEnd().anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
+            return belowMinAnchorLength(var.breakendEnd());
         }
+    }
+
+    private boolean belowMinAnchorLength(final Breakend breakend)
+    {
+        if(breakend.Context.hasAttribute(ASM_LINKS))
+            return false;
+
+        return breakend.anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
     }
 
     private static boolean isLineInsertion(final byte[] insertSequence, final Orientation orientation)
