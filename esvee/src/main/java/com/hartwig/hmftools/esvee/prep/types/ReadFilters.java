@@ -4,11 +4,13 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
@@ -52,37 +54,72 @@ public class ReadFilters
 
     public boolean ignoreRead(final SAMRecord record)
     {
-        // ignore local, non-chimeric fully-aligned reads
-        return record.getCigar().getCigarElements().size() == 1 && !isChimericRead(record, mConfig);
+        // ignore local, non-chimeric, locally-aligned reads
+        if(record.getSupplementaryAlignmentFlag() || record.getCigar().getCigarElements().size() > 1)
+            return false;
+
+        if(record.getReadUnmappedFlag() || mateUnmapped(record))
+            return false;
+
+        if(isChimericRead(record, mConfig))
+            return false;
+
+        String mateCigarStr = record.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+        if(mateCigarStr != null && mateCigarStr.equals(format("%dM", record.getReadBases().length)))
+            return true;
+
+        return false;
     }
 
-    public void checkFilters(final SAMRecord record, final ReadState readState)
+    public boolean isCandidateSupportingRead(final PrepRead read)
+    {
+        if(isChimericRead(read.record(), mConfig))
+            return true;
+
+        // or with any amount of soft or hard clipping or a long INDEL
+        return read.isLeftClipped() || read.isRightClipped() || read.maxIndelLength() >= MIN_INDEL_SUPPORT_LENGTH;
+    }
+
+    public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
+    {
+        // only difference from the common discordant fragment method is that reads with unmapped mates are also captured
+        // an unmapped mate
+        if(mateUnmapped(record))
+            return true;
+
+        return isDiscordantFragment(record, config.fragmentLengthMax(), null);
+    }
+
+    public void checkFilters(final PrepRead read)
     {
         // check each filter type that would prevent a read being used to establish a junction
         // NOTE: must check all filters (ie no early) exits since the state of some are subsequently used (eg map-qual & poly-G)
-        int alignedBases = readState.AlignedBaseLength;
+        int alignedBases = read.alignedBaseLength();
+
+        SAMRecord record = read.record();
 
         if(alignedBases < mConfig.MinAlignmentBases)
-            readState.addFilter(ReadFilterType.MIN_ALIGN_MATCH);
+            read.addFilter(ReadFilterType.MIN_ALIGN_MATCH);
 
-        if(record.getMappingQuality() < mConfig.MinMapQuality)
-            readState.addFilter(ReadFilterType.MIN_MAP_QUAL);
+        if(read.record().getMappingQuality() < mConfig.MinMapQuality)
+            read.addFilter(ReadFilterType.MIN_MAP_QUAL);
 
         if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
             if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
-                readState.addFilter(ReadFilterType.INSERT_MAP_OVERLAP);
+                read.addFilter(ReadFilterType.INSERT_MAP_OVERLAP);
         }
 
         // check length and quality of soft-clipped bases if not an INDEL
-        int scLeft = readState.SoftClipLengthLeft;
-        int scRight = readState.SoftClipLengthRight;
+        int scLeft = read.leftClipLength();
+        int scRight = read.rightClipLength();
 
         // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        if(readState.MaxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-            readState.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
+        if(read.maxIndelLength() < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+            read.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
 
         // base qual in soft clip
         if(scLeft > 0 || scRight > 0)
@@ -108,13 +145,13 @@ public class ReadFilters
 
             if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
             {
-                readState.addFilter(ReadFilterType.SOFT_CLIP_BASE_QUAL);
+                read.addFilter(ReadFilterType.SOFT_CLIP_BASE_QUAL);
 
                 // additional check to exclude a read from any use
                 int lowQualCount = scLength - aboveQual;
 
                 if(lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT)
-                    readState.addFilter(ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
+                    read.addFilter(ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
             }
 
             String scBases = scBaseArray != null ? new String(scBaseArray) : "";
@@ -122,14 +159,14 @@ public class ReadFilters
             // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
             if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
             {
-                readState.addFilter(ReadFilterType.POLY_G_SC);
+                read.addFilter(ReadFilterType.POLY_G_SC);
             }
-            else if(!readState.hasFilter(ReadFilterType.SOFT_CLIP_LENGTH))
+            else if(!read.hasFilter(ReadFilterType.SOFT_CLIP_LENGTH))
             {
                 if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
                 && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    readState.addFilter(ReadFilterType.BREAK_IN_REPEAT);
+                    read.addFilter(ReadFilterType.BREAK_IN_REPEAT);
                 }
             }
             else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
@@ -140,29 +177,10 @@ public class ReadFilters
                 if(isMobileLineElement(orientation.asByte(), scBases)
                 && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    readState.removefilter(ReadFilterType.SOFT_CLIP_LENGTH);
+                    read.removefilter(ReadFilterType.SOFT_CLIP_LENGTH);
                 }
             }
         }
-    }
-
-    public boolean isCandidateSupportingRead(final PrepRead read)
-    {
-        if(isChimericRead(read.record(), mConfig))
-            return true;
-
-        // or with any amount of soft or hard clipping or a long INDEL
-        return read.isLeftClipped() || read.isRightClipped() || read.maxIndelLength() >= MIN_INDEL_SUPPORT_LENGTH;
-    }
-
-    public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
-    {
-        // only difference from the common discordant fragment method is that reads with unmapped mates are also captured
-        // an unmapped mate
-        if(mateUnmapped(record))
-            return true;
-
-        return isDiscordantFragment(record, config.fragmentLengthMax(), null);
     }
 
     public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int scLength)

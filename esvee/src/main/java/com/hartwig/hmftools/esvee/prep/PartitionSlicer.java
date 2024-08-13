@@ -21,7 +21,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
-import com.hartwig.hmftools.esvee.prep.types.ReadState;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
@@ -156,22 +155,20 @@ public class PartitionSlicer
 
         record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, mCurrentSampleId);
 
-        ReadState readState = new ReadState(record);
+        PrepRead read = new PrepRead(record);
 
-        mReadFilters.checkFilters(record, readState);
+        mReadFilters.checkFilters(read);
 
         if(mConfig.PerfDebug)
         {
             for(ReadFilterType type : ReadFilterType.values())
             {
-                if(type.isSet(readState.filters()))
+                if(type.isSet(read.filters()))
                     ++mStats.ReadFilterCounts[type.index()];
             }
         }
 
-        PrepRead read = new PrepRead(record, readState);
-
-        if(readState.unfiltered() || readState.filters() == ReadFilterType.MIN_MAP_QUAL.flag())
+        if(read.unfiltered() || read.filters() == ReadFilterType.MIN_MAP_QUAL.flag())
         {
             // allow reads only filtered by low map quality through
             read.setReadType(ReadType.JUNCTION);

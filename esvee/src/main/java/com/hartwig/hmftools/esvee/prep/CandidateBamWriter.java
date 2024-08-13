@@ -22,7 +22,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
-import com.hartwig.hmftools.esvee.prep.types.ReadState;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.SAMFileHeader;

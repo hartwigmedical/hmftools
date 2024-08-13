@@ -56,19 +56,48 @@ public class PrepRead
 
     private boolean mWritten; // a check to avoid a read being written again
 
-    // public static PrepRead from(final SAMRecord record) { return new PrepRead(record); }
-
     public static final String UNMAPPED_CHR = "-1";
 
-    public PrepRead(final SAMRecord record, final ReadState readState)
+    public PrepRead(final SAMRecord record)
     {
         mRecord = record;
 
-        mAlignedBaseLength = readState.AlignedBaseLength;
-        mSoftClipLengthLeft = readState.SoftClipLengthLeft;
-        mSoftClipLengthRight = readState.SoftClipLengthRight;
-        mMaxIndelLength = readState.MaxIndelLength;
-        mFilters = readState.filters();
+        int alignedBaseLength = 0;
+        int softClipLengthLeft = 0;
+        int softClipLengthRight = 0;
+        int maxIndelLength = 0;
+
+        for(int i = 0; i < record.getCigar().getCigarElements().size(); ++i)
+        {
+            CigarElement element = record.getCigar().getCigarElements().get(i);
+
+            switch(element.getOperator())
+            {
+                case M:
+                    alignedBaseLength += element.getLength();
+                    break;
+
+                case S:
+                    if(i == 0)
+                        softClipLengthLeft = element.getLength();
+                    else
+                        softClipLengthRight = element.getLength();
+                    break;
+
+                case D:
+                case I:
+                    maxIndelLength = max(element.getLength(), maxIndelLength);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        mAlignedBaseLength = alignedBaseLength;
+        mSoftClipLengthLeft = softClipLengthLeft;
+        mSoftClipLengthRight = softClipLengthRight;
+        mMaxIndelLength = maxIndelLength;
 
         if(!record.getReadUnmappedFlag())
         {
@@ -104,14 +133,12 @@ public class PrepRead
         mCheckedIndelCoords = false;
         mIndelCoords = null;
 
+        mFilters = 0;
         mReadType = ReadType.NO_SUPPORT;
         mWritten = false;
     }
 
-    public static PrepRead from(final SAMRecord record)
-    {
-        return new PrepRead(record, new ReadState(record));
-    }
+    public static PrepRead from(final SAMRecord record) { return new PrepRead(record); }
 
     public String id() { return mRecord.getReadName(); }
     public final SAMRecord record() { return mRecord; }
@@ -148,8 +175,11 @@ public class PrepRead
     public String readBases() { return mRecord.getReadString(); }
     public byte[] baseQualities() { return mRecord.getBaseQualities(); }
 
-    public int filters() { return mFilters; }
+    public void addFilter(final ReadFilterType filterType) { mFilters |= filterType.flag(); }
     public boolean hasFilter(final ReadFilterType filterType) { return (mFilters & filterType.flag()) != 0; }
+    public void removefilter(final ReadFilterType filterType) { mFilters &= ~filterType.flag(); }
+    public boolean unfiltered() { return mFilters == 0; }
+    public int filters() { return mFilters; }
 
     public void setReadType(ReadType type) { setReadType(type, false); }
 
