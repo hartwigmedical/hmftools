@@ -607,7 +607,8 @@ public class VariantFilters
         if(variant.mixedGermlineImpact() > 0)
             return true;
 
-        if(variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
+        if(!config.IsGermline
+        && variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
         && !variant.hasMatchingLps(passingPhaseSets))
         {
             final ReadContextCounter refCounter = variant.referenceReadCounters().get(0);
