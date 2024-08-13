@@ -7,10 +7,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ORIENT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
@@ -47,6 +46,7 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,6 +89,7 @@ public class SvCompareVcfs
     private final VcfType mOriginalVcfType;
     private final boolean mCompareFilters; // only relevant for the same caller (ie Esvee or Gridss)
     private final boolean mIgnorePonDiff;
+    private final boolean mPassVariantsOnly;
 
     private final List<VcfCompareField> mVcfCheckFields;
     private RefGenomeVersion mRefGenomeVersion;
@@ -105,9 +106,11 @@ public class SvCompareVcfs
     private static final String COMPARE_FILTERS = "compare_filters";
     private static final String FIELD_FILTERS = "FILTERS";
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
+    private static final String PASS_VARIANTS_ONLY = "pass_variants_only";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
+    private static final int DEFAULT_NEAR_MATCH_UPPER_LOWER_BOUNDS = 5;
 
     public SvCompareVcfs(final ConfigBuilder configBuilder)
     {
@@ -127,6 +130,7 @@ public class SvCompareVcfs
         mOriginalVcfType = VcfType.fromVcfPath(mOriginalVcf);
         mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
         mCompareFilters = configBuilder.hasFlag(COMPARE_FILTERS);
+        mPassVariantsOnly = configBuilder.hasFlag(PASS_VARIANTS_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
         addComparisonFields();
@@ -149,9 +153,6 @@ public class SvCompareVcfs
 
             mVcfCheckFields.add(new VcfCompareField(
                     STRAND_BIAS, FieldType.DECIMAL, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
-            mVcfCheckFields.add(new VcfCompareField(
-                    IHOMPOS, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
         }
 
         if(mOriginalVcfType == VcfType.ESVEE)
@@ -165,49 +166,6 @@ public class SvCompareVcfs
             mVcfCheckFields.add(new VcfCompareField(
                     DISC_FRAGS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         }
-
-        if(mOriginalVcfType == VcfType.TRUTH)
-        {
-            // Use assembly id 'comparison' to force all breakends to be outputted, regardless of diff or no diff
-            mVcfCheckFields.add(new VcfCompareField(
-                    ASM_ID, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
-
-            mVcfCheckFields.add(new VcfCompareField(
-                    BE_ORIENT, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
-
-            mVcfCheckFields.add(new VcfCompareField(
-                    CIPOS, FieldType.STRING, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
-
-            mVcfCheckFields.add(new VcfCompareField(
-                    HOMSEQ, FieldType.STRING, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, 0, 0));
-        }
-
-        /*
-        mVcfCheckFields.add(new VcfCompareField(INDEL_COUNT, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
-        mVcfCheckFields.add(new VcfCompareField(READ_PAIRS, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_ASRP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
-                        // check local and remote linked by for assembled links
-                boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                boolean origHasEndAssembled =
-                        !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-                boolean newHasEndAssembled =
-                        !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-
-                    if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
-                    {
-                        writeDiffs(
-                                origSv, newSv, "ASSEMBLY",
-                                format("%s_%s", origHasStartAssembled, origHasEndAssembled),
-                                format("%s_%s", newHasStartAssembled, newHasEndAssembled));
-                        ++diffCount;
-                        continue;
-                    }
-                }
-            }
-        */
     }
 
     public void run()
@@ -253,6 +211,12 @@ public class SvCompareVcfs
 
         for(VariantContext variantContext : reader.iterator())
         {
+            boolean isPassVariant = variantContext.getFilters().size() == 0;
+            if(mPassVariantsOnly & !isPassVariant)
+            {
+                continue;
+            }
+
             String chromosome = variantContext.getContig();
 
             if(mRefGenomeVersion == null)
@@ -304,10 +268,12 @@ public class SvCompareVcfs
                 // original is ahead, so need to skip past new (or multiple)
                 // new is ahead, so need to skip past original
 
-                if(origBreakend.matchesWithinHomology(newBreakend))
+                MatchType matchType = origBreakend.compareCoordinates(newBreakend, DEFAULT_NEAR_MATCH_UPPER_LOWER_BOUNDS);
+
+                if(matchType != MatchType.NO_MATCH)
                 {
                     ++mMatchedCount;
-                    compareBreakends(origBreakend, newBreakend);
+                    compareBreakends(origBreakend, newBreakend, matchType);
 
                     origBreakends.remove(origIndex);
                     newBreakends.remove(newIndex);
@@ -348,6 +314,8 @@ public class SvCompareVcfs
                         newBreakend = newBreakends.get(newIndex);
                     }
                 }
+
+                processedCount++;
             }
 
             // SV_LOGGER.info("loaded {} new SVs", newSvCount);
@@ -378,9 +346,9 @@ public class SvCompareVcfs
                     String breakendInfo = format("QUAL(%.0f)", breakend.Context.getPhredScaledQual());
 
                     if(isOriginal)
-                        writeDiffs(breakend, null, DIFF_NO_NEW, breakendInfo, "");
+                        writeDiffs(breakend, null, MatchType.NO_MATCH, DIFF_NO_NEW, breakendInfo, "");
                     else
-                        writeDiffs(null, breakend, DIFF_NO_ORIG, "", breakendInfo);
+                        writeDiffs(null, breakend, MatchType.NO_MATCH, DIFF_NO_ORIG, "", breakendInfo);
                 }
             }
         }
@@ -436,14 +404,16 @@ public class SvCompareVcfs
                 {
                     VariantBreakend breakend = breakends.get(j);
 
-                    if(breakend.matchesWithinHomology(filteredBreakend))
+                    MatchType matchType = breakend.compareCoordinates(filteredBreakend, DEFAULT_NEAR_MATCH_UPPER_LOWER_BOUNDS);
+
+                    if(matchType != MatchType.NO_MATCH)
                     {
                         String filters = filtersStr(filteredBreakend.Context.getFilters(), true);
 
                         if(checkOriginal)
-                            writeDiffs(breakend, filteredBreakend, FIELD_FILTERS, PASS, filters);
+                            writeDiffs(breakend, filteredBreakend, matchType, FIELD_FILTERS, PASS, filters);
                         else
-                            writeDiffs(filteredBreakend, breakend, FIELD_FILTERS, filters, PASS);
+                            writeDiffs(filteredBreakend, breakend, matchType, FIELD_FILTERS, filters, PASS);
 
                         breakends.remove(j);
                         --unmatchedBreakends;
@@ -464,7 +434,7 @@ public class SvCompareVcfs
         }
     }
 
-    private void compareBreakends(final VariantBreakend origBreakend, final VariantBreakend newBreakend)
+    private void compareBreakends(final VariantBreakend origBreakend, final VariantBreakend newBreakend, final MatchType matchType)
     {
         // compare each field in turn, building up a set of diffs to write to file
         if(mCompareFilters)
@@ -485,28 +455,42 @@ public class SvCompareVcfs
             if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
             {
                 writeDiffs(
-                        origBreakend, newBreakend, FIELD_FILTERS,
+                        origBreakend, newBreakend, matchType, FIELD_FILTERS,
                         filtersStr(origFilterDiffs, true), filtersStr(newFilterDiffs, true));
             }
 
         }
 
-        // compare breakend attributes
-
-        // insert sequence
+        // compare core breakend attributes
         if(!origBreakend.Coords.InsertSequence.equals(newBreakend.Coords.InsertSequence))
         {
-            writeDiffs(origBreakend, newBreakend, "INSSEQ", origBreakend.Coords.InsertSequence, newBreakend.Coords.InsertSequence);
+            writeDiffs(origBreakend, newBreakend, matchType,"INSSEQ", origBreakend.Coords.InsertSequence, newBreakend.Coords.InsertSequence);
+        }
+
+        if(origBreakend.ciposRange() != newBreakend.ciposRange())
+        {
+            writeDiffs(origBreakend, newBreakend, matchType, CIPOS, Arrays.toString(origBreakend.Cipos), Arrays.toString(newBreakend.Cipos));
+        }
+
+        if(origBreakend.ihomposRange() != newBreakend.ihomposRange())
+        {
+            writeDiffs(origBreakend, newBreakend, matchType, IHOMPOS, Arrays.toString(origBreakend.Ihompos), Arrays.toString(newBreakend.Ihompos));
+        }
+
+        if(!origBreakend.Homseq.equals(newBreakend.Homseq))
+        {
+            writeDiffs(origBreakend, newBreakend, matchType, HOMSEQ, origBreakend.Homseq, newBreakend.Homseq);
         }
 
         // check specified VCF tags
         for(VcfCompareField compareField : mVcfCheckFields)
         {
-            checkVcfFieldDiff(origBreakend, newBreakend, compareField);
+            checkVcfFieldDiff(origBreakend, newBreakend, matchType, compareField);
         }
     }
 
-    private void checkVcfFieldDiff(final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField)
+    private void checkVcfFieldDiff(final VariantBreakend origBreakend, final VariantBreakend newBreakend,
+            final MatchType matchType, final VcfCompareField compareField)
     {
         if(compareField.TypeScope == VariantTypeScope.VARIANT && origBreakend.isEnd())
         {
@@ -523,21 +507,21 @@ public class SvCompareVcfs
             if(compareField.Type == FieldType.STRING)
             {
                 checkField(
-                        origBreakend, newBreakend, compareField,
+                        origBreakend, newBreakend, matchType, compareField,
                         origBreakend.Context.getAttributeAsString(origVcfTag, ""),
                         newBreakend.Context.getAttributeAsString(compareField.VcfTag, ""));
             }
             else if(compareField.Type == FieldType.INTEGER)
             {
                 checkField(
-                        origBreakend, newBreakend, compareField,
+                        origBreakend, newBreakend, matchType, compareField,
                         origBreakend.Context.getAttributeAsInt(origVcfTag, 0),
                         newBreakend.Context.getAttributeAsInt(compareField.VcfTag, 0));
             }
             else
             {
                 checkField(
-                        origBreakend, newBreakend, compareField,
+                        origBreakend, newBreakend, matchType, compareField,
                         origBreakend.Context.getAttributeAsDouble(origVcfTag, 0),
                         newBreakend.Context.getAttributeAsDouble(compareField.VcfTag, 0));
             }
@@ -559,14 +543,14 @@ public class SvCompareVcfs
                 if(compareField.Type == FieldType.INTEGER)
                 {
                     checkField(
-                            origBreakend, newBreakend, compareField,
+                            origBreakend, newBreakend, matchType, compareField,
                             getGenotypeAttributeAsInt(origGenotype, origVcfTag, 0),
                             getGenotypeAttributeAsInt(newGenotype, compareField.VcfTag, 0));
                 }
                 else
                 {
                     checkField(
-                            origBreakend, newBreakend, compareField,
+                            origBreakend, newBreakend, matchType, compareField,
                             getGenotypeAttributeAsDouble(origGenotype, origVcfTag, 0),
                             getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0));
                 }
@@ -589,32 +573,32 @@ public class SvCompareVcfs
     }
 
     private void checkField(
-            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
-            final String origValue, final String newValue)
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final MatchType matchType,
+            final VcfCompareField compareField, final String origValue, final String newValue)
     {
         if(!origValue.equals(newValue))
         {
-            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, origValue, newValue);
+            writeDiffs(origBreakend, newBreakend, matchType, compareField.VcfTag, origValue, newValue);
         }
     }
 
     private void checkField(
-            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
-            int origValue, int newValue)
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final MatchType matchType,
+            final VcfCompareField compareField, int origValue, int newValue)
     {
         if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
         {
-            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
+            writeDiffs(origBreakend, newBreakend, matchType, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
         }
     }
 
     private void checkField(
-            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
-            double origValue, double newValue)
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final MatchType matchType,
+            final VcfCompareField compareField, double origValue, double newValue)
     {
         if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
         {
-            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, format("%.2f", origValue), format("%.2f", newValue));
+            writeDiffs(origBreakend, newBreakend, matchType, compareField.VcfTag, format("%.2f", origValue), format("%.2f", newValue));
         }
     }
 
@@ -650,10 +634,8 @@ public class SvCompareVcfs
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            sj.add("OrigId").add("NewId").add("Coords").add("SvType").add("DiffType").add("OrigValue").add("NewValue");
-            writer.write(sj.toString());
+            String header = String.join(TSV_DELIM, "OrigId", "NewId", "OrigCoords", "NewCoords", "CoordMatchType", "SvType", "DiffType", "OrigValue", "NewValue");
+            writer.write(header);
             writer.newLine();
 
             return writer;
@@ -666,7 +648,7 @@ public class SvCompareVcfs
     }
 
     private void writeDiffs(
-            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final String diffType,
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final MatchType matchType, final String diffType,
             final String origValue, final String newValue)
     {
         try
@@ -676,8 +658,10 @@ public class SvCompareVcfs
             sj.add(origBreakend != null ? origBreakend.Context.getID() : "-1");
             sj.add(newBreakend != null ? newBreakend.Context.getID() : "-1");
 
-            String breakendCoords = origBreakend != null ? origBreakend.coordStr() : newBreakend.coordStr();
-            sj.add(breakendCoords);
+            sj.add(origBreakend != null ? origBreakend.coordStr() : "");
+            sj.add(newBreakend != null ? newBreakend.coordStr() : "");
+
+            sj.add(matchType.toString());
 
             StructuralVariantType svType = origBreakend != null ? origBreakend.svType() : newBreakend.svType();
             sj.add(svType.toString());
@@ -694,12 +678,22 @@ public class SvCompareVcfs
         }
     }
 
+    private enum MatchType
+    {
+        EXACT_MATCH,
+        WITHIN_CIPOS,
+        NEAR_MATCH,
+        NO_MATCH;
+    }
+
     private class VariantBreakend
     {
         public final VariantContext Context;
         public final VariantAltInsertCoords Coords;
         public final int Position;
         public final int[] Cipos;
+        public final int[] Ihompos;
+        public final String Homseq;
 
         public VariantBreakend(final VariantContext context)
         {
@@ -711,10 +705,18 @@ public class SvCompareVcfs
 
             List<Integer> ciposList = context.getAttributeAsIntList(CIPOS, 0);
             Cipos = ciposList.size() == 2 ? new int[] { ciposList.get(0), ciposList.get(1) } : new int[] {0, 0};
+
+            List<Integer> iHomPosList = context.getAttributeAsIntList(IHOMPOS, 0);
+            Ihompos = iHomPosList.size() == 2 ? new int[] { iHomPosList.get(0), iHomPosList.get(1) } : new int[] {0, 0};
+
+            Homseq = context.getAttributeAsString(HOMSEQ, "");
         }
 
         public int minPosition() { return Position + Cipos[0];}
         public int maxPosition() { return Position + Cipos[1];}
+
+        public int ciposRange() { return Cipos[1]-Cipos[0];}
+        public int ihomposRange() { return Ihompos[1]-Ihompos[0];}
 
         public boolean isSingle() { return Coords.OtherChromsome.isEmpty(); }
 
@@ -746,6 +748,23 @@ public class SvCompareVcfs
             return positionsOverlap(minPosition(), maxPosition(),  other.minPosition(), other.maxPosition());
         }
 
+        public MatchType compareCoordinates(final VariantBreakend other, int upperLowerBound)
+        {
+            if(other.Coords.Orient != Coords.Orient)
+                return MatchType.NO_MATCH;
+
+            if(other.Position == Position)
+                return MatchType.EXACT_MATCH;
+
+            if(positionsOverlap(minPosition(), maxPosition(),  other.minPosition(), other.maxPosition()))
+                return MatchType.WITHIN_CIPOS;
+
+            if(positionWithin(Position, other.Position-upperLowerBound, other.Position+upperLowerBound))
+                return MatchType.NEAR_MATCH;
+
+            return MatchType.NO_MATCH;
+        }
+
         public boolean isLowerPosition(final VariantBreakend other)
         {
             if(Position == other.Position)
@@ -761,7 +780,7 @@ public class SvCompareVcfs
             }
         }
 
-        public String toString() { return format("%d:%d cipos(%d,%d)", Position, Coords.Orient.asByte(), Cipos[0], Cipos[1]); }
+        public String toString() { return format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]); }
 
         public String coordStr() { return format("%s:%d:%d", Context.getContig(), Position, Coords.Orient.asByte()); }
 
@@ -856,6 +875,7 @@ public class SvCompareVcfs
         configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
         configBuilder.addFlag(COMPARE_FILTERS, "Compare filters within same SV caller");
+        configBuilder.addFlag(PASS_VARIANTS_ONLY, "Only compare PASS variants for each caller");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
