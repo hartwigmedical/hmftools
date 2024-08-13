@@ -189,7 +189,8 @@ public class RefBaseExtender
     }
 
     public static void extendRefBases(
-            final JunctionAssembly assembly, final List<Read> candidateSupport, final RefGenomeInterface refGenome, boolean allowBranching)
+            final JunctionAssembly assembly, final List<Read> candidateSupport, final RefGenomeInterface refGenome, boolean allowBranching,
+            boolean allowSoftClipRestrictions)
     {
         if(candidateSupport.isEmpty())
             return;
@@ -205,7 +206,7 @@ public class RefBaseExtender
 
         // capture RSSC from these new candidate reads
         // NOTE: this is only done once per assembly linking and extension for now to avoid repeated consideration of branching
-        boolean considerRefSideSoftClips = candidateSupport.stream().anyMatch(x -> x.hasJunctionMate());
+        boolean considerRefSideSoftClips = allowSoftClipRestrictions && candidateSupport.stream().anyMatch(x -> x.hasJunctionMate());
 
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
         List<Read> nonJunctionSupport = Lists.newArrayListWithExpectedSize(candidateSupport.size());

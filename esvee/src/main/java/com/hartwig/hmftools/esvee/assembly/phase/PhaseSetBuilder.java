@@ -33,8 +33,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -628,7 +626,7 @@ public class PhaseSetBuilder
                 }
             }
 
-            extendRefBases(assembly, refExtensionReads, mRefGenome, false);
+            extendRefBases(assembly, refExtensionReads, mRefGenome, false, false);
         }
     }
 
@@ -680,8 +678,8 @@ public class PhaseSetBuilder
         */
 
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
-        extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching);
-        extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
+        extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
+        extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
 
         if(assembly1.outcome() == UNSET)
             assembly1.setOutcome(LINKED);

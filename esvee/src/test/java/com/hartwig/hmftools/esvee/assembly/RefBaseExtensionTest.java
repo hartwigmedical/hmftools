@@ -122,7 +122,7 @@ public class RefBaseExtensionTest
 
         List<Read> candidateSupport = Lists.newArrayList(mate1, mate2, disc1, disc2, disc3);
 
-        extendRefBases(assembly, candidateSupport, REF_GENOME, false);
+        extendRefBases(assembly, candidateSupport, REF_GENOME, false, true);
 
         assertEquals(30, assembly.refBasePosition());
         assertEquals(4, assembly.supportCount());
@@ -161,7 +161,7 @@ public class RefBaseExtensionTest
 
         candidateSupport = Lists.newArrayList(mate1, mate2, disc1, disc2);
 
-        extendRefBases(assembly, candidateSupport, REF_GENOME, false);
+        extendRefBases(assembly, candidateSupport, REF_GENOME, false, true);
 
         assertEquals(159, assembly.refBasePosition());
         assertEquals(3, assembly.supportCount());
