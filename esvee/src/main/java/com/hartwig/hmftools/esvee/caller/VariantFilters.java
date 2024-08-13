@@ -183,13 +183,16 @@ public class VariantFilters
 
     private boolean belowMinFragmentLength(final Variant var)
     {
+        int svAvgLength = var.averageFragmentLength();
+
+        if(svAvgLength == 0) // for now treat is this as a pass
+            return false;
+
         int medianLength = mFragmentLengthBounds.Median;
         double stdDeviation = mFragmentLengthBounds.StdDeviation;
 
         int totalSplitFrags = var.splitFragmentCount();
         double lowerLengthLimit = medianLength - (mFilterConstants.MinAvgFragFactor * stdDeviation / sqrt(totalSplitFrags));
-
-        int svAvgLength = var.averageFragmentLength();
 
         return svAvgLength < lowerLengthLimit;
     }

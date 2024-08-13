@@ -1120,15 +1120,18 @@ public class JunctionTracker
                 return true;
         }
 
-        boolean hasPassingAlignedRead = false;
-
-        for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+        if(!junctionData.internalIndel())
         {
-            hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
-        }
+            boolean hasPassingAlignedRead = false;
 
-        if(!hasPassingAlignedRead)
-            return false;
+            for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+            {
+                hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
+            }
+
+            if(!hasPassingAlignedRead)
+                return false;
+        }
 
         if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
             return true;
