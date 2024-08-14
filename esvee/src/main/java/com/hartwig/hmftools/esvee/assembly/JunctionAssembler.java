@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LINE_MIN_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
@@ -27,9 +29,11 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -227,7 +231,7 @@ public class JunctionAssembler
 
             if(basesMatch(read.getBases()[i], assemblyBases[assemblyIndex], qual, assemblyBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
             {
-                if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                if(qual >= LOW_BASE_QUAL_THRESHOLD && assemblyIndex != assembly.junctionIndex())
                     ++highQualMatchCount;
             }
             else
@@ -248,7 +252,7 @@ public class JunctionAssembler
                     mJunction.isForward(), assemblyBases, assemblyBaseQuals, assembly.repeatInfo(), read, readJunctionIndex, permittedMismatches);
         }
 
-        if(mismatchCount > permittedMismatches)
+        if(mismatchCount > permittedMismatches || highQualMatchCount < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
             return false;
 
         assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
@@ -267,6 +271,8 @@ public class JunctionAssembler
 
         SupportRead topSupportRead = null;
 
+        Set<Read> excludedReads = Sets.newHashSet();
+
         for(SupportRead support : assembly.support())
         {
             Read read = support.cachedRead();
@@ -276,13 +282,27 @@ public class JunctionAssembler
             // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
             int readExtensionDistance;
 
+            // junction reads must overlap the junction by 3+ bases to extend the ref sequence
+
             if(junctionIsForward)
             {
+                if(read.isRightClipped() && read.unclippedEnd() - junctionPosition < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
+                {
+                    excludedReads.add(read);
+                    continue;
+                }
+
                 newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
                 readExtensionDistance = max(readJunctionIndex - read.leftClipLength(), 0);
             }
             else
             {
+                if(read.isLeftClipped() && junctionPosition - read.unclippedStart() < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
+                {
+                    excludedReads.add(read);
+                    continue;
+                }
+
                 newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
                 readExtensionDistance = max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
             }
@@ -316,7 +336,7 @@ public class JunctionAssembler
 
         for(SupportRead support : assembly.support())
         {
-            if(support == topSupportRead)
+            if(support == topSupportRead || excludedReads.contains(support.cachedRead()))
                 continue;
 
             extendRefBasesWithJunctionRead(assembly, support.cachedRead(), support);

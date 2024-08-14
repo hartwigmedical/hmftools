@@ -45,6 +45,37 @@ public class JunctionAssemblyTest
     }
 
     @Test
+    public void testBasicJunctionAssemblies()
+    {
+        String extBases = REF_BASES_400.substring(300, 350);
+
+        Junction junction = new Junction(CHR_1, 100, FORWARD);
+
+        // assembly has 2 high-qual junction reads
+        String readBases = REF_BASES_400.substring(51, 101) + extBases;
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, makeCigarString(readBases, 0, extBases.length()));
+
+        Read read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        // the 3rd read doesn't overlap the junction enough to count as a junction read
+        readBases = REF_BASES_400.substring(21, 101) + extBases.substring(0, 2);
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 21, readBases, makeCigarString(readBases, 0, extBases.length()));
+
+        List<Read> reads = List.of(read1, read2, read3);
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
+
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
+        assertEquals(1, assemblies.size());
+
+        JunctionAssembly assembly = assemblies.get(0);
+
+        assertEquals(50, assembly.refBaseLength());
+        assertEquals(51, assembly.refBasePosition());
+        assertEquals(3, assembly.supportCount()); // read counts as support, just doesn't extend the ref bases
+    }
+
+    @Test
     public void testPosJunctionExtensionSequence()
     {
         String refBases = REF_BASES_200.substring(0, 20);
