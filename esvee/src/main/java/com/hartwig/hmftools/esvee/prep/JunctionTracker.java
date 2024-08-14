@@ -1134,7 +1134,11 @@ public class JunctionTracker
 
             for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
             {
-                hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
+                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore))
+                {
+                    hasPassingAlignedRead = true;
+                    break;
+                }
             }
 
             if(!hasPassingAlignedRead)
