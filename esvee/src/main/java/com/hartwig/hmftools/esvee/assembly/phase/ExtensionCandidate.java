@@ -69,29 +69,22 @@ public class ExtensionCandidate implements Comparable<ExtensionCandidate>
     @Override
     public int compareTo(final ExtensionCandidate other)
     {
-        int support1 = totalSupport();
-        int support2 = other.totalSupport();
+        return Integer.compare(-adjustedSupportScore(), -other.adjustedSupportScore());
+    }
 
-        if(Type == other.Type && Type == ExtensionType.SPLIT_LINK)
+    private int adjustedSupportScore()
+    {
+        int support = totalSupport();
+
+        if(Type == ExtensionType.SPLIT_LINK)
         {
             int junctionDiff = max(Link.insertedBases().length(), Link.overlapBases().length());
-            int junctionDiffOther = max(other.Link.insertedBases().length(), other.Link.overlapBases().length());
-
-            if(junctionDiff > junctionDiffOther)
-                support2 += junctionDiff - junctionDiffOther;
-            else
-                support1 += junctionDiffOther - junctionDiff;
+            support = max(support - junctionDiff, 0);
         }
 
-        return Integer.compare(-support1, -support2);
+        return support;
     }
 
-    private static boolean hasSignificantDifference(int value1, int value2, int diffThreshold, double diffThresholdPerc)
-    {
-        double diff = abs(value1 - value2);
-        double diffPerc = diff / (double) max(value1, value2);
-        return diff > diffThreshold && diffPerc > diffThresholdPerc;
-    }
 
     public int totalSupport()
     {

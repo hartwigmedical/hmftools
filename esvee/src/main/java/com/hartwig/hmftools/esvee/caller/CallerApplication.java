@@ -173,7 +173,7 @@ public class CallerApplication
 
         markLikelyLineSites();
 
-        SV_LOGGER.info("applying soft-filters");
+        SV_LOGGER.info("applying filters");
 
         for(Variant var : mSvDataCache.getSvList())
         {

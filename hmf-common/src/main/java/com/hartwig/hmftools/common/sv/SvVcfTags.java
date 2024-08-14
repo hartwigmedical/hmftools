@@ -66,6 +66,9 @@ public final class SvVcfTags
     public static final String AVG_FRAG_LENGTH = "AVGLEN";
     public static final String AVG_FRAG_LENGTH_DESC = "Average variant fragment length";
 
+    public static final String LINE_SITE = "LINE";
+    public static final String LINE_SITE_DESC = "LINE insertion site";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";

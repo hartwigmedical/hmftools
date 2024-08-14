@@ -85,8 +85,10 @@ public class VariantFilters
         {
             try
             {
-                FilterType filterType = FilterType.valueOf(filterStr);
-                breakend.sv().addFilter(filterType);
+                FilterType filterType = FilterType.fromVcfTag(filterStr);
+
+                if(filterType != null)
+                    breakend.sv().addFilter(filterType);
             }
             catch(Exception e) {}
         }
