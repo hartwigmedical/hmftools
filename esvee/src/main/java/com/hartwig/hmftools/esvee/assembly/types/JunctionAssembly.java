@@ -142,7 +142,7 @@ public class JunctionAssembly
     public boolean isForwardJunction() { return mJunction.isForward(); }
     public boolean isReverseJunction() { return mJunction.isReverse(); }
 
-    public boolean indel() { return mJunction.IndelBased; }
+    public boolean indel() { return mJunction.indelBased(); }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }

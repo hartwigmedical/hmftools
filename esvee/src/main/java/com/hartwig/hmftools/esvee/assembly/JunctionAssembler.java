@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerCom
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
@@ -57,7 +58,13 @@ public class JunctionAssembler
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> extensionReads = Lists.newArrayList();
 
-        if(mJunction.IndelBased)
+        if(!mJunction.indelBased() && hasIndelJunctionReads(mJunction, rawReads))
+        {
+            // fall-back in case Prep didn't set this state or junctions are loaded from config
+            mJunction.markAsIndel();
+        }
+
+        if(mJunction.indelBased())
         {
             findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
         }

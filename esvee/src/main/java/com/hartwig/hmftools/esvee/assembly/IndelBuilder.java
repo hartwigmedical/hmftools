@@ -24,6 +24,13 @@ import htsjdk.samtools.CigarElement;
 
 public final class IndelBuilder
 {
+    public static boolean hasIndelJunctionReads(final Junction junction, final List<Read> reads)
+    {
+        return reads.stream()
+                .filter(x -> x.indelCoords() != null && x.indelCoords().Length >= MIN_INDEL_LENGTH)
+                .anyMatch(x -> x.indelCoords().matchesJunction(junction.Position, junction.Orient));
+    }
+
     public static void findIndelExtensionReads(
             final Junction junction, final List<Read> rawReads,
             final List<Read> extensionReads, final List<Read> junctionReads, final List<Read> nonJunctionReads)
