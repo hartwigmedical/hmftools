@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
@@ -14,8 +15,11 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
@@ -165,6 +169,10 @@ public class CallerApplication
             return;
         }
 
+        mSvDataCache.buildBreakendMap();
+
+        markLikelyLineSites();
+
         SV_LOGGER.info("applying soft-filters");
 
         for(Variant var : mSvDataCache.getSvList())
@@ -177,11 +185,9 @@ public class CallerApplication
             mVariantFilters.applyFilters(var);
         }
 
-        mSvDataCache.buildBreakendMap();
-
+        /*
         SV_LOGGER.info("deduplication of paired end single breakends");
 
-        /*
         DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
         // duplicateFinder.findDuplicateSVs(alternatePaths);
 
@@ -230,6 +236,31 @@ public class CallerApplication
 
         if(maxGermlineAf >= GERMLINE_AF_THRESHOLD * maxTumorAf)
             var.markGermline();
+    }
+
+    private void markLikelyLineSites()
+    {
+        for(List<Breakend> breakends : mSvDataCache.getBreakendMap().values())
+        {
+            for(int i = 0; i < breakends.size() - 1; ++i)
+            {
+                Breakend breakend = breakends.get(i);
+                Breakend nextBreakend = breakends.get(i + 1);
+
+                if(!breakend.isSgl() || !nextBreakend.isSgl()) // only mark SGLs, ignore breakends already linked
+                    continue;
+
+                if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
+                    continue;
+
+                // mark if either site is line
+                if(breakend.Context.hasAttribute(LINE_SITE) || nextBreakend.Context.hasAttribute(LINE_SITE))
+                {
+                    breakend.setLineSiteBreakend(nextBreakend);
+                    nextBreakend.setLineSiteBreakend(breakend);
+                }
+            }
+        }
     }
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)

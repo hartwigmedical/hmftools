@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -183,17 +184,6 @@ public class PhaseSetBuilder
         mLocallyLinkedAssemblies.add(assembly);
 
         // seems no need to persist these synthetic junction assemblies for either alignment or the assemblies TSV
-
-        /*
-        JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
-
-        localRefAssembly.setOutcome(LOCAL_INDEL);
-
-        mPhaseGroup.addDerivedAssembly(localRefAssembly);
-        mSplitLinks.add(localRefLink);
-        */
-
-        // no need to build out the link with matching reads etc since only one assembly has read support
         return true;
     }
 
@@ -426,9 +416,11 @@ public class PhaseSetBuilder
 
     private static boolean isProximateIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome)
-        && assembly1.junction().Orient != assembly2.junction().Orient
-        && abs(assembly1.junction().Position - assembly2.junction().Position) < 100;
+        if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
+            return false;
+
+        return withLineProximity(
+                assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
     }
 
     private void findRemoteRefCandidates()

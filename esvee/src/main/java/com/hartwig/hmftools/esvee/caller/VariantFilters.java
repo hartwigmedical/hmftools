@@ -146,7 +146,11 @@ public class VariantFilters
         else if(otherBreakend != null && mFilterConstants.LowQualRegion.containsPosition(otherBreakend.Chromosome, otherBreakend.Position))
             qualThreshold *= 0.5;
 
-        return var.qual() < qualThreshold;
+        double variantQual = var.qual();
+        if(var.isSgl() && breakend.lineSiteBreakend() != null)
+            variantQual += breakend.lineSiteBreakend().sv().qual();
+
+        return variantQual < qualThreshold;
     }
 
     private boolean belowMinLength(final Variant var)

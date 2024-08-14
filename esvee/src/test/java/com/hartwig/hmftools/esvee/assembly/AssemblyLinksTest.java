@@ -132,15 +132,13 @@ public class AssemblyLinksTest
         String secondExtensionBases = firstRefBases.substring(20, 100); // last 80 bases of first's ref, again an exact match
         String secondAssemblyBases = secondExtensionBases + secondRefBases;
 
-        JunctionAssembly secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
-
         AssemblyLinker assemblyLinker = new AssemblyLinker();
 
         posJunction = new Junction(CHR_1, 1000, FORWARD);
         negJunction = new Junction(CHR_1, 500, REVERSE);
 
         firstAssembly = new JunctionAssembly(posJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
-        secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
+        JunctionAssembly secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
 
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(secondAssembly, firstAssembly);
         assertNotNull(link);

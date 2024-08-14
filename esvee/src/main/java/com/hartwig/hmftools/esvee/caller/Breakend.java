@@ -44,6 +44,8 @@ public class Breakend
     private final List<String> mLinkedAssemblyIds;
     private int mChrLocationIndex;
 
+    private Breakend mLineSiteBreakend;
+
     public Breakend(
             final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
             final Orientation orientation, final Genotype refGenotype, final Genotype tumorGenotype)
@@ -82,6 +84,7 @@ public class Breakend
         else
             mLinkedAssemblyIds = Collections.emptyList();
 
+        mLineSiteBreakend = null;
         mChrLocationIndex = -1;
     }
 
@@ -138,6 +141,9 @@ public class Breakend
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
+
+    public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
+    public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
 
     public int anchorLength()
     {

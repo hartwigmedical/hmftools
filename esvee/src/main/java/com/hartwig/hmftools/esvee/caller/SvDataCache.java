@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -130,24 +132,35 @@ public class SvDataCache
                     mChromosomeBreakends.put(breakend.Chromosome, breakends);
                 }
 
-                int index = 0;
-                while(index < breakends.size())
-                {
-                    if(breakend.Position < breakends.get(index).Position)
-                        break;
-
-                    ++index;
-                }
-
-                breakends.add(index, breakend);
+                breakends.add(breakend);
             }
         }
 
         for(List<Breakend> breakends : mChromosomeBreakends.values())
         {
+            Collections.sort(breakends, new BreakendPositionComparator());
+
             for(int index = 0; index < breakends.size(); ++index)
             {
                 breakends.get(index).setChrLocationIndex(index);
+            }
+        }
+    }
+
+    public static class BreakendPositionComparator implements Comparator<Breakend>
+    {
+        public int compare(final Breakend first, final Breakend second)
+        {
+            if(first.Position == second.Position)
+            {
+                if(first.Orient == second.Orient)
+                    return 0;
+                else
+                    return first.Orient.isForward() ? -1 : 1;
+            }
+            else
+            {
+                return first.Position < second.Position ? -1 : 1;
             }
         }
     }
