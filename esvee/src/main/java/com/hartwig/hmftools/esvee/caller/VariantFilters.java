@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -113,14 +115,20 @@ public class VariantFilters
         double afThreshold = var.isHotspot() ? mFilterConstants.MinAfHotspot :
                 (var.isSgl() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction);
 
-        Breakend breakend = var.breakendStart();
-
-        for(Genotype genotype : breakend.Context.getGenotypes())
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            double af = breakend.calcAllelicFrequency(genotype);
+            if(var.breakends()[se] == null)
+                continue;
 
-            if(af >= afThreshold)
-                return false;
+            Breakend breakend = var.breakends()[se];
+
+            for(Genotype genotype : breakend.Context.getGenotypes())
+            {
+                double af = breakend.calcAllelicFrequency(genotype);
+
+                if(af >= afThreshold)
+                    return false;
+            }
         }
 
         return true;
