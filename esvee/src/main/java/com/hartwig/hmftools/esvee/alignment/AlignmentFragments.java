@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 public class AlignmentFragments
 {
@@ -173,14 +174,17 @@ public class AlignmentFragments
 
         boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
 
+        boolean isSplitSupport = firstBreakendMatches.stream().anyMatch(x -> x.IsSplit)
+                || secondBreakendMatches.stream().anyMatch(x -> x.IsSplit);
+
+        if(!isSplitSupport && isShortIndel)
+            return;
+
+        firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
+        secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
+
         for(Breakend breakend : breakends)
         {
-            boolean isSplitSupport = firstBreakendMatches.stream().anyMatch(x -> x.IsSplit)
-                    || secondBreakendMatches.stream().anyMatch(x -> x.IsSplit);
-
-            if(!isSplitSupport && isShortIndel)
-                continue;
-
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
 
@@ -225,6 +229,8 @@ public class AlignmentFragments
         // since these reads are missing a mate, manually calculate their fragment length factoring in the simple SV type if they are local
         boolean setValidFragmentLength = false;
 
+        boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
+
         if(!read.isDiscordant() && breakends.size() <= 2)
         {
             StructuralVariantType svType = readBreakendMatches.get(0).Breakend.svType();
@@ -244,10 +250,15 @@ public class AlignmentFragments
 
         read.setInferredFragmentLength(inferredFragmentLength);
 
+        boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
+
+        if(!isSplitSupport && isShortIndel)
+            return;
+
+        read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
+
         for(Breakend breakend : breakends)
         {
-            boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
-
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
 

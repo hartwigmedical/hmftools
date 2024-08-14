@@ -67,6 +67,7 @@ public class SupportRead
     private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) if the read's start position
     private Orientation mFullAssemblyOrientation;
     private int mInferredFragmentLength;
+    private SupportType mBreakendType;
 
     // those past the junction
     private int mJunctionMatches;
@@ -113,6 +114,7 @@ public class SupportRead
         mFullAssemblyIndex = -1;
         mFullAssemblyOrientation = null;
         mInferredFragmentLength = -1;
+        mBreakendType = null;
 
         mRead = read;
     }
@@ -181,6 +183,9 @@ public class SupportRead
 
     public int inferredFragmentLength() { return mInferredFragmentLength; }
     public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
+
+    public SupportType breakendSupportType() { return mBreakendType; }
+    public void setBreakendSupportType(final SupportType breakendType) { mBreakendType = breakendType; }
 
     public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
     {

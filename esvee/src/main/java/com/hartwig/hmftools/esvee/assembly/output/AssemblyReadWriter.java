@@ -75,6 +75,7 @@ public class AssemblyReadWriter
             sj.add("JunctionReadStartDistance");
             sj.add("AlignmentIndex");
             sj.add("AlignmentOrientation");
+            sj.add("BreakendSupport");
 
             sj.add("Matches");
             sj.add("Mismatches");
@@ -146,6 +147,8 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(support.junctionReadStartDistance()));
                 sj.add(String.valueOf(support.fullAssemblyIndexStart()));
                 sj.add(String.valueOf(support.fullAssemblyOrientation() != null ? support.fullAssemblyOrientation().asByte() : 0));
+
+                sj.add(support.breakendSupportType() != null ? support.breakendSupportType().toString() : "NONE");
 
                 sj.add(String.valueOf(support.junctionMatches()));
                 sj.add(String.valueOf(support.mismatchCount()));
