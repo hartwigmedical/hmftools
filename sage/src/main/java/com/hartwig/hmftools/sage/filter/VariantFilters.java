@@ -34,6 +34,8 @@ import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DE
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
@@ -185,7 +187,7 @@ public class VariantFilters
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
-            if(belowMinTumorQual(config, tier, primaryTumor))
+            if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
             if(belowMinTumorVaf(config, primaryTumor))
@@ -264,7 +266,8 @@ public class VariantFilters
     }
 
     // each of the following filters returns true if a variant does not pass the test
-    private static boolean belowMinTumorQual(final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
+    private static boolean belowMinTumorQual(final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor,
+                                             final boolean isGermline)
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
@@ -288,6 +291,14 @@ public class VariantFilters
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
         double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+
+        if(isGermline)
+        {
+            BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
+            double hetProb = hetGermlineDistribution.cumulativeProbability(altSupport);
+            if(hetProb < prob)
+                prob /= max(hetProb, GERMLINE_HET_MIN_SAMPLING_PROB);
+        }
 
         primaryTumor.setTumorQualProbability(prob);
         primaryTumor.setMapQualFactor(mapQualFactor);

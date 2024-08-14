@@ -94,6 +94,10 @@ public class SageConstants
     public static final int MIN_TQP_QUAL = 15;
     public static final int MIN_TQP_QUAL_MSI_VARIANT = 20;
 
+    public static final double GERMLINE_HET_MIN_EXPECTED_VAF = 0.4;
+    public static final double GERMLINE_HET_MIN_SAMPLING_PROB = 1e-3;
+
+
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
     public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
