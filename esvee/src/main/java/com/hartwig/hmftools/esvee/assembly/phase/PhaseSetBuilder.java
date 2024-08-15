@@ -183,7 +183,13 @@ public class PhaseSetBuilder
 
         mLocallyLinkedAssemblies.add(assembly);
 
-        // seems no need to persist these synthetic junction assemblies for either alignment or the assemblies TSV
+        // no need to register this against the phase group, but keep the link since it will be used to create the ref breakend if the aligner doesn't
+        // mPhaseGroup.addDerivedAssembly(localRefAssembly);
+
+        mSplitLinks.add(localRefLink);
+        JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
+        localRefAssembly.setOutcome(LOCAL_INDEL);
+
         return true;
     }
 

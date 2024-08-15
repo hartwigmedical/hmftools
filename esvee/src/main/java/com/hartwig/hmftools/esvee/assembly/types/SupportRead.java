@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
@@ -129,6 +130,8 @@ public class SupportRead
     public int unclippedEnd() { return mUnclippedEnd; }
     public boolean isLeftClipped() { return mUnclippedStart < mAlignmentStart; }
     public boolean isRightClipped() { return mUnclippedEnd > mAlignmentEnd; }
+    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
     public String mateChromosome() { return mMateChromosome; }
     public int mateAlignmentStart() { return mMateAlignmentStart; }
     public int mateAlignmentEnd() { return mMateAlignmentEnd; }

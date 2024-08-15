@@ -5,10 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
 import java.util.Collections;
@@ -19,7 +16,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -227,28 +223,28 @@ public class AlignmentFragments
         int inferredFragmentLength = -1;
 
         // since these reads are missing a mate, manually calculate their fragment length factoring in the simple SV type if they are local
-        boolean setValidFragmentLength = false;
 
         boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
+        boolean setValidFragmentLength = false;
 
-        if(!read.isDiscordant() && breakends.size() <= 2)
+        if(mAssemblyAlignment.assemblies().size() == 2)
         {
-            StructuralVariantType svType = readBreakendMatches.get(0).Breakend.svType();
-            int svLength = readBreakendMatches.get(0).Breakend.svLength();
-
-            if((svType == DEL || svType == DUP || svType == INS) && svLength <= PROXIMATE_DEL_LENGTH)
+            if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel())
+            || mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
             {
-                inferredFragmentLength = abs(read.insertSize());
-
-                if(svType == DUP)
-                    inferredFragmentLength += svLength;
-
-                if(mAssemblyAlignment.assemblies().size() == 2 && mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel()))
-                    setValidFragmentLength = true;
+                setValidFragmentLength = true;
             }
         }
+        else if(!read.isDiscordant() && breakends.size() <= 2)
+        {
+            setValidFragmentLength = true;
+        }
 
-        read.setInferredFragmentLength(inferredFragmentLength);
+        if(setValidFragmentLength)
+        {
+            inferredFragmentLength = abs(read.insertSize()) + read.leftClipLength() + read.rightClipLength();
+            read.setInferredFragmentLength(inferredFragmentLength);
+        }
 
         boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 

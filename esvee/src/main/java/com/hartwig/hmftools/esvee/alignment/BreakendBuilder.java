@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_A
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -30,7 +31,10 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.JunctionAssembler;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
@@ -262,6 +266,41 @@ public class BreakendBuilder
     {
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
+
+        if(mAssemblyAlignment.assemblies().size() == 2 && mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
+        {
+            // keep the breakends matching the original assembly and its local ref match
+            int sequenceStart = -1;
+            for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
+            {
+                Breakend breakend = new Breakend(
+                        mAssemblyAlignment, assembly.junction().Chromosome, assembly.junction().Position,
+                        assembly.junction().Orient, "", null);
+
+                if(sequenceStart == -1)
+                    sequenceStart = assembly.refBaseLength();
+                else
+                    ++sequenceStart;
+
+                BreakendSegment segment = new BreakendSegment(
+                        mAssemblyAlignment.id(), fullSequenceLength, sequenceStart, assembly.junction().Orient, 0, alignment);
+
+                breakend.addSegment(segment);
+
+                if(!zeroQualAlignments.isEmpty())
+                {
+                    List<AlternativeAlignment> altAlignments = Lists.newArrayList();
+                    zeroQualAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
+                    breakend.setAlternativeAlignments(altAlignments);
+                }
+
+                mAssemblyAlignment.addBreakend(breakend);
+            }
+
+            mAssemblyAlignment.breakends().get(0).setOtherBreakend(mAssemblyAlignment.breakends().get(1));
+            mAssemblyAlignment.breakends().get(1).setOtherBreakend(mAssemblyAlignment.breakends().get(0));
+            return;
+        }
 
         int breakendPosition;
         Orientation orientation;
