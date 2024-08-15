@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH;
@@ -282,8 +283,11 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ASM_ID, assemblyAlignment.id());
         builder.attribute(ASM_LENGTH, assemblyAlignment.fullSequenceLength());
 
-        if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence()))
+        if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())
+        && isMobileLineElement(breakend.Orient, breakend.InsertedBases))
+        {
             builder.attribute(LINE_SITE, true);
+        }
 
         List<BreakendSegment> segments = breakend.segments();
 

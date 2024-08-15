@@ -131,6 +131,7 @@ public final class ReadUtils
 
     public static boolean isLineSequence(final byte[] bases, final int indexStart, final int indexEnd)
     {
+        // returns true if the whole sequence matches a LINE base
         if(indexStart < 0 || indexEnd >= bases.length)
             return false;
 
