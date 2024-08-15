@@ -167,6 +167,9 @@ public class JunctionAssembler
 
     private JunctionAssembly checkSecondAssembly(final List<Read> extensionReads, final JunctionAssembly firstAssembly)
     {
+        if(extensionReads.isEmpty())
+            return null;
+
         if(firstAssembly.hasLineSequence())
             return null;
 
@@ -205,20 +208,37 @@ public class JunctionAssembler
         ReadAssemblyIndices readAssemblyIndices = getJunctionReadExtensionIndices(
                 assembly.junction(), assembly.junctionIndex(), read, readJunctionIndex);
 
-        int assemblyIndex = readAssemblyIndices.AssemblyIndexStart;
+        int assemblyIndexStart = readAssemblyIndices.AssemblyIndexStart;
+        int readIndexStart = readAssemblyIndices.ReadIndexStart;
+        int readIndexEnd = readAssemblyIndices.ReadIndexEnd;
 
-        if(assemblyIndex < 0)
+        if(assemblyIndexStart < 0)
+        {
+            // allow for indel-adjusted reads
+            if(read.indelImpliedAlignmentStart() != mJunction.Position)
+                return false;
+
+            readIndexStart -= assemblyIndexStart;
+            assemblyIndexStart = 0;
+        }
+
+        // first attempt a straight string match for simplicity
+        int matchLength = readIndexEnd - readIndexStart + 1;
+
+        if(matchLength < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
             return false;
 
-        int mismatchCount = 0;
         int highQualMatchCount = 0;
+        int mismatchCount = 0;
         int checkedBaseCount = 0;
-        int assemblyBaseLength = assembly.baseLength();
 
         final byte[] assemblyBases = assembly.bases();
         final byte[] assemblyBaseQuals = assembly.baseQuals();
 
-        for(int i = readAssemblyIndices.ReadIndexStart; i <= readAssemblyIndices.ReadIndexEnd; ++i, ++assemblyIndex)
+        int assemblyIndex = assemblyIndexStart;
+        int assemblyBaseLength = assembly.baseLength();
+
+        for(int i = readIndexStart; i <= readIndexEnd; ++i, ++assemblyIndex)
         {
             if(assemblyIndex < 0)
                 continue;
@@ -247,6 +267,13 @@ public class JunctionAssembler
 
         if(mismatchCount > permittedMismatches)
         {
+            checkedBaseCount = readIndexEnd - readIndexStart + 1;
+
+            if(assemblyIndex < 0)
+                checkedBaseCount = max(checkedBaseCount + assemblyIndex, 0);
+
+            permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
+
             // test again taking repeats into consideration
             mismatchCount = calcReadSequenceMismatches(
                     mJunction.isForward(), assemblyBases, assemblyBaseQuals, assembly.repeatInfo(), read, readJunctionIndex, permittedMismatches);
