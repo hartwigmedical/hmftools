@@ -403,9 +403,9 @@ public class UltimaCoreExtender
             readCigarElements.add(new CigarElement(currentLength, currentOp));
         }
 
-        int newReadCoreStart = alignedBases.get(coreStart).ReadIndex + (alignedBases.get(coreStart).ReadBase == MISSING_BASE ? 1 : 0);
+        int newReadCoreStart = alignedBases.get(coreStart).ReadIndex;
         int newReadCoreEnd = alignedBases.get(coreEnd).ReadIndex;
-        int corePosStart = alignedBases.get(coreStart).RefPos + (alignedBases.get(coreStart).RefBase == MISSING_BASE ? 1 : 0);
+        int corePosStart = alignedBases.get(coreStart).RefPos;
         int corePosEnd = alignedBases.get(coreEnd).RefPos;
         return new UltimaCoreInfo(
                 newReadCoreStart,
