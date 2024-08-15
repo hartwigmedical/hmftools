@@ -171,24 +171,29 @@ public class ExtensionSeqBuilder
                 if(readCounts == null)
                 {
                     if(consensusBase == 0
-                    || AssemblyUtils.basesMatch(base, consensusBase, (byte)qual, (byte)consensusMaxQual, LOW_BASE_QUAL_THRESHOLD))
+                    || (base != consensusBase && consensusMaxQual < LOW_BASE_QUAL_THRESHOLD && qual >= LOW_BASE_QUAL_THRESHOLD))
                     {
-                        if(consensusBase == 0)
-                        {
-                            consensusBase = base;
-                            consensusMaxQual = qual;
-                        }
-                        else
-                        {
-                            consensusMaxQual = max(qual, consensusMaxQual);
-                        }
-
+                        // set first or replace with first high qual
+                        consensusBase = base;
+                        consensusMaxQual = qual;
+                        consensusQualTotal = qual;
+                        consensusReadCount = 1;
+                        continue;
+                    }
+                    else if(base == consensusBase)
+                    {
+                        consensusMaxQual = max(qual, consensusMaxQual);
                         consensusQualTotal += qual;
                         ++consensusReadCount;
                         continue;
                     }
+                    else if(base != consensusBase && qual < LOW_BASE_QUAL_THRESHOLD)
+                    {
+                        // low-qual disagreement - ignore regardless of consensus qual
+                        continue;
+                    }
 
-                    // start tracking frequencies for each base
+                    // high-qual mismatch so start tracking frequencies for each base
                     readCounts = new int[baseCount];
                     totalQuals = new int[baseCount];
                     maxQuals = new int[baseCount];
@@ -487,9 +492,9 @@ public class ExtensionSeqBuilder
 
         public String toString()
         {
-            return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) hqMatch(%d) mismatches(%d/%d) %s",
+            return format("%s: range(%d - %d) cigar(%s) extLen(%d) index(junc=%d cur=%d) hqMatch(%d) mismatches(%d/%d) %s",
                     mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
-                    mExtensionLength, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches, mExhausted ? "exhausted" : "");
+                    mExtensionLength, mJunctionIndex, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches, mExhausted ? "exhausted" : "");
         }
     }
 
