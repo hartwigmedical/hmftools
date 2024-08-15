@@ -66,6 +66,7 @@ public class MetricsConfig
     private static final int DEFAULT_PARTITION_SIZE = 1_000_000;
     private static final double DEFAULT_GC_BUCKET = 0.01;
     private static final int DEFAULT_FRAG_LENGTH_BUCKET = 10;
+    public static final int MIN_MAPPING_QUALITY = 50;
 
     public MetricsConfig(final ConfigBuilder configBuilder)
     {

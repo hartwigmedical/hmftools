@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QU
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundDuplicateCount;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundFragmentLength;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundGcPercent;
+import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.TARGET_REGION_PROXIMITY;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
@@ -16,6 +17,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -172,6 +175,9 @@ public class PartitionReader extends Thread
 
     private void processFragment(final SAMRecord read, final SAMRecord mate)
     {
+        if(read.getMappingQuality() < MIN_MAPPING_QUALITY)
+            return;
+
         int duplicateCount = getDuplicateReadCount(read);
 
         int fragmentLength = abs(read.getInferredInsertSize());
