@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemblyAlignment;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -41,9 +42,13 @@ public class BreakendTest
 
         HomologyData homology = new HomologyData("AAA", -3, 3, -3, 3);
         Breakend breakend4 = new Breakend(assemblyAlignment, CHR_1, 102, FORWARD, "", homology);
-        Breakend breakend5 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "", homology);
+        Breakend breakend5 = new Breakend(assemblyAlignment, CHR_1, 104, REVERSE, "AAG", homology);
+        Breakend breakend6 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "AAG", homology);
+        Breakend breakend7 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "AAG", homology);
+        Breakend breakend8 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "CCC", homology);
 
-        List<Breakend> breakends = Lists.newArrayList(breakend1, breakend2, breakend3, breakend4, breakend5);
+        List<Breakend> breakends = Lists.newArrayList(
+                breakend1, breakend2, breakend3, breakend4, breakend5, breakend6, breakend7, breakend8);
         Collections.sort(breakends);
 
         Deduplication.deduplicateBreakends(breakends);
@@ -51,7 +56,10 @@ public class BreakendTest
         assertTrue(breakend1.passing());
         assertTrue(breakend2.passing());
         assertTrue(breakend3.filters().contains(FilterType.DUPLICATE));
-        assertTrue(breakend4.filters().contains(FilterType.DUPLICATE));
+        assertFalse(breakend4.filters().contains(FilterType.DUPLICATE));
         assertTrue(breakend5.passing());
+        assertTrue(breakend6.passing());
+        assertTrue(breakend7.filters().contains(FilterType.DUPLICATE));
+        assertTrue(breakend8.passing());
     }
 }

@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-
 import java.util.List;
 
 import com.hartwig.hmftools.esvee.common.FilterType;
 
 public final class Deduplication
 {
-    private static final int MAX_DEDUP_DISTANCE = 100; // logically is there a limit
-
     public static void deduplicateBreakends(final List<Breakend> breakends)
     {
         for(int i = 0; i < breakends.size() - 1; ++i)
@@ -23,7 +19,7 @@ public final class Deduplication
             {
                 Breakend nextBreakend = breakends.get(j);
 
-                if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position - breakend.Position > MAX_DEDUP_DISTANCE)
+                if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position > breakend.Position)
                     break;
 
                 if(isDuplicate(breakend, nextBreakend))
@@ -40,10 +36,7 @@ public final class Deduplication
 
     private static boolean isDuplicate(final Breakend first, final Breakend second)
     {
-        if(first.Orient != second.Orient)
-            return false;
-
-        return positionsOverlap(first.minPosition(), first.maxPosition(), second.minPosition(), second.maxPosition());
+        return first.Orient == second.Orient && first.InsertedBases.equals(second.InsertedBases);
     }
 
     private static boolean keepFirst(final Breakend first, final Breakend second)
