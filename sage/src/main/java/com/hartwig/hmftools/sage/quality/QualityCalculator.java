@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
+import static com.hartwig.hmftools.sage.quality.UltimaModelType.MICROSAT_ADJUSTMENT;
 
 import java.util.List;
 
@@ -130,11 +131,24 @@ public class QualityCalculator
     {
         if(readContextCounter.realignedUltimaQualModels() != null)
         {
-            int ultimaQual = readContextCounter.realignedUltimaQualModels().stream()
-                    .mapToInt(model -> (int) model.calculateQual(record, readIndex)).min().orElse(ULTIMA_MAX_QUAL);
+            double ultimaQual = ULTIMA_MAX_QUAL;
+            for(UltimaQualModel realignedUltimaQualModel : readContextCounter.realignedUltimaQualModels())
+            {
+                double modelQual;
+                if(realignedUltimaQualModel.type() == MICROSAT_ADJUSTMENT && readContextCounter.qualCache().usesMsiIndelErrorQual())
+                {
+                    modelQual = readContextCounter.qualCache().msiIndelErrorQual();
+                }
+                else
+                {
+                    modelQual = realignedUltimaQualModel.calculateQual(record, readIndex);
+                }
 
-            if(ultimaQual < 0)
-                return INVALID_BASE_QUAL;
+                if(modelQual < 0)
+                    return INVALID_BASE_QUAL;
+
+                ultimaQual = min(ultimaQual, modelQual);
+            }
 
             return ultimaQual;
         }
