@@ -233,7 +233,6 @@ public class SpecificAlignmentsTest
         refGenome.RefGenomeMap.put(CHR_2, REF_BASES_600);
 
         // chr1:100:-1 - has reads soft-clipping at 200 and others going out further and soft-clipping at 300
-        String refBases1Old = REF_BASES_400.substring(100, 150);
         String refBases1 = refGenome.getBaseString(CHR_1, 100, 150);
         String extBases1 = refGenome.getBaseString(CHR_2, 100, 200);
         String assemblyBases1 = Nucleotides.reverseComplementBases(extBases1) + refBases1;
@@ -241,7 +240,6 @@ public class SpecificAlignmentsTest
         JunctionAssembly assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
         // chr1:200:1
-        String refBases2Old = REF_BASES_400.substring(100, 201);
         String refBases2 = refGenome.getBaseString(CHR_1, 100, 200);
         String extBases2 = refGenome.getBaseString(CHR_1, 251, 301);
         String assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(extBases2);
@@ -463,7 +461,7 @@ public class SpecificAlignmentsTest
         */
 
         String fullSequence = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 249))
-                + refGenome.getBaseString(CHR_1, 100, 300) + "C"
+                + refGenome.getBaseString(CHR_1, 100, 300) + "A"
                 + Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
 
         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);

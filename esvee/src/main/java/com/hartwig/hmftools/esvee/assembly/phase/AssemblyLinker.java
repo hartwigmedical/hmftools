@@ -348,11 +348,11 @@ public final class AssemblyLinker
             // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
             // around its junction index - with the exception being for when both assemblies are -ve orientation, in which case the
             // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
-            extraBases = extractExtraBases(first, firstSeq.Reversed, junctionOffsetDiff);
+            extraBases = extractExtraBases(first, junctionOffsetDiff);
 
             if(extraBases == null)
             {
-                extraBases = extractExtraBases(second, secondSeq.Reversed, junctionOffsetDiff);
+                extraBases = extractExtraBases(second, junctionOffsetDiff);
 
                 if(extraBases == null)
                 {
@@ -378,7 +378,7 @@ public final class AssemblyLinker
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
-    private static String extractExtraBases(final JunctionAssembly assembly, boolean isReversed, int junctionOffsetDiff)
+    private static String extractExtraBases(final JunctionAssembly assembly, int junctionOffsetDiff)
     {
         int extraBasesStartIndex, extraBasesEndIndex;
 

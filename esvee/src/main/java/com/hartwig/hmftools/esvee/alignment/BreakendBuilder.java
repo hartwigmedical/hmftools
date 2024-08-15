@@ -453,8 +453,10 @@ public class BreakendBuilder
                 nextPosition += nextHomology.positionAdjustment(nextOrientation);
             }
 
+            String assemblyInsertedBases = breakendOrientation.isForward() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
+
             Breakend breakend = new Breakend(
-                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, firstHomology);
+                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, assemblyInsertedBases, firstHomology);
 
             mAssemblyAlignment.addBreakend(breakend);
 
@@ -464,8 +466,7 @@ public class BreakendBuilder
 
             breakend.addSegment(segment);
 
-            String nextInsertedBases = breakendOrientation != nextOrientation ?
-                    insertedBases : Nucleotides.reverseComplementBases(insertedBases);
+            String nextInsertedBases = nextOrientation.isReverse() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, nextInsertedBases, nextHomology);
