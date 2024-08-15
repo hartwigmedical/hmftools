@@ -79,17 +79,6 @@ public class UltimaRealignedQualModelBuilder
 
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
-        // TODO: Ignore this Thomas. No variants debug case.
-//        boolean debugVariant = readContext.variant().chromosome().equals("chr1");
-//        debugVariant = debugVariant && readContext.variant().Position == 10101838;
-//        debugVariant = debugVariant && readContext.variant().Ref.equals("A");
-//        debugVariant = debugVariant && readContext.variant().Alt.equals("AT");
-//
-//        if(!debugVariant)
-//        {
-//            return Lists.newArrayList();
-//        }
-
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
@@ -107,11 +96,10 @@ public class UltimaRealignedQualModelBuilder
         List<SimpleVariant> qualVariants = getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants);
         List<UltimaQualModel> realignedQualModels = qualVariants.stream().map(x -> ultimaQualCalculator.buildContext(x)).collect(Collectors.toList());
 
-        // TODO: Go back to this.
-//        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
-//        {
-//            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
-//        }
+        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
+        {
+            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
+        }
 
         return realignedQualModels;
     }
@@ -378,15 +366,15 @@ public class UltimaRealignedQualModelBuilder
     private static void createRealignedVariants(final List<SimpleVariant> realignedVariants, final VariantReadContext readContext,
             final List<Homopolymer> delHomopolymers, final List<Homopolymer> insHomopolymers, final int lastMatchedRefPos, final byte lastMatchedBase)
     {
+        if(delHomopolymers.isEmpty() && insHomopolymers.isEmpty())
+        {
+            return;
+        }
+
         SimpleVariant variant = readContext.variant();
         if(lastMatchedRefPos == -1)
         {
-            // TODO: How do we reach back?
-            //                int variantPos = readContext.CorePositionStart - 1;
-            //                String ref = String.valueOf((char) readContext.RefBaseBeforeCore) + delBases.toString();
-            //                String alt = String.valueOf((char) readContext.ReadBases[readContext.CoreIndexStart - 1]);
-            //                realignedVariants.add(new SimpleVariant(variant.Chromosome, variantPos, ref, alt));
-            return;
+            throw new IllegalArgumentException("Looks as though the first core homopolymers of the read and ref do not have the same base.");
         }
 
         for(int i = 0; i < delHomopolymers.size(); i++)

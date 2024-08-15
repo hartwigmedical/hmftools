@@ -165,7 +165,7 @@ public class UltimaCoreExtender
             return null;
         }
 
-        // extend so we are not cutting off homopolymers
+        // extend so we are not cutting off homopolymers and that the first and last base are an M and match exactly between the ref and read
         boolean leftExpanded = false;
         boolean rightExpanded = false;
         while(true)
@@ -173,27 +173,47 @@ public class UltimaCoreExtender
             AlignedBase coreStartBase = alignedBases.get(coreStart);
             AlignedBase coreEndBase = alignedBases.get(coreEnd);
 
-            int firstRefBaseIndex = coreStartBase.RefBase == MISSING_BASE ? lookupFromRefPos.get(coreStartBase.RefPos + 1) : coreStart;
-            int lastRefBaseIndex = lookupFromRefPos.get(coreEndBase.RefPos);
+            if(coreStartBase.RefBase == MISSING_BASE || coreStartBase.ReadBase == MISSING_BASE)
+            {
+                leftExpanded = true;
+                coreStart--;
+                if(coreStart < 0)
+                {
+                    return null;
+                }
+                continue;
+            }
 
-            int firstReadBaseIndex = coreStartBase.ReadBase == MISSING_BASE ? lookupFromReadIndex.get(coreStartBase.ReadIndex + 1) : coreStart;
-            int lastReadBaseIndex = lookupFromReadIndex.get(coreEndBase.ReadIndex);
+            if(coreEndBase.RefBase == MISSING_BASE || coreEndBase.ReadBase == MISSING_BASE)
+            {
+                rightExpanded = true;
+                coreEnd++;
+                if(coreEnd >= alignedBases.size())
+                {
+                    return null;
+                }
+                continue;
+            }
 
-            Integer prevRefBaseIndex = lookupFromRefPos.get(alignedBases.get(firstRefBaseIndex).RefPos - 1);
-            Integer nextRefBaseIndex = lookupFromRefPos.get(alignedBases.get(lastRefBaseIndex).RefPos + 1);
+            Integer prevRefBaseIndex = lookupFromRefPos.get(coreStartBase.RefPos - 1);
+            Integer nextRefBaseIndex = lookupFromRefPos.get(coreEndBase.RefPos + 1);
 
-            Integer prevReadBaseIndex = lookupFromReadIndex.get(alignedBases.get(firstReadBaseIndex).ReadIndex - 1);
-            Integer nextReadBaseIndex = lookupFromReadIndex.get(alignedBases.get(lastReadBaseIndex).ReadIndex + 1);
+            Integer prevReadBaseIndex = lookupFromReadIndex.get(coreStartBase.ReadIndex - 1);
+            Integer nextReadBaseIndex = lookupFromReadIndex.get(coreEndBase.ReadIndex + 1);
 
             if(prevRefBaseIndex == null || nextRefBaseIndex == null || prevReadBaseIndex == null || nextReadBaseIndex == null)
             {
                 return null;
             }
 
-            boolean expandLeft = alignedBases.get(firstRefBaseIndex).RefBase == alignedBases.get(prevRefBaseIndex).RefBase
-                    || alignedBases.get(firstReadBaseIndex).ReadBase == alignedBases.get(prevReadBaseIndex).ReadBase;
-            boolean expandRight = alignedBases.get(lastRefBaseIndex).RefBase == alignedBases.get(nextRefBaseIndex).RefBase
-                    || alignedBases.get(lastReadBaseIndex).ReadBase == alignedBases.get(nextReadBaseIndex).ReadBase;
+            boolean expandLeft = coreStartBase.RefBase == alignedBases.get(prevRefBaseIndex).RefBase
+                    || coreStartBase.ReadBase == alignedBases.get(prevReadBaseIndex).ReadBase
+                    || coreStartBase.RefBase != coreStartBase.ReadBase;
+
+            boolean expandRight = coreEndBase.RefBase == alignedBases.get(nextRefBaseIndex).RefBase
+                    || coreEndBase.ReadBase == alignedBases.get(nextReadBaseIndex).ReadBase
+                    || coreEndBase.RefBase != coreEndBase.ReadBase;
+
             if(!expandLeft && !expandRight)
             {
                 break;
@@ -220,19 +240,33 @@ public class UltimaCoreExtender
             }
         }
 
-        // go left until we have one ref and read base padding
+        // go left until we have one ref and read base padding and that they match exactly
         if(leftExpanded)
         {
-            boolean refPaddingAdded = false;
-            boolean readPaddingAdded = false;
-            while(coreStart >= 1 && (!refPaddingAdded || !readPaddingAdded))
+            boolean paddingAdded = false;
+            while(coreStart >= 1)
             {
                 coreStart--;
-                refPaddingAdded = refPaddingAdded || alignedBases.get(coreStart).RefBase != MISSING_BASE;
-                readPaddingAdded = readPaddingAdded || alignedBases.get(coreStart).ReadBase != MISSING_BASE;
+                if(alignedBases.get(coreStart).RefBase == MISSING_BASE)
+                {
+                    continue;
+                }
+
+                if(alignedBases.get(coreStart).ReadBase == MISSING_BASE)
+                {
+                    continue;
+                }
+
+                if(alignedBases.get(coreStart).RefBase != alignedBases.get(coreStart).ReadBase)
+                {
+                    continue;
+                }
+
+                paddingAdded = true;
+                break;
             }
 
-            if(!refPaddingAdded || !readPaddingAdded)
+            if(!paddingAdded)
             {
                 return null;
             }
@@ -240,16 +274,30 @@ public class UltimaCoreExtender
 
         if(rightExpanded)
         {
-            boolean refPaddingAdded = false;
-            boolean readPaddingAdded = false;
-            while(coreEnd < alignedBases.size() - 1 && (!refPaddingAdded || !readPaddingAdded))
+            boolean paddingAdded = false;
+            while(coreEnd < alignedBases.size() - 1)
             {
                 coreEnd++;
-                refPaddingAdded = refPaddingAdded || alignedBases.get(coreEnd).RefBase != MISSING_BASE;
-                readPaddingAdded = readPaddingAdded || alignedBases.get(coreEnd).ReadBase != MISSING_BASE;
+                if(alignedBases.get(coreEnd).RefBase == MISSING_BASE)
+                {
+                    continue;
+                }
+
+                if(alignedBases.get(coreEnd).ReadBase == MISSING_BASE)
+                {
+                    continue;
+                }
+
+                if(alignedBases.get(coreEnd).RefBase != alignedBases.get(coreEnd).ReadBase)
+                {
+                    continue;
+                }
+
+                paddingAdded = true;
+                break;
             }
 
-            if(!refPaddingAdded || !readPaddingAdded)
+            if(!paddingAdded)
             {
                 return null;
             }
