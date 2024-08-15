@@ -72,6 +72,8 @@ public class SvCompareVcfs
     private final Map<String,List<VariantBreakend>> mOldChrBreakendMapUnfiltered;
     private final Map<String,List<VariantBreakend>> mNewChrBreakendMapUnfiltered;
 
+    private final boolean mShowNonPass;
+
     private final BufferedWriter mWriter;
 
     private RefGenomeVersion mRefGenomeVersion;
@@ -81,6 +83,8 @@ public class SvCompareVcfs
 
     private static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
     private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
+
+    private static final String SHOW_NON_PASS = "show_non_pass";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
@@ -96,6 +100,8 @@ public class SvCompareVcfs
 
         mOldUnfilteredVcf = configBuilder.getValue(OLD_UNFILTERED_VCF);
         mNewUnfilteredVcf = configBuilder.getValue(NEW_UNFILTERED_VCF);
+
+        mShowNonPass = configBuilder.hasFlag(SHOW_NON_PASS);
 
         mOutputDir = FileWriterUtils.parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
@@ -190,9 +196,12 @@ public class SvCompareVcfs
 
     private void matchAndWriteVariants(
             Map<String,List<VariantBreakend>> oldChrBreakendMap,
-            Map<String,List<VariantBreakend>> newChrBreakendMap
+            Map<String,List<VariantBreakend>> newChrBreakendMap,
+            MatchType matchType
     )
     {
+        int matchedCount = 0;
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
@@ -203,7 +212,6 @@ public class SvCompareVcfs
             if(oldBreakends == null || newBreakends == null)
                 continue;
 
-            int matchedCount = 0;
             for(int oldBreakendIndex = 0; oldBreakendIndex < oldBreakends.size(); oldBreakendIndex++)
             {
                 VariantBreakend oldBreakend = oldBreakends.get(oldBreakendIndex);
@@ -212,10 +220,25 @@ public class SvCompareVcfs
                 {
                     VariantBreakend newBreakend = newBreakends.get(newBreakendIndex);
 
-                    MatchType matchType = oldBreakend.compareCoordinates(newBreakend, DEFAULT_APPROX_MATCH_UPPER_LOWER_BOUNDS);
-                    if(!matchType.equals(MatchType.NO_MATCH))
+                    boolean hasMatch = false;
+
+                    switch(matchType)
                     {
-                        writeBreakend(oldBreakend, newBreakend, matchType);
+                        case EXACT_MATCH:
+                            hasMatch = oldBreakend.exactMatch(newBreakend);
+                            break;
+                        case COORDS_ONLY:
+                            hasMatch = oldBreakend.coordsOnlyMatch(newBreakend);
+                            break;
+                        case APPROX_MATCH:
+                            hasMatch = oldBreakend.approxMatch(newBreakend, DEFAULT_APPROX_MATCH_UPPER_LOWER_BOUNDS);
+                            break;
+                    }
+
+                    if(hasMatch)
+                    {
+                        if(mShowNonPass || oldBreakend.isPassVariant() || newBreakend.isPassVariant())
+                            writeBreakend(oldBreakend, newBreakend, matchType);
 
                         // Only allow one match
                         oldBreakends.remove(oldBreakendIndex);
@@ -231,18 +254,27 @@ public class SvCompareVcfs
                     }
                 }
             }
-
-            if(matchedCount > 0)
-            {
-                SV_LOGGER.debug("  Matched {} variants in chromosome {}", matchedCount, chrStr);
-            }
         }
+
+        if(matchedCount > 0)
+        {
+            SV_LOGGER.debug("  Found {} variants with match type: {}", matchedCount, matchType);
+        }
+    }
+
+    private void  matchAndWriteVariants(
+            Map<String,List<VariantBreakend>> oldChrBreakendMap,
+            Map<String,List<VariantBreakend>> newChrBreakendMap
+    )
+    {
+        matchAndWriteVariants(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH);
+        matchAndWriteVariants(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY);
+        matchAndWriteVariants(oldChrBreakendMap, newChrBreakendMap, MatchType.APPROX_MATCH);
     }
 
     private void writeUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
     {
         int unmatchedVariantsCount = 0;
-        int nonPassVariantsCount = 0;
 
         for(List<VariantBreakend> breakends : chrBreakendMap.values())
         {
@@ -251,17 +283,13 @@ public class SvCompareVcfs
 
             for(VariantBreakend breakend : breakends)
             {
-                if(!breakend.isPassVariant())
+                if(mShowNonPass || breakend.isPassVariant())
                 {
-                    nonPassVariantsCount++;
-                    continue;
+                    if(isOld)
+                        writeBreakend(breakend, null, MatchType.NO_MATCH);
+                    else
+                        writeBreakend(null, breakend, MatchType.NO_MATCH);
                 }
-
-
-                if(isOld)
-                    writeBreakend(breakend, null, MatchType.NO_MATCH);
-                else
-                    writeBreakend(null, breakend, MatchType.NO_MATCH);
 
                 unmatchedVariantsCount++;
             }
@@ -270,11 +298,6 @@ public class SvCompareVcfs
         if(unmatchedVariantsCount > 0)
         {
             SV_LOGGER.debug("Writing {} unmatched variants", unmatchedVariantsCount);
-        }
-
-        if(nonPassVariantsCount > 0)
-        {
-            SV_LOGGER.debug("Excluded {} non PASS unmatched variants", nonPassVariantsCount);
         }
     }
 
@@ -345,7 +368,7 @@ public class SvCompareVcfs
             oldCipos = Arrays.toString(oldBreakend.Cipos);
             oldIhompos = Arrays.toString(oldBreakend.Ihompos);
             oldHomSeq = oldBreakend.Homseq;
-            oldInsSeq = oldBreakend.Coords.InsertSequence;
+            oldInsSeq = oldBreakend.AltCoords.InsertSequence;
             oldSvtype = oldBreakend.SvType;
             oldFilter = oldBreakend.filtersStr();
             oldVcfType = oldBreakend.SourceVcfType.toString();
@@ -373,7 +396,7 @@ public class SvCompareVcfs
             newCipos = Arrays.toString(newBreakend.Cipos);
             newIhompos = Arrays.toString(newBreakend.Ihompos);
             newHomSeq = newBreakend.Homseq;
-            newInsSeq = newBreakend.Coords.InsertSequence;
+            newInsSeq = newBreakend.AltCoords.InsertSequence;
             newSvtype = newBreakend.SvType;
             newFilter = newBreakend.filtersStr();
             newVcfType = newBreakend.SourceVcfType.toString();
@@ -451,7 +474,7 @@ public class SvCompareVcfs
             if(!oldBreakend.Homseq.equals(newBreakend.Homseq))
                 diffSet.add(HOMSEQ);
 
-            if(!oldBreakend.Coords.InsertSequence.equals(newBreakend.Coords.InsertSequence))
+            if(!oldBreakend.InsertSequence.equals(newBreakend.InsertSequence))
                 diffSet.add(DIFF_INSSEQ);
 
             if(!oldBreakend.SvType.equals(newBreakend.SvType))
@@ -482,11 +505,21 @@ public class SvCompareVcfs
     private class VariantBreakend
     {
         public final VariantContext Context;
-        public final VariantAltInsertCoords Coords;
+        private final VariantAltInsertCoords AltCoords;
+
+        public final String Chromosome;
         public final int Position;
+        public final byte Orientation;
+
+        public final String OtherChromosome;
+        public final int OtherPosition;
+        public final byte OtherOrientation;
+
         public final int[] Cipos;
         public final int[] Ihompos;
         public final String Homseq;
+        public final String InsertSequence;
+
         public final String SvType;
         public final Set<String> Filters;
         public final VcfType SourceVcfType;
@@ -494,63 +527,126 @@ public class SvCompareVcfs
         public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
         {
             Context = context;
-            Position = Context.getStart();
 
             String alt = context.getAlternateAllele(0).getDisplayString();
-            Coords = VariantAltInsertCoords.fromRefAlt(alt, alt.substring(0, 1));
+            AltCoords = VariantAltInsertCoords.fromRefAlt(alt, alt.substring(0, 1));
 
-            List<Integer> ciposList = context.getAttributeAsIntList(CIPOS, 0);
-            Cipos = ciposList.size() == 2 ? new int[] { ciposList.get(0), ciposList.get(1) } : new int[] {0, 0};
+            Chromosome = Context.getContig();
+            Position = Context.getStart();
+            Orientation = AltCoords.Orient.asByte();
 
-            List<Integer> iHomPosList = context.getAttributeAsIntList(IHOMPOS, 0);
-            Ihompos = iHomPosList.size() == 2 ? new int[] { iHomPosList.get(0), iHomPosList.get(1) } : new int[] {0, 0};
+            OtherChromosome = AltCoords.OtherChromsome;
+            OtherPosition = AltCoords.OtherPosition;
+            OtherOrientation = AltCoords.OtherOrient == null ? 0 : AltCoords.OtherOrient.asByte();
 
+            Cipos = getPositionOffsets(CIPOS);
+            Ihompos = getPositionOffsets(IHOMPOS);
             Homseq = context.getAttributeAsString(HOMSEQ, "");
+            InsertSequence = AltCoords.InsertSequence;
 
-            SvType = (svCaller== SvCaller.GRIDSS) ? context.getAttributeAsString(EVENT_TYPE, "") : context.getAttributeAsString(SVTYPE, "");
+            SvType = svCaller == SvCaller.GRIDSS ?
+                    context.getAttributeAsString(EVENT_TYPE, "") :
+                    context.getAttributeAsString(SVTYPE, "");
 
             Filters = Context.getFilters();
 
             SourceVcfType = sourceVcfType;
         }
 
-        public int minPosition() { return Position + Cipos[0];}
-        public int maxPosition() { return Position + Cipos[1];}
-
-        private boolean exactMatch(final VariantBreakend other)
+        private boolean isSingle()
         {
-            return minPosition() == other.minPosition() &&
-                    maxPosition() == other.maxPosition() &&
-                    Coords.InsertSequence.equals(other.Coords.InsertSequence) &&
-                    Homseq.equals(other.Homseq) &&
-                    SvType.equals(other.SvType);
+            return AltCoords.OtherChromsome.isEmpty();
         }
 
-        private boolean coordsOnlyMatch(final VariantBreakend other)
+        private boolean isEnd()
         {
-            return Position == other.Position;
+            if(OtherChromosome.isEmpty())
+                return false;
+
+            if(Context.getContig().equals(OtherChromosome))
+                return Position > OtherPosition;
+
+            return HumanChromosome.lowerChromosome(OtherChromosome, Chromosome);
         }
 
-        private boolean approxMatch(final VariantBreakend other, final int upperLowerBound)
+        public boolean isInverted()
         {
-            return positionWithin(Position, other.Position-upperLowerBound, other.Position+upperLowerBound);
+            return Orientation == OtherOrientation;
         }
 
-        public MatchType compareCoordinates(final VariantBreakend other, int upperLowerBound)
+        private int[] getPositionOffsets(String vcfTag)
         {
-            if(other.Coords.Orient != Coords.Orient)
-                return MatchType.NO_MATCH;
+            List<Integer> offsetsList = Context.getAttributeAsIntList(vcfTag, 0);
+            return offsetsList.size() == 2 ?
+                    new int[] { offsetsList.get(0), offsetsList.get(1) } :
+                    new int[] {0, 0};
+        }
 
-            if(exactMatch(other))
-                return MatchType.EXACT_MATCH;
+        public int minPosition() { return Position + Cipos[0]; }
+        public int maxPosition() { return Position + Cipos[1]; }
 
-            if(coordsOnlyMatch(other))
-                return MatchType.COORDS_ONLY;
+        public int otherMinPosition()
+        {
+            return isInverted() ?
+                    OtherPosition - Cipos[0] :
+                    OtherPosition + Cipos[0];
+        }
 
-            if(approxMatch(other, upperLowerBound))
-                return MatchType.APPROX_MATCH;
+        public int otherMaxPosition()
+        {
+            return isInverted() ?
+                    OtherPosition - Cipos[1] :
+                    OtherPosition + Cipos[1];
+        }
 
-            return MatchType.NO_MATCH;
+        private boolean exactMatch(final VariantBreakend otherBreakend)
+        {
+            return
+                    // First side
+                    Chromosome.equals(otherBreakend.Chromosome) &&
+                    Orientation == otherBreakend.Orientation &&
+                    minPosition() == otherBreakend.minPosition() &&
+                    maxPosition() == otherBreakend.maxPosition() &&
+                    InsertSequence.equals(otherBreakend.InsertSequence) &&
+                    Homseq.equals(otherBreakend.Homseq) &&
+                    SvType.equals(otherBreakend.SvType) &&
+
+                    // Second side
+                    OtherChromosome.equals(otherBreakend.OtherChromosome) &&
+                    OtherOrientation == otherBreakend.OtherOrientation &&
+                    otherMinPosition() == otherBreakend.otherMinPosition() &&
+                    otherMaxPosition() == otherBreakend.otherMaxPosition()
+                    // No need to check insert seq, hom seq or SV type again. It is always the same on the other side
+                    ;
+        }
+
+        private boolean coordsOnlyMatch(final VariantBreakend otherBreakend)
+        {
+            return
+                    // First side
+                    Chromosome.equals(otherBreakend.Chromosome) &&
+                    Position == otherBreakend.Position &&
+                    Orientation == otherBreakend.Orientation &&
+
+                    // Second side
+                    OtherChromosome.equals(otherBreakend.OtherChromosome) &&
+                    OtherPosition == otherBreakend.OtherPosition &&
+                    OtherOrientation == otherBreakend.OtherOrientation;
+        }
+
+        private boolean approxMatch(final VariantBreakend otherBreakend, final int upperLowerBound)
+        {
+            return
+                    // First side
+                    Chromosome.equals(otherBreakend.Chromosome) &&
+                    Orientation == otherBreakend.Orientation &&
+                    positionWithin(Position,otherBreakend.Position-upperLowerBound, otherBreakend.Position+upperLowerBound) &&
+
+                    // Second side
+                    OtherChromosome.equals(otherBreakend.OtherChromosome) &&
+                    OtherOrientation == otherBreakend.OtherOrientation &&
+                    positionWithin(OtherPosition,otherBreakend.OtherPosition-upperLowerBound, otherBreakend.OtherPosition+upperLowerBound)
+                    ;
         }
 
         public String getExtendedAttributeAsString(String id, String key)
@@ -571,26 +667,9 @@ public class SvCompareVcfs
 
         public String toString() { return String.format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]); }
 
-        public String coordStr() { return String.format("%s:%d:%d", Context.getContig(), Position, Coords.Orient.asByte()); }
+        public String coordStr() { return String.format("%s:%d:%d", Context.getContig(), Position, Orientation); }
 
-        public String otherCoordStr() { return String.format("%s:%d:%d", Coords.OtherChromsome, Coords.OtherPosition, Coords.OtherOrient.asByte()); }
-
-        public boolean isSingle() { return Coords.OtherChromsome.isEmpty(); }
-
-        public boolean isEnd()
-        {
-            if(Coords.OtherChromsome.isEmpty())
-                return false;
-
-            if(Context.getContig().equals(Coords.OtherChromsome))
-            {
-                return Position > Coords.OtherPosition;
-            }
-            else
-            {
-                return HumanChromosome.lowerChromosome(Coords.OtherChromsome, Context.getContig());
-            }
-        }
+        public String otherCoordStr() { return String.format("%s:%d:%d", OtherChromosome, OtherPosition, OtherOrientation); }
 
         public String svCoordStr()
         {
@@ -615,12 +694,15 @@ public class SvCompareVcfs
 
         public StructuralVariantType svType()
         {
-            if(Coords.OtherChromsome.equals(""))
+            if(OtherChromosome.equals(""))
                 return SGL;
 
             return formSvType(
-                    Context.getContig(), Coords.OtherChromsome, Position, Coords.OtherPosition,
-                    Coords.Orient, Coords.OtherOrient, !Coords.InsertSequence.isEmpty());
+                    Chromosome, OtherChromosome,
+                    Position, OtherPosition,
+                    AltCoords.Orient, AltCoords.OtherOrient,
+                    InsertSequence.isEmpty()
+            );
         }
 
         public boolean isPassVariant() { return Filters.isEmpty(); }
@@ -686,6 +768,8 @@ public class SvCompareVcfs
 
         configBuilder.addPath(OLD_UNFILTERED_VCF, false, "Path to the old unfiltered VCF file");
         configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
+
+        configBuilder.addPath(SHOW_NON_PASS, false, "Show variants not PASSing in both old nor new VCF files");
 
         FileWriterUtils.addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
