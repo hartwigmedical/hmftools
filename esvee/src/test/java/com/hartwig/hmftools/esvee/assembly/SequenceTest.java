@@ -142,18 +142,68 @@ public class SequenceTest
         assertEquals(28, repeats.get(3).Index);
     }
 
+    private static final int NO_MISMATCH_LIMIT = -1;
+
     @Test
+    public void testSequenceRepeatComparisons()
+    {
+        // test where the repeat multiple is just sufficient to count for one of the sequences only
+
+        //                              10           20
+        //                   01234 567890 1234 5678 9012
+        String firstBases = "ACGTA CTCTCT ACGT GAGA ACGT";
+
+        String secondBases = "ACGTA CTCT ACGT GAGAGA ACGT";
+        //                    01234 5678 9012 345678 9012
+        //                                10          20
+
+        firstBases = firstBases.replaceAll(" ", "");
+        secondBases = secondBases.replaceAll(" ", "");
+
+        List<RepeatInfo> firstRepeats = findRepeats(firstBases.getBytes());
+        assertEquals(1, firstRepeats.size());
+
+        byte[] firstBaseQuals = buildDefaultBaseQuals(firstBases.length());
+
+        List<RepeatInfo> secondRepeats = findRepeats(secondBases.getBytes());
+        assertEquals(1, secondRepeats.size());
+
+        byte[] secondBaseQuals = buildDefaultBaseQuals(secondBases.length());
+
+        int mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT);
+
+        assertEquals(2, mismatches);
+
+        mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT, false);
+
+        assertEquals(2, mismatches);
+    }
+
+        @Test
     public void testSequenceComparisons()
     {
-        //                   0123456789012345678901234567890123456789
-        String firstBases = "ATTTTTAACTCTCTCTAAAGGCTGACGTATTCC";
+        //                                   10          20            30
+        //                    012345     6789012345 678 90 12345678   9012
+        String firstBases =  "ATTTTT     AACTCTCTCT AAA GG CTGACGTA   TTCC";
+
+        String secondBases = "ATTTTTTTTT AACTCTCT   AAA    CTGACGTA G TTCC";
+        //                    0123456789 01234567   890    12345678 9 0123
+        //                               10           20              30
+
+        firstBases = firstBases.replaceAll(" ", "");
+        secondBases = secondBases.replaceAll(" ", "");
+
         List<RepeatInfo> firstRepeats = findRepeats(firstBases.getBytes());
         assertEquals(2, firstRepeats.size());
 
         byte[] firstBaseQuals = buildDefaultBaseQuals(firstBases.length());
 
-        //                    0123456789012345678901234567890123456789
-        String secondBases = "ATTTTTTTTTAACTCTCTAAACTGACGTAGTTCC";
         List<RepeatInfo> secondRepeats = findRepeats(secondBases.getBytes());
         assertEquals(2, secondRepeats.size());
 
@@ -163,7 +213,15 @@ public class SequenceTest
 
         int mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
-                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT);
+
+        assertEquals(4, mismatches);
+
+        mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT, false);
 
         assertEquals(4, mismatches);
 
@@ -180,7 +238,15 @@ public class SequenceTest
 
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
-                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT);
+
+        assertEquals(1, mismatches);
+
+        mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT, false);
 
         assertEquals(1, mismatches);
     }
@@ -188,8 +254,12 @@ public class SequenceTest
     @Test
     public void testLongerSequenceComparisons()
     {
+        //                              10        20            30        40         50            60            70          80        90
+        //                    012345678901234567890 1 2345678  901234567890123456789 012  345678 9 012 3 456 7 890123456 7 89012345678901
         String firstBases =  "TTTTTTGTATTAAGTCTAATA C TTTTTTT  AACTTAAGTGTAGATTTTTTT AAA  TGCTCC A TAA C GGT T TTATTTATA C GATTTTTGTCACTG";
-        String secondBases = "TTTTTTGTATTAAGTCTAATA G TTTTTTTT AACTTAAGTGTAGATTTTTT  AAAA TGCTCC G TAA T GGT G TTATTTATA T GATTTTTGTCACTGCT";
+        String secondBases = "TTTTTTGTATTAAGTCTAATA G TTTTTTTT AACTTAAGTGTAGATTTTTT  AAAA TGCTCC G TAA T GGT G TTATTTATA T GATTTTTGTCACTG";
+        //                    012345678901234567890 1 23456789 01234567890123456789  0123 456789 0 123 4 567 8 901234567 8 90123456789012
+        //                              10        20           30        40          50          60             70          80        90
 
         firstBases = firstBases.replaceAll(" ", "");
         secondBases = secondBases.replaceAll(" ", "");
@@ -208,7 +278,15 @@ public class SequenceTest
 
         int mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
-                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT);
+
+        assertEquals(8, mismatches);
+
+        mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
+                NO_MISMATCH_LIMIT, false);
 
         assertEquals(8, mismatches);
     }

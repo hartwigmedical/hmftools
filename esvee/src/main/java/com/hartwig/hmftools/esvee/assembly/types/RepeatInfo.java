@@ -22,6 +22,7 @@ public class RepeatInfo
 
     public int postRepeatIndex() { return Index + length(); }
     public int length() { return Count * Bases.length(); }
+    public int baseLength() { return Bases.length(); }
 
     public boolean matchesType(final RepeatInfo other) { return Bases.equals(other.Bases); }
 
@@ -30,6 +31,16 @@ public class RepeatInfo
     public static final int MIN_SINGLE_REPEAT = 4;
     public static final int MIN_DUAL_REPEAT = 3;
     public static final int MIN_OTHER_REPEAT = 2;
+
+    public static int minRequiredRepeatCount(int baseLength)
+    {
+        if(baseLength == 1)
+            return MIN_SINGLE_REPEAT;
+        if(baseLength == 1)
+            return MIN_DUAL_REPEAT;
+        else
+            return MIN_OTHER_REPEAT;
+    }
 
     public static List<RepeatInfo> findRepeats(final byte[] bases)
     {
@@ -85,17 +96,7 @@ public class RepeatInfo
         return repeats;
     }
 
-    public static String repeatsAsString(final List<RepeatInfo> repeats)
-    {
-        if(repeats.isEmpty())
-            return "";
-
-        StringJoiner sj = new StringJoiner(" ");
-        repeats.forEach(x -> sj.add(format("%dx%s", x.Count, x.Bases)));
-
-        return format("%d %s", repeats.size(), sj);
-    }
-
+    // see Sage for a flexible repeat-length routine to find these
     private static final int DUAL_LENGTH = 2;
     private static final int THREE_LENGTH = 3;
     private static final int FOUR_LENGTH = 4;
@@ -315,5 +316,16 @@ public class RepeatInfo
         }
 
         return trimmedBasesLength;
+    }
+
+    public static String repeatsAsString(final List<RepeatInfo> repeats)
+    {
+        if(repeats.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(" ");
+        repeats.forEach(x -> sj.add(format("%dx%s", x.Count, x.Bases)));
+
+        return format("%d %s", repeats.size(), sj);
     }
 }
