@@ -45,8 +45,7 @@ public class UltimaRealignedQualModelBuilder
         private final SimpleVariant mVariant;
         private final UltimaQualModel mBaseQualModel;
         private final int mVarReadIndexOffset;
-
-        // TODO: Just need offset, because core will always match right?
+        
         public UltimaRealignedQualModel(final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset)
         {
             super(baseQualModel.type());
