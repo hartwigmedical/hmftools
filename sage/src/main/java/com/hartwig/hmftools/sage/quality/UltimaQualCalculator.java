@@ -62,7 +62,7 @@ public class UltimaQualCalculator
                 byte upperHpBase = upperRefBases[0];
                 int upperHpLength = findHomopolymerLength(upperRefBases, upperHpBase, 0, true);
 
-                if(lowerHpLength > 2 && upperHpLength > 2)
+                if(lowerHpLength > 2 && upperHpLength > 2 && variant.ref().length() + variant.position() - 1 <= upperRefBaseEnd)
                 {
                     return new HomopolymerTransitionDeletion(variant, homopolymerTransitionIndex, lowerHpLength, upperHpLength);
                 }
@@ -81,7 +81,9 @@ public class UltimaQualCalculator
                 homopolymerLength = findHomopolymerLength(refBases, hpBase, refVarIndex + 1, true);
             }
 
-            if(homopolymerLength <= MAX_HOMOPOLYMER)
+            boolean singleRefBase = variant.ref().substring(1).chars().distinct().count() <= 1;
+            boolean singleAltBase = variant.alt().substring(1).chars().distinct().count() <= 1;
+            if(homopolymerLength <= MAX_HOMOPOLYMER && singleRefBase && singleAltBase)
             {
                 int homopolymerStartIndex = 1;
                 // adjust the HP length by the diff observed in the variant
