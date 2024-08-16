@@ -897,15 +897,15 @@ public class PhaseSetBuilder
             if(phaseSet.assemblies().size() <= 2)
                 continue;
 
-            for(int i = 0; i < phaseSet.assemblies().size(); ++i)
+            for(int i = 0; i < phaseSet.assemblies().size() - 1; ++i)
             {
-                JunctionAssembly assembly1 = mAssemblies.get(i);
+                JunctionAssembly assembly1 = phaseSet.assemblies().get(i);
 
                 List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly1);
 
                 for(int j = i + 1; j < phaseSet.assemblies().size(); ++j)
                 {
-                    JunctionAssembly assembly2 = mAssemblies.get(j);
+                    JunctionAssembly assembly2 = phaseSet.assemblies().get(j);
 
                     // ignore already linked assemblies since their support has been matched, and ignore assemblies in a facing link
                     if(assemblyLinks.stream().anyMatch(x -> x.hasAssembly(assembly2)))
