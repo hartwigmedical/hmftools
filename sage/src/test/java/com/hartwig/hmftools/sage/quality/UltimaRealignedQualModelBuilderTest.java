@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getQualVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.mergeSandwichedHomopolymers;
 
 import static org.junit.Assert.assertEquals;
@@ -8,10 +10,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.Homopolymer;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.MergedHomopolymers;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.UltimaRealignedQualModel;
 
 import org.junit.Test;
 
@@ -115,6 +121,34 @@ public class UltimaRealignedQualModelBuilderTest
         for(SandwichedHomopolymerTestCase testCase : testCases)
         {
             testCase.check();
+        }
+    }
+
+    @Test
+    public void testGetQualVariantsNonHomopolymerInsert()
+    {
+        int variantPos = 1000;
+        SimpleVariant variant = new SimpleVariant(CHR_1, variantPos, "C", "CAT");
+        SimpleVariant realignedVariant1 = new SimpleVariant(CHR_1, variantPos - 200, "CC", "C");
+        SimpleVariant realignedVariant2 = new SimpleVariant(CHR_1, variantPos - 100, "C", "CCC");
+        SimpleVariant realignedVariant3 = new SimpleVariant(CHR_1, variantPos, "C", "CA");
+        SimpleVariant realignedVariant4 = new SimpleVariant(CHR_1, variantPos, "C", "CT");
+        List<UltimaRealignedQualModel> realignedVariants = Lists.newArrayList(
+                new UltimaRealignedQualModel(realignedVariant1),
+                new UltimaRealignedQualModel(realignedVariant2),
+                new UltimaRealignedQualModel(realignedVariant3),
+                new UltimaRealignedQualModel(realignedVariant4));
+        List<SimpleVariant> actualQualVariants = getQualVariants(false, variant, realignedVariants)
+                .stream()
+                .map(UltimaRealignedQualModel::variant)
+                .collect(Collectors.toList());
+
+        List<SimpleVariant> expectedQualVariants = Lists.newArrayList(realignedVariant2, realignedVariant3, realignedVariant4);
+
+        assertEquals(expectedQualVariants.size(), actualQualVariants.size());
+        for(int i = 0; i < expectedQualVariants.size(); i++)
+        {
+            assertTrue(expectedQualVariants.get(i).matches(actualQualVariants.get(i)));
         }
     }
 

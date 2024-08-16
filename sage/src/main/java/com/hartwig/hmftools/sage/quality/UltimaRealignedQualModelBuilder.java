@@ -56,6 +56,17 @@ public class UltimaRealignedQualModelBuilder
             mVarReadIndexOffset = varReadIndexOffset;
         }
 
+        @VisibleForTesting
+        public UltimaRealignedQualModel(final SimpleVariant variant)
+        {
+            // this is just a placeholder for testing
+            super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
+
+            mVariant = variant;
+            mBaseQualModel = null;
+            mVarReadIndexOffset = -1;
+        }
+
         @Override
         public byte calculateQual(final SAMRecord record, final int varReadIndex)
         {
@@ -123,7 +134,7 @@ public class UltimaRealignedQualModelBuilder
 
         // TODO: This has been duct taped.
         List<UltimaQualModel> realignedQualModels =
-                getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext, realignedVariants)
+                getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext.variant(), realignedVariants)
                         .stream()
                         .map(x -> (UltimaQualModel) x)
                         .collect(Collectors.toList());
@@ -563,9 +574,9 @@ public class UltimaRealignedQualModelBuilder
     }
 
     // TODO: Simplify and remove repetition.
-    private static List<UltimaRealignedQualModel> getQualVariants(boolean variantInMergedHomopolymers, final VariantReadContext readContext, final List<UltimaRealignedQualModel> realignedVariants)
+    @VisibleForTesting
+    public static List<UltimaRealignedQualModel> getQualVariants(boolean variantInMergedHomopolymers, final SimpleVariant variant, final List<UltimaRealignedQualModel> realignedVariants)
     {
-        SimpleVariant variant = readContext.variant();
         if(variantInMergedHomopolymers)
         {
             // sandwiched snv/mnv case
@@ -631,90 +642,24 @@ public class UltimaRealignedQualModelBuilder
             return qualVariants;
         }
 
-        if(variant.isIndel())
+        // non-sandwiched snv/mnv case and indel case
+        List<Homopolymer> delHomopolymers;
+        List<Homopolymer> insertHomopolymers;
+        if(variant.indelLength() > 0)
         {
-            int indelLength = variant.indelLength();
-            char indelBase = indelLength > 0 ? variant.Alt.charAt(1) : variant.Ref.charAt(1);
-
-            int variantIndex = -1;
-            List<UltimaRealignedQualModel> leftInserts = Lists.newArrayList();
-            List<UltimaRealignedQualModel> leftDels = Lists.newArrayList();
-            int leftIndelBalance = 0;
-            List<UltimaRealignedQualModel> rightInserts = Lists.newArrayList();
-            List<UltimaRealignedQualModel> rightDels = Lists.newArrayList();
-            int rightIndelBalance = 0;
-            for(int i = 0; i < realignedVariants.size(); ++i)
-            {
-                UltimaRealignedQualModel realignedVariant = realignedVariants.get(i);
-                int realignedIndelLength = realignedVariant.variant().indelLength();
-                char realignedIndelBase = realignedIndelLength > 0 ? realignedVariant.variant().Alt.charAt(1) : realignedVariant.variant().Ref.charAt(1);
-                if(variantIndex == -1
-                        && indelLength == realignedIndelLength
-                        && indelBase == realignedIndelBase)
-                {
-                    variantIndex = i;
-                    continue;
-                }
-
-                if(variantIndex == -1)
-                {
-                    leftIndelBalance += realignedVariant.variant().indelLength();
-                    if(realignedVariant.variant().isInsert())
-                    {
-                        leftInserts.add(realignedVariant);
-                    }
-                    else
-                    {
-                        leftDels.add(realignedVariant);
-                    }
-
-                    continue;
-                }
-
-                rightIndelBalance += realignedVariant.variant().indelLength();
-                if(realignedVariant.variant().isInsert())
-                {
-                    rightInserts.add(realignedVariant);
-                }
-                else
-                {
-                    rightDels.add(realignedVariant);
-                }
-            }
-
-            if(variantIndex == -1)
-            {
-                return realignedVariants;
-            }
-
-            List<UltimaRealignedQualModel> qualVariants = Lists.newArrayList();
-            qualVariants.add(realignedVariants.get(variantIndex));
-            if(leftIndelBalance > 0)
-            {
-                qualVariants.addAll(leftInserts);
-            }
-
-            if(leftIndelBalance < 0)
-            {
-                qualVariants.addAll(leftDels);
-            }
-
-            if(rightIndelBalance > 0)
-            {
-                qualVariants.addAll(rightInserts);
-            }
-
-            if(rightIndelBalance < 0)
-            {
-                qualVariants.addAll(rightDels);
-            }
-
-            return qualVariants;
+            delHomopolymers = Lists.newArrayList();
+            insertHomopolymers = getHomopolymers(variant.Alt.getBytes(), 1, variant.Alt.length() - 1);
         }
-
-        // non-sandwiched snv/mnv case
-        List<Homopolymer> delHomopolymers = getHomopolymers(variant.Ref.getBytes(), 0, variant.Ref.length() - 1);
-        List<Homopolymer> insertHomopolymers = getHomopolymers(variant.Alt.getBytes(), 0, variant.Alt.length() - 1);
+        else if(variant.indelLength() < 0)
+        {
+            delHomopolymers = getHomopolymers(variant.Ref.getBytes(), 1, variant.Ref.length() - 1);
+            insertHomopolymers = Lists.newArrayList();
+        }
+        else
+        {
+            delHomopolymers = getHomopolymers(variant.Ref.getBytes(), 0, variant.Ref.length() - 1);
+            insertHomopolymers = getHomopolymers(variant.Alt.getBytes(), 0, variant.Alt.length() - 1);
+        }
 
         List<UltimaRealignedQualModel> seqVariants = null;
         List<UltimaRealignedQualModel> leftInserts = Lists.newArrayList();
@@ -823,7 +768,6 @@ public class UltimaRealignedQualModelBuilder
         }
 
         List<UltimaRealignedQualModel> qualVariants = Lists.newArrayList();
-        qualVariants.addAll(seqVariants);
         if(leftIndelBalance > 0)
         {
             qualVariants.addAll(leftInserts);
@@ -833,6 +777,8 @@ public class UltimaRealignedQualModelBuilder
         {
             qualVariants.addAll(leftDels);
         }
+
+        qualVariants.addAll(seqVariants);
 
         if(rightIndelBalance > 0)
         {
