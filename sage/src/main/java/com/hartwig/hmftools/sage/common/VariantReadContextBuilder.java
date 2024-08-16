@@ -81,7 +81,10 @@ public class VariantReadContextBuilder
             // set max ref repeat for use in MSI calcs and VCF output
             setMaxRefRepeat(readContext);
 
-            readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
+            if(mConfig == null || mConfig.Sequencing.Type != ULTIMA)
+            {
+                readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
+            }
 
             return readContext;
         }
