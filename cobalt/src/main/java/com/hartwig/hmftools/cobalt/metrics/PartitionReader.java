@@ -25,6 +25,7 @@ import java.util.Queue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.sv.SvUtils;
@@ -135,13 +136,18 @@ public class PartitionReader extends Thread
         // process overlapping groups
         for(SAMRecord read : mReadGroupMap.values())
         {
-            processSamRecord(read);
+            processSamRecord(read, false);
         }
 
         mReadGroupMap.clear();
     }
 
     private void processSamRecord(final SAMRecord read)
+    {
+        processSamRecord(read, true);
+    }
+
+    private void processSamRecord(final SAMRecord read, boolean removeFragments)
     {
         int readStart = read.getAlignmentStart();
 
@@ -163,6 +169,9 @@ public class PartitionReader extends Thread
         }
 
         processFragment(read, mateRead);
+
+        if(removeFragments)
+            mReadGroupMap.remove(read.getReadName());
     }
 
     private void processSingleRecord(final SAMRecord read)
@@ -182,7 +191,6 @@ public class PartitionReader extends Thread
 
         int fragmentLength = abs(read.getInferredInsertSize());
 
-        // CHECK: should soft-clipped bases be included or ignored?
         int readPosStart = read.getAlignmentStart();
         int readPosEnd = read.getAlignmentEnd();
 
@@ -196,16 +204,21 @@ public class PartitionReader extends Thread
 
         if(positionsOverlap(readPosStart, readPosEnd, matePosStart, matePosEnd))
         {
-            // CHECK: how accurate to make this for overlapping fragments? for now just take the lower read's bases
-            // and append with GC content of upper non-overlapping bases
             SAMRecord lowerRead = read.getAlignmentStart() <= mate.getAlignmentStart() ? read : mate;
             SAMRecord upperRead = read == lowerRead ? mate : read;
 
             String alignedBases = getAlignedReadBases(lowerRead, 0);
 
-            if(upperRead.getAlignmentEnd() > lowerRead.getAlignmentEnd())
+            boolean useRightClip = lowerRead.getReadNegativeStrandFlag();
+            int scRightLength = CigarUtils.rightSoftClipLength(lowerRead);
+
+            int impliedLowerReadEnd = lowerRead.getAlignmentEnd();
+            if(useRightClip)
+                impliedLowerReadEnd += scRightLength;
+
+            if(upperRead.getAlignmentEnd() > impliedLowerReadEnd)
             {
-                alignedBases += getAlignedReadBases(upperRead, lowerRead.getAlignmentEnd());
+                alignedBases += getAlignedReadBases(upperRead, impliedLowerReadEnd);
             }
 
             gcContent = GcCalcs.calcGcPercent(alignedBases);
@@ -295,16 +308,29 @@ public class PartitionReader extends Thread
             }
         }
 
+        boolean useLeftClip = minReadStartPos == 0 && !read.getReadNegativeStrandFlag();
+        boolean useRightClip = read.getReadNegativeStrandFlag();
+
         int readIndex = 0;
         int position = read.getAlignmentStart();
 
         String alignedReadBases = "";
 
-        for(CigarElement element : read.getCigar().getCigarElements())
+        for(int i = 0; i < read.getCigar().getCigarElements().size(); ++i)
         {
+            CigarElement element = read.getCigar().getCigarElements().get(i);
+
             switch(element.getOperator())
             {
                 case S:
+
+                    if((i == 0 && useLeftClip) || (i > 0 && useRightClip))
+                    {
+                        int readIndexStart = readIndex;
+                        int readIndexEnd = readIndexStart + element.getLength() - 1;
+                        alignedReadBases += readBasesStr.substring(readIndexStart, readIndexEnd);
+                    }
+
                     readIndex += element.getLength();
                     break;
 
