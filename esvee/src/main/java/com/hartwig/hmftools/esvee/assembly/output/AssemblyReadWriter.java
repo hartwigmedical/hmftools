@@ -78,7 +78,8 @@ public class AssemblyReadWriter
             sj.add("BreakendSupport");
 
             sj.add("Matches");
-            sj.add("Mismatches");
+            sj.add("ExtMismatches");
+            sj.add("RefMismatches");
             sj.add("TrimCount");
             sj.add("LineTail");
 
@@ -151,7 +152,8 @@ public class AssemblyReadWriter
                 sj.add(support.breakendSupportType() != null ? support.breakendSupportType().toString() : "NONE");
 
                 sj.add(String.valueOf(support.junctionMatches()));
-                sj.add(String.valueOf(support.mismatchCount()));
+                sj.add(String.valueOf(support.junctionMismatches()));
+                sj.add(String.valueOf(support.referenceMismatches()));
                 sj.add(String.valueOf(support.trimCount()));
                 sj.add(String.valueOf(support.hasLineTail()));
 

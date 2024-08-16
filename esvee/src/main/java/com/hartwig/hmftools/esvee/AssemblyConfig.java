@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
@@ -195,12 +196,9 @@ public class AssemblyConfig
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
         RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null
-                || WriteTypes.contains(BREAKEND) ||  WriteTypes.contains(ALIGNMENT_DATA);
+                || WriteTypes.contains(BREAKEND) || WriteTypes.contains(ALIGNMENT_DATA) || WriteTypes.contains(ALIGNMENT);
 
-        String bwaLibPath = configBuilder.getValue(BWA_LIB_PATH);
-
-        if(RunAlignment || DecoyGenome != null)
-            loadAlignerLibrary(bwaLibPath);
+        loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 

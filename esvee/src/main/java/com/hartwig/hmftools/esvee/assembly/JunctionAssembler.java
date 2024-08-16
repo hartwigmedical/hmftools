@@ -297,6 +297,7 @@ public class JunctionAssembler
         int maxDistanceFromJunction = 0;
 
         SupportRead topSupportRead = null;
+        int maxRefBaseQual = 0;
 
         Set<Read> excludedReads = Sets.newHashSet();
 
@@ -338,10 +339,15 @@ public class JunctionAssembler
 
             maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
 
-            if(topSupportRead == null)
+            int readRefBaseQual = calcRefBaseQual(read, readJunctionIndex, mJunction.isForward());
+
+            if(topSupportRead == null || readRefBaseQual > maxRefBaseQual)
             {
-                topSupportRead = support; // will be the initial
+                maxRefBaseQual = readRefBaseQual;
+                topSupportRead = support;
             }
+
+            /*
             else
             {
                 // select the read with the fewest SNVs in the aligned bases that also has the equal least number of junction mismatches
@@ -352,6 +358,7 @@ public class JunctionAssembler
                     topSupportRead = support;
                 }
             }
+            */
         }
 
         assembly.extendRefBases(newRefBasePosition, Collections.emptyList(), null);
@@ -370,6 +377,21 @@ public class JunctionAssembler
         }
 
         RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
+    }
+
+    private static int calcRefBaseQual(final Read read, int readJunctionIndex, boolean isForward)
+    {
+        int totalQual = 0;
+
+        int readIndexStart = isForward ? 0 : readJunctionIndex;
+        int readIndexEnd = isForward ? readJunctionIndex : read.getBaseQuality().length - 1;
+
+        for(int i = readIndexStart; i <= readIndexEnd; ++i)
+        {
+            totalQual += read.getBaseQuality()[i];
+        }
+
+        return totalQual;
     }
 
     private void extendRefBasesWithJunctionRead(final JunctionAssembly assembly, final Read read, final SupportRead existingSupport)
