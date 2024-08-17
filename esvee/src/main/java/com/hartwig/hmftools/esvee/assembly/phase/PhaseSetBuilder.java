@@ -189,6 +189,7 @@ public class PhaseSetBuilder
         mSplitLinks.add(localRefLink);
         JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
         localRefAssembly.setOutcome(LOCAL_INDEL);
+        localRefAssembly.setPhaseGroup(mPhaseGroup);
 
         return true;
     }

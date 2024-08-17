@@ -404,28 +404,4 @@ public class TestUtils
     {
         return (int)assembly.support().stream().filter(x -> x.type() == type).count();
     }
-
-    public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
-    {
-        List<String> lines = new BufferedReader(new InputStreamReader(
-                TestUtils.class.getResourceAsStream(testFilename))).lines().collect(Collectors.toList());
-
-        for(String line : lines)
-        {
-            String[] values = line.split(CSV_DELIM, 2);
-            String chr = values[0];
-
-            if(chr.startsWith("#")) // comment lines
-                continue;
-
-            String bases = values[1];
-
-            String existingBases = refGenome.RefGenomeMap.get(chr);
-
-            if(existingBases != null)
-                bases = existingBases + bases;
-
-            refGenome.RefGenomeMap.put(chr, bases);
-        }
-    }
 }
