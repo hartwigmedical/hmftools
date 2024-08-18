@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -157,7 +154,8 @@ public class JunctionAssembler
 
             assembly.addMismatchReadCount(mismatchReadCount);
 
-            expandReferenceBases(assembly);
+            RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
+            assembly.setRefBases(refBaseSeqBuilder);
 
             assembly.buildRepeatInfo();
         }
@@ -284,121 +282,5 @@ public class JunctionAssembler
 
         assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
         return true;
-    }
-
-    private void expandReferenceBases(final JunctionAssembly assembly)
-    {
-        // find the longest length of aligned reference bases extending back from the junction
-        int newRefBasePosition = assembly.junction().Position;
-
-        int junctionPosition = assembly.junction().Position;
-        boolean junctionIsForward = assembly.junction().isForward();
-
-        int maxDistanceFromJunction = 0;
-
-        SupportRead topSupportRead = null;
-        int maxRefBaseQual = 0;
-
-        Set<Read> excludedReads = Sets.newHashSet();
-
-        for(SupportRead support : assembly.support())
-        {
-            Read read = support.cachedRead();
-            int readJunctionIndex = read.getReadIndexAtReferencePosition(junctionPosition, true);
-
-            // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
-            // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
-            int readExtensionDistance;
-
-            // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-
-            if(junctionIsForward)
-            {
-                if(read.isRightClipped() && read.unclippedEnd() - junctionPosition < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
-                {
-                    excludedReads.add(read);
-                    continue;
-                }
-
-                newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
-                readExtensionDistance = max(readJunctionIndex - read.leftClipLength(), 0);
-            }
-            else
-            {
-                if(read.isLeftClipped() && junctionPosition - read.unclippedStart() < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
-                {
-                    excludedReads.add(read);
-                    continue;
-                }
-
-                newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
-                readExtensionDistance = max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
-            }
-
-            assembly.checkAddRefSideSoftClip(read);
-
-            maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
-
-            int readRefBaseQual = calcRefBaseQual(read, readJunctionIndex, mJunction.isForward());
-
-            if(topSupportRead == null || readRefBaseQual > maxRefBaseQual)
-            {
-                maxRefBaseQual = readRefBaseQual;
-                topSupportRead = support;
-            }
-
-            /*
-            else
-            {
-                // select the read with the fewest SNVs in the aligned bases that also has the equal least number of junction mismatches
-                if(support.junctionMismatches() <= topSupportRead.junctionMismatches()
-                && support.junctionMatches() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH
-                && read.snvCount() < topSupportRead.cachedRead().snvCount())
-                {
-                    topSupportRead = support;
-                }
-            }
-            */
-        }
-
-        assembly.extendRefBases(newRefBasePosition, Collections.emptyList(), null);
-
-        if(topSupportRead != null)
-        {
-            extendRefBasesWithJunctionRead(assembly, topSupportRead.cachedRead(), topSupportRead);
-        }
-
-        for(SupportRead support : assembly.support())
-        {
-            if(support == topSupportRead || excludedReads.contains(support.cachedRead()))
-                continue;
-
-            extendRefBasesWithJunctionRead(assembly, support.cachedRead(), support);
-        }
-
-        RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
-    }
-
-    private static int calcRefBaseQual(final Read read, int readJunctionIndex, boolean isForward)
-    {
-        int totalQual = 0;
-
-        int readIndexStart = isForward ? 0 : readJunctionIndex;
-        int readIndexEnd = isForward ? readJunctionIndex : read.getBaseQuality().length - 1;
-
-        for(int i = readIndexStart; i <= readIndexEnd; ++i)
-        {
-            totalQual += read.getBaseQuality()[i];
-        }
-
-        return totalQual;
-    }
-
-    private void extendRefBasesWithJunctionRead(final JunctionAssembly assembly, final Read read, final SupportRead existingSupport)
-    {
-        ReadAssemblyIndices readAssemblyIndices = ReadAssemblyIndices.getJunctionReadRefBaseIndices(
-                mJunction, assembly.junctionIndex(), read, existingSupport.junctionReadStartDistance());
-
-        assembly.addRead(read, readAssemblyIndices, existingSupport.type(), existingSupport);
     }
 }

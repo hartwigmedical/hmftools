@@ -305,7 +305,7 @@ public class RefBaseExtender
         {
             if(assembly.isForwardJunction() == (newRefPosition < assembly.refBasePosition()))
             {
-                assembly.extendRefBases(newRefPosition, Collections.emptyList(), refGenome);
+                assembly.extendRefBases(newRefPosition, refGenome);
             }
             else if(isSoftClipped)
             {

@@ -57,11 +57,10 @@ public class RefBaseExtensionTest
         // the inserted bases are included but the extension sequence is not extended to include all the ref bases to the lowest start pos
         assertEquals(50, assembly.extensionLength());
         assertEquals(161, assembly.refBasePosition());
-        assertEquals(40, assembly.refBaseLength());
+        assertEquals(50, assembly.refBaseLength());
 
-        String assemblyRefBases = readBases.substring(10, 50);
+        String assemblyRefBases = readBases.substring(0, 50);
         assertEquals(assemblyRefBases, assembly.formRefBaseSequence());
-
 
         // repeat for a series of junction reads with a delete in their ref bases
         readBases = REF_BASES_400.substring(161, 171) + REF_BASES_400.substring(181, 201) + extBases;
@@ -80,7 +79,7 @@ public class RefBaseExtensionTest
 
         // the inserted bases are included but the extension sequence is not extended to include all the ref bases to the lowest start pos
         assertEquals(50, assembly.extensionLength());
-        assertEquals(171, assembly.refBasePosition());
+        assertEquals(161, assembly.refBasePosition());
         assertEquals(30, assembly.refBaseLength());
 
         assemblyRefBases = REF_BASES_400.substring(161, 171) + REF_BASES_400.substring(181, 201);

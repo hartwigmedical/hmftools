@@ -299,17 +299,12 @@ public class SequenceTest
         String extensionSequence = "ACGTTCGTAAAAAAGGGGGGACGTACGTCCCC";
         String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGG";
         String assemblySequence = refBaseSequence + extensionSequence;
-        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
+        byte[] baseQuals = buildDefaultBaseQuals(assemblySequence.length());
 
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 37, assemblySequence, "24M32S");
         Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
-        String softClipRef = "GGGGGGGG";
-        Read read2 = createRead(
-                READ_ID_GENERATOR.nextId(), 41,
-                softClipRef + refBaseSequence + extensionSequence.substring(0, 20), "12S20M20S");
-
-        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b, read2)).get(0);
+        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b)).get(0);
 
         assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
         assertEquals(18, assembly.refBaseTrimLength());

@@ -31,6 +31,7 @@ public class ReadParseState
     private int mElementIndex; // index within the current CIGAR element
 
     private boolean mExhausted;
+    private boolean mIsValid;
     private int mRefBaseCount;
 
     private final int mPermittedMismatches;
@@ -47,6 +48,7 @@ public class ReadParseState
         mElements = mRead.cigarElements();
         mElementCount = mElements.size();
         mExhausted = false;
+        mIsValid = true;
         mReadIndex = 0;
         mRefPosition = 0;
         mCigarIndex = 0;
@@ -66,38 +68,24 @@ public class ReadParseState
         return mRead;
     }
 
-    public boolean exhausted()
-    {
-        return mExhausted;
-    }
+    public boolean isValid() { return mIsValid; }
+    public void markInvalid() { mIsValid = false; }
+
+    public boolean exhausted() { return mExhausted; }
 
     public int refPosition() { return mRefPosition; }
     public int readIndex() { return mReadIndex; }
-    public CigarOperator operator()
-    {
-        return mElement.getOperator();
-    }
-    public byte currentBase()
-    {
-        return mRead.getBases()[mReadIndex];
-    }
-    public byte currentQual()
-    {
-        return mRead.getBaseQuality()[mReadIndex];
-    }
 
-    public int mismatches()
-    {
-        return mMismatches;
-    }
-    public int highQualMatches()
-    {
-        return mHighQualMatches;
-    }
-    public boolean exceedsMaxMismatches()
-    {
-        return mMismatches > mPermittedMismatches;
-    }
+    public CigarOperator operator() { return mElement.getOperator(); }
+    public byte currentBase() { return mRead.getBases()[mReadIndex]; }
+    public byte currentQual() { return mRead.getBaseQuality()[mReadIndex]; }
+
+    public int mismatches() { return mMismatches; }
+    public int highQualMatches() { return mHighQualMatches; }
+    public void addMismatch() { ++mMismatches; }
+    public void addHighQualMatch() { ++mHighQualMatches; }
+
+    public boolean exceedsMaxMismatches() { return mMismatches > mPermittedMismatches; }
 
     public void moveNext()
     {
@@ -223,15 +211,6 @@ public class ReadParseState
             moveNext();
         }
     }
-
-    public void resetMatches()
-    {
-        mMismatches = 0;
-        mHighQualMatches = 0;
-    }
-
-    public void addMismatch() { ++mMismatches; }
-    public void addHighQualMatch() { ++mHighQualMatches; }
 
     public String toString()
     {

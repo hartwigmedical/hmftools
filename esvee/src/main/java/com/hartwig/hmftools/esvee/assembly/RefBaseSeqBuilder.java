@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
@@ -16,6 +15,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -41,8 +41,6 @@ public class RefBaseSeqBuilder
     private final List<CigarElement> mCigarElements;
     private int mRefBasePosition;
 
-    private boolean mIsValid;
-
     public RefBaseSeqBuilder(final JunctionAssembly assembly)
     {
         mAssembly = assembly;
@@ -52,6 +50,7 @@ public class RefBaseSeqBuilder
 
         int maxReadBaseLength = 0;
 
+        // all reads will be loaded even if not used, to make updating ref bases more efficient back into the junction assembly
         mReads = Lists.newArrayListWithCapacity(assembly.supportCount());
 
         for(SupportRead support : assembly.support())
@@ -59,23 +58,28 @@ public class RefBaseSeqBuilder
             Read read = support.cachedRead();
             int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunctionPosition, true);
 
+            boolean hasValidJunctionOverlap;
+
             if(mIsForward)
             {
                 // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                if(read.isRightClipped() && read.unclippedEnd() - mJunctionPosition < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
-                    continue;
+                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
             }
             else
             {
-                if(read.isLeftClipped() && mJunctionPosition - read.unclippedStart() < PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP)
-                    continue;
+                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
             }
 
             int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);
 
-            maxReadBaseLength = max(maxReadBaseLength, readRefBaseLength);
+            ReadParseState readState = new ReadParseState(mIsForward, read, readJunctionIndex, readRefBaseLength);
 
-            mReads.add(new ReadParseState(mIsForward, read, readJunctionIndex, readRefBaseLength));
+            if(hasValidJunctionOverlap)
+                maxReadBaseLength = max(maxReadBaseLength, readRefBaseLength);
+            else
+                readState.markInvalid();
+
+            mReads.add(readState);
         }
 
         int baseLength = maxReadBaseLength + 1; // since the junction base itself is included (which is a ref base)
@@ -84,51 +88,34 @@ public class RefBaseSeqBuilder
         mBaseQuals = new byte[baseLength];
         mCigarElements = Lists.newArrayList();
 
-        mIsValid = true;
-
         buildSequence();
 
         trimFinalSequence();
-
-        /*
-        formConsensusSequence();
-
-        // findRepeats();
-
-        assignReads();
-
-        determineFinalBases();
-        */
     }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQualities() { return mBaseQuals; }
     public int refBaseLength() { return mBases.length; }
-    public boolean isValid() { return mIsValid; }
     public int refBasePosition() { return mRefBasePosition; }
     public List<CigarElement> cigarElements() { return mCigarElements; }
     public String cigarStr() { return CigarUtils.cigarElementsToStr(mCigarElements); }
 
     public static int readRefBaseLength(final Read read, int readJunctionIndex, boolean isForwardJunction)
     {
-        if(isForwardJunction)
-        {
-            return max(readJunctionIndex - read.leftClipLength(), 0);
-        }
-        else
-        {
-            return max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
-        }
+        // work out the aligned length including deletes and adding inserts
+        int insertLength = read.cigarElements().stream().filter(x -> x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
+
+        // exclude soft clipped bases on the ref side
+        int alignedLength = isForwardJunction ?
+                max(readJunctionIndex - read.leftClipLength(), 0)
+                : max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
+
+        return alignedLength + insertLength;
     }
 
-    /*
-    public List<Read> mismatchReads()
-    {
-        return mReads.stream().filter(x -> x.exceedsMaxMismatches()).map(x -> x.mRead).collect(Collectors.toList());
-    }
-    */
+    public List<ReadParseState> reads() { return mReads; }
 
-    public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
+    // public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
     private static final byte NO_BASE = 0;
 
@@ -145,7 +132,7 @@ public class RefBaseSeqBuilder
         CigarOperator currentElementType = M;
         int currentElementLength = 0;
 
-        List<ReadParseState> activeReads = Lists.newArrayList(mReads);
+        List<ReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
         while(!activeReads.isEmpty() && currentIndex >= 0 && currentIndex < mBases.length)
         {
@@ -392,8 +379,12 @@ public class RefBaseSeqBuilder
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
     }
 
+    public String toString()
+    {
+        return format("refPosition(%d len=%d) cigar(%s) reads(%s)",
+                mRefBasePosition, mBases.length, cigarStr(), mReads.size());
+    }
+
     @VisibleForTesting
     public String refBaseSequence() { return new String(mBases); }
-
-    public List<ReadParseState> reads() { return mReads; }
 }
