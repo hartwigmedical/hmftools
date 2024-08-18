@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -336,7 +335,7 @@ public class JunctionAssemblyTest
 
         junctionReads.add(juncRead2);
 
-        for(int i = 0; i < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT - 1; ++i)
+        for(int i = 0; i < ASSEMBLY_SPLIT_MIN_READ_SUPPORT - 1; ++i)
         {
             junctionReads.add(cloneRead(juncRead2, READ_ID_GENERATOR.nextId()));
         }

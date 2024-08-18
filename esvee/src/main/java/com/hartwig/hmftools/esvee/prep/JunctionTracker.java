@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -959,7 +958,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
+                if(belowMinQual(read.baseQualities()[i]) || belowMinQual(juncRead.baseQualities()[juncIndex]))
                     continue;
 
                 ++highQualMismatches;
@@ -1042,7 +1041,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
+                if(belowMinQual(read.baseQualities()[i]) || belowMinQual(juncRead.baseQualities()[juncIndex]))
                     continue;
 
                 ++highQualMismatches;

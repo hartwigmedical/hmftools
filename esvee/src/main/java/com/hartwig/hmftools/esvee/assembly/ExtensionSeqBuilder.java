@@ -6,15 +6,16 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
@@ -67,7 +68,7 @@ public class ExtensionSeqBuilder
 
             // indel-based reads may have much shorter extensions than the typical 32-base requirement, so ensure they can extend far enough
             // to satisfy the min-high-qual match filter used post-consensus
-            if(extensionLength < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            if(extensionLength < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
                 continue;
 
             maxExtension = max(maxExtension, extensionLength);
@@ -112,7 +113,7 @@ public class ExtensionSeqBuilder
             if(read.exceedsMaxMismatches())
                 continue;
 
-            if(read.highQualMatches() < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            if(read.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
                 continue;
 
             supportReads.add(new SupportRead(
@@ -170,8 +171,7 @@ public class ExtensionSeqBuilder
 
                 if(readCounts == null)
                 {
-                    if(consensusBase == 0
-                    || (base != consensusBase && consensusMaxQual < LOW_BASE_QUAL_THRESHOLD && qual >= LOW_BASE_QUAL_THRESHOLD))
+                    if(consensusBase == 0 || (base != consensusBase && belowMinQual(consensusMaxQual) && aboveMinQual(qual)))
                     {
                         // set first or replace with first high qual
                         consensusBase = base;
@@ -187,7 +187,7 @@ public class ExtensionSeqBuilder
                         ++consensusReadCount;
                         continue;
                     }
-                    else if(base != consensusBase && qual < LOW_BASE_QUAL_THRESHOLD)
+                    else if(base != consensusBase && belowMinQual(qual))
                     {
                         // low-qual disagreement - ignore regardless of consensus qual
                         continue;
@@ -234,7 +234,7 @@ public class ExtensionSeqBuilder
             mBases[extensionIndex] = consensusBase;
             mBaseQuals[extensionIndex] = (byte)consensusMaxQual;
 
-            if(consensusReadCount >= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            if(consensusReadCount >= ASSEMBLY_MIN_READ_SUPPORT)
                 ++mMinSupportLength;
 
             if(mIsForward)
@@ -261,7 +261,7 @@ public class ExtensionSeqBuilder
                 byte base = read.currentBase();
                 byte qual = read.currentQual();
 
-                if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
+                if(aboveMinQual(qual) && aboveMinQual(mBaseQuals[extensionIndex]))
                 {
                     if(base != mBases[extensionIndex])
                         read.addMismatch();
@@ -324,7 +324,7 @@ public class ExtensionSeqBuilder
                 byte base = read.currentBase();
                 byte qual = read.currentQual();
 
-                if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
+                if(aboveMinQual(qual) && aboveMinQual(mBaseQuals[extensionIndex]))
                 {
                     if(base != mBases[extensionIndex])
                         read.addMismatch();
@@ -351,7 +351,7 @@ public class ExtensionSeqBuilder
 
         checkLineSequence();
 
-        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 
         for(ReadState read : mReads)
         {
@@ -377,7 +377,7 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0 || validExtensionReadCount < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT)
         {
             mIsValid = false;
             return;

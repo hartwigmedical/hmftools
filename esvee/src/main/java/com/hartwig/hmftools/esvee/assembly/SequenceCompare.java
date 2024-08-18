@@ -6,8 +6,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.minRequiredRepeatCount;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
 import java.util.List;
@@ -146,9 +144,7 @@ public final class SequenceCompare
         {
             // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
             // the solution may be to start the matching process from the other end
-            if(basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            if(basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
                 firstIndex += checkForwards ? 1 : -1;
                 secondIndex += checkForwards ? 1 : -1;
@@ -407,9 +403,7 @@ public final class SequenceCompare
 
         while(true)
         {
-            if(!basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            if(!basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
                 return false;
             }
@@ -437,9 +431,7 @@ public final class SequenceCompare
         {
             // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
             // the solution may be to start the matching process from the other end
-            if(basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            if(basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
                 ++firstIndex;
                 ++secondIndex;

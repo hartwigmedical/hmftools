@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -21,6 +22,12 @@ import htsjdk.samtools.SAMRecord;
 
 public final class CommonUtils
 {
+    public static boolean aboveMinQual(byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean aboveMinQual(int qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+
+    public static boolean belowMinQual(byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean belowMinQual(int qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
+
     public static boolean isDiscordantFragment(
             final SAMRecord read, final int fragmentLengthUpperBound, @Nullable final SupplementaryReadData suppData)
     {

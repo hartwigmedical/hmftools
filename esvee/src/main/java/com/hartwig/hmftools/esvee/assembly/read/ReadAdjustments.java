@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isLineSequence;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_TEST_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
 
@@ -174,7 +174,7 @@ public final class ReadAdjustments
 
         for(int i = 1; i <= scBaseCount - lineExclusionLength; ++i)
         {
-            if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
+            if(belowMinQual(read.getBaseQuality()[baseIndex]))
             {
                 lowQualCount++;
 
@@ -210,7 +210,7 @@ public final class ReadAdjustments
 
         while(true)
         {
-            if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
+            if(belowMinQual(read.getBaseQuality()[baseIndex]))
                 lowQualCount++;
             else
                 break;

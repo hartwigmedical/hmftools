@@ -11,7 +11,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBa
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
@@ -239,20 +240,20 @@ public class JunctionAssembly
                 mBases[assemblyIndex] = base;
                 mBaseQuals[assemblyIndex] = qual;
 
-                if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                if(aboveMinQual(qual))
                     ++highQualMatchCount;
             }
             else
             {
-                if(mBases[assemblyIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD)
+                if(mBases[assemblyIndex] == base || belowMinQual(qual))
                 {
                     if((int)qual > (int)mBaseQuals[assemblyIndex])
                         mBaseQuals[assemblyIndex] = qual;
 
-                    if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                    if(aboveMinQual(qual))
                         ++highQualMatchCount;
                 }
-                else if(mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
+                else if(belowMinQual(mBaseQuals[assemblyIndex]))
                 {
                     mBases[assemblyIndex] = base;
                     mBaseQuals[assemblyIndex] = qual;

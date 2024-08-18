@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedExtensionBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
@@ -75,7 +75,7 @@ public class RemoteRegionAssembler
         if(assembly.stats().SoftClipSecondMaxLength < MIN_VARIANT_LENGTH)
             return false;
 
-        if(assembly.stats().JuncMateDiscordantRemote < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(assembly.stats().JuncMateDiscordantRemote < ASSEMBLY_MIN_READ_SUPPORT)
             return false;
 
         // check for sufficient diversity in the extension bases
@@ -149,7 +149,7 @@ public class RemoteRegionAssembler
             mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
         }
 
-        if(mMatchedRemoteReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(mMatchedRemoteReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
             return null;
 
         // form a remote ref-based assembly from these reads but without a specific junction

@@ -5,9 +5,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -63,11 +64,11 @@ public class RefBaseSeqBuilder
             if(mIsForward)
             {
                 // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
             }
             else
             {
-                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
             }
 
             int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);
@@ -194,8 +195,7 @@ public class RefBaseSeqBuilder
 
                 if(readCounts == null)
                 {
-                    if(consensusBase == NO_BASE
-                    || (base != consensusBase && consensusMaxQual < LOW_BASE_QUAL_THRESHOLD && qual >= LOW_BASE_QUAL_THRESHOLD))
+                    if(consensusBase == NO_BASE || (base != consensusBase && belowMinQual(consensusMaxQual) && aboveMinQual(qual)))
                     {
                         // set first or replace with first high qual
                         consensusBase = base;
@@ -211,7 +211,7 @@ public class RefBaseSeqBuilder
                         ++consensusReadCount;
                         continue;
                     }
-                    else if(base != consensusBase && qual < LOW_BASE_QUAL_THRESHOLD)
+                    else if(base != consensusBase && belowMinQual(qual))
                     {
                         // low-qual disagreement - ignore regardless of consensus qual
                         continue;
@@ -334,8 +334,8 @@ public class RefBaseSeqBuilder
                 continue;
             }
 
-            boolean aboveMinQual = read.currentQual() >= LOW_BASE_QUAL_THRESHOLD;
-            boolean consensusAboveMinQual = consensusQual >= LOW_BASE_QUAL_THRESHOLD;
+            boolean aboveMinQual = aboveMinQual(read.currentQual());
+            boolean consensusAboveMinQual = aboveMinQual(consensusQual);
 
             if(read.operator() != currentElementType)
             {

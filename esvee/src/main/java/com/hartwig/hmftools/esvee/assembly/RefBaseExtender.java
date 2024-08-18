@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
@@ -166,7 +166,7 @@ public class RefBaseExtender
             findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
-        purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
+        purgeRefSideSoftClips(assembly.refSideSoftClips(), ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
     }
 
     private class NonJunctionRead
@@ -240,7 +240,7 @@ public class RefBaseExtender
         int nonSoftClipRefPosition = newRefBasePosition;
 
         if(considerRefSideSoftClips)
-            purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
+            purgeRefSideSoftClips(refSideSoftClips, ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
 
         if(!considerRefSideSoftClips || refSideSoftClips.isEmpty())
         {
@@ -285,7 +285,7 @@ public class RefBaseExtender
         }
 
         double secondRefPositionSupportPerc = secondRefPositionSupport / (double)primaryRefPositionSupport;
-        boolean hasSufficientSecondRefSupport = secondRefPositionSupport >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT
+        boolean hasSufficientSecondRefSupport = secondRefPositionSupport >= ASSEMBLY_SPLIT_MIN_READ_SUPPORT
                 && secondRefPositionSupportPerc >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 
         if(!allowBranching || !hasSufficientSecondRefSupport)
@@ -377,7 +377,7 @@ public class RefBaseExtender
                 // check if has sufficient support to branch the assembly
                 int totalSupport = junctionAssembly.supportCount();
                 double supportPerc = totalSupport / (double)maxRefSideSupport;
-                boolean hasSufficientSecondRefSupport = totalSupport >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT
+                boolean hasSufficientSecondRefSupport = totalSupport >= ASSEMBLY_SPLIT_MIN_READ_SUPPORT
                         && supportPerc >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 
                 if(!hasSufficientSecondRefSupport)
@@ -497,8 +497,7 @@ public class RefBaseExtender
             // any unset base (ie unset qual) can be a mismatch
             byte refBaseQual = assemblyBaseQuals[assemblyIndex] == 0 ? (byte)(LOW_BASE_QUAL_THRESHOLD + 1) : assemblyBaseQuals[assemblyIndex];
 
-            if(!basesMatch(
-                    read.getBases()[i], assemblyBases[assemblyIndex], read.getBaseQuality()[i], refBaseQual, LOW_BASE_QUAL_THRESHOLD))
+            if(!basesMatch(read.getBases()[i], assemblyBases[assemblyIndex], read.getBaseQuality()[i], refBaseQual))
             {
                 ++mismatchCount;
 

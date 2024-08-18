@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
 
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
@@ -29,7 +29,7 @@ public final class ReadFilters
             junctionOverlap = junction.Position - read.alignmentStart();
         }
 
-        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
     }
 
     public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)
