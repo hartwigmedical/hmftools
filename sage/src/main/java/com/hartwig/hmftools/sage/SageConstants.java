@@ -130,7 +130,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 6;
     public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
     public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
     public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -49,6 +50,37 @@ public class VariantReadContextBuilder
     public VariantReadContextBuilder(int flankSize)
     {
         this(null, flankSize);
+    }
+
+    public boolean isMsiIndelOfType(final SimpleVariant variant, final List<String> units)
+    {
+        if(!variant.isIndel())
+            return false;
+        String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
+        for(String unit : units)
+        {
+            int numRepeats = indelBases.length() / unit.length();
+            String expectedIndelBases = unit.repeat(numRepeats);
+            if(indelBases.equals(expectedIndelBases))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean isAdjacentToLongHomopolymer(final SimpleVariant variant, final SAMRecord read, final int varIndexInRead, final int longLength)
+    {
+        boolean roomOnRight = varIndexInRead + longLength < read.getReadBases().length;
+        boolean roomOnLeft = varIndexInRead >= longLength;
+        for (byte base : DNA_BASE_BYTES)
+        {
+            byte[] longHomopolymer = new byte[longLength];
+            Arrays.initialise(longHomopolymer, base);
+            if(roomOnRight && Arrays.subsetArray(read.getReadBases(), varIndexInRead+1, varIndexInRead+longLength).equals(longHomopolymer))
+                return true;
+            if(roomOnLeft && Arrays.equalArray(Arrays.subsetArray(read.getReadBases(), varIndexInRead-longLength, varIndexInRead-1), longHomopolymer))
+                return true;
+        }
+        return false;
     }
 
     public VariantReadContext createContext(
@@ -144,6 +176,14 @@ public class VariantReadContextBuilder
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE;
             readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
         }
+
+        int longLength = 20;
+        if(isMsiIndelOfType(variant, List.of("A", "C", "G", "T")) && homology != null && homology.Length >= longLength - 5)
+            return null; // Ultima cannot call variants of this type
+        if(isMsiIndelOfType(variant, List.of("TA", "AT")) && homology != null && homology.Length >= longLength)
+            return null; // Ultima cannot call variants of this type
+        if(isAdjacentToLongHomopolymer(variant, read, varIndexInRead, longLength))
+            return null;  // Ultima gets confused near variants of this type
 
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
             return null;
