@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.quality;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getHomopolymers;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getQualVariants;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getRealignedVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.mergeSandwichedHomopolymers;
 
 import static org.junit.Assert.assertEquals;
@@ -150,6 +151,52 @@ public class UltimaRealignedQualModelBuilderTest
         {
             assertTrue(expectedQualVariants.get(i).matches(actualQualVariants.get(i)));
         }
+    }
+
+    @Test
+    public void testGetRealignedVariantsVariantStartForHomopolymerContraction()
+    {
+        List<Homopolymer> refHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'T', 5),
+                new Homopolymer((byte) 'A', 5));
+        List<Homopolymer> readHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'T', 2),
+                new Homopolymer((byte) 'A', 5));
+        int coreIndexStart = 0;
+        int varIndex = 4;
+        int corePositionStart = 100;
+        int position = 104;
+        SimpleVariant variant = new SimpleVariant(CHR_1, position,"ATTT", "A");
+        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, null, Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
+
+        assertEquals(1, realignedVariants.size());
+        assertTrue(variant.matches(realignedVariants.get(0).variant()));
+    }
+
+    @Test
+    public void testGetRealignedVariantsVariantStartForHomopolymerExpansion()
+    {
+        List<Homopolymer> refHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'T', 2),
+                new Homopolymer((byte) 'A', 5));
+        List<Homopolymer> readHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'T', 5),
+                new Homopolymer((byte) 'A', 5));
+        int coreIndexStart = 0;
+        int varIndex = 4;
+        int corePositionStart = 100;
+        int position = 104;
+        SimpleVariant variant = new SimpleVariant(CHR_1, position,"A", "ATTT");
+        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, null, Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
+
+        assertEquals(1, realignedVariants.size());
+        assertTrue(variant.matches(realignedVariants.get(0).variant()));
     }
 
     // TODO: re-enable tests.

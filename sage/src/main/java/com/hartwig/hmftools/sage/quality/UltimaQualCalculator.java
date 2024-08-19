@@ -177,10 +177,10 @@ public class UltimaQualCalculator
             super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
 
             // TODO: Do we keep this around after testing?
-            if(hpEndIndex < hpStartIndex)
-            {
-                throw new IllegalArgumentException("Homopolymer end index is before start index.");
-            }
+//            if(hpEndIndex < hpStartIndex)
+//            {
+//                throw new IllegalArgumentException("Homopolymer end index is before start index.");
+//            }
 
             mHpStartIndex = hpStartIndex;
             mHpEndIndex = hpEndIndex;
