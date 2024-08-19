@@ -50,6 +50,7 @@ public class MetricsConfig
     public final int FragmentLengthUnits;
     public final double GcPercentUnits;
     public final boolean CaptureRegionCounts;
+    public final boolean WriteReadData;
 
     public final int Threads;
 
@@ -60,6 +61,7 @@ public class MetricsConfig
     private static final String FRAG_LENGTH_UNITS = "frag_length_units";
     private static final String GC_PERCENT_UNITS = "gc_percent_units";
     private static final String CAPTURE_REGION_COUNTS = "capture_region_counts";
+    private static final String WRITE_READ_INFO = "write_read_info";
 
     public static final int TARGET_REGION_PROXIMITY = 100;
 
@@ -99,6 +101,7 @@ public class MetricsConfig
         FragmentLengthUnits = configBuilder.getInteger(FRAG_LENGTH_UNITS);
         GcPercentUnits = configBuilder.getDecimal(GC_PERCENT_UNITS);
         CaptureRegionCounts = configBuilder.hasFlag(CAPTURE_REGION_COUNTS);
+        WriteReadData = configBuilder.hasFlag(WRITE_READ_INFO);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -119,6 +122,7 @@ public class MetricsConfig
 
         configBuilder.addFlag(ONLY_TARGET, "Only capture metrics within the specific regions file");
         configBuilder.addFlag(CAPTURE_REGION_COUNTS, "Capture metrics for each regions");
+        configBuilder.addFlag(WRITE_READ_INFO, "Write read / fragment info");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
