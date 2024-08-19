@@ -137,7 +137,7 @@ public class UltimaRealignedQualModelBuilder
         {
             if(realignedVariants.get(i).variant().Position < realignedVariants.get(i - 1).variant().Position)
             {
-                throw new IllegalStateException("Realigned variants are out of order.");
+                throw new IllegalStateException(format("Realigned variants are out of order: readContext(%s)", readContext.toString()));
             }
         }
 
@@ -150,7 +150,7 @@ public class UltimaRealignedQualModelBuilder
 
         if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
         {
-            throw new IllegalStateException("Variant({}) is expected to have realigned ultima variants, but none have been found.");
+            throw new IllegalStateException(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
         }
 
         return realignedQualModels;
