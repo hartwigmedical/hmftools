@@ -125,6 +125,7 @@ public class RefBaseSeqBuilder
         int currentIndex = mIsForward ? mBases.length - 1 : 0;
         int refPosition = mJunctionPosition;
 
+        // set the junction read base as established from the initial split reads
         mBases[currentIndex] = mAssembly.bases()[mAssembly.junctionIndex()];
         mBaseQuals[currentIndex] = mAssembly.baseQuals()[mAssembly.junctionIndex()];
 
@@ -135,8 +136,16 @@ public class RefBaseSeqBuilder
 
         List<ReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
-        while(!activeReads.isEmpty() && currentIndex >= 0 && currentIndex < mBases.length)
+        while(!activeReads.isEmpty())
         {
+            if(currentElementType == M || currentElementType == I)
+                currentIndex += mIsForward ? -1 : 1;
+
+            ++currentElementLength;
+
+            if(currentIndex < 0 || currentIndex >= mBases.length)
+                break;
+
             byte consensusBase = 0;
             int consensusMaxQual = 0;
             int consensusQualTotal = 0;
@@ -147,19 +156,11 @@ public class RefBaseSeqBuilder
             int[] totalQuals = null;
             int[] maxQuals = null;
 
-            if(currentElementType == M || currentElementType == I)
-                currentIndex += mIsForward ? -1 : 1;
-
-            ++currentElementLength;
-
             // move to the next position or index if during an insert
             progressReadState(activeReads, currentElementType);
 
             if(activeReads.isEmpty())
-            {
-                mCigarElements.add(new CigarElement(currentElementLength, currentElementType));
                 break;
-            }
 
             // establish new most common operator
             CigarOperator nextElementType = findNextOperator(activeReads);
@@ -263,6 +264,9 @@ public class RefBaseSeqBuilder
             if(currentElementType == M || currentElementType == D)
                 refPosition += mIsForward ? -1 : 1;
         }
+
+        // add the last, current element
+        mCigarElements.add(new CigarElement(currentElementLength, currentElementType));
 
         mRefBasePosition = refPosition;
 

@@ -350,7 +350,6 @@ public class RefBaseSequenceTest
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read2));
         assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read3));
-
     }
 
     @Test
@@ -432,7 +431,6 @@ public class RefBaseSequenceTest
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read2));
         assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read3));
-
     }
 
     private static int getReadMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)
