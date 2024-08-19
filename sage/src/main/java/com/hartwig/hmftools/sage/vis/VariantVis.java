@@ -630,7 +630,7 @@ public class VariantVis
 
         String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
         String mateAlignmentStr = "unmapped";
-        if(!firstRead.getMateUnmappedFlag())
+        if(!true) // !firstRead.getMateUnmappedFlag()
         {
             String mateChromosome = firstRead.getMateReferenceName();
             int mateAlignmentStart = firstRead.getMateAlignmentStart();
