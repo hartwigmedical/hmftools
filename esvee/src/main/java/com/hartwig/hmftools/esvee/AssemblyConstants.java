@@ -24,8 +24,8 @@ public final class AssemblyConstants
     public static final double PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC = 0.2;
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
-    public static final int ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP = 3;
-    public static final int ASSEMBLY_MIN_SOFT_CLIP_OVERLAP = 3;
+    public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = 2;
+    public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;

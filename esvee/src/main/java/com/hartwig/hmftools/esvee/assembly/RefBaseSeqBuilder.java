@@ -5,7 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
@@ -64,11 +64,11 @@ public class RefBaseSeqBuilder
             if(mIsForward)
             {
                 // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
+                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
             }
             else
             {
-                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_MIN_SOFT_CLIP_OVERLAP;
+                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
             }
 
             int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);

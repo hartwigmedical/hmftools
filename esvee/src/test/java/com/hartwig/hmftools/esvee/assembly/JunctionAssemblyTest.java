@@ -71,7 +71,7 @@ public class JunctionAssemblyTest
 
         assertEquals(50, assembly.refBaseLength());
         assertEquals(51, assembly.refBasePosition());
-        assertEquals(3, assembly.supportCount()); // read counts as support, just doesn't extend the ref bases
+        assertEquals(2, assembly.supportCount()); // read counts as support, just doesn't extend the ref bases
     }
 
     @Test
