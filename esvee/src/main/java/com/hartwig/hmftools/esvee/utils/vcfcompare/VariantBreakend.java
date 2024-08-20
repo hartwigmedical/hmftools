@@ -129,57 +129,6 @@ class VariantBreakend
                 OtherPosition + Cipos[1];
     }
 
-    public boolean exactMatch(final VariantBreakend otherBreakend)
-    {
-        return
-                // First side
-                Chromosome.equals(otherBreakend.Chromosome) &&
-                        Orientation == otherBreakend.Orientation &&
-                        minPosition() == otherBreakend.minPosition() &&
-                        maxPosition() == otherBreakend.maxPosition() &&
-                        InsertSequence.equals(otherBreakend.InsertSequence) &&
-                        Homseq.equals(otherBreakend.Homseq) &&
-                        SvType.equals(otherBreakend.SvType) &&
-
-                        // Second side
-                        OtherChromosome.equals(otherBreakend.OtherChromosome) &&
-                        OtherOrientation == otherBreakend.OtherOrientation &&
-                        otherMinPosition() == otherBreakend.otherMinPosition() &&
-                        otherMaxPosition() == otherBreakend.otherMaxPosition()
-                // No need to check insert seq, hom seq or SV type again. It is always the same on the other side
-                ;
-    }
-
-    public boolean coordsOnlyMatch(final VariantBreakend otherBreakend)
-    {
-        return
-                // First side
-                Chromosome.equals(otherBreakend.Chromosome) &&
-                        Position == otherBreakend.Position &&
-                        Orientation == otherBreakend.Orientation &&
-
-                        // Second side
-                        OtherChromosome.equals(otherBreakend.OtherChromosome) &&
-                        OtherPosition == otherBreakend.OtherPosition &&
-                        OtherOrientation == otherBreakend.OtherOrientation;
-    }
-
-    public boolean approxMatch(final VariantBreakend otherBreakend, final int upperLowerBound)
-    {
-        return
-                // First side
-                Chromosome.equals(otherBreakend.Chromosome) &&
-                        Orientation == otherBreakend.Orientation &&
-                        positionWithin(Position, otherBreakend.Position - upperLowerBound, otherBreakend.Position + upperLowerBound) &&
-
-                        // Second side
-                        OtherChromosome.equals(otherBreakend.OtherChromosome) &&
-                        OtherOrientation == otherBreakend.OtherOrientation &&
-                        positionWithin(OtherPosition,
-                                otherBreakend.OtherPosition - upperLowerBound, otherBreakend.OtherPosition + upperLowerBound)
-                ;
-    }
-
     public String getExtendedAttributeAsString(String id, String key)
     {
         Object value = Context.getGenotype(id).getExtendedAttribute(key);

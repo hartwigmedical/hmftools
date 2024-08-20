@@ -189,6 +189,8 @@ public class SvVcfComparer
             MatchType matchType
     )
     {
+        BreakendMatchers.Matcher breakendMatcher = MatchType.getMatcher(matchType);
+
         int matchedCount = 0;
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -209,20 +211,7 @@ public class SvVcfComparer
                 {
                     VariantBreakend newBreakend = newBreakends.get(newBreakendIndex);
 
-                    boolean hasMatch = false;
-
-                    switch(matchType)
-                    {
-                        case EXACT_MATCH:
-                            hasMatch = oldBreakend.exactMatch(newBreakend);
-                            break;
-                        case COORDS_ONLY:
-                            hasMatch = oldBreakend.coordsOnlyMatch(newBreakend);
-                            break;
-                        case APPROX_MATCH:
-                            hasMatch = oldBreakend.approxMatch(newBreakend, DEFAULT_APPROX_MATCH_UPPER_LOWER_BOUNDS);
-                            break;
-                    }
+                    boolean hasMatch = breakendMatcher.match(oldBreakend, newBreakend);
 
                     if(hasMatch)
                     {
