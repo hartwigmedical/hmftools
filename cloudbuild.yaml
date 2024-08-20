@@ -2,7 +2,7 @@ steps:
   - id: 'Fetch token for github'
     name: gcr.io/cloud-builders/gcloud
     entrypoint: 'bash'
-    args: [ '-c', "gcloud secrets versions access latest --secret=hmftools-github-release-token --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/github.token" ]
+    args: [ '-c', "gcloud secrets versions access latest --secret=hmftools-github-private-key --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/github.key" ]
   - id: 'Fetch password for Dockerhub'
     name: gcr.io/cloud-builders/gcloud
     entrypoint: 'bash'
@@ -10,7 +10,7 @@ steps:
   - id: 'Tag, release, build'
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
-    args: ['hmftools-build.py', '$TAG_NAME']
+    args: ['hmftools-build.py', '$TAG_NAME', '/workspace/github.key', '${_GITHUB_CLIENT_ID}', '${_GITHUB_INSTALLATION_ID}']
   - id: 'Publish Docker image'
     name: 'eu.gcr.io/hmf-build/docker-tag'
     entrypoint: sh

@@ -18,6 +18,10 @@ import re
 import subprocess
 import requests
 import os.path
+import sys
+import time
+import jwt
+
 from xml.etree import ElementTree
 from argparse import ArgumentParser
 
@@ -60,20 +64,26 @@ class Docker:
 
 
 class GithubRelease:
-    def __init__(self, tag_name, module, version, artifact_file, token):
+    def __init__(self, tag_name: str, module: str, version: str, artifact_file: str, private_key: str, github_client_id: str,
+            github_installation_id: str):
         self.tag_name = tag_name
         self.module = module
         self.version = version
         self.artifact_file = artifact_file
-        self.token = token
+        self.private_key = private_key
+        self.github_client_id = github_client_id
+        self.github_installation_id = github_installation_id
         self.release_name = f"{module} v{version}"
 
     def create(self):
-        id = self._create_release()
+        jwt = self._construct_jwt()
+        token = self._refresh_token(jwt)
+        print("Successfully refreshed token")
+        id = self._create_release(token)
         print(f"Created release with id {id}")
-        self._upload_artifacts(id)
+        self._upload_artifacts(id, token)
 
-    def _create_release(self):
+    def _create_release(self, token: str):
         print(f"Creating release [{self.release_name}]")
         request = {"tag_name": self.tag_name,
                 "target_commitish": "master",
@@ -82,25 +92,18 @@ class GithubRelease:
                 "prerelease": True,
                 "generate_release_notes": True
         }
-        headers = {"Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {self.token}",
-                "X-GitHub-Api-Version": "2022-11-28"
-        }
 
         response = requests.post(self._construct_url("api"),
                 json = request,
-                headers = headers)
+                headers = self._headers(token))
         print(f"Response: {response.text}")
         response.raise_for_status()
         return response.json()["id"]
 
-    def _upload_artifacts(self, id):
+    def _upload_artifacts(self, id: str, token: str):
         print(f"Uploading artifact to release {id}")
-        headers = {"Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {self.token}",
-                "X-GitHub-Api-Version": "2022-11-28",
-                "Content-Type": "application/octet-stream"
-        }
+        headers = self._headers(token)
+        headers["Content-Type"] = "application/octet-stream"
         base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
         response = requests.post(f"{base_url}={self.module}_v{self.version}.jar", 
                 headers = headers, 
@@ -110,6 +113,28 @@ class GithubRelease:
 
     def _construct_url(self, prefix):
         return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
+
+    # This method gleaned from Github docs/examples
+    def _construct_jwt(self):
+        payload = {
+            'iat': int(time.time()),
+            # JWT expiration time (10 minutes maximum)
+            'exp': int(time.time()) + 600,
+            'iss': self.client_id
+        }
+        return jwt.encode(payload, self.private_key, algorithm='RS256')
+
+    def _refresh_token(self, jwt: str):
+        response = requests.post(f"https://api.github.com/app/installations/${self.github_installation_id}/access_tokens",
+                headers = self._headers(jwt))
+        response.raise_for_status()
+        return response.json()["token"]
+
+    def _headers(self, jwt: str):
+        return {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {token}",
+                "X-GitHub-Api-Version": "2022-11-28"
+        }
 
 
 def extract_hmftools_dependencies(pom_path):
@@ -134,12 +159,15 @@ def main():
     parser = ArgumentParser(
         description="A tool for automatically building and deploying individual modules in HMF-tools.")
     parser.add_argument('tag', help="The semantic versioning tag in the following format: <tool-name>-<version>")
+    parser.add_argument('github-key-path', help="Path to private key for the Github deployment bot")
+    parser.add_argument('github-client-id', help="Client id for the deployment bot")
+    parser.add_argument('github-installation-id', help="Installation id of the deployment bot")
     args = parser.parse_args()
 
-    build_and_release(args.tag)
+    build_and_release(args.tag, args.github-key-path, args.github-client-id, args.github-installation-id)
 
 
-def build_and_release(raw_tag: str):
+def build_and_release(raw_tag: str, github-key: str, github-client-id: str, github-installation-id: str):
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
@@ -170,7 +198,7 @@ def build_and_release(raw_tag: str):
 
     Docker(module, version).build()
     GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
-            open("/workspace/github.token", "r").read()).create()
+            open(github-key, "r").read(), github-client-id, github-installation-id).create()
 
 if __name__ == '__main__':
     main()
