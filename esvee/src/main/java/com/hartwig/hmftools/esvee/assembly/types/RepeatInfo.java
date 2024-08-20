@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -93,7 +94,7 @@ public class RepeatInfo
             }
         }
 
-        return repeats;
+        return repeats != null ? repeats : Collections.emptyList();
     }
 
     // see Sage for a flexible repeat-length routine to find these

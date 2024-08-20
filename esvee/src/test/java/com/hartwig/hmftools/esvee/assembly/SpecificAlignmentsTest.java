@@ -247,7 +247,6 @@ public class SpecificAlignmentsTest
         JunctionAssembly assembly2 = createAssembly(CHR_1, 200, FORWARD, assemblyBases2, refBases2.length() - 1);
 
         // chr1:300:1
-        String refBases3Old = REF_BASES_400.substring(251, 301);
         String refBases3 = refGenome.getBaseString(CHR_1, 251, 300);
         String extBases3 = refGenome.getBaseString(CHR_1, 151, 201);
         String assemblyBases3 = refBases3 + Nucleotides.reverseComplementBases(extBases3);

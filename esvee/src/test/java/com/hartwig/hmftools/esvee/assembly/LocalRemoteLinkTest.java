@@ -9,9 +9,11 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.isExtensionCandidateAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
@@ -95,22 +97,27 @@ public class LocalRemoteLinkTest
     @Test
     public void testAssemblyRemoteReadMatch()
     {
-        String remoteRefSequence = formTestRefSequence(400);
+        MockRefGenome refGenome = new MockRefGenome(false);
+        refGenome.RefGenomeMap.put(CHR_2, REF_BASES_400);
 
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_2, remoteRefSequence);
+        int remoteRegionStart = 200;
+        int remoteRegionEnd = 300;
+        String remoteRefBases = refGenome.getBaseString(CHR_2, remoteRegionStart, remoteRegionEnd);
 
-        // first a basic exact match at the remote site
+        // test 1: extension bases match fully within the remote site - test each assembly and remote orientation combination in turn
         String assemblyRefBases = REF_BASES_200.substring(1, 101);
-        String assemblyExtensionBases = refGenome.getBaseString(CHR_2, 200, 300);
-        String assemblyBases = assemblyRefBases + assemblyExtensionBases;
+        String assemblyExtBases = refGenome.getBaseString(CHR_2, 220, 280);
+        String assemblyBases = assemblyRefBases + assemblyExtBases;
 
-        JunctionAssembly assembly = createAssembly(CHR_1, 100, FORWARD, assemblyBases, 99);
+        int juncPosition = 100;
+        JunctionAssembly assembly = createAssembly(CHR_1, juncPosition, FORWARD, assemblyBases, assemblyRefBases.length() - 1);
 
-        String juncReadBases = REF_BASES_200.substring(51, 101) + refGenome.getBaseString(CHR_2, 200, 250);
+        String juncReadBases = REF_BASES_200.substring(51, juncPosition + 1) + assemblyExtBases;
 
+        // add reads to test out the criteria for attempting remote ref matching, does not factor into matching
         Read juncRead = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases, "50M50S", CHR_2, 200, true);
+                READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases,
+                makeCigarString(juncReadBases, 0, assemblyExtBases.length()), CHR_2, 220, true);
 
         Read juncRead2 = cloneRead(juncRead, READ_ID_GENERATOR.nextId());
 
@@ -121,56 +128,114 @@ public class LocalRemoteLinkTest
 
         RemoteRegionAssembler remoteRegionAssembler = new RemoteRegionAssembler(refGenome, null);
 
-        Read remoteRead = createRead(READ_ID_GENERATOR.nextId(), 200, refGenome.getBaseString(CHR_2, 200, 300), "100M");
+        Read remoteRead = createRead(READ_ID_GENERATOR.nextId(), remoteRegionStart, remoteRefBases, makeCigarString(remoteRefBases, 0, 0));
 
         RemoteRegion remoteRegion = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 200, 300), remoteRead.id(), DISCORDANT);
+                new ChrBaseRegion(CHR_2, remoteRegionStart, remoteRegionEnd), remoteRead.id(), DISCORDANT);
 
         remoteRegionAssembler.addMatchedReads(List.of(remoteRead), remoteRegion);
 
-        byte[] remoteRegionBases = refGenome.getBases(CHR_2, 200, 300);
-
         AssemblyLink assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
-                assembly, 200, 300, remoteRegionBases);
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
 
         assertNotNull(assemblyLink);
         assertEquals(BND, assemblyLink.svType());
-        assertEquals(200, assemblyLink.second().junction().Position);
-        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
-        assertEquals(1, assemblyLink.second().supportCount());
+        JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(assembly);
 
-        // now a match upstream of the remote read, inferring the missing ref bases
-        assemblyExtensionBases = refGenome.getBaseString(CHR_2, 150, 250);
-        assemblyBases = assemblyRefBases + assemblyExtensionBases;
+        assertEquals(220, remoteAssembly.junction().Position);
+        assertEquals(REVERSE, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
 
-        assembly = createAssembly(CHR_1, 100, FORWARD, assemblyBases, 99);
+        // test 2: assembly has reversed bases, requiring a switched orientation match in the remote region
+        assemblyBases = assemblyRefBases + Nucleotides.reverseComplementBases(assemblyExtBases);
 
-        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(assembly, 200, 300, remoteRegionBases);
+        assembly = createAssembly(CHR_1, juncPosition, FORWARD, assemblyBases, assemblyRefBases.length() - 1);
 
-        assertNotNull(assemblyLink);
-        assertEquals(BND, assemblyLink.svType());
-        assertEquals(150, assemblyLink.second().junction().Position);
-        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
-        assertEquals(1, assemblyLink.second().supportCount());
-
-        // now test negative to negative orientation (a la 3-6-3)
-        assemblyRefBases = REF_BASES_200.substring(100, 200);
-        assemblyExtensionBases = refGenome.getBaseString(CHR_2, 150, 249);
-        String assemblyExtensionBasesReversed = Nucleotides.reverseComplementBases(assemblyExtensionBases);
-        assemblyBases = assemblyExtensionBasesReversed + assemblyRefBases;
-
-        assembly = createAssembly(CHR_1, 100, REVERSE, assemblyBases, assemblyExtensionBasesReversed.length());
-
-        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(assembly, 200, 300, remoteRegionBases);
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
 
         assertNotNull(assemblyLink);
-        assertEquals(BND, assemblyLink.svType());
-        assertEquals(CHR_2, assemblyLink.first().junction().Chromosome);
-        assertEquals(150, assemblyLink.first().junction().Position);
-        assertEquals(REVERSE, assemblyLink.first().junction().Orient);
-        assertEquals(1, assemblyLink.first().supportCount());
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
 
-        assertEquals(100, assemblyLink.second().junction().Position);
-        assertEquals(REVERSE, assemblyLink.second().junction().Orient);
+        assertEquals(280, remoteAssembly.junction().Position);
+        assertEquals(FORWARD, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
+
+        // test 3: assembly is reversed, remote bases are not
+        assemblyBases = assemblyExtBases + assemblyRefBases;
+
+        assembly = createAssembly(CHR_1, juncPosition, REVERSE, assemblyBases, assemblyExtBases.length());
+
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
+
+        assertNotNull(assemblyLink);
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+        assertEquals(280, remoteAssembly.junction().Position);
+        assertEquals(FORWARD, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
+
+        // test 4: assembly is reversed as are the remote bases
+        assemblyBases = Nucleotides.reverseComplementBases(assemblyExtBases) + assemblyRefBases;
+
+        assembly = createAssembly(CHR_1, juncPosition, REVERSE, assemblyBases, assemblyExtBases.length());
+
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
+
+        assertNotNull(assemblyLink);
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+        assertEquals(220, remoteAssembly.junction().Position);
+        assertEquals(REVERSE, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
+
+        // test 5: extension bases match downstream of the remote region, but by extending it show an exact match
+        assemblyExtBases = refGenome.getBaseString(CHR_2, 180, 280);
+        assemblyBases = assemblyRefBases + assemblyExtBases;
+
+        assembly = createAssembly(CHR_1, juncPosition, FORWARD, assemblyBases, assemblyRefBases.length() - 1);
+
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
+
+        assertNotNull(assemblyLink);
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+        assertEquals(180, remoteAssembly.junction().Position);
+        assertEquals(REVERSE, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
+
+        // test 6: extension bases match upstream of the remote region, but by extending it show an exact match
+        assemblyExtBases = refGenome.getBaseString(CHR_2, 230, 350);
+        assemblyBases = assemblyRefBases + assemblyExtBases;
+
+        assembly = createAssembly(CHR_1, juncPosition, FORWARD, assemblyBases, assemblyRefBases.length() - 1);
+
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
+
+        assertNotNull(assemblyLink);
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+        assertEquals(230, remoteAssembly.junction().Position);
+        assertEquals(REVERSE, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
+
+        // test again with reversed orientations
+        assemblyBases = assemblyExtBases + assemblyRefBases;
+
+        assembly = createAssembly(CHR_1, juncPosition, REVERSE, assemblyBases, assemblyExtBases.length());
+
+        assemblyLink = remoteRegionAssembler.tryAssemblyRemoteRefOverlap(
+                assembly, remoteRegion.start(), remoteRegion.end(), remoteRefBases.getBytes());
+
+        assertNotNull(assemblyLink);
+        remoteAssembly = assemblyLink.otherAssembly(assembly);
+
+        assertEquals(350, remoteAssembly.junction().Position);
+        assertEquals(FORWARD, remoteAssembly.junction().Orient);
+        assertEquals(1, remoteAssembly.supportCount());
     }
 }

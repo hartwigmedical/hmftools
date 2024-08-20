@@ -133,6 +133,12 @@ public final class SequenceCompare
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches, boolean checkForwards)
     {
+        if(firstIndexStart < 0 || firstIndexEnd >= firstBases.length || firstIndexEnd >= firstBaseQuals.length
+        || secondIndexStart < 0 || secondIndexEnd >= secondBases.length || secondIndexEnd >= secondBaseQuals.length)
+        {
+            return maxMismatches < 0 ? maxMismatches : maxMismatches + 1; // invalid
+        }
+
         int mismatchCount = 0;
 
         int firstIndex = checkForwards ? firstIndexStart : firstIndexEnd;
