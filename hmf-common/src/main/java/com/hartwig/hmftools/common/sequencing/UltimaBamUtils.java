@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.sequencing;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
+import java.util.Arrays;
+
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+
 
 import htsjdk.samtools.SAMRecord;
 
@@ -119,6 +123,8 @@ public final class UltimaBamUtils
     {
         if(startBase == endBase || startBase == testBase)
             return false;
+        if(Arrays.binarySearch(DNA_BASE_BYTES, startBase) < 0 || Arrays.binarySearch(DNA_BASE_BYTES, endBase) < 0)
+            return false;  // either base is not TGCA
 
         boolean started = false;
         int index = 0;

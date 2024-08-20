@@ -43,7 +43,7 @@ public class UltimaRealignedQualModelBuilderTest
                 new Homopolymer((byte) 'T', 10),
                 new Homopolymer((byte) 'A', 1));
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers, false);
         List<Homopolymer> expectedHomopolymers = refHomopolymers;
 
         assertEquals(expectedHomopolymers, mergedHomopolymers.RefHomopolymers);
@@ -58,7 +58,7 @@ public class UltimaRealignedQualModelBuilderTest
         List<Homopolymer> refHomopolymers = getHomopolymers(refBases.getBytes(), 0, refBases.length() - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readBases.getBytes(), 0, readBases.length() - 1);
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers, false);
         List<Homopolymer> expectedMergedRefHomopolymers = refHomopolymers;
         List<Homopolymer> expectedMergedReadHomopolymers = Lists.newArrayList(refHomopolymers);
         expectedMergedReadHomopolymers.set(expectedMergedReadHomopolymers.size() - 3, new Homopolymer((byte) 'A', 11));
@@ -92,7 +92,7 @@ public class UltimaRealignedQualModelBuilderTest
 
         public void check()
         {
-            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, RefHomopolymers, ReadHomopolymers);
+            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, RefHomopolymers, ReadHomopolymers, false);
 
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.RefHomopolymers);
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.ReadHomopolymers);

@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.CYCLE_BASES;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -122,11 +123,17 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
-    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, final boolean skipFirstSandwiched)
     {
+        if(readContext.variant().isInsert())
+        {
+            int insertLength = readContext.alt().length() - 1;
+            if(!readContext.readCigar().contains(insertLength + "I"))  // TODO: should handle this better
+                return null;
+        }
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, skipFirstSandwiched);
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, ultimaQualCalculator, mergedHomopolymers.RefHomopolymers, mergedHomopolymers.ReadHomopolymers);
 
         // TODO: Look into why we need to do this.
@@ -148,9 +155,10 @@ public class UltimaRealignedQualModelBuilder
                         .map(x -> (UltimaQualModel) x)
                         .collect(Collectors.toList());
 
-        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
+        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipFirstSandwiched)
         {
-            throw new IllegalStateException(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
+            SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
+            return buildRealignedUltimaQualModels(readContext, ultimaQualCalculator, true);  // TODO: should handle skipping last sandwiched too
         }
 
         return realignedQualModels;
@@ -241,7 +249,7 @@ public class UltimaRealignedQualModelBuilder
     // TODO: Simplify this.
     @VisibleForTesting
     public static MergedHomopolymers mergeSandwichedHomopolymers(@Nullable final VariantReadContext readContext,
-            final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0)
+            final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0, final boolean skipFirstSandwiched)
     {
         List<Homopolymer> refHomopolymers = Lists.newArrayList(refHomopolymers0);
         List<Homopolymer> readHomopolymers = Lists.newArrayList(readHomopolymers0);
@@ -250,6 +258,7 @@ public class UltimaRealignedQualModelBuilder
         int refIndex = 0;
         int readIndex = 0;
         int readBasesConsumed = 0;
+        boolean sandwichedFound = false;
         while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
@@ -273,7 +282,7 @@ public class UltimaRealignedQualModelBuilder
                         int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
-                            if(forwardRefHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount)
+                            if(forwardRefHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount && !(skipFirstSandwiched && !sandwichedFound))
                             {
                                 int mergedLength = IntStream.range(refIndex, refIndex + extraRefIndex + 1).map(i -> refHomopolymers.get(i).Length).sum();
                                 refHomopolymers.set(refIndex, new Homopolymer(refHomopolymer.Base, mergedLength));
@@ -293,6 +302,10 @@ public class UltimaRealignedQualModelBuilder
                                 }
 
                                 break;
+                            }
+                            else if(forwardRefHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount)
+                            {
+                                sandwichedFound = true;
                             }
                             else if(extraRefBasesConsumed >= netLength)
                             {
@@ -332,7 +345,7 @@ public class UltimaRealignedQualModelBuilder
                         int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
-                            if(forwardReadHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount)
+                            if(forwardReadHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount && !(skipFirstSandwiched && !sandwichedFound))
                             {
                                 int mergedLength = IntStream.range(readIndex, readIndex + extraReadIndex + 1).map(i -> readHomopolymers.get(i).Length).sum();
                                 readHomopolymers.set(readIndex, new Homopolymer(refHomopolymer.Base, mergedLength));
@@ -352,6 +365,10 @@ public class UltimaRealignedQualModelBuilder
                                 }
 
                                 break;
+                            }
+                            else if(forwardReadHompolymer.Base == refHomopolymer.Base && refCycleCount != readCycleCount)
+                            {
+                                sandwichedFound = true;
                             }
                             else if(extraReadBasesConsumed >= -netLength)
                             {
