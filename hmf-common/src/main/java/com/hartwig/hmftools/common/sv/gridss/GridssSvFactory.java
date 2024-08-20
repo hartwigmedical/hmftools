@@ -52,7 +52,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvFactoryInterface;
-import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +84,6 @@ public class GridssSvFactory implements SvFactoryInterface
     {
         CompoundFilter compoundfilter = new CompoundFilter(true);
         compoundfilter.add(new HumanChromosomeFilter());
-        compoundfilter.add(new ExcludeCNVFilter());
         compoundfilter.add(filter);
         return new GridssSvFactory(compoundfilter);
     }

@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +66,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
     {
         CompoundFilter compoundfilter = new CompoundFilter(true);
         compoundfilter.add(new HumanChromosomeFilter());
-        compoundfilter.add(new ExcludeCNVFilter());
         compoundfilter.add(filter);
         return new StructuralVariantFactory(compoundfilter);
     }
