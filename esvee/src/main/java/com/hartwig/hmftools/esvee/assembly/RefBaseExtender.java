@@ -64,7 +64,8 @@ public class RefBaseExtender
         else
         {
             discordantReads = unfilteredNonJunctionReads.stream()
-                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition) || x.isMateUnmapped())
+                    .filter(x -> isValidSupportCoordsVsJunction(x, isForwardJunction, junctionPosition))
+                    .filter(x -> isDiscordantFragment(x) || x.isMateUnmapped())
                     .filter(x -> !assembly.hasReadSupport(x.mateRead()))
                     .collect(Collectors.toList());
 
@@ -187,11 +188,6 @@ public class RefBaseExtender
         {
             return format("%s: %s", type(), mRead);
         }
-    }
-
-    private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
-    {
-        return isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition) && isDiscordantFragment(read);
     }
 
     public static void extendRefBases(

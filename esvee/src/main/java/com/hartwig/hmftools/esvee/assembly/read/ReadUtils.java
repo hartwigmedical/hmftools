@@ -20,7 +20,7 @@ public final class ReadUtils
     public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)
     {
         // cannot cross the junction since will already have considered all junction candidate reads
-        // and must read in the direction of the junction. Also cannot be soft-clipped prior to the junction.
+        // and must read in the direction of the junction, and cannot be soft-clipped prior to the junction
         if(isForwardJunction)
         {
             if(read.negativeStrand() || read.isRightClipped())

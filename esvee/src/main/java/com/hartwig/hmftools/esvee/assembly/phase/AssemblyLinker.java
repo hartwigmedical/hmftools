@@ -123,6 +123,8 @@ public final class AssemblyLinker
         boolean firstReversed = false;
         boolean secondReversed = false;
 
+        // select assemblies such that the sequence comparison is always comparing first in +ve orientation overlapping with
+        // second in the -ve orientation, even one of them needs to be reverse complimented
         if(assembly1.junction().Orient != assembly2.junction().Orient)
         {
             first = assembly1.junction().isForward() ? assembly1 : assembly2;
@@ -182,16 +184,28 @@ public final class AssemblyLinker
             if(secondSubSeqIndex < 0)
                 continue;
 
+            // also must allow for the first match sequence (ie including all extension bases) to fit/match within the second
+            int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+            if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                continue; // still possible that a later subsequence will match earlier
+
             alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 
             secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             while(secondSubSeqIndex >= 0)
             {
+                impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+                if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                    break;
+
                 alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
                 secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
             }
         }
+
+        if(alternativeIndexStarts.isEmpty())
+            return null;
 
         // now perform a full junction sequence search in the second using the sequence matching logic
         int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
@@ -213,6 +227,9 @@ public final class AssemblyLinker
     public static int[] findBestSequenceMatch(
             final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
     {
+        if(alternativeIndexStarts.isEmpty())
+            return null;
+
         int topMatchLength = 0;
         int topMatchMismatches = 0;
         int[] topMatchIndices = null;
@@ -231,7 +248,7 @@ public final class AssemblyLinker
 
             int matchOffset = secondMatchIndex - firstMatchSeqMatchIndex;
 
-            // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
+            // skip testing a comparison anchored around the same offsets between the 2 sequences
             if(testedOffsets.contains(matchOffset))
                 continue;
 
@@ -368,7 +385,8 @@ public final class AssemblyLinker
                             first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
                             firstIndexStart, secondIndexStart, firstSeq, secondSeq);
 
-                    extraBases = "";
+                    // failure to extract the required bases invalidates the link
+                    return null;
                 }
             }
         }

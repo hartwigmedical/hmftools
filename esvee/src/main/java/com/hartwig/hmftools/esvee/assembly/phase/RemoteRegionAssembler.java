@@ -312,6 +312,10 @@ public class RemoteRegionAssembler
 
             // finally attempt a sequence comparison allowing mismatches - extract the same length ref base sequence to compare
             int remoteRefBaseIndexStart = useAdjustedStart ? 0 : inferredRegionPosStart - remoteRegionStart;
+            int remoteRefBaseIndexEnd = remoteRefBaseIndexStart + assemblyExtBaseLength;
+
+            if(remoteRefBaseIndexStart >= extendedRemoteRefBases.length()|| remoteRefBaseIndexEnd > extendedRemoteRefBases.length())
+                return null;
 
             byte[] remoteRefBaseBytes = extendedRemoteRefBases.substring(
                     remoteRefBaseIndexStart, remoteRefBaseIndexStart + assemblyExtBaseLength).getBytes();
