@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -61,14 +62,23 @@ public class RefBaseSeqBuilder
 
             boolean hasValidJunctionOverlap;
 
-            if(mIsForward)
+            IndelCoords indelCoords = read.indelCoords();
+
+            if(indelCoords != null && indelCoords.matchesJunction(mJunctionPosition, assembly.junction().Orient))
             {
-                // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                hasValidJunctionOverlap = true;
             }
             else
             {
-                hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                if(mIsForward)
+                {
+                    // junction reads must overlap the junction by 3+ bases to extend the ref sequence
+                    hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                }
+                else
+                {
+                    hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                }
             }
 
             int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);
