@@ -17,6 +17,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
@@ -345,10 +346,17 @@ public final class AssemblyLinker
 
         if(junctionOffsetDiff != 0)
         {
-            // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
-            // around its junction index - with the exception being for when both assemblies are -ve orientation, in which case the
-            // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
             extraBases = extractExtraBases(first, junctionOffsetDiff);
+
+            if(junctionOffsetDiff > 0 && junctionOffsetDiff > first.extensionLength())
+            {
+                // take the extra bases from the second assembly
+                String secondExtraBases = extractExtraBases(second, junctionOffsetDiff - first.extensionLength());
+                if(first.isForwardJunction() != second.isForwardJunction())
+                    extraBases += secondExtraBases;
+                else
+                    extraBases += Nucleotides.reverseComplementBases(secondExtraBases);
+            }
 
             if(extraBases == null)
             {
@@ -383,7 +391,7 @@ public final class AssemblyLinker
         int extraBasesStartIndex, extraBasesEndIndex;
 
         // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
-        // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
+        // around its junction index - with the exception being for when both assemblies are -ve orientation, in which case the
         // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
 
         // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
@@ -393,6 +401,8 @@ public final class AssemblyLinker
             {
                 // an insert, so take bases from after the junction
                 extraBasesStartIndex = assembly.junctionIndex() + 1;
+
+
                 extraBasesEndIndex = min(assembly.junctionIndex() + junctionOffsetDiff, assembly.baseLength() - 1);
             }
             else
@@ -404,7 +414,6 @@ public final class AssemblyLinker
         }
         else
         {
-            // now work around a -ve orientation junction
             if(junctionOffsetDiff > 0)
             {
                 extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;

@@ -561,7 +561,7 @@ public class JunctionAssembly
     {
         mRepeatInfo.clear();
         List<RepeatInfo> repeats = findRepeats(mBases);
-        if(repeats != null)
+        if(!repeats.isEmpty())
         {
             mRepeatInfo.addAll(repeats);
             mRefBasesRepeatedTrimmed = RepeatInfo.buildTrimmedRefBaseSequence(this, MIN_VARIANT_LENGTH);

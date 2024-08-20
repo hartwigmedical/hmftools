@@ -377,8 +377,8 @@ public class RemoteRegionAssembler
         {
             remoteJunctionPosition = remoteRegionStart + extBaseIndexStartInRef + assemblyExtBaseLength - 1;
             remoteRefPosition = remoteRegionStart;
-            remoteJunctionIndex = remoteJunctionPosition - remoteRefPosition + 1;
-            remoteRefLength = remoteJunctionIndex;
+            remoteRefLength = remoteJunctionPosition - remoteRefPosition + 1;
+            remoteJunctionIndex = remoteRefLength - 1;
             remoteRefBaseIndexStart = 0;
         }
         else
