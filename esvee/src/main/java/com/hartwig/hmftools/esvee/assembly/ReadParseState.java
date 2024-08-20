@@ -175,6 +175,9 @@ public class ReadParseState
                     --mReadIndex;
             }
         }
+
+        if(mReadIndex < 0 || mReadIndex >= mRead.getBases().length)
+            mIsValid = false;
     }
 
     public void skipInsert()

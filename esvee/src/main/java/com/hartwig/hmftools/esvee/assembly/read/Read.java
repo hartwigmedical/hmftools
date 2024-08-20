@@ -379,13 +379,30 @@ public class Read
 
         if(fromStart)
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 CigarElement element = mCigarElements.get(0);
 
-                if(element.getOperator() == H)
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(0);
+                        newReadStart += element.getLength();
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
                 {
                     mCigarElements.remove(0);
+
+                    if(element.getOperator().consumesReferenceBases())
+                        newReadStart += element.getLength();
+
                     continue;
                 }
 
@@ -413,12 +430,24 @@ public class Read
         }
         else
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 int lastIndex = mCigarElements.size() - 1;
                 CigarElement element = mCigarElements.get(lastIndex);
 
-                if(element.getOperator() == H)
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(lastIndex);
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
                 {
                     mCigarElements.remove(lastIndex);
                     continue;

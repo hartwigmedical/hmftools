@@ -70,6 +70,38 @@ public class ReadAdjustmentsTest
         assertEquals(103 + otherBases.length() - 1, read.alignmentEnd());
         assertEquals(otherBases, read.getBasesString());
         assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
+
+        // test trimming into delete
+        readBases = otherBases + polyGSection.substring(0, 5);
+        read = createRead(TEST_READ_ID, 100, readBases, "16M2D5M");
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(115, read.alignmentEnd());
+        assertEquals("16M", read.cigarString());
+
+        readBases = otherBases + polyGSection.substring(0, 6);
+        read = createRead(TEST_READ_ID, 100, readBases, "16M2D5M");
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(114, read.alignmentEnd());
+        assertEquals("15M", read.cigarString());
+
+        // again from the other end
+        readBases = polyCSection.substring(0, 5) + otherBases;
+        read = createRead(TEST_READ_ID, 100, readBases, "5M2D16M");
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(107, read.alignmentStart());
+        assertEquals("16M", read.cigarString());
+
+        readBases = polyCSection.substring(0, 6) + otherBases;
+        read = createRead(TEST_READ_ID, 100, readBases, "5M2D16M");
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(108, read.alignmentStart());
+        assertEquals("15M", read.cigarString());
     }
 
     @Test
