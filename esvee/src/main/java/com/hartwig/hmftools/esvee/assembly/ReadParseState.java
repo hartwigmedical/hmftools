@@ -87,6 +87,40 @@ public class ReadParseState
 
     public boolean exceedsMaxMismatches() { return mMismatches > mPermittedMismatches; }
 
+    public void moveStart()
+    {
+        // skips hard-clips if present
+        if(mElement.getOperator() != H)
+            return;
+
+        if(mMoveForward)
+        {
+            ++mCigarIndex;
+
+            if(mCigarIndex >= mElementCount)
+            {
+                mExhausted = true;
+                return;
+            }
+
+            mElementIndex = 0;
+            mElement = mElements.get(mCigarIndex);
+        }
+        else
+        {
+            --mCigarIndex;
+
+            if(mCigarIndex < 0)
+            {
+                mExhausted = true;
+                return;
+            }
+
+            mElement = mElements.get(mCigarIndex);
+            mElementIndex = mElement.getLength() - 1;
+        }
+    }
+
     public void moveNext()
     {
         if(mExhausted)
@@ -138,7 +172,7 @@ public class ReadParseState
         {
             --mElementIndex;
 
-            if(mElementIndex < 0)
+            if(mElementIndex < 0 || mElement.getOperator() == H)
             {
                 boolean wasClipping = mElement.getOperator().isClipping();
 
@@ -208,6 +242,8 @@ public class ReadParseState
             mElement = mElements.get(mCigarIndex);
             mElementIndex = mElement.getLength() - 1;
         }
+
+        moveStart();
 
         while(mReadIndex != mJunctionIndex && !mExhausted)
         {

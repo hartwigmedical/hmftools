@@ -247,6 +247,69 @@ public class RefBaseSequenceTest
     }
 
     @Test
+    public void testHardClippedReads()
+    {
+        // index 0-14, ref pos 1-15
+        // index DEL, ref pos 16-21
+        // index 15-46, ref pos 22-52
+        String cigar = "105H15M6D31M";
+        String readBases = REF_BASES_200.substring(1, 16) + REF_BASES_200.substring(22, 53);
+
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 1, readBases, cigar);
+        int readJunctionIndex = 15;
+        boolean isForwardJunction = false;
+
+        ReadParseState readState = new ReadParseState(
+                isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
+
+        assertEquals(22, readState.refPosition());
+        assertEquals(15, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(22), (char)readState.currentBase());
+
+        readState.moveNext();
+
+        assertEquals(23, readState.refPosition());
+        assertEquals(16, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(23), (char)readState.currentBase());
+
+        // index 0-30, ref pos 1-31
+        // index DEL, ref pos 32-37
+        // index 31-45, ref pos 38-52
+        cigar = "31M6D15M105H";
+        readBases = REF_BASES_200.substring(1, 32) + REF_BASES_200.substring(38, 53);
+
+        read = createRead(READ_ID_GENERATOR.nextId(), 1, readBases, cigar);
+        readJunctionIndex = 31;
+        isForwardJunction = true;
+
+        readState = new ReadParseState(
+                isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
+
+        assertEquals(38, readState.refPosition());
+        assertEquals(31, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(38), (char)readState.currentBase());
+
+        readState.moveNext();
+
+        assertEquals(37, readState.refPosition());
+        assertEquals(31, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        for(int i = 0; i < 6; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(31, readState.refPosition());
+        assertEquals(30, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(31), (char)readState.currentBase());
+    }
+
+    @Test
     public void testForwardRefBaseSequences()
     {
         String extBases = REF_BASES_200.substring(100, 140);
