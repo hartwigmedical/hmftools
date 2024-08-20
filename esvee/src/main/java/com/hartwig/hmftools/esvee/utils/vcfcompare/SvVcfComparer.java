@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils;
+package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -52,7 +52,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SvCompareVcfs
+public class SvVcfComparer
 {
     private final String mSampleId;
     private final String mReferenceId;
@@ -90,7 +90,7 @@ public class SvCompareVcfs
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
     private static final int DEFAULT_APPROX_MATCH_UPPER_LOWER_BOUNDS = 10;
 
-    public SvCompareVcfs(final ConfigBuilder configBuilder)
+    public SvVcfComparer(final ConfigBuilder configBuilder)
     {
         mSampleId = configBuilder.getValue(SAMPLE);
         mReferenceId = configBuilder.getValue(REFERENCE, "");
@@ -777,7 +777,7 @@ public class SvCompareVcfs
         configBuilder.checkAndParseCommandLine(args);
         ConfigUtils.setLogLevel(configBuilder);
 
-        SvCompareVcfs svVcfCompare = new SvCompareVcfs(configBuilder);
+        SvVcfComparer svVcfCompare = new SvVcfComparer(configBuilder);
         svVcfCompare.run();
     }
 }
