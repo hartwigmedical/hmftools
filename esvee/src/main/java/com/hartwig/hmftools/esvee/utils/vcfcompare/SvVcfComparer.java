@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
-import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class MatchFunctions
 {

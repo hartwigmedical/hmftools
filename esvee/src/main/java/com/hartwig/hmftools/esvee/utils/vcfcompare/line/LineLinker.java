@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class LineLinker
 {

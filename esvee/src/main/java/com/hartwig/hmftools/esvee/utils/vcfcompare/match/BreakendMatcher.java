@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class BreakendMatcher
 {
@@ -153,9 +153,9 @@ public class BreakendMatcher
                         mBreakendMatches.add(new BreakendMatch(breakend, null, MatchType.NO_MATCH));
                     else
                         mBreakendMatches.add(new BreakendMatch(null, breakend, MatchType.NO_MATCH));
-                }
 
-                unmatchedVariantsCount++;
+                    unmatchedVariantsCount++;
+                }
             }
         }
 

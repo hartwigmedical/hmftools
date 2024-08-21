@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare;
+package com.hartwig.hmftools.esvee.utils.vcfcompare.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;

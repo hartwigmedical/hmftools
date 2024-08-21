@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 

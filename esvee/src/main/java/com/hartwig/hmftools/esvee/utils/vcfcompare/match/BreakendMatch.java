@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
 
-import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class BreakendMatch
 {
