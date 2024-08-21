@@ -26,12 +26,6 @@ public class SvVcfComparer
 
     public void run()
     {
-        if(mConfig.OldVcf == null || mConfig.NewVcf == null)
-        {
-            SV_LOGGER.error("Missing VCFs");
-            return;
-        }
-
         Map<String,List<VariantBreakend>> oldChrBreakendMap = VariantBreakend.loadVariants(mConfig.OldVcf);
         Map<String,List<VariantBreakend>> newChrBreakendMap = VariantBreakend.loadVariants(mConfig.NewVcf);
 
@@ -52,7 +46,6 @@ public class SvVcfComparer
         mBreakendMatcher.gatherUnmatchedVariants(oldChrBreakendMap, newChrBreakendMap);
 
         mBreakendMatcher.writeBreakends();
-        mBreakendMatcher.closeWriter();
 
         SV_LOGGER.info("Esvee compare VCFs complete");
     }

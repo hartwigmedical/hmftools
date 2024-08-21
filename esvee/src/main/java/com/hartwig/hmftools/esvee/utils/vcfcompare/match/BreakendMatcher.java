@@ -34,8 +34,6 @@ public class BreakendMatcher
     public final RefGenomeVersion mRefGenomeVersion;
     public final boolean mShowNonPass;
 
-    private final BufferedWriter mWriter;
-
     private final List<BreakendMatch> mBreakendMatches = new ArrayList<>();
 
     public BreakendMatcher(
@@ -49,8 +47,6 @@ public class BreakendMatcher
 
         mRefGenomeVersion = refGenomeVersion;
         mShowNonPass = showNonPass;
-
-        mWriter = initialiseWriter();
     }
 
     public BreakendMatcher(CompareConfig config)
@@ -60,8 +56,6 @@ public class BreakendMatcher
         mOutputId = config.OutputId;
         mRefGenomeVersion = config.RefGenomeVersion;
         mShowNonPass = config.ShowNonPass;
-
-        mWriter = initialiseWriter();
     }
 
     public void matchBreakends(
@@ -133,7 +127,7 @@ public class BreakendMatcher
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, true);
     }
 
-    private void gatherUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
+    private int gatherUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
     {
         int unmatchedVariantsCount = 0;
 
@@ -159,10 +153,7 @@ public class BreakendMatcher
             }
         }
 
-        if(unmatchedVariantsCount > 0)
-        {
-            SV_LOGGER.debug("Writing {} unmatched variants", unmatchedVariantsCount);
-        }
+        return unmatchedVariantsCount;
     }
 
     public void gatherUnmatchedVariants(
@@ -170,8 +161,15 @@ public class BreakendMatcher
             Map<String,List<VariantBreakend>> newChrBreakendMap
     )
     {
-        gatherUnmatchedVariants(oldChrBreakendMap, true);
-        gatherUnmatchedVariants(newChrBreakendMap, false);
+        int unmatchedVariantsCount = 0;
+
+        unmatchedVariantsCount += gatherUnmatchedVariants(oldChrBreakendMap, true);
+        unmatchedVariantsCount += gatherUnmatchedVariants(newChrBreakendMap, false);
+
+        if(unmatchedVariantsCount > 0)
+        {
+            SV_LOGGER.debug("Found {} unmatched variants", unmatchedVariantsCount);
+        }
     }
 
     private BufferedWriter initialiseWriter()
@@ -204,9 +202,8 @@ public class BreakendMatcher
                     "OldFilter",   "NewFilter",
                     "OldVcfType",  "NewVcfType",
                     "OldQual",     "NewQual",
-                    "OldVF",       "NewVF",
-                    "OldLineLinkCoords", "NewLineLinkCoords"
-                    );
+                    "OldVF",       "NewVF"
+            );
 
             writer.write(header);
             writer.newLine();
@@ -215,22 +212,23 @@ public class BreakendMatcher
         }
         catch(IOException e)
         {
-            SV_LOGGER.error("failed to initialise output file: {}", e.toString());
+            SV_LOGGER.error("Failed to initialise output file: {}", e.toString());
+            System.exit(1);
             return null;
         }
     }
 
-    public void closeWriter() { FileWriterUtils.closeBufferedWriter(mWriter); }
-
     public void writeBreakends()
     {
+        BufferedWriter writer = initialiseWriter();
+
         for(BreakendMatch breakendMatch : mBreakendMatches)
-        {
-            writeBreakend(breakendMatch.OldBreakend, breakendMatch.NewBreakend, breakendMatch.Type);
-        }
+            writeBreakend(writer, breakendMatch.OldBreakend, breakendMatch.NewBreakend, breakendMatch.Type);
+
+        FileWriterUtils.closeBufferedWriter(writer);
     }
 
-    private void writeBreakend(VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
+    private void writeBreakend(BufferedWriter writer, VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
     {
         String oldId       = "";
         String oldSvCoords = "";
@@ -244,7 +242,6 @@ public class BreakendMatcher
         String oldVcfType  = "";
         String oldQual     = "";
         String oldVF       = "";
-        String oldLineLinkCoords = "";
         if(oldBreakend != null)
         {
             oldId = oldBreakend.Context.getID();
@@ -259,7 +256,6 @@ public class BreakendMatcher
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
             oldVF = oldBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
-            oldLineLinkCoords = oldBreakend.lineLinkCoordStr();
         }
 
         String newId       = "";
@@ -274,7 +270,6 @@ public class BreakendMatcher
         String newVcfType  = "";
         String newQual     = "";
         String newVF       = "";
-        String newLineLinkCoords = "";
         if(newBreakend != null)
         {
             newId = newBreakend.Context.getID();
@@ -289,7 +284,6 @@ public class BreakendMatcher
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
             newVF = newBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
-            newLineLinkCoords = newBreakend.lineLinkCoordStr();
         }
 
         String diffs = "";
@@ -316,12 +310,11 @@ public class BreakendMatcher
                     oldFilter,   newFilter,
                     oldVcfType,  newVcfType,
                     oldQual,     newQual,
-                    oldVF,       newVF,
-                    oldLineLinkCoords, newLineLinkCoords
+                    oldVF,       newVF
             );
 
-            mWriter.write(line);
-            mWriter.newLine();
+            writer.write(line);
+            writer.newLine();
         }
         catch(IOException e)
         {
