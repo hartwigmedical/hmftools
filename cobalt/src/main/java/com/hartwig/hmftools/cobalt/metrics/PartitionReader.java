@@ -243,20 +243,6 @@ public class PartitionReader extends Thread
                 alignedBases += getAlignedReadBases(upperRead, minReadEnd + 1);
             }
 
-            /*
-            boolean useRightClip = lowerRead.getReadNegativeStrandFlag();
-            int scRightLength = CigarUtils.rightSoftClipLength(lowerRead);
-
-            int impliedLowerReadEnd = lowerRead.getAlignmentEnd();
-            if(useRightClip)
-                impliedLowerReadEnd += scRightLength;
-
-            if(upperRead.getAlignmentEnd() > impliedLowerReadEnd)
-            {
-                alignedBases += getAlignedReadBases(upperRead, impliedLowerReadEnd);
-            }
-            */
-
             gcContent = GcCalcs.calcGcPercent(alignedBases);
         }
         else
