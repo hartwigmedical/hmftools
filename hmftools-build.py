@@ -120,7 +120,7 @@ class GithubRelease:
             'iat': int(time.time()),
             # JWT expiration time (10 minutes maximum)
             'exp': int(time.time()) + 600,
-            'iss': self.client_id
+            'iss': self.github_client_id
         }
         return jwt.encode(payload, self.private_key, algorithm='RS256')
 
