@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
@@ -17,7 +18,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.VcfType;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -158,7 +159,7 @@ public class VariantBreakend
 
     public boolean hasMatchedBreakend() { return MatchedBreakend != null; }
 
-    public boolean isLineInsertionSite() { return LineUtils.isLineInsertionSite(this); }
+    public boolean isLineInsertionSite() { return LineLinker.isLineInsertionSite(this); }
 
     public boolean hasLineLink() { return LinkedLineBreakend != null; }
 
@@ -182,7 +183,7 @@ public class VariantBreakend
 
     public String svCoordStr()
     {
-        if(isSingle() && !hasSglLineLink())
+        if(isSingle())
         {
             return coordStr();
         }
@@ -195,6 +196,32 @@ public class VariantBreakend
         return coordStr() + "_" + otherCoordStr();
     }
 
+    private boolean isLowerBreakend(VariantBreakend otherBreakend)
+    {
+        if(otherBreakend.Chromosome.isEmpty())
+        {
+            return true;
+        }
+
+        if(Context.getContig().equals(otherBreakend.Chromosome))
+        {
+            return Position < otherBreakend.Position;
+        }
+
+        return HumanChromosome.lowerChromosome(Chromosome, otherBreakend.Chromosome);
+    }
+
+    public String lineLinkCoordStr()
+    {
+        if(!hasLineLink())
+            return coordStr();
+
+        if(isLowerBreakend(LinkedLineBreakend))
+            return coordStr() + "_" + LinkedLineBreakend.coordStr();
+        else
+            return LinkedLineBreakend.coordStr() + "_" + coordStr();
+    }
+
     public String filtersStr()
     {
         return isPassVariant() ? PASS : String.join(",", Filters);
@@ -204,6 +231,10 @@ public class VariantBreakend
     {
         return String.format("%.0f", Context.getPhredScaledQual());
     }
+
+    public String id() { return Context.getID(); }
+
+    public String fragsStr(String sampleId){ return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS); }
 
     public StructuralVariantType svType()
     {
