@@ -125,7 +125,7 @@ class GithubRelease:
         return jwt.encode(payload, self.private_key, algorithm='RS256')
 
     def _refresh_token(self, jwt: str):
-        response = requests.post(f"https://api.github.com/app/installations/${self.github_installation_id}/access_tokens",
+        response = requests.post(f"https://api.github.com/app/installations/{self.github_installation_id}/access_tokens",
                 headers = self._headers(jwt))
         response.raise_for_status()
         return response.json()["token"]
