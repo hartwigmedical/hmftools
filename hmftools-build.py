@@ -167,7 +167,7 @@ def main():
     build_and_release(args.tag, args.github_key_path, args.github_client_id, args.github_installation_id)
 
 
-def build_and_release(raw_tag: str, github_key: str, github_client-id: str, github_installation-id: str):
+def build_and_release(raw_tag: str, github_key: str, github_client_id: str, github_installation_id: str):
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
