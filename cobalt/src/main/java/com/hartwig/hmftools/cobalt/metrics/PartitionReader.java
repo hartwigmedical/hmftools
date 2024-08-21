@@ -69,7 +69,7 @@ public class PartitionReader extends Thread
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(0, false, false, false);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false, false);
         mBamSlicer.setKeepUnmapped();
 
         mReadGroupMap = Maps.newHashMap();
