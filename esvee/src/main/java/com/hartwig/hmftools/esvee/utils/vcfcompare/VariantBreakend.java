@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
@@ -18,21 +17,22 @@ import java.util.Set;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.match.VcfType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-class VariantBreakend
+public class VariantBreakend
 {
     public final VariantContext Context;
-    public final VariantAltInsertCoords AltCoords;
+    private final VariantAltInsertCoords AltCoords;
 
     public final String Chromosome;
     public final int Position;
     public final byte Orientation;
 
-    public final String OtherChromosome;
-    public final int OtherPosition;
-    public final byte OtherOrientation;
+    public String OtherChromosome;
+    public int OtherPosition;
+    public byte OtherOrientation;
 
     public final int[] Cipos;
     public final int[] Ihompos;
@@ -42,6 +42,9 @@ class VariantBreakend
     public final String SvType;
     public final Set<String> Filters;
     public final VcfType SourceVcfType;
+
+    public VariantBreakend MatchedBreakend;
+    public VariantBreakend LinkedLineBreakend;
 
     public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
     {
@@ -70,11 +73,19 @@ class VariantBreakend
         Filters = Context.getFilters();
 
         SourceVcfType = sourceVcfType;
+
+        MatchedBreakend = null;
+        LinkedLineBreakend = null;
     }
 
-    private boolean isSingle()
+    public boolean isSingle()
     {
-        return AltCoords.OtherChromsome.isEmpty();
+        return OtherChromosome.isEmpty();
+    }
+
+    public boolean isTranslocation()
+    {
+        return !isSingle() && Chromosome.equals(OtherChromosome);
     }
 
     private boolean isEnd()
@@ -145,6 +156,15 @@ class VariantBreakend
         return getGenotypeAttributeAsDouble(Context.getGenotype(id), key, 0);
     }
 
+    public boolean hasMatchedBreakend() { return MatchedBreakend != null; }
+
+    public boolean isLineInsertionSite() { return LineUtils.isLineInsertionSite(this); }
+
+    public boolean hasLineLink() { return LinkedLineBreakend != null; }
+
+    @Deprecated
+    public boolean hasSglLineLink() { return hasLineLink() && isSingle() && LinkedLineBreakend.isSingle(); }
+
     public String toString()
     {
         return String.format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]);
@@ -162,7 +182,7 @@ class VariantBreakend
 
     public String svCoordStr()
     {
-        if(isSingle())
+        if(isSingle() && !hasSglLineLink())
         {
             return coordStr();
         }

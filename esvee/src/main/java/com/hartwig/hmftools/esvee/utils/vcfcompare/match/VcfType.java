@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare;
+package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
 
 import java.io.File;
 
-enum VcfType
+public enum VcfType
 {
     SOMATIC,
     GERMLINE,

@@ -1,16 +1,18 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare;
+package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
-public class BreakendMatchers
+import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
+
+public class MatchFunctions
 {
     @FunctionalInterface
-    public interface Matcher
+    public interface MatchFunction
     {
         boolean match(final VariantBreakend breakend1, final VariantBreakend breakend2);
     }
 
-    public static class ExactMatcher implements Matcher
+    public static class ExactMatcher implements MatchFunction
     {
         @Override
         public boolean match(final VariantBreakend breakend1, final VariantBreakend breakend2)
@@ -35,7 +37,7 @@ public class BreakendMatchers
         }
     }
 
-    public static class CoordsOnlyMatcher implements Matcher
+    public static class CoordsOnlyMatcher implements MatchFunction
     {
         @Override
         public boolean match(final VariantBreakend breakend1, final VariantBreakend breakend2)
@@ -51,12 +53,11 @@ public class BreakendMatchers
                     breakend1.OtherOrientation == breakend2.OtherOrientation &&
                     breakend1.OtherPosition == breakend2.OtherPosition &&
                     breakend1.OtherChromosome.equals(breakend2.OtherChromosome)
-
             ;
         }
     }
 
-    public static class ApproxMatcher implements Matcher
+    public static class ApproxMatcher implements MatchFunction
     {
         private static final int UPPER_LOWER_BOUNDS = 10;
 
