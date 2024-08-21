@@ -10,14 +10,19 @@ import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -254,5 +259,41 @@ public class VariantBreakend
     public boolean isPassVariant()
     {
         return Filters.isEmpty();
+    }
+
+    public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
+    {
+        SV_LOGGER.info("Loading vcfFile({})", vcfFile);
+
+        Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
+
+        VcfFileReader reader = new VcfFileReader(vcfFile);
+
+        String currentChr = "";
+        List<VariantBreakend> breakends = null;
+
+        SvCaller svCaller = SvCaller.fromVcfPath(vcfFile);
+        VcfType sourceVcfType = VcfType.fromVcfPath(vcfFile);
+
+        for(VariantContext variantContext : reader.iterator())
+        {
+            String chromosome = variantContext.getContig();
+
+            if(!currentChr.equals(chromosome))
+            {
+                currentChr = chromosome;
+                breakends = new ArrayList<>();
+                chrBreakendMap.put(chromosome, breakends);
+            }
+
+            breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
+        }
+
+        SV_LOGGER.debug("  Loaded {} SVs from {})",
+                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(),
+                vcfFile
+        );
+
+        return chrBreakendMap;
     }
 }
