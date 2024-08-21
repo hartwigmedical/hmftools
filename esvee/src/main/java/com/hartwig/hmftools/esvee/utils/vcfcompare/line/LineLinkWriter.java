@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
@@ -24,8 +25,6 @@ public class LineLinkWriter
 
     private final boolean mShowNonPass;
 
-    private final BufferedWriter mWriter;
-
     public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean showNonPass)
     {
         mSampleId = sampleId;
@@ -33,8 +32,15 @@ public class LineLinkWriter
         mOutputId = outputId;
 
         mShowNonPass = showNonPass;
+    }
 
-        mWriter = initialiseWriter();
+    public LineLinkWriter(CompareConfig config)
+    {
+        mSampleId = config.SampleId;
+        mOutputDir = config.OutputDir;
+        mOutputId = config.OutputId;
+
+        mShowNonPass = config.ShowNonPass;
     }
 
     private static final String OLD_PREFIX = "Old";
@@ -46,7 +52,6 @@ public class LineLinkWriter
     );
 
     private static final List<String> HEADER_SUFFIXES = List.of(
-            "LineCoords",
             "PolyAId",
             "OtherId",
             "PolyACoords",
@@ -101,17 +106,14 @@ public class LineLinkWriter
         }
         catch(IOException e)
         {
-            SV_LOGGER.error("failed to initialise output file: {}", e.toString());
+            SV_LOGGER.error("Failed to initialise output file: {}", e.toString());
+            System.exit(1);
             return null;
         }
     }
 
-    public void closeWriter() { FileWriterUtils.closeBufferedWriter(mWriter); }
-
     private List<String> getOutputStrings(@Nullable VariantBreakend insertSite)
     {
-        String LineCoords = "";
-
         String PolyAId = "";
         String OtherId = "";
         String PolyACoords = "";
@@ -128,14 +130,10 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        //System.out.println(insertSite + "    " + insertSite.LinkedLineBreakend);
-
         if(insertSite != null)
         {
             VariantBreakend polyASite = insertSite;
             VariantBreakend otherSite = insertSite.LinkedLineBreakend;
-
-            LineCoords = polyASite.lineLinkCoordStr();
 
             PolyAId = polyASite.id();
             PolyACoords = polyASite.coordStr();
@@ -151,7 +149,7 @@ public class LineLinkWriter
                 OtherCoords = otherSite.coordStr();
                 OtherInsertSeq = otherSite.InsertSequence;
 
-                if(otherSite.isTranslocation())
+                if(otherSite.isTranslocation() && otherSite == polyASite)
                     RemoteCoords = otherSite.otherCoordStr();
 
                 OtherSvType = otherSite.SvType;
@@ -162,7 +160,6 @@ public class LineLinkWriter
         }
 
         return List.of(
-                LineCoords,
                 PolyAId,
                 OtherId,
                 PolyACoords,
@@ -192,6 +189,8 @@ public class LineLinkWriter
     {
         try
         {
+            BufferedWriter writer = initialiseWriter();
+
             SV_LOGGER.info("Writing LINE breakends");
 
             List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
@@ -200,9 +199,6 @@ public class LineLinkWriter
             {
                 VariantBreakend oldBreakend = match.OldBreakend;
                 VariantBreakend newBreakend = match.NewBreakend;
-
-                // System.out.println(oldBreakend + "    " + newBreakend);
-                // int a = 0;
 
                 if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
                     continue;
@@ -225,9 +221,11 @@ public class LineLinkWriter
                     rowStrings.add(newStrings.get(i));
                 }
 
-                mWriter.write(String.join(TSV_DELIM, rowStrings));
-                mWriter.newLine();
+                writer.write(String.join(TSV_DELIM, rowStrings));
+                writer.newLine();
             }
+
+            FileWriterUtils.closeBufferedWriter(writer);
         }
         catch(IOException e)
         {
