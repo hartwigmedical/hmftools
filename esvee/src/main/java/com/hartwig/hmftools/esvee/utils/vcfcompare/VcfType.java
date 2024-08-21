@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
+package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
 import java.io.File;
 
