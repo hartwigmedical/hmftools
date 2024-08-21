@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.OVERLAP_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.SATELLITE_SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.TI_JCN_MATCH;
-import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.types.SvVarData.SGL_CENTRO_SATELLITE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
@@ -137,11 +136,6 @@ public class ComplexMergeRuleTest
         SvVarData var3 = createDel(tester.nextVarId(), "1", 60000, 60100);
         allVariants.add(var3);
 
-        // eqv breakend will be ignored
-        SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1);
-        var4.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
-        allVariants.add(var4);
-
         // now some SV which will be overlapped by the consecutive breakends
         SvVarData overlap1 = createBnd(tester.nextVarId(), "1", 20000, -1, "4", 200, 1);
         allVariants.add(overlap1);
@@ -154,7 +148,7 @@ public class ComplexMergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(4, tester.getAllClusters().size());
+        assertEquals(3, tester.getAllClusters().size());
 
         SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(consec1, consec2, consec3, overlap1, overlap2));
 

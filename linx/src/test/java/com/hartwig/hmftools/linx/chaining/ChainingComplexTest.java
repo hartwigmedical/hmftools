@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -100,8 +101,7 @@ public class ChainingComplexTest
         final SvVarData varA1 = createTestSv(0, "1", "1", 2000,5500, -1, -1, INV, 4);
         final SvVarData varA2 = createTestSv(1, "1", "1", 3000,5600, -1, 1, DUP, 4);
 
-        varA1.setAssemblyData(false, "asmb_A1_A2");
-        varA2.setAssemblyData(false, "asmb_A1_A2");
+        setAssembledLinkInfo(varA1, false, varA2, false);
 
         final SvVarData varB = createTestSv(2, "1", "1", 9000,10000, 1, 1, INV, 2);
 
@@ -147,16 +147,13 @@ public class ChainingComplexTest
         // SVs: telomere - 1 -
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, 1, -1, DEL, 2);
-        final SvVarData var2 = createTestSv(2, "1", "2", 4000,100, 1, -1, BND, 2);
-        final SvVarData var3 = createTestSv(3, "1", "2", 5000,200, -1, 1, BND, 2);
-        final SvVarData dup = createTestSv(4, "1", "1", 1000,6000, -1, 1, DUP, 1);
+        SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, 1, -1, DEL, 2);
+        SvVarData var2 = createTestSv(2, "1", "2", 4000,100, 1, -1, BND, 2);
+        SvVarData var3 = createTestSv(3, "1", "2", 5000,200, -1, 1, BND, 2);
+        SvVarData dup = createTestSv(4, "1", "1", 1000,6000, -1, 1, DUP, 1);
 
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
-
-        var2.setAssemblyData(false, "asmb23");
-        var3.setAssemblyData(false, "asmb23");
+        setAssembledLinkInfo(var1, false, var2, true);
+        setAssembledLinkInfo(var2, false, var3, false);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -183,23 +180,24 @@ public class ChainingComplexTest
         // chain with more than breakend connecting via assembly to other breakends
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "1", 2000,1000, 1, -1, DEL, 5);
-        final SvVarData var2 = createTestSv(2, "1", "1", 1500,9000, 1, 1, INV, 5);
-        final SvVarData var3 = createTestSv(3, "1", "1", 1200,6000, 1, -1, DEL, 4);
-        final SvVarData var4 = createTestSv(4, "1", "2", 1300,200, -1, 1, BND, 2);
-        final SvVarData var5 = createTestSv(5, "1", "2", 1400,500, -1, -1, BND, 1);
-        final SvVarData var6 = createTestSv(6, "1", "1", 100,900, 1, -1, DEL, 2);
-        final SvVarData var7 = createTestSv(7, "1", "1", 800,2000, -1, -1, INV, 1);
-        final SvVarData var8 = createTestSv(8, "1", "1", 1100,10000, 1, 1, INV, 2);
+        SvVarData var1 = createTestSv(1, "1", "1", 2000,1000, 1, -1, DEL, 5);
+        SvVarData var2 = createTestSv(2, "1", "1", 1500,9000, 1, 1, INV, 5);
+        SvVarData var3 = createTestSv(3, "1", "1", 1200,6000, 1, -1, DEL, 4);
+        SvVarData var4 = createTestSv(4, "1", "2", 1300,200, -1, 1, BND, 2);
+        SvVarData var5 = createTestSv(5, "1", "2", 1400,500, -1, -1, BND, 1);
+        SvVarData var6 = createTestSv(6, "1", "1", 100,900, 1, -1, DEL, 2);
+        SvVarData var7 = createTestSv(7, "1", "1", 800,2000, -1, -1, INV, 1);
+        SvVarData var8 = createTestSv(8, "1", "1", 1100,10000, 1, 1, INV, 2);
 
-        var1.setAssemblyData(false, "asmb12;asmb18;asmb13");
-        var2.setAssemblyData(true, "asmb12;asmb24;asmb25");
-        var3.setAssemblyData(true, "asmb13;asmb36;asmb37");
-        var4.setAssemblyData(true, "asmb24");
-        var5.setAssemblyData(true, "asmb25");
-        var6.setAssemblyData(false, "asmb36");
-        var7.setAssemblyData(true, "asmb37");
-        var8.setAssemblyData(true, "asmb18");
+        setAssembledLinkInfo(var1, false, var2, true);
+        setAssembledLinkInfo(var1, false, var8, true);
+        setAssembledLinkInfo(var1, false, var3, true);
+
+        setAssembledLinkInfo(var2, true, var4, true);
+        setAssembledLinkInfo(var2, true, var5, true);
+
+        setAssembledLinkInfo(var3, true, var6, false);
+        setAssembledLinkInfo(var3, true, var7, true);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -228,20 +226,17 @@ public class ChainingComplexTest
         // BFB of the form telomere - 3 - 4 - 3 - 1 - 2 - 1 - 3 - 4 - 3 - R5-6 - centromere, where R is the resolving SV
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "1", 1000,2000, -1, -1, INV, 2);
-        final SvVarData var2 = createTestSv(2, "1", "1", 3000,4000, 1, 1, INV, 1);
-        final SvVarData var3 = createTestSv(3, "1", "1", 6000,7000, 1, -1, DEL, 4);
-        final SvVarData var4 = createTestSv(4, "1", "1", 9000,10000, 1, 1, INV, 2);
-        final SvVarData var5 = createTestSv(5, "1", "1", 5000,15000, -1, -1, INV, 1);
-        final SvVarData var6 = createTestSv(6, "1", "2", 15500,1000, 1, 1, BND, 1);
+        SvVarData var1 = createTestSv(1, "1", "1", 1000,2000, -1, -1, INV, 2);
+        SvVarData var2 = createTestSv(2, "1", "1", 3000,4000, 1, 1, INV, 1);
+        SvVarData var3 = createTestSv(3, "1", "1", 6000,7000, 1, -1, DEL, 4);
+        SvVarData var4 = createTestSv(4, "1", "1", 9000,10000, 1, 1, INV, 2);
+        SvVarData var5 = createTestSv(5, "1", "1", 5000,15000, -1, -1, INV, 1);
+        SvVarData var6 = createTestSv(6, "1", "2", 15500,1000, 1, 1, BND, 1);
 
-        var1.setAssemblyData(true, "asmb12s;asmb12e");
-        var2.setAssemblyData(true, "asmb12s");
-        var2.setAssemblyData(false, "asmb12e");
-
-        var3.setAssemblyData(false, "asmb34s;asmb34e");
-        var4.setAssemblyData(true, "asmb34s");
-        var4.setAssemblyData(false, "asmb34e");
+        setAssembledLinkInfo(var1, true, var2, true);
+        setAssembledLinkInfo(var1, true, var2, false);
+        setAssembledLinkInfo(var3, false, var4, true);
+        setAssembledLinkInfo(var3, false, var4, false);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -275,19 +270,16 @@ public class ChainingComplexTest
         //  T - 3 - 4 - 1 - 2 - 3 - 4 - 5 - C
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "2", 1000,1000, -1, -1, BND, 1);
-        final SvVarData var2 = createTestSv(2, "1", "2", 6000,3000, -1, 1, BND, 1);
+        SvVarData var1 = createTestSv(1, "1", "2", 1000,1000, -1, -1, BND, 1);
+        SvVarData var2 = createTestSv(2, "1", "2", 6000,3000, -1, 1, BND, 1);
 
-        final SvVarData var3 = createTestSv(3, "1", "2", 10000,20000, 1, -1, BND, 2);
-        final SvVarData var4 = createTestSv(4, "1", "2", 11000,25000, -1, 1, BND, 2);
-        final SvVarData var5 = createTestSv(5, "1", "3", 28000,2000, 1, 1, BND, 1);
+        SvVarData var3 = createTestSv(3, "1", "2", 10000,20000, 1, -1, BND, 2);
+        SvVarData var4 = createTestSv(4, "1", "2", 11000,25000, -1, 1, BND, 2);
+        SvVarData var5 = createTestSv(5, "1", "3", 28000,2000, 1, 1, BND, 1);
 
         // mark breakends as assembled to ensure they are foldbacks
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(false, "asmb12");
-
-        var3.setAssemblyData(false, "asmb34");
-        var4.setAssemblyData(false, "asmb34");
+        setAssembledLinkInfo(var1, false, var2, false);
+        setAssembledLinkInfo(var3, false, var4, false);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -319,13 +311,13 @@ public class ChainingComplexTest
         // simple chain with replicated SV: telomere - 4 - 5 - 1 - 2 - DUP - 1 - 3 - centromere
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "1", 4000,5000, 1, -1, DEL, 2);
-        final SvVarData var2 = createTestSv(2, "1", "1", 2000,6000, -1, 1, DUP, 1);
-        final SvVarData var3 = createTestSv(3, "1", "1", 7000,8000, 1, -1, DEL, 1);
+        SvVarData var1 = createTestSv(1, "1", "1", 4000,5000, 1, -1, DEL, 2);
+        SvVarData var2 = createTestSv(2, "1", "1", 2000,6000, -1, 1, DUP, 1);
+        SvVarData var3 = createTestSv(3, "1", "1", 7000,8000, 1, -1, DEL, 1);
 
         // add some BND so the group isn't considered simple and split up
-        final SvVarData var4 = createTestSv(4, "1", "2", 500,100, 1, -1, BND, 1);
-        final SvVarData var5 = createTestSv(5, "1", "2", 1000,200, -1, 1, BND, 1);
+        SvVarData var4 = createTestSv(4, "1", "2", 500,100, 1, -1, BND, 1);
+        SvVarData var5 = createTestSv(5, "1", "2", 1000,200, -1, 1, BND, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -355,12 +347,12 @@ public class ChainingComplexTest
         // where D is a complex DUP around the section B - C - D
         LinxTester tester = new LinxTester();
 
-        final SvVarData varA = createTestSv(1, "1", "1", 1000,5000, 1, 1, INV, 1);
-        final SvVarData varB = createTestSv(2, "1", "1", 4000,9000, -1, 1, DUP, 2);
-        final SvVarData varC = createTestSv(3, "1", "1", 7000,8000, 1, -1, DEL, 2);
-        final SvVarData varD = createTestSv(4, "1", "1", 3000,6000, 1, -1, DEL, 2);
-        final SvVarData varE = createTestSv(5, "1", "1", 2000,10000, -1, -1, INV, 1);
-        final SvVarData varDup = createTestSv(6, "1", "1", 2500,4500, -1, 1, DUP, 1);
+        SvVarData varA = createTestSv(1, "1", "1", 1000,5000, 1, 1, INV, 1);
+        SvVarData varB = createTestSv(2, "1", "1", 4000,9000, -1, 1, DUP, 2);
+        SvVarData varC = createTestSv(3, "1", "1", 7000,8000, 1, -1, DEL, 2);
+        SvVarData varD = createTestSv(4, "1", "1", 3000,6000, 1, -1, DEL, 2);
+        SvVarData varE = createTestSv(5, "1", "1", 2000,10000, -1, -1, INV, 1);
+        SvVarData varDup = createTestSv(6, "1", "1", 2500,4500, -1, 1, DUP, 1);
 
         tester.AllVariants.add(varA);
         tester.AllVariants.add(varB);
@@ -392,11 +384,11 @@ public class ChainingComplexTest
         // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, -1, -1, INV, 5);
-        final SvVarData var2 = createTestSv(2, "1", "1", 9000,10000, 1, 1, INV, 3);
-        final SvVarData var3 = createTestSv(3, "1", "1", 5000,6000, 1, 1, INV, 2);
-        final SvVarData var4 = createTestSv(4, "1", "1", 7000,8000, -1, 1, DUP, 1);
-        final SvVarData var5 = createTestSv(5, "1", "1", 1000,4000, 1, -1, DEL, 1);
+        SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, -1, -1, INV, 5);
+        SvVarData var2 = createTestSv(2, "1", "1", 9000,10000, 1, 1, INV, 3);
+        SvVarData var3 = createTestSv(3, "1", "1", 5000,6000, 1, 1, INV, 2);
+        SvVarData var4 = createTestSv(4, "1", "1", 7000,8000, -1, 1, DUP, 1);
+        SvVarData var5 = createTestSv(5, "1", "1", 1000,4000, 1, -1, DEL, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

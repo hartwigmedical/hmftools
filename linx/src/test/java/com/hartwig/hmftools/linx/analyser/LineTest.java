@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertFalse;
 
@@ -343,8 +344,8 @@ public class LineTest
         var2.addLineElement(KNOWN, true);
         var3.addLineElement(KNOWN, true);
         var4.addLineElement(KNOWN, true);
-        var1.setAssemblyData(true, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
+
+        setAssembledLinkInfo(var1, true, var2, true);
 
         tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4));
 
@@ -367,8 +368,7 @@ public class LineTest
         var4 = createInv(tester.nextVarId(), "1", 400, 600, 1);
         SvVarData var5 = createBnd(tester.nextVarId(), "1", 500, -1, "2", 200, -1);
 
-        var3.setAssemblyData(true, "asmb12");
-        var4.setAssemblyData(true, "asmb12");
+        setAssembledLinkInfo(var3, true, var4, true);
 
         // another independent source element
         SvVarData var6 = createBnd(tester.nextVarId(), "3", 1000, -1, "4", 100, 1);

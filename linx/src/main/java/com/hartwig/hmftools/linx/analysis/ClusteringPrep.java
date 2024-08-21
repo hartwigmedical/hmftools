@@ -140,7 +140,8 @@ public class ClusteringPrep
 
         StructuralVariantData newSvData = ImmutableStructuralVariantData.builder()
                 .id(svId)
-                .vcfId(sglSvData.vcfId() != null ? sglSvData.vcfId() : "")
+                .vcfIdStart(sglSvData.vcfIdStart() != null ? sglSvData.vcfIdStart() : "")
+                .vcfIdEnd("")
                 .startChromosome(sglSvData.startChromosome())
                 .endChromosome(infSvData.startChromosome())
                 .startPosition(sglSvData.startPosition())
