@@ -275,7 +275,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
         builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
-        if(breakend.alternativeAlignments() != null)
+        if(breakend.alternativeAlignments() != null && !breakend.alternativeAlignments().isEmpty())
             builder.attribute(INSALN, toVcfTag(breakend.alternativeAlignments()));
 
         AssemblyAlignment assemblyAlignment = breakend.assembly();

@@ -534,9 +534,7 @@ public class BreakendBuilder
             Breakend breakend = mAssemblyAlignment.breakends().get(i);
             Breakend nextBreakend = mAssemblyAlignment.breakends().get(i + 1);
 
-            if(areFacingBreakends(
-                    breakend.Chromosome, breakend.Position, breakend.Orient,
-                    nextBreakend.Chromosome, nextBreakend.Position, nextBreakend.Orient))
+            if(areFacingBreakends(breakend, nextBreakend))
             {
                 breakend.addFacingBreakend(nextBreakend);
                 nextBreakend.addFacingBreakend(breakend);
@@ -545,17 +543,19 @@ public class BreakendBuilder
     }
 
     private static boolean areFacingBreakends(
-            final String chrFirst, final int positionFirst, final Orientation orientFirst,
-            final String chrSecond, final int positionSecond, final Orientation orientSecond)
+            final Breakend breakend, final Breakend nextBreakend)
     {
-        // order is maintained ie the first must face the second
-        if(orientFirst == orientSecond || !chrFirst.equals(chrSecond))
+        if(breakend.otherBreakend() == nextBreakend) // ignore DUPs
             return false;
 
-        if(orientFirst.isReverse())
-            return positionFirst < positionSecond && positionSecond - positionFirst <= PHASED_ASSEMBLY_MAX_TI;
+        // order is maintained ie the first must face the second
+        if(breakend.Orient == nextBreakend.Orient || !breakend.Chromosome.equals(nextBreakend.Chromosome))
+            return false;
+
+        if(breakend.Orient.isReverse())
+            return breakend.Position < nextBreakend.Position && nextBreakend.Position - breakend.Position <= PHASED_ASSEMBLY_MAX_TI;
         else
-            return positionFirst > positionSecond && positionFirst - positionSecond <= PHASED_ASSEMBLY_MAX_TI;
+            return breakend.Position > nextBreakend.Position && breakend.Position - nextBreakend.Position <= PHASED_ASSEMBLY_MAX_TI;
     }
 
     protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)
