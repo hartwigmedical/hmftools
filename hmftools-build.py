@@ -159,15 +159,15 @@ def main():
     parser = ArgumentParser(
         description="A tool for automatically building and deploying individual modules in HMF-tools.")
     parser.add_argument('tag', help="The semantic versioning tag in the following format: <tool-name>-<version>")
-    parser.add_argument('github-key-path', help="Path to private key for the Github deployment bot")
-    parser.add_argument('github-client-id', help="Client id for the deployment bot")
-    parser.add_argument('github-installation-id', help="Installation id of the deployment bot")
+    parser.add_argument('github_key_path', help="Path to private key for the Github deployment bot")
+    parser.add_argument('github_client_id', help="Client id for the deployment bot")
+    parser.add_argument('github_installation_id', help="Installation id of the deployment bot")
     args = parser.parse_args()
 
-    build_and_release(args.tag, args.github-key-path, args.github-client-id, args.github-installation-id)
+    build_and_release(args.tag, args.github_key_path, args.github_client_id, args.github_installation_id)
 
 
-def build_and_release(raw_tag: str, github-key: str, github-client-id: str, github-installation-id: str):
+def build_and_release(raw_tag: str, github_key: str, github_client-id: str, github_installation-id: str):
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
@@ -198,7 +198,7 @@ def build_and_release(raw_tag: str, github-key: str, github-client-id: str, gith
 
     Docker(module, version).build()
     GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
-            open(github-key, "r").read(), github-client-id, github-installation-id).create()
+            open(github_key, "r").read(), github_client_id, github_installation_id).create()
 
 if __name__ == '__main__':
     main()
