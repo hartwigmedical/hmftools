@@ -1,18 +1,23 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static java.lang.Math.abs;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.bam.BamOperations;
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -30,6 +35,7 @@ public class SliceWriter
     private int mRecordWriteCount;
     private final SAMFileWriter mBamWriter;
     private final BufferedWriter mReadWriter;
+    private String mUnsortedOutputBam;
     private String mOutputBam;
 
     public SliceWriter(final SliceConfig config)
@@ -46,18 +52,22 @@ public class SliceWriter
 
         mOutputBam = mConfig.formFilename(WriteType.BAM);
 
+        boolean writeUnsortedBam = mConfig.UnsortedBam || mConfig.BamToolPath != null;
+        mUnsortedOutputBam = mOutputBam.replaceAll("bam", "unsorted.bam");
+
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
-        if(mConfig.UnsortedBam)
+        String outputBamFile = mConfig.BamToolPath != null ? mUnsortedOutputBam : mOutputBam;
+
+        if(writeUnsortedBam)
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         else
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(outputBamFile));
     }
 
     public synchronized void writeRead(final SAMRecord read) { doWriteRecord(read); }
-    public synchronized void writeReads(final List<SAMRecord> reads) { reads.forEach(x -> doWriteRecord(x));}
 
     private void doWriteRecord(final SAMRecord read)
     {
@@ -77,10 +87,16 @@ public class SliceWriter
             String filename = mConfig.formFilename(WriteType.READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,MapQual,SuppData,Flags");
-            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate");
-            writer.write(",ReadSequence,BaseQual");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add("ReadId").add("Chromosome").add("PosStart").add("PosEnd").add("Cigar");
+            sj.add("InsertSize").add("MateChr").add("MatePosStart").add("MapQual").add("SuppData").add("Flags");
+            sj.add("FirstInPair").add("ReadReversed").add("Proper").add("Unmapped").add("MateUnmapped").add("Supplementary").add("Duplicate");
+
+            if(mConfig.WriteReadBases)
+                sj.add("ReadSequence").add("BaseQual");
+
+            writer.write(sj.toString());
 
             writer.newLine();
 
@@ -101,24 +117,38 @@ public class SliceWriter
 
         try
         {
-            mReadWriter.write(format("%s,%s,%d,%d,%s",
-                    record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigar()));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(record.getReadName());
+            sj.add(record.getContig());
+            sj.add(String.valueOf(record.getAlignmentStart()));
+            sj.add(String.valueOf(record.getAlignmentEnd()));
+            sj.add(record.getCigar().toString());
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
-                    abs(record.getInferredInsertSize()), record.getMateReferenceName(), record.getMateAlignmentStart(), record.getMappingQuality(),
-                    suppData != null ? suppData.asCsv() : "N/A", record.getFlags()));
+            sj.add(String.valueOf(abs(record.getInferredInsertSize())));
+            sj.add(record.getMateReferenceName());
+            sj.add(String.valueOf(record.getMateAlignmentStart()));
+            sj.add(String.valueOf(record.getMappingQuality()));
+            sj.add(suppData != null ? suppData.asDelimStr() : "N/A");
+            sj.add(String.valueOf(record.getFlags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
-                    record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getProperPairFlag(), record.getReadUnmappedFlag(),
-                    record.getMateUnmappedFlag(), record.getSupplementaryAlignmentFlag(), record.getDuplicateReadFlag()));
+            sj.add(String.valueOf(record.getFirstOfPairFlag()));
+            sj.add(String.valueOf(record.getReadNegativeStrandFlag()));
+            sj.add(String.valueOf(record.getProperPairFlag()));
+            sj.add(String.valueOf(record.getProperPairFlag()));
+            sj.add(String.valueOf(record.getMateUnmappedFlag()));
+            sj.add(String.valueOf(record.getSupplementaryAlignmentFlag()));
+            sj.add(String.valueOf(record.getDuplicateReadFlag()));
 
-            String readSequence = StringUtil.bytesToString(record.getReadBases());
-            String baseQualities = record.getBaseQualityString();
+            if(mConfig.WriteReadBases)
+            {
+                sj.add(StringUtil.bytesToString(record.getReadBases()));
+                sj.add(record.getBaseQualityString());
+            }
 
-            mReadWriter.write(format(",%s,%s", readSequence, baseQualities));
-
+            mReadWriter.write(sj.toString());
             mReadWriter.newLine();
         }
         catch(IOException e)
@@ -131,16 +161,35 @@ public class SliceWriter
     {
         if(mBamWriter != null)
         {
-            BT_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);
-
-            if(!mConfig.UnsortedBam)
-            {
-                // TODO
-                // BT_LOGGER.debug("indexing sliced BAM");
-                // BamOperations.indexBam(bamToolName(), bamToolPath(), finalBamFilename, mConfig.Threads)
-            }
+            BT_LOGGER.info("{} records written to BAM", mRecordWriteCount);
 
             mBamWriter.close();
+
+            if(!mConfig.UnsortedBam && mConfig.BamToolPath != null)
+            {
+                BT_LOGGER.info("writing sorted BAM: {}", mOutputBam);
+
+                BamToolName toolName = fromPath(mConfig.BamToolPath);
+
+                boolean success = BamOperations.sortBam(toolName, mConfig.BamToolPath, mUnsortedOutputBam, mOutputBam, mConfig.Threads);
+
+                if(success && toolName == BamToolName.SAMTOOLS)
+                {
+                    success = BamOperations.indexBam(toolName, mConfig.BamToolPath, mOutputBam, mConfig.Threads);
+                }
+
+                if(success)
+                {
+                    try
+                    {
+                        Files.deleteIfExists(Paths.get(mUnsortedOutputBam));
+                    }
+                    catch(IOException e)
+                    {
+                        BT_LOGGER.error("error deleting interim file: {}", e.toString());
+                    }
+                }
+            }
         }
 
         closeBufferedWriter(mReadWriter);

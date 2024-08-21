@@ -33,7 +33,7 @@ public class SupplementaryReadDataTest
     @Test
     public void testFromAlignment_AlternativeDelimiter()
     {
-        final SupplementaryReadData actual = SupplementaryReadData.fromAlignment(TEST_SUPP_DATA1.asCsv(), ";");
+        final SupplementaryReadData actual = SupplementaryReadData.fromAlignment(TEST_SUPP_DATA1.asDelimStr(), ";");
 
         assertNotNull(actual);
         assertEquals(TEST_SUPP_DATA1, actual);
@@ -68,7 +68,7 @@ public class SupplementaryReadDataTest
     @Test
     public void testFrom_SingleAlignment_AlternativeDelimiter()
     {
-        final List<SupplementaryReadData> actual = SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asCsv());
+        final List<SupplementaryReadData> actual = SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asDelimStr());
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -138,7 +138,7 @@ public class SupplementaryReadDataTest
     @Test
     public void testFirstAlignmentFrom_SingleAlignment_AlternativeDelimiter()
     {
-        final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asCsv());
+        final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asDelimStr());
 
         assertNotNull(actual);
         assertEquals(TEST_SUPP_DATA1, actual);
