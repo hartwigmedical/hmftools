@@ -1,25 +1,17 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.VcfType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,17 +20,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SvVcfComparer
 {
-    private final String mSampleId;
-    private final String mReferenceId;
-
-    private final String mOldVcf;
-    private final String mNewVcf;
-
-    private final String mOldUnfilteredVcf;
-    private final String mNewUnfilteredVcf;
-
-    private final String mOutputDir;
-    private final String mOutputId;
+    private final CompareConfig mConfig;
 
     private final Map<String,List<VariantBreakend>> mOldChrBreakendMap;
     private final Map<String,List<VariantBreakend>> mNewChrBreakendMap;
@@ -46,35 +28,11 @@ public class SvVcfComparer
     private final Map<String,List<VariantBreakend>> mOldChrBreakendMapUnfiltered;
     private final Map<String,List<VariantBreakend>> mNewChrBreakendMapUnfiltered;
 
-    private final boolean mShowNonPass;
-
     private final BreakendMatcher mBreakendMatcher;
 
-    private RefGenomeVersion mRefGenomeVersion;
-
-    private static final String OLD_VCF = "old_vcf";
-    private static final String NEW_VCF = "new_vcf";
-
-    private static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
-    private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
-
-    private static final String SHOW_NON_PASS = "show_non_pass";
-
-    public SvVcfComparer(final ConfigBuilder configBuilder)
+    public SvVcfComparer(final CompareConfig config)
     {
-        mSampleId = configBuilder.getValue(SAMPLE);
-        mReferenceId = configBuilder.getValue(REFERENCE, "");
-
-        mOldVcf = configBuilder.getValue(OLD_VCF);
-        mNewVcf = configBuilder.getValue(NEW_VCF);
-
-        mOldUnfilteredVcf = configBuilder.getValue(OLD_UNFILTERED_VCF);
-        mNewUnfilteredVcf = configBuilder.getValue(NEW_UNFILTERED_VCF);
-
-        mShowNonPass = configBuilder.hasFlag(SHOW_NON_PASS);
-
-        mOutputDir = FileWriterUtils.parseOutputDir(configBuilder);
-        mOutputId = configBuilder.getValue(OUTPUT_ID);
+        mConfig = config;
 
         mOldChrBreakendMap = new HashMap<>();
         mNewChrBreakendMap = new HashMap<>();
@@ -82,38 +40,36 @@ public class SvVcfComparer
         mOldChrBreakendMapUnfiltered = new HashMap<>();
         mNewChrBreakendMapUnfiltered = new HashMap<>();
 
-        mRefGenomeVersion = RefGenomeVersion.V37; // FIXME: Make this configurable
-
-        mBreakendMatcher = new BreakendMatcher(mSampleId, mOutputDir, mOutputId, mRefGenomeVersion, mShowNonPass);
+        mBreakendMatcher = new BreakendMatcher(config);
     }
 
     public void run()
     {
-        if(mOldVcf == null || mNewVcf == null)
+        if(mConfig.OldVcf == null || mConfig.NewVcf == null)
         {
             SV_LOGGER.error("Missing VCFs");
             return;
         }
 
-        loadVariants(mOldVcf, mOldChrBreakendMap);
-        loadVariants(mNewVcf, mNewChrBreakendMap);
+        loadVariants(mConfig.OldVcf, mOldChrBreakendMap);
+        loadVariants(mConfig.NewVcf, mNewChrBreakendMap);
 
         mBreakendMatcher.matchBreakends(mOldChrBreakendMap, mNewChrBreakendMap);
 
-        if(mOldUnfilteredVcf != null)
+        if(mConfig.OldUnfilteredVcf != null)
         {
-            loadVariants(mOldUnfilteredVcf, mOldChrBreakendMapUnfiltered);
+            loadVariants(mConfig.OldUnfilteredVcf, mOldChrBreakendMapUnfiltered);
             mBreakendMatcher.matchBreakends(mNewChrBreakendMap, mOldChrBreakendMapUnfiltered);
         }
 
-        if(mNewUnfilteredVcf != null)
+        if(mConfig.NewUnfilteredVcf != null)
         {
-            loadVariants(mNewUnfilteredVcf, mNewChrBreakendMapUnfiltered);
+            loadVariants(mConfig.NewUnfilteredVcf, mNewChrBreakendMapUnfiltered);
             mBreakendMatcher.matchBreakends(mOldChrBreakendMap, mNewChrBreakendMapUnfiltered);
         }
 
-        mBreakendMatcher.gatherUnmatchedVariants(mOldChrBreakendMap, true);
-        mBreakendMatcher.gatherUnmatchedVariants(mNewChrBreakendMap, false);
+        mBreakendMatcher.gatherUnmatchedVariants(mOldChrBreakendMap, mNewChrBreakendMap);
+
         mBreakendMatcher.writeBreakends();
         mBreakendMatcher.closeWriter();
 
@@ -127,15 +83,12 @@ public class SvVcfComparer
         VcfFileReader reader = new VcfFileReader(vcfFile);
 
         VCFHeader vcfHeader = reader.vcfHeader();
-        GenotypeIds genotypeIds = GenotypeIds.fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
+        GenotypeIds genotypeIds = GenotypeIds.fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
         if(genotypeIds == null)
         {
             System.exit(1);
         }
-
-        SV_LOGGER.info("Genotype info: ref({}: {}) tumor({}: {})",
-                genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
 
         String currentChr = "";
         List<VariantBreakend> breakends = null;
@@ -147,9 +100,6 @@ public class SvVcfComparer
         {
             String chromosome = variantContext.getContig();
 
-//            if(mRefGenomeVersion == null)
-//                mRefGenomeVersion = chromosome.startsWith(CHR_PREFIX) ? V38 : V37;
-
             if(!currentChr.equals(chromosome))
             {
                 currentChr = chromosome;
@@ -160,32 +110,21 @@ public class SvVcfComparer
             breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
         }
 
-        SV_LOGGER.info("Loaded {} SVs from {})",
-                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(), vcfFile);
+        SV_LOGGER.info("  Loaded {} SVs from {})",
+                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(),
+                vcfFile
+        );
     }
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
-
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
-
-        configBuilder.addPath(OLD_VCF, true, "Path to the old VCF file");
-        configBuilder.addPath(NEW_VCF, true, "Path to the new VCF file");
-
-        configBuilder.addPath(OLD_UNFILTERED_VCF, false, "Path to the old unfiltered VCF file");
-        configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
-
-        configBuilder.addPath(SHOW_NON_PASS, false, "Show variants not PASSing in both old nor new VCF files");
-
-        FileWriterUtils.addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
-
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        CompareConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
-        ConfigUtils.setLogLevel(configBuilder);
 
-        SvVcfComparer svVcfCompare = new SvVcfComparer(configBuilder);
+        CompareConfig compareConfig = new CompareConfig(configBuilder);
+
+        SvVcfComparer svVcfCompare = new SvVcfComparer(compareConfig);
         svVcfCompare.run();
     }
 }
