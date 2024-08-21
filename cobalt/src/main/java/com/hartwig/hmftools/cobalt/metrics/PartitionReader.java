@@ -69,7 +69,7 @@ public class PartitionReader extends Thread
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false, false);
+        mBamSlicer = new BamSlicer(0, false, false, false);
         mBamSlicer.setKeepUnmapped();
 
         mReadGroupMap = Maps.newHashMap();
@@ -142,7 +142,7 @@ public class PartitionReader extends Thread
         // process overlapping groups
         for(SAMRecord read : mReadGroupMap.values())
         {
-            processSamRecord(read, false);
+            processSingleRecord(read);
         }
 
         mReadGroupMap.clear();
@@ -182,6 +182,9 @@ public class PartitionReader extends Thread
 
     private void processSingleRecord(final SAMRecord read)
     {
+        if(read.getMappingQuality() < MIN_MAPPING_QUALITY)
+            return;
+
         int duplicateCount = getDuplicateReadCount(read);
 
         String alignedBases = getAlignedReadBases(read, 0);
@@ -201,7 +204,7 @@ public class PartitionReader extends Thread
 
     private void processFragment(final SAMRecord read, final SAMRecord mate)
     {
-        if(read.getMappingQuality() < MIN_MAPPING_QUALITY)
+        if(read.getMappingQuality() < MIN_MAPPING_QUALITY || mate.getMappingQuality() < MIN_MAPPING_QUALITY)
             return;
 
         int duplicateCount = getDuplicateReadCount(read);
