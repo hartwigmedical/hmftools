@@ -130,7 +130,7 @@ class GithubRelease:
         response.raise_for_status()
         return response.json()["token"]
 
-    def _headers(self, jwt: str):
+    def _headers(self, token: str):
         return {"Accept": "application/vnd.github+json",
                 "Authorization": f"Bearer {token}",
                 "X-GitHub-Api-Version": "2022-11-28"
