@@ -22,6 +22,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.VariantBreakend;
 
 public class BreakendMatcher
@@ -52,10 +53,22 @@ public class BreakendMatcher
         mWriter = initialiseWriter();
     }
 
+    public BreakendMatcher(CompareConfig config)
+    {
+        mSampleId = config.SampleId;
+        mOutputDir = config.OutputDir;
+        mOutputId = config.OutputId;
+        mRefGenomeVersion = config.RefGenomeVersion;
+        mShowNonPass = config.ShowNonPass;
+
+        mWriter = initialiseWriter();
+    }
+
     public void matchBreakends(
             Map<String, List<VariantBreakend>> oldChrBreakendMap,
             Map<String,List<VariantBreakend>> newChrBreakendMap,
-            MatchType matchType
+            MatchType matchType,
+            boolean checkOtherSide
     )
     {
         MatchFunctions.MatchFunction breakendMatcher = MatchType.getMatcher(matchType);
@@ -79,7 +92,7 @@ public class BreakendMatcher
                     if(oldBreakend.hasMatchedBreakend() || newBreakend.hasMatchedBreakend())
                         continue;
 
-                    boolean hasMatch = breakendMatcher.match(oldBreakend, newBreakend);
+                    boolean hasMatch = breakendMatcher.match(oldBreakend, newBreakend, checkOtherSide);
 
                     if(hasMatch)
                     {
@@ -103,15 +116,24 @@ public class BreakendMatcher
 
     public void matchBreakends(
             Map<String,List<VariantBreakend>> oldChrBreakendMap,
+            Map<String,List<VariantBreakend>> newChrBreakendMap,
+            boolean checkOtherSide
+    )
+    {
+        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH, checkOtherSide);
+        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY, checkOtherSide);
+        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.APPROX_MATCH, checkOtherSide);
+    }
+
+    public void matchBreakends(
+            Map<String,List<VariantBreakend>> oldChrBreakendMap,
             Map<String,List<VariantBreakend>> newChrBreakendMap
     )
     {
-        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH);
-        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY);
-        matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.APPROX_MATCH);
+        matchBreakends(oldChrBreakendMap, newChrBreakendMap, true);
     }
 
-    public void gatherUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
+    private void gatherUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
     {
         int unmatchedVariantsCount = 0;
 
@@ -123,20 +145,14 @@ public class BreakendMatcher
             for(VariantBreakend breakend : breakends)
             {
                 if(breakend.hasMatchedBreakend())
-                {
                     continue;
-                }
 
                 if(mShowNonPass || breakend.isPassVariant())
                 {
                     if(isOld)
-                    {
                         mBreakendMatches.add(new BreakendMatch(breakend, null, MatchType.NO_MATCH));
-                    }
                     else
-                    {
                         mBreakendMatches.add(new BreakendMatch(null, breakend, MatchType.NO_MATCH));
-                    }
                 }
 
                 unmatchedVariantsCount++;
@@ -147,6 +163,15 @@ public class BreakendMatcher
         {
             SV_LOGGER.debug("Writing {} unmatched variants", unmatchedVariantsCount);
         }
+    }
+
+    public void gatherUnmatchedVariants(
+            Map<String,List<VariantBreakend>> oldChrBreakendMap,
+            Map<String,List<VariantBreakend>> newChrBreakendMap
+    )
+    {
+        gatherUnmatchedVariants(oldChrBreakendMap, true);
+        gatherUnmatchedVariants(newChrBreakendMap, false);
     }
 
     private BufferedWriter initialiseWriter()
@@ -160,7 +185,7 @@ public class BreakendMatcher
 
             fileName += TSV_EXTENSION;
 
-            SV_LOGGER.info("writing comparison file: {}", fileName);
+            SV_LOGGER.info("Writing comparison file: {}", fileName);
 
             BufferedWriter writer = FileWriterUtils.createBufferedWriter(fileName, false);
 
@@ -179,8 +204,9 @@ public class BreakendMatcher
                     "OldFilter",   "NewFilter",
                     "OldVcfType",  "NewVcfType",
                     "OldQual",     "NewQual",
-                    "OldVF",       "NewVF"
-            );
+                    "OldVF",       "NewVF",
+                    "OldLineLinkCoords", "NewLineLinkCoords"
+                    );
 
             writer.write(header);
             writer.newLine();
@@ -218,6 +244,7 @@ public class BreakendMatcher
         String oldVcfType  = "";
         String oldQual     = "";
         String oldVF       = "";
+        String oldLineLinkCoords = "";
         if(oldBreakend != null)
         {
             oldId = oldBreakend.Context.getID();
@@ -232,6 +259,7 @@ public class BreakendMatcher
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
             oldVF = oldBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            oldLineLinkCoords = oldBreakend.lineLinkCoordStr();
         }
 
         String newId       = "";
@@ -246,6 +274,7 @@ public class BreakendMatcher
         String newVcfType  = "";
         String newQual     = "";
         String newVF       = "";
+        String newLineLinkCoords = "";
         if(newBreakend != null)
         {
             newId = newBreakend.Context.getID();
@@ -260,6 +289,7 @@ public class BreakendMatcher
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
             newVF = newBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            newLineLinkCoords = newBreakend.lineLinkCoordStr();
         }
 
         String diffs = "";
@@ -286,7 +316,8 @@ public class BreakendMatcher
                     oldFilter,   newFilter,
                     oldVcfType,  newVcfType,
                     oldQual,     newQual,
-                    oldVF,       newVF
+                    oldVF,       newVF,
+                    oldLineLinkCoords, newLineLinkCoords
             );
 
             mWriter.write(line);
@@ -294,21 +325,7 @@ public class BreakendMatcher
         }
         catch(IOException e)
         {
-            SV_LOGGER.error("failed to write output file: {}", e.toString());
-        }
-    }
-
-    public static class BreakendMatch
-    {
-        VariantBreakend OldBreakend;
-        VariantBreakend NewBreakend;
-        MatchType Type;
-
-        public BreakendMatch(VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType type)
-        {
-            OldBreakend = oldBreakend;
-            NewBreakend = newBreakend;
-            Type = type;
+            SV_LOGGER.error("Failed to write output file: {}", e.toString());
         }
     }
 
@@ -369,4 +386,6 @@ public class BreakendMatcher
 
         return diffSet;
     }
+
+    public List<BreakendMatch> getBreakendMatches(){ return mBreakendMatches; }
 }
