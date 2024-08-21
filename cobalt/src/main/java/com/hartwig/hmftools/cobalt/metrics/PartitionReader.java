@@ -142,7 +142,7 @@ public class PartitionReader extends Thread
         // process overlapping groups
         for(SAMRecord read : mReadGroupMap.values())
         {
-            processSamRecord(read, false);
+            processSingleRecord(read);
         }
 
         mReadGroupMap.clear();
@@ -201,7 +201,7 @@ public class PartitionReader extends Thread
 
     private void processFragment(final SAMRecord read, final SAMRecord mate)
     {
-        if(read.getMappingQuality() < MIN_MAPPING_QUALITY)
+        if(read.getMappingQuality() < MIN_MAPPING_QUALITY || mate.getMappingQuality() < MIN_MAPPING_QUALITY)
             return;
 
         int duplicateCount = getDuplicateReadCount(read);
