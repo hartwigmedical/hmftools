@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_ORIENTATION;
@@ -481,6 +481,6 @@ public class GridssSvFactory implements SvFactoryInterface
 
     private static StructuralVariantType type(final VariantContext context)
     {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(SVTYPE));
+        return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
     }
 }

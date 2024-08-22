@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -74,7 +74,7 @@ public class VariantBreakend
 
         SvType = svCaller == SvCaller.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
-                context.getAttributeAsString(SVTYPE, "");
+                context.getAttributeAsString(SV_TYPE, "");
 
         Filters = Context.getFilters();
 

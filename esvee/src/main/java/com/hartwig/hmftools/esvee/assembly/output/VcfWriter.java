@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID_DESC;
@@ -32,6 +34,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
@@ -50,8 +54,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
@@ -159,7 +163,8 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
 
         metaData.add(new VCFInfoHeaderLine(MATE_ID, 1, VCFHeaderLineType.String, MATE_ID_DESC));
-        metaData.add(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        metaData.add(new VCFInfoHeaderLine(SV_ID, 1, VCFHeaderLineType.String, SV_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(SV_TYPE, 1, VCFHeaderLineType.String, SV_TYPE_DESC));
 
         metaData.add(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
@@ -253,9 +258,15 @@ public class VcfWriter implements AutoCloseable
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())
-            builder.attribute(MATE_ID, String.valueOf(breakend.otherBreakend().id()));
+        {
+            int otherBreakendId = breakend.otherBreakend().id();
+            builder.attribute(MATE_ID, String.valueOf(otherBreakendId));
 
-        builder.attribute(SVTYPE, breakend.svType());
+            String svId = format("%d_%d", breakend.id(), otherBreakendId);
+            builder.attribute(SV_ID, String.valueOf(svId));
+        }
+
+        builder.attribute(SV_TYPE, breakend.svType());
 
         if(breakend.Homology != null)
         {

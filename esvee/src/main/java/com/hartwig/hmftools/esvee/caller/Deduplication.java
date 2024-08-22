@@ -45,7 +45,21 @@ public final class Deduplication
 
     private static boolean isDuplicate(final Breakend first, final Breakend second)
     {
-        return first.Orient == second.Orient && first.InsertSequence.equals(second.InsertSequence);
+        if(first.Position != second.Position || first.Orient != second.Orient || !first.InsertSequence.equals(second.InsertSequence))
+            return false;
+
+        if(first.isSgl() != second.isSgl())
+            return false;
+
+        if(first.isSgl())
+            return true;
+
+        Breakend firstOther = first.otherBreakend();
+        Breakend secondOther = second.otherBreakend();
+
+        return firstOther.Position == secondOther.Position
+            && firstOther.Orient == secondOther.Orient
+            && firstOther.Chromosome.equals(secondOther.Chromosome);
     }
 
     private static boolean keepFirst(final Breakend first, final Breakend second)

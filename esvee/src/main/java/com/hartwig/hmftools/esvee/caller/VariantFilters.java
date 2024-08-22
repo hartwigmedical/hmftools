@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
@@ -87,7 +88,7 @@ public class VariantFilters
             {
                 FilterType filterType = FilterType.fromVcfTag(filterStr);
 
-                if(filterType != null)
+                if(filterType != null && filterType != DUPLICATE)
                     breakend.sv().addFilter(filterType);
             }
             catch(Exception e) {}
