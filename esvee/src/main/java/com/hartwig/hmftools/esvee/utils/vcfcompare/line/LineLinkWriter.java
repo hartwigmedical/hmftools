@@ -14,6 +14,7 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.match.MatchFunctions;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -52,10 +53,10 @@ public class LineLinkWriter
     );
 
     private static final List<String> HEADER_SUFFIXES = List.of(
+            "VcfType",
             "PolyAId",
             "OtherId",
-            "PolyAVcfType",
-            "OtherVcfType",
+            "RemoteId",
             "PolyACoords",
             "OtherCoords",
             "RemoteCoords",
@@ -114,33 +115,43 @@ public class LineLinkWriter
         }
     }
 
+    private static MatchFunctions.MatchFunction mCoordMatcher = new MatchFunctions.CoordsOnlyMatcher();
+
     private List<String> getOutputStrings(@Nullable VariantBreakend insertSite)
     {
+        String VcfType = "";
+
         String PolyAId = "";
         String OtherId = "";
-        String PolyAVcfType = "";
-        String OtherVcfType = "";
+        String RemoteId = "";
+
         String PolyACoords = "";
         String OtherCoords = "";
         String RemoteCoords = "";
+
         String PolyAInsertSeq = "";
         String OtherInsertSeq = "";
+
         String PolyASvType = "";
         String OtherSvType = "";
+
         String PolyAFilter = "";
         String OtherFilter = "";
+
         String PolyAQual = "";
         String OtherQual = "";
+
         String PolyAFrags = "";
         String OtherFrags = "";
 
         if(insertSite != null)
         {
+            VcfType = insertSite.SourceVcfType.toString();
+
             VariantBreakend polyASite = insertSite;
             VariantBreakend otherSite = insertSite.LinkedLineBreakend;
 
-            PolyAId = polyASite.id();
-            PolyAVcfType = polyASite.SourceVcfType.toString();
+            PolyAId = polyASite.Id;
             PolyACoords = polyASite.coordStr();
             PolyAInsertSeq = polyASite.InsertSequence;
             PolyASvType = polyASite.SvType;
@@ -150,13 +161,15 @@ public class LineLinkWriter
 
             if(otherSite != null)
             {
-                OtherId = otherSite.id();
-                OtherVcfType = otherSite.SourceVcfType.toString();
+                OtherId = otherSite.Id;
                 OtherCoords = otherSite.coordStr();
                 OtherInsertSeq = otherSite.InsertSequence;
 
-                if(otherSite.isTranslocation() && otherSite == polyASite)
+                if(!otherSite.isSingle() && !otherSite.eventId().equals(polyASite.eventId()))
+                {
                     RemoteCoords = otherSite.otherCoordStr();
+                    RemoteId = otherSite.mateId();
+                }
 
                 OtherSvType = otherSite.SvType;
                 OtherFilter = otherSite.filtersStr();
@@ -166,10 +179,10 @@ public class LineLinkWriter
         }
 
         return List.of(
+                VcfType,
                 PolyAId,
                 OtherId,
-                PolyAVcfType,
-                OtherVcfType,
+                RemoteId,
                 PolyACoords,
                 OtherCoords,
                 RemoteCoords,
