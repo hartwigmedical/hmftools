@@ -23,15 +23,15 @@ public class LineLinkWriter
     public final String mOutputDir;
     public final String mOutputId;
 
-    private final boolean mShowNonPass;
+    private final boolean mIncludeNonPass;
 
-    public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean showNonPass)
+    public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean includeNonPass)
     {
         mSampleId = sampleId;
         mOutputDir = outputDir;
         mOutputId = outputId;
 
-        mShowNonPass = showNonPass;
+        mIncludeNonPass = includeNonPass;
     }
 
     public LineLinkWriter(CompareConfig config)
@@ -40,7 +40,7 @@ public class LineLinkWriter
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
 
-        mShowNonPass = config.ShowNonPass;
+        mIncludeNonPass = config.IncludeNonPass;
     }
 
     private static final String OLD_PREFIX = "Old";
@@ -54,6 +54,8 @@ public class LineLinkWriter
     private static final List<String> HEADER_SUFFIXES = List.of(
             "PolyAId",
             "OtherId",
+            "PolyAVcfType",
+            "OtherVcfType",
             "PolyACoords",
             "OtherCoords",
             "RemoteCoords",
@@ -116,6 +118,8 @@ public class LineLinkWriter
     {
         String PolyAId = "";
         String OtherId = "";
+        String PolyAVcfType = "";
+        String OtherVcfType = "";
         String PolyACoords = "";
         String OtherCoords = "";
         String RemoteCoords = "";
@@ -136,6 +140,7 @@ public class LineLinkWriter
             VariantBreakend otherSite = insertSite.LinkedLineBreakend;
 
             PolyAId = polyASite.id();
+            PolyAVcfType = polyASite.SourceVcfType.toString();
             PolyACoords = polyASite.coordStr();
             PolyAInsertSeq = polyASite.InsertSequence;
             PolyASvType = polyASite.SvType;
@@ -146,6 +151,7 @@ public class LineLinkWriter
             if(otherSite != null)
             {
                 OtherId = otherSite.id();
+                OtherVcfType = otherSite.SourceVcfType.toString();
                 OtherCoords = otherSite.coordStr();
                 OtherInsertSeq = otherSite.InsertSequence;
 
@@ -162,6 +168,8 @@ public class LineLinkWriter
         return List.of(
                 PolyAId,
                 OtherId,
+                PolyAVcfType,
+                OtherVcfType,
                 PolyACoords,
                 OtherCoords,
                 RemoteCoords,
@@ -181,7 +189,7 @@ public class LineLinkWriter
     private boolean isLineInsertSiteOfInterest(@Nullable VariantBreakend breakend)
     {
         return breakend != null &&
-                (mShowNonPass || breakend.isPassVariant()) &&
+                (mIncludeNonPass || breakend.isPassVariant()) &&
                 breakend.isLineInsertionSite();
     }
 
@@ -190,8 +198,6 @@ public class LineLinkWriter
         try
         {
             BufferedWriter writer = initialiseWriter();
-
-            SV_LOGGER.info("Writing LINE breakends");
 
             List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
 

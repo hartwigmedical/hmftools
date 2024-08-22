@@ -263,7 +263,7 @@ public class VariantBreakend
 
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
     {
-        SV_LOGGER.info("Loading vcfFile({})", vcfFile);
+        SV_LOGGER.info("Loading VCF file: {}", vcfFile);
 
         Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
 
@@ -289,10 +289,7 @@ public class VariantBreakend
             breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
         }
 
-        SV_LOGGER.debug("  Loaded {} SVs from {})",
-                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(),
-                vcfFile
-        );
+        SV_LOGGER.debug("Loaded {} structural variants", chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
 
         return chrBreakendMap;
     }

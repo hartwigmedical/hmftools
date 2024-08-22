@@ -57,8 +57,8 @@ public class SvVcfLineComparer
     {
         Map<String, List<VariantBreakend>> chrBreakendMap = VariantBreakend.loadVariants(vcfFile);
 
-        SV_LOGGER.debug("  Linking potential LINE breakends");
-        LineLinker.tryLinkLineBreakends(chrBreakendMap);
+        LineLinker lineLinker = new LineLinker(chrBreakendMap);
+        lineLinker.tryLinkLineBreakends();
 
         return chrBreakendMap;
     }

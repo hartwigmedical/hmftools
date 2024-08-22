@@ -104,7 +104,7 @@ public class BreakendMatcher
 
         if(matchedCount > 0)
         {
-            SV_LOGGER.debug("  Found {} variants with match type: {}", matchedCount, matchType);
+            SV_LOGGER.debug("Found {} variants with match type: {}", matchedCount, matchType);
         }
     }
 
@@ -114,6 +114,9 @@ public class BreakendMatcher
             boolean checkOtherSide
     )
     {
+        SV_LOGGER.info("Performing breakend matching using {} variants",
+                mIncludeNonPass ? "ALL" : "PASS");
+
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH, checkOtherSide);
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY, checkOtherSide);
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.APPROX_MATCH, checkOtherSide);

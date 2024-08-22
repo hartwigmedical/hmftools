@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -9,12 +10,20 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class LineLinker
 {
+    private final Map<String, List<VariantBreakend>> mChrBreakendMap;
+    private int mLinkCount = 0;
+
     private static final int MIN_POLY_A_OR_T_LENGTH = 10;
     private static final String POLY_A_SEQUENCE = "A".repeat(MIN_POLY_A_OR_T_LENGTH);
     private static final String POLY_T_SEQUENCE = "T".repeat(MIN_POLY_A_OR_T_LENGTH);
 
     private static final int OTHER_SITE_UPPER_BOUND = 30;
     private static final int OTHER_SITE_LOWER_BOUND = 10;
+
+    public LineLinker(Map<String, List<VariantBreakend>> chrBreakendMap)
+    {
+        mChrBreakendMap = chrBreakendMap;
+    }
 
     public static boolean isLineInsertionSite(VariantBreakend breakend)
     {
@@ -49,45 +58,43 @@ public class LineLinker
                 );
     }
 
-    private static boolean tryLinkSgls(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private void tryLinkSgls(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
-            return false;
+            return;
 
         if(!(maybeInsertSite.isSingle() && maybeLinkedSite.isSingle() && maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome)))
-            return false;
+            return;
 
         if(nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
         {
             maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
             maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
-            return true;
+            mLinkCount++;
         }
-
-        return false;
     }
 
-    private static boolean tryLinkTranslocations(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private void tryLinkTranslocations(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
-            return false;
+            return;
 
         if(!(maybeLinkedSite.isTranslocation() && maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome)))
-            return false;
+            return;
 
         if(nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
         {
             maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
             maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
-            return true;
+            mLinkCount++;
         }
-
-        return false;
     }
 
-    public static void tryLinkLineBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
+    public void tryLinkLineBreakends()
     {
-        for(List<VariantBreakend> breakends : chrBreakendMap.values())
+        SV_LOGGER.info("Linking potential LINE breakends");
+
+        for(List<VariantBreakend> breakends : mChrBreakendMap.values())
         {
             for(VariantBreakend breakend1 : breakends)
             {
@@ -97,6 +104,11 @@ public class LineLinker
                     tryLinkTranslocations(breakend1, breakend2);
                 }
             }
+        }
+
+        if(mLinkCount > 0)
+        {
+            SV_LOGGER.debug("Made {} LINE links", mLinkCount);
         }
     }
 }
