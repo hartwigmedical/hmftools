@@ -160,6 +160,7 @@ public class Variant
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }
     public boolean isPass() { return mFilters.isEmpty(); }
+    public boolean isFiltered() { return !mFilters.isEmpty(); }
 
     private void addExistingFilters(final VariantContext variantContext)
     {

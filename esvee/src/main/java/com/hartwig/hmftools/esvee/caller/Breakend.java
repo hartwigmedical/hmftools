@@ -130,6 +130,8 @@ public class Breakend
         return getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
     }
 
+    public int fragmentCount() { return fragmentCount(TumorGenotype) + fragmentCount(RefGenotype); }
+
     // convenience
     public boolean isSgl() { return mVariant.isSgl(); }
     public StructuralVariantType type() { return mVariant.type(); }

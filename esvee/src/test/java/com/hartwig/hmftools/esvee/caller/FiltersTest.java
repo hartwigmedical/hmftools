@@ -1,31 +1,43 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemblyAlignment;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
+import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.Deduplication;
-import com.hartwig.hmftools.esvee.alignment.HomologyData;
-import com.hartwig.hmftools.esvee.common.FilterType;
+import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class BreakendTest
+public class FiltersTest
 {
     @Test
+    public void testDeduplication()
+    {
+        Variant var1 = createSv("01", CHR_1, CHR_2, 100, 200, POS_ORIENT, NEG_ORIENT, "");
+        Variant var2 = createSv("01", CHR_1, CHR_2, 100, 200, POS_ORIENT, NEG_ORIENT, "");
+
+        List<Variant> variants = List.of(var1, var2);
+        Map<String,List<Breakend>> chrBreakendMap = Maps.newHashMap();
+        buildBreakendMap(variants, chrBreakendMap);
+
+        Deduplication.deduplicateVariants(chrBreakendMap);
+
+        assertTrue(var1.isPass());
+        assertFalse(var2.isPass());
+    }
+
+    /*
+
+        @Test
     public void testDeduplication()
     {
         MockRefGenome refGenome = new MockRefGenome();
@@ -62,4 +74,6 @@ public class BreakendTest
         assertTrue(breakend7.filters().contains(FilterType.DUPLICATE));
         assertTrue(breakend8.passing());
     }
+     */
+
 }

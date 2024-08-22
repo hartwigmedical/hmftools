@@ -185,15 +185,7 @@ public class CallerApplication
             mVariantFilters.applyFilters(var);
         }
 
-        /*
-        SV_LOGGER.info("deduplication of paired end single breakends");
-
-        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
-        // duplicateFinder.findDuplicateSVs(alternatePaths);
-
-        SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
-                duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
-        */
+        Deduplication.deduplicateVariants(mSvDataCache.getBreakendMap());
 
         if(mPonCache.hasValidData())
         {
