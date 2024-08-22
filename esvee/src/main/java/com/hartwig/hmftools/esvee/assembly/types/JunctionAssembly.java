@@ -46,7 +46,7 @@ public class JunctionAssembly
     private int mRefBasePosition;
     private final List<CigarElement> mRefBaseCigarElements;
 
-    private final IndelCoords mIndelCoords;
+    private IndelCoords mIndelCoords;
     private boolean mHasLineSequence;
 
     private byte mBases[];
@@ -816,4 +816,7 @@ public class JunctionAssembly
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
     }
+
+    @VisibleForTesting
+    public void setIndelCoords(final IndelCoords coords) { mIndelCoords = coords; }
 }

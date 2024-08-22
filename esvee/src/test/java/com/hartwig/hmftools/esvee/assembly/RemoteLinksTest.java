@@ -3,8 +3,6 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
@@ -12,7 +10,6 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.isExtensionCandidateAssembly;
@@ -27,73 +24,16 @@ import java.util.List;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.assembly.phase.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 
 import org.junit.Test;
 
-public class LocalRemoteLinkTest
+public class RemoteLinksTest
 {
-    @Test
-    public void testAssemblyLocalRefMatch()
-    {
-        // must be long enough to test the local ref genome sequence but not repetitive
-        String localRefSequence = formTestRefSequence(600);
-
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_1, localRefSequence);
-
-        LocalSequenceMatcher localSequenceMatcher = new LocalSequenceMatcher(refGenome, 200);
-
-        // first a basic exact match junction
-        Junction posJunction = new Junction(CHR_1, 300, FORWARD);
-
-        String assemblyRefBases = refGenome.getBaseString(CHR_1, 200, 300);
-        String assemblyExtensionBases = refGenome.getBaseString(CHR_1, 400, 449);
-        String assemblyBases = assemblyRefBases + assemblyExtensionBases;
-        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
-
-        JunctionAssembly assembly = new JunctionAssembly(posJunction, assemblyBases.getBytes(), baseQuals, assemblyRefBases.length() - 1);
-
-        AssemblyLink assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
-        assertNotNull(assemblyLink);
-        assertEquals(DEL, assemblyLink.svType());
-        JunctionAssembly localAssembly = assemblyLink.second();
-
-        assertEquals(400, localAssembly.junction().Position);
-        assertTrue(localAssembly.junction().Orient.isReverse());
-        assertEquals(50, localAssembly.extensionLength());
-        String localSequence = refGenome.getBaseString(CHR_1, 251, 300) + refGenome.getBaseString(CHR_1, 400, 449);
-        assertEquals(localSequence, localAssembly.formFullSequence());
-
-        Junction negJunction = new Junction(CHR_1, 300, REVERSE);
-
-        assemblyRefBases = refGenome.getBaseString(CHR_1,300, 400);
-        assemblyExtensionBases = refGenome.getBaseString(CHR_1,401, 450);
-        assemblyBases = assemblyExtensionBases + assemblyRefBases;
-        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
-
-        assembly = new JunctionAssembly(negJunction, assemblyBases.getBytes(), baseQuals, assemblyExtensionBases.length());
-
-        assemblyLink = localSequenceMatcher.tryLocalAssemblyLink(assembly);
-        assertNotNull(assemblyLink);
-        assertEquals(DUP, assemblyLink.svType());
-
-        localAssembly = assemblyLink.first();
-        assertEquals(450, localAssembly.junction().Position);
-        assertTrue(localAssembly.junction().Orient.isForward());
-        assertEquals(50, localAssembly.extensionLength());
-
-        localSequence = refGenome.getBaseString(CHR_1,401, 450) + refGenome.getBaseString(CHR_1,300, 349);
-        assertEquals(localSequence, localAssembly.formFullSequence());
-    }
-
     @Test
     public void testAssemblyRemoteReadMatch()
     {

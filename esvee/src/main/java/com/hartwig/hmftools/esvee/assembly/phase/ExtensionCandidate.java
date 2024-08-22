@@ -4,10 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import java.util.Comparator;
+
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
-public class ExtensionCandidate implements Comparable<ExtensionCandidate>
+public class ExtensionCandidate
 {
     public final ExtensionType Type;
     public final JunctionAssembly Assembly;
@@ -66,10 +68,20 @@ public class ExtensionCandidate implements Comparable<ExtensionCandidate>
         SecondAssemblyCandidateReads = 0;
     }
 
-    @Override
-    public int compareTo(final ExtensionCandidate other)
+    public int totalSupport()
     {
-        return Integer.compare(-adjustedSupportScore(), -other.adjustedSupportScore());
+        return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
+    }
+
+    public boolean isValid() { return mIsValid && totalSupport() > 0; }
+
+    protected static class StandardComparator implements Comparator<ExtensionCandidate>
+    {
+        @Override
+        public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
+        {
+            return Integer.compare(-first.adjustedSupportScore(), -second.adjustedSupportScore());
+        }
     }
 
     private int adjustedSupportScore()
@@ -85,13 +97,17 @@ public class ExtensionCandidate implements Comparable<ExtensionCandidate>
         return support;
     }
 
-
-    public int totalSupport()
+    protected static class LocalLinkComparator implements Comparator<ExtensionCandidate>
     {
-        return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
-    }
+        @Override
+        public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
+        {
+            if(first.Type != second.Type)
+                return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
 
-    public boolean isValid() { return mIsValid && totalSupport() > 0; }
+            return Integer.compare(-first.totalSupport(), -second.totalSupport());
+        }
+    }
 
     public String toString()
     {
