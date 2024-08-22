@@ -1,0 +1,74 @@
+package com.hartwig.hmftools.esvee.utils.vcfcompare;
+
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+
+public class CompareConfig
+{
+    public final String SampleId;
+    public final String ReferenceId;
+
+    public final String OldVcf;
+    public final String NewVcf;
+
+    public final String OldUnfilteredVcf;
+    public final String NewUnfilteredVcf;
+
+    public final String OutputDir;
+    public final String OutputId;
+
+    public final boolean ShowNonPass;
+    public RefGenomeVersion RefGenomeVersion;
+
+    private static final String OLD_VCF = "old_vcf";
+    private static final String NEW_VCF = "new_vcf";
+
+    private static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
+    private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
+
+    private static final String SHOW_NON_PASS = "show_non_pass";
+
+    public static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
+
+        configBuilder.addPath(OLD_VCF, true, "Path to the old VCF file");
+        configBuilder.addPath(NEW_VCF, true, "Path to the new VCF file");
+
+        configBuilder.addPath(OLD_UNFILTERED_VCF, false, "Path to the old unfiltered VCF file");
+        configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
+
+        configBuilder.addPath(SHOW_NON_PASS, false, "Show variants not PASSing in both old nor new VCF files");
+
+        FileWriterUtils.addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+    }
+
+    public CompareConfig(final ConfigBuilder configBuilder)
+    {
+        SampleId = configBuilder.getValue(SAMPLE);
+        ReferenceId = configBuilder.getValue(REFERENCE, "");
+
+        OldVcf = configBuilder.getValue(OLD_VCF);
+        NewVcf = configBuilder.getValue(NEW_VCF);
+
+        OldUnfilteredVcf = configBuilder.getValue(OLD_UNFILTERED_VCF);
+        NewUnfilteredVcf = configBuilder.getValue(NEW_UNFILTERED_VCF);
+
+        OutputDir = FileWriterUtils.parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        ShowNonPass = configBuilder.hasFlag(SHOW_NON_PASS);
+        RefGenomeVersion = RefGenomeVersion.V37; // FIXME: Make this configurable
+    }
+
+}
