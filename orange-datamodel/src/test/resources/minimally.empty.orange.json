@@ -58,6 +58,14 @@
       "minPloidy": 0,
       "maxPloidy": 0
     },
+    "tumorStats": {
+      "maxDiploidProportion": 0,
+      "hotspotMutationCount": 0,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantAlleleReadCount": 0,
+      "structuralVariantTumorFragmentCount": 0,
+      "bafCount": 0
+    },
     "characteristics": {
       "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0,
@@ -78,15 +86,7 @@
     "allSomaticGeneCopyNumbers": [],
     "allSomaticGainsLosses": [],
     "reportableSomaticGainsLosses": [],
-    "suspectGeneCopyNumbersWithLOH": [],
-    "tumorStats": {
-      "maxDiploidProportion": 0,
-      "hotspotMutationCount": 0,
-      "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 0,
-      "structuralVariantTumorFragmentCount": 0,
-      "bafCount": 0
-    }
+    "suspectGeneCopyNumbersWithLOH": []
   },
   "linx": {
     "allSomaticStructuralVariants": [],

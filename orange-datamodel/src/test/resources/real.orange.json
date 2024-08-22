@@ -82,6 +82,14 @@
       "minPloidy": 3.05,
       "maxPloidy": 3.15
     },
+    "tumorStats": {
+      "maxDiploidProportion": 0.0211,
+      "hotspotMutationCount": 3,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantAlleleReadCount": 2273196,
+      "structuralVariantTumorFragmentCount": 4908,
+      "bafCount": 675344
+    },
     "characteristics": {
       "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0.1207,
@@ -728,15 +736,7 @@
     ],
     "reportableGermlineFullLosses": [],
     "allGermlineLossOfHeterozygosities": [],
-    "reportableGermlineLossOfHeterozygosities": [],
-    "tumorStats": {
-      "maxDiploidProportion": 0.0211,
-      "hotspotMutationCount": 3,
-      "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2273196,
-      "structuralVariantTumorFragmentCount": 4908,
-      "bafCount": 675344
-    }
+    "reportableGermlineLossOfHeterozygosities": []
   },
   "linx": {
     "somaticDrivers": [

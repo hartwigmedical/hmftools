@@ -59,6 +59,14 @@
       "minPloidy": 3.1,
       "maxPloidy": 3.15
     },
+    "tumorStats": {
+      "maxDiploidProportion": 0.0211,
+      "hotspotMutationCount": 3,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantAlleleReadCount": 2273196,
+      "structuralVariantTumorFragmentCount": 4908,
+      "bafCount": 675344
+    },
     "characteristics": {
       "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0.1,
@@ -316,15 +324,7 @@
         "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
       }
-    ],
-    "tumorStats": {
-      "maxDiploidProportion": 0.0211,
-      "hotspotMutationCount": 3,
-      "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2273196,
-      "structuralVariantTumorFragmentCount": 4908,
-      "bafCount": 675344
-    }
+    ]
   },
   "linx": {
     "allSomaticStructuralVariants": [

@@ -16,6 +16,9 @@ public interface PurpleRecord
     PurpleFit fit();
 
     @NotNull
+    TumorStats tumorStats();
+
+    @NotNull
     PurpleCharacteristics characteristics();
 
     @NotNull
@@ -77,7 +80,4 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
-
-    @NotNull
-    TumorStats tumorStats();
 }
