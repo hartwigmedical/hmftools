@@ -73,7 +73,7 @@ public class SupportRead
     // those past the junction
     private int mJunctionMatches;
     private int mJunctionMismatches;
-    private int mReferenceMismatches;
+    private Integer mReferenceMismatches;
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
@@ -109,7 +109,7 @@ public class SupportRead
 
         mJunctionMatches = matches;
         mJunctionMismatches = mismatches;
-        mReferenceMismatches = 0;
+        mReferenceMismatches =  null;
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
@@ -161,10 +161,12 @@ public class SupportRead
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
 
-    public int mismatchCount() { return mJunctionMismatches + mReferenceMismatches; }
     public int junctionMismatches() { return mJunctionMismatches; }
     public int junctionMatches() { return mJunctionMatches; }
-    public int referenceMismatches() { return mReferenceMismatches; }
+
+    public int referenceMismatches() { return mReferenceMismatches != null ? mReferenceMismatches : -1; }
+    public boolean hasReferenceMismatches() { return mReferenceMismatches != null; }
+
     public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
 
     @Nullable
@@ -231,6 +233,6 @@ public class SupportRead
         return format("type(%s) read(%s %s:%d-%d %s %d) index(juncDist=%d asm=%d:%d) hqMatch(%d) mismatch(junc=%d ref=%d)",
                 mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadStartDistance,
                 mFullAssemblyIndex, mFullAssemblyOrientation != null ? mFullAssemblyOrientation.asByte() : 0,
-                mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
+                mJunctionMatches, mJunctionMismatches, mReferenceMismatches != null ? mReferenceMismatches : -1);
     }
 }

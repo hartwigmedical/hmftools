@@ -140,7 +140,7 @@ public class JunctionAssembler
         {
             int mismatchReadCount = 0;
 
-            // test other reads against this new assembly
+            // test other junction-spanning reads against this new assembly
             for(Read read : junctionReads)
             {
                 if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
@@ -278,7 +278,7 @@ public class JunctionAssembler
         if(mismatchCount > permittedMismatches || highQualMatchCount < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
             return false;
 
-        assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount, 0);
+        assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount);
         return true;
     }
 }

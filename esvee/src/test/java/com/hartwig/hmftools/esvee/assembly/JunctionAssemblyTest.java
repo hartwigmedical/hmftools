@@ -250,7 +250,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.mismatchCount() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
     }
 
     @Test
