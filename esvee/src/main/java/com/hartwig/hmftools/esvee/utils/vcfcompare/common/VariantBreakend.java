@@ -4,9 +4,12 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
@@ -19,18 +22,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantBreakend
 {
+    public final SvCaller mSvCaller;
+
     public final VariantContext Context;
     private final VariantAltInsertCoords AltCoords;
+
+    public final String Id;
 
     public final String Chromosome;
     public final int Position;
@@ -54,7 +64,11 @@ public class VariantBreakend
 
     public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
     {
+        mSvCaller = svCaller;
+
         Context = context;
+
+        Id = Context.getID();
 
         String alt = context.getAlternateAllele(0).getDisplayString();
         AltCoords = VariantAltInsertCoords.fromRefAlt(alt, alt.substring(0, 1));
@@ -72,7 +86,7 @@ public class VariantBreakend
         Homseq = context.getAttributeAsString(HOMSEQ, "");
         InsertSequence = AltCoords.InsertSequence;
 
-        SvType = svCaller == SvCaller.GRIDSS ?
+        SvType = mSvCaller == SvCaller.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
                 context.getAttributeAsString(SVTYPE, "");
 
@@ -91,7 +105,7 @@ public class VariantBreakend
 
     public boolean isTranslocation()
     {
-        return !isSingle() && Chromosome.equals(OtherChromosome);
+        return !isSingle() && !Chromosome.equals(OtherChromosome);
     }
 
     private boolean isEnd()
@@ -237,8 +251,6 @@ public class VariantBreakend
         return String.format("%.0f", Context.getPhredScaledQual());
     }
 
-    public String id() { return Context.getID(); }
-
     public String fragsStr(String sampleId){ return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS); }
 
     public StructuralVariantType svType()
@@ -259,6 +271,34 @@ public class VariantBreakend
     public boolean isPassVariant()
     {
         return Filters.isEmpty();
+    }
+
+    public String mateId()
+    {
+        return mSvCaller == SvCaller.GRIDSS ?
+                Context.getAttributeAsString(PAR_ID, "") :
+                Context.getAttributeAsString(MATE_ID, "");
+    }
+
+    public String eventId()
+    {
+        // This id links 2 breakends together into 1 structural event
+
+        if(mSvCaller == SvCaller.GRIDSS)
+        {
+            return Context.getAttributeAsString(EVENT, "");
+        }
+
+        if(mSvCaller == SvCaller.ESVEE)
+        {
+            if(isSingle())
+                return Id;
+
+            Set<String> mateIds = Sets.newHashSet(Id, mateId());
+            return String.join(",",mateIds);
+        }
+
+        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCaller);
     }
 
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
