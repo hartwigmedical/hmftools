@@ -40,6 +40,7 @@ public final class PurpleDataLoader
         String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorSample);
         String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
+        String segmentTsv = SegmentFile.generateFilename(purpleDir, tumorSample);
 
         return load(tumorSample,
                 referenceSample,
@@ -54,7 +55,8 @@ public final class PurpleDataLoader
                 germlineStructuralVariantVcf,
                 copyNumberTsv,
                 geneCopyNumberTsv,
-                germlineDeletionTsv);
+                germlineDeletionTsv,
+                segmentTsv);
     }
 
     private static String resolveVcfPath(final String vcfPath)
@@ -75,7 +77,7 @@ public final class PurpleDataLoader
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String somaticStructuralVariantVcf,
             @NotNull String germlineStructuralVariantVcf, @NotNull String copyNumberTsv, @NotNull String geneCopyNumberTsv,
-            @NotNull String germlineDeletionTsv) throws IOException
+            @NotNull String germlineDeletionTsv, @NotNull String segmentTsv) throws IOException
     {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
@@ -89,6 +91,8 @@ public final class PurpleDataLoader
                 StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
+
+        List<Segment> segments = SegmentFile.read(segmentTsv);
 
         List<DriverCatalog> germlineDrivers = null;
         List<StructuralVariant> allGermlineStructuralVariants = null;
@@ -123,6 +127,7 @@ public final class PurpleDataLoader
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
                 .reportableGermlineDeletions(reportableGermlineDeletions)
+                .segments(segments)
                 .build();
     }
 
