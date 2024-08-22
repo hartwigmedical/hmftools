@@ -39,6 +39,7 @@ public class LineLinker
                 (maybeInsertSite.Orientation == -1 &&
                         maybeLinkedSite.Orientation == 1 &&
                         maybeInsertSite.InsertSequence.endsWith(POLY_A_SEQUENCE) &&
+                        maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                         positionWithin(
                                 maybeLinkedSite.Position,
                                 maybeInsertSite.Position - OTHER_SITE_LOWER_BOUND,
@@ -50,6 +51,7 @@ public class LineLinker
                 (maybeInsertSite.Orientation == 1 &&
                         maybeLinkedSite.Orientation == -1 &&
                         maybeInsertSite.InsertSequence.startsWith(POLY_T_SEQUENCE) &&
+                        maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                         positionWithin(
                                 maybeLinkedSite.Position,
                                 maybeInsertSite.Position - OTHER_SITE_UPPER_BOUND,
@@ -58,36 +60,20 @@ public class LineLinker
                 );
     }
 
-    private void tryLinkSgls(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private void tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
             return;
 
-        if(!(maybeInsertSite.isSingle() && maybeLinkedSite.isSingle() && maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome)))
+        if(maybeInsertSite == maybeLinkedSite)
             return;
 
-        if(nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
-        {
-            maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
-            maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
-            mLinkCount++;
-        }
-    }
-
-    private void tryLinkTranslocations(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
-    {
-        if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
+        if(!nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
             return;
 
-        if(!(maybeLinkedSite.isTranslocation() && maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome)))
-            return;
-
-        if(nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
-        {
-            maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
-            maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
-            mLinkCount++;
-        }
+        maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
+        maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
+        mLinkCount++;
     }
 
     public void tryLinkLineBreakends()
@@ -100,15 +86,14 @@ public class LineLinker
             {
                 for(VariantBreakend breakend2 : breakends)
                 {
-                    tryLinkSgls(breakend1, breakend2);
-                    tryLinkTranslocations(breakend1, breakend2);
+                    tryLinkLineBreakendPair(breakend1, breakend2);
                 }
             }
         }
 
         if(mLinkCount > 0)
         {
-            SV_LOGGER.debug("Made {} LINE links", mLinkCount);
+            SV_LOGGER.debug("Formed {} LINE links", mLinkCount);
         }
     }
 }
