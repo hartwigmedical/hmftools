@@ -19,11 +19,12 @@ public final class VariantCommon
     protected static final String FLD_HGVS_CODING = "CanonicalHgvsCoding";
     protected static final String FLD_HGVS_PROTEIN = "CanonicalHgvsProtein";
     protected static final String FLD_OTHER_REPORTED = "OtherReportedEffects";
+    protected static final String FLD_VARIANT_COPY_NUMBER = "VariantCopyNumber";
 
     protected static List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_HOTSPOT, FLD_TIER, FLD_BIALLELIC, FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT,
-                FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL);
+                FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL, FLD_VARIANT_COPY_NUMBER);
     }
 }

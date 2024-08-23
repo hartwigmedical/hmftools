@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.compar.common.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class GermlineVariantComparer implements ItemComparer
     {
         // same as somatic
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
+        thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.2);
     }
 
     @Override
