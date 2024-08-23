@@ -30,8 +30,8 @@ public final class TestPurpleInterpretationFactory
     {
         return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
-                .characteristics(createMinimalTestCharacteristicsData())
-                .tumorStats(createMinimalTumorStatsBuilder().build());
+                .tumorStats(createMinimalTumorStatsBuilder().build())
+                .characteristics(createMinimalTestCharacteristicsData());
     }
 
     @NotNull
