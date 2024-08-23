@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
@@ -28,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+
+import javax.swing.DefaultListSelectionModel;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -291,8 +294,25 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
-            if(variant.isHotspot() || (vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX))
-                variantVafs.add(vaf);
+            if(variant.isHotspot())
+            {
+                if(vaf > SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
+                {
+                    vaf = SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
+                    variantVafs.add(vaf);
+                }
+                else
+                {
+                    variantVafs.add(vaf);
+                }
+            }
+            else
+            {
+                if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                {
+                    variantVafs.add(vaf);
+                }
+            }
         }
 
         if(variantVafs.isEmpty())
