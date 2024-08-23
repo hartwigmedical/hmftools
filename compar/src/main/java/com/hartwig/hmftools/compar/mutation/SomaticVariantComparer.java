@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
@@ -252,7 +253,7 @@ public class SomaticVariantComparer implements ItemComparer
                     "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
-                    0, context.getFilters(), 0);
+                    0, context.getFilters(), 0, 0);
         }
 
         return null;
@@ -291,6 +292,7 @@ public class SomaticVariantComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
         thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
         thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.2);
+        thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0.2);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
@@ -27,6 +28,7 @@ import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
@@ -78,6 +80,7 @@ public class SomaticVariantData implements ComparableItem
     public final double SubclonalLikelihood;
     public final Set<String> Filters;
     public final double VariantCopyNumber;
+    public final double PurityAdjustedVaf;
 
     private String mComparisonChromosome;
     private int mComparisonPosition;
@@ -92,7 +95,7 @@ public class SomaticVariantData implements ComparableItem
             final String gene, final boolean reported, final Hotspot hotspotStatus, final VariantTier tier, final boolean biallelic,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
-            final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber)
+            final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf)
     {
         Chromosome = chromosome;
         Position = position;
@@ -114,6 +117,7 @@ public class SomaticVariantData implements ComparableItem
         SubclonalLikelihood = subclonalLikelihood;
         Filters = filters;
         VariantCopyNumber = variantCopyNumber;
+        PurityAdjustedVaf = purityAdjustedVaf;
 
         mComparisonChromosome = chromosome;
         mComparisonPosition = position;
@@ -147,6 +151,7 @@ public class SomaticVariantData implements ComparableItem
         values.add(format("%s", OtherReportedEffects));
         values.add(format("%d", Qual));
         values.add(format("%.2f", VariantCopyNumber));
+        values.add(format("%.2f", PurityAdjustedVaf));
 
         values.add(format("%.2f", SubclonalLikelihood));
         values.add(format("%s", HasLPS));
@@ -219,6 +224,7 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
             checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
             checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
+            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, thresholds);
         }
 
         checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);
@@ -276,7 +282,8 @@ public class SomaticVariantData implements ComparableItem
                 (int)context.getPhredScaledQual(),
                 context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
                 context.getFilters(),
-                context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0));
+                context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
+                context.getAttributeAsDouble(PURPLE_AF, 0));
     }
 
     public static SomaticVariantData fromRecord(final Record record)
@@ -304,7 +311,8 @@ public class SomaticVariantData implements ComparableItem
                 localPhaseSets != null && !localPhaseSets.isEmpty(),
                 (int)qual, record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD),
                 filters,
-                record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER));
+                record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
+                record.getValue(SOMATICVARIANT.ADJUSTEDVAF));
     }
 
     private static final String SNPEFF_WORST = "SEW";
