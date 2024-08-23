@@ -14,4 +14,10 @@ public class BreakendMatch
         NewBreakend = newBreakend;
         Type = type;
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("oldBreakend(%s) newBreakend(%s)", OldBreakend.coordStr(), NewBreakend.coordStr());
+    }
 }

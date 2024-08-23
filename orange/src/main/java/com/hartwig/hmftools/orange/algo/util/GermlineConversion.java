@@ -75,36 +75,38 @@ public final class GermlineConversion
     @VisibleForTesting
     static PurpleRecord convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleRecord purple)
     {
+        TumorStats mergedTumorStats;
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
         List<PurpleGainLoss> mergedAllSomaticGainsLosses;
         List<PurpleGainLoss> mergedReportableSomaticGainsLosses;
         List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumbersWithLOH;
-        TumorStats mergedTumorStats;
         if(containsTumorCells)
         {
+            mergedTumorStats = mergeTumorStats(purple);
             mergedDrivers =
-                    mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers(), purple.reportableGermlineFullLosses());
+                    mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers(),
+                            purple.reportableGermlineFullLosses());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
             mergedAllSomaticGainsLosses = mergeGermlineFullLosses(purple.reportableGermlineFullLosses(), purple.allSomaticGainsLosses());
             mergedReportableSomaticGainsLosses =
                     mergeGermlineFullLosses(purple.reportableGermlineFullLosses(), purple.reportableSomaticGainsLosses());
             mergedSuspectGeneCopyNumbersWithLOH = mergeSuspectGeneCopyNumberWithLOH(purple);
-            mergedTumorStats = mergeTumorStats(purple);
         }
         else
         {
+            mergedTumorStats = purple.tumorStats();
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
             mergedAllSomaticGainsLosses = purple.allSomaticGainsLosses();
             mergedReportableSomaticGainsLosses = purple.reportableSomaticGainsLosses();
             mergedSuspectGeneCopyNumbersWithLOH = purple.suspectGeneCopyNumbersWithLOH();
-            mergedTumorStats = purple.tumorStats();
         }
 
         return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .fit(removeGermlineAberrations(purple.fit()))
+                .tumorStats(mergedTumorStats)
                 .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
                 .addAllAllSomaticVariants(additionalReportableVariants)
@@ -120,7 +122,6 @@ public final class GermlineConversion
                 .suspectGeneCopyNumbersWithLOH(mergedSuspectGeneCopyNumbersWithLOH)
                 .allGermlineLossOfHeterozygosities(null)
                 .reportableGermlineLossOfHeterozygosities(null)
-                .tumorStats(mergedTumorStats)
                 .build();
     }
 

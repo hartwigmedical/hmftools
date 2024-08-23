@@ -23,15 +23,15 @@ public class LineLinkWriter
     public final String mOutputDir;
     public final String mOutputId;
 
-    private final boolean mShowNonPass;
+    private final boolean mIncludeNonPass;
 
-    public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean showNonPass)
+    public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean includeNonPass)
     {
         mSampleId = sampleId;
         mOutputDir = outputDir;
         mOutputId = outputId;
 
-        mShowNonPass = showNonPass;
+        mIncludeNonPass = includeNonPass;
     }
 
     public LineLinkWriter(CompareConfig config)
@@ -40,23 +40,30 @@ public class LineLinkWriter
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
 
-        mShowNonPass = config.ShowNonPass;
+        mIncludeNonPass = config.IncludeNonPass;
     }
 
     private static final String OLD_PREFIX = "Old";
     private static final String NEW_PREFIX = "New";
 
     private static final List<String> FIXED_HEADER_FIELDS = List.of(
+            "SampleId",
             "UnifiedPolyACoords",
-            "PolyAMatchType"
+            "PolyAMatchType",
+            "HasAnyPass"
     );
 
     private static final List<String> HEADER_SUFFIXES = List.of(
+            "VcfType",
+            "PolyAHasLink",
             "PolyAId",
+            "PolyARemoteId",
             "OtherId",
+            "OtherRemoteId",
             "PolyACoords",
+            "PolyARemoteCoords",
             "OtherCoords",
-            "RemoteCoords",
+            "OtherRemoteCoords",
             "PolyAInsertSeq",
             "OtherInsertSeq",
             "PolyASvType",
@@ -112,30 +119,66 @@ public class LineLinkWriter
         }
     }
 
-    private List<String> getOutputStrings(@Nullable VariantBreakend insertSite)
+    private class OutputRow
     {
+        String VcfType = "";
+        String PolyAHasLink = "";
+
         String PolyAId = "";
         String OtherId = "";
+        String PolyARemoteId = "";
+        String OtherRemoteId = "";
+
         String PolyACoords = "";
         String OtherCoords = "";
-        String RemoteCoords = "";
+        String PolyARemoteCoords = "";
+        String OtherRemoteCoords = "";
+
         String PolyAInsertSeq = "";
         String OtherInsertSeq = "";
+
         String PolyASvType = "";
         String OtherSvType = "";
+
         String PolyAFilter = "";
         String OtherFilter = "";
+
         String PolyAQual = "";
         String OtherQual = "";
+
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        if(insertSite != null)
+        public OutputRow(@Nullable VariantBreakend breakend)
         {
-            VariantBreakend polyASite = insertSite;
-            VariantBreakend otherSite = insertSite.LinkedLineBreakend;
+            if(breakend == null)
+            {
+                return;
+            }
 
-            PolyAId = polyASite.id();
+            boolean hasLink = breakend.hasLineLink();
+            PolyAHasLink = String.valueOf(hasLink);
+
+            LineLink lineLink;
+            VariantBreakend polyASite;
+            VariantBreakend otherSite;
+
+            if(hasLink)
+            {
+                lineLink = breakend.LinkedLineBreakends;
+                polyASite = lineLink.mPolyASite;
+                otherSite = lineLink.mOtherSite;
+            }
+            else
+            {
+                lineLink = null;
+                polyASite = breakend;
+                otherSite = null;
+            }
+
+            VcfType = polyASite.SourceVcfType.toString();
+
+            PolyAId = polyASite.Id;
             PolyACoords = polyASite.coordStr();
             PolyAInsertSeq = polyASite.InsertSequence;
             PolyASvType = polyASite.SvType;
@@ -143,46 +186,103 @@ public class LineLinkWriter
             PolyAQual = polyASite.qualStr();
             PolyAFrags = polyASite.fragsStr(mSampleId);
 
-            if(otherSite != null)
+            if(!hasLink)
             {
-                OtherId = otherSite.id();
-                OtherCoords = otherSite.coordStr();
-                OtherInsertSeq = otherSite.InsertSequence;
+                return;
+            }
 
-                if(otherSite.isTranslocation() && otherSite == polyASite)
-                    RemoteCoords = otherSite.otherCoordStr();
+            if(lineLink.polyAHasRemote())
+            {
+                PolyARemoteCoords = polyASite.otherCoordStr();
+                PolyARemoteId = polyASite.mateId();
+            }
 
-                OtherSvType = otherSite.SvType;
-                OtherFilter = otherSite.filtersStr();
-                OtherQual = otherSite.qualStr();
-                OtherFrags = otherSite.fragsStr(mSampleId);
+            OtherId = otherSite.Id;
+            OtherCoords = otherSite.coordStr();
+            OtherInsertSeq = otherSite.InsertSequence;
+            OtherSvType = otherSite.SvType;
+            OtherFilter = otherSite.filtersStr();
+            OtherQual = otherSite.qualStr();
+            OtherFrags = otherSite.fragsStr(mSampleId);
+
+            if(lineLink.otherHasRemote())
+            {
+                OtherRemoteCoords = otherSite.otherCoordStr();
+                OtherRemoteId = otherSite.mateId();
             }
         }
 
-        return List.of(
-                PolyAId,
-                OtherId,
-                PolyACoords,
-                OtherCoords,
-                RemoteCoords,
-                PolyAInsertSeq,
-                OtherInsertSeq,
-                PolyASvType,
-                OtherSvType,
-                PolyAFilter,
-                OtherFilter,
-                PolyAQual,
-                OtherQual,
-                PolyAFrags,
-                OtherFrags
-        );
+        public List<String> getOutputStrings()
+        {
+            return List.of(
+                    VcfType,
+                    PolyAHasLink,
+                    PolyAId,
+                    PolyARemoteId,
+                    OtherId,
+                    OtherRemoteId,
+                    PolyACoords,
+                    PolyARemoteCoords,
+                    OtherCoords,
+                    OtherRemoteCoords,
+                    PolyAInsertSeq,
+                    OtherInsertSeq,
+                    PolyASvType,
+                    OtherSvType,
+                    PolyAFilter,
+                    OtherFilter,
+                    PolyAQual,
+                    OtherQual,
+                    PolyAFrags,
+                    OtherFrags
+            );
+        }
     }
 
     private boolean isLineInsertSiteOfInterest(@Nullable VariantBreakend breakend)
     {
         return breakend != null &&
-                (mShowNonPass || breakend.isPassVariant()) &&
+                (mIncludeNonPass || breakend.isPassVariant()) &&
                 breakend.isLineInsertionSite();
+    }
+
+    private static String getUnifiedPolyACoords(VariantBreakend oldBreakend, VariantBreakend newBreakend)
+    {
+        if(oldBreakend != null)
+        {
+            if(!oldBreakend.hasLineLink())
+                return oldBreakend.coordStr();
+            else
+                return oldBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+        }
+        else
+        {
+            if(!newBreakend.hasLineLink())
+                return newBreakend.coordStr();
+            else
+                return newBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+        }
+    }
+
+    private static boolean variantHasAnyPass(@Nullable VariantBreakend breakend)
+    {
+        boolean anyPass;
+
+        if(breakend == null)
+        {
+            anyPass = false;
+        }
+        else if(!breakend.hasLineLink())
+        {
+            anyPass = breakend.isPassVariant();
+        }
+        else
+        {
+            anyPass = breakend.LinkedLineBreakends.mPolyASite.isPassVariant();
+            anyPass |= breakend.LinkedLineBreakends.mOtherSite.isPassVariant();
+        }
+
+        return anyPass;
     }
 
     public void writeBreakends(BreakendMatcher breakendMatcher)
@@ -190,8 +290,6 @@ public class LineLinkWriter
         try
         {
             BufferedWriter writer = initialiseWriter();
-
-            SV_LOGGER.info("Writing LINE breakends");
 
             List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
 
@@ -205,15 +303,19 @@ public class LineLinkWriter
 
                 List<String> rowStrings = new ArrayList<>();
 
-                String unifiedPolyACoords = oldBreakend != null ? oldBreakend.coordStr() : newBreakend.coordStr();
+                rowStrings.add(mSampleId);
+
+                String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
+                rowStrings.add(unifiedPolyACoords);
 
                 String polyAMatchType = match.Type.toString();
-
-                rowStrings.add(unifiedPolyACoords);
                 rowStrings.add(polyAMatchType);
 
-                List<String> oldStrings = getOutputStrings(oldBreakend);
-                List<String> newStrings = getOutputStrings(newBreakend);
+                String hasAnyPass = String.valueOf(variantHasAnyPass(oldBreakend) || variantHasAnyPass(newBreakend));
+                rowStrings.add(hasAnyPass);
+
+                List<String> oldStrings = new OutputRow(oldBreakend).getOutputStrings();
+                List<String> newStrings = new OutputRow(newBreakend).getOutputStrings();
 
                 for(int i = 0; i < oldStrings.size(); i++)
                 {

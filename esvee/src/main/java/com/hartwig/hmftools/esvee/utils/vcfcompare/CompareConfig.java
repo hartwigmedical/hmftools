@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -13,6 +18,8 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 public class CompareConfig
 {
+    public final List<CompareTask> CompareTasks;
+
     public final String SampleId;
     public final String ReferenceId;
 
@@ -25,8 +32,8 @@ public class CompareConfig
     public final String OutputDir;
     public final String OutputId;
 
-    public final boolean ShowNonPass;
-    public RefGenomeVersion RefGenomeVersion;
+    public final boolean IncludeNonPass;
+    public RefGenomeVersion RefGenVersion;
 
     private static final String OLD_VCF = "old_vcf";
     private static final String NEW_VCF = "new_vcf";
@@ -34,10 +41,14 @@ public class CompareConfig
     private static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
     private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
 
-    private static final String SHOW_NON_PASS = "show_non_pass";
+    private static final String INCLUDE_NON_PASS = "include_non_pass";
+
+    private static final String COMPARE_TASKS = "tasks";
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(COMPARE_TASKS, false, "Comparisons to perform");
+
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
 
@@ -47,7 +58,8 @@ public class CompareConfig
         configBuilder.addPath(OLD_UNFILTERED_VCF, false, "Path to the old unfiltered VCF file");
         configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
 
-        configBuilder.addPath(SHOW_NON_PASS, false, "Show variants not PASSing in both old nor new VCF files");
+        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        configBuilder.addFlag(INCLUDE_NON_PASS, "Show variants not PASSing in both old nor new VCF files");
 
         FileWriterUtils.addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -55,6 +67,8 @@ public class CompareConfig
 
     public CompareConfig(final ConfigBuilder configBuilder)
     {
+        CompareTasks = CompareTask.fromConfig(configBuilder.getValue(COMPARE_TASKS));
+
         SampleId = configBuilder.getValue(SAMPLE);
         ReferenceId = configBuilder.getValue(REFERENCE, "");
 
@@ -67,8 +81,8 @@ public class CompareConfig
         OutputDir = FileWriterUtils.parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        ShowNonPass = configBuilder.hasFlag(SHOW_NON_PASS);
-        RefGenomeVersion = RefGenomeVersion.V37; // FIXME: Make this configurable
+        IncludeNonPass = configBuilder.hasFlag(INCLUDE_NON_PASS);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
     }
 
 }

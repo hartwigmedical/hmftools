@@ -46,7 +46,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
@@ -163,10 +162,9 @@ public class PurpleInterpreter
             LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
-        TumorStats tumorStats = TumorStatsFactory.compute(purple);
-
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
+                .tumorStats(TumorStatsFactory.compute(purple))
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
@@ -188,7 +186,6 @@ public class PurpleInterpreter
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
                 .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
-                .tumorStats(tumorStats)
                 .build();
     }
 

@@ -2,52 +2,40 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareTask.LINE_COMPARE;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareTask.MATCH_BREAKENDS;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SvVcfComparer
 {
     private final CompareConfig mConfig;
-    private final BreakendMatcher mBreakendMatcher;
+
+    private final String mSampleId;
+    private final List<CompareTask> mCompareTasks;
+
 
     public SvVcfComparer(final CompareConfig config)
     {
         mConfig = config;
 
-        mBreakendMatcher = new BreakendMatcher(config);
+        mSampleId = config.SampleId;
+        mCompareTasks = config.CompareTasks;
     }
 
     public void run()
     {
-        Map<String,List<VariantBreakend>> oldChrBreakendMap = VariantBreakend.loadVariants(mConfig.OldVcf);
-        Map<String,List<VariantBreakend>> newChrBreakendMap = VariantBreakend.loadVariants(mConfig.NewVcf);
+        SV_LOGGER.info("Comparing VCFs for sample: " + mSampleId);
 
-        mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMap);
+        if(mCompareTasks.contains(MATCH_BREAKENDS))
+            new BreakendMatchTask(mConfig).run();
 
-        if(mConfig.OldUnfilteredVcf != null)
-        {
-            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = VariantBreakend.loadVariants(mConfig.OldUnfilteredVcf);
-            mBreakendMatcher.matchBreakends(newChrBreakendMap, oldChrBreakendMapUnfiltered);
-        }
-
-        if(mConfig.NewUnfilteredVcf != null)
-        {
-            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = VariantBreakend.loadVariants(mConfig.NewUnfilteredVcf);
-            mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMapUnfiltered);
-        }
-
-        mBreakendMatcher.gatherUnmatchedVariants(oldChrBreakendMap, newChrBreakendMap);
-
-        mBreakendMatcher.writeBreakends();
-
-        SV_LOGGER.info("Esvee compare VCFs complete");
+        if(mCompareTasks.contains(LINE_COMPARE))
+            new LineCompareTask(mConfig).run();
     }
 
     public static void main(@NotNull final String[] args)
@@ -58,7 +46,7 @@ public class SvVcfComparer
 
         CompareConfig compareConfig = new CompareConfig(configBuilder);
 
-        SvVcfComparer svVcfCompare = new SvVcfComparer(compareConfig);
-        svVcfCompare.run();
+        SvVcfComparer svVcfComparer = new SvVcfComparer(compareConfig);
+        svVcfComparer.run();
     }
 }

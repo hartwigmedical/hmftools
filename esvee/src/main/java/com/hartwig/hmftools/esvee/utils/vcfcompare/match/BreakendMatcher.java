@@ -32,13 +32,13 @@ public class BreakendMatcher
     public final String mOutputId;
 
     public final RefGenomeVersion mRefGenomeVersion;
-    public final boolean mShowNonPass;
+    public final boolean mIncludeNonPass;
 
     private final List<BreakendMatch> mBreakendMatches = new ArrayList<>();
 
     public BreakendMatcher(
             String sampleId, String outputDir, String outputId,
-            RefGenomeVersion refGenomeVersion, boolean showNonPass
+            RefGenomeVersion refGenomeVersion, boolean includeNonPass
     )
     {
         mSampleId = sampleId;
@@ -46,7 +46,7 @@ public class BreakendMatcher
         mOutputId = outputId;
 
         mRefGenomeVersion = refGenomeVersion;
-        mShowNonPass = showNonPass;
+        mIncludeNonPass = includeNonPass;
     }
 
     public BreakendMatcher(CompareConfig config)
@@ -54,8 +54,8 @@ public class BreakendMatcher
         mSampleId = config.SampleId;
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
-        mRefGenomeVersion = config.RefGenomeVersion;
-        mShowNonPass = config.ShowNonPass;
+        mRefGenomeVersion = config.RefGenVersion;
+        mIncludeNonPass = config.IncludeNonPass;
     }
 
     public void matchBreakends(
@@ -93,7 +93,7 @@ public class BreakendMatcher
                         oldBreakend.MatchedBreakend = newBreakend;
                         newBreakend.MatchedBreakend = oldBreakend;
 
-                        if(mShowNonPass || oldBreakend.isPassVariant() || newBreakend.isPassVariant())
+                        if(mIncludeNonPass || oldBreakend.isPassVariant() || newBreakend.isPassVariant())
                             mBreakendMatches.add(new BreakendMatch(oldBreakend, newBreakend, matchType));
 
                         matchedCount++;
@@ -104,7 +104,7 @@ public class BreakendMatcher
 
         if(matchedCount > 0)
         {
-            SV_LOGGER.debug("  Found {} variants with match type: {}", matchedCount, matchType);
+            SV_LOGGER.debug("Found {} variants with match type: {}", matchedCount, matchType);
         }
     }
 
@@ -114,6 +114,9 @@ public class BreakendMatcher
             boolean checkOtherSide
     )
     {
+        SV_LOGGER.info("Performing breakend matching using {} variants",
+                mIncludeNonPass ? "ALL" : "PASS");
+
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH, checkOtherSide);
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY, checkOtherSide);
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.APPROX_MATCH, checkOtherSide);
@@ -141,7 +144,7 @@ public class BreakendMatcher
                 if(breakend.hasMatchedBreakend())
                     continue;
 
-                if(mShowNonPass || breakend.isPassVariant())
+                if(mIncludeNonPass || breakend.isPassVariant())
                 {
                     if(isOld)
                         mBreakendMatches.add(new BreakendMatch(breakend, null, MatchType.NO_MATCH));
@@ -176,7 +179,7 @@ public class BreakendMatcher
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".sv_compare";
+            String fileName = mOutputDir + mSampleId + ".sv_compare.breakends";
 
             if(mOutputId != null)
                 fileName += "." + mOutputId;

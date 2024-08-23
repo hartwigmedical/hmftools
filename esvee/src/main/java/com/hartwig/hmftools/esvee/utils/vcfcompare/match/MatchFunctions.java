@@ -6,6 +6,25 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class MatchFunctions
 {
+    public static boolean coordsMatchExactly(
+            String chrom1, int pos1, byte orient1,
+            String chrom2, int pos2, byte orient2
+    )
+    {
+        return orient1 == orient2 && pos1 == pos2 && chrom1.equals(chrom2);
+    }
+
+    public static boolean coordsMatchApproximately(
+            String chrom1, int pos1, byte orient1,
+            String chrom2, int pos2, byte orient2,
+            int upperLowerBounds
+    )
+    {
+        return orient1 == orient2 &&
+                chrom1.equals(chrom2) &&
+                positionWithin(pos1, pos2 - upperLowerBounds, pos2 + upperLowerBounds);
+    }
+
     @FunctionalInterface
     public interface MatchFunction
     {
@@ -45,18 +64,18 @@ public class MatchFunctions
         @Override
         public boolean match(final VariantBreakend breakend1, final VariantBreakend breakend2, boolean checkOtherSide)
         {
-            boolean firstSideMatches =
-                    breakend1.Orientation == breakend2.Orientation &&
-                    breakend1.Position == breakend2.Position &&
-                    breakend1.Chromosome.equals(breakend2.Chromosome);
+            boolean firstSideMatches = coordsMatchExactly(
+                    breakend1.Chromosome, breakend1.Position, breakend1.Orientation,
+                    breakend2.Chromosome, breakend2.Position, breakend2.Orientation
+            );
 
             if(!checkOtherSide)
                 return firstSideMatches;
 
-            boolean secondSideMatches =
-                    breakend1.OtherOrientation == breakend2.OtherOrientation &&
-                    breakend1.OtherPosition == breakend2.OtherPosition &&
-                    breakend1.OtherChromosome.equals(breakend2.OtherChromosome);
+            boolean secondSideMatches = coordsMatchExactly(
+                    breakend1.OtherChromosome, breakend1.OtherPosition, breakend1.OtherOrientation,
+                    breakend2.OtherChromosome, breakend2.OtherPosition, breakend2.OtherOrientation
+            );
 
             return firstSideMatches && secondSideMatches;
         }
@@ -69,18 +88,20 @@ public class MatchFunctions
         @Override
         public boolean match(final VariantBreakend breakend1, final VariantBreakend breakend2, boolean checkOtherSide)
         {
-            boolean firstSideMatches =
-                    breakend1.Orientation == breakend2.Orientation &&
-                    breakend1.Chromosome.equals(breakend2.Chromosome) &&
-                    positionWithin(breakend1.Position, breakend2.Position - UPPER_LOWER_BOUNDS, breakend2.Position + UPPER_LOWER_BOUNDS);
+            boolean firstSideMatches = coordsMatchApproximately(
+                    breakend1.Chromosome, breakend1.Position, breakend1.Orientation,
+                    breakend2.Chromosome, breakend2.Position, breakend2.Orientation,
+                    UPPER_LOWER_BOUNDS
+            );
 
             if(!checkOtherSide)
                 return firstSideMatches;
 
-            boolean secondSideMatches =
-                    breakend1.OtherOrientation == breakend2.OtherOrientation &&
-                    breakend1.OtherChromosome.equals(breakend2.OtherChromosome) &&
-                    positionWithin(breakend1.OtherPosition, breakend2.OtherPosition - UPPER_LOWER_BOUNDS, breakend2.OtherPosition + UPPER_LOWER_BOUNDS);
+            boolean secondSideMatches = coordsMatchApproximately(
+                    breakend1.OtherChromosome, breakend1.OtherPosition, breakend1.OtherOrientation,
+                    breakend2.OtherChromosome, breakend2.OtherPosition, breakend2.OtherOrientation,
+                    UPPER_LOWER_BOUNDS
+            );
 
             return firstSideMatches && secondSideMatches;
 

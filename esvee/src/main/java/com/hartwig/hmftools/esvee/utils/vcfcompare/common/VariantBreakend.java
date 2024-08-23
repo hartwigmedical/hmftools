@@ -4,9 +4,12 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
@@ -19,18 +22,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLink;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantBreakend
 {
+    public final SvCaller mSvCaller;
+
     public final VariantContext Context;
     private final VariantAltInsertCoords AltCoords;
+
+    public final String Id;
 
     public final String Chromosome;
     public final int Position;
@@ -50,11 +61,15 @@ public class VariantBreakend
     public final VcfType SourceVcfType;
 
     public VariantBreakend MatchedBreakend;
-    public VariantBreakend LinkedLineBreakend;
+    public LineLink LinkedLineBreakends;
 
     public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
     {
+        mSvCaller = svCaller;
+
         Context = context;
+
+        Id = Context.getID();
 
         String alt = context.getAlternateAllele(0).getDisplayString();
         AltCoords = VariantAltInsertCoords.fromRefAlt(alt, alt.substring(0, 1));
@@ -72,7 +87,7 @@ public class VariantBreakend
         Homseq = context.getAttributeAsString(HOMSEQ, "");
         InsertSequence = AltCoords.InsertSequence;
 
-        SvType = svCaller == SvCaller.GRIDSS ?
+        SvType = mSvCaller == SvCaller.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
                 context.getAttributeAsString(SV_TYPE, "");
 
@@ -81,7 +96,7 @@ public class VariantBreakend
         SourceVcfType = sourceVcfType;
 
         MatchedBreakend = null;
-        LinkedLineBreakend = null;
+        LinkedLineBreakends = null;
     }
 
     public boolean isSingle()
@@ -91,7 +106,7 @@ public class VariantBreakend
 
     public boolean isTranslocation()
     {
-        return !isSingle() && Chromosome.equals(OtherChromosome);
+        return !isSingle() && !Chromosome.equals(OtherChromosome);
     }
 
     private boolean isEnd()
@@ -166,10 +181,7 @@ public class VariantBreakend
 
     public boolean isLineInsertionSite() { return LineLinker.isLineInsertionSite(this); }
 
-    public boolean hasLineLink() { return LinkedLineBreakend != null; }
-
-    @Deprecated
-    public boolean hasSglLineLink() { return hasLineLink() && isSingle() && LinkedLineBreakend.isSingle(); }
+    public boolean hasLineLink() { return LinkedLineBreakends != null; }
 
     public String toString()
     {
@@ -216,17 +228,6 @@ public class VariantBreakend
         return HumanChromosome.lowerChromosome(Chromosome, otherBreakend.Chromosome);
     }
 
-    public String lineLinkCoordStr()
-    {
-        if(!hasLineLink())
-            return coordStr();
-
-        if(isLowerBreakend(LinkedLineBreakend))
-            return coordStr() + "_" + LinkedLineBreakend.coordStr();
-        else
-            return LinkedLineBreakend.coordStr() + "_" + coordStr();
-    }
-
     public String filtersStr()
     {
         return isPassVariant() ? PASS : String.join(",", Filters);
@@ -236,8 +237,6 @@ public class VariantBreakend
     {
         return String.format("%.0f", Context.getPhredScaledQual());
     }
-
-    public String id() { return Context.getID(); }
 
     public String fragsStr(String sampleId){ return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS); }
 
@@ -261,9 +260,40 @@ public class VariantBreakend
         return Filters.isEmpty();
     }
 
+    public String mateId()
+    {
+        return mSvCaller == SvCaller.GRIDSS ?
+                Context.getAttributeAsString(PAR_ID, "") :
+                Context.getAttributeAsString(MATE_ID, "");
+    }
+
+    public String eventId()
+    {
+        // This id links 2 breakends together into 1 structural event
+
+        if(mSvCaller == SvCaller.GRIDSS)
+        {
+            return Context.getAttributeAsString(EVENT, "");
+        }
+
+        if(mSvCaller == SvCaller.TRUTH)
+            return Context.getAttributeAsString("SVID", "");
+
+        if(mSvCaller == SvCaller.ESVEE)
+        {
+            if(isSingle())
+                return Id;
+
+            Set<String> mateIds = Sets.newHashSet(Id, mateId());
+            return String.join(",",mateIds);
+        }
+
+        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCaller);
+    }
+
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
     {
-        SV_LOGGER.info("Loading vcfFile({})", vcfFile);
+        SV_LOGGER.info("Loading VCF file: {}", vcfFile);
 
         Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
 
@@ -289,10 +319,7 @@ public class VariantBreakend
             breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
         }
 
-        SV_LOGGER.debug("  Loaded {} SVs from {})",
-                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(),
-                vcfFile
-        );
+        SV_LOGGER.debug("Loaded {} structural variants", chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
 
         return chrBreakendMap;
     }

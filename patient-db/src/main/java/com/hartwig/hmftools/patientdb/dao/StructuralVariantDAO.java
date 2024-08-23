@@ -18,11 +18,9 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
-import org.jooq.Record1;
 import org.jooq.Result;
 
 class StructuralVariantDAO
@@ -62,6 +60,7 @@ class StructuralVariantDAO
                 ploidy = DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
+            // TODO (CS): Populate vcfStartId and vcfEndId (or remove)
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(record.getValue(STRUCTURALVARIANT.SVID))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
@@ -103,7 +102,6 @@ class StructuralVariantDAO
                     .inexactHomologyOffsetEnd(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
                     .startLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
                     .endLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
-                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .recoveryMethod(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYMETHOD)))
                     .recoveryFilter(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYFILTER)))
@@ -235,7 +233,8 @@ class StructuralVariantDAO
                 isSingle ? null : variant.endIntervalOffsetEnd(),
                 variant.inexactHomologyOffsetStart(),
                 variant.inexactHomologyOffsetEnd(),
-                variant.vcfId(),
+                // TODO (CS): Write vcfStartId and vcfEndId to database properly.
+                "no_vcf_id_known",
                 limitSizeOfCSV(MAX_LINKED_BY, variant.startLinkedBy()),
                 limitSizeOfCSV(MAX_LINKED_BY, variant.endLinkedBy()),
                 variant.recovered(),

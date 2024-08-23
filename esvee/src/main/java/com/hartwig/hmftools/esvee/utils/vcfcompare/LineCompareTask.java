@@ -14,20 +14,23 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SvVcfLineComparer
+public class LineCompareTask implements Runnable
 {
     private final CompareConfig mConfig;
     private final BreakendMatcher mBreakendMatcher;
 
-    public SvVcfLineComparer(final CompareConfig config)
+    public LineCompareTask(final CompareConfig config)
     {
         mConfig = config;
 
         mBreakendMatcher = new BreakendMatcher(config);
     }
 
+    @Override
     public void run()
     {
+        SV_LOGGER.info("Running task: " + CompareTask.LINE_COMPARE);
+
         Map<String, List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf);
         Map<String,List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf);
 
@@ -50,15 +53,15 @@ public class SvVcfLineComparer
         LineLinkWriter writer = new LineLinkWriter(mConfig);
         writer.writeBreakends(mBreakendMatcher);
 
-        SV_LOGGER.info("Esvee compare LINE breakends complete");
+        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
     }
 
     public static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile)
     {
         Map<String, List<VariantBreakend>> chrBreakendMap = VariantBreakend.loadVariants(vcfFile);
 
-        SV_LOGGER.debug("  Linking potential LINE breakends");
-        LineLinker.tryLinkLineBreakends(chrBreakendMap);
+        LineLinker lineLinker = new LineLinker(chrBreakendMap);
+        lineLinker.tryLinkLineBreakends();
 
         return chrBreakendMap;
     }
@@ -71,7 +74,7 @@ public class SvVcfLineComparer
 
         CompareConfig compareConfig = new CompareConfig(configBuilder);
 
-        SvVcfLineComparer svVcfCompare = new SvVcfLineComparer(compareConfig);
+        LineCompareTask svVcfCompare = new LineCompareTask(compareConfig);
         svVcfCompare.run();
     }
 }
