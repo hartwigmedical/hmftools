@@ -149,7 +149,7 @@ public class SomaticVariantData implements ComparableItem
 
         values.add(format("%.2f", SubclonalLikelihood));
         values.add(format("%s", HasLPS));
-        values.add(format("%.3f", VariantCopyNumber));
+        values.add(format("%.2f", VariantCopyNumber));
 
         return values;
     }

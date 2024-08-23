@@ -140,6 +140,6 @@ public class GermlineVariantData implements ComparableItem
         values.add(String.format("%s", variant.canonicalHgvsProteinImpact()));
         values.add(String.format("%s", variant.otherReportedEffects()));
         values.add(String.format("%.0f", variant.qual()));
-        values.add(String.format("%.3f", variant.variantCopyNumber()));
+        values.add(String.format("%.2f", variant.variantCopyNumber()));
     }
 }
