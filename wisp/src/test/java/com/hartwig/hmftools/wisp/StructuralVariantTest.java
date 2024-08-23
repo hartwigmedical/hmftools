@@ -112,9 +112,8 @@ public class StructuralVariantTest
     {
         return ImmutableStructuralVariantData.builder()
                         .id(varId)
-                        // TODO (CS): Use (or remove) vcfId / properly populate start/end
-                        .vcfIdStart("not_known")
-                        .vcfIdEnd("not_known")
+                        .vcfIdStart(vcfId)
+                        .vcfIdEnd(vcfId)
                         .startChromosome(chrStart)
                         .endChromosome(chrEnd)
                         .startPosition(posStart)

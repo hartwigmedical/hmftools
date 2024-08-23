@@ -60,9 +60,14 @@ class StructuralVariantDAO
                 ploidy = DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
-            // TODO (CS): Populate vcfStartId and vcfEndId (or remove)
+            String vcfId = String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID));
+
+            // breakend IDs are not populated into the database
+
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(record.getValue(STRUCTURALVARIANT.SVID))
+                    .vcfIdStart(vcfId)
+                    .vcfIdEnd("")
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(isSingleBreakend ? "0" : record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
