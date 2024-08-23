@@ -46,7 +46,7 @@ public class JunctionAssembly
     private int mRefBasePosition;
     private final List<CigarElement> mRefBaseCigarElements;
 
-    private final IndelCoords mIndelCoords;
+    private IndelCoords mIndelCoords;
     private boolean mHasLineSequence;
 
     private byte mBases[];
@@ -210,8 +210,7 @@ public class JunctionAssembly
     public int mismatchReadCount() { return mMismatchReadCount; }
     public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
-    public void addRead(
-            final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type, @Nullable final SupportRead existingSupport)
+    public void addRead(final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type)
     {
         if(readAssemblyIndices == ReadAssemblyIndices.INVALID_INDICES)
             return;
@@ -265,24 +264,16 @@ public class JunctionAssembly
             }
         }
 
-        if(existingSupport == null)
-        {
-            int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(mJunctionIndex);
-            addSupport(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount, 0);
-        }
-        else
-        {
-            existingSupport.setReferenceMismatches(mismatchCount);
-        }
+        int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(mJunctionIndex);
+        addSupport(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount);
     }
 
     public void addSupport(
-            final Read read, final SupportType type, int junctionReadStartDistance, int matches, int mismatches, int refMismatches)
+            final Read read, final SupportType type, int junctionReadStartDistance, int matches, int mismatches)
     {
         boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
         SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
         SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matches, mismatches);
-        support.setReferenceMismatches(refMismatches);
 
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
@@ -347,10 +338,12 @@ public class JunctionAssembly
         {
             SupportRead read = mSupport.get(i);
             ReadParseState readState = refBaseSeqBuilder.reads().get(i);
-            read.setReferenceMismatches(readState.mismatches());
 
             if(readState.isValid() && !readState.exceedsMaxMismatches())
+            {
+                read.setReferenceMismatches(readState.mismatches());
                 checkAddRefSideSoftClip(read.cachedRead());
+            }
         }
     }
 
@@ -819,7 +812,11 @@ public class JunctionAssembly
         int junctionReadStartDistance = mJunction.Position - read.unclippedStart();
 
         SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, read.basesLength(), 0);
+        support.setReferenceMismatches(0);
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
     }
+
+    @VisibleForTesting
+    public void setIndelCoords(final IndelCoords coords) { mIndelCoords = coords; }
 }

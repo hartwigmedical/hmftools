@@ -19,8 +19,10 @@ import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteR
 import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getRefReadIndices;
 import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
@@ -398,13 +400,36 @@ public class RefBaseExtender
     private static void checkAddRefBaseSupport(
             final JunctionAssembly assembly, final List<Read> nonJunctionReads, final Set<String> excludedReadIds)
     {
-        List<Read> newSupportReads = !excludedReadIds.isEmpty() ?
-                nonJunctionReads.stream().filter(x -> !excludedReadIds.contains(x.id())).collect(Collectors.toList()) : nonJunctionReads;
+        List<Read> secondarySupportReads = Lists.newArrayList();
 
-        // favour junction mates first, then reads with least variants and most aligned bases
-        Collections.sort(newSupportReads, new RefBaseReadComparator());
+        int permittedMismatches = ASSEMBLY_EXTENSION_BASE_MISMATCH;
+        int requiredOverlap = ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 
-        for(Read read : newSupportReads)
+        for(Read read : nonJunctionReads)
+        {
+            if(excludedReadIds.contains(read.id()))
+                continue;
+
+            // favour junction mates with ref base support first
+            if(read.hasJunctionMate())
+            {
+                SupportRead juncMate = assembly.support().stream()
+                        .filter(x -> x.type() == JUNCTION && x.matchesFragment(read, false)).findFirst().orElse(null);
+
+                if(juncMate != null && juncMate.hasReferenceMismatches() && juncMate.referenceMismatches() <= permittedMismatches)
+                {
+                    checkAddRefBaseRead(assembly, read, JUNCTION_MATE, 0);
+                    continue;
+                }
+            }
+
+            secondarySupportReads.add(read);
+        }
+
+        boolean sortOnReadStart = assembly.isReverseJunction();
+        Collections.sort(secondarySupportReads, Comparator.comparingInt(x -> sortOnReadStart ? x.alignmentStart() : -x.alignmentEnd()));
+
+        for(Read read : secondarySupportReads)
         {
             SupportType type = read.hasJunctionMate() ? JUNCTION_MATE : DISCORDANT;
             checkAddRefBaseRead(assembly, read, type);
@@ -415,6 +440,12 @@ public class RefBaseExtender
 
     public static boolean checkAddRefBaseRead(final JunctionAssembly assembly, final Read read, final SupportType supportType)
     {
+        return checkAddRefBaseRead(assembly, read, supportType, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
+    }
+
+    private static boolean checkAddRefBaseRead(
+            final JunctionAssembly assembly, final Read read, final SupportType supportType, int requiredOverlap)
+    {
         ReadAssemblyIndices readAssemblyIndices = getRefReadIndices(assembly, assembly.refBasePosition(), read);
 
         if(readAssemblyIndices == null)
@@ -424,7 +455,9 @@ public class RefBaseExtender
         final byte[] assemblyBases = assembly.bases();
         final byte[] assemblyBaseQuals = assembly.baseQuals();
 
-        boolean canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices);
+        int permittedMismatches = ASSEMBLY_EXTENSION_BASE_MISMATCH;
+
+        boolean canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches);
 
         if(!canAddRead && readStartIndex < read.getBases().length - REF_READ_SEARCH_LENGTH)
         {
@@ -436,8 +469,7 @@ public class RefBaseExtender
             {
                 SV_LOGGER.error("refAssembly({}) invalid indices({} - {}) vs readBases({}) for ref extension read search",
                         assembly, readStartIndex, readTestEndIndex, read.getBases().length);
-
-                System.exit(1);
+                return false;
             }
 
             String readBases = new String(read.getBases(), readStartIndex, length);
@@ -446,7 +478,9 @@ public class RefBaseExtender
             if(assemblyStartIndex >= 0)
             {
                 readAssemblyIndices = new ReadAssemblyIndices(readStartIndex, readAssemblyIndices.ReadIndexEnd, assemblyStartIndex);
-                canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices);
+
+                canAddRead = canAddRefBaseRead(
+                        assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches);
             }
         }
 
@@ -465,20 +499,18 @@ public class RefBaseExtender
             return false;
         }
 
-        assembly.addRead(read, readAssemblyIndices, supportType, null);
+        assembly.addRead(read, readAssemblyIndices, supportType);
 
         return true;
     }
 
     private static boolean canAddRefBaseRead(
-            final byte[] assemblyBases, final byte[] assemblyBaseQuals, final Read read, final ReadAssemblyIndices readIndexInfo)
+            final byte[] assemblyBases, final byte[] assemblyBaseQuals, final Read read, final ReadAssemblyIndices readIndexInfo,
+            int requiredOverlap, int permittedMismatches)
     {
         int mismatchCount = 0;
         int overlappedBaseCount = 0;
         int assemblyIndex = readIndexInfo.AssemblyIndexStart;
-
-        int permittedMismatches = ASSEMBLY_EXTENSION_BASE_MISMATCH;
-        int requiredOverlap = ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 
         for(int i = readIndexInfo.ReadIndexStart; i <= readIndexInfo.ReadIndexEnd; ++i, ++assemblyIndex)
         {
@@ -488,7 +520,8 @@ public class RefBaseExtender
             if(assemblyBases[assemblyIndex] == 0)
                 continue;
 
-            ++overlappedBaseCount;
+            if(aboveMinQual(assemblyBaseQuals[assemblyIndex]))
+                ++overlappedBaseCount;
 
             // any unset base (ie unset qual) can be a mismatch
             byte refBaseQual = assemblyBaseQuals[assemblyIndex] == 0 ? (byte)(LOW_BASE_QUAL_THRESHOLD + 1) : assemblyBaseQuals[assemblyIndex];
@@ -503,24 +536,6 @@ public class RefBaseExtender
         }
 
         return overlappedBaseCount >= requiredOverlap;
-    }
-
-    private static class RefBaseReadComparator implements Comparator<Read>
-    {
-        @Override
-        public int compare(Read first, Read second)
-        {
-            if(first.hasJunctionMate() != second.hasJunctionMate())
-                return first.hasJunctionMate() ? -1 : 1;
-
-            // favour reads with less variants
-            if(first.numOfEvents() != second.numOfEvents())
-                return first.numOfEvents() < second.numOfEvents() ? -1 : 1;
-
-            int firstAlignedLength = first.alignmentEnd() - first.alignmentStart() + 1;
-            int secondAlignedLength = second.alignmentEnd() - second.alignmentStart() + 1;
-            return -1 * Integer.compare(firstAlignedLength, secondAlignedLength);
-        }
     }
 
     private static List<Set<String>> allocateExcludedReads(final JunctionAssembly assembly, final List<Read> nonJunctionReads)

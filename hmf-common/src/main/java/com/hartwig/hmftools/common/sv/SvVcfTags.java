@@ -5,11 +5,14 @@ public final class SvVcfTags
     // set by Esvee
     public static final String ESVEE_VERSION = "EsveeVersion";
 
-    public static final String SVTYPE = "SVTYPE";
-    public static final String SVTYPE_DESC = "Type of structural variant";
+    public static final String SV_TYPE = "SVTYPE";
+    public static final String SV_TYPE_DESC = "Type of structural variant";
 
     public static final String MATE_ID = "MATEID";
     public static final String MATE_ID_DESC = "Mate breakend ID";
+
+    public static final String SV_ID = "SVID";
+    public static final String SV_ID_DESC = "ID shared by two breakends";
 
     public static final String CIPOS = "CIPOS";
     public static final String CIPOS_DESC = "Confidence interval around position";

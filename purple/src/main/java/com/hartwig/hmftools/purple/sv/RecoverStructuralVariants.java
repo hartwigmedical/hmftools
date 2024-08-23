@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
@@ -342,7 +342,7 @@ public class RecoverStructuralVariants implements Closeable
 
         return new VariantContextBuilder("purple", leg.chromosome(), leg.position(), leg.position(), alleles).filter(INFERRED)
                 .id("unbalanced_" + mCounter++)
-                .attribute(SVTYPE, StructuralVariantType.BND.toString())
+                .attribute(SV_TYPE, StructuralVariantType.BND.toString())
                 .attribute(INFERRED, true)
                 .attribute(RECOVERED, true)
                 .attribute(RECOVERY_METHOD, "UNBALANCED_SV_START")

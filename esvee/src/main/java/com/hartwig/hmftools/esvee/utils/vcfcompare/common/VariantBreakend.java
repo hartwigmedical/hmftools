@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
@@ -89,7 +89,7 @@ public class VariantBreakend
 
         SvType = mSvCaller == SvCaller.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
-                context.getAttributeAsString(SVTYPE, "");
+                context.getAttributeAsString(SV_TYPE, "");
 
         Filters = Context.getFilters();
 

@@ -31,7 +31,6 @@ import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -172,8 +171,6 @@ public class AssemblyApplication
             {
                 breakends.get(i).setId(i);
             }
-
-            Deduplication.deduplicateBreakends(breakends);
 
             writeAssemblyOutput(finalAssemblies);
 

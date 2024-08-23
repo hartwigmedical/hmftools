@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK;
@@ -144,7 +145,7 @@ public class PhaseSetBuilder
         findSplitLinkCandidates(true);
 
         // prioritise and capture local links
-        Collections.sort(mExtensionCandidates, Comparator.comparingInt(x -> -x.totalSupport()));
+        Collections.sort(mExtensionCandidates, new ExtensionCandidate.LocalLinkComparator());
 
         for(ExtensionCandidate extensionCandidate : mExtensionCandidates)
         {
@@ -223,10 +224,9 @@ public class PhaseSetBuilder
                 if(existingCandidates.stream().anyMatch(x -> x.Assembly == assembly1 && x.SecondAssembly == assembly2))
                     continue;
 
-                if(assembly1.indel() != assembly2.indel()) // indel-based assemblies can only link to the same
-                    continue;
+                boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
 
-                boolean isLocalLink = isAssemblyIndelLink(assembly1, assembly2) || isLocalAssemblyCandidate(assembly1, assembly2, false);
+                boolean isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2, false);
 
                 if(localOnly && !isLocalLink)
                     continue;
@@ -249,7 +249,7 @@ public class PhaseSetBuilder
                     continue;
                 }
 
-                ExtensionType type = isLocalLink ? LOCAL_DEL_DUP : SPLIT_LINK;
+                ExtensionType type = isLocalLink ? (isLocalIndel ? INDEL : LOCAL_DEL_DUP) : SPLIT_LINK;
 
                 ExtensionCandidate extensionCandidate = new ExtensionCandidate(type, assemblyLink);
                 mExtensionCandidates.add(extensionCandidate);
@@ -309,7 +309,7 @@ public class PhaseSetBuilder
                 .filter(x -> !mLocallyLinkedAssemblies.contains(x.Assembly) && !mLocallyLinkedAssemblies.contains(x.SecondAssembly))
                 .collect(Collectors.toList());
 
-        Collections.sort(remainingCandidates);
+        Collections.sort(remainingCandidates, new ExtensionCandidate.StandardComparator());
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
 

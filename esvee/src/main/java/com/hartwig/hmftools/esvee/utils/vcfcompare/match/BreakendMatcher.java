@@ -6,7 +6,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
@@ -367,7 +367,7 @@ public class BreakendMatcher
                 diffSet.add(DIFF_INSSEQ);
 
             if(!oldBreakend.SvType.equals(newBreakend.SvType))
-                diffSet.add(SVTYPE);
+                diffSet.add(SV_TYPE);
         }
 
         if(hasDiffWithinTolerance(

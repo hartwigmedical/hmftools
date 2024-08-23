@@ -401,7 +401,7 @@ public class AssemblyLinksTest
         JunctionAssembly secondAssembly = junctionAssembler.processJunction(List.of(juncRead3, juncRead4)).get(0);
 
         Read discRead2 = createRead(
-                juncRead2.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
+                juncRead2.id(), CHR_1, 120, refSequence.substring(120, 175), "55M", CHR_1, 51, false);
         discRead2.bamRecord().setSecondOfPairFlag(true);
 
         secondAssembly.addCandidateSupport(discRead2);
@@ -411,12 +411,12 @@ public class AssemblyLinksTest
         secondAssembly.addCandidateSupport(juncRead1);
 
         Read discRead1 = createRead(
-                juncRead1.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 51, false);
+                juncRead1.id(), CHR_1, 120, refSequence.substring(120, 175), "55M", CHR_1, 51, false);
         discRead1.bamRecord().setSecondOfPairFlag(true);
         secondAssembly.addCandidateSupport(discRead1);
 
         Read discRead3 = createRead(
-                juncRead3.id(), CHR_1, 20, refSequence.substring(20, 70), "50M", CHR_1, 151, false);
+                juncRead3.id(), CHR_1, 20, refSequence.substring(20, 80), "60M", CHR_1, 151, false);
         discRead3.bamRecord().setSecondOfPairFlag(true);
 
         firstAssembly.addCandidateSupport(discRead3);

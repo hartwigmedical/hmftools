@@ -46,6 +46,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
@@ -70,11 +71,13 @@ public class PurpleInterpreter
     private final LinxRecord linx;
     @Nullable
     private final ChordData chord;
+    boolean convertGermlineToSomatic;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory,
             @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord)
+            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord,
+            boolean convertGermlineToSomatic)
     {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
@@ -82,6 +85,7 @@ public class PurpleInterpreter
         this.driverGenes = driverGenes;
         this.linx = linx;
         this.chord = chord;
+        this.convertGermlineToSomatic = convertGermlineToSomatic;
     }
 
     @NotNull
@@ -159,6 +163,8 @@ public class PurpleInterpreter
             LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
+        TumorStats tumorStats = TumorStatsFactory.compute(purple);
+
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
@@ -182,6 +188,7 @@ public class PurpleInterpreter
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
                 .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
+                .tumorStats(tumorStats)
                 .build();
     }
 

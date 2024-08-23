@@ -16,6 +16,9 @@ public interface PurpleRecord
     PurpleFit fit();
 
     @NotNull
+    TumorStats tumorStats();
+
+    @NotNull
     PurpleCharacteristics characteristics();
 
     @NotNull
