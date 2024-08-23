@@ -12,7 +12,7 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BreakendMatchTask
+public class BreakendMatchTask implements Runnable
 {
     private final CompareConfig mConfig;
     private final BreakendMatcher mBreakendMatcher;
@@ -24,8 +24,11 @@ public class BreakendMatchTask
         mBreakendMatcher = new BreakendMatcher(config);
     }
 
+    @Override
     public void run()
     {
+        SV_LOGGER.info("Running task: " + CompareTask.MATCH_BREAKENDS);
+
         Map<String,List<VariantBreakend>> oldChrBreakendMap = VariantBreakend.loadVariants(mConfig.OldVcf);
         Map<String,List<VariantBreakend>> newChrBreakendMap = VariantBreakend.loadVariants(mConfig.NewVcf);
 
@@ -47,7 +50,7 @@ public class BreakendMatchTask
 
         mBreakendMatcher.writeBreakends();
 
-        SV_LOGGER.info("Esvee compare VCFs complete");
+        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
     }
 
     public static void main(@NotNull final String[] args)

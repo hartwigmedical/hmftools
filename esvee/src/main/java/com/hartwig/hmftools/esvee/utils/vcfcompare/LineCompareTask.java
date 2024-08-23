@@ -14,7 +14,7 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LineCompareTask
+public class LineCompareTask implements Runnable
 {
     private final CompareConfig mConfig;
     private final BreakendMatcher mBreakendMatcher;
@@ -26,8 +26,11 @@ public class LineCompareTask
         mBreakendMatcher = new BreakendMatcher(config);
     }
 
+    @Override
     public void run()
     {
+        SV_LOGGER.info("Running task: " + CompareTask.LINE_COMPARE);
+
         Map<String, List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf);
         Map<String,List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf);
 
@@ -50,7 +53,7 @@ public class LineCompareTask
         LineLinkWriter writer = new LineLinkWriter(mConfig);
         writer.writeBreakends(mBreakendMatcher);
 
-        SV_LOGGER.info("Esvee compare LINE breakends complete");
+        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
     }
 
     public static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile)

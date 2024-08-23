@@ -179,7 +179,7 @@ public class BreakendMatcher
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".sv_compare";
+            String fileName = mOutputDir + mSampleId + ".sv_compare.breakends";
 
             if(mOutputId != null)
                 fileName += "." + mOutputId;

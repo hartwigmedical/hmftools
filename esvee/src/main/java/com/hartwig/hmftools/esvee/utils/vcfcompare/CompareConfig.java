@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -16,6 +18,8 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 public class CompareConfig
 {
+    public final List<CompareTask> CompareTasks;
+
     public final String SampleId;
     public final String ReferenceId;
 
@@ -39,8 +43,12 @@ public class CompareConfig
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
 
+    private static final String COMPARE_TASKS = "tasks";
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(COMPARE_TASKS, false, "Comparisons to perform");
+
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
 
@@ -59,6 +67,8 @@ public class CompareConfig
 
     public CompareConfig(final ConfigBuilder configBuilder)
     {
+        CompareTasks = CompareTask.fromConfig(configBuilder.getValue(COMPARE_TASKS));
+
         SampleId = configBuilder.getValue(SAMPLE);
         ReferenceId = configBuilder.getValue(REFERENCE, "");
 
