@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
+import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
@@ -171,7 +172,7 @@ public class CallerApplication
 
         mSvDataCache.buildBreakendMap();
 
-        markLikelyLineSites();
+        LineChecker.markLineSites(mSvDataCache.getBreakendMap());
 
         SV_LOGGER.info("applying filters");
 
@@ -180,9 +181,18 @@ public class CallerApplication
             if(mHotspotCache.isHotspotVariant(var))
                 var.markHotspot();
 
-            markGermline(var);
-
             mVariantFilters.applyFilters(var);
+        }
+
+        // set germline status and final filters based on LINE
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            markGermline(var);
+        }
+
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            adjustLineSites(var);
         }
 
         Deduplication.deduplicateVariants(mSvDataCache.getBreakendMap());
@@ -228,31 +238,6 @@ public class CallerApplication
 
         if(maxGermlineAf >= GERMLINE_AF_THRESHOLD * maxTumorAf)
             var.markGermline();
-    }
-
-    private void markLikelyLineSites()
-    {
-        for(List<Breakend> breakends : mSvDataCache.getBreakendMap().values())
-        {
-            for(int i = 0; i < breakends.size() - 1; ++i)
-            {
-                Breakend breakend = breakends.get(i);
-                Breakend nextBreakend = breakends.get(i + 1);
-
-                if(breakend.otherBreakend() == nextBreakend)
-                    continue;
-
-                if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
-                    continue;
-
-                // mark if either site is line
-                if(breakend.isLine() || nextBreakend.isLine())
-                {
-                    breakend.setLineSiteBreakend(nextBreakend);
-                    nextBreakend.setLineSiteBreakend(breakend);
-                }
-            }
-        }
     }
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
