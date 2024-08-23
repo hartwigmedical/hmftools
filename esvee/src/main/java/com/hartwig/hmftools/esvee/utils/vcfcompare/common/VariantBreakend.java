@@ -276,6 +276,9 @@ public class VariantBreakend
             return Context.getAttributeAsString(EVENT, "");
         }
 
+        if(mSvCaller == SvCaller.TRUTH)
+            return Context.getAttributeAsString("SVID", "");
+
         if(mSvCaller == SvCaller.ESVEE)
         {
             if(isSingle())
