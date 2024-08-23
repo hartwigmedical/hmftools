@@ -161,13 +161,23 @@ public class AssemblyAlignment
         int linkCount = assemblyLinks.size();
 
         // for a chain which starts with a facing link, reverse the order in which the sequence is added so as to start with ref bases
-        boolean hasOuterExtensions = mPhaseSet.hasFacingLinks()
-                && assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() == FACING;
+        boolean hasFacingAtStart = false;
+        boolean hasFacingAtEnd = false;
 
-        boolean reverseLinks = assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() != FACING;
+        if(mPhaseSet.hasFacingLinks())
+        {
+            hasFacingAtStart = assemblyLinks.get(0).type() == FACING;
+            hasFacingAtEnd = assemblyLinks.get(linkCount - 1).type() == FACING;
+        }
+
+        boolean hasOuterExtensions = hasFacingAtStart && hasFacingAtEnd;
+
+        boolean reverseLinks = hasFacingAtStart && !hasFacingAtEnd;
 
         if(reverseLinks)
         {
+            hasFacingAtStart = false;
+            hasFacingAtEnd = true;
             assemblies = Lists.newArrayList(assemblies);
             assemblyLinks = Lists.newArrayList(assemblyLinks);
             Collections.reverse(assemblies);
@@ -198,7 +208,7 @@ public class AssemblyAlignment
             {
                 assemblyReversed = startReversed;
 
-                if(hasOuterExtensions)
+                if(hasFacingAtStart)
                 {
                     // add on the extension sequence instead of the ref base sequence
                     String assemblyExtensionBases = assembly.formJunctionSequence();
@@ -240,6 +250,14 @@ public class AssemblyAlignment
                     JunctionAssembly nextAssembly = assemblies.get(i + 1);
 
                     setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength);
+
+                    if(i == assemblyCount - 2)
+                    {
+                        // add on the extension sequence for the last assembly
+                        addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, lastAddedReversed);
+                        currentSeqLength = nextAssembly.extensionLength();
+                    }
+
                     continue;
                 }
 
@@ -290,18 +308,11 @@ public class AssemblyAlignment
 
             buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
 
-            if(hasOuterExtensions && i == assemblyCount - 2)
+            if(hasFacingAtEnd && i == assemblyCount - 2)
             {
                 // add on the extension sequence for the last assembly
-                String assemblyExtensionBases = nextAssembly.formJunctionSequence();
-
-                fullSequence.append(assemblyExtensionBases);
-
-                logBuildInfo(nextAssembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
-
-                currentSeqLength = assemblyExtensionBases.length();
-
-                buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
+                addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, assemblyReversed);
+                currentSeqLength = nextAssembly.extensionLength();
             }
 
             lastAddedReversed = nextReversed;
@@ -312,6 +323,22 @@ public class AssemblyAlignment
         mSequenceCigar = cigarElementsToStr(sequenceCigar);
 
         return fullSequence.toString();
+    }
+
+    private void addFinalFacingExtensionBases(
+            final JunctionAssembly assembly, final StringBuilder fullSequence, final List<CigarElement> sequenceCigar,
+            int currentSeqLength, boolean assemblyReversed)
+    {
+        String assemblyExtensionBases = assembly.formJunctionSequence();
+
+        if(assembly.isReverseJunction())
+            assemblyExtensionBases = Nucleotides.reverseComplementBases(assemblyExtensionBases);
+
+        fullSequence.append(assemblyExtensionBases);
+
+        logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+
+        buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
     }
 
     private static String getAssemblyInsertSequence(final JunctionAssembly assembly, boolean assemblyReversed, int insertLength)

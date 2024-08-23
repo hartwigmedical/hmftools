@@ -54,7 +54,7 @@ import org.junit.Test;
 public class SpecificAlignmentsTest
 {
     @Test
-    public void testUnamppedSglPair()
+    public void testUnmappedSglPair()
     {
         // two facing SGLs which both have unmapped reads which form consistent extension sequences
 
@@ -149,7 +149,7 @@ public class SpecificAlignmentsTest
         refBaseExtender.findAssemblyCandidateExtensions(assembly1, candidates1);
         refBaseExtender.findAssemblyCandidateExtensions(assembly2, candidates2);
 
-        PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
+        PhaseGroup phaseGroup = new PhaseGroup(assembly2, assembly1);
 
         PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
         phaseSetBuilder.buildPhaseSets();
@@ -796,9 +796,13 @@ public class SpecificAlignmentsTest
         assertEquals(0, getSupportTypeCount(assembly2, DISCORDANT));
         */
 
-        String fullSequence = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 249))
-                + refGenome.getBaseString(CHR_1, 100, 300) + "A"
-                + Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
+        String bases1 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 249));
+        String bases2 = refGenome.getBaseString(CHR_1, 100, 300) + "A";
+        String bases3 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
+        String bases4 = refGenome.getBaseString(CHR_2, 100, 200);
+
+        // String fullSequence = bases1 + bases2 + bases3;
+        String fullSequence = bases1 + bases2 + bases3 + bases4;
 
         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
 
