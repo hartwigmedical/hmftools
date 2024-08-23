@@ -12,12 +12,12 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SvVcfComparer
+public class BreakendMatchTask
 {
     private final CompareConfig mConfig;
     private final BreakendMatcher mBreakendMatcher;
 
-    public SvVcfComparer(final CompareConfig config)
+    public BreakendMatchTask(final CompareConfig config)
     {
         mConfig = config;
 
@@ -58,7 +58,7 @@ public class SvVcfComparer
 
         CompareConfig compareConfig = new CompareConfig(configBuilder);
 
-        SvVcfComparer svVcfCompare = new SvVcfComparer(compareConfig);
+        BreakendMatchTask svVcfCompare = new BreakendMatchTask(compareConfig);
         svVcfCompare.run();
     }
 }
