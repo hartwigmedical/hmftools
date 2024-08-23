@@ -47,12 +47,15 @@ public class LineLinkWriter
     private static final String NEW_PREFIX = "New";
 
     private static final List<String> FIXED_HEADER_FIELDS = List.of(
+            "SampleId",
             "UnifiedPolyACoords",
-            "PolyAMatchType"
+            "PolyAMatchType",
+            "HasAnyPass"
     );
 
     private static final List<String> HEADER_SUFFIXES = List.of(
             "VcfType",
+            "PolyAHasLink",
             "PolyAId",
             "PolyARemoteId",
             "OtherId",
@@ -119,6 +122,7 @@ public class LineLinkWriter
     private class OutputRow
     {
         String VcfType = "";
+        String PolyAHasLink = "";
 
         String PolyAId = "";
         String OtherId = "";
@@ -145,13 +149,32 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        public OutputRow(@Nullable LineLink lineLink)
+        public OutputRow(@Nullable VariantBreakend breakend)
         {
-            if(lineLink == null)
+            if(breakend == null)
+            {
                 return;
+            }
 
-            VariantBreakend polyASite = lineLink.mPolyASite;
-            VariantBreakend otherSite = lineLink.mOtherSite;
+            boolean hasLink = breakend.hasLineLink();
+            PolyAHasLink = String.valueOf(hasLink);
+
+            LineLink lineLink;
+            VariantBreakend polyASite;
+            VariantBreakend otherSite;
+
+            if(hasLink)
+            {
+                lineLink = breakend.LinkedLineBreakends;
+                polyASite = lineLink.mPolyASite;
+                otherSite = lineLink.mOtherSite;
+            }
+            else
+            {
+                lineLink = null;
+                polyASite = breakend;
+                otherSite = null;
+            }
 
             VcfType = polyASite.SourceVcfType.toString();
 
@@ -162,6 +185,11 @@ public class LineLinkWriter
             PolyAFilter = polyASite.filtersStr();
             PolyAQual = polyASite.qualStr();
             PolyAFrags = polyASite.fragsStr(mSampleId);
+
+            if(!hasLink)
+            {
+                return;
+            }
 
             if(lineLink.polyAHasRemote())
             {
@@ -188,6 +216,7 @@ public class LineLinkWriter
         {
             return List.of(
                     VcfType,
+                    PolyAHasLink,
                     PolyAId,
                     PolyARemoteId,
                     OtherId,
@@ -235,6 +264,27 @@ public class LineLinkWriter
         }
     }
 
+    private static boolean variantHasAnyPass(@Nullable VariantBreakend breakend)
+    {
+        boolean anyPass;
+
+        if(breakend == null)
+        {
+            anyPass = false;
+        }
+        else if(!breakend.hasLineLink())
+        {
+            anyPass = breakend.isPassVariant();
+        }
+        else
+        {
+            anyPass = breakend.LinkedLineBreakends.mPolyASite.isPassVariant();
+            anyPass |= breakend.LinkedLineBreakends.mOtherSite.isPassVariant();
+        }
+
+        return anyPass;
+    }
+
     public void writeBreakends(BreakendMatcher breakendMatcher)
     {
         try
@@ -242,8 +292,6 @@ public class LineLinkWriter
             BufferedWriter writer = initialiseWriter();
 
             List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
-
-            List<String> emptyOutputStrings = new OutputRow(null).getOutputStrings();
 
             for(BreakendMatch match : breakendMatches)
             {
@@ -255,20 +303,19 @@ public class LineLinkWriter
 
                 List<String> rowStrings = new ArrayList<>();
 
+                rowStrings.add(mSampleId);
+
                 String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
+                rowStrings.add(unifiedPolyACoords);
 
                 String polyAMatchType = match.Type.toString();
-
-                rowStrings.add(unifiedPolyACoords);
                 rowStrings.add(polyAMatchType);
 
-                List<String> oldStrings = (oldBreakend != null) ?
-                        new OutputRow(oldBreakend.LinkedLineBreakends).getOutputStrings() :
-                        emptyOutputStrings;
+                String hasAnyPass = String.valueOf(variantHasAnyPass(oldBreakend) || variantHasAnyPass(newBreakend));
+                rowStrings.add(hasAnyPass);
 
-                List<String> newStrings = (newBreakend != null) ?
-                        new OutputRow(newBreakend.LinkedLineBreakends).getOutputStrings() :
-                        emptyOutputStrings;
+                List<String> oldStrings = new OutputRow(oldBreakend).getOutputStrings();
+                List<String> newStrings = new OutputRow(newBreakend).getOutputStrings();
 
                 for(int i = 0; i < oldStrings.size(); i++)
                 {
