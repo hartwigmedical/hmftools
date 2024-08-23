@@ -96,8 +96,9 @@ public class LineLinker
                     LineLink lineLink = tryLinkLineBreakendPair(breakend1, breakend2);
 
                     if(lineLink != null)
-                        mLinkedBreakends.add(new LineLink(breakend1, breakend2));
-
+                    {
+                        mLinkedBreakends.add(lineLink);
+                    }
                 }
             }
         }

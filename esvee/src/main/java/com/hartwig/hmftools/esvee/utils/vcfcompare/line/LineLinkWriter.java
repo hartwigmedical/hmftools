@@ -217,6 +217,24 @@ public class LineLinkWriter
                 breakend.isLineInsertionSite();
     }
 
+    private static String getUnifiedPolyACoords(VariantBreakend oldBreakend, VariantBreakend newBreakend)
+    {
+        if(oldBreakend != null)
+        {
+            if(!oldBreakend.hasLineLink())
+                return oldBreakend.coordStr();
+            else
+                return oldBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+        }
+        else
+        {
+            if(!newBreakend.hasLineLink())
+                return newBreakend.coordStr();
+            else
+                return newBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+        }
+    }
+
     public void writeBreakends(BreakendMatcher breakendMatcher)
     {
         try
@@ -237,7 +255,7 @@ public class LineLinkWriter
 
                 List<String> rowStrings = new ArrayList<>();
 
-                String unifiedPolyACoords = oldBreakend != null ? oldBreakend.coordStr() : newBreakend.coordStr();
+                String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
 
                 String polyAMatchType = match.Type.toString();
 
