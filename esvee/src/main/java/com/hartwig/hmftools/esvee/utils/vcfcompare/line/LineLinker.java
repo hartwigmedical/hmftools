@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 public class LineLinker
 {
     private final Map<String, List<VariantBreakend>> mChrBreakendMap;
+    private final List<LineLink> mLinkedBreakends;
     private int mLinkCount = 0;
 
     private static final int MIN_POLY_A_OR_T_LENGTH = 10;
@@ -23,6 +25,7 @@ public class LineLinker
     public LineLinker(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
         mChrBreakendMap = chrBreakendMap;
+        mLinkedBreakends = new ArrayList<>();
     }
 
     public static boolean isLineInsertionSite(VariantBreakend breakend)
@@ -60,20 +63,24 @@ public class LineLinker
                 );
     }
 
-    private void tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
-            return;
+            return null;
 
         if(maybeInsertSite == maybeLinkedSite)
-            return;
+            return null;
 
         if(!nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
-            return;
+            return null;
 
-        maybeInsertSite.LinkedLineBreakend = maybeLinkedSite;
-        maybeLinkedSite.LinkedLineBreakend = maybeInsertSite;
+        LineLink lineLink = new LineLink(maybeLinkedSite, maybeInsertSite);
+
+        maybeInsertSite.LinkedLineBreakends = lineLink;
+        maybeLinkedSite.LinkedLineBreakends = lineLink;
         mLinkCount++;
+
+        return lineLink;
     }
 
     public void tryLinkLineBreakends()
@@ -86,7 +93,11 @@ public class LineLinker
             {
                 for(VariantBreakend breakend2 : breakends)
                 {
-                    tryLinkLineBreakendPair(breakend1, breakend2);
+                    LineLink lineLink = tryLinkLineBreakendPair(breakend1, breakend2);
+
+                    if(lineLink != null)
+                        mLinkedBreakends.add(new LineLink(breakend1, breakend2));
+
                 }
             }
         }
@@ -96,4 +107,6 @@ public class LineLinker
             SV_LOGGER.debug("Formed {} LINE links", mLinkCount);
         }
     }
+
+    public List<LineLink> getLinkedBreakends(){ return mLinkedBreakends; }
 }

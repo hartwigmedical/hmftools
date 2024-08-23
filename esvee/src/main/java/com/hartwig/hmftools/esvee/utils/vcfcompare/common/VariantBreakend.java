@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLink;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -60,7 +61,7 @@ public class VariantBreakend
     public final VcfType SourceVcfType;
 
     public VariantBreakend MatchedBreakend;
-    public VariantBreakend LinkedLineBreakend;
+    public LineLink LinkedLineBreakends;
 
     public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
     {
@@ -95,7 +96,7 @@ public class VariantBreakend
         SourceVcfType = sourceVcfType;
 
         MatchedBreakend = null;
-        LinkedLineBreakend = null;
+        LinkedLineBreakends = null;
     }
 
     public boolean isSingle()
@@ -180,10 +181,7 @@ public class VariantBreakend
 
     public boolean isLineInsertionSite() { return LineLinker.isLineInsertionSite(this); }
 
-    public boolean hasLineLink() { return LinkedLineBreakend != null; }
-
-    @Deprecated
-    public boolean hasSglLineLink() { return hasLineLink() && isSingle() && LinkedLineBreakend.isSingle(); }
+    public boolean hasLineLink() { return LinkedLineBreakends != null; }
 
     public String toString()
     {
@@ -228,17 +226,6 @@ public class VariantBreakend
         }
 
         return HumanChromosome.lowerChromosome(Chromosome, otherBreakend.Chromosome);
-    }
-
-    public String lineLinkCoordStr()
-    {
-        if(!hasLineLink())
-            return coordStr();
-
-        if(isLowerBreakend(LinkedLineBreakend))
-            return coordStr() + "_" + LinkedLineBreakend.coordStr();
-        else
-            return LinkedLineBreakend.coordStr() + "_" + coordStr();
     }
 
     public String filtersStr()

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.MatchFunctions;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -55,11 +54,13 @@ public class LineLinkWriter
     private static final List<String> HEADER_SUFFIXES = List.of(
             "VcfType",
             "PolyAId",
+            "PolyARemoteId",
             "OtherId",
-            "RemoteId",
+            "OtherRemoteId",
             "PolyACoords",
+            "PolyARemoteCoords",
             "OtherCoords",
-            "RemoteCoords",
+            "OtherRemoteCoords",
             "PolyAInsertSeq",
             "OtherInsertSeq",
             "PolyASvType",
@@ -115,19 +116,19 @@ public class LineLinkWriter
         }
     }
 
-    private static MatchFunctions.MatchFunction mCoordMatcher = new MatchFunctions.CoordsOnlyMatcher();
-
-    private List<String> getOutputStrings(@Nullable VariantBreakend insertSite)
+    private class OutputRow
     {
         String VcfType = "";
 
         String PolyAId = "";
         String OtherId = "";
-        String RemoteId = "";
+        String PolyARemoteId = "";
+        String OtherRemoteId = "";
 
         String PolyACoords = "";
         String OtherCoords = "";
-        String RemoteCoords = "";
+        String PolyARemoteCoords = "";
+        String OtherRemoteCoords = "";
 
         String PolyAInsertSeq = "";
         String OtherInsertSeq = "";
@@ -144,12 +145,15 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        if(insertSite != null)
+        public OutputRow(@Nullable LineLink lineLink)
         {
-            VcfType = insertSite.SourceVcfType.toString();
+            if(lineLink == null)
+                return;
 
-            VariantBreakend polyASite = insertSite;
-            VariantBreakend otherSite = insertSite.LinkedLineBreakend;
+            VariantBreakend polyASite = lineLink.mPolyASite;
+            VariantBreakend otherSite = lineLink.mOtherSite;
+
+            VcfType = polyASite.SourceVcfType.toString();
 
             PolyAId = polyASite.Id;
             PolyACoords = polyASite.coordStr();
@@ -159,44 +163,51 @@ public class LineLinkWriter
             PolyAQual = polyASite.qualStr();
             PolyAFrags = polyASite.fragsStr(mSampleId);
 
-            if(otherSite != null)
+            if(lineLink.polyAHasRemote())
             {
-                OtherId = otherSite.Id;
-                OtherCoords = otherSite.coordStr();
-                OtherInsertSeq = otherSite.InsertSequence;
+                PolyARemoteCoords = polyASite.otherCoordStr();
+                PolyARemoteId = polyASite.mateId();
+            }
 
-                if(!otherSite.isSingle() && !otherSite.eventId().equals(polyASite.eventId()))
-                {
-                    RemoteCoords = otherSite.otherCoordStr();
-                    RemoteId = otherSite.mateId();
-                }
+            OtherId = otherSite.Id;
+            OtherCoords = otherSite.coordStr();
+            OtherInsertSeq = otherSite.InsertSequence;
+            OtherSvType = otherSite.SvType;
+            OtherFilter = otherSite.filtersStr();
+            OtherQual = otherSite.qualStr();
+            OtherFrags = otherSite.fragsStr(mSampleId);
 
-                OtherSvType = otherSite.SvType;
-                OtherFilter = otherSite.filtersStr();
-                OtherQual = otherSite.qualStr();
-                OtherFrags = otherSite.fragsStr(mSampleId);
+            if(lineLink.otherHasRemote())
+            {
+                OtherRemoteCoords = otherSite.otherCoordStr();
+                OtherRemoteId = otherSite.mateId();
             }
         }
 
-        return List.of(
-                VcfType,
-                PolyAId,
-                OtherId,
-                RemoteId,
-                PolyACoords,
-                OtherCoords,
-                RemoteCoords,
-                PolyAInsertSeq,
-                OtherInsertSeq,
-                PolyASvType,
-                OtherSvType,
-                PolyAFilter,
-                OtherFilter,
-                PolyAQual,
-                OtherQual,
-                PolyAFrags,
-                OtherFrags
-        );
+        public List<String> getOutputStrings()
+        {
+            return List.of(
+                    VcfType,
+                    PolyAId,
+                    PolyARemoteId,
+                    OtherId,
+                    OtherRemoteId,
+                    PolyACoords,
+                    PolyARemoteCoords,
+                    OtherCoords,
+                    OtherRemoteCoords,
+                    PolyAInsertSeq,
+                    OtherInsertSeq,
+                    PolyASvType,
+                    OtherSvType,
+                    PolyAFilter,
+                    OtherFilter,
+                    PolyAQual,
+                    OtherQual,
+                    PolyAFrags,
+                    OtherFrags
+            );
+        }
     }
 
     private boolean isLineInsertSiteOfInterest(@Nullable VariantBreakend breakend)
@@ -213,6 +224,8 @@ public class LineLinkWriter
             BufferedWriter writer = initialiseWriter();
 
             List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
+
+            List<String> emptyOutputStrings = new OutputRow(null).getOutputStrings();
 
             for(BreakendMatch match : breakendMatches)
             {
@@ -231,8 +244,13 @@ public class LineLinkWriter
                 rowStrings.add(unifiedPolyACoords);
                 rowStrings.add(polyAMatchType);
 
-                List<String> oldStrings = getOutputStrings(oldBreakend);
-                List<String> newStrings = getOutputStrings(newBreakend);
+                List<String> oldStrings = (oldBreakend != null) ?
+                        new OutputRow(oldBreakend.LinkedLineBreakends).getOutputStrings() :
+                        emptyOutputStrings;
+
+                List<String> newStrings = (newBreakend != null) ?
+                        new OutputRow(newBreakend.LinkedLineBreakends).getOutputStrings() :
+                        emptyOutputStrings;
 
                 for(int i = 0; i < oldStrings.size(); i++)
                 {
