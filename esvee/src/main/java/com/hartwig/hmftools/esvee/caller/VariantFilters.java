@@ -3,16 +3,13 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
@@ -28,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -88,7 +84,7 @@ public class VariantFilters
             {
                 FilterType filterType = FilterType.fromVcfTag(filterStr);
 
-                if(filterType != null && filterType != DUPLICATE)
+                if(filterType != null && filterType != DUPLICATE) // only required from where assembly marked duplicates
                     breakend.sv().addFilter(filterType);
             }
             catch(Exception e) {}
@@ -115,8 +111,20 @@ public class VariantFilters
 
     private boolean belowMinAf(final Variant var)
     {
-        double afThreshold = var.isHotspot() ? mFilterConstants.MinAfHotspot :
-                (var.isSgl() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction);
+        double afThreshold;
+
+        if(var.isHotspot())
+        {
+            afThreshold = mFilterConstants.MinAfHotspot;
+        }
+        else if(var.isSgl() && !var.isLineSite())
+        {
+            afThreshold = mFilterConstants.MinAfSgl;
+        }
+        else
+        {
+            afThreshold = mFilterConstants.MinAfJunction;
+        }
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -150,7 +158,8 @@ public class VariantFilters
             qualThreshold *= 0.5;
 
         double variantQual = var.qual();
-        if(var.isSgl() && breakend.lineSiteBreakend() != null)
+
+        if(breakend.lineSiteBreakend() != null)
             variantQual += breakend.lineSiteBreakend().sv().qual();
 
         return variantQual < qualThreshold;
@@ -172,12 +181,11 @@ public class VariantFilters
 
         if(var.isSgl())
         {
-            byte[] insertSequence = var.insertSequence().getBytes();
-
             // skip if a line site
-            if(isLineInsertion(insertSequence, var.breakendStart().Orient))
+            if(var.breakendStart().isLine())
                 return false;
 
+            byte[] insertSequence = var.insertSequence().getBytes();
             List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence);
             int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length - 1, repeats);
 
@@ -191,32 +199,23 @@ public class VariantFilters
 
     private boolean belowMinAnchorLength(final Breakend breakend)
     {
-        if(breakend.Context.hasAttribute(ASM_LINKS))
+        if(breakend.inChainedAssembly())
             return false;
 
         return breakend.anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
     }
 
-    private static boolean isLineInsertion(final byte[] insertSequence, final Orientation orientation)
-    {
-        int indexStart, indexEnd;
-
-        if(orientation.isForward())
-        {
-            indexStart = 0;
-            indexEnd = LINE_POLY_AT_TEST_LEN - 1;
-        }
-        else
-        {
-            indexEnd = insertSequence.length - 1;
-            indexStart = indexEnd - LINE_POLY_AT_TEST_LEN + 1;
-        }
-
-        return findLineSequenceBase(insertSequence, indexStart, indexEnd) != null;
-    }
-
     private boolean belowMinFragmentLength(final Variant var)
     {
+        if(var.isSgl())
+            return false;
+
+        if(var.isLineSite())
+            return false;
+
+        if(var.inChainedAssembly())
+            return false;
+
         int svAvgLength = var.averageFragmentLength();
 
         if(svAvgLength == 0) // for now treat is this as a pass

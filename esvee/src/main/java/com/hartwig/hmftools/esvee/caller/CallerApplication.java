@@ -239,14 +239,14 @@ public class CallerApplication
                 Breakend breakend = breakends.get(i);
                 Breakend nextBreakend = breakends.get(i + 1);
 
-                if(!breakend.isSgl() || !nextBreakend.isSgl()) // only mark SGLs, ignore breakends already linked
+                if(breakend.otherBreakend() == nextBreakend)
                     continue;
 
                 if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
                     continue;
 
                 // mark if either site is line
-                if(breakend.Context.hasAttribute(LINE_SITE) || nextBreakend.Context.hasAttribute(LINE_SITE))
+                if(breakend.isLine() || nextBreakend.isLine())
                 {
                     breakend.setLineSiteBreakend(nextBreakend);
                     nextBreakend.setLineSiteBreakend(breakend);

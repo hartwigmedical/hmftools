@@ -46,6 +46,15 @@ public class CallerTestUtils
             final String vcfId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
             final String insSeq)
     {
+        return createSv(
+                vcfId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, insSeq,
+                Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+    }
+
+    public static Variant createSv(
+            final String vcfId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String insSeq, final Map<String,Object> attributes, final Map<String,Object> refAttributes, final Map<String,Object> tumorAttributes)
+    {
         String ref = "A";
 
         String altStart = formPairedAltString(ref, insSeq, chrEnd, posEnd, orientStart, orientEnd);
@@ -55,7 +64,7 @@ public class CallerTestUtils
         String vcfIdEnd = vcfId + "_end";
 
         VariantContext contextStart = createContext(
-                vcfIdStart, chrStart, posStart, ref, altStart, vcfIdEnd, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+                vcfIdStart, chrStart, posStart, ref, altStart, vcfIdEnd, attributes, refAttributes, tumorAttributes);
 
         GenotypeIds genotypeIds = createGenotypeIds();
 
@@ -66,7 +75,7 @@ public class CallerTestUtils
         }
 
         VariantContext contextEnd = createContext(
-                    vcfIdEnd, chrEnd, posEnd, ref, altEnd, vcfIdStart, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+                vcfIdEnd, chrEnd, posEnd, ref, altEnd, vcfIdStart, attributes, refAttributes, tumorAttributes);
 
         StructuralVariant sv = SV_FACTOR.createSV(contextStart, contextEnd);
         return new Variant(sv, genotypeIds);
@@ -85,22 +94,13 @@ public class CallerTestUtils
 
         double defaultQual = DEFAULT_QUAL;
 
-        Map<String,Object> commonAttributes = makeCommonAttributes(vcfId, 50, 50, 50);
+        Map<String,Object> commonAttributes = commonOverrides != null ? commonOverrides : makeCommonAttributes(vcfId, 50, 50, 50);
 
-        if(commonOverrides != null)
-            commonAttributes.putAll(commonOverrides);
-
-        if(mateId != null)
+        if(mateId != null && !commonAttributes.isEmpty())
             commonAttributes.put(PAR_ID, mateId);
 
-        Map<String,Object> refAttributes = makeGenotypeAttributes(0, 0, 30);
-        Map<String,Object> tumorAttributes = makeGenotypeAttributes(30, 20, 100);
-
-        if(refOverrides != null)
-            refAttributes.putAll(refOverrides);
-
-        if(tumorOverrides != null)
-            tumorAttributes.putAll(tumorOverrides);
+        Map<String,Object> refAttributes = refOverrides != null ? refOverrides : makeGenotypeAttributes(0, 0, 30);
+        Map<String,Object> tumorAttributes = tumorOverrides != null ? tumorOverrides : makeGenotypeAttributes(30, 20, 100);
 
         Genotype gtNormal = new GenotypeBuilder()
                 .attributes(refAttributes)
