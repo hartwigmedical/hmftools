@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
@@ -29,6 +31,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -177,7 +180,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(matchedVariant == null)
                 {
-                    final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE);
+                    final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE, sampleId);
 
                     if(unfilteredVariant != null)
                     {
@@ -213,7 +216,7 @@ public class SomaticVariantComparer implements ItemComparer
                 if(!includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
-                SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE);
+                SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE, sampleId);
 
                 if(unfilteredVariant != null)
                 {
@@ -230,7 +233,7 @@ public class SomaticVariantComparer implements ItemComparer
         return true;
     }
 
-    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource)
+    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource, final String sampleId)
     {
         VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(otherSource);
 
@@ -253,7 +256,8 @@ public class SomaticVariantComparer implements ItemComparer
                     "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
-                    0, context.getFilters(), 0, 0);
+                    0, context.getFilters(), 0, 0,
+                    AllelicDepth.fromGenotype(context.getGenotype(sampleId)));
         }
 
         return null;
@@ -293,6 +297,8 @@ public class SomaticVariantComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
         thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.2);
         thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0.2);
+        thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 0, 0.2);
+        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 0, 0.2);
     }
 
     @Override
@@ -364,7 +370,7 @@ public class SomaticVariantComparer implements ItemComparer
             if(variantContext.isFiltered())
                 continue;
 
-            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
+            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
