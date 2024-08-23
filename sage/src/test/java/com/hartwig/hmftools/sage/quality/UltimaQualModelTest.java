@@ -157,8 +157,8 @@ public class UltimaQualModelTest
         byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
         byte[] t0Values = buildDefaultBaseQuals(readBases.length());
         byte[] tpValues = new byte[readBases.length()];
-        t0Values[18] = 25+33;
-        t0Values[19] = 30+33;
+        t0Values[18] = 25;
+        t0Values[19] = 30;
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 18);
@@ -302,7 +302,7 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 22);
-        assertEquals(37, calcQual);
+        assertEquals(21, calcQual);
 
         // C>T GCT > GTT, left full delete, right insertion/expansion
         //                             01     234     56
@@ -378,7 +378,7 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 22);
-        assertEquals(37, calcQual);
+        assertEquals(21, calcQual);
 
 
         // contraction on the C side, expansion on the T side
@@ -410,7 +410,7 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 23);
-        assertEquals(31, calcQual);
+        assertEquals(18, calcQual);
 
         // HP on right partially deleted -> right matches ref, insert on left
         // AG GCC AGA > AG GTC AGA
@@ -438,6 +438,8 @@ public class UltimaQualModelTest
         String cigar = format("%dM", qualities.length);
         SAMRecord record = buildSamRecord(readStart, cigar, readBases, qualities);
         record.setAttribute(TP_TAG, tpValues);
+        for(int i = 0; i < t0Values.length; ++i)
+            t0Values[i] += 33;
         record.setAttribute(T0_TAG, new String(t0Values));
 
         return record;

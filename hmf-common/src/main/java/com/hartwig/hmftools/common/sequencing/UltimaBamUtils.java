@@ -162,6 +162,6 @@ public final class UltimaBamUtils
         if(index < 0 || index >= qualityArray.length)
             return ULTIMA_INVALID_QUAL;
 
-        return qualityArray[index];
+        return (byte) (qualityArray[index] - 33);
     }
 }

@@ -83,8 +83,8 @@ public class SageConstants
     public static final double VAF_PROBABILITY_THRESHOLD = 1e-14;
     public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 1e-9;
 
-    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 22;
-    public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 15;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 20;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
 
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5

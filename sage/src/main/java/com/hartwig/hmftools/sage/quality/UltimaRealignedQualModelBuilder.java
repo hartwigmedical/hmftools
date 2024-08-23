@@ -120,6 +120,23 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
+    public static boolean isCleanSnv(VariantReadContext readContext)
+    {
+        if(!readContext.variant().isSNV())
+            return false;
+        byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+        if(coreReadBases.length != readContext.RefBases.length)
+            return false;
+        for(int i = 0; i < coreReadBases.length; ++i)
+        {
+            if(i == readContext.leftCoreLength())
+                continue;  // the SNV base
+            if(coreReadBases[i] != readContext.RefBases[i])
+                return false;
+        }
+        return true;
+    }
+
     public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, final boolean skipSandwiched)
     {
         if(readContext.variant().isInsert())
@@ -170,6 +187,8 @@ public class UltimaRealignedQualModelBuilder
             SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
             return null;
         }
+        else if(isCleanSnv(readContext))
+            realignedQualModels = Lists.newArrayList();  // if a clean SNV, want to take max of quals, not min
 
         return realignedQualModels;
     }
@@ -287,8 +306,6 @@ public class UltimaRealignedQualModelBuilder
                         int extraRefIndex = 1;
                         Homopolymer forwardRefHompolymer = refHomopolymers.get(refIndex + extraRefIndex);
                         int extraRefBasesConsumed = forwardRefHompolymer.Length;
-                        int refCycleCount = cycleCount(refHomopolymers, refIndex);
-                        int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
                             if(forwardRefHompolymer.Base == refHomopolymer.Base && (!requireCycleShift || refCycleCount != readCycleCount))
@@ -346,8 +363,6 @@ public class UltimaRealignedQualModelBuilder
                         int extraReadIndex = 1;
                         Homopolymer forwardReadHompolymer = readHomopolymers.get(readIndex + extraReadIndex);
                         int extraReadBasesConsumed = forwardReadHompolymer.Length;
-                        int refCycleCount = cycleCount(refHomopolymers, refIndex);
-                        int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
                             if(forwardReadHompolymer.Base == refHomopolymer.Base && (!requireCycleShift || refCycleCount != readCycleCount))
@@ -479,6 +494,8 @@ public class UltimaRealignedQualModelBuilder
 
             SimpleVariant variant = new SimpleVariant(chromosome, varPosition, ref, alt);
             byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset-1, readContext.VarIndex+varReadIndexOffset+1);
+            if(varReadIndexOffset == -1 && !readContext.variant().isIndel()) // common scenario, we want to pass in the base after the variant, not the SNV base itself, for the right straddle base
+                coreBases[2] = readContext.ReadBases[readContext.VarIndex+varReadIndexOffset+2];
             UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant, coreBases);
             UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset);
             realignedVariants.add(realignedQualModel);

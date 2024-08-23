@@ -268,7 +268,7 @@ public class UltimaQualCalculator
                 return ULTIMA_INVALID_QUAL;
             }
 
-            return (byte) (max(qual1, qual2) - 33);
+            return max(qual1, qual2);
         }
 
         public String toString()
@@ -321,7 +321,7 @@ public class UltimaQualCalculator
             if(upperQual == ULTIMA_INVALID_QUAL)
                 return ULTIMA_INVALID_QUAL;
 
-            return (byte)(lowerQual + upperQual);
+            return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL);
         }
 
         public String toString()
@@ -468,12 +468,16 @@ public class UltimaQualCalculator
             int leftQual = mLeftAdjust != null ?
                     mLeftAdjust.calculateQual(record, varReadIndex) : mLeftDeletion.calculateQual(record, varReadIndex);
 
+            if(leftQual == ULTIMA_INVALID_QUAL)
+                return ULTIMA_INVALID_QUAL;
+
             int rightQual = mRightAdjust != null ?
                     mRightAdjust.calculateQual(record, varReadIndex) : mRightDeletion.calculateQual(record, varReadIndex);
 
-            int combinedQual = min(leftQual + rightQual, ULTIMA_MAX_QUAL);
+            if(rightQual == ULTIMA_INVALID_QUAL)
+                return ULTIMA_INVALID_QUAL;
 
-            return (byte)combinedQual;
+            return (byte) min(Math.max(leftQual, rightQual), ULTIMA_MAX_QUAL);
         }
 
         public String toString()
