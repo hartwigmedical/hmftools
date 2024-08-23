@@ -399,7 +399,7 @@ public class GermlineVariantDAO
                 .spliceRegion(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.SPLICEREGION)))
                 .otherReportedEffects(DatabaseUtil.valueNotNull(record.getValue(GERMLINEVARIANT.OTHERTRANSCRIPTEFFECTS)))
                 .allelicDepth(new AllelicDepth(
-                        record.getValue(GERMLINEVARIANT.GERMLINETOTALREADCOUNT), record.getValue(GERMLINEVARIANT.GERMLINEALLELEREADCOUNT)))
+                        record.getValue(GERMLINEVARIANT.TUMORTOTALREADCOUNT), record.getValue(GERMLINEVARIANT.TUMORALLELEREADCOUNT)))
                 .adjustedCopyNumber(record.getValue(GERMLINEVARIANT.COPYNUMBER))
                 .adjustedVAF(record.getValue(GERMLINEVARIANT.ADJUSTEDVAF))
                 .variantCopyNumber(record.getValue(GERMLINEVARIANT.VARIANTCOPYNUMBER))
