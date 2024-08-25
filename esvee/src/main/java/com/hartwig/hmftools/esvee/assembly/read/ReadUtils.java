@@ -149,26 +149,21 @@ public final class ReadUtils
         return true;
     }
 
-    public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
+    public static int findLineSequenceCount(final byte[] bases, final int indexStart, final int indexEnd, final byte lineBase)
     {
         if(indexStart < 0 || indexEnd >= bases.length)
-            return null;
+            return 0;
 
         if(indexEnd - indexStart + 1 < LINE_POLY_AT_REQ)
-            return null;
+            return 0;
 
-        int aCount = 0;
-        int tCount = 0;
+        int lineBaseCount = 0;
         int otherCount = 0;
         for(int i = indexStart; i <= indexEnd; ++i)
         {
-            if(bases[i] == LINE_BASE_A)
+            if(bases[i] == lineBase)
             {
-                ++aCount;
-            }
-            else if(bases[i] == LINE_BASE_T)
-            {
-                ++tCount;
+                ++lineBaseCount;
             }
             else
             {
@@ -179,12 +174,6 @@ public final class ReadUtils
             }
         }
 
-        if(aCount >= LINE_POLY_AT_REQ)
-            return LINE_BASE_A;
-
-        if(tCount >= LINE_POLY_AT_REQ)
-            return LINE_BASE_T;
-
-        return null;
+        return lineBaseCount >= LINE_POLY_AT_REQ ? lineBaseCount : 0;
     }
 }

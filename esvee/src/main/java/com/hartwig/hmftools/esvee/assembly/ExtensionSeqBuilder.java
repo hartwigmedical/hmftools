@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
@@ -12,7 +14,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLI
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -408,20 +410,22 @@ public class ExtensionSeqBuilder
             return;
 
         int indexStart, indexEnd;
+        byte lineBase;
 
         if(mIsForward)
         {
             indexStart = 1; // skip the ref base at the start
             indexEnd = min(indexStart + mMinSupportLength, mBases.length - 1);
-
+            lineBase = LINE_BASE_T;
         }
         else
         {
             indexEnd = mBases.length - 2; // skip the ref base
             indexStart = max(indexEnd - mMinSupportLength, 0);
+            lineBase = LINE_BASE_A;
         }
 
-        mHasLineSequence = findLineSequenceBase(mBases, indexStart, indexEnd) != null;
+        mHasLineSequence = findLineSequenceCount(mBases, indexStart, indexEnd, lineBase) > 0;
     }
 
     private class ReadState

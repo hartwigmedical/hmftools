@@ -2,13 +2,15 @@ package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isLineSequence;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_TEST_LENGTH;
@@ -134,20 +136,21 @@ public final class ReadAdjustments
                 refIndexStart = refIndexEnd - LINE_REF_BASE_TEST_LENGTH + 1;
             }
 
-            Byte lineBase = null;
+            byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
+            int lineBaseCount = 0;
 
             if(!isLineSequence(read.getBases(), refIndexStart, refIndexEnd))
             {
-                lineBase = findLineSequenceBase(read.getBases(), scIndexStart, scIndexEnd);
+                lineBaseCount = findLineSequenceCount(read.getBases(), scIndexStart, scIndexEnd, lineBase);
             }
 
-            if(lineBase != null)
+            if(lineBaseCount > 0)
             {
                 read.markLineTail();
 
                 lineExclusionLength = lineTestLength;
 
-                // find the most 3' index for the observed line base
+                // find the outermost index for the observed line base
 
                 int baseIndex = fromStart ? scIndexStart : scIndexEnd;
                 int baseCheck = lineTestLength - LINE_POLY_AT_REQ;

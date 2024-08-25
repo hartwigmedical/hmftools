@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 
@@ -200,6 +201,7 @@ public class ReadAdjustmentsTest
 
 
         // test the other orientation
+        lineSequence = Nucleotides.reverseComplementBases(lineSequence);
         softClipBases = "CC" + lineSequence + "GCTGCTGTCGTGTCC";
         readBases = REF_BASES_RANDOM_100 + softClipBases;
 

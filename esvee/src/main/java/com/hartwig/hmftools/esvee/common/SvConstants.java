@@ -21,6 +21,6 @@ public final class SvConstants
     // LINE elements
     public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
     public static final int LINE_REF_BASE_TEST_LENGTH = 8;
-    public static final int LINE_INDEL_MAX_OVERLAP = 25;
-    public static final int LINE_INDEL_MAX_GAP = 10;
+    public static final int LINE_INDEL_MAX_OVERLAP = 40;
+    public static final int LINE_INDEL_MAX_GAP = 30;
 }
