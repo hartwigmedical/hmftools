@@ -295,10 +295,10 @@ public class Alignment
         if(!assemblyAlignment.isValid())
             return;
 
-        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
-            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
+        if(mConfig.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
+            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment);
 
-        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENTS))
         {
             List<AlignData> alignmentsToWrite;
 

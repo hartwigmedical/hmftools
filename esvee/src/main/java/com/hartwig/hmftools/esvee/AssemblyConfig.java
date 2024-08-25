@@ -31,8 +31,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.PHASED_ASSEMBLY;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENTS;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
@@ -66,7 +66,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.ValidationStringency;
 
 public class AssemblyConfig
 {
@@ -196,7 +195,7 @@ public class AssemblyConfig
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
         RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null
-                || WriteTypes.contains(BREAKEND) || WriteTypes.contains(ALIGNMENT_DATA) || WriteTypes.contains(ALIGNMENT);
+                || WriteTypes.contains(BREAKEND) || WriteTypes.contains(ALIGNMENTS) || WriteTypes.contains(PHASED_ASSEMBLY);
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 

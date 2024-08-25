@@ -52,7 +52,7 @@ public class AlignmentWriter
 
     private BufferedWriter initialiseWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ALIGNMENT))
+        if(!config.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
             return null;
 
         if(config.OutputDir == null)
@@ -60,7 +60,7 @@ public class AlignmentWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT));
+            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.PHASED_ASSEMBLY));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -69,12 +69,6 @@ public class AlignmentWriter
             sj.add("Merged");
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
-
-            sj.add("AlignResults");
-            sj.add("AlignCigar");
-            sj.add("AlignScore");
-            sj.add("AlignedBases");
-
             sj.add("FullSequence");
 
             writer.write(sj.toString());
@@ -90,7 +84,7 @@ public class AlignmentWriter
     }
 
     public synchronized static void writeAssemblyAlignment(
-            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final List<AlignData> alignmentResults)
+            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment)
     {
         if(writer == null)
             return;
@@ -101,31 +95,12 @@ public class AlignmentWriter
 
             sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
+
             boolean phasetSetMerged = assemblyAlignment.phaseSet() != null && assemblyAlignment.phaseSet().merged();
             sj.add(String.valueOf(phasetSetMerged));
+
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
-
-            AlignData topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
-
-            if(topAlignment == null || topAlignment.Score == 0 || topAlignment.Cigar.isEmpty())
-            {
-                sj.add("0").add("").add("0").add("0").add("").add("0");
-                sj.add(assemblyAlignment.fullSequence());
-                writer.write(sj.toString());
-                writer.newLine();
-                return;
-            }
-
-            sj.add(String.valueOf(alignmentResults.size()));
-
-            Cigar cigar = CigarUtils.cigarFromStr(topAlignment.Cigar);
-            int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-
-            sj.add(topAlignment.Cigar);
-            sj.add(String.valueOf(topAlignment.Score));
-            sj.add(String.valueOf(alignedBases));
-
             sj.add(assemblyAlignment.fullSequence());
 
             writer.write(sj.toString());
@@ -152,7 +127,7 @@ public class AlignmentWriter
 
     private BufferedWriter initialiseAlignmentDataWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
+        if(!config.WriteTypes.contains(WriteType.ALIGNMENTS))
             return null;
 
         if(config.OutputDir == null)
@@ -160,7 +135,7 @@ public class AlignmentWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT_DATA));
+            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENTS));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
