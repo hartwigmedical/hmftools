@@ -33,12 +33,12 @@ import htsjdk.samtools.CigarOperator;
 
 public class AssemblyAlignment
 {
-    private final int mId;
+    private int mId;
     private final List<JunctionAssembly> mAssemblies;
     private final PhaseSet mPhaseSet;
 
-    private final String mFullSequence;
-    private final int mFullSequenceLength;
+    private String mFullSequence;
+    private int mFullSequenceLength;
 
     private final Map<Integer,String> mSequenceOverlaps;
     private String mSequenceCigar;
@@ -47,13 +47,13 @@ public class AssemblyAlignment
 
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
 
-    public AssemblyAlignment(final int id, final JunctionAssembly assembly) { this(id, assembly, null); }
+    public AssemblyAlignment(final JunctionAssembly assembly) { this(assembly, null); }
 
-    public AssemblyAlignment(final int id, final PhaseSet phaseSet) { this(id, null, phaseSet); }
+    public AssemblyAlignment(final PhaseSet phaseSet) { this(null, phaseSet); }
 
-    private AssemblyAlignment(final int id, final JunctionAssembly assembly, final PhaseSet phaseSet)
+    private AssemblyAlignment(final JunctionAssembly assembly, final PhaseSet phaseSet)
     {
-        mId = id;
+        mId = -1;
 
         if(assembly != null)
         {
@@ -86,6 +86,7 @@ public class AssemblyAlignment
         mFullSequenceLength = mFullSequence != null ? mFullSequence.length() : 0;
     }
 
+    public void setId(int id) { mId = id; }
     public int id() { return mId; }
 
     public boolean isValid() { return mFullSequence != null && mFullSequenceLength < 100000; }
@@ -99,6 +100,10 @@ public class AssemblyAlignment
 
     public String fullSequence() { return mFullSequence; }
     public int fullSequenceLength() { return mFullSequenceLength; }
+
+    public String assemblyCigar() { return mSequenceCigar; }
+
+    public Map<Integer,String> sequenceOverlaps() { return mSequenceOverlaps; }
 
     public String overlapBases(int sequenceIndex)
     {
@@ -484,7 +489,18 @@ public class AssemblyAlignment
         return matchedRead;
     }
 
-    public String assemblyCigar() { return mSequenceCigar; }
+    public void updateSequenceInfo(final String newSequence, final Map<Integer,String> newSequenceOverlaps, int primaryOffsetAdjust)
+    {
+        mFullSequence = newSequence;
+        mFullSequenceLength = newSequence.length();
+
+        for(Map.Entry<Integer,String> entry : mSequenceOverlaps.entrySet())
+        {
+            entry.setValue(entry.getValue() + primaryOffsetAdjust);
+        }
+
+        mSequenceOverlaps.putAll(newSequenceOverlaps);
+    }
 
     public String toString()
     {

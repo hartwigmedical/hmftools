@@ -43,7 +43,19 @@ public class AlignmentFragments
 
         Map<String,Integer> processedFragmentLengths = Maps.newHashMap();
 
-        for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
+        List<JunctionAssembly> assemblies;
+
+        if(!mAssemblyAlignment.phaseSet().mergedPhaseSets().isEmpty())
+        {
+            assemblies = Lists.newArrayList(mAssemblyAlignment.assemblies());
+            mAssemblyAlignment.phaseSet().mergedPhaseSets().forEach(x -> assemblies.addAll(x.assemblies()));
+        }
+        else
+        {
+            assemblies = mAssemblyAlignment.assemblies();
+        }
+
+        for(JunctionAssembly assembly : assemblies)
         {
             for(SupportRead read : assembly.support())
             {

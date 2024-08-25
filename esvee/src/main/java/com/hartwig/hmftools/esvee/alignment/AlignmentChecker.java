@@ -23,7 +23,7 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 import htsjdk.samtools.Cigar;
 
-public class AssemblyAlignmentChecker
+public class AlignmentChecker
 {
     private final AssemblyConfig mConfig;
     private final BwaMemAligner mDecoyAligner;
@@ -32,7 +32,7 @@ public class AssemblyAlignmentChecker
     private int mSequenceMatched;
     private final BufferedWriter mWriter;
 
-    public AssemblyAlignmentChecker(final AssemblyConfig config, final BufferedWriter writer)
+    public AlignmentChecker(final AssemblyConfig config, final BufferedWriter writer)
     {
         mConfig = config;
         mSequenceCount = 0;

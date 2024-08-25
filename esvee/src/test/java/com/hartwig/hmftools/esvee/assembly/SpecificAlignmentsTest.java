@@ -181,7 +181,7 @@ public class SpecificAlignmentsTest
 
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly1, assembly2, LinkType.FACING);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
 
         assertEquals(301, assemblyAlignment.fullSequenceLength());
 
@@ -533,7 +533,7 @@ public class SpecificAlignmentsTest
                 + Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_3, 50, 200))
                 + refGenome.getBaseString(CHR_1, 250, 350);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
 
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
 
@@ -804,7 +804,7 @@ public class SpecificAlignmentsTest
         // String fullSequence = bases1 + bases2 + bases3;
         String fullSequence = bases1 + bases2 + bases3 + bases4;
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, phaseSet);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
 
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
 

@@ -841,7 +841,7 @@ public class PhaseSetBuilder
             for(AssemblyLink link : mSecondarySplitLinks)
             {
                 if(phaseSet.hasAssembly(link.first()) || phaseSet.hasAssembly(link.second()))
-                    phaseSet.addSecondaryLinkEnd(link);
+                    phaseSet.addSecondaryLink(link);
             }
         }
     }

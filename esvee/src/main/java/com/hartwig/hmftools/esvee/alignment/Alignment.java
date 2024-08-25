@@ -152,6 +152,12 @@ public class Alignment
                 return;
             }
 
+            if(assemblyAlignment.phaseSet().merged())
+            {
+                writeAssemblyData(assemblyAlignment, Collections.emptyList(), Collections.emptyList());
+                return;
+            }
+
             List<AlignData> alignments;
             List<AlignData> requeriedAlignments;
 
@@ -177,25 +183,7 @@ public class Alignment
             AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
             alignmentFragments.allocateBreakendSupport();
 
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
-                AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
-
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
-            {
-                List<AlignData> alignmentsToWrite;
-
-                if(!requeriedAlignments.isEmpty())
-                {
-                    alignmentsToWrite = Lists.newArrayList(alignments);
-                    alignmentsToWrite.addAll(requeriedAlignments);
-                }
-                else
-                {
-                    alignmentsToWrite = alignments;
-                }
-
-                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
-            }
+            writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
         }
 
         private List<AlignData> requerySupplementaryAlignments(
@@ -272,6 +260,9 @@ public class Alignment
 
         private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
+            if(alignments.isEmpty())
+                return;
+
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
 
@@ -295,6 +286,33 @@ public class Alignment
 
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
+        }
+    }
+
+    private void writeAssemblyData(
+            final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+    {
+        if(!assemblyAlignment.isValid())
+            return;
+
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
+            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
+
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
+        {
+            List<AlignData> alignmentsToWrite;
+
+            if(!requeriedAlignments.isEmpty())
+            {
+                alignmentsToWrite = Lists.newArrayList(alignments);
+                alignmentsToWrite.addAll(requeriedAlignments);
+            }
+            else
+            {
+                alignmentsToWrite = alignments;
+            }
+
+            AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
         }
     }
 }

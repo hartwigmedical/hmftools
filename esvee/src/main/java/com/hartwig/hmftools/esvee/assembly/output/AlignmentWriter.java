@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import htsjdk.samtools.Cigar;
 
@@ -33,7 +32,7 @@ public class AlignmentWriter
         if(config.AlignmentFile == null)
         {
             mWriter = initialiseWriter(config);
-            mDetailedWriter = initialiseDetailedWriter(config);
+            mDetailedWriter = initialiseAlignmentDataWriter(config);
         }
         else
         {
@@ -67,6 +66,7 @@ public class AlignmentWriter
 
             sj.add(FLD_ASSEMBLY_IDS);
             sj.add(FLD_ASSEMLY_INFO);
+            sj.add("Merged");
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
 
@@ -101,6 +101,8 @@ public class AlignmentWriter
 
             sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
+            boolean phasetSetMerged = assemblyAlignment.phaseSet() != null && assemblyAlignment.phaseSet().merged();
+            sj.add(String.valueOf(phasetSetMerged));
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
 
@@ -148,7 +150,7 @@ public class AlignmentWriter
     public static final String FLD_XA_TAG = "LocTag";
     public static final String FLD_MD_TAG = "MdTag";
 
-    private BufferedWriter initialiseDetailedWriter(final AssemblyConfig config)
+    private BufferedWriter initialiseAlignmentDataWriter(final AssemblyConfig config)
     {
         if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
             return null;

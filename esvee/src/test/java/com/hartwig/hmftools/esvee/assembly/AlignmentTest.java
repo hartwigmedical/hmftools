@@ -92,7 +92,7 @@ public class AlignmentTest
         addAssemblyRead(assembly1, -30);
         addAssemblyRead(assembly1, 10);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -104,7 +104,7 @@ public class AlignmentTest
         assemblyBases1 = extBases1 + refBases1;
         assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
-        assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 

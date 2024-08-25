@@ -217,9 +217,6 @@ public class RemoteRegionAssembler
 
         String assemblyExtensionBases = assembly.formJunctionSequence();
 
-        // test in orientation in turn
-        // JunctionSequence assemblySeq = JunctionSequence.formFullExtensionMatchSequence(assembly, false);
-
         AssemblyLink assemblyLink = tryAssemblyRemoteRefOverlap(
                 assembly, assemblyExtensionBases, false, remoteRegionStart, remoteRegionEnd, remoteRefBases);
 
