@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -246,5 +247,17 @@ public class CommonUtils
         }
 
         return new BasePosition(chromosome, position);
+    }
+
+    public static String determineComparisonChromosome(final String chromosome, final boolean requiresLiftover)
+    {
+        if(requiresLiftover)
+        {
+            return HumanChromosome.fromString(chromosome).name().substring(1);
+        }
+        else
+        {
+            return chromosome;
+        }
     }
 }

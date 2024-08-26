@@ -19,15 +19,21 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
 
     protected static final String FLD_LIKELIHOOD = "Likelihood";
     protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
+    protected static final String FLD_CHROMOSOME = "Chromosome";
+    protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
+    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
+    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
 
-    public DriverData(final DriverCatalog driverCatalog, boolean checkTranscript)
+    public DriverData(final DriverCatalog driverCatalog, final String comparisonChromosome, boolean checkTranscript)
     {
         DriverCatalog = driverCatalog;
+        mComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
         String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());
@@ -46,9 +52,16 @@ public class DriverData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
+        String chromosomeDisplay = DriverCatalog.chromosome().equals(mComparisonChromosome)
+                ? DriverCatalog.chromosome()
+                : format("%s compared(%s)", DriverCatalog.chromosome(), mComparisonChromosome);
         List<String> values = Lists.newArrayList();
         values.add(format("%s", DriverCatalog.likelihoodMethod()));
         values.add(format("%.2f", DriverCatalog.driverLikelihood()));
+        values.add(format("%.2f", DriverCatalog.minCopyNumber()));
+        values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
+        values.add(format("%s", chromosomeDisplay));
+        values.add(format("%s", DriverCatalog.chromosomeBand()));
         return values;
     }
 
@@ -90,6 +103,10 @@ public class DriverData implements ComparableItem
                 DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
 
         checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
+        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
+        checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

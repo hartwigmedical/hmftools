@@ -4,8 +4,13 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.compar.common.Category.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,6 +48,8 @@ public class DriverComparer implements ItemComparer
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_LIKELIHOOD, 0.1, 0);
+        thresholds.addFieldThreshold(FLD_MIN_COPY_NUMBER, 0.5, 0.15);
+        thresholds.addFieldThreshold(FLD_MAX_COPY_NUMBER, 0.5, 0.15);
     }
 
     @Override
@@ -54,7 +61,7 @@ public class DriverComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD);
+        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
     }
 
     @Override
@@ -62,15 +69,7 @@ public class DriverComparer implements ItemComparer
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
 
-        final List<ComparableItem> driverDataList = Lists.newArrayList();
-
-        for(DriverCatalog driver : drivers)
-        {
-            boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
-            driverDataList.add(new DriverData(driver, checkTranscript));
-        }
-
-        return driverDataList;
+        return drivers.stream().map(this::createDriverData).collect(Collectors.toList());
     }
 
     @Override
@@ -118,8 +117,7 @@ public class DriverComparer implements ItemComparer
 
             for(DriverCatalog driver : drivers)
             {
-                boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
-                comparableItems.add(new DriverData(driver, checkTranscript));
+                comparableItems.add(createDriverData(driver));
             }
         }
         catch(IOException e)
@@ -129,5 +127,12 @@ public class DriverComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private DriverData createDriverData(final DriverCatalog driver)
+    {
+        boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
+        String comparisonChromosome = determineComparisonChromosome(driver.chromosome(), mConfig.RequiresLiftover);
+        return new DriverData(driver, comparisonChromosome, checkTranscript);
     }
 }

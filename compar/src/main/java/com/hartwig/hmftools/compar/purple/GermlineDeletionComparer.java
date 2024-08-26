@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -25,8 +25,6 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-
-import org.jetbrains.annotations.NotNull;
 
 public class GermlineDeletionComparer implements ItemComparer
 {
@@ -88,23 +86,9 @@ public class GermlineDeletionComparer implements ItemComparer
         return comparableItems;
     }
 
-    @NotNull
     private GermlineDeletionData createGermlineDeletionData(final GermlineDeletion deletion)
     {
         String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
         return new GermlineDeletionData(deletion, comparisonChromosome);
-    }
-
-    @NotNull
-    private static String determineComparisonChromosome(final String chromosome, final boolean requiresLiftover)
-    {
-        if(requiresLiftover)
-        {
-            return HumanChromosome.fromString(chromosome).name().substring(1);
-        }
-        else
-        {
-            return chromosome;
-        }
     }
 }
