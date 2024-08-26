@@ -123,6 +123,9 @@ public class RegionBamSlicer extends Thread
         if(mLowerRegions.stream().anyMatch(x -> positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), x.start(), x.end())))
             return;
 
+        if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
+            return;
+
         ++mReadsProcessed;
 
         if((mReadsProcessed % READ_LOG_COUNT) == 0)

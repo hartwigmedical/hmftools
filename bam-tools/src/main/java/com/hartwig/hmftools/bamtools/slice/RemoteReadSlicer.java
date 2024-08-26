@@ -135,6 +135,9 @@ public class RemoteReadSlicer implements Callable
             return;
         }
 
+        if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
+            return;
+
         int readStartPos = read.getAlignmentStart();
 
         int i = 0;
