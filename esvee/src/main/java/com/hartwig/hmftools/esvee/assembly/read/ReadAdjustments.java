@@ -105,6 +105,53 @@ public final class ReadAdjustments
         return true;
     }
 
+    public static void markLineSoftClips(final Read read)
+    {
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean fromStart = (i == 0);
+            int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
+
+            if(scBaseCount == 0)
+                continue;
+
+            if(scBaseCount >= LINE_POLY_AT_REQ)
+            {
+                int scIndexStart, scIndexEnd, refIndexStart, refIndexEnd;
+                int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
+
+                if(fromStart)
+                {
+                    scIndexEnd = scBaseCount - 1;
+                    scIndexStart = scIndexEnd - lineTestLength + 1;
+                    refIndexStart = scIndexEnd + 1;
+                    refIndexEnd = refIndexStart + LINE_REF_BASE_TEST_LENGTH - 1;
+                }
+                else
+                {
+                    scIndexStart = read.basesLength() - scBaseCount;
+                    scIndexEnd = scIndexStart + lineTestLength - 1;
+                    refIndexEnd = scIndexStart - 1;
+                    refIndexStart = refIndexEnd - LINE_REF_BASE_TEST_LENGTH + 1;
+                }
+
+                byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
+                int lineBaseCount = 0;
+
+                if(!isLineSequence(read.getBases(), refIndexStart, refIndexEnd))
+                {
+                    lineBaseCount = findLineSequenceCount(read.getBases(), scIndexStart, scIndexEnd, lineBase);
+                }
+
+                if(lineBaseCount > 0)
+                {
+                    read.markLineTail();
+                    return;
+                }
+            }
+        }
+    }
+
     public static boolean trimLowQualSoftClipBases(final Read read)
     {
         boolean fromStart = read.negativeStrand();
@@ -125,33 +172,20 @@ public final class ReadAdjustments
             {
                 scIndexEnd = scBaseCount - 1;
                 scIndexStart = scIndexEnd - lineTestLength + 1;
-                refIndexStart = scIndexEnd + 1;
-                refIndexEnd = refIndexStart + LINE_REF_BASE_TEST_LENGTH - 1;
             }
             else
             {
                 scIndexStart = read.basesLength() - scBaseCount;
                 scIndexEnd = scIndexStart + lineTestLength - 1;
-                refIndexEnd = scIndexStart - 1;
-                refIndexStart = refIndexEnd - LINE_REF_BASE_TEST_LENGTH + 1;
             }
 
             byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
-            int lineBaseCount = 0;
 
-            if(!isLineSequence(read.getBases(), refIndexStart, refIndexEnd))
+            if(read.hasLineTail())
             {
-                lineBaseCount = findLineSequenceCount(read.getBases(), scIndexStart, scIndexEnd, lineBase);
-            }
-
-            if(lineBaseCount > 0)
-            {
-                read.markLineTail();
-
                 lineExclusionLength = lineTestLength;
 
                 // find the outermost index for the observed line base
-
                 int baseIndex = fromStart ? scIndexStart : scIndexEnd;
                 int baseCheck = lineTestLength - LINE_POLY_AT_REQ;
 

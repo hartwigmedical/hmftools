@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
@@ -63,9 +64,12 @@ public class JunctionAssembler
             mJunction.markAsIndel();
         }
 
+        boolean hasMinLengthSoftClipRead = false;
+
         if(mJunction.indelBased())
         {
             findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
+            hasMinLengthSoftClipRead = !extensionReads.isEmpty();
         }
         else
         {
@@ -85,8 +89,10 @@ public class JunctionAssembler
                 {
                     int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
 
-                    if(softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH
-                    || (read.hasLineTail() && softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH))
+                    hasMinLengthSoftClipRead |= softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH
+                            || (read.hasLineTail() && softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH);
+
+                    if(softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
                     {
                         extensionReads.add(read);
                     }
@@ -106,7 +112,7 @@ public class JunctionAssembler
             extensionReads.addAll(dominantIndelReads);
         }
 
-        if(extensionReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
+        if(!hasMinLengthSoftClipRead || extensionReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
             return Collections.emptyList();
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);

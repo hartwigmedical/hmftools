@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
@@ -350,25 +351,30 @@ public class ExtensionSeqBuilder
     {
         int maxValidExtensionLength = 0;
         int validExtensionReadCount = 0;
+        boolean hasMinLengthSoftClipRead = false;
 
         checkLineSequence();
 
         int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+        int reqSecondaryExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         for(ReadState read : mReads)
         {
             if(read.exceedsMaxMismatches())
                 continue;
 
-            // check for extensions comprised only of short indels, even if they started with some soft-clipped reads
-            if((mJunction.isForward() && read.read().rightClipLength() >= reqExtensionLength)
-            || (mJunction.isReverse() && read.read().leftClipLength() >= reqExtensionLength))
+            int scLength = mJunction.isForward() ? read.read().rightClipLength() : read.read().leftClipLength();
+
+            if(scLength >= reqSecondaryExtensionLength)
             {
+                hasMinLengthSoftClipRead |= scLength >= reqExtensionLength;
                 ++validExtensionReadCount;
             }
             else if(read.read().indelCoords() != null && read.read().indelCoords().Length >= MIN_INDEL_LENGTH)
             {
+                // check for extensions comprised only of short indels, even if they started with some soft-clipped reads
                 ++validExtensionReadCount;
+                hasMinLengthSoftClipRead = true;
             }
             else
             {
@@ -379,7 +385,7 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT)
+        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT || !hasMinLengthSoftClipRead)
         {
             mIsValid = false;
             return;

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -238,6 +239,8 @@ public class JunctionGroupAssembler extends ThreadTask
 
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
+
+        markLineSoftClips(read);
 
         if(ReadAdjustments.trimLowQualSoftClipBases(read))
             ++mReadStats.LowBaseQualTrimmed;
