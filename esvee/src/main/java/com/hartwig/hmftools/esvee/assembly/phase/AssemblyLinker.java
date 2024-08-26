@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LEN
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
@@ -359,27 +359,28 @@ public final class AssemblyLinker
             junctionOffsetDiff = second.junctionIndex() - firstJunctionIndexInSecond - 1;
         }
 
-        String extraBases = "";
+        String insertedBases = "";
+        String overlapBases = "";
 
-        if(junctionOffsetDiff != 0)
+        if(junctionOffsetDiff > 0)
         {
-            extraBases = extractExtraBases(first, junctionOffsetDiff);
+            boolean secondReversed = first.isForwardJunction() == second.isForwardJunction();
+            insertedBases = extractInsertSequence(first, false, second, secondReversed, junctionOffsetDiff);
+        }
+        else if(junctionOffsetDiff < 0)
+        {
+            int overlapLength = abs(junctionOffsetDiff);
 
-            if(junctionOffsetDiff > 0 && junctionOffsetDiff > first.extensionLength())
+            if(overlapLength >= first.refBaseLength() || overlapLength >= second.refBaseLength())
+                return null;
+
+            overlapBases = extractOverlapBases(first, overlapLength);
+
+            if(overlapBases == null)
             {
-                // take the extra bases from the second assembly
-                String secondExtraBases = extractExtraBases(second, junctionOffsetDiff - first.extensionLength());
-                if(first.isForwardJunction() != second.isForwardJunction())
-                    extraBases += secondExtraBases;
-                else
-                    extraBases += Nucleotides.reverseComplementBases(secondExtraBases);
-            }
+                overlapBases = extractOverlapBases(second, junctionOffsetDiff);
 
-            if(extraBases == null)
-            {
-                extraBases = extractExtraBases(second, junctionOffsetDiff);
-
-                if(extraBases == null)
+                if(overlapBases == null)
                 {
                     SV_LOGGER.debug("asm({} & {}) invalid insert/overlap junctOffsetDiff({} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
                             first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
@@ -391,20 +392,10 @@ public final class AssemblyLinker
             }
         }
 
-        // if the first assembly's bases have matched further into the second's ref bases than its own length then the link is uninformative
-        if(junctionOffsetDiff < 0)
-        {
-            if(abs(junctionOffsetDiff) >= first.refBaseLength() || abs(junctionOffsetDiff) >= second.refBaseLength())
-                return null;
-        }
-
-        String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
-        String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
-
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
-    private static String extractExtraBases(final JunctionAssembly assembly, int junctionOffsetDiff)
+    private static String extractOverlapBases(final JunctionAssembly assembly, int overlapLength)
     {
         int extraBasesStartIndex, extraBasesEndIndex;
 
@@ -415,33 +406,14 @@ public final class AssemblyLinker
         // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
         if(assembly.isForwardJunction())
         {
-            if(junctionOffsetDiff > 0)
-            {
-                // an insert, so take bases from after the junction
-                extraBasesStartIndex = assembly.junctionIndex() + 1;
-
-
-                extraBasesEndIndex = min(assembly.junctionIndex() + junctionOffsetDiff, assembly.baseLength() - 1);
-            }
-            else
-            {
-                // an overlap, so go back from the junction
-                extraBasesStartIndex = assembly.junctionIndex() + junctionOffsetDiff + 1;
-                extraBasesEndIndex = assembly.junctionIndex();
-            }
+            // an overlap, so go back from the junction
+            extraBasesStartIndex = assembly.junctionIndex() - overlapLength + 1;
+            extraBasesEndIndex = assembly.junctionIndex();
         }
         else
         {
-            if(junctionOffsetDiff > 0)
-            {
-                extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;
-                extraBasesEndIndex = min(assembly.junctionIndex() - 1, assembly.baseLength() - 1);
-            }
-            else
-            {
-                extraBasesStartIndex = assembly.junctionIndex();
-                extraBasesEndIndex = assembly.junctionIndex() - junctionOffsetDiff - 1;
-            }
+            extraBasesStartIndex = assembly.junctionIndex();
+            extraBasesEndIndex = assembly.junctionIndex() + overlapLength - 1;
         }
 
         if(extraBasesStartIndex >= 0 && extraBasesEndIndex >= extraBasesStartIndex && extraBasesEndIndex < assembly.baseLength())

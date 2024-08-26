@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -126,6 +127,52 @@ public final class AssemblyUtils
     public static byte[] createLowBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD - 1)); }
 
     public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
+
+    public static String extractInsertSequence(
+            final JunctionAssembly first, boolean firstReversed, final JunctionAssembly second, boolean secondReversed, int insertLength)
+    {
+        int extBaseIndexStart, extBaseIndexEnd;
+
+        if(first.isForwardJunction())
+        {
+            extBaseIndexStart = first.junctionIndex() + 1;
+            extBaseIndexEnd = min(extBaseIndexStart + insertLength - 1, first.baseLength() - 1);
+        }
+        else
+        {
+            extBaseIndexEnd = first.junctionIndex() - 1;
+            extBaseIndexStart = max(extBaseIndexEnd - insertLength + 1, 0);
+        }
+
+        String insertSequence = first.formSequence(extBaseIndexStart, extBaseIndexEnd);
+
+        if(firstReversed)
+            insertSequence = Nucleotides.reverseComplementBases(insertSequence);
+
+        if(insertLength <= first.extensionLength())
+            return insertSequence;
+
+        // take the extra bases from the second assembly
+        int remainingInsertLength = insertLength - first.extensionLength();
+
+        if(second.isForwardJunction())
+        {
+            extBaseIndexStart = second.junctionIndex() + 1;
+            extBaseIndexEnd = min(extBaseIndexStart + remainingInsertLength - 1, second.baseLength() - 1);
+        }
+        else
+        {
+            extBaseIndexEnd = second.junctionIndex() - 1;
+            extBaseIndexStart = max(extBaseIndexEnd - remainingInsertLength + 1, 0);
+        }
+
+        String extraInsertSequence = second.formSequence(extBaseIndexStart, extBaseIndexEnd);
+
+        if(secondReversed)
+            extraInsertSequence = Nucleotides.reverseComplementBases(extraInsertSequence);
+
+        return insertSequence + extraInsertSequence;
+    }
 
     public static int calcTrimmedRefBaseLength(final JunctionAssembly assembly)
     {

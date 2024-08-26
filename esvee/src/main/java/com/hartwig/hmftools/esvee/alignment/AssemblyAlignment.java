@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.hasUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
@@ -272,21 +273,22 @@ public class AssemblyAlignment
             int overlapLength = link.overlapBases().length();
             int insertedBaseLength = link.insertedBases().length();
 
+            JunctionAssembly nextAssembly = assemblies.get(i + 1);
+
+            // typically reverse any assemblies which come in on the +ve side, unless this is a facing link (from outer extensions)
+            boolean nextReversed = nextAssembly.isForwardJunction() && link.type() != FACING;
+
             if(insertedBaseLength > 0)
             {
                 // keep inserted bases in the same direction as the assembly is added
-                String insertedBases = getAssemblyInsertSequence(assembly, assemblyReversed, insertedBaseLength);
+                String insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+
                 fullSequence.append(insertedBases);
 
                 currentSeqLength += insertedBaseLength;
 
                 buildSequenceCigar(sequenceCigar, I, insertedBaseLength);
             }
-
-            JunctionAssembly nextAssembly = assemblies.get(i + 1);
-
-            // typically reverse any assemblies which come in on the +ve side, unless this is a facing link (from outer extensions)
-            boolean nextReversed = nextAssembly.isForwardJunction() && link.type() != FACING;
 
             String nextAssemblyRefBases = nextReversed ?
                     Nucleotides.reverseComplementBases(nextAssembly.formRefBaseSequence()) : nextAssembly.formRefBaseSequence();
@@ -344,26 +346,6 @@ public class AssemblyAlignment
         logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
 
         buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
-    }
-
-    private static String getAssemblyInsertSequence(final JunctionAssembly assembly, boolean assemblyReversed, int insertLength)
-    {
-        int extBaseIndexStart, extBaseIndexEnd;
-
-        if(assembly.isForwardJunction())
-        {
-            extBaseIndexStart = assembly.junctionIndex() + 1;
-            extBaseIndexEnd = min(extBaseIndexStart + insertLength - 1, assembly.baseLength() - 1);
-        }
-        else
-        {
-            extBaseIndexEnd = assembly.junctionIndex() - 1;
-            extBaseIndexStart = max(extBaseIndexEnd - insertLength + 1, 0);
-        }
-
-        String insertSequence = assembly.formSequence(extBaseIndexStart, extBaseIndexEnd);
-
-        return assemblyReversed ? Nucleotides.reverseComplementBases(insertSequence) : insertSequence;
     }
 
     private static void logBuildInfo(
