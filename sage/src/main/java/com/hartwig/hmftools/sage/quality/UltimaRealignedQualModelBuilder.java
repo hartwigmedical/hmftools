@@ -193,6 +193,11 @@ public class UltimaRealignedQualModelBuilder
 
     private static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, boolean skipSandwichMasking)
     {
+        if(isCleanSnv(readContext))
+        {
+            return Lists.newArrayList();  // if a clean SNV, want to take max of quals, not min
+        }
+
         if(!skipSandwichMasking && readContext.variant().isInsert())
         {
             int insertLength = readContext.alt().length() - 1;
@@ -244,8 +249,6 @@ public class UltimaRealignedQualModelBuilder
             SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
             return Lists.newArrayList();
         }
-        else if(isCleanSnv(readContext))
-            realignedQualModels = Lists.newArrayList();  // TODO: if a clean SNV, want to take max of quals, not min
 
         return realignedQualModels;
     }
