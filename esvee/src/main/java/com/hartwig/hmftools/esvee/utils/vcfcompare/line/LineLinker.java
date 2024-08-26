@@ -19,8 +19,8 @@ public class LineLinker
     private static final String POLY_A_SEQUENCE = "A".repeat(MIN_POLY_A_OR_T_LENGTH);
     private static final String POLY_T_SEQUENCE = "T".repeat(MIN_POLY_A_OR_T_LENGTH);
 
-    private static final int OTHER_SITE_UPPER_BOUND = 30;
-    private static final int OTHER_SITE_LOWER_BOUND = 10;
+    private static final int POLY_A_TO_OTHER_SITE_UPPER_DISTANCE = 40;
+    private static final int POLY_A_TO_OTHER_SITE_LOWER_DISTANCE = 30;
 
     public LineLinker(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
@@ -37,29 +37,31 @@ public class LineLinker
 
     private static boolean nearbyBreakendsMeetLineCriteria(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
-        boolean insertSiteHasPolyA = (maybeInsertSite.Orientation == -1 &&
+        boolean meetsPolyACriteria = (
+                maybeInsertSite.Orientation == -1 &&
                 maybeLinkedSite.Orientation == 1 &&
                 maybeInsertSite.InsertSequence.endsWith(POLY_A_SEQUENCE) &&
                 maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                 positionWithin(
                         maybeLinkedSite.Position,
-                        maybeInsertSite.Position - OTHER_SITE_LOWER_BOUND,
-                        maybeInsertSite.Position + OTHER_SITE_UPPER_BOUND
+                        maybeInsertSite.Position - POLY_A_TO_OTHER_SITE_LOWER_DISTANCE,
+                        maybeInsertSite.Position + POLY_A_TO_OTHER_SITE_UPPER_DISTANCE
                 )
         );
 
-        boolean insertSiteHasPolyT = (maybeInsertSite.Orientation == 1 &&
+        boolean meetsPolyTCriteria = (
+                maybeInsertSite.Orientation == 1 &&
                 maybeLinkedSite.Orientation == -1 &&
                 maybeInsertSite.InsertSequence.startsWith(POLY_T_SEQUENCE) &&
                 maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                 positionWithin(
                         maybeLinkedSite.Position,
-                        maybeInsertSite.Position - OTHER_SITE_UPPER_BOUND,
-                        maybeInsertSite.Position + OTHER_SITE_LOWER_BOUND
+                        maybeInsertSite.Position - POLY_A_TO_OTHER_SITE_UPPER_DISTANCE,
+                        maybeInsertSite.Position + POLY_A_TO_OTHER_SITE_LOWER_DISTANCE
                 )
         );
 
-        return insertSiteHasPolyA || insertSiteHasPolyT;
+        return meetsPolyACriteria || meetsPolyTCriteria;
     }
 
     private LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
