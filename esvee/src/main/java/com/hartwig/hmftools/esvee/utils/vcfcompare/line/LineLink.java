@@ -9,8 +9,19 @@ public class LineLink
 
     public LineLink(VariantBreakend polyASite, VariantBreakend otherSite)
     {
+        checkPolyASite(polyASite);
+
         mPolyASite = polyASite;
         mOtherSite = otherSite;
+    }
+
+    private static void checkPolyASite(VariantBreakend polyASite)
+    {
+        if(!polyASite.hasPolyATail())
+        {
+            throw new IllegalStateException(String.format("breakend(%s) does not have a poly A tail. Insert sequence: %s",
+                            polyASite, polyASite.InsertSequence));
+        }
     }
 
     public boolean hasRemotes()
