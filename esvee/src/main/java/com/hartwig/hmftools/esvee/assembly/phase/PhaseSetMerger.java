@@ -228,7 +228,8 @@ public final class PhaseSetMerger
                     .filter(x -> x.getKey() >= otherSeqIndex).forEach(x -> newSequenceOverlaps.put(x.getKey(), x.getValue()));
         }
 
-        primaryAssembly.updateSequenceInfo(newSequence, otherAssembly.sequenceOverlaps(), primaryOffsetAdjust);
+        if(newSequence != null)
+            primaryAssembly.updateSequenceInfo(newSequence, otherAssembly.sequenceOverlaps(), primaryOffsetAdjust);
 
         // merge read support, adjusting assembly indices and orientations as required
         if(primaryOffsetAdjust > 0)
