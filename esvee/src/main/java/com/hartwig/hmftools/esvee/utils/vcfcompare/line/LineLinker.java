@@ -28,7 +28,7 @@ public class LineLinker
         mLinkedBreakends = new ArrayList<>();
     }
 
-    public static boolean isLineInsertionSite(VariantBreakend breakend)
+    public static boolean hasPolyATail(VariantBreakend breakend)
     {
         return
                 (breakend.Orientation == -1 && breakend.InsertSequence.endsWith(POLY_A_SEQUENCE)) ||
@@ -37,30 +37,29 @@ public class LineLinker
 
     private static boolean nearbyBreakendsMeetLineCriteria(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
-        return
-                // Insert site with forward orientation with trailing poly A
-                (maybeInsertSite.Orientation == -1 &&
-                        maybeLinkedSite.Orientation == 1 &&
-                        maybeInsertSite.InsertSequence.endsWith(POLY_A_SEQUENCE) &&
-                        maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
-                        positionWithin(
-                                maybeLinkedSite.Position,
-                                maybeInsertSite.Position - OTHER_SITE_LOWER_BOUND,
-                                maybeInsertSite.Position + OTHER_SITE_UPPER_BOUND
-                        )
-                ) ||
+        boolean insertSiteHasPolyA = (maybeInsertSite.Orientation == -1 &&
+                maybeLinkedSite.Orientation == 1 &&
+                maybeInsertSite.InsertSequence.endsWith(POLY_A_SEQUENCE) &&
+                maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
+                positionWithin(
+                        maybeLinkedSite.Position,
+                        maybeInsertSite.Position - OTHER_SITE_LOWER_BOUND,
+                        maybeInsertSite.Position + OTHER_SITE_UPPER_BOUND
+                )
+        );
 
-                // Insert site with reverse complement orientation with leading poly T
-                (maybeInsertSite.Orientation == 1 &&
-                        maybeLinkedSite.Orientation == -1 &&
-                        maybeInsertSite.InsertSequence.startsWith(POLY_T_SEQUENCE) &&
-                        maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
-                        positionWithin(
-                                maybeLinkedSite.Position,
-                                maybeInsertSite.Position - OTHER_SITE_UPPER_BOUND,
-                                maybeInsertSite.Position + OTHER_SITE_LOWER_BOUND
-                        )
-                );
+        boolean insertSiteHasPolyT = (maybeInsertSite.Orientation == 1 &&
+                maybeLinkedSite.Orientation == -1 &&
+                maybeInsertSite.InsertSequence.startsWith(POLY_T_SEQUENCE) &&
+                maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
+                positionWithin(
+                        maybeLinkedSite.Position,
+                        maybeInsertSite.Position - OTHER_SITE_UPPER_BOUND,
+                        maybeInsertSite.Position + OTHER_SITE_LOWER_BOUND
+                )
+        );
+
+        return insertSiteHasPolyA || insertSiteHasPolyT;
     }
 
     private LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
@@ -74,7 +73,7 @@ public class LineLinker
         if(!nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
             return null;
 
-        LineLink lineLink = new LineLink(maybeLinkedSite, maybeInsertSite);
+        LineLink lineLink = new LineLink(maybeInsertSite, maybeLinkedSite);
 
         maybeInsertSite.LinkedLineBreakends = lineLink;
         maybeLinkedSite.LinkedLineBreakends = lineLink;

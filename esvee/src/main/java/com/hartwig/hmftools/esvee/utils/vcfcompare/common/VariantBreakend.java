@@ -179,7 +179,7 @@ public class VariantBreakend
 
     public boolean hasMatchedBreakend() { return MatchedBreakend != null; }
 
-    public boolean isLineInsertionSite() { return LineLinker.isLineInsertionSite(this); }
+    public boolean hasPolyATail() { return LineLinker.hasPolyATail(this); }
 
     public boolean hasLineLink() { return LinkedLineBreakends != null; }
 

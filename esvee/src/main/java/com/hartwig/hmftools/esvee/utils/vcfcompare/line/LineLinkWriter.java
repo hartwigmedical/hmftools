@@ -243,7 +243,7 @@ public class LineLinkWriter
     {
         return breakend != null &&
                 (mIncludeNonPass || breakend.isPassVariant()) &&
-                breakend.isLineInsertionSite();
+                breakend.hasPolyATail();
     }
 
     private static String getUnifiedPolyACoords(VariantBreakend oldBreakend, VariantBreakend newBreakend)
