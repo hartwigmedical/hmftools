@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CRAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.nio.file.Files;
@@ -158,7 +159,8 @@ public class BamMerger
 
         for(String inputBam : mInputBams)
         {
-            String indexFile = inputBam + BAM_INDEX_EXTENSION;
+            String fileExtension = inputBam.endsWith(BAM_EXTENSION) ? BAM_INDEX_EXTENSION : CRAM_INDEX_EXTENSION;
+            String indexFile = inputBam + fileExtension;
 
             if(!Files.exists(Paths.get(indexFile)))
                 bamMissingIndexFiles.add(inputBam);
