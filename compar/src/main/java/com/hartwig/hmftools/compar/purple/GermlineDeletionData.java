@@ -20,15 +20,19 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public class GermlineDeletionData implements ComparableItem
 {
     public final GermlineDeletion Deletion;
+    public final String mComparisonChromosome;
 
     protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
     protected static final String FLD_TUMOR_STATUS = "TumorStatus";
     protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
     protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
+    protected static final String FLD_CHROMOSOME = "Chromosome";
+    protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
-    public GermlineDeletionData(final GermlineDeletion germlineDeletion)
+    public GermlineDeletionData(final GermlineDeletion germlineDeletion, final String comparisonChromosome)
     {
         Deletion = germlineDeletion;
+        mComparisonChromosome = comparisonChromosome;
     }
 
     public Category category() {
@@ -44,12 +48,17 @@ public class GermlineDeletionData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
+        String chromosomeDisplay = Deletion.Chromosome.equals(mComparisonChromosome)
+                ? Deletion.Chromosome
+                : format("%s compared(%s)", Deletion.Chromosome, mComparisonChromosome);
         List<String> values = Lists.newArrayList();
         values.add(format("%s", Deletion.Reported));
         values.add(format("%s", Deletion.NormalStatus));
         values.add(format("%s", Deletion.TumorStatus));
         values.add(format("%s", Deletion.GermlineCopyNumber));
         values.add(format("%s", Deletion.TumorCopyNumber));
+        values.add(format("%s", chromosomeDisplay));
+        values.add(format("%s", Deletion.ChromosomeBand));
         return values;
     }
 
@@ -77,6 +86,8 @@ public class GermlineDeletionData implements ComparableItem
         checkDiff(diffs, FLD_TUMOR_STATUS, Deletion.TumorStatus.toString(), otherDeletion.Deletion.TumorStatus.toString());
         checkDiff(diffs, FLD_GERMLINE_CN, Deletion.GermlineCopyNumber, otherDeletion.Deletion.GermlineCopyNumber, thresholds);
         checkDiff(diffs, FLD_TUMOR_CN, Deletion.TumorCopyNumber, otherDeletion.Deletion.TumorCopyNumber, thresholds);
+        checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDeletion.mComparisonChromosome);
+        checkDiff(diffs, FLD_CHROMOSOME_BAND, Deletion.ChromosomeBand, otherDeletion.Deletion.ChromosomeBand);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

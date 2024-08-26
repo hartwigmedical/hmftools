@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -22,6 +25,8 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.NotNull;
 
 public class GermlineDeletionComparer implements ItemComparer
 {
@@ -52,7 +57,7 @@ public class GermlineDeletionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
-                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
+                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
     }
 
     @Override
@@ -60,7 +65,7 @@ public class GermlineDeletionComparer implements ItemComparer
     {
         final List<GermlineDeletion> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
-        germlineDeletions.forEach(x -> items.add(new GermlineDeletionData(x)));
+        germlineDeletions.forEach(x -> items.add(createGermlineDeletionData(x)));
         return items;
     }
 
@@ -72,7 +77,7 @@ public class GermlineDeletionComparer implements ItemComparer
         try
         {
             List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(GermlineDeletion.generateFilename(fileSources.Purple, sampleId));
-            germlineDeletions.forEach(x -> comparableItems.add(new GermlineDeletionData(x)));
+            germlineDeletions.forEach(x -> comparableItems.add(createGermlineDeletionData(x)));
         }
         catch(IOException e)
         {
@@ -81,5 +86,25 @@ public class GermlineDeletionComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    @NotNull
+    private GermlineDeletionData createGermlineDeletionData(final GermlineDeletion deletion)
+    {
+        String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
+        return new GermlineDeletionData(deletion, comparisonChromosome);
+    }
+
+    @NotNull
+    private static String determineComparisonChromosome(final String chromosome, final boolean requiresLiftover)
+    {
+        if(requiresLiftover)
+        {
+            return HumanChromosome.fromString(chromosome).name().substring(1);
+        }
+        else
+        {
+            return chromosome;
+        }
     }
 }
