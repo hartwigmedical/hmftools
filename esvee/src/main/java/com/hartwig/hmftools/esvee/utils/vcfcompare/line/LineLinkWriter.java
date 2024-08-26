@@ -25,22 +25,28 @@ public class LineLinkWriter
 
     private final boolean mIncludeNonPass;
 
-    public LineLinkWriter(String sampleId, String outputDir, String outputId, boolean includeNonPass)
+    private final BreakendMatcher mBreakendMatcher;
+
+    public LineLinkWriter(BreakendMatcher breakendMatcher, String sampleId, String outputDir, String outputId, boolean includeNonPass)
     {
         mSampleId = sampleId;
         mOutputDir = outputDir;
         mOutputId = outputId;
 
         mIncludeNonPass = includeNonPass;
+
+        mBreakendMatcher = breakendMatcher;
     }
 
-    public LineLinkWriter(CompareConfig config)
+    public LineLinkWriter(BreakendMatcher breakendMatcher, CompareConfig config)
     {
         mSampleId = config.SampleId;
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
 
         mIncludeNonPass = config.IncludeNonPass;
+
+        mBreakendMatcher = breakendMatcher;
     }
 
     private static final String OLD_PREFIX = "Old";
@@ -55,7 +61,7 @@ public class LineLinkWriter
 
     private static final List<String> HEADER_SUFFIXES = List.of(
             "VcfType",
-            "PolyAHasLink",
+            "LinkType",
             "PolyAId",
             "PolyARemoteId",
             "OtherId",
@@ -122,7 +128,7 @@ public class LineLinkWriter
     private class OutputRow
     {
         String VcfType = "";
-        String PolyAHasLink = "";
+        String LinkType = "";
 
         String PolyAId = "";
         String OtherId = "";
@@ -157,7 +163,6 @@ public class LineLinkWriter
             }
 
             boolean hasLink = breakend.hasLineLink();
-            PolyAHasLink = String.valueOf(hasLink);
 
             LineLink lineLink;
             VariantBreakend polyASite;
@@ -165,12 +170,16 @@ public class LineLinkWriter
 
             if(hasLink)
             {
+                LinkType = breakend.LinkedLineBreakends.mType.toString();
+
                 lineLink = breakend.LinkedLineBreakends;
                 polyASite = lineLink.mPolyASite;
                 otherSite = lineLink.mOtherSite;
             }
             else
             {
+                LinkType = LineLinkType.NO_LINK.toString();
+
                 lineLink = null;
                 polyASite = breakend;
                 otherSite = null;
@@ -216,7 +225,7 @@ public class LineLinkWriter
         {
             return List.of(
                     VcfType,
-                    PolyAHasLink,
+                    LinkType,
                     PolyAId,
                     PolyARemoteId,
                     OtherId,
@@ -243,7 +252,7 @@ public class LineLinkWriter
     {
         return breakend != null &&
                 (mIncludeNonPass || breakend.isPassVariant()) &&
-                breakend.isLineInsertionSite();
+                breakend.hasPolyATail();
     }
 
     private static String getUnifiedPolyACoords(VariantBreakend oldBreakend, VariantBreakend newBreakend)
@@ -285,13 +294,13 @@ public class LineLinkWriter
         return anyPass;
     }
 
-    public void writeBreakends(BreakendMatcher breakendMatcher)
+    public void writeBreakends()
     {
         try
         {
             BufferedWriter writer = initialiseWriter();
 
-            List<BreakendMatch> breakendMatches = breakendMatcher.getBreakendMatches();
+            List<BreakendMatch> breakendMatches = mBreakendMatcher.getBreakendMatches();
 
             for(BreakendMatch match : breakendMatches)
             {

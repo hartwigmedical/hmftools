@@ -32,7 +32,7 @@ public class LineCompareTask implements Runnable
         SV_LOGGER.info("Running task: " + CompareTask.LINE_COMPARE);
 
         Map<String, List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf);
-        Map<String,List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf);
+        Map<String, List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf);
 
         mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMap, false);
 
@@ -50,18 +50,20 @@ public class LineCompareTask implements Runnable
 
         mBreakendMatcher.gatherUnmatchedVariants(oldChrBreakendMap, newChrBreakendMap);
 
-        LineLinkWriter writer = new LineLinkWriter(mConfig);
-        writer.writeBreakends(mBreakendMatcher);
+        LineLinker.inferLinks(oldChrBreakendMap, newChrBreakendMap);
+        LineLinker.inferLinks(newChrBreakendMap, oldChrBreakendMap);
 
-        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
+        LineLinkWriter writer = new LineLinkWriter(mBreakendMatcher, mConfig);
+        writer.writeBreakends();
+
+        SV_LOGGER.info("Completed task: " + CompareTask.LINE_COMPARE);
     }
 
     public static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile)
     {
         Map<String, List<VariantBreakend>> chrBreakendMap = VariantBreakend.loadVariants(vcfFile);
 
-        LineLinker lineLinker = new LineLinker(chrBreakendMap);
-        lineLinker.tryLinkLineBreakends();
+        LineLinker.linkBreakends(chrBreakendMap);
 
         return chrBreakendMap;
     }
