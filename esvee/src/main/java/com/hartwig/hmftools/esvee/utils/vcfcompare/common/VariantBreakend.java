@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
@@ -183,6 +184,8 @@ public class VariantBreakend
 
     public boolean hasLineLink() { return LinkedLineBreakends != null; }
 
+    public boolean hasLineInfoFlag() { return Context.getAttributeAsBoolean(LINE_SITE, false); }
+
     public String toString()
     {
         return String.format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]);
@@ -242,7 +245,7 @@ public class VariantBreakend
 
     public StructuralVariantType svType()
     {
-        if(OtherChromosome.equals(""))
+        if(isSingle())
         {
             return SGL;
         }
