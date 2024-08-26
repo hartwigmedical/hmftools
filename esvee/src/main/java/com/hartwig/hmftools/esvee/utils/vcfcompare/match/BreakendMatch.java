@@ -1,15 +1,22 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
 
+import java.util.StringJoiner;
+
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+
+import org.jetbrains.annotations.Nullable;
 
 public class BreakendMatch
 {
-    public VariantBreakend OldBreakend;
-    public VariantBreakend NewBreakend;
+    public @Nullable VariantBreakend OldBreakend;
+    public @Nullable VariantBreakend NewBreakend;
     public MatchType Type;
 
-    public BreakendMatch(VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType type)
+    public BreakendMatch(@Nullable VariantBreakend oldBreakend, @Nullable VariantBreakend newBreakend, MatchType type)
     {
+        if(oldBreakend == null && newBreakend == null)
+            throw new IllegalArgumentException("`oldBreakend` and `newBreakend` cannot both be null");
+
         OldBreakend = oldBreakend;
         NewBreakend = newBreakend;
         Type = type;
@@ -18,6 +25,14 @@ public class BreakendMatch
     @Override
     public String toString()
     {
-        return String.format("oldBreakend(%s) newBreakend(%s)", OldBreakend.coordStr(), NewBreakend.coordStr());
+        StringJoiner sj = new StringJoiner(" ");
+
+        if(OldBreakend != null)
+            sj.add(String.format("oldBreakend(%s)", OldBreakend.coordStr()));
+
+        if(NewBreakend != null)
+            sj.add(String.format("newBreakend(%s)", NewBreakend.coordStr()));
+
+        return sj.toString();
     }
 }
