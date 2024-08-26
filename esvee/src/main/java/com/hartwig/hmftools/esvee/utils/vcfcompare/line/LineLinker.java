@@ -83,17 +83,17 @@ public class LineLinker
 
     public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
-        SV_LOGGER.info("Linking potential LINE breakends");
+        SV_LOGGER.info("Linking breakends with LINE characteristics");
 
         int linkCount = 0;
 
         for(List<VariantBreakend> breakends : chrBreakendMap.values())
         {
-            for(VariantBreakend breakend1 : breakends)
+            for(VariantBreakend maybePolyASite : breakends)
             {
-                for(VariantBreakend breakend2 : breakends)
+                for(VariantBreakend maybeOtherSite : breakends)
                 {
-                    LineLink lineLink = tryLinkLineBreakendPair(breakend1, breakend2, LineLinkType.LINKED);
+                    LineLink lineLink = tryLinkLineBreakendPair(maybePolyASite, maybeOtherSite, LineLinkType.LINKED);
 
                     if(lineLink != null)
                         linkCount++;
@@ -107,34 +107,34 @@ public class LineLinker
         }
     }
 
-    public static void inferLinks(
-            Map<String, List<VariantBreakend>> sourceChrBreakendMap,
-            Map<String, List<VariantBreakend>> targetChrBreakendMap
-    )
-    {
-        SV_LOGGER.info("Inferring LINE links using poly A sites from different files");
+    public static void inferLinksBetweenBreakendSets(
+            Map<String, List<VariantBreakend>> chrMaybePolyASitesMap,
+            Map<String, List<VariantBreakend>> chrMaybeOtherSitesMap,
+            LineLinkType linkType
+    ){
+        SV_LOGGER.info("Inferring LINE links between sets of breakends: {}", linkType);
 
         int linkCount = 0;
 
-        for(String chromosome : sourceChrBreakendMap.keySet())
+        for(String chromosome : chrMaybePolyASitesMap.keySet())
         {
-            List<VariantBreakend> sourceBreakends = sourceChrBreakendMap.get(chromosome);
-            List<VariantBreakend> targetBreakends = targetChrBreakendMap.get(chromosome);
+            List<VariantBreakend> maybePolyASites = chrMaybePolyASitesMap.get(chromosome);
+            List<VariantBreakend> maybeOtherSites = chrMaybeOtherSitesMap.get(chromosome);
 
-            if(targetBreakends == null)
+            if(maybeOtherSites == null)
                 continue;
 
-            for(VariantBreakend sourceBreakend : sourceBreakends)
+            for(VariantBreakend maybePolyASite : maybePolyASites)
             {
-                if(!sourceBreakend.hasPolyATail())
+                if(!maybePolyASite.hasPolyATail())
                     continue;
 
-                for(VariantBreakend targetBreakend : targetBreakends)
+                for(VariantBreakend maybeOtherSite : maybeOtherSites)
                 {
-                    if(targetBreakend.hasLineLink())
+                    if(maybeOtherSite.hasLineLink())
                         continue;
 
-                    LineLink lineLink = tryLinkLineBreakendPair(sourceBreakend, targetBreakend, LineLinkType.INFERRED_OTHER);
+                    LineLink lineLink = tryLinkLineBreakendPair(maybePolyASite, maybeOtherSite, linkType);
 
                     if(lineLink != null)
                         linkCount++;
