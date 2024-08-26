@@ -271,6 +271,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                     mBamWriter.writeRead(read, partitionResults.fragmentStatus());
                 }
 
+                if(partitionResults.supplementaries() != null)
+                {
+                    partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+                }
+
                 ++mStats.LocalComplete;
             }
             else
@@ -322,6 +327,10 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             if(partitionResults.resolvedFragments() != null)
                 mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
+
+            if(partitionResults.supplementaries() != null)
+                partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+
         }
 
         mPendingIncompleteReads.clear();

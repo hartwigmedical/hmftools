@@ -36,6 +36,7 @@ import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
+import com.hartwig.hmftools.redux.write.SuppBamReprocessor;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -109,17 +110,24 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
+        // write any orphaned or remaining fragments (can be supplementaries)
+        BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
+
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
+        consensusReads.setDebugOptions(mConfig.RunChecks);
+
+        if(mConfig.UseSupplementaryBam)
+        {
+            SuppBamReprocessor.reprocessSupplememtaries(
+                    mConfig, recordWriter, partitionDataStore, fileWriterCache.getSupplementaryBamReadWriters(), consensusReads);
+        }
+
         long unmappedReads = writeUnmappedReads(fileWriterCache);
 
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
-        consensusReads.setDebugOptions(mConfig.RunChecks);
-
-        // write any orphaned or remaining fragments (can be supplementaries)
-        BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {

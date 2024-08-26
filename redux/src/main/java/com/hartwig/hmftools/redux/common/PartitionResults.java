@@ -6,17 +6,29 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import htsjdk.samtools.SAMRecord;
+
 public class PartitionResults
 {
     private List<Fragment> mResolvedFragments;
     private List<DuplicateGroup> mDuplicateGroups;
     private FragmentStatus mFragmentStatus; // set for a single non-primary fragment
+    private List<SAMRecord> mSupplementaries;
 
     public PartitionResults()
     {
         mResolvedFragments = null;
         mDuplicateGroups = null;
         mFragmentStatus = null;
+        mSupplementaries = null;
+    }
+
+    public PartitionResults(final SAMRecord supplementaryRead)
+    {
+        mResolvedFragments = null;
+        mDuplicateGroups = null;
+        mFragmentStatus = null;
+        mSupplementaries = List.of(supplementaryRead);
     }
 
     public FragmentStatus fragmentStatus() { return mFragmentStatus; }
@@ -50,12 +62,23 @@ public class PartitionResults
             mDuplicateGroups.add(umiGroup);
     }
 
+    public List<SAMRecord> supplementaries() { return mSupplementaries; }
+
+    public void addSupplementary(final SAMRecord read)
+    {
+        if(mSupplementaries == null)
+            mSupplementaries = Lists.newArrayList(read);
+        else
+            mSupplementaries.add(read);
+    }
+
     public String toString()
     {
-        return format("fragStatus(%s) resolved(%d) umiGroups(%d)",
+        return format("fragStatus(%s) resolved(%d) umiGroups(%d) supplementaries(%d)",
                 mFragmentStatus != null ? mFragmentStatus : "unset",
-                mResolvedFragments != null ? mResolvedFragments.size() : "unset",
-                mDuplicateGroups != null ? mDuplicateGroups.size() : "unset");
+                mResolvedFragments != null ? mResolvedFragments.size() : 0,
+                mDuplicateGroups != null ? mDuplicateGroups.size() : 0,
+                mSupplementaries != null ? mSupplementaries.size() : 0);
     }
 
 }
