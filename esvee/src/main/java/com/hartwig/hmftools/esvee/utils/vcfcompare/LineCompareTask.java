@@ -53,7 +53,7 @@ public class LineCompareTask implements Runnable
         LineLinkWriter writer = new LineLinkWriter(mConfig);
         writer.writeBreakends(mBreakendMatcher);
 
-        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
+        SV_LOGGER.info("Completed task: " + CompareTask.LINE_COMPARE);
     }
 
     public static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile)
