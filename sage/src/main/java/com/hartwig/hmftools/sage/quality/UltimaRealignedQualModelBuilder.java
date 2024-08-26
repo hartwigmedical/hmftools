@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.CYCLE_BASES;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
+import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,7 +24,9 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 // TODO: clean up unneeded functions.
 // TODO: run "Reformat code"
@@ -44,7 +49,7 @@ public class UltimaRealignedQualModelBuilder
         private final SimpleVariant mVariant;
         private final UltimaQualModel mBaseQualModel;
         private final int mVarReadIndexOffset;
-        
+
         public UltimaRealignedQualModel(final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset)
         {
             super(baseQualModel.type());
@@ -120,35 +125,87 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
-    public static boolean isCleanSnv(VariantReadContext readContext)
+    private static boolean isCleanSnv(VariantReadContext readContext)
     {
         if(!readContext.variant().isSNV())
             return false;
+
         byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         if(coreReadBases.length != readContext.RefBases.length)
             return false;
+
         for(int i = 0; i < coreReadBases.length; ++i)
         {
             if(i == readContext.leftCoreLength())
                 continue;  // the SNV base
+
             if(coreReadBases[i] != readContext.RefBases[i])
                 return false;
         }
+
         return true;
     }
 
-    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, final boolean skipSandwiched)
+    private static boolean readCoreCigarContainsElement(final VariantReadContext readContext, final CigarElement el)
     {
-        if(readContext.variant().isInsert())
+        List<CigarElement> cigar = TextCigarCodec.decode(readContext.readCigar()).getCigarElements();
+        int readIndex = 0;
+        for(CigarElement cigarEl : cigar)
+        {
+            if(readIndex > readContext.CoreIndexEnd)
+            {
+                break;
+            }
+
+            if(!cigarEl.getOperator().consumesReadBases())
+            {
+                if(readIndex > readContext.CoreIndexStart && el.equals(cigarEl))
+                {
+                    return true;
+                }
+                continue;
+            }
+
+            int readIndexEnd = readIndex + cigarEl.getLength() - 1;
+            if(readIndexEnd < readContext.CoreIndexStart)
+            {
+                readIndex += cigarEl.getLength();
+                continue;
+            }
+
+            int readIndexStart = max(readIndex, readContext.CoreIndexStart);
+            readIndexEnd = min(readIndexEnd, readContext.CoreIndexEnd);
+            if(el.getLength() == readIndexEnd - readIndexStart + 1 && el.getOperator() == cigarEl.getOperator())
+            {
+                return true;
+            }
+
+            readIndex += cigarEl.getLength();
+        }
+
+        return false;
+    }
+
+    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    {
+        return buildRealignedUltimaQualModels(readContext, ultimaQualCalculator, false);
+    }
+
+    private static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, boolean skipSandwichMasking)
+    {
+        if(!skipSandwichMasking && readContext.variant().isInsert())
         {
             int insertLength = readContext.alt().length() - 1;
-            if(!readContext.readCigar().contains(insertLength + "I"))  // TODO: should handle this better
-                return null;
+            if(!readCoreCigarContainsElement(readContext, new CigarElement(insertLength, I)))
+            {
+                return Lists.newArrayList();
+            }
         }
+
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         MergedHomopolymers mergedHomopolymers;
-        if(skipSandwiched)
+        if(skipSandwichMasking)
             mergedHomopolymers = new MergedHomopolymers(refHomopolymers, readHomopolymers, false);
         else
             mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, false);
@@ -178,17 +235,17 @@ public class UltimaRealignedQualModelBuilder
         //                        .map(x -> (UltimaQualModel) x)
         //                        .collect(Collectors.toList());
 
-        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwiched)
+        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwichMasking)
         {
             return buildRealignedUltimaQualModels(readContext, ultimaQualCalculator, true);  // TODO: should handle skipping first/last sandwiched?
         }
         else if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
         {
             SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
-            return null;
+            return Lists.newArrayList();
         }
         else if(isCleanSnv(readContext))
-            realignedQualModels = Lists.newArrayList();  // if a clean SNV, want to take max of quals, not min
+            realignedQualModels = Lists.newArrayList();  // TODO: if a clean SNV, want to take max of quals, not min
 
         return realignedQualModels;
     }
@@ -306,6 +363,8 @@ public class UltimaRealignedQualModelBuilder
                         int extraRefIndex = 1;
                         Homopolymer forwardRefHompolymer = refHomopolymers.get(refIndex + extraRefIndex);
                         int extraRefBasesConsumed = forwardRefHompolymer.Length;
+                        int refCycleCount = cycleCount(refHomopolymers, refIndex);
+                        int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
                             if(forwardRefHompolymer.Base == refHomopolymer.Base && (!requireCycleShift || refCycleCount != readCycleCount))
@@ -363,6 +422,8 @@ public class UltimaRealignedQualModelBuilder
                         int extraReadIndex = 1;
                         Homopolymer forwardReadHompolymer = readHomopolymers.get(readIndex + extraReadIndex);
                         int extraReadBasesConsumed = forwardReadHompolymer.Length;
+                        int refCycleCount = cycleCount(refHomopolymers, refIndex);
+                        int readCycleCount = cycleCount(readHomopolymers, readIndex);
                         while(true)
                         {
                             if(forwardReadHompolymer.Base == refHomopolymer.Base && (!requireCycleShift || refCycleCount != readCycleCount))

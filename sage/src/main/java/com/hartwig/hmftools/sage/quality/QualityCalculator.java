@@ -63,7 +63,7 @@ public class QualityCalculator
 
     public List<UltimaQualModel> createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
-        return mUltimaQualCalculator != null ? UltimaRealignedQualModelBuilder.buildRealignedUltimaQualModels(readContext, mUltimaQualCalculator, false) : null;
+        return mUltimaQualCalculator != null ? UltimaRealignedQualModelBuilder.buildRealignedUltimaQualModels(readContext, mUltimaQualCalculator) : null;
     }
 
     public static int modifiedMapQuality(

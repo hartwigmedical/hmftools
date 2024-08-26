@@ -316,4 +316,51 @@ public final class CigarUtils
 
         return NO_POSITION_INFO;
     }
+
+    public static List<CigarOperator> expandCigarElements(final List<CigarElement> elements)
+    {
+        List<CigarOperator> ops = Lists.newArrayList();
+        for(CigarElement el : elements)
+        {
+            for(int i = 0; i < el.getLength(); ++i)
+            {
+                ops.add(el.getOperator());
+            }
+        }
+
+        return ops;
+    }
+
+    public static List<CigarElement> collapseCigarOps(final List<CigarOperator> ops)
+    {
+        List<CigarElement> elements = Lists.newArrayList();
+        CigarOperator currentOp = null;
+        int currentLength = 0;
+        for(CigarOperator op : ops)
+        {
+            if(currentOp == null)
+            {
+                currentOp = op;
+                currentLength = 1;
+                continue;
+            }
+
+            if(currentOp == op)
+            {
+                currentLength++;
+                continue;
+            }
+
+            elements.add(new CigarElement(currentLength, currentOp));
+            currentOp = op;
+            currentLength = 1;
+        }
+
+        if(currentLength > 0)
+        {
+            elements.add(new CigarElement(currentLength, currentOp));
+        }
+
+        return elements;
+    }
 }
