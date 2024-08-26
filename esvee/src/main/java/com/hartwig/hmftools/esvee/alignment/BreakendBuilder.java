@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -12,8 +14,10 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_A
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
@@ -87,10 +91,8 @@ public class BreakendBuilder
             // check for cigar-based INDELs and SGLs with soft-clips
             boolean formsIndel = formIndelBreakends(singleAlignment);
 
-            if(!formsIndel && singleAlignment.maxSoftClipLength() >= ALIGNMENT_MIN_SOFT_CLIP)
-            {
-                formSingleBreakend(validAlignments.get(0), lowQualAlignments);
-            }
+            if(!formsIndel)
+                formSingleBreakend(singleAlignment, lowQualAlignments);
         }
         else
         {
@@ -291,6 +293,11 @@ public class BreakendBuilder
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
         }
 
+        int requiredSoftClipLength = isLineInsertion(insertedBases, orientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
+
+        if(softClipLength < requiredSoftClipLength)
+            return;
+
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
 
@@ -376,26 +383,35 @@ public class BreakendBuilder
         mAssemblyAlignment.breakends().get(1).setOtherBreakend(mAssemblyAlignment.breakends().get(0));
     }
 
+    private static boolean isLineInsertion(final String insertedBases, final Orientation orientation)
+    {
+        return findLineSequenceCount(
+                insertedBases.getBytes(), 0, insertedBases.length() - 1,
+                orientation.isForward() ? LINE_BASE_T : LINE_BASE_A) > 0;
+    }
+
     private boolean checkOuterSingle(
             final AlignData alignment, boolean checkStart, int nextSegmentIndex, final List<AlignData> zeroQualAlignments)
     {
         // switch the reference coord and CIGAR end being check if the segment was reverse aligned
-        boolean sqlRefEnd = alignment.orientation().isForward() ? checkStart : !checkStart;
+        boolean sglRefBaseAtEnd = alignment.orientation().isForward() ? checkStart : !checkStart;
 
-        int softClipLength = sqlRefEnd ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
-
-        if(softClipLength < ALIGNMENT_MIN_SOFT_CLIP)
-            return false;
+        int softClipLength = sglRefBaseAtEnd ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
 
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
-        int sglPosition = sqlRefEnd ? alignment.RefLocation.start() : alignment.RefLocation.end();
+        int sglPosition = sglRefBaseAtEnd ? alignment.RefLocation.start() : alignment.RefLocation.end();
 
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
 
         Orientation sglOrientation = segmentOrientation(alignment, !checkStart);
+
+        int requiredSoftClipLength = isLineInsertion(insertSequence, sglOrientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
+
+        if(softClipLength < requiredSoftClipLength)
+            return false;
 
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);

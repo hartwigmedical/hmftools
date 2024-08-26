@@ -95,10 +95,7 @@ public class AlignmentWriter
 
             sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
-
-            boolean phasetSetMerged = assemblyAlignment.phaseSet() != null && assemblyAlignment.phaseSet().merged();
-            sj.add(String.valueOf(phasetSetMerged));
-
+            sj.add(String.valueOf(assemblyAlignment.isMerged()));
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
             sj.add(assemblyAlignment.fullSequence());

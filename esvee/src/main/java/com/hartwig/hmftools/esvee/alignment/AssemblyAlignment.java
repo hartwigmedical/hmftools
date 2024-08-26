@@ -95,6 +95,7 @@ public class AssemblyAlignment
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
     public PhaseSet phaseSet() { return mPhaseSet; }
+    public boolean isMerged() { return mPhaseSet != null && mPhaseSet.merged(); }
 
     public List<Breakend> breakends() { return mBreakends; }
     public void addBreakend(final Breakend breakend) { mBreakends.add(breakend); }

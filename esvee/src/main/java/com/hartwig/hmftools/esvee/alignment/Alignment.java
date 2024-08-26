@@ -152,7 +152,7 @@ public class Alignment
                 return;
             }
 
-            if(assemblyAlignment.phaseSet().merged())
+            if(assemblyAlignment.isMerged())
             {
                 writeAssemblyData(assemblyAlignment, Collections.emptyList(), Collections.emptyList());
                 return;

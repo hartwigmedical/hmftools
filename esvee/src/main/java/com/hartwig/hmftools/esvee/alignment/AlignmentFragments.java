@@ -45,7 +45,7 @@ public class AlignmentFragments
 
         List<JunctionAssembly> assemblies;
 
-        if(!mAssemblyAlignment.phaseSet().mergedPhaseSets().isEmpty())
+        if(mAssemblyAlignment.phaseSet() != null && !mAssemblyAlignment.phaseSet().mergedPhaseSets().isEmpty())
         {
             assemblies = Lists.newArrayList(mAssemblyAlignment.assemblies());
             mAssemblyAlignment.phaseSet().mergedPhaseSets().forEach(x -> assemblies.addAll(x.assemblies()));
