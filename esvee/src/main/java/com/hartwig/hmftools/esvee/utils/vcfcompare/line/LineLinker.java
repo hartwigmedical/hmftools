@@ -3,30 +3,21 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
+import org.jetbrains.annotations.Nullable;
+
 public class LineLinker
 {
-    private final Map<String, List<VariantBreakend>> mChrBreakendMap;
-    private final List<LineLink> mLinkedBreakends;
-    private int mLinkCount = 0;
-
     private static final int MIN_POLY_A_OR_T_LENGTH = 10;
     private static final String POLY_A_SEQUENCE = "A".repeat(MIN_POLY_A_OR_T_LENGTH);
     private static final String POLY_T_SEQUENCE = "T".repeat(MIN_POLY_A_OR_T_LENGTH);
 
     private static final int POLY_A_TO_OTHER_SITE_UPPER_DISTANCE = 40;
     private static final int POLY_A_TO_OTHER_SITE_LOWER_DISTANCE = 30;
-
-    public LineLinker(Map<String, List<VariantBreakend>> chrBreakendMap)
-    {
-        mChrBreakendMap = chrBreakendMap;
-        mLinkedBreakends = new ArrayList<>();
-    }
 
     public static boolean hasPolyATail(VariantBreakend breakend)
     {
@@ -64,51 +55,96 @@ public class LineLinker
         return meetsPolyACriteria || meetsPolyTCriteria;
     }
 
-    private LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private static boolean canLinkBreakendsAsLinePair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
-            return null;
+            return false;
 
         if(maybeInsertSite == maybeLinkedSite)
-            return null;
+            return false;
 
-        if(!nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite))
-            return null;
+        return nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite);
+    }
 
-        LineLink lineLink = new LineLink(maybeInsertSite, maybeLinkedSite);
+    private static @Nullable LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite, LineLinkType linkType)
+    {
+        LineLink lineLink = null;
 
-        maybeInsertSite.LinkedLineBreakends = lineLink;
-        maybeLinkedSite.LinkedLineBreakends = lineLink;
-        mLinkCount++;
+        if(canLinkBreakendsAsLinePair(maybeInsertSite, maybeLinkedSite))
+        {
+            lineLink = new LineLink(maybeInsertSite, maybeLinkedSite, linkType);
+
+            maybeInsertSite.LinkedLineBreakends = lineLink;
+            maybeLinkedSite.LinkedLineBreakends = lineLink;
+        }
 
         return lineLink;
     }
 
-    public void tryLinkLineBreakends()
+    public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
         SV_LOGGER.info("Linking potential LINE breakends");
 
-        for(List<VariantBreakend> breakends : mChrBreakendMap.values())
+        int linkCount = 0;
+
+        for(List<VariantBreakend> breakends : chrBreakendMap.values())
         {
             for(VariantBreakend breakend1 : breakends)
             {
                 for(VariantBreakend breakend2 : breakends)
                 {
-                    LineLink lineLink = tryLinkLineBreakendPair(breakend1, breakend2);
+                    LineLink lineLink = tryLinkLineBreakendPair(breakend1, breakend2, LineLinkType.LINKED);
 
                     if(lineLink != null)
-                    {
-                        mLinkedBreakends.add(lineLink);
-                    }
+                        linkCount++;
                 }
             }
         }
 
-        if(mLinkCount > 0)
+        if(linkCount > 0)
         {
-            SV_LOGGER.debug("Formed {} LINE links", mLinkCount);
+            SV_LOGGER.debug("Formed {} LINE links", linkCount);
         }
     }
 
-    public List<LineLink> getLinkedBreakends(){ return mLinkedBreakends; }
+    public static void inferLinks(
+            Map<String, List<VariantBreakend>> sourceChrBreakendMap,
+            Map<String, List<VariantBreakend>> targetChrBreakendMap
+    )
+    {
+        SV_LOGGER.info("Inferring LINE links using poly A sites from different files");
+
+        int linkCount = 0;
+
+        for(String chromosome : sourceChrBreakendMap.keySet())
+        {
+            List<VariantBreakend> sourceBreakends = sourceChrBreakendMap.get(chromosome);
+            List<VariantBreakend> targetBreakends = targetChrBreakendMap.get(chromosome);
+
+            if(targetBreakends == null)
+                continue;
+
+            for(VariantBreakend sourceBreakend : sourceBreakends)
+            {
+                if(!sourceBreakend.hasPolyATail())
+                    continue;
+
+                for(VariantBreakend targetBreakend : targetBreakends)
+                {
+                    if(targetBreakend.hasLineLink())
+                        continue;
+
+                    LineLink lineLink = tryLinkLineBreakendPair(sourceBreakend, targetBreakend, LineLinkType.INFERRED_OTHER);
+
+                    if(lineLink != null)
+                        linkCount++;
+                }
+            }
+        }
+
+        if(linkCount > 0)
+        {
+            SV_LOGGER.debug("Inferred {} LINE links", linkCount);
+        }
+    }
 }
