@@ -175,16 +175,15 @@ public class VariantFilters
 
     private boolean belowMinAnchorLength(final Variant var)
     {
+        if(var.isLineSite())
+            return false;
+
         // skip for chained breakends
         if(belowMinAnchorLength(var.breakendStart()))
             return false;
 
         if(var.isSgl())
         {
-            // skip if a line site
-            if(var.breakendStart().isLine())
-                return false;
-
             byte[] insertSequence = var.insertSequence().getBytes();
             List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence);
             int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length - 1, repeats);
