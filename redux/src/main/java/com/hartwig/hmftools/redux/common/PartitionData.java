@@ -217,7 +217,7 @@ public class PartitionData
         return processIncompleteFragments(reads, true);
     }
 
-    public PartitionResults processIncompleteFragments(final List<SAMRecord> reads, boolean checkSupplentaries)
+    public PartitionResults processIncompleteFragments(final List<SAMRecord> reads, boolean checkSupplementaries)
     {
         try
         {
@@ -227,7 +227,7 @@ public class PartitionData
 
             for(SAMRecord read : reads)
             {
-                ReadMatch readMatch = handleIncompleteFragment(read, checkSupplentaries);
+                ReadMatch readMatch = handleIncompleteFragment(read, checkSupplementaries);
 
                 if(readMatch.Status != null && readMatch.Status.isResolved())
                 {
@@ -235,7 +235,7 @@ public class PartitionData
                     fragment.setStatus(readMatch.Status);
                     partitionResults.addResolvedFragment(fragment);
                 }
-                else if(!readMatch.Matched && checkSupplentaries && isUnhandledSupplementary(read))
+                else if(!readMatch.Matched && checkSupplementaries && isUnhandledSupplementary(read))
                 {
                     partitionResults.addSupplementary(read);
                 }
@@ -302,9 +302,6 @@ public class PartitionData
             return new ReadMatch(true, resolvedState.Status);
         }
 
-        if(checkSupplementary && isUnhandledSupplementary(read))
-            return NO_READ_MATCH;
-
         DuplicateGroup duplicateGroup = mDuplicateGroupMap.get(read.getReadName());
 
         if(duplicateGroup != null)
@@ -335,6 +332,9 @@ public class PartitionData
 
             return NO_READ_MATCH;
         }
+
+        if(checkSupplementary && isUnhandledSupplementary(read))
+            return NO_READ_MATCH;
 
         // store the new fragment
         mIncompleteFragments.put(read.getReadName(), new Fragment(read));

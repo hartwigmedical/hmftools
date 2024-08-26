@@ -35,10 +35,13 @@ public class SuppBamReprocessor implements Callable
     private final ConsensusReads mConsensusReads;
 
     private final SamReader mBamReader;
+    private final String mBamFilename;
     private final Map<String,List<SAMRecord>> mPendingReads;
     private int mCacheCount;
+    private int mProcessedCount;
 
     private static final int READ_BATCH_SIZE = 10000;
+    private static final int READ_LOG_COUNT = 100000;
 
     public SuppBamReprocessor(
             final ReduxConfig config, final String bamFilename, final BamWriter bamWriter,
@@ -46,11 +49,13 @@ public class SuppBamReprocessor implements Callable
     {
         mConfig = config;
         mBamWriter = bamWriter;
+        mBamFilename = bamFilename;
         mPartitionDataStore = partitionDataStore;
         mConsensusReads = consensusReads;
 
         mPendingReads = Maps.newHashMap();
         mCacheCount = 0;
+        mProcessedCount = 0;
 
         mBamReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(config.RefGenomeFile)).open(new File(bamFilename));
@@ -67,6 +72,9 @@ public class SuppBamReprocessor implements Callable
         }
 
         processCachedReads();
+        mPendingReads.clear();
+
+        RD_LOGGER.debug("finished reprocessing {} supplementaries from {}", mProcessedCount, mBamFilename);
 
         return (long) 0;
     }
@@ -92,11 +100,18 @@ public class SuppBamReprocessor implements Callable
             processCachedReads();
             mCacheCount = 0;
         }
+
+        ++mProcessedCount;
+
+        if((mProcessedCount % READ_LOG_COUNT) == 0)
+        {
+            RD_LOGGER.debug("reprocessed {} supplementaries from {}", mProcessedCount, mBamFilename);
+        }
     }
 
     private void processCachedReads()
     {
-        RD_LOGGER.debug("reprocessing {} supplementary reads", mCacheCount);
+        // RD_LOGGER.trace("reprocessing {} supplementary reads", mCacheCount);
 
         for(Map.Entry<String,List<SAMRecord>> entry : mPendingReads.entrySet())
         {
@@ -105,7 +120,7 @@ public class SuppBamReprocessor implements Callable
 
             PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
-            PartitionResults partitionResults = partitionData.processIncompleteFragments(reads, false);
+            PartitionResults partitionResults = partitionData.processIncompleteFragments(reads, true);
 
             if(partitionResults == null)
                 return;
@@ -121,12 +136,13 @@ public class SuppBamReprocessor implements Callable
             }
 
             if(partitionResults.resolvedFragments() != null)
-            {
                 mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
-            }
-        }
 
-        mPendingReads.clear();
+            if(partitionResults.supplementaries() != null)
+                partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+
+            reads.clear();
+        }
     }
 
     public static void reprocessSupplememtaries(
@@ -135,13 +151,15 @@ public class SuppBamReprocessor implements Callable
     {
         suppBamWriters.forEach(x -> x.close());
 
+        long totalSupplementaries = suppBamWriters.stream().mapToInt(x -> x.readCount()).sum();
+
         List<SuppBamReprocessor> reprocessTasks = suppBamWriters.stream()
                 .map(x -> new SuppBamReprocessor(config, x.filename(), bamWriter, partitionDataStore, consensusReads))
                 .collect(Collectors.toList());
 
         List<Callable> callableTasks = reprocessTasks.stream().collect(Collectors.toList());
 
-        RD_LOGGER.info("reprocessing {} supplementary BAMs", callableTasks.size());
+        RD_LOGGER.info("reprocessing {} supplementary reads from {} BAMs", totalSupplementaries, callableTasks.size());
 
         if(!TaskExecutor.executeTasks(callableTasks, config.Threads))
         {

@@ -18,6 +18,7 @@ public class SuppBamWriter
 {
     private final String mFilename;
     private final SAMFileWriter mBamWriter;
+    private int mReadCount;
 
     public SuppBamWriter(final String filename, final ReduxConfig config)
     {
@@ -30,10 +31,11 @@ public class SuppBamWriter
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
         mBamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
+        mReadCount = 0;
     }
 
     public String filename() { return mFilename; }
-
+    public int readCount() { return mReadCount; }
 
     public static String formBamFilename(final ReduxConfig config, final String multiId)
     {
@@ -50,6 +52,7 @@ public class SuppBamWriter
     public void writeRecord(final SAMRecord read)
     {
         mBamWriter.addAlignment(read);
+        ++mReadCount;
     }
 
     public void close() { mBamWriter.close(); }
