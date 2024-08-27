@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
@@ -31,7 +32,13 @@ public final class AssemblyUtils
 {
     public static int mismatchesPerComparisonLength(final int sequenceLength)
     {
-        return (int)floor(log10(sequenceLength + 1));
+        if(sequenceLength < 15)
+            return 0;
+
+        if(sequenceLength <= 100)
+            return 1;
+
+        return (int)ceil(sequenceLength / 200.0) + 1;
     }
 
     public static int readQualFromJunction(final Read read, final Junction junction)

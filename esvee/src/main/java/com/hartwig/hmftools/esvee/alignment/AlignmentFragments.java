@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
@@ -269,9 +270,10 @@ public class AlignmentFragments
             if(svType == DEL)
                 indelLength = -abs(indelLength);
 
-            setValidFragmentLength = true;
             inferredFragmentLength = abs(read.insertSize()) + indelLength;
             read.setInferredFragmentLength(inferredFragmentLength);
+
+            setValidFragmentLength = inferredFragmentLength <= DISCORDANT_FRAGMENT_LENGTH;
         }
 
         boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);

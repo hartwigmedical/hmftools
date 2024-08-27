@@ -156,6 +156,9 @@ public class PhaseSetBuilder
 
             applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching);
 
+            extensionCandidate.Assembly.setOutcome(LINKED);
+            extensionCandidate.SecondAssembly.setOutcome(LINKED);
+
             mSplitLinks.add(assemblyLink);
             mLocallyLinkedAssemblies.add(extensionCandidate.Assembly);
             mLocallyLinkedAssemblies.add(extensionCandidate.SecondAssembly);
@@ -208,15 +211,16 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            if(mLocallyLinkedAssemblies.contains(assembly1))
-                continue;
+            // allow linking assemblies to be included, so as to allow secondary links to be found
+            // if(mLocallyLinkedAssemblies.contains(assembly1))
+            //    continue;
 
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(mLocallyLinkedAssemblies.contains(assembly2))
-                    continue;
+                // if(mLocallyLinkedAssemblies.contains(assembly2))
+                //    continue;
 
                 // avoid a second check of the same pair
                 if(existingCandidates.stream().anyMatch(x -> x.Assembly == assembly1 && x.SecondAssembly == assembly2))
@@ -493,6 +497,9 @@ public class PhaseSetBuilder
         if(isPrimaryLink)
         {
             mSplitLinks.add(assemblyLink);
+
+            assemblyLink.first().setOutcome(LINKED);
+            assemblyLink.second().setOutcome(LINKED);
         }
         else
         {
@@ -653,12 +660,6 @@ public class PhaseSetBuilder
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
-
-        if(assembly1.outcome() == UNSET)
-            assembly1.setOutcome(LINKED);
-
-        if(assembly2.outcome() == UNSET)
-            assembly2.setOutcome(LINKED);
 
         return true;
     }

@@ -39,8 +39,12 @@ public class JunctionAssemblyTest
     public void testMiscAssemblyFunctions()
     {
         assertEquals(0, mismatchesPerComparisonLength(1));
-        assertEquals(1, mismatchesPerComparisonLength(10));
-        assertEquals(2, mismatchesPerComparisonLength(100));
+        assertEquals(1, mismatchesPerComparisonLength(15));
+        assertEquals(1, mismatchesPerComparisonLength(100));
+        assertEquals(2, mismatchesPerComparisonLength(101));
+        assertEquals(3, mismatchesPerComparisonLength(201));
+        assertEquals(3, mismatchesPerComparisonLength(399));
+        assertEquals(4, mismatchesPerComparisonLength(500));
     }
 
     @Test
