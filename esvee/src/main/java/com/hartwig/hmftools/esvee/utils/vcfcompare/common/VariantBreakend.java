@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
@@ -241,7 +242,15 @@ public class VariantBreakend
         return String.format("%.0f", Context.getPhredScaledQual());
     }
 
-    public String fragsStr(String sampleId){ return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS); }
+    public String fragsStr(String sampleId)
+    {
+        if(mSvCaller == SvCaller.GRIDSS)
+        {
+            return isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
+        }
+
+        return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS);
+    }
 
     public StructuralVariantType svType()
     {
