@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
-import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -150,44 +149,54 @@ public class PartitionSlicer
             SV_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
         }
 
+        if(mReadFilters.ignoreRead(record))
+            return;
+
         record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, mCurrentSampleId);
 
-        int filters = mReadFilters.checkFilters(record);
+        PrepRead read = new PrepRead(record);
 
-        if(filters == 0 || filters == ReadFilterType.MIN_MAP_QUAL.flag()) // allow reads only filtered by low map quality through
+        mReadFilters.checkFilters(read);
+
+        if(mConfig.PerfDebug)
         {
-            PrepRead read = PrepRead.from(record);
-            read.setFilters(filters);
+            for(ReadFilterType type : ReadFilterType.values())
+            {
+                if(type.isSet(read.filters()))
+                    ++mStats.ReadFilterCounts[type.index()];
+            }
+        }
+
+        if(read.unfiltered() || read.filters() == ReadFilterType.MIN_MAP_QUAL.flag())
+        {
+            // allow reads only filtered by low map quality through
             read.setReadType(ReadType.JUNCTION);
 
             mJunctionTracker.processRead(read);
         }
         else
         {
-            processFilteredRead(record, filters);
+            processFilteredRead(read);
         }
     }
 
-    private void processFilteredRead(final SAMRecord record, final int filters)
+    private void processFilteredRead(final PrepRead read)
     {
         // check criteria to keep an otherwise filtered, to see if it supports a non-filtered read or location
         if(mConfig.PerfDebug)
         {
             for(ReadFilterType type : ReadFilterType.values())
             {
-                if(type.isSet(filters))
+                if(type.isSet(read.filters()))
                     ++mStats.ReadFilterCounts[type.index()];
             }
         }
 
         // check for any evidence of support for an SV
-        boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(record, filters);
+        boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(read);
 
         if(!isSupportCandidate && !mConfig.writeReads())
             return;
-
-        PrepRead read = PrepRead.from(record);
-        read.setFilters(filters);
 
         if(isSupportCandidate)
             read.setReadType(ReadType.CANDIDATE_SUPPORT);

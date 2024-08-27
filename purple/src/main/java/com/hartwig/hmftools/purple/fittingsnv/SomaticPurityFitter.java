@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.purple.fittingsnv;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
@@ -26,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+
+import javax.swing.DefaultListSelectionModel;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -289,8 +294,25 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
-            if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
-                variantVafs.add(vaf);
+            if(variant.isHotspot())
+            {
+                if(vaf > SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
+                {
+                    vaf = SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
+                    variantVafs.add(vaf);
+                }
+                else
+                {
+                    variantVafs.add(vaf);
+                }
+            }
+            else
+            {
+                if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                {
+                    variantVafs.add(vaf);
+                }
+            }
         }
 
         if(variantVafs.isEmpty())
@@ -298,33 +320,35 @@ public class SomaticPurityFitter
 
         Collections.sort(variantVafs);
 
-        // replace median VAF with VAF at 75th percentile
-        
-//        double medianVaf;
-//        int medianIndex = variantVafs.size() / 2;
-//
-//        if((variantVafs.size() % 2) == 0)
-//        {
-//            medianVaf = (variantVafs.get(medianIndex - 1) + variantVafs.get(medianIndex)) * 0.5;
-//        }
-//        else
-//        {
-//            medianVaf = variantVafs.get(medianIndex);
-//        }
-//
-//        double somaticPurity = medianVaf * 2;
-        
         double vaf75thPercentile;
-        double index75thPercentile = 0.75 * (variantVafs.size() + 1);
-        
-        int lowerIndex = (int) index75thPercentile;
-        int upperIndex = lowerIndex + 1;
 
-        vaf75thPercentile = variantVafs.get(lowerIndex) + (index75thPercentile - lowerIndex) * (variantVafs.get(upperIndex) - variantVafs.get(lowerIndex));
+        if(variantVafs.size() >= 4)
+        {
+            double index75thPercentile = 0.75 * (variantVafs.size() + 1);
+
+            int lowerIndex = min((int)floor(index75thPercentile), variantVafs.size() - 2);
+            int upperIndex = lowerIndex + 1;
+
+            double lowerVaf = variantVafs.get(lowerIndex);
+            double upperVaf = variantVafs.get(upperIndex);
+
+            vaf75thPercentile = lowerVaf + (index75thPercentile - lowerIndex) * (upperVaf - lowerVaf);
+        }
+        else if(variantVafs.size() == 3)
+        {
+            vaf75thPercentile = variantVafs.get(1);
+        }
+        else if(variantVafs.size() == 2)
+        {
+            vaf75thPercentile = (variantVafs.get(0) + variantVafs.get(1)) * 0.5;
+        }
+        else
+        {
+            vaf75thPercentile = variantVafs.get(0);
+        }
 
         double somaticPurity = vaf75thPercentile * 2;
-        
-        
+
         PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
         FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);

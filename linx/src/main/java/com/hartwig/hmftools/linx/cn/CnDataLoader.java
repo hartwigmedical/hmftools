@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.io.IOException;
@@ -197,10 +196,7 @@ public class CnDataLoader
 
                     // a match has been found
 
-                    // don't override with a duplicate breakend
-                    boolean isDuplicateSgl = svData.type() == SGL && svData.startLinkedBy().contains(ASSEMBLY_TYPE_EQV);
-
-                    if(cnData.getStructuralVariantData() == null || !isDuplicateSgl)
+                    if(cnData.getStructuralVariantData() == null)
                     {
                         cnData.setStructuralVariantData(svData, isStart);
                     }
@@ -399,10 +395,6 @@ public class CnDataLoader
                     StructuralVariantData svData = findSvData(cnData, 1);
 
                     if(lohLost && cnData.matchesSV(true) && svData == null)
-                    {
-                        lohLost = false;
-                    }
-                    else if(svData != null && svData.type() == SGL && svData.startLinkedBy().contains(ASSEMBLY_TYPE_EQV))
                     {
                         lohLost = false;
                     }

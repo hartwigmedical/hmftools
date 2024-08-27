@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -127,7 +128,8 @@ public class ComparConfig
         }
         else
         {
-            final String[] categoryStrings = configBuilder.getValue(CATEGORIES).split(CSV_DELIM);
+            String itemDelim = categoriesStr.contains(ITEM_DELIM) ? ITEM_DELIM : CSV_DELIM;
+            final String[] categoryStrings = categoriesStr.split(itemDelim);
 
             for(String catStr : categoryStrings)
             {

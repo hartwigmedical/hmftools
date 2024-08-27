@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -14,7 +13,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
-import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
 import java.util.List;
@@ -24,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class Breakend implements Comparable<Breakend>
@@ -48,6 +45,7 @@ public class Breakend implements Comparable<Breakend>
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
+    private int mIncompleteFragmentCount;
     private final Set<FilterType> mFilters;
 
     public Breakend(
@@ -74,6 +72,7 @@ public class Breakend implements Comparable<Breakend>
         mFilters = Sets.newHashSet();
         mFragmentLengthTotal = 0;
         mFragmentLengthCount = 0;
+        mIncompleteFragmentCount = 0;
     }
 
     public int id() { return mId; }
@@ -116,10 +115,19 @@ public class Breakend implements Comparable<Breakend>
         return mFragmentLengthCount > 0 ? (int)round(mFragmentLengthTotal / (double)mFragmentLengthCount) : 0;
     }
 
-    public void addInferredFragmentLength(final int length)
+    public int incompleteFragmentCount() { return mIncompleteFragmentCount; }
+
+    public void addInferredFragmentLength(final int length, boolean isComplete)
     {
-        ++mFragmentLengthCount;
-        mFragmentLengthTotal += length;
+        if(isComplete && length > 0)
+        {
+            ++mFragmentLengthCount;
+            mFragmentLengthTotal += length;
+        }
+        else
+        {
+            ++mIncompleteFragmentCount;
+        }
     }
 
     public boolean isSingle() { return mOtherBreakend == null; }

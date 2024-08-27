@@ -244,8 +244,7 @@ public class CohortDataWriter
                 }
 
                 // assembly info
-                writer.write(String.format(",%s,%s",
-                        var.getAssemblyData(true), var.getAssemblyData(false)));
+                writer.write(String.format(",%s,%s", var.assemblyInfoStr(true), var.assemblyInfoStr(false)));
 
                 // chain info
                 final SvChain chain = cluster.findChain(var);

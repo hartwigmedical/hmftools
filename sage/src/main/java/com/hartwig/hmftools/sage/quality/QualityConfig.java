@@ -33,7 +33,7 @@ public class QualityConfig
     public QualityConfig(final ConfigBuilder configBuilder)
     {
         JitterMinRepeatCount = configBuilder.getInteger(JITTER_MIN_REPEAT_COUNT);
-        BaseQualityFixedPenalty = configBuilder.getInteger(BASE_QUAL_FIXED_PENALTY);
+        BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         ReadMapQualEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
@@ -63,9 +63,6 @@ public class QualityConfig
     {
         configBuilder.addInteger(
                 JITTER_MIN_REPEAT_COUNT,"Minimum repeat count before applying jitter penalty", DEFAULT_JITTER_MIN_REPEAT_COUNT);
-
-        configBuilder.addInteger(
-                BASE_QUAL_FIXED_PENALTY, "Fixed penalty to apply to base quality", DEFAULT_BASE_QUAL_FIXED_PENALTY);
 
         configBuilder.addInteger(
                 MAP_QUAL_FIXED_PENALTY,  "Fixed penalty to apply to map quality", DEFAULT_MAP_QUAL_FIXED_PENALTY);

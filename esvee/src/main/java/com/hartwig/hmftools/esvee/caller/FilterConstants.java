@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -35,9 +36,9 @@ public class FilterConstants
     public final double MinAfSgl;
     public final double MinAfHotspot;
 
-    public static final double DEFAULT_MIN_AF_JUNCTION = 0.01;
     public static final double DEFAULT_MIN_AF_SGL = 0.05;
     public static final double DEFAULT_MIN_AF_HOTSPOT = 0.001;
+    public static final double DEFAULT_MIN_AF_JUNCTION = DEFAULT_MIN_AF_HOTSPOT;
 
     public final int MinAvgFragFactor;
     public static final int DEFAULT_MIN_AVG_FRAG_FACTOR = 3;
@@ -72,13 +73,19 @@ public class FilterConstants
         // use targeted panel defaults where applicable
         boolean filterSgls = targetedMode || configBuilder.hasFlag(FILTER_SGLS);
 
+        return FilterConstants.from(filterSgls, refGenVersion, configBuilder.getInteger(PON_DISTANCE));
+    }
+
+    @VisibleForTesting
+    public static FilterConstants from(boolean filterSgls, final RefGenomeVersion refGenomeVersion, int ponDistance)
+    {
         return new FilterConstants(
                 DEFAULT_MIN_TUMOR_QUAL, MIN_VARIANT_LENGTH,
                 DEFAULT_MIN_SUPPORT_JUNCTION, DEFAULT_MIN_SUPPORT_SGL, DEFAULT_MIN_SUPPORT_HOTSPOT,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
                 DEFAULT_MIN_AVG_FRAG_FACTOR, filterSgls,
-                getPolyGRegions(refGenVersion), refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
-                configBuilder.getInteger(PON_DISTANCE));
+                getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38,
+                ponDistance);
     }
 
     public FilterConstants(

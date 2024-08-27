@@ -42,6 +42,9 @@ public class CallerConfig
     public final String OutputId;
     public final List<String> RestrictedChromosomes;
 
+    public final int ManualRefDepth;
+    public static final String MANUAL_REF_DEPTH = "manual_ref_depth";
+
     public CallerConfig(final ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);
@@ -60,6 +63,8 @@ public class CallerConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         RestrictedChromosomes = loadSpecificChromsomes(configBuilder);
+
+        ManualRefDepth = configBuilder.getInteger(MANUAL_REF_DEPTH);
     }
 
     public boolean hasTumor() { return SampleId != null; }
@@ -99,6 +104,7 @@ public class CallerConfig
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
+        configBuilder.addInteger(MANUAL_REF_DEPTH, "Manually set ref depth for testing", 0);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

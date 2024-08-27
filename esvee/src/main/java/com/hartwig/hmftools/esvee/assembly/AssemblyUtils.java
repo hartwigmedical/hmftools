@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
@@ -66,10 +67,9 @@ public final class AssemblyUtils
     public static final byte N_BASE = 78;
 
     public static boolean basesMatch(
-            final byte first, final byte second, final byte firstQual, final byte secondQual, final int lowQualThreshold)
+            final byte first, final byte second, final byte firstQual, final byte secondQual)
     {
-        return first == second || first == N_BASE || second == N_BASE
-                || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
+        return first == second || first == N_BASE || second == N_BASE || belowMinQual(firstQual) || belowMinQual(secondQual);
     }
 
     public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second, boolean checkReads)
@@ -123,6 +123,7 @@ public final class AssemblyUtils
     }
 
     public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
+    public static byte[] createLowBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD - 1)); }
 
     public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
 

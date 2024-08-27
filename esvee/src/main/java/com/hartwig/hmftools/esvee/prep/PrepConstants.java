@@ -23,6 +23,7 @@ public final class PrepConstants
 
     // candidate junction fragments
     public static final int MIN_ALIGNMENT_BASES = 50;
+    public static final int MIN_CALC_ALIGNMENT_SCORE = 40;
     public static final int MIN_MAP_QUALITY = 20;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
     public static final int MIN_SOFT_CLIP_LENGTH = 30;

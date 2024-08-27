@@ -100,12 +100,16 @@ public abstract class BamWriter
 
     protected final void processRecord(final SAMRecord read)
     {
+        processJitterRead(read);
+        writeRecord(read);
+    }
+
+    public void processJitterRead(final SAMRecord read)
+    {
         if(mJitterAnalyser != null && mJitterAnalyser.bamSlicerFilter().passesFilters(read))
         {
             mJitterAnalyser.processRead(read);
         }
-
-        writeRecord(read);
     }
 
     public abstract void close();

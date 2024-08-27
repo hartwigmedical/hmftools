@@ -47,7 +47,8 @@ public class LocalSequenceMatcher
 
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
+        JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(
+                assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
 
         Orientation localRefOrientation = assembly.junction().Orient.opposite();
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
@@ -65,7 +66,7 @@ public class LocalSequenceMatcher
             return formLocalLink(assembly, localRegionStart, assemblySeqIndexInRef);
         }
 
-        int juncSeqStartIndex = 0;
+        int matchSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
 
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
@@ -73,26 +74,26 @@ public class LocalSequenceMatcher
 
         for(int i = 0; i < subSeqIterations; ++i)
         {
-            juncSeqStartIndex = i * subsequenceLength;
-            int juncSeqEndIndex = juncSeqStartIndex + subsequenceLength;
+            matchSeqStartIndex = i * subsequenceLength;
+            int matchSeqEndIndex = matchSeqStartIndex + subsequenceLength;
 
-            if(juncSeqEndIndex >= assemblyJunctionSeqLength)
+            if(matchSeqEndIndex >= assemblyJunctionSeqLength)
                 break;
 
-            String assemblySubSequence = assemblyExtBases.substring(juncSeqStartIndex, juncSeqStartIndex + subsequenceLength);
+            String assemblySubSequence = assemblyExtBases.substring(matchSeqStartIndex, matchSeqStartIndex + subsequenceLength);
 
             int refSubSeqIndex = localRefSeq.FullSequence.indexOf(assemblySubSequence);
 
             if(refSubSeqIndex < 0)
                 continue;
 
-            alternativeIndexStarts.add(new int[] {juncSeqStartIndex, refSubSeqIndex});
+            alternativeIndexStarts.add(new int[] {matchSeqStartIndex, refSubSeqIndex});
 
             refSubSeqIndex = localRefSeq.FullSequence.indexOf(assemblySubSequence, refSubSeqIndex + subsequenceLength);
 
             while(refSubSeqIndex >= 0)
             {
-                alternativeIndexStarts.add(new int[] {juncSeqStartIndex, refSubSeqIndex});
+                alternativeIndexStarts.add(new int[] {matchSeqStartIndex, refSubSeqIndex});
                 refSubSeqIndex = localRefSeq.FullSequence.indexOf(assemblySubSequence, refSubSeqIndex + subsequenceLength);
             }
         }

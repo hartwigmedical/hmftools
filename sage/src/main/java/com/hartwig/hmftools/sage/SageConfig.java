@@ -71,6 +71,7 @@ public class SageConfig
     public final String JitterParamsDir;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
+    public final boolean IsGermline;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxReadDepth;
@@ -111,6 +112,7 @@ public class SageConfig
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
     private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String GERMLINE = "germline";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -158,6 +160,10 @@ public class SageConfig
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
+        IsGermline = configBuilder.hasFlag(GERMLINE);
+
+        if(IsGermline)
+            SG_LOGGER.info("running in germline mode");
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
@@ -326,6 +332,7 @@ public class SageConfig
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
+        configBuilder.addFlag(GERMLINE, "Run with germline filters disabled");
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
         addValidationStringencyOption(configBuilder);
@@ -365,6 +372,7 @@ public class SageConfig
         JitterParamsDir = null;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
+        IsGermline = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;

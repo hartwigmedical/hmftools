@@ -155,7 +155,7 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
 2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files. Wildcards (`*`) are replaced with sample names 
-3. `-ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL). `alt_sj.selected_loci.tsv.gz` files for hg37 and hg38 can be downloaded from the [common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo
+3. `-ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL). `alt_sj.selected_loci.tsv.gz` files for hg37 and hg38 can be downloaded from the [HMFTools-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa) Google cloud bucket
 
 ## Classifier (Python component)
 
@@ -219,7 +219,7 @@ pip install cuppa_jar/pycuppa/
 
 ### Predicting
 Pre-trained classifiers (`cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the 
-[common-resources-public](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:cuppa/) repo.
+[HMFTools-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa) Google cloud bucket.
 
 To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: [Classifier output](#classifier-output).
 

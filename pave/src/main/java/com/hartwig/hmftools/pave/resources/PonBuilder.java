@@ -29,14 +29,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class PonBuilder
 {
@@ -112,57 +110,50 @@ public class PonBuilder
     {
         String vcfFilename = mVcfPath.replaceAll("\\*", sampleId);
 
-        AbstractFeatureReader<VariantContext, LineIterator> vcfReader = AbstractFeatureReader.getFeatureReader(vcfFilename, new VCFCodec(), false);
+        VcfFileReader vcfReader = new VcfFileReader(vcfFilename);
 
-        try
+        int varCount = 0;
+
+        int lastPosition = 0;
+        String lastChromosome = "";
+        String lastRef = "";
+        String lastAlt = "";
+
+        for(VariantContext variantContext : vcfReader.iterator())
         {
-            int varCount = 0;
+            double qual = variantContext.getPhredScaledQual();
 
-            int lastPosition = 0;
-            String lastChromosome = "";
-            String lastRef = "";
-            String lastAlt = "";
+            if(qual < mQualCutoff)
+                continue;
 
-            for(VariantContext variantContext : vcfReader.iterator())
+            String tier = variantContext.getAttributeAsString(TIER, "");
+            if(tier.equals(HOTSPOT.toString()))
+                continue;
+
+            int position = variantContext.getStart();
+            String chromosome = variantContext.getContig();
+            String ref = variantContext.getReference().getBaseString();
+            String alt = variantContext.getAlternateAlleles().get(0).toString();
+
+            // ignore duplicates (eg with different read-contexts)
+            if(chromosome.equals(lastChromosome) && lastPosition == position && lastRef.equals(ref) && lastAlt.equals(alt))
+                continue;
+
+            addVariant(chromosome, position, ref, alt, 1);
+            ++varCount;
+
+            lastChromosome = chromosome;
+            lastPosition = position;
+            lastRef = ref;
+            lastAlt = alt;
+
+            if((varCount % 100000) == 0)
             {
-                double qual = variantContext.getPhredScaledQual();
-
-                if(qual < mQualCutoff)
-                    continue;
-
-                String tier = variantContext.getAttributeAsString(TIER, "");
-                if(tier.equals(HOTSPOT.toString()))
-                    continue;
-
-                int position = variantContext.getStart();
-                String chromosome = variantContext.getContig();
-                String ref = variantContext.getReference().getBaseString();
-                String alt = variantContext.getAlternateAlleles().get(0).toString();
-
-                // ignore duplicates (eg with different read-contexts)
-                if(chromosome.equals(lastChromosome) && lastPosition == position && lastRef.equals(ref) && lastAlt.equals(alt))
-                    continue;
-
-                addVariant(chromosome, position, ref, alt, 1);
-                ++varCount;
-
-                lastChromosome = chromosome;
-                lastPosition = position;
-                lastRef = ref;
-                lastAlt = alt;
-
-                if((varCount % 100000) == 0)
-                {
-                    PV_LOGGER.debug("sample({}) loaded {} variants", sampleId, varCount);
-                }
+                PV_LOGGER.debug("sample({}) loaded {} variants", sampleId, varCount);
             }
+        }
 
-            PV_LOGGER.info("sample({}) read {} variants from vcf({})", sampleId, varCount, vcfFilename);
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("error reading vcf file: {}", e.toString());
-        }
+        PV_LOGGER.info("sample({}) read {} variants from vcf({})", sampleId, varCount, vcfFilename);
     }
 
     private void writePon()

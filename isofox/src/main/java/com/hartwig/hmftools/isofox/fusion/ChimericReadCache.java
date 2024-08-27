@@ -86,7 +86,7 @@ public class ChimericReadCache
                 */
 
                 mReadWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%d",
-                        read.Flags, read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asCsv() : "NONE",
+                        read.Flags, read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asDelimStr() : "NONE",
                         read.BoundaryBases[SE_START], read.BoundaryBases[SE_END], read.MateChromosome, read.MatePosStart));
 
                 mReadWriter.write(String.format(",%d,%d,%s,%s,%s",

@@ -12,12 +12,13 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_A
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
@@ -33,6 +34,8 @@ import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DE
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
@@ -56,6 +59,7 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class VariantFilters
 {
+    private final boolean mIsGermline;
     private final FilterConfig mConfig;
     private final int mReadEdgeDistanceThreshold;
     private final int mReadEdgeDistanceThresholdPanel;
@@ -75,6 +79,7 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
+        mIsGermline = config.IsGermline;
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
         mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
@@ -155,10 +160,13 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
-            for(int i = 0; i < maxReferenceSamples; ++i)
+            if(!mIsGermline)
             {
-                ReadContextCounter referenceCounter = refReadCounters.get(i);
-                applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                for(int i = 0; i < maxReferenceSamples; ++i)
+                {
+                    ReadContextCounter referenceCounter = refReadCounters.get(i);
+                    applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                }
             }
 
             if(tumorFilters.isEmpty())
@@ -179,7 +187,7 @@ public class VariantFilters
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
-            if(belowMinTumorQual(config, tier, primaryTumor))
+            if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
             if(belowMinTumorVaf(config, primaryTumor))
@@ -258,7 +266,8 @@ public class VariantFilters
     }
 
     // each of the following filters returns true if a variant does not pass the test
-    private static boolean belowMinTumorQual(final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
+    private static boolean belowMinTumorQual(final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor,
+                                             final boolean isGermline)
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
@@ -268,9 +277,13 @@ public class VariantFilters
             return true;
 
         int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
-        byte qualPerReadFloored = (byte)max(qualPerRead, 15);
+
+        int minQualForTqp = primaryTumor.qualCache().isMsiSampleAndVariant() ? MIN_TQP_QUAL_MSI_VARIANT : MIN_TQP_QUAL;
+
+        byte qualPerReadFloored = (byte)max(qualPerRead, minQualForTqp);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerReadFloored);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
@@ -278,6 +291,14 @@ public class VariantFilters
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
         double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+
+        if(isGermline)
+        {
+            BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
+            double hetProb = hetGermlineDistribution.cumulativeProbability(altSupport);
+            if(hetProb < prob)
+                prob /= max(hetProb, GERMLINE_HET_MIN_SAMPLING_PROB);
+        }
 
         primaryTumor.setTumorQualProbability(prob);
         primaryTumor.setMapQualFactor(mapQualFactor);
@@ -369,7 +390,7 @@ public class VariantFilters
 
         int supportCount = primaryTumor.strongAltSupport();
 
-        double altBaseQualAvg = primaryTumor.averageAltBaseQuality();
+        double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
 
         // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
@@ -393,9 +414,9 @@ public class VariantFilters
             return false;
 
         if(tier == HOTSPOT)
-            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else
-            return Doubles.lessThan(primaryTumor.averageRawAltBaseQuality(), mConfig.MinAvgBaseQual);
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
@@ -597,7 +618,8 @@ public class VariantFilters
         if(variant.mixedGermlineImpact() > 0)
             return true;
 
-        if(variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
+        if(!config.IsGermline
+        && variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
         && !variant.hasMatchingLps(passingPhaseSets))
         {
             final ReadContextCounter refCounter = variant.referenceReadCounters().get(0);

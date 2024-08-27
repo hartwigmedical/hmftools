@@ -91,6 +91,32 @@ data class TealCommonParams
             throw ParameterException("$TUMOR_BAM is required when $TUMOR_SAMPLE(${tumorSampleId}) is specified")
         }
     }
+    
+    // helper functions to standardise file names
+    fun germlineTelbamPath() : String
+    {
+        return "${outputDir}/${referenceSampleId}.teal.telbam.bam"
+    }
+
+    fun tumorTelbamPath() : String
+    {
+        return "${outputDir}/${tumorSampleId}.teal.telbam.bam"
+    }
+
+    fun germlineTelLegnthTsvPath() : String
+    {
+        return "${outputDir}/${referenceSampleId}.teal.tellength.tsv"
+    }
+
+    fun tumorTelLengthTsvPath() : String
+    {
+        return "${outputDir}/${tumorSampleId}.teal.tellength.tsv"
+    }
+
+    fun breakEndTsvPath() : String
+    {
+        return "${outputDir}/${tumorSampleId}.teal.breakend.tsv.gz"
+    }
 }
 
 // NOTE: We use nullable string for required argument types, this is to avoid (default: <empty string>) getting

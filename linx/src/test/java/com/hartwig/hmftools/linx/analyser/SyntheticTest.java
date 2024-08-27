@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -82,8 +83,7 @@ public class SyntheticTest
         // test 2 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 100, 10400, 1);
         var2 = createInv(tester.nextVarId(), "1", 250, 10350, -1);
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(false, "asmb12");
+        setAssembledLinkInfo(var1, false, var2, false);
 
         tester.addAndCluster(var1, var2);
 
@@ -232,8 +232,7 @@ public class SyntheticTest
         var1 = createDup(tester.nextVarId(), "1", 100, 2200);
         var2 = createDup(tester.nextVarId(), "1", 300, 2400);
 
-        var1.getTIAssemblies(true).add("asmb1");
-        var2.getTIAssemblies(false).add("asmb1");
+        setAssembledLinkInfo(var1, true, var2, false);
 
         tester.addAndCluster(var1, var2);
 
@@ -243,8 +242,7 @@ public class SyntheticTest
         var1 = createDup(tester.nextVarId(), "1", 100, 300);
         var2 = createDup(tester.nextVarId(), "1", 250, 400);
 
-        var1.getTIAssemblies(false).add("asmb1");
-        var2.getTIAssemblies(true).add("asmb1");
+        setAssembledLinkInfo(var1, false, var2, true);
 
         tester.addAndCluster(var1, var2);
 

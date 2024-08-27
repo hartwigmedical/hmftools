@@ -28,6 +28,12 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvTestUtils
 {
+    public static void setAssembledLinkInfo(final SvVarData var1, boolean useStart1, final SvVarData var2, boolean useStart2)
+    {
+        var1.addAssemblyInfo(useStart1, useStart2 ? var2.getSvData().vcfIdStart() : var2.getSvData().vcfIdEnd());
+        var2.addAssemblyInfo(useStart2, useStart1 ? var1.getSvData().vcfIdStart() : var1.getSvData().vcfIdEnd());
+    }
+
     public static SvVarData createSv(final int varId, final String chrStart, final String chrEnd,
             int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
     {
@@ -101,14 +107,19 @@ public class SvTestUtils
                 cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS, "", "");
     }
 
-    public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
-            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type,
-            double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq,
-            final String filter, final String repeatClass, final String repeatType)
+    public static SvVarData createTestSv(
+            final int varId, final String chrStart, final String chrEnd, int posStart, int posEnd, int orientStart, int orientEnd,
+            final StructuralVariantType type, double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy,
+            final String insertSeq, final String filter, final String repeatClass, final String repeatType)
     {
+        String vcfIdStart = varId + "_start";
+        String vcfIdEnd = varId + "_end";
+
         StructuralVariantData svData =
                 ImmutableStructuralVariantData.builder()
                         .id(varId)
+                        .vcfIdStart(vcfIdStart)
+                        .vcfIdEnd(vcfIdEnd)
                         .startChromosome(chrStart)
                         .endChromosome(chrEnd)
                         .startPosition(posStart)
@@ -148,7 +159,6 @@ public class SvTestUtils
                         .inexactHomologyOffsetEnd(0)
                         .startLinkedBy("")
                         .endLinkedBy("")
-                        .vcfId("")
                         .startRefContext("")
                         .endRefContext("")
                         .recovered(false)

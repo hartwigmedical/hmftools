@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
@@ -86,7 +88,7 @@ public class AssemblyAlignment
 
     public int id() { return mId; }
 
-    public boolean isValid() { return mFullSequence != null; }
+    public boolean isValid() { return mFullSequence != null && mFullSequenceLength < 100000; }
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
@@ -245,16 +247,17 @@ public class AssemblyAlignment
             }
 
             int overlapLength = link.overlapBases().length();
-            String insertedBases = link.insertedBases();
+            int insertedBaseLength = link.insertedBases().length();
 
-            if(!insertedBases.isEmpty())
+            if(insertedBaseLength > 0)
             {
-                // keep inserted bases in the same direction as a full sequence
-                fullSequence.append(assemblyReversed ? Nucleotides.reverseComplementBases(insertedBases) : insertedBases);
+                // keep inserted bases in the same direction as the assembly is added
+                String insertedBases = getAssemblyInsertSequence(assembly, assemblyReversed, insertedBaseLength);
+                fullSequence.append(insertedBases);
 
-                currentSeqLength += insertedBases.length();
+                currentSeqLength += insertedBaseLength;
 
-                buildSequenceCigar(sequenceCigar, I, insertedBases.length());
+                buildSequenceCigar(sequenceCigar, I, insertedBaseLength);
             }
 
             JunctionAssembly nextAssembly = assemblies.get(i + 1);
@@ -294,8 +297,6 @@ public class AssemblyAlignment
 
                 fullSequence.append(assemblyExtensionBases);
 
-                // setAssemblyReadIndices(assembly, assemblyReversed, currentSeqLength, 0);
-
                 logBuildInfo(nextAssembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
 
                 currentSeqLength = assemblyExtensionBases.length();
@@ -311,6 +312,26 @@ public class AssemblyAlignment
         mSequenceCigar = cigarElementsToStr(sequenceCigar);
 
         return fullSequence.toString();
+    }
+
+    private static String getAssemblyInsertSequence(final JunctionAssembly assembly, boolean assemblyReversed, int insertLength)
+    {
+        int extBaseIndexStart, extBaseIndexEnd;
+
+        if(assembly.isForwardJunction())
+        {
+            extBaseIndexStart = assembly.junctionIndex() + 1;
+            extBaseIndexEnd = min(extBaseIndexStart + insertLength - 1, assembly.baseLength() - 1);
+        }
+        else
+        {
+            extBaseIndexEnd = assembly.junctionIndex() - 1;
+            extBaseIndexStart = max(extBaseIndexEnd - insertLength + 1, 0);
+        }
+
+        String insertSequence = assembly.formSequence(extBaseIndexStart, extBaseIndexEnd);
+
+        return assemblyReversed ? Nucleotides.reverseComplementBases(insertSequence) : insertSequence;
     }
 
     private static void logBuildInfo(

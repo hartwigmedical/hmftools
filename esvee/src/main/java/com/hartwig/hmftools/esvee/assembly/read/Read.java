@@ -71,6 +71,7 @@ public class Read
     private boolean mIsReference;
     private boolean mHasLineTail;
     private int mTrimCount;
+    private boolean mLowQualTrimmed;
 
     public Read(final SAMRecord record)
     {
@@ -104,6 +105,7 @@ public class Read
 
         mHasLineTail = false;
         mTrimCount = 0;
+        mLowQualTrimmed = false;
     }
 
     private void setBoundaries(int newReadStart)
@@ -197,19 +199,30 @@ public class Read
 
     public int mappingQuality() { return mRecord.getMappingQuality(); }
 
-    public String mateChromosome() { return isMateMapped() ? mRecord.getMateReferenceName() : null; }
-    public int mateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
+    // if the mate read reference is set, use this so it can be clear on any unmapping state
+    public String mateChromosome()
+    {
+        if(mMateRead != null)
+            return mMateRead.chromosome();;
+
+        return isMateMapped() ? mRecord.getMateReferenceName() : null;
+    }
+
+    public int mateAlignmentStart()
+    {
+        if(mMateRead != null)
+            return mMateRead.alignmentStart();
+
+        return mRecord.getMateAlignmentStart();
+    }
 
     public int mateAlignmentEnd()
     {
-        if(mMateAlignmentEnd != null)
-            return mMateAlignmentEnd;
-
-        if(isMateUnmapped())
-            return alignmentEnd();
-
         if(mMateRead != null)
             return mMateRead.alignmentEnd();
+
+        if(mMateAlignmentEnd != null)
+            return mMateAlignmentEnd;
 
         mMateAlignmentEnd = getMateAlignmentEnd(mRecord);
 
@@ -219,8 +232,15 @@ public class Read
         return mMateAlignmentEnd;
     }
 
-    public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
-    public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
+    public boolean isMateMapped()
+    {
+        if(mMateRead != null)
+            return !mMateRead.isUnmapped();
+
+        return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag();
+    }
+
+    public boolean isMateUnmapped() { return !isMateMapped(); }
 
     public Orientation mateOrientation()
     {
@@ -359,13 +379,30 @@ public class Read
 
         if(fromStart)
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 CigarElement element = mCigarElements.get(0);
 
-                if(element.getOperator() == H)
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(0);
+                        newReadStart += element.getLength();
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
                 {
                     mCigarElements.remove(0);
+
+                    if(element.getOperator().consumesReferenceBases())
+                        newReadStart += element.getLength();
+
                     continue;
                 }
 
@@ -393,12 +430,24 @@ public class Read
         }
         else
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 int lastIndex = mCigarElements.size() - 1;
                 CigarElement element = mCigarElements.get(lastIndex);
 
-                if(element.getOperator() == H)
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(lastIndex);
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
                 {
                     mCigarElements.remove(lastIndex);
                     continue;
@@ -429,6 +478,9 @@ public class Read
     }
 
     public int baseTrimCount() { return mTrimCount; }
+
+    public void markLowQualTrimmed() { mLowQualTrimmed = true; }
+    public boolean lowQualTrimmed() { return mLowQualTrimmed; }
 
     public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
     {

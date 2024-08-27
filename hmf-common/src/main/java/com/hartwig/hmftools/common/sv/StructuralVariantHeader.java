@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
@@ -54,7 +54,7 @@ public class StructuralVariantHeader
                 VCFHeaderLineType.Flag,
                 IMPRECISE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(SV_TYPE, 1, VCFHeaderLineType.String, SV_TYPE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_METHOD, 1, VCFHeaderLineType.String, RECOVERY_METHOD_DESC));

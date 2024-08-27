@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMENTARY;
@@ -13,7 +12,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -52,12 +50,20 @@ public final class RemoteRegionFinder
         // purge regions with only weak supplementary support
         purgeWeakSupplementaryRegions(remoteRegions);
 
+        for(RemoteRegion remoteRegion : remoteRegions)
+        {
+            if(remoteRegion.length() > 100000)
+            {
+                SV_LOGGER.warn("assembly({}) long remote region({})", assembly, remoteRegion);
+            }
+        }
+
         assembly.addRemoteRegions(remoteRegions);
     }
 
     private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
     {
-        if(read.isMateUnmapped())
+        if(read.isMateUnmapped() || read.isSupplementary())
             return;
 
         String mateChr = read.mateChromosome();
@@ -105,5 +111,4 @@ public final class RemoteRegionFinder
 
         region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }
-
 }

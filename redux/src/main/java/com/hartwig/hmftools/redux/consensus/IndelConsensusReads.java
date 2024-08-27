@@ -58,9 +58,6 @@ public class IndelConsensusReads
         boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
-        // SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
-        // SAMRecord selectedConsensusRead = templateRead;
-
         int baseLength = templateRead.getReadBases().length;
         consensusState.setBaseLength(baseLength);
         consensusState.setBoundaries(templateRead);

@@ -50,6 +50,11 @@ public class JitterCountsTable
             return jitterCounts.getOrDefault(jitter, 0);
         }
 
+        void setJitterReadCount(int jitter, int count)
+        {
+            jitterCounts.put(jitter, count);
+        }
+
         String getRepeatUnit() { return RepeatUnit; }
     }
 
@@ -58,12 +63,9 @@ public class JitterCountsTable
     // ref num unit to rows
     private final List<Row> mRows = new ArrayList<>();
 
-    private final double mMaxSingleAltSiteContributionPerc;
-
     JitterCountsTable(final String repeatUnit, final double maxSingleAltSiteContributionPerc)
     {
         RepeatUnit = repeatUnit;
-        mMaxSingleAltSiteContributionPerc = maxSingleAltSiteContributionPerc;
     }
 
     public int repeatUnitLength()
@@ -114,16 +116,7 @@ public class JitterCountsTable
                     row.addRead(jitter);
                 }
 
-                // use the row object to perform outlier test
-                if(outlierTestTable != null && outlierTestTable.isOutlier(row))
-                {
-                    outliers.add(microsatelliteSiteAnalyser);
-                    outlierFound = true;
-                }
-                else
-                {
-                    newTable.mergeCounts(row);
-                }
+                newTable.mergeCounts(row);
             }
 
             if(outlierTestTable != null && !outlierFound)
@@ -147,33 +140,6 @@ public class JitterCountsTable
         }
     }
 
-    boolean isOutlier(Row siteCounts)
-    {
-//        for(Map.Entry<Integer, Integer> entry: siteCounts.jitterCounts.entrySet())
-//        {
-//            int jitter = entry.getKey();
-//
-//            if(jitter == 0)
-//            {
-//                continue;
-//            }
-//
-//            int siteJitterReadCount = entry.getValue();
-//            int allJitterReadCount = getJitterReadCount(siteCounts.refNumUnits, jitter);
-//
-//            if(siteJitterReadCount >= JitterAnalyserConstants.MIN_SITE_READS_BEFORE_OUTLIER_CHECK
-//            && siteJitterReadCount >= allJitterReadCount * mMaxSingleAltSiteContributionPerc)
-//            {
-//                sLogger.trace("{} x unit({}), site jitter({}) read count({}) > all sites jitter read count({}) * {}, filtering",
-//                        siteCounts.refNumUnits,
-//                        siteCounts.getRepeatUnit(),
-//                        jitter, siteJitterReadCount, allJitterReadCount, mMaxSingleAltSiteContributionPerc);
-//                return true;
-//            }
-//        }
-        return false;
-    }
-
     public List<Row> getRows()
     {
         return mRows;
@@ -185,13 +151,6 @@ public class JitterCountsTable
         return row == null ? 0 : row.totalReadCount;
     }
 
-    public int getJitterReadCount(int refNumRepeats, int jitter)
-    {
-        Row row = getRow(refNumRepeats);
-        return row == null ? 0 : row.getJitterReadCount(jitter);
-    }
-
-    @NotNull
     public Row getOrCreateRow(int refNumUnits)
     {
         for(int i = 0; i < mRows.size(); ++i)

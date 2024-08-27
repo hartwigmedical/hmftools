@@ -165,7 +165,7 @@ public class SupplementaryReadData
         return sj.toString();
     }
 
-    public String asCsv()
+    public String asDelimStr()
     {
         return String.format("%s;%d;%c;%s;%d;%d", Chromosome, Position, Strand, Cigar, MapQuality, NM);
     }

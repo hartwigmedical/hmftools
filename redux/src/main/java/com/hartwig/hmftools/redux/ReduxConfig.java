@@ -77,6 +77,7 @@ public class ReduxConfig
     // UMI group config
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
+    public final boolean JitterMsiOnly;
 
     public final ReadUnmapper UnmapRegions;
 
@@ -127,6 +128,7 @@ public class ReduxConfig
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
+    private static final String JITTER_MSI_ONLY = "jitter_msi_only";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
@@ -232,7 +234,11 @@ public class ReduxConfig
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
-        WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
+        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
+        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
+        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+
+        WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
@@ -244,9 +250,6 @@ public class ReduxConfig
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
-
-        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         if(RunChecks)
         {
@@ -302,6 +305,7 @@ public class ReduxConfig
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
+        configBuilder.addFlag(JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
@@ -357,6 +361,7 @@ public class ReduxConfig
 
         JitterMsiFile = null;
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
+        JitterMsiOnly = false;
 
         WriteBam = false;
         MultiBam = false;

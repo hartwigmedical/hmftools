@@ -69,7 +69,7 @@ public class ReadWriter implements AutoCloseable
             sj.add(String.valueOf(read.getReadNegativeStrandFlag()));
             sj.add(String.valueOf(read.getDuplicateReadFlag()));
             sj.add(String.valueOf(read.getSupplementaryAlignmentFlag()));
-            sj.add(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.extractAlignment(read).asCsv() : "N/A");
+            sj.add(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.extractAlignment(read).asDelimStr() : "N/A");
             mWriter.write(sj.toString());
             mWriter.newLine();
         }

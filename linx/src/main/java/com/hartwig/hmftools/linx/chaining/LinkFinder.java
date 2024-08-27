@@ -208,7 +208,11 @@ public class LinkFinder
 
     public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
     {
-        return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
+        // Esvee sets the linked variant ID into the breakend, not a unique assembly ID as Gridss does
+        return var1.getAssemblyLinks(v1Start).stream()
+                .anyMatch(x -> v2Start ? x.equals(var2.getSvData().vcfIdStart()) : x.equals(var2.getSvData().vcfIdEnd()));
+
+        //return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
     }
 
     public static boolean isPossibleLink(final String chr1, int pos1, byte orient1, final String chr2, int pos2, byte orient2, int minDistance)

@@ -77,6 +77,7 @@ public class PhaseSetTask extends ThreadTask
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
                 PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteRegionAssembler, phaseGroup);
+                phaseSetBuilder.setPerfLogTime(mConfig.PerfLogTime);
 
                 try
                 {

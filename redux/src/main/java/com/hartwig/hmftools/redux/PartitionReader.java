@@ -160,6 +160,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
+        if(mConfig.JitterMsiOnly)
+        {
+            mBamWriter.processJitterRead(read);
+            return;
+        }
+
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
 

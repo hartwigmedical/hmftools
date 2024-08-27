@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
-import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -189,14 +188,14 @@ public class MiscEvidenceTest
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(37, readContextCounter.qualCounters().altBaseQualityTotal());
+        assertEquals(37, readContextCounter.qualCounters().altRecalibratedBaseQualityTotal());
 
         // min rather than average is used
         altRead.getBaseQualities()[readVarIndex] = 11;
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(48, readContextCounter.qualCounters().altBaseQualityTotal());
+        assertEquals(48, readContextCounter.qualCounters().altRecalibratedBaseQualityTotal());
     }
 
     @Test

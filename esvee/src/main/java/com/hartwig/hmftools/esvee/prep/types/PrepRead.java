@@ -12,6 +12,10 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -19,6 +23,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
@@ -38,14 +43,18 @@ public class PrepRead
     private int mFragmentInsertSize;
     private final SupplementaryReadData mSupplementaryAlignment;
 
+    // read filtering and evaluation state
+    private final int mAlignedBaseLength;
+    private final int mSoftClipLengthLeft;
+    private final int mSoftClipLengthRight;
+    private final int mMaxIndelLength;
     private boolean mCheckedIndelCoords;
     private IndelCoords mIndelCoords;
-
     private int mFilters;
-    private ReadType mReadType;
-    private boolean mWritten;
 
-    public static PrepRead from(final SAMRecord record) { return new PrepRead(record); }
+    private ReadType mReadType; // junction classification
+
+    private boolean mWritten; // a check to avoid a read being written again
 
     public static final String UNMAPPED_CHR = "-1";
 
@@ -53,16 +62,50 @@ public class PrepRead
     {
         mRecord = record;
 
+        int alignedBaseLength = 0;
+        int softClipLengthLeft = 0;
+        int softClipLengthRight = 0;
+        int maxIndelLength = 0;
+
+        for(int i = 0; i < record.getCigar().getCigarElements().size(); ++i)
+        {
+            CigarElement element = record.getCigar().getCigarElements().get(i);
+
+            switch(element.getOperator())
+            {
+                case M:
+                    alignedBaseLength += element.getLength();
+                    break;
+
+                case S:
+                    if(i == 0)
+                        softClipLengthLeft = element.getLength();
+                    else
+                        softClipLengthRight = element.getLength();
+                    break;
+
+                case D:
+                case I:
+                    maxIndelLength = max(element.getLength(), maxIndelLength);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        mAlignedBaseLength = alignedBaseLength;
+        mSoftClipLengthLeft = softClipLengthLeft;
+        mSoftClipLengthRight = softClipLengthRight;
+        mMaxIndelLength = maxIndelLength;
+
         if(!record.getReadUnmappedFlag())
         {
             Chromosome = record.getReferenceName();
             mAlignmentStart = record.getStart();
             mAlignmentEnd = record.getEnd();
-
-            int scLeft = CigarUtils.leftSoftClipLength(record);
-            int scRight = CigarUtils.rightSoftClipLength(record);
-            mUnclippedStart = mAlignmentStart - scLeft;
-            mUnclippedEnd = mAlignmentEnd + scRight;
+            mUnclippedStart = mAlignmentStart - mSoftClipLengthLeft;
+            mUnclippedEnd = mAlignmentEnd + mSoftClipLengthRight;
         }
         else
         {
@@ -95,6 +138,8 @@ public class PrepRead
         mWritten = false;
     }
 
+    public static PrepRead from(final SAMRecord record) { return new PrepRead(record); }
+
     public String id() { return mRecord.getReadName(); }
     public final SAMRecord record() { return mRecord; }
     public int start() { return mAlignmentStart; }
@@ -102,10 +147,12 @@ public class PrepRead
 
     public int unclippedStart()  { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
-    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart; }
-    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd; }
-    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
-    public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
+    public boolean isLeftClipped() { return mSoftClipLengthLeft > 0; }
+    public boolean isRightClipped() { return mSoftClipLengthRight > 0; }
+    public int leftClipLength() { return mSoftClipLengthLeft; }
+    public int rightClipLength() { return mSoftClipLengthRight; }
+    public int maxIndelLength()  { return mMaxIndelLength; }
+    public int alignedBaseLength()  { return mAlignedBaseLength; }
 
     public Orientation orientation() { return !isReadReversed() ? FORWARD : REVERSE; }
     public Orientation mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? FORWARD : REVERSE; }
@@ -128,7 +175,10 @@ public class PrepRead
     public String readBases() { return mRecord.getReadString(); }
     public byte[] baseQualities() { return mRecord.getBaseQualities(); }
 
-    public void setFilters(int filters) { mFilters = filters; }
+    public void addFilter(final ReadFilterType filterType) { mFilters |= filterType.flag(); }
+    public boolean hasFilter(final ReadFilterType filterType) { return (mFilters & filterType.flag()) != 0; }
+    public void removefilter(final ReadFilterType filterType) { mFilters &= ~filterType.flag(); }
+    public boolean unfiltered() { return mFilters == 0; }
     public int filters() { return mFilters; }
 
     public void setReadType(ReadType type) { setReadType(type, false); }
@@ -153,7 +203,9 @@ public class PrepRead
         if(!mCheckedIndelCoords)
         {
             mCheckedIndelCoords = true;
-            mIndelCoords = findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+
+            if(mMaxIndelLength >= MIN_INDEL_SUPPORT_LENGTH)
+                mIndelCoords = findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
         }
 
         return mIndelCoords;

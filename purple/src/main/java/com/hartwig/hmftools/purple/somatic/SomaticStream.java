@@ -63,7 +63,7 @@ public class SomaticStream
     private final List<PeakModelData> mPeakModelData;
     private final Set<String> mReportedGenes;
 
-    private final List<VariantContextDecorator> mDownsampledVariants; // cached for charting
+    private final List<VariantContextDecorator> mPlottingVariants; // cached for charting
     private final int mSnpMod;
     private final int mIndelMod;
     private int mSnpCount;
@@ -96,7 +96,7 @@ public class SomaticStream
         mRChartData = new RChartData(config, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
-        mDownsampledVariants = Lists.newArrayList();
+        mPlottingVariants = Lists.newArrayList();
         mSnpMod = somaticVariantCache.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.snpCount() / CHART_DOWNSAMPLE_FACTOR;
         mIndelMod = somaticVariantCache.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.indelCount() / CHART_DOWNSAMPLE_FACTOR;
 
@@ -152,7 +152,7 @@ public class SomaticStream
     }
 
     public Set<String> reportedGenes() { return mReportedGenes; }
-    public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
+    public List<VariantContextDecorator> plottingVariants() { return mPlottingVariants; }
     public List<PeakModelData> peakModelData() { return mPeakModelData; }
 
     public void processAndWrite(final PurityAdjuster purityAdjuster)
@@ -255,7 +255,7 @@ public class SomaticStream
             calculateVariantLoadValues();
 
             PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({} snvMod={} indelMod={})",
-                    mSnpCount, mIndelCount, mDownsampledVariants.size(), mSnpMod, mIndelMod);
+                    mSnpCount, mIndelCount, mPlottingVariants.size(), mSnpMod, mIndelMod);
         }
         catch(IOException e)
         {
@@ -386,19 +386,25 @@ public class SomaticStream
         if(!HumanChromosome.contains(variant.chromosome()))
             return;
 
+        if(mReferenceData.TargetRegions.hasTargetRegions())
+        {
+            if(!mReferenceData.TargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+                return;
+        }
+
         if(variant.type() == VariantType.INDEL)
         {
             mIndelCount++;
 
             if(mIndelCount % mIndelMod == 0)
-                mDownsampledVariants.add(variant.decorator());
+                mPlottingVariants.add(variant.decorator());
         }
         else
         {
             mSnpCount++;
 
             if(mSnpCount % mSnpMod == 0)
-                mDownsampledVariants.add(variant.decorator());
+                mPlottingVariants.add(variant.decorator());
         }
     }
 }

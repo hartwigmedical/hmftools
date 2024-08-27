@@ -17,6 +17,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
@@ -122,6 +123,8 @@ public final class AssemblyLinker
         boolean firstReversed = false;
         boolean secondReversed = false;
 
+        // select assemblies such that the sequence comparison is always comparing first in +ve orientation overlapping with
+        // second in the -ve orientation, even one of them needs to be reverse complimented
         if(assembly1.junction().Orient != assembly2.junction().Orient)
         {
             first = assembly1.junction().isForward() ? assembly1 : assembly2;
@@ -138,53 +141,71 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
-        firstSeq = new JunctionSequence(first, firstReversed);
-        secondSeq = new JunctionSequence(second, secondReversed);
+        firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
+        secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
-        String firstJunctionSequence = firstSeq.junctionSequence();
-        int firstJunctionSeqLength = firstJunctionSequence.length();
+        String firstMatchSequence = firstSeq.matchSequence();
+        int firstMatchSeqLength = firstMatchSequence.length();
 
-        int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstJunctionSequence);
+        int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstMatchSequence);
 
         if(firstSeqIndexInSecond >= 0)
         {
             // simple sequence match, so can form a link between these 2 assemblies
-            return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond, 0);
+            return formLink(first, second, firstSeq, secondSeq, firstSeq.matchSeqStartIndex(), firstSeqIndexInSecond, 0);
         }
 
         if(!allowMismatches)
             return null;
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
-        int juncSeqStartIndex = 0;
+        int matchSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
-        int subSeqIterations = (int)floor(firstJunctionSeqLength / MATCH_SUBSEQUENCE_LENGTH);
+        Set<String> testedSequences = Sets.newHashSet();
+        int subSeqIterations = (int)floor(firstMatchSeqLength / MATCH_SUBSEQUENCE_LENGTH);
         for(int i = 0; i < subSeqIterations; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
-            juncSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
-            int juncSeqEndIndex = juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
+            matchSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
+            int matchSeqEndIndex = matchSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
 
-            if(juncSeqEndIndex >= firstJunctionSeqLength)
+            if(matchSeqEndIndex >= firstMatchSeqLength + 1)
                 break;
 
-            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH);
+            String firstSubSequence = firstMatchSequence.substring(matchSeqStartIndex, matchSeqEndIndex);
+
+            if(testedSequences.contains(firstSubSequence))
+                continue;
+
+            testedSequences.add(firstSubSequence);
 
             int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
             if(secondSubSeqIndex < 0)
                 continue;
 
-            alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+            // also must allow for the first match sequence (ie including all extension bases) to fit/match within the second
+            int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+            if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                continue; // still possible that a later subsequence will match earlier
+
+            alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 
             secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             while(secondSubSeqIndex >= 0)
             {
-                alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+                impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+                if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                    break;
+
+                alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
                 secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
             }
         }
+
+        if(alternativeIndexStarts.isEmpty())
+            return null;
 
         // now perform a full junction sequence search in the second using the sequence matching logic
         int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
@@ -206,48 +227,55 @@ public final class AssemblyLinker
     public static int[] findBestSequenceMatch(
             final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
     {
+        if(alternativeIndexStarts.isEmpty())
+            return null;
+
         int topMatchLength = 0;
         int topMatchMismatches = 0;
         int[] topMatchIndices = null;
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int firstJunctionSeqLength = firstSeq.junctionSequence().length();
+        int firstJunctionSeqLength = firstSeq.matchSequence().length();
 
         // take each of the subsequence match locations, build out a longer sequence around it and check for a match
         // then return the longest of these
         for(int[] indexStarts : alternativeIndexStarts)
         {
             // find a comparison range that falls within both sequence's index range around the junction
-            int firstJuncSeqMatchIndex = indexStarts[0];
+            int firstMatchSeqMatchIndex = indexStarts[0];
             int secondMatchIndex = indexStarts[1];
 
-            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
+            int matchOffset = secondMatchIndex - firstMatchSeqMatchIndex;
 
-            // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
+            // skip testing a comparison anchored around the same offsets between the 2 sequences
             if(testedOffsets.contains(matchOffset))
                 continue;
 
             testedOffsets.add(matchOffset);
 
-            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
+            int secondIndexStart = secondMatchIndex - firstMatchSeqMatchIndex;
             int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
 
-            int firstJuncIndexStart = 0;
-            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
+            int firstMatchIndexStart = 0;
+            int firstMatchIndexEnd = firstJunctionSeqLength - 1;
 
             if(secondIndexStart < 0)
             {
-                firstJuncIndexStart += -(secondIndexStart);
+                firstMatchIndexStart += -(secondIndexStart);
                 secondIndexStart = 0;
             }
 
-            // discount this match if the implied end of the match in the second sequence is past its ref base end
             if(secondIndexEnd >= secondSeq.BaseLength)
-                continue;
+            {
+                // trim the match end if the extension bases exceed the length of the second sequence's ref bases, as can happen for short TIs
+                int endReduction = secondIndexEnd - secondSeq.BaseLength + 1;
+                secondIndexEnd -= endReduction;
+                firstMatchIndexEnd -= endReduction;
+            }
 
-            int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
-            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
+            int firstIndexStart = firstMatchIndexStart + firstSeq.matchSeqStartIndex();
+            int firstIndexEnd = min(firstMatchIndexEnd + firstSeq.matchSeqStartIndex(), firstSeq.BaseLength - 1);
 
             int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
 
@@ -262,7 +290,7 @@ public final class AssemblyLinker
             if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
-            if(overlapLength > topMatchLength)
+            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
@@ -312,7 +340,7 @@ public final class AssemblyLinker
 
         int firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
-        // determine whether the junctions align exactly (junctionOffsetDiff = 0), or have an overlap (junctionOffsetDiff < 0)
+        // determine whether the junctions align exactly (junctionOffsetDiff = 0), or has an overlap (junctionOffsetDiff < 0)
         // or there are inserted bases (junctionOffsetDiff > 0)
         int junctionOffsetDiff = 0;
 
@@ -335,14 +363,21 @@ public final class AssemblyLinker
 
         if(junctionOffsetDiff != 0)
         {
-            // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
-            // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
-            // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
-            extraBases = extractExtraBases(first, firstSeq.Reversed, junctionOffsetDiff);
+            extraBases = extractExtraBases(first, junctionOffsetDiff);
+
+            if(junctionOffsetDiff > 0 && junctionOffsetDiff > first.extensionLength())
+            {
+                // take the extra bases from the second assembly
+                String secondExtraBases = extractExtraBases(second, junctionOffsetDiff - first.extensionLength());
+                if(first.isForwardJunction() != second.isForwardJunction())
+                    extraBases += secondExtraBases;
+                else
+                    extraBases += Nucleotides.reverseComplementBases(secondExtraBases);
+            }
 
             if(extraBases == null)
             {
-                extraBases = extractExtraBases(second, secondSeq.Reversed, junctionOffsetDiff);
+                extraBases = extractExtraBases(second, junctionOffsetDiff);
 
                 if(extraBases == null)
                 {
@@ -350,7 +385,8 @@ public final class AssemblyLinker
                             first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
                             firstIndexStart, secondIndexStart, firstSeq, secondSeq);
 
-                    extraBases = "";
+                    // failure to extract the required bases invalidates the link
+                    return null;
                 }
             }
         }
@@ -368,12 +404,12 @@ public final class AssemblyLinker
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
-    private static String extractExtraBases(final JunctionAssembly assembly, boolean isReversed, int junctionOffsetDiff)
+    private static String extractExtraBases(final JunctionAssembly assembly, int junctionOffsetDiff)
     {
         int extraBasesStartIndex, extraBasesEndIndex;
 
         // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
-        // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
+        // around its junction index - with the exception being for when both assemblies are -ve orientation, in which case the
         // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
 
         // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
@@ -383,7 +419,9 @@ public final class AssemblyLinker
             {
                 // an insert, so take bases from after the junction
                 extraBasesStartIndex = assembly.junctionIndex() + 1;
-                extraBasesEndIndex = assembly.junctionIndex() + junctionOffsetDiff;
+
+
+                extraBasesEndIndex = min(assembly.junctionIndex() + junctionOffsetDiff, assembly.baseLength() - 1);
             }
             else
             {
@@ -394,11 +432,10 @@ public final class AssemblyLinker
         }
         else
         {
-            // now work around a -ve orientation junction
             if(junctionOffsetDiff > 0)
             {
                 extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;
-                extraBasesEndIndex = assembly.junctionIndex() - 1;
+                extraBasesEndIndex = min(assembly.junctionIndex() - 1, assembly.baseLength() - 1);
             }
             else
             {

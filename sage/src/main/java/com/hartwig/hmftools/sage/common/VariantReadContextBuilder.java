@@ -47,6 +47,10 @@ public class VariantReadContextBuilder
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
 
+            // enforce ref base padding for trinucleotide generation
+            if(readContext.variantRefIndex() <= 0 || readContext.variantRefIndex() >= readContext.refBases().length() - 1)
+                return null;
+
             // ref bases are extended for long inserts for partial ref matching
             if(isLongInsert(variant))
             {
@@ -147,6 +151,9 @@ public class VariantReadContextBuilder
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
+
+        if(readFlankStart < 0 || readFlankEnd >= readBases.length)
+            return null;
 
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;

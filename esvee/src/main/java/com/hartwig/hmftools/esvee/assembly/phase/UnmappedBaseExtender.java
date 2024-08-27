@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
@@ -12,18 +13,15 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -115,8 +113,6 @@ public class UnmappedBaseExtender
         if(readSequenceMatches.isEmpty())
             return false;
 
-        Collections.sort(readSequenceMatches, Comparator.comparingInt(x -> -x.Overlap));
-
         // build out extension bases from these overlapping reads
         int newExtensionLength = readSequenceMatches.stream().mapToInt(x -> x.maxReadExtension()).max().orElse(0);
         int baseOffset = newExtensionLength - mBases.length;
@@ -125,9 +121,32 @@ public class UnmappedBaseExtender
             extendBases(newExtensionLength);
 
         // now add reads to extend the new bases
-        readSequenceMatches.forEach(x -> addRead(x, baseOffset));
+        int addedReads = 0;
 
-        return true;
+        Collections.sort(readSequenceMatches);
+
+        for(ReadSequenceMatch readSequenceMatch : readSequenceMatches)
+        {
+            if(addRead(readSequenceMatch, baseOffset))
+            {
+                /*
+                SV_LOGGER.debug("junc({}) added read({}), new sequence {}",
+                        mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), new String(mBases));
+                */
+
+                ++addedReads;
+            }
+        }
+
+        /*
+        if(addedReads > 0)
+        {
+            SV_LOGGER.debug("junc({}) added {} unmapped reads, new sequence {}",
+                    mJunctionAssembly.junction().coords(), addedReads, new String(mBases));
+        }
+        */
+
+        return addedReads > 0;
     }
 
     private void extendBases(int newExtensionLength)
@@ -172,7 +191,7 @@ public class UnmappedBaseExtender
         }
     }
 
-    private void addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
+    private boolean addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
     {
         int mismatchCount = 0;
 
@@ -208,13 +227,17 @@ public class UnmappedBaseExtender
             junctionReadStartDistance += baseOffset;
         }
 
-        boolean readReversed = mJunctionOrientation.isForward();
+        boolean reverseBases = reverseReadBases(read);
         int readBaseLength = read.basesLength();
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
         {
-            int readIndex = readReversed ? readBaseLength - 1 - i : i;
+            int readIndex = reverseBases ? readBaseLength - 1 - i : i;
             byte base = read.getBases()[readIndex];
+
+            if(reverseBases)
+                base = swapDnaBase(base);
+
             byte qual = read.getBaseQuality()[readIndex];
 
             if(extBaseIndex >= mBases.length)
@@ -227,12 +250,12 @@ public class UnmappedBaseExtender
             }
             else
             {
-                if(mBases[extBaseIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD)
+                if(mBases[extBaseIndex] == base || belowMinQual(qual))
                 {
                     if((int)qual > (int)mBaseQuals[extBaseIndex])
                         mBaseQuals[extBaseIndex] = qual;
                 }
-                else if(mBaseQuals[extBaseIndex] < LOW_BASE_QUAL_THRESHOLD)
+                else if(belowMinQual(mBaseQuals[extBaseIndex]))
                 {
                     mBases[extBaseIndex] = base;
                     mBaseQuals[extBaseIndex] = qual;
@@ -245,29 +268,32 @@ public class UnmappedBaseExtender
         }
 
         int readBaseOverlap = readIndexEnd - readIndexStart + 1;
-        int permittedMismatches = mismatchesPerComparisonLength(readBaseOverlap);
+        int permittedMismatches = permittedReadMismatches(readBaseOverlap);
 
-        if(mismatchCount <= permittedMismatches)
-        {
-            int matchedCount = readBaseOverlap - mismatchCount;
-            SupportRead supportRead = new SupportRead(read, SupportType.EXTENSION, junctionReadStartDistance, matchedCount, mismatchCount);
-            mSupportReads.add(supportRead);
-        }
+        if(mismatchCount > permittedMismatches)
+            return false;
+
+        int matchedCount = readBaseOverlap - mismatchCount;
+        SupportRead supportRead = new SupportRead(read, SupportType.EXTENSION, junctionReadStartDistance, matchedCount, mismatchCount);
+        mSupportReads.add(supportRead);
+        return true;
     }
 
-    private class ReadSequenceMatch
+    private class ReadSequenceMatch implements Comparable<ReadSequenceMatch>
     {
         public final Read Read;
         public final int ReadSeqStart;
         public final int ExtensionBaseSeqStart;
         public final int Overlap;
+        public final int Mismatches;
 
-        public ReadSequenceMatch(final Read read, final int readSeqStart, final int extensionBaseSeqStart, final int overlap)
+        public ReadSequenceMatch(final Read read, final int readSeqStart, final int extensionBaseSeqStart, final int overlap, int mismatches)
         {
             Read = read;
             ReadSeqStart = readSeqStart;
             ExtensionBaseSeqStart = extensionBaseSeqStart;
             Overlap = overlap;
+            Mismatches = mismatches;
         }
 
         public int maxReadExtension()
@@ -280,9 +306,23 @@ public class UnmappedBaseExtender
                 return mBases.length - ExtensionBaseSeqStart + ReadSeqStart;
         }
 
+        @Override
+        public int compareTo(final ReadSequenceMatch other)
+        {
+            // longer overlap followed by lower mismatches
+            if(Overlap != other.Overlap)
+                return Overlap > other.Overlap ? -1 : 1;
+
+            if(Mismatches != other.Mismatches)
+                return Mismatches < other.Mismatches ? -1 : 1;
+
+            return 0;
+        }
+
         public String toString()
         {
-            return format("id(%s) index(read=%d ext=%d) overlap(%d)", Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap);
+            return format("id(%s) index(read=%d ext=%d) overlap(%d) mismatches(%d)",
+                    Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap, Mismatches);
         }
     }
 
@@ -290,9 +330,14 @@ public class UnmappedBaseExtender
     {
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
 
+        // apply qual trimming before a read is used
+        ReadAdjustments.trimLowQualBases(read);
+
         int readBaseCount = read.getBases().length;
 
-        byte[] readBases = mJunctionOrientation.isForward() ? reverseArray(read.getBases()) : read.getBases();
+        boolean reverseBases = reverseReadBases(read);
+        byte[] readBases = reverseBases ? reverseComplementBases(read.getBases()) : read.getBases();
+
         byte[] readBaseQuals = null;
 
         for(int readIndex = 0; readIndex + subsequenceLength < read.basesLength(); readIndex += subsequenceLength)
@@ -322,10 +367,10 @@ public class UnmappedBaseExtender
             int extBaseIndexStart = extBaseMatchIndex - lowerOverlap;
             int extBaseIndexEnd = extBaseMatchIndex + upperOverlap - 1;
 
-            int permittedMismatches = mismatchesPerComparisonLength(totalOverlap);
+            int permittedMismatches = permittedReadMismatches(totalOverlap);
 
             if(readBaseQuals == null)
-                readBaseQuals = mJunctionOrientation.isForward() ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
+                readBaseQuals = reverseBases ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
 
             int mismatchCount = compareSequences(
                     mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
@@ -334,11 +379,25 @@ public class UnmappedBaseExtender
             if(mismatchCount > permittedMismatches)
                 continue;
 
-            return new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap);
+            /*
+            SV_LOGGER.debug("junc({}) adding unmapped readId({}) orient({} mate={}) overlap({}) mismatches({}) bases({})",
+                    mJunctionAssembly.junction().coords(), read.id(), read.orientation().asByte(), read.mateOrientation().asByte(),
+                    totalOverlap, mismatchCount, new String(readBases));
+            */
+
+            return new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount);
         }
 
         return null;
     }
+
+    private int permittedReadMismatches(int readBaseOverlap)
+    {
+        // more lenient than normal read comparisons
+        return mismatchesPerComparisonLength(readBaseOverlap) + 1;
+    }
+
+    private boolean reverseReadBases(final Read read) { return read.orientation() == read.mateOrientation(); }
 
     public String toString()
     {

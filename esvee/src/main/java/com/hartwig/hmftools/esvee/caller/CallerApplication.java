@@ -3,6 +3,11 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
@@ -10,10 +15,15 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -26,7 +36,10 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class CallerApplication
 {
@@ -41,16 +54,21 @@ public class CallerApplication
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
 
+    private final long mStartTimeMs;
+
     public CallerApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new CallerConfig(configBuilder);
         mFilterConstants = FilterConstants.from(configBuilder);
 
+        mStartTimeMs = System.currentTimeMillis();
+
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.SampleId);
+        String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
+        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.SampleId);
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -82,11 +100,9 @@ public class CallerApplication
             System.exit(1);
         }
 
-        long startTimeMs = System.currentTimeMillis();
-
         processVcf(mConfig.VcfFile);
 
-        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(mStartTimeMs));
     }
 
     private void processVcf(final String vcfFile)
@@ -94,6 +110,12 @@ public class CallerApplication
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
+
+        if(mConfig.ManualRefDepth > 0 && !vcfHeader.hasFormatLine(REF_DEPTH))
+        {
+            vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH, 1, VCFHeaderLineType.Integer, REF_DEPTH_DESC));
+            vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH_PAIR, 1, VCFHeaderLineType.Integer, REF_DEPTH_PAIR_DESC));
+        }
 
         SV_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
@@ -147,7 +169,11 @@ public class CallerApplication
             return;
         }
 
-        SV_LOGGER.info("applying soft-filters");
+        mSvDataCache.buildBreakendMap();
+
+        markLikelyLineSites();
+
+        SV_LOGGER.info("applying filters");
 
         for(Variant var : mSvDataCache.getSvList())
         {
@@ -159,17 +185,7 @@ public class CallerApplication
             mVariantFilters.applyFilters(var);
         }
 
-        mSvDataCache.buildBreakendMap();
-
-        SV_LOGGER.info("deduplication of paired end single breakends");
-        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
-
-        /*
-        // duplicateFinder.findDuplicateSVs(alternatePaths);
-
-        SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
-                duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
-        */
+        Deduplication.deduplicateVariants(mSvDataCache.getBreakendMap());
 
         if(mPonCache.hasValidData())
         {
@@ -214,6 +230,31 @@ public class CallerApplication
             var.markGermline();
     }
 
+    private void markLikelyLineSites()
+    {
+        for(List<Breakend> breakends : mSvDataCache.getBreakendMap().values())
+        {
+            for(int i = 0; i < breakends.size() - 1; ++i)
+            {
+                Breakend breakend = breakends.get(i);
+                Breakend nextBreakend = breakends.get(i + 1);
+
+                if(breakend.otherBreakend() == nextBreakend)
+                    continue;
+
+                if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
+                    continue;
+
+                // mark if either site is line
+                if(breakend.isLine() || nextBreakend.isLine())
+                {
+                    breakend.setLineSiteBreakend(nextBreakend);
+                    nextBreakend.setLineSiteBreakend(breakend);
+                }
+            }
+        }
+    }
+
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
         // SV_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
@@ -223,6 +264,24 @@ public class CallerApplication
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
             SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+        }
+
+        if(mConfig.ManualRefDepth > 0)
+        {
+            if(genotypeIds.hasReference())
+            {
+                if(!variant.getGenotype(genotypeIds.ReferenceId).hasExtendedAttribute(REF_DEPTH))
+                {
+                    variant.getGenotype(genotypeIds.ReferenceId).getExtendedAttributes().put(REF_DEPTH, mConfig.ManualRefDepth);
+                    variant.getGenotype(genotypeIds.ReferenceId).getExtendedAttributes().put(REF_DEPTH_PAIR, mConfig.ManualRefDepth);
+                }
+
+                if(!variant.getGenotype(genotypeIds.TumorId).hasExtendedAttribute(REF_DEPTH))
+                {
+                    variant.getGenotype(genotypeIds.TumorId).getExtendedAttributes().put(REF_DEPTH, mConfig.ManualRefDepth);
+                    variant.getGenotype(genotypeIds.TumorId).getExtendedAttributes().put(REF_DEPTH_PAIR, mConfig.ManualRefDepth);
+                }
+            }
         }
 
         mSvDataCache.processVariant(variant, genotypeIds);

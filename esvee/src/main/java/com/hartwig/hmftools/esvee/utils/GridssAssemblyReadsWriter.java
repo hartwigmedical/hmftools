@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.esvee.utils;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
@@ -24,7 +21,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -41,7 +37,7 @@ public class GridssAssemblyReadsWriter
     public final String mOutputFile;
 
     private final List<Variant> mVariants = new ArrayList<>();
-    private final Map<String, Read> mAssemblies = new HashMap<>();
+    private final Map<String, SAMRecord> mAssemblies = new HashMap<>();
     private final BufferedWriter mWriter;
     int mReadsWritten = 0;
 
@@ -138,10 +134,14 @@ public class GridssAssemblyReadsWriter
             else
                 parsedAssemblyIds = (List<String>) assemblyIds;
 
+            byte orientation = StructuralVariantFactory.parseSvOrientation(variantContext);
+            if(orientation == 0)
+                orientation = StructuralVariantFactory.parseSingleOrientation(variantContext);
+
             Variant variant = new Variant(
                     variantContext.getContig(),
                     variantContext.getStart(),
-                    StructuralVariantFactory.parseSvOrientation(variantContext),
+                    orientation,
                     (String) variantContext.getAttribute(VCF_TAG_SV_TYPE),
                     ciLower,
                     ciUpper,
@@ -195,7 +195,7 @@ public class GridssAssemblyReadsWriter
 
             String bamAssemblyId = samRecord.getReadName();
             if(vcfAssemblyIds.contains(bamAssemblyId))
-                mAssemblies.put(bamAssemblyId, new Read(samRecord));
+                mAssemblies.put(bamAssemblyId, samRecord);
         }
 
         if(mAssemblies.size() == 0)
@@ -212,16 +212,13 @@ public class GridssAssemblyReadsWriter
 
             for(String assemblyId : variant.AssemblyIds)
             {
-                Read assembly = mAssemblies.get(assemblyId);
+                SAMRecord assembly = mAssemblies.get(assemblyId);
 
-                boolean assemblyIntersectsBreakend = assembly.chromosome().equals(variant.Chromosome) &&
-                        assembly.alignmentStart() <= variant.Position &&
-                        assembly.alignmentEnd() >= variant.Position;
+                boolean assemblyIntersectsBreakend = assembly.getReferenceName().equals(variant.Chromosome) &&
+                        assembly.getAlignmentStart() <= variant.Position &&
+                        assembly.getAlignmentEnd() >= variant.Position;
 
-                byte assemblySoftClipOrient = assembly.isRightClipped() ? POS_ORIENT : NEG_ORIENT;
-                boolean orientationsMatch = assemblySoftClipOrient == variant.Orientation;
-
-                if(assemblyIntersectsBreakend && (orientationsMatch | variant.Type.equals(SGL.toString())))
+                if(assemblyIntersectsBreakend)
                 {
                     intersectingAssemblyId = assemblyId;
                     break;
@@ -265,10 +262,10 @@ public class GridssAssemblyReadsWriter
     {
         try
         {
-            Read assembly = mAssemblies.get(assemblyId);
+            SAMRecord assembly = mAssemblies.get(assemblyId);
 
             // Need to dedup read ids as gridss sometimes reports a read id 2 (or more?) times per assembly
-            String[] readIds = String.valueOf(assembly.bamRecord().getAttribute(SAM_TAG_READ_IDS)).split(" ");
+            String[] readIds = String.valueOf(assembly.getAttribute(SAM_TAG_READ_IDS)).split(" ");
             Set<String> uniqueReadIds = new HashSet<>(List.of(readIds));
 
             for(String readId : uniqueReadIds)
@@ -284,7 +281,7 @@ public class GridssAssemblyReadsWriter
                         variant.SvId,
                         variant.BreakendId,
                         readId,
-                        assembly.id(),
+                        assembly.getReadName(),
                         String.valueOf(isIntersectingAssembly)
                 );
 

@@ -42,6 +42,9 @@ public class TumorMutationalLoad
         if(!mTargetRegions.hasTargetRegions())
             return mLoad;
 
+        if(mTargetRegions.codingBases() == 0)
+            return 0;
+
         double adjustedLoad = mBurden;
 
         if(mUnclearVariants > 0)

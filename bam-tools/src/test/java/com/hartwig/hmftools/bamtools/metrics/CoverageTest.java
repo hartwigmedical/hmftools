@@ -224,18 +224,20 @@ public class CoverageTest
 
         bamReader.processRead(read1);
 
+        supp1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 20, testBases.substring(10, 30), testCigar, CHR_1, 10,
+                false, true, new SupplementaryReadData(CHR_1, 10, SUPP_POS_STRAND, testCigar, 60));
+
+        bamReader.processRead(supp1);
+
+        assertTrue(bamReader.readGroupMap().isEmpty());
+
         // now its mate
         mate1 = SamRecordTestUtils.createSamRecord(
                 read1.getReadName(), CHR_1, 50, testBases.substring(50, 70), testCigar, CHR_1, 10,
                 true, false, null);
 
         bamReader.processRead(mate1);
-
-        supp1 = SamRecordTestUtils.createSamRecord(
-                read1.getReadName(), CHR_1, 20, testBases.substring(10, 30), testCigar, CHR_1, 10,
-                false, true, new SupplementaryReadData(CHR_1, 10, SUPP_POS_STRAND, testCigar, 60));
-
-        bamReader.processRead(supp1);
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {

@@ -352,7 +352,7 @@ public class PurpleApplication
 
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
-                        gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
+                        gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
 
                 // clean up any temporary files

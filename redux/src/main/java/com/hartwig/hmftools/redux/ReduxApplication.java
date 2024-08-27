@@ -175,36 +175,39 @@ public class ReduxApplication
             }
         }
 
-        combinedStats.logStats();
-
-        long totalWrittenReads = fileWriterCache.totalWrittenReads();
-        long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
-
-        if(mConfig.UnmapRegions.enabled())
+        if(!mConfig.JitterMsiOnly)
         {
-            RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
-        }
+            combinedStats.logStats();
 
-        if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
-        {
-            long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
+            long totalWrittenReads = fileWriterCache.totalWrittenReads();
+            long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
 
-            RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
-                    combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
-        }
-
-        if(mConfig.WriteStats)
-        {
-            combinedStats.writeDuplicateStats(mConfig);
-
-            if(mConfig.UMIs.Enabled)
+            if(mConfig.UnmapRegions.enabled())
             {
-                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
+                RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+            }
 
-                if(mConfig.UMIs.BaseStats)
+            if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
+            {
+                long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
+
+                RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
+                        combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
+            }
+
+            if(mConfig.WriteStats)
+            {
+                combinedStats.writeDuplicateStats(mConfig);
+
+                if(mConfig.UMIs.Enabled)
                 {
-                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
-                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
+                    combinedStats.UmiStats.writePositionFragmentsData(mConfig);
+
+                    if(mConfig.UMIs.BaseStats)
+                    {
+                        combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                        combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
+                    }
                 }
             }
         }

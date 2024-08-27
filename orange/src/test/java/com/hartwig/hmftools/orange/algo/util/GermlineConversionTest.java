@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -22,17 +25,18 @@ import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleQCFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
@@ -108,7 +112,12 @@ public class GermlineConversionTest
         PurpleLossOfHeterozygosity reportableGermlineLOH =
                 TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).maxCopies(2.0).build();
         PurpleGeneCopyNumber geneCopyNumberForGermlineLOH =
-                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).maxCopyNumber(2.0).build();
+                TestPurpleGeneCopyNumberFactory.builder()
+                        .gene(TEST_GENE1)
+                        .minCopyNumber(2.0)
+                        .minMinorAlleleCopyNumber(0.9)
+                        .maxCopyNumber(2.0)
+                        .build();
         PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE2).build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
@@ -165,7 +174,12 @@ public class GermlineConversionTest
         assertEquals(2, converted.suspectGeneCopyNumbersWithLOH().size());
         assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(suspectSomaticGeneCopyNumberWithLOH));
         PurpleGeneCopyNumber convertedReportableGermlineLOH =
-                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).maxCopyNumber(2.0).build();
+                TestPurpleGeneCopyNumberFactory.builder()
+                        .gene(TEST_GENE1)
+                        .minCopyNumber(0.8)
+                        .minMinorAlleleCopyNumber(0.)
+                        .maxCopyNumber(2.0)
+                        .build();
         assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedReportableGermlineLOH));
 
         PurpleRecord unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
@@ -763,7 +777,7 @@ public class GermlineConversionTest
     }
 
     @Test
-    public void shouldAdjustClonalLikelihoodWhenConvertingVariantsToSomatic()
+    public void canAdjustClonalLikelihoodWhenConvertingVariantsToSomatic()
     {
         PurpleVariant germlineVariant1 = TestPurpleVariantFactory.builder().variantCopyNumber(0).build();
         final List<PurpleVariant> somaticVariants1 = GermlineConversion.toSomaticVariants(Lists.newArrayList(germlineVariant1));
@@ -774,5 +788,21 @@ public class GermlineConversionTest
         final List<PurpleVariant> somaticVariants2 = GermlineConversion.toSomaticVariants(Lists.newArrayList(germlineVariant2));
         assertEquals(1, somaticVariants1.size());
         assertEquals(0.0, somaticVariants2.get(0).subclonalLikelihood(), EPSILON);
+    }
+
+    @Test
+    public void canMergeTumorStats()
+    {
+        PurpleVariant somaticVariant = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .addAllSomaticVariants(somaticVariant)
+                .addReportableGermlineVariants(reportableGermlineVariant)
+                .tumorStats(createMinimalTumorStatsBuilder().hotspotMutationCount(1).build())
+                .build();
+
+        TumorStats mergedTumorStats = GermlineConversion.mergeTumorStats(purple);
+        assertEquals(2, mergedTumorStats.hotspotMutationCount());
     }
 }

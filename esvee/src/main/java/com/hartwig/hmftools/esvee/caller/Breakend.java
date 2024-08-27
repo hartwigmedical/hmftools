@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
@@ -44,6 +45,8 @@ public class Breakend
     private final List<String> mLinkedAssemblyIds;
     private int mChrLocationIndex;
 
+    private Breakend mLineSiteBreakend;
+
     public Breakend(
             final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
             final Orientation orientation, final Genotype refGenotype, final Genotype tumorGenotype)
@@ -82,6 +85,7 @@ public class Breakend
         else
             mLinkedAssemblyIds = Collections.emptyList();
 
+        mLineSiteBreakend = null;
         mChrLocationIndex = -1;
     }
 
@@ -127,6 +131,8 @@ public class Breakend
         return getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
     }
 
+    public int fragmentCount() { return fragmentCount(TumorGenotype) + fragmentCount(RefGenotype); }
+
     // convenience
     public boolean isSgl() { return mVariant.isSgl(); }
     public StructuralVariantType type() { return mVariant.type(); }
@@ -138,6 +144,12 @@ public class Breakend
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
+
+    public boolean isLine() { return IsLineInsertion || Context.hasAttribute(LINE_SITE); }
+    public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
+    public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
+
+    public boolean inChainedAssembly() { return Context.hasAttribute(ASM_LINKS); }
 
     public int anchorLength()
     {

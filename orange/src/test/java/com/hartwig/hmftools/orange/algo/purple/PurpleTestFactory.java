@@ -21,6 +21,12 @@ public final class PurpleTestFactory
     @NotNull
     public static PurpleData createMinimalTestPurpleData()
     {
+        return createMinimalTestPurpleDataBuilder().build();
+    }
+
+    @NotNull
+    public static ImmutablePurpleData.Builder createMinimalTestPurpleDataBuilder()
+    {
         PurityContext minimalContext = ImmutablePurityContext.builder()
                 .gender(Gender.FEMALE)
                 .runMode(RunMode.TUMOR_GERMLINE)
@@ -40,7 +46,7 @@ public final class PurpleTestFactory
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .build();
 
-        return ImmutablePurpleData.builder().purityContext(minimalContext).build();
+        return ImmutablePurpleData.builder().purityContext(minimalContext);
     }
 
     @NotNull

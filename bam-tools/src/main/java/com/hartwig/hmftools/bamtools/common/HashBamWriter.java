@@ -51,7 +51,7 @@ public class HashBamWriter implements AutoCloseable
             final String tempDir = Files.createTempDirectory(tempDirPrefix)
                     .toString();
 
-            BT_LOGGER.info("creating {} hash bams in {}", mNumHashBams, tempDir);
+            BT_LOGGER.trace("creating {} hash bams in {}", mNumHashBams, tempDir);
 
             for(int i = 0; i < mNumHashBams; ++i)
             {

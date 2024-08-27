@@ -386,7 +386,7 @@ public class JitterTest
         String readBases = REF_BASES_200.substring(80, 100) + var.alt() + "AAAAAA" + REF_BASES_200.substring(101, 121);
         byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
         String readCigar = buildCigarString(readBases.length());
-        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+        SAMRecord read = buildSamRecord(80, readCigar, readBases, baseQuals);
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
