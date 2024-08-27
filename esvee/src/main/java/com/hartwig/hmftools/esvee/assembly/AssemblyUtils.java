@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
-import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 

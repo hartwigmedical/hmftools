@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceCount;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isLineSequence;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineSequence;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_TEST_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
