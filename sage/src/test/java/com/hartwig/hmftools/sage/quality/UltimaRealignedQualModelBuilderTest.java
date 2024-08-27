@@ -1,24 +1,22 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getHomopolymers;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getQualVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.getRealignedVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getQualVariants;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getRealignedVariants;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.mergeSandwichedHomopolymers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.Homopolymer;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.MergedHomopolymers;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelBuilder.UltimaRealignedQualModel;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
 
 import org.junit.Test;
 

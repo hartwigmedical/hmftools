@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.Nullable;
@@ -163,24 +165,29 @@ public class MsiJitterCalcs
         return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
     }
 
+    @VisibleForTesting
     public double calcErrorRate(final VariantReadContext readContext, final String sampleId)
     {
-        if(!readContext.variant().isIndel())
+        return calcErrorRate(readContext.variant(), readContext.VarIndex, readContext.variantRefIndex(), readContext.RefBases, readContext.ReadBases, sampleId);
+    }
+
+    public double calcErrorRate(final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases, final byte[] readBases, final String sampleId)
+    {
+        if(!variant.isIndel())
             return 0;
 
-        int repeatIndexStart = readContext.variantRefIndex() + 1;
-        int readRepeatIndexStart = readContext.VarIndex + 1;
+        int repeatIndexStart = variantRefIndex + 1;
+        int readRepeatIndexStart = varIndex + 1;
 
         RepeatInfo refRepeat = RepeatInfo.findMaxRepeat(
-                readContext.RefBases, repeatIndexStart, repeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
+                refBases, repeatIndexStart, repeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
                 false, repeatIndexStart);
 
         RepeatInfo inferredRefRepeat = RepeatInfo.findMaxRepeat(
-                readContext.ReadBases, readRepeatIndexStart, readRepeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
+                readBases, readRepeatIndexStart, readRepeatIndexStart, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
                 false, readRepeatIndexStart);
 
-        String altBases = readContext.variant().isInsert() ?
-                readContext.variant().Alt.substring(1) : readContext.variant().Ref.substring(1);
+        String altBases = variant.isInsert() ? variant.Alt.substring(1) : variant.Ref.substring(1);
 
         RepeatInfo repeatToUse;
         if(inferredRefRepeat == null || !altBases.startsWith(inferredRefRepeat.Bases))
@@ -190,14 +197,14 @@ public class MsiJitterCalcs
         else
         {
             int refRepeatCount = refRepeat == null ? 0 : refRepeat.Count;
-            int inferredRefRepeatCount = inferredRefRepeat.Count - getImpliedAltChange(readContext, altBases, inferredRefRepeat);
+            int inferredRefRepeatCount = inferredRefRepeat.Count - getImpliedAltChange(variant.isDelete(), altBases, inferredRefRepeat);
             repeatToUse = new RepeatInfo(inferredRefRepeat.Index, inferredRefRepeat.Bases, Math.max(refRepeatCount, inferredRefRepeatCount));
         }
 
         if(repeatToUse == null)
             return 0;
 
-        int impliedAltChange = getImpliedAltChange(readContext, altBases, repeatToUse);
+        int impliedAltChange = getImpliedAltChange(variant.isDelete(), altBases, repeatToUse);
 
         if(impliedAltChange > MSI_JITTER_MAX_REPEAT_CHANGE || impliedAltChange == 0)
             return 0;
@@ -217,12 +224,12 @@ public class MsiJitterCalcs
         return varParams.calcErrorRate(repeatToUse.Count, impliedAltChange, fixedScale);
     }
 
-    private static int getImpliedAltChange(VariantReadContext readContext, String altBases, RepeatInfo repeat)
+    private static int getImpliedAltChange(boolean isDelete, final String altBases, final RepeatInfo repeat)
     {
         int impliedAltChange = altBases.length() / repeat.repeatLength();
-
-        if(readContext.variant().isDelete())
+        if(isDelete)
             impliedAltChange *= -1;
+
         return impliedAltChange;
     }
 

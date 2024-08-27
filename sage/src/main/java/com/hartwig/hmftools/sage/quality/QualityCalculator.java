@@ -56,14 +56,9 @@ public class QualityCalculator
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
 
-    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant, final byte[] coreBases)
+    public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
-        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant, coreBases) : null;
-    }
-
-    public List<UltimaQualModel> createRealignedUltimaQualModels(final VariantReadContext readContext)
-    {
-        return mUltimaQualCalculator != null ? UltimaRealignedQualModelBuilder.buildRealignedUltimaQualModels(readContext, mUltimaQualCalculator) : null;
+        return mUltimaQualCalculator != null ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator) : null;
     }
 
     public static int modifiedMapQuality(
@@ -137,26 +132,7 @@ public class QualityCalculator
     {
         if(readContextCounter.realignedUltimaQualModels() != null)
         {
-            double ultimaQual = ULTIMA_MAX_QUAL;
-            for(UltimaQualModel realignedUltimaQualModel : readContextCounter.realignedUltimaQualModels())
-            {
-                double modelQual;
-                if(realignedUltimaQualModel.type() == MICROSAT_ADJUSTMENT && readContextCounter.qualCache().usesMsiIndelErrorQual())
-                {
-                    modelQual = readContextCounter.qualCache().msiIndelErrorQual();
-                }
-                else
-                {
-                    modelQual = realignedUltimaQualModel.calculateQual(record, readIndex);
-                }
-
-                if(modelQual < 0)
-                    return INVALID_BASE_QUAL;
-
-                ultimaQual = min(ultimaQual, modelQual);
-            }
-
-            return ultimaQual;
+            return readContextCounter.realignedUltimaQualModels().calculateQual(readContextCounter, readIndex, record);
         }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?

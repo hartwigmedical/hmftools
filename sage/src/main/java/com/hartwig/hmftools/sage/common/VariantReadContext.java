@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.List;
@@ -10,12 +9,10 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
-import com.hartwig.hmftools.sage.quality.UltimaQualModel;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 
 public class VariantReadContext
 {
@@ -42,7 +39,7 @@ public class VariantReadContext
     private final String mReadCigarStr;
 
     private ArtefactContext mArtefactContext;
-    private List<UltimaQualModel> mRealignedUltimaQualModels;
+    private UltimaRealignedQualModels mUltimaRealignedQualModels;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
     private byte[] mExtendedRefBases;
@@ -71,7 +68,7 @@ public class VariantReadContext
         CorePositionEnd = corePositionEnd;
 
         mArtefactContext = null;
-        mRealignedUltimaQualModels = null;
+        mUltimaRealignedQualModels = null;
         mMaxRefRepeat = null;
         mExtendedRefBases = null;
     }
@@ -133,14 +130,10 @@ public class VariantReadContext
     public ArtefactContext artefactContext() { return mArtefactContext; }
     public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
 
-    public List<UltimaQualModel> realignedUltimaQualModels() { return mRealignedUltimaQualModels; }
-    public void setRealignedUltimaQualModels(final List<UltimaQualModel> models, UltimaQualModel qualModel)
+    public UltimaRealignedQualModels realignedUltimaQualModels() { return mUltimaRealignedQualModels; }
+    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels model)
     {
-        mRealignedUltimaQualModels = models;
-        if(qualModel != null && models != null)
-            mRealignedUltimaQualModels.add(qualModel);
-        else if(qualModel != null)
-            mRealignedUltimaQualModels = List.of(qualModel);
+        mUltimaRealignedQualModels = model;
     }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }

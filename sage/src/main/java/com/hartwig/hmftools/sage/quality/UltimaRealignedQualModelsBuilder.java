@@ -12,7 +12,6 @@ import static htsjdk.samtools.CigarOperator.I;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,13 +24,12 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
 // TODO: clean up unneeded functions.
 // TODO: run "Reformat code"
 // TODO: comprehensive unit tests.
-public class UltimaRealignedQualModelBuilder
+public class UltimaRealignedQualModelsBuilder
 {
     private static final HashMap<Byte, Integer> CYCLE_BASE_INDEX;
     static
@@ -41,48 +39,6 @@ public class UltimaRealignedQualModelBuilder
         {
             CYCLE_BASE_INDEX.put(CYCLE_BASES[i], i);
         }
-    }
-
-    // TODO: This is duct tape for now.
-    public static class UltimaRealignedQualModel extends UltimaQualModel
-    {
-        private final SimpleVariant mVariant;
-        private final UltimaQualModel mBaseQualModel;
-        private final int mVarReadIndexOffset;
-
-        public UltimaRealignedQualModel(final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset)
-        {
-            super(baseQualModel.type());
-
-            mVariant = variant;
-            mBaseQualModel = baseQualModel;
-            mVarReadIndexOffset = varReadIndexOffset;
-        }
-
-        @VisibleForTesting
-        public UltimaRealignedQualModel(final SimpleVariant variant, int varReadIndexOffset)
-        {
-            // this is just a placeholder for testing
-            super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
-
-            mVariant = variant;
-            mBaseQualModel = null;
-            mVarReadIndexOffset = varReadIndexOffset;
-        }
-
-        @VisibleForTesting
-        public UltimaRealignedQualModel(final SimpleVariant variant)
-        {
-            this(variant, -1);
-        }
-
-        @Override
-        public byte calculateQual(final SAMRecord record, final int varReadIndex)
-        {
-            return mBaseQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);
-        }
-
-        public SimpleVariant variant() { return mVariant; }
     }
 
     @VisibleForTesting
@@ -186,16 +142,16 @@ public class UltimaRealignedQualModelBuilder
         return false;
     }
 
-    public static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    public static UltimaRealignedQualModels buildUltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
-        return buildRealignedUltimaQualModels(readContext, ultimaQualCalculator, false);
+        return buildUltimaRealignedQualModels(readContext, ultimaQualCalculator, false);
     }
 
-    private static List<UltimaQualModel> buildRealignedUltimaQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, boolean skipSandwichMasking)
+    private static UltimaRealignedQualModels buildUltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, boolean skipSandwichMasking)
     {
-        if(isCleanSnv(readContext))
+        if(!skipSandwichMasking && isCleanSnv(readContext))
         {
-            return Lists.newArrayList();  // if a clean SNV, want to take max of quals, not min
+            return new UltimaRealignedQualModels(readContext, ultimaQualCalculator);  // if a clean SNV, want to take max of quals, not min
         }
 
         if(!skipSandwichMasking && readContext.variant().isInsert())
@@ -203,7 +159,7 @@ public class UltimaRealignedQualModelBuilder
             int insertLength = readContext.alt().length() - 1;
             if(!readCoreCigarContainsElement(readContext, new CigarElement(insertLength, I)))
             {
-                return Lists.newArrayList();
+                return new UltimaRealignedQualModels(readContext, ultimaQualCalculator);
             }
         }
 
@@ -229,28 +185,23 @@ public class UltimaRealignedQualModelBuilder
         }
 
         // TODO: This has been duct taped.
-        List<UltimaQualModel> realignedQualModels = realignedVariants
-                .stream()
-                .map(x -> (UltimaQualModel) x)
-                .collect(Collectors.toList());
+        // TODO: NOW
+        List<UltimaRealignedQualModel> realignedQualModels = realignedVariants;
 
-        // TODO: Use indel variants?
-        //                getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext.variant(), realignedVariants)
-        //                        .stream()
-        //                        .map(x -> (UltimaQualModel) x)
-        //                        .collect(Collectors.toList());
+        // TODO: Indel balance?
+        // getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext.variant(), realignedVariants);
 
         if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwichMasking)
         {
-            return buildRealignedUltimaQualModels(readContext, ultimaQualCalculator, true);  // TODO: should handle skipping first/last sandwiched?
+            return buildUltimaRealignedQualModels(readContext, ultimaQualCalculator, true);  // TODO: should handle skipping first/last sandwiched?
         }
         else if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
         {
             SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
-            return Lists.newArrayList();
+            return new UltimaRealignedQualModels(readContext, ultimaQualCalculator);
         }
 
-        return realignedQualModels;
+        return new UltimaRealignedQualModels(readContext, ultimaQualCalculator, realignedQualModels);
     }
 
     @VisibleForTesting
@@ -524,12 +475,12 @@ public class UltimaRealignedQualModelBuilder
             return;
         }
 
-        String chromosome = readContext.variant().chromosome();
         if(lastMatchedRefPos == -1 || lastMatchedReadCoreIndex == -1 || lastMatchedLength == -1)
         {
             throw new IllegalArgumentException("Looks as though the first core homopolymers of the read and ref do not have the same base.");
         }
 
+        String chromosome = readContext.variant().chromosome();
         int origReadCoreIndex = readContext.VarIndex - readContext.CoreIndexStart;
         for(int i = 0; i < delHomopolymers.size(); i++)
         {
@@ -543,8 +494,8 @@ public class UltimaRealignedQualModelBuilder
             if(firstRefBase == -1 || firstAltBase == -1)
             {
                 // TODO: look into this this T -> TT
-              firstRefBase = readContext.ReadBases[readContext.CoreIndexStart - 1];
-              firstAltBase = firstRefBase;
+                firstRefBase = readContext.ReadBases[readContext.CoreIndexStart - 1];
+                firstAltBase = firstRefBase;
             }
 
             if(delHomopolymer.Base == lastMatchedBase)
@@ -559,9 +510,13 @@ public class UltimaRealignedQualModelBuilder
             SimpleVariant variant = new SimpleVariant(chromosome, varPosition, ref, alt);
             byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset-1, readContext.VarIndex+varReadIndexOffset+1);
             if(varReadIndexOffset == -1 && !readContext.variant().isIndel()) // common scenario, we want to pass in the base after the variant, not the SNV base itself, for the right straddle base
-                coreBases[2] = readContext.ReadBases[readContext.VarIndex+varReadIndexOffset+2];
+            {
+                coreBases[2] = readContext.ReadBases[readContext.VarIndex + varReadIndexOffset + 2];
+            }
+
+            int varIndex = varReadIndexOffset + readContext.VarIndex;
             UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant, coreBases);
-            UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset);
+            UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset, varIndex, varPosition - readContext.CorePositionStart);
             realignedVariants.add(realignedQualModel);
         }
 
@@ -591,9 +546,11 @@ public class UltimaRealignedQualModelBuilder
             String alt = String.valueOf((char) firstAltBase) + insBasesString;
 
             SimpleVariant variant = new SimpleVariant(chromosome, varPosition, ref, alt);
-            byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset-1, readContext.VarIndex+varReadIndexOffset+1);
+            byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset - 1, readContext.VarIndex + varReadIndexOffset + 1);
+
+            int varIndex = varReadIndexOffset + readContext.VarIndex;
             UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant, coreBases);
-            UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset);
+            UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset, varIndex, varPosition - readContext.CorePositionStart);
             realignedVariants.add(realignedQualModel);
         }
     }

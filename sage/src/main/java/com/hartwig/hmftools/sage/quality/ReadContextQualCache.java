@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -15,8 +12,7 @@ public class ReadContextQualCache
     private final String mVariantAlt;
     private final Map<String,Double>[] mQualMapByIndex;
     private final QualityCalculator mQualityCalculator;
-    private final double mMsiIndelErrorQual;
-    private final boolean mIsMsiSampleAndVariant;
+    private final MsiJitterQualCache mMsiJitterQualCache;
 
     public ReadContextQualCache(final VariantReadContext readContext, final QualityCalculator qualityCalculator, final String sampleId)
     {
@@ -24,22 +20,17 @@ public class ReadContextQualCache
         mVariantAlt = readContext.variant().alt();
 
         mQualityCalculator = qualityCalculator;
-
-        double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
-        mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
-        mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
-
+        mMsiJitterQualCache = new MsiJitterQualCache(readContext, qualityCalculator, sampleId);
         mQualMapByIndex = new HashMap[mVariantAlt.length()];
-
         for(int i = 0; i < mVariantAlt.length(); ++i)
         {
             mQualMapByIndex[i] = new HashMap<>();
         }
     }
 
-    public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
-    public boolean usesMsiIndelErrorQual() { return mMsiIndelErrorQual != INVALID_BASE_QUAL; }
-    public boolean isMsiSampleAndVariant() { return mIsMsiSampleAndVariant; }
+    public double msiIndelErrorQual() { return mMsiJitterQualCache.msiIndelErrorQual(); }
+    public boolean usesMsiIndelErrorQual() { return mMsiJitterQualCache.usesMsiIndelErrorQual(); }
+    public boolean isMsiSampleAndVariant() { return mMsiJitterQualCache.isMsiSampleAndVariant(); }
 
     public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
     {

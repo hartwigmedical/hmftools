@@ -68,8 +68,8 @@ import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
-import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.common.NumberEvents;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
@@ -234,7 +234,7 @@ public class ReadContextCounter
     public JitterData jitter() { return mJitterData; }
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
-    public List<UltimaQualModel> realignedUltimaQualModels() { return mReadContext.realignedUltimaQualModels(); }
+    public UltimaRealignedQualModels realignedUltimaQualModels() { return mReadContext.realignedUltimaQualModels(); }
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
@@ -673,4 +673,6 @@ public class ReadContextCounter
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
     public ReadSupportCounts readSupportCounts() { return mCounts; }
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
+
+    public QualityCalculator qualityCalculator() { return mQualityCalculator; }
 }
