@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -24,6 +25,7 @@ public class GermlineSvData implements ComparableItem
     private final BasePosition mComparisonEndPosition;
 
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
+    protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
 
     public GermlineSvData(
             final LinxGermlineSv svData, boolean isReported, final BasePosition comparisonStartPosition,
@@ -62,6 +64,8 @@ public class GermlineSvData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(String.format("%s", mIsReported));
         values.add(String.format("%d", SvData.GermlineFragments));
+        values.add(String.format("%d", (int) SvData.QualScore));
+        values.add(String.format("%.2f", SvData.JunctionCopyNumber));
         return values;
     }
 
@@ -103,8 +107,10 @@ public class GermlineSvData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_QUAL, (int) SvData.QualScore, (int) otherSv.SvData.QualScore, thresholds);
+        checkDiff(diffs, FLD_REPORTED, mIsReported, otherSv.mIsReported);
         checkDiff(diffs, FLD_GERMLINE_FRAGS, SvData.GermlineFragments, otherSv.SvData.GermlineFragments, thresholds);
+        checkDiff(diffs, FLD_QUAL, (int) SvData.QualScore, (int) otherSv.SvData.QualScore, thresholds);
+        checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, SvData.JunctionCopyNumber, otherSv.SvData.JunctionCopyNumber, thresholds);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

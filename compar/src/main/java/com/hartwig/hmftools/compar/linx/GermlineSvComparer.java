@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class GermlineSvComparer implements ItemComparer
     {
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
         thresholds.addFieldThreshold(FLD_GERMLINE_FRAGS, 5, 0.1);
+        thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
     }
 
     @Override
@@ -58,7 +60,7 @@ public class GermlineSvComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_GERMLINE_FRAGS);
+        return Lists.newArrayList(FLD_REPORTED, FLD_GERMLINE_FRAGS, FLD_QUAL, FLD_JUNCTION_COPY_NUMBER);
     }
 
     @Override
