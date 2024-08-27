@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
@@ -16,6 +19,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -238,23 +242,35 @@ public class AlignmentFragments
 
         boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
         boolean setValidFragmentLength = false;
+        int indelLength = 0;
+        StructuralVariantType svType = null;
 
         if(mAssemblyAlignment.assemblies().size() == 2)
         {
             if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel())
             || mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
             {
-                setValidFragmentLength = true;
+                if(mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() == 1)
+                {
+                    indelLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
+                    svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
+                }
             }
         }
         else if(!read.isDiscordant() && breakends.size() <= 2)
         {
-            setValidFragmentLength = true;
+            indelLength = breakends.iterator().next().svLength();
+            svType = breakends.iterator().next().svType();
         }
 
-        if(setValidFragmentLength)
+        if(svType != null && (svType == DUP || svType == INS || svType == DEL) && indelLength != 0)
         {
-            inferredFragmentLength = abs(read.insertSize()) + read.leftClipLength() + read.rightClipLength();
+            // inferredFragmentLength = abs(read.insertSize()) + read.leftClipLength() + read.rightClipLength();
+            if(svType == DEL)
+                indelLength = -abs(indelLength);
+
+            setValidFragmentLength = true;
+            inferredFragmentLength = abs(read.insertSize()) + indelLength;
             read.setInferredFragmentLength(inferredFragmentLength);
         }
 
