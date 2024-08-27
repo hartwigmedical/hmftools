@@ -4,12 +4,14 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
@@ -183,6 +185,8 @@ public class VariantBreakend
 
     public boolean hasLineLink() { return LinkedLineBreakends != null; }
 
+    public boolean hasLineInfoFlag() { return Context.getAttributeAsBoolean(LINE_SITE, false); }
+
     public String toString()
     {
         return String.format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]);
@@ -238,11 +242,19 @@ public class VariantBreakend
         return String.format("%.0f", Context.getPhredScaledQual());
     }
 
-    public String fragsStr(String sampleId){ return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS); }
+    public String fragsStr(String sampleId)
+    {
+        if(mSvCaller == SvCaller.GRIDSS)
+        {
+            return isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
+        }
+
+        return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS);
+    }
 
     public StructuralVariantType svType()
     {
-        if(OtherChromosome.equals(""))
+        if(isSingle())
         {
             return SGL;
         }

@@ -205,7 +205,8 @@ public class BreakendMatcher
                     "OldFilter",   "NewFilter",
                     "OldVcfType",  "NewVcfType",
                     "OldQual",     "NewQual",
-                    "OldVF",       "NewVF"
+                    "OldVF",       "NewVF",
+                    "OldIsLine",   "NewIsLine"
             );
 
             writer.write(header);
@@ -245,6 +246,7 @@ public class BreakendMatcher
         String oldVcfType  = "";
         String oldQual     = "";
         String oldVF       = "";
+        String oldIsLine   = "";
         if(oldBreakend != null)
         {
             oldId = oldBreakend.Context.getID();
@@ -259,6 +261,7 @@ public class BreakendMatcher
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
             oldVF = oldBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            oldIsLine = String.valueOf(oldBreakend.hasLineInfoFlag());
         }
 
         String newId       = "";
@@ -273,6 +276,7 @@ public class BreakendMatcher
         String newVcfType  = "";
         String newQual     = "";
         String newVF       = "";
+        String newIsLine   = "";
         if(newBreakend != null)
         {
             newId = newBreakend.Context.getID();
@@ -287,6 +291,7 @@ public class BreakendMatcher
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
             newVF = newBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            newIsLine = String.valueOf(newBreakend.hasLineInfoFlag());
         }
 
         String diffs = "";
@@ -313,7 +318,8 @@ public class BreakendMatcher
                     oldFilter,   newFilter,
                     oldVcfType,  newVcfType,
                     oldQual,     newQual,
-                    oldVF,       newVF
+                    oldVF,       newVF,
+                    oldIsLine,   newIsLine
             );
 
             writer.write(line);

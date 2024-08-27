@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -55,6 +56,7 @@ public class LineLinkWriter
     private static final List<String> FIXED_HEADER_FIELDS = List.of(
             "SampleId",
             "UnifiedPolyACoords",
+            "UnifiedPolyACoordsCount",
             "PolyAMatchType",
             "HasAnyPass"
     );
@@ -273,6 +275,26 @@ public class LineLinkWriter
         }
     }
 
+    private HashMap<String, Integer> countUnifiedPolyACoords(List<BreakendMatch> breakendMatches)
+    {
+        HashMap<String, Integer> countMap = new HashMap<>();
+
+        for(BreakendMatch match : breakendMatches)
+        {
+            VariantBreakend oldBreakend = match.OldBreakend;
+            VariantBreakend newBreakend = match.NewBreakend;
+
+            if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
+                continue;
+
+            String coords = getUnifiedPolyACoords(oldBreakend, newBreakend);
+
+            countMap.merge(coords, 1, Integer::sum);
+        }
+
+        return countMap;
+    }
+
     private static boolean variantHasAnyPass(@Nullable VariantBreakend breakend)
     {
         boolean anyPass;
@@ -302,6 +324,8 @@ public class LineLinkWriter
 
             List<BreakendMatch> breakendMatches = mBreakendMatcher.getBreakendMatches();
 
+            HashMap<String, Integer> unifiedPolyACoordsCountMap = countUnifiedPolyACoords(breakendMatches);
+
             for(BreakendMatch match : breakendMatches)
             {
                 VariantBreakend oldBreakend = match.OldBreakend;
@@ -316,6 +340,9 @@ public class LineLinkWriter
 
                 String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
                 rowStrings.add(unifiedPolyACoords);
+
+                Integer unifiedPolyACoordsCount = unifiedPolyACoordsCountMap.get(unifiedPolyACoords);
+                rowStrings.add(unifiedPolyACoordsCount.toString());
 
                 String polyAMatchType = match.Type.toString();
                 rowStrings.add(polyAMatchType);

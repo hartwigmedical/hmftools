@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinkType;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinkWriter;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
@@ -50,8 +51,8 @@ public class LineCompareTask implements Runnable
 
         mBreakendMatcher.gatherUnmatchedVariants(oldChrBreakendMap, newChrBreakendMap);
 
-        LineLinker.inferLinks(oldChrBreakendMap, newChrBreakendMap);
-        LineLinker.inferLinks(newChrBreakendMap, oldChrBreakendMap);
+        LineLinker.inferLinksBetweenBreakendSets(oldChrBreakendMap, newChrBreakendMap, LineLinkType.OLD_POLY_A_NEW_OTHER);
+        LineLinker.inferLinksBetweenBreakendSets(newChrBreakendMap, oldChrBreakendMap, LineLinkType.NEW_POLY_A_OLD_OTHER);
 
         LineLinkWriter writer = new LineLinkWriter(mBreakendMatcher, mConfig);
         writer.writeBreakends();

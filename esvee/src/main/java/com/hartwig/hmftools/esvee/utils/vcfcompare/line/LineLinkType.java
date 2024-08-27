@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
 
-enum LineLinkType
+public enum LineLinkType
 {
     LINKED,
-    INFERRED_OTHER,
+    OLD_POLY_A_NEW_OTHER,
+    NEW_POLY_A_OLD_OTHER,
     NO_LINK;
 }
