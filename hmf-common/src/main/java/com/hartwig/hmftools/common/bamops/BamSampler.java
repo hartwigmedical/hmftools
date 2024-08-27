@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.bam;
+package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.Math.max;
 
@@ -8,6 +8,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.bam;
+package com.hartwig.hmftools.common.bamops;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

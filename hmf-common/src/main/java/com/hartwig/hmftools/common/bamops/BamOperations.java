@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.common.bam;
-
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.SAM_LOGGER;
+package com.hartwig.hmftools.common.bamops;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -11,6 +9,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public final class BamOperations
 {
     private static final String INDEX_COMMAND = "index";
@@ -18,10 +19,12 @@ public final class BamOperations
     private static final String CONCATENATE_COMMAND = "cat";
     private static final String SORT_COMMAND = "sort";
 
+    protected static final Logger BOP_LOGGER = LogManager.getLogger(BamOperations.class);
+
     public static boolean mergeBams(
             final BamToolName toolName, final String toolPath, final String outputBam, final List<String> inputBams, final int threads)
     {
-        SAM_LOGGER.debug("merging {} bams", inputBams.size());
+        BOP_LOGGER.debug("merging {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -39,7 +42,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        SAM_LOGGER.debug("merge complete");
+        BOP_LOGGER.debug("merge complete");
         return true;
     }
 
@@ -48,11 +51,11 @@ public final class BamOperations
     {
         if(toolName != BamToolName.SAMTOOLS)
         {
-            SAM_LOGGER.error("{} concatenation no supported", toolName);
+            BOP_LOGGER.error("{} concatenation no supported", toolName);
             return false;
         }
 
-        SAM_LOGGER.debug("concatenating {} bams", inputBams.size());
+        BOP_LOGGER.debug("concatenating {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -74,13 +77,13 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        SAM_LOGGER.debug("merge complete");
+        BOP_LOGGER.debug("merge complete");
         return true;
     }
 
     public static boolean indexBam(final BamToolName toolName, final String toolPath, final String bamFilename, final int threads)
     {
-        SAM_LOGGER.debug("indexing bam({})", bamFilename);
+        BOP_LOGGER.debug("indexing bam({})", bamFilename);
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -92,7 +95,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, bamFilename))
             return false;
 
-        SAM_LOGGER.debug("index complete");
+        BOP_LOGGER.debug("index complete");
         return true;
     }
 
@@ -126,7 +129,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        SAM_LOGGER.debug("sort complete");
+        BOP_LOGGER.debug("sort complete");
         return true;
     }
 
@@ -162,7 +165,7 @@ public final class BamOperations
 
             if(result != 0)
             {
-                SAM_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
+                BOP_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
                 logErrorFile(redirectErrFile);
                 // System.err.print(new String(process.getErrorStream().readAllBytes()));
                 return false;
@@ -174,7 +177,7 @@ public final class BamOperations
         }
         catch(Exception e)
         {
-            SAM_LOGGER.error("error running command({}) for file({}): {}", commandToStr(command), outputPrefix, e.toString());
+            BOP_LOGGER.error("error running command({}) for file({}): {}", commandToStr(command), outputPrefix, e.toString());
             return false;
         }
 
@@ -190,16 +193,16 @@ public final class BamOperations
     {
         try
         {
-            SAM_LOGGER.error("error file({}) contents", errorFile);
+            BOP_LOGGER.error("error file({}) contents", errorFile);
 
             for(String line : Files.readAllLines(Paths.get(errorFile)))
             {
-                SAM_LOGGER.error("{}", line);
+                BOP_LOGGER.error("{}", line);
             }
         }
         catch(Exception e)
         {
-            SAM_LOGGER.error("cannot read  error file: {}", e.toString());
+            BOP_LOGGER.error("cannot read  error file: {}", e.toString());
         }
     }
 }

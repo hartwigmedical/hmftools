@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.merge;
+package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.String.format;
 

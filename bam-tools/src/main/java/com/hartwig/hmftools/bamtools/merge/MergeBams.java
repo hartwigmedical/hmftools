@@ -1,14 +1,13 @@
-package com.hartwig.hmftools.redux.merge;
+package com.hartwig.hmftools.bamtools.merge;
 
-import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.KEEP_INTERIM_BAMS;
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,7 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamMerger;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -28,6 +28,7 @@ public class MergeBams
 
     private static final String INPUT_BAMS = "input_bams";
     private static final String OUTPUT_BAM = "output_bam";
+    private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
 
     public MergeBams(final ConfigBuilder configBuilder)
     {
@@ -42,7 +43,7 @@ public class MergeBams
         {
             if(!Files.exists(Paths.get(inputBam)))
             {
-                RD_LOGGER.error("missing input BAM: {}", inputBam);
+                BT_LOGGER.error("missing input BAM: {}", inputBam);
                 hasMissing = true;
             }
         }
@@ -63,11 +64,11 @@ public class MergeBams
     {
         long startTimeMs = System.currentTimeMillis();
 
-        RD_LOGGER.info("starting BAM merge");
+        BT_LOGGER.info("starting BAM merge");
 
         mBamMerger.merge();
 
-        RD_LOGGER.info("BAM merge complete, mins({})", runTimeMinsStr(startTimeMs));
+        BT_LOGGER.info("BAM merge complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
@@ -76,10 +77,11 @@ public class MergeBams
 
         configBuilder.addConfigItem(INPUT_BAMS, true, "List of input BAMs to be merged, separated ','");
         configBuilder.addConfigItem(OUTPUT_BAM, true, "Output BAM filename");
+        configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
 
         RefGenomeSource.addRefGenomeFile(configBuilder, true);
         BamToolName.addConfig(configBuilder);
-        configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
+
         addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
 

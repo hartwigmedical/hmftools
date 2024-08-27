@@ -1,15 +1,14 @@
-package com.hartwig.hmftools.redux.merge;
+package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.Math.ceil;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CRAM_INDEX_EXTENSION;
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,8 +18,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamOperations;
-import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import htsjdk.samtools.QueryInterval;
@@ -79,16 +76,16 @@ public class BamMerger
         UnmappedMergeTask unmappedMergeTask = new UnmappedMergeTask(mInputBams, mRefGenomeFile, mOutputBamPrefix);
         workers.add(unmappedMergeTask);
 
-        RD_LOGGER.debug("splitting {} sequence merges across {} threads", sequences.size(), mThreads);
+        BOP_LOGGER.debug("splitting {} sequence merges across {} threads", sequences.size(), mThreads);
 
         if(!runThreadTasks(workers))
             System.exit(1);
 
-        RD_LOGGER.debug("all sequence merge tasks complete");
+        BOP_LOGGER.debug("all sequence merge tasks complete");
 
         makeFinalBam(sequenceIntervals);
 
-        RD_LOGGER.debug("BAM merge complete");
+        BOP_LOGGER.debug("BAM merge complete");
 
         return true;
     }
@@ -169,7 +166,7 @@ public class BamMerger
         if(bamMissingIndexFiles.isEmpty())
             return;
 
-        RD_LOGGER.debug("building index files for {} files", bamMissingIndexFiles.size());
+        BOP_LOGGER.debug("building index files for {} files", bamMissingIndexFiles.size());
 
         BamToolName bamToolName = BamToolName.fromPath(mBamToolPath);
 

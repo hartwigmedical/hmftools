@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.redux.merge;
+package com.hartwig.hmftools.common.bamops;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
 
 import java.io.File;
 import java.util.List;
@@ -54,7 +54,7 @@ public class BamMergeTask extends Thread
             }
             catch(NoSuchElementException e)
             {
-                RD_LOGGER.trace("all tasks complete");
+                BOP_LOGGER.trace("all tasks complete");
                 break;
             }
             catch(Exception e)
@@ -88,13 +88,13 @@ public class BamMergeTask extends Thread
 
         if(mActiveBamReaders.isEmpty())
         {
-            RD_LOGGER.debug("seqRange({}) no BAM files with records found", sequenceIntervalStr, mActiveBamReaders.size());
+            BOP_LOGGER.debug("seqRange({}) no BAM files with records found", sequenceIntervalStr, mActiveBamReaders.size());
             return;
         }
 
         mSamFileWriter = initialiseWriter(sequenceInfo.BamFile);
 
-        RD_LOGGER.debug("seqRange({}) merging {} BAMs", sequenceIntervalStr, mActiveBamReaders.size());
+        BOP_LOGGER.debug("seqRange({}) merging {} BAMs", sequenceIntervalStr, mActiveBamReaders.size());
 
         // begin the merge process:
         // 1. take the top record from the first BAM reader
@@ -112,7 +112,7 @@ public class BamMergeTask extends Thread
             }
             catch(Exception e)
             {
-                RD_LOGGER.error("failed to add read from top writer({}): {}", topWriter.toString(), e.toString());
+                BOP_LOGGER.error("failed to add read from top writer({}): {}", topWriter.toString(), e.toString());
                 e.printStackTrace();
                 System.exit(1);
             }
@@ -120,7 +120,7 @@ public class BamMergeTask extends Thread
 
             if((recordCount % LOG_COUNT) == 0)
             {
-                RD_LOGGER.trace("seqRangeId({}) merged {} records, readers(active={} finished={}) reorders({})",
+                BOP_LOGGER.trace("seqRangeId({}) merged {} records, readers(active={} finished={}) reorders({})",
                         sequenceInfo.Id, recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size(), mReorderCount);
             }
 
@@ -136,7 +136,7 @@ public class BamMergeTask extends Thread
 
             if(topWriter.finished())
             {
-                RD_LOGGER.trace("seqRangeId({}) bam({}) finished", sequenceInfo.Id, topWriter.filename());
+                BOP_LOGGER.trace("seqRangeId({}) bam({}) finished", sequenceInfo.Id, topWriter.filename());
                 mFinishedBamReaders.add(topWriter);
             }
             else
@@ -153,7 +153,7 @@ public class BamMergeTask extends Thread
             topWriter = mActiveBamReaders.get(0);
         }
 
-        RD_LOGGER.debug("seqRangeId({}) merged {} BAM files with {} records, reorder count({})",
+        BOP_LOGGER.debug("seqRangeId({}) merged {} BAM files with {} records, reorder count({})",
                 sequenceInfo.Id, mInputBams.size(), recordCount, mReorderCount);
 
         mSamFileWriter.close();

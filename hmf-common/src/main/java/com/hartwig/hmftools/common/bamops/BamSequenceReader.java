@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.redux.merge;
+package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
 
 import static htsjdk.samtools.ValidationStringency.SILENT;
 
@@ -96,7 +96,7 @@ public class BamSequenceReader
 
                 if(skippedRecords > 0)
                 {
-                    RD_LOGGER.trace("seqRangeId({}) skipped {} records to start of first interval({})",
+                    BOP_LOGGER.trace("seqRangeId({}) skipped {} records to start of first interval({})",
                             mSequenceInfo.Id, skippedRecords, firstInterval);
                 }
 
