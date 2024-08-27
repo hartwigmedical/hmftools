@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
-import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -61,7 +60,7 @@ public class MiscEvidenceTest
 
         assertEquals(11, readContext.VarIndex);
         assertTrue(readContext.isValid());
-        assertEquals(readBases.substring(33, 48), readContext.coreStr());
+        assertEquals(readBases.substring(33, 49), readContext.coreStr());
 
         ReadContextCounter readCounter = new ReadContextCounter(
                 0, readContext, LOW_CONFIDENCE,
@@ -189,14 +188,14 @@ public class MiscEvidenceTest
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(37, readContextCounter.qualCounters().altBaseQualityTotal());
+        assertEquals(37, readContextCounter.qualCounters().altRecalibratedBaseQualityTotal());
 
         // min rather than average is used
         altRead.getBaseQualities()[readVarIndex] = 11;
 
         readContextCounter.processRead(altRead, 1, null);
 
-        assertEquals(48, readContextCounter.qualCounters().altBaseQualityTotal());
+        assertEquals(48, readContextCounter.qualCounters().altRecalibratedBaseQualityTotal());
     }
 
     @Test
@@ -216,23 +215,26 @@ public class MiscEvidenceTest
         String readBases1 = REF_BASES_200.substring(30, 50) + "A" + REF_BASES_200.substring(51, 70);
         String readCigar = "40M";
         SAMRecord read1 = buildSamRecord(30, readCigar, readBases1, buildDefaultBaseQuals(readBases1.length()));
+        SAMRecord read1Clone = buildSamRecord(30, readCigar, readBases1, buildDefaultBaseQuals(readBases1.length()));
 
         String readBases2 = REF_BASES_200.substring(30, 48) + REF_BASES_200.substring(52, 70); // 4-base delete
         readCigar = "18M4D17M";
         SAMRecord read2 = buildSamRecord(30, readCigar, readBases2, buildDefaultBaseQuals(readBases2.length()));
+        SAMRecord read2Clone = buildSamRecord(30, readCigar, readBases2, buildDefaultBaseQuals(readBases2.length()));
 
         String readBases3 = REF_BASES_200.substring(40, 55) + "G" + REF_BASES_200.substring(56, 80);
         readCigar = "40M";
         SAMRecord read3 = buildSamRecord(40, readCigar, readBases3, buildDefaultBaseQuals(readBases3.length()));
+        SAMRecord read3Clone = buildSamRecord(40, readCigar, readBases3, buildDefaultBaseQuals(readBases3.length()));
 
         tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
+        tester.TumorSamSlicer.ReadRecords.add(read1Clone);
 
         tester.TumorSamSlicer.ReadRecords.add(read2);
-        tester.TumorSamSlicer.ReadRecords.add(read2);
+        tester.TumorSamSlicer.ReadRecords.add(read2Clone);
 
         tester.TumorSamSlicer.ReadRecords.add(read3);
-        tester.TumorSamSlicer.ReadRecords.add(read3);
+        tester.TumorSamSlicer.ReadRecords.add(read3Clone);
 
         // a read beyond the delete but still considered
         String readBases4 = REF_BASES_200.substring(47, 48) + REF_BASES_200.substring(52, 80);

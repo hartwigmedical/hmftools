@@ -47,12 +47,21 @@ public class VariantReadContextBuilder
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
 
+            // enforce ref base padding for trinucleotide generation
+            if(readContext.variantRefIndex() <= 0 || readContext.variantRefIndex() >= readContext.refBases().length() - 1)
+                return null;
+
             // ref bases are extended for long inserts for partial ref matching
             if(isLongInsert(variant))
             {
-                readContext.setExtendedRefBases(refSequence.positionBases(
-                        readContext.CorePositionEnd + 1, readContext.CorePositionEnd + 11));
+                byte[] extendedRefBases = refSequence.baseRange(
+                        readContext.CorePositionStart - readContext.leftFlankLength(),
+                        readContext.CorePositionEnd + readContext.rightFlankLength() + 1);
+                readContext.setExtendedRefBases(extendedRefBases);
             }
+
+            // set max ref repeat for use in MSI calcs and VCF output
+            setMaxRefRepeat(readContext);
 
             readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
 
@@ -81,26 +90,30 @@ public class VariantReadContextBuilder
 
         int readCoreStart, readCoreEnd;
         Microhomology homology = null;
+        Microhomology refHomology = null;
         SoftClipReadAdjustment softClipReadAdjustment = null;
 
         if(variant.isIndel())
         {
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
+            int refBaseLength = read.getReadBases().length - varIndexInRead;
+            byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
 
             softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
 
             if(softClipReadAdjustment != null)
             {
-                int refBaseLength = read.getReadBases().length - varIndexInRead;
-                byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
                 homology = Microhomology.findHomology(variant, homologyRefBases, 0, false);
             }
             else
             {
-                homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead, true);
+                homology = Microhomology.findHomology(variant, read.getReadBases(), varIndexInRead, variant.isInsert());
+                refHomology = Microhomology.findHomology(variant, homologyRefBases, 0, variant.isDelete());
             }
 
+            if(refHomology != null && (homology == null || refHomology.Length  > homology.Length))
+                homology = refHomology;
             if(homology != null)
                 readCoreEnd += homology.Length;
         }
@@ -138,6 +151,9 @@ public class VariantReadContextBuilder
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
+
+        if(readFlankStart < 0 || readFlankEnd >= readBases.length)
+            return null;
 
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
@@ -257,5 +273,17 @@ public class VariantReadContextBuilder
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+    }
+
+    public static void setMaxRefRepeat(final VariantReadContext readContext)
+    {
+        // set max ref repeat for use in MSI calcs and VCF output
+        int refRepeatIndex = readContext.variant().isIndel() ? readContext.variantRefIndex() + 1 : readContext.variantRefIndex();
+
+        RepeatInfo maxRefRepeat = RepeatInfo.findMaxRepeat(
+                readContext.RefBases, refRepeatIndex, refRepeatIndex, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT + 1,
+                false, refRepeatIndex);
+
+        readContext.setRefMaxRepeat(maxRefRepeat);
     }
 }

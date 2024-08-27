@@ -80,11 +80,6 @@ public class BqrConfig
         UsePanel = false;
     }
 
-    public static boolean useReadType(final SageConfig config)
-    {
-        return config.Quality.HighDepthMode || config.Sequencing.HasUMIs || config.Sequencing.Type == SequencingType.ULTIMA;
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addFlag(DISABLE_BQR, "Disable Base Quality Recalibration");

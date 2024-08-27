@@ -16,7 +16,7 @@ public class Realignment
 {
     public static RealignedType checkRealignment(
             final VariantReadContext readContext, final ReadContextMatcher readContextMatcher, final SAMRecord record,
-            final int readIndex, int realignedReadIndex, final SplitReadSegment splitReadSegment)
+            int readIndex, int realignedReadIndex, final SplitReadSegment splitReadSegment)
     {
         // the read index corresponding to the ref position at the end of the core
         if(readIndex == realignedReadIndex)
@@ -24,7 +24,10 @@ public class Realignment
 
         ReadContextMatch match = NONE;
 
-        int realignmentOffset = realignedReadIndex - readIndex;
+        if(readIndex < 0 && !readContext.variant().isDelete())
+            return RealignedType.NONE;
+
+        int realignmentOffset = readContext.variant().isDelete() ? 0 : realignedReadIndex - readIndex;
 
         if(splitReadSegment != null)
         {

@@ -68,7 +68,7 @@ public class Microhomology
         // start looking in the read in the first base after the variant
         int homReadIndexStart = varReadIndex + 1;
 
-        if(applyIndelLength && variant.isInsert())
+        if(applyIndelLength)
             homReadIndexStart += indelAltLength;
 
         int homReadIndex = homReadIndexStart;

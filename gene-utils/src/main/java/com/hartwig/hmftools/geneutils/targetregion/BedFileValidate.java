@@ -128,7 +128,9 @@ public class BedFileValidate
                 if(region.end() < nextRegion.start())
                     break;
 
-                region.setEnd(nextRegion.end());
+                if(region.end() < nextRegion.end())
+                    region.setEnd(nextRegion.end());
+
                 chrRegions.remove(nextIndex);
                 ++mergedCount;
             }

@@ -280,10 +280,10 @@ Ultimately we classify each cluster into 1 of 7 major event categories:
 
 Event Category | Description
 ---|---
-SIMPLE | Single junction cluster which forms a local deletion, tandem duplication or unbalanced translocation
+SIMPLE | Single junction cluster which forms a local deletion, tandem duplication, or unbalanced translocation.  May have a short inserted sequence
 RECIPROCAL | Reciprocal inversion or translocation events forming from 2 concurrent breaks interacting with each other
-TEMPLATED INSERTION | DEL or DUP or unbalanced translocation (‘chain’) with templated insertion
-INSERTION | SV that are formed by the insertion of a templated piece of DNA normally via a mobile element insertion.
+TEMPLATED INSERTION | DEL or DUP or unbalanced translocation (‘chain’) with longer templated insertions
+INSERTION | Mobile element insertion
 DOUBLE_MINUTE | Any 1 or 2 variant cluster where all variants form part of an ecDNA ring
 COMPLEX | Clusters with 3 or more variants that cannot be resolved into one of the above categories
 INCOMPLETE | 1 or 2 breakpoint clusters which are inconsistent, but cannot be clustered further OR clusters which are inferred from copy number changes only

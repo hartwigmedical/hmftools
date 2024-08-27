@@ -42,7 +42,7 @@ public class VariantReadContext
     private UltimaQualModel mUltimaQualModel;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
-    private String mExtendedRefBases;
+    private byte[] mExtendedRefBases;
 
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
@@ -62,7 +62,7 @@ public class VariantReadContext
         MaxRepeat = maxRepeat;
         AllRepeats = allRepeats;
 
-        mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
+        mReadCigarStr = CigarUtils.cigarElementsToStr(readCigar);
 
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
@@ -136,8 +136,8 @@ public class VariantReadContext
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }
 
-    public String extendedRefBases() { return mExtendedRefBases; }
-    public void setExtendedRefBases(final String refBases) { mExtendedRefBases = refBases; }
+    public byte[] extendedRefBases() { return mExtendedRefBases; }
+    public void setExtendedRefBases(final byte[] refBases) { mExtendedRefBases = refBases; }
 
     public String toString()
     {

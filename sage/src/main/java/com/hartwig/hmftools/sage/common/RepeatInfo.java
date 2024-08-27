@@ -195,19 +195,6 @@ public class RepeatInfo
         return true;
     }
 
-    public static void setReferenceMaxRepeatInfo(final SageVariant variant, final RefSequence refSequence)
-    {
-        int refIndex = refSequence.index(variant.position());
-
-        int searchIndexStart = refIndex - REPEAT_SEARCH_LENGTH;
-        int searchIndexEnd = refIndex + variant.ref().length();
-
-        RepeatInfo maxRepeat = findMaxRepeat(
-                refSequence.Bases, searchIndexStart, searchIndexEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, refIndex);
-
-        variant.readContext().setRefMaxRepeat(maxRepeat);
-    }
-
     public static RepeatInfo findMaxRepeat(
             final byte[] bases, final int searchIndexStart, final int searchIndexEnd,
             final int maxLength, final int minCount, boolean extendLower, final int requiredIndex) // note: required index not used in Sage

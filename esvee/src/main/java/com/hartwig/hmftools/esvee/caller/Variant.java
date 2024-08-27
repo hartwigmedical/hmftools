@@ -131,14 +131,20 @@ public class Variant
         return type == INS || type == INV || type == DEL || type == DUP;
     }
 
-    public int length() { return hasLength(mType) ? posEnd() - posStart() : 0; }
-
-    public static int length(final StructuralVariant sv)
+    public int adjustedLength()
     {
-        if(hasLength(sv.type()))
-            return (sv.position(false) - sv.position(true));
+        if(!hasLength(mType))
+            return 0;
 
-        return 0;
+        if(mType == INS)
+            return mInsertSequence.length();
+
+        int positionLength = posEnd() - posStart();
+
+        if(mType == DUP)
+            ++positionLength;
+
+        return positionLength + mInsertSequence.length();
     }
 
     public int averageFragmentLength() { return contextStart().getAttributeAsInt(AVG_FRAG_LENGTH, 0); }
@@ -151,9 +157,32 @@ public class Variant
     public void markGermline() { mGermline = true; }
     public boolean isGermline() { return mGermline; }
 
+    public boolean isLineSite()
+    {
+        for(Breakend breakend : mBreakends)
+        {
+            if(breakend != null && (breakend.isLine() || breakend.lineSiteBreakend() != null))
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean inChainedAssembly()
+    {
+        for(Breakend breakend : mBreakends)
+        {
+            if(breakend != null && breakend.inChainedAssembly())
+                return true;
+        }
+
+        return false;
+    }
+
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }
     public boolean isPass() { return mFilters.isEmpty(); }
+    public boolean isFiltered() { return !mFilters.isEmpty(); }
 
     private void addExistingFilters(final VariantContext variantContext)
     {

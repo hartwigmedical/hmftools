@@ -10,13 +10,14 @@ import static com.hartwig.hmftools.common.variant.SomaticLikelihood.MEDIUM;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
-import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
+import static com.hartwig.hmftools.purple.PurpleConstants.CODING_BASES_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF;
+import static com.hartwig.hmftools.purple.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.config.TargetRegionsData;
+import com.hartwig.hmftools.purple.TargetRegionsData;
 
 public class TumorMutationalLoad
 {
@@ -41,6 +42,9 @@ public class TumorMutationalLoad
         if(!mTargetRegions.hasTargetRegions())
             return mLoad;
 
+        if(mTargetRegions.codingBases() == 0)
+            return 0;
+
         double adjustedLoad = mBurden;
 
         if(mUnclearVariants > 0)
@@ -56,6 +60,9 @@ public class TumorMutationalLoad
 
     public void processVariant(final SomaticVariant variant)
     {
+        if(variant.alleleFrequency() < TUMOR_MSI_LOAD_MIN_VAF)
+            return;
+
         if(mTargetRegions.hasTargetRegions())
         {
             processTargetedRegionVariant(variant);

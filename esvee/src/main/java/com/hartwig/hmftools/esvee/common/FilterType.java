@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ public enum FilterType
     STRAND_BIAS("strandBias", "Outside valid strand bias range", false),
     SGL_STRAND_BIAS("sglStrandBias", "Single breakend with excessive strand bias and not a mobile line insertion", false),
     MIN_LENGTH("minLength", "Variant is too short", false),
+    MIN_ANCHOR_LENGTH("minAnchorLength", "Trimmed anchor length is too short", false),
     SHORT_FRAG_LENGTH("shortFrags", "Average variant fragment length is too short", false),
     DUPLICATE("dedup", "Event is duplicate of another", false),
     SGL("sgl", "SGLs filtered entirely", false),
@@ -39,5 +41,10 @@ public enum FilterType
             return PASS;
 
         return filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(";"));
+    }
+
+    public static FilterType fromVcfTag(final String vcfTag)
+    {
+        return Arrays.stream(FilterType.values()).filter(x -> x.vcfTag().equals(vcfTag)).findFirst().orElse(null);
     }
 }

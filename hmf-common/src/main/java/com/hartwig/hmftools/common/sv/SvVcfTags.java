@@ -3,11 +3,16 @@ package com.hartwig.hmftools.common.sv;
 public final class SvVcfTags
 {
     // set by Esvee
-    public static final String SVTYPE = "SVTYPE";
-    public static final String SVTYPE_DESC = "Type of structural variant";
+    public static final String ESVEE_VERSION = "EsveeVersion";
+
+    public static final String SV_TYPE = "SVTYPE";
+    public static final String SV_TYPE_DESC = "Type of structural variant";
 
     public static final String MATE_ID = "MATEID";
     public static final String MATE_ID_DESC = "Mate breakend ID";
+
+    public static final String SV_ID = "SVID";
+    public static final String SV_ID_DESC = "ID shared by two breakends";
 
     public static final String CIPOS = "CIPOS";
     public static final String CIPOS_DESC = "Confidence interval around position";
@@ -21,48 +26,51 @@ public final class SvVcfTags
     public static final String INSALN = "INSALN";
     public static final String INSALN_DESC = "Alternative alignment locations of insert sequence";
 
-    public static final String ASMID = "ASMID";
-    public static final String ASMID_DESC = "Unique id(s) of assembly(s) containing the breakend";
+    public static final String ASM_ID = "ASMID";
+    public static final String ASM_ID_DESC = "Unique id(s) of assembly(s) containing the breakend";
 
-    public static final String ASMLEN = "ASMLEN";
-    public static final String ASMLEN_DESC = "Assembly sequence length";
+    public static final String ASM_LENGTH = "ASMLEN";
+    public static final String ASM_LENGTH_DESC = "Assembly sequence length";
 
-    public static final String ASMSEG = "ASMSEG";
-    public static final String ASMSEG_DESC = "Segment indices in assembly(s) containing the breakend";
+    public static final String ASM_SEG_INDEX = "ASMSEG";
+    public static final String ASM_SEG_INDEX_DESC = "Segment indices in assembly(s) containing the breakend";
 
-    public static final String BEAPOS = "BEAPOS";
-    public static final String BEAPOS_DESC = "Breakend position(s) in assembly(s)";
+    public static final String BE_ASM_POS = "BEAPOS";
+    public static final String BE_ASM_POS_DESC = "Breakend position(s) in assembly(s)";
 
-    public static final String BEOR = "BEOR";
-    public static final String BEOR_DESC = "Breakend orientation(s) in reference genome";
+    public static final String BE_ORIENT = "BEOR";
+    public static final String BE_ORIENT_DESC = "Breakend orientation(s) in reference genome";
 
-    public static final String BEAOR = "BEAOR";
-    public static final String BEAOR_DESC = "Breakend orientation(s) in assembly(s)";
+    public static final String BE_ASM_ORIENT = "BEAOR";
+    public static final String BE_ASM_ORIENT_DESC = "Breakend orientation(s) in assembly(s)";
 
-    public static final String SEGID = "SEGID";
-    public static final String SEGID_DESC = "Unique id(s) of segment(s) containing the breakend";
+    public static final String SEG_ID = "SEGID";
+    public static final String SEG_ID_DESC = "Unique id(s) of segment(s) containing the breakend";
 
-    public static final String SEGALEN = "SEGALEN";
-    public static final String SEGALEN_DESC = "Aligned length of segment(s) in reference genome";
+    public static final String SEG_ALIGN_LENGTH = "SEGALEN";
+    public static final String SEG_ALIGN_LENGTH_DESC = "Aligned length of segment(s) in reference genome";
 
-    public static final String SEGMAPQ = "SEGMAPQ";
-    public static final String SEGMAPQ_DESC = "MAPQ of segment containing the breakend with highest QUAL contribution";
+    public static final String SEG_MAPQ = "SEGMAPQ";
+    public static final String SEG_MAPQ_DESC = "MAPQ of segment containing the breakend with highest QUAL contribution";
 
-    public static final String SEGSCO = "SEGSCO";
-    public static final String SEGSCO_DESC = "Alignment score of segments containing the breakend with highest QUAL contribution";
+    public static final String SEG_SCORE = "SEGSCO";
+    public static final String SEG_SCORE_DESC = "Alignment score of segments containing the breakend with highest QUAL contribution";
 
-    public static final String SEGRL = "SEGRL";
-    public static final String SEGRL_DESC = "Repeat length of segment with highest QUAL contribution";
+    public static final String SEG_REPEAT_LENGTH = "SEGRL";
+    public static final String SEG_REPEAT_LENGTH_DESC = "Repeat length of segment with highest QUAL contribution";
 
     // NOTE: this is used by Linx to form assembly TIs
-    public static final String ASSEMBLY_LINKS = "ASMLNKS";
-    public static final String ASSEMBLY_LINKS_DESC = "Id(s) of breakend(s) linked by assembly";
+    public static final String ASM_LINKS = "ASMLNKS";
+    public static final String ASM_LINKS_DESC = "Id(s) of breakend(s) linked by assembly";
 
     public static final String TOTAL_FRAGS = "VF";
     public static final String TOTAL_FRAGS_DESC = "Total variant fragments supporting the breakend";
 
     public static final String AVG_FRAG_LENGTH = "AVGLEN";
     public static final String AVG_FRAG_LENGTH_DESC = "Average variant fragment length";
+
+    public static final String LINE_SITE = "LINE";
+    public static final String LINE_SITE_DESC = "LINE insertion site";
 
     // per sample
     public static final String SPLIT_FRAGS = "SF";

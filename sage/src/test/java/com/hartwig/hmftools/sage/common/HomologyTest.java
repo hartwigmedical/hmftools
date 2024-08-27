@@ -133,8 +133,9 @@ public class HomologyTest
         String cigar = buildCigarString(refAlignedBases.length(), 0, softClipBases.length());
 
         SAMRecord read = buildSamRecord(readStart, cigar, readBases);
+        SAMRecord readClone = buildSamRecord(readStart, cigar, readBases);
         refContextConsumer.processRead(read);
-        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(readClone);
 
         List<AltContext> altContexts = refContextCache.altContexts();
         TestCase.assertEquals(1, altContexts.size());
@@ -149,11 +150,12 @@ public class HomologyTest
 
         cigar = "20M2D4M25S";
         read = buildSamRecord(readStart, cigar, readBases);
+        readClone = buildSamRecord(readStart, cigar, readBases);
 
         refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
         refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
         refContextConsumer.processRead(read);
-        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(readClone);
 
         altContexts = refContextCache.altContexts();
         TestCase.assertEquals(2, altContexts.size());
@@ -162,12 +164,12 @@ public class HomologyTest
         assertNotNull(altContext);
         readContext = altContext.readContext();
         assertEquals(17, readContext.CorePositionStart);
-        assertEquals(32, readContext.CorePositionEnd);
+        assertEquals(39, readContext.CorePositionEnd);
     }
 
     private static Microhomology findHomology(final SimpleVariant variant, final byte[] readBases, int varReadIndex)
     {
-        return Microhomology.findHomology(variant, readBases, varReadIndex, true);
+        return Microhomology.findHomology(variant, readBases, varReadIndex, variant.isInsert());
     }
 
     @Test

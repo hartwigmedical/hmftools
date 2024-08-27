@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.common.RepeatInfo.setReferenceMaxRepeatInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
@@ -41,13 +40,15 @@ public class RegionTask
     private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
     private final RegionResults mResults;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
+
+    private final VariantFilters mVariantFilters;
     private final VariantDeduper mVariantDeduper;
 
     private final List<SageVariant> mSageVariants;
@@ -64,7 +65,7 @@ public class RegionTask
             final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
+            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -78,7 +79,9 @@ public class RegionTask
         mEvidenceStage = new EvidenceStage(
                 config.Common, refGenome, qualityRecalibrationMap, msiJitterCalcs, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength(), mConfig.Common.Filter);
+        mVariantFilters = new VariantFilters(mConfig.Common);
+
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.Filter, mVariantFilters);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -145,8 +148,6 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            VariantFilters filters = new VariantFilters(mConfig.Common);
-
             // combine reference and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
             Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
@@ -161,12 +162,11 @@ public class RegionTask
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, tumorReadCounters);
-                setReferenceMaxRepeatInfo(sageVariant, refSequence);
                 mSageVariants.add(sageVariant);
 
                 // apply filters
-                if(filters.enabled())
-                    filters.applySoftFilters(sageVariant);
+                if(mVariantFilters.enabled())
+                    mVariantFilters.applySoftFilters(sageVariant);
 
                 if(sageVariant.isPassing())
                     passingTumorReadCounters.add(tumorReadCounters.get(0));
@@ -227,7 +227,7 @@ public class RegionTask
                 for(int s = 0; s < mConfig.TumorIds.size(); ++s)
                 {
                     String sampleId = mConfig.TumorIds.get(s);
-                    FragmentLengthCounts fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
+                    FragmentLengthCounts fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengthCounts();
                     mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
             }

@@ -31,6 +31,35 @@ public class JitterModelFitter
         }
     }
 
+    public static class FittingDefaults
+    {
+        public final double scale_four;
+        public final double scale_five;
+        public final double scale_six;
+        public final double slope;
+
+        private FittingDefaults(final double scale_four, final double scale_five, final double scale_six, final double slope)
+        {
+            this.scale_four = scale_four;
+            this.scale_five = scale_five;
+            this.scale_six = scale_six;
+            this.slope = slope;
+        }
+    }
+
+    public FittingDefaults defaults(int repeatUnitLength)
+    {
+        switch(repeatUnitLength)
+        {
+            case 1:
+                return new FittingDefaults(0.1, 0.15, 0.2, 0.06);
+            case 2:
+                return new FittingDefaults(0.15, 0.2, 0.25, 0.06);
+            default:
+                return new FittingDefaults(0.2, 0.25, 0.3, 0.06);
+        }
+    }
+
     private final JitterCountsTable mStatsTable;
     private final Map<Integer, ScaleSkew> msRepeatFittedScaleSkew = new HashMap<>();
 
@@ -48,29 +77,55 @@ public class JitterModelFitter
 
     public void performFit()
     {
+        int repeatUnitLength = mStatsTable.repeatUnitLength();
+        FittingDefaults relevantDefaults = defaults(repeatUnitLength);
         msRepeatFittedScaleSkew.clear();
         mJitterModelParams = null;
+        int totalShortenedCount = 0;
+        int totalLengthenedCount = 0;
 
         for(int numRepeats = 4; numRepeats <= 15; ++numRepeats)
         {
-            ScaleSkew bestScaleSkew = gridSearch(numRepeats);
-            if(bestScaleSkew != null)
+            double defaultScale = Double.NaN;
+            switch(numRepeats)
             {
+                case 4:
+                    defaultScale = relevantDefaults.scale_four;
+                    break;
+                case 5:
+                    defaultScale = relevantDefaults.scale_five;
+                    break;
+                case 6:
+                    defaultScale = relevantDefaults.scale_six;
+                    break;
+            }
+            JitterCountsTable.Row row = mStatsTable.getRow(numRepeats);
+            if(row != null)
+            {
+                for(Map.Entry<Integer, Integer> entry : row.jitterCounts.entrySet())
+                {
+                    if(entry.getKey() < 0) { totalShortenedCount += entry.getValue(); }
+                    if(entry.getKey() > 0) { totalLengthenedCount += entry.getValue(); }
+                }
+                ScaleSkew bestScaleSkew = gridSearch(numRepeats, row, defaultScale);
                 msRepeatFittedScaleSkew.put(numRepeats, bestScaleSkew);
             }
         }
 
         double readCountSum7_15 = 0.0;
+        int numRepeatCountsOverMin = 0;
         for(int numRepeats = 7; numRepeats <= 15; ++numRepeats)
         {
-            readCountSum7_15 += mStatsTable.getReadCount(numRepeats);
+            int readCount = mStatsTable.getReadCount(numRepeats);
+            readCountSum7_15 += readCount;
+            if(readCount >= 20000) { numRepeatCountsOverMin++; }
         }
 
         double scaleFitGradient = Double.NaN;
         double scaleFitIntercept = Double.NaN;
-        double microsatelliteSkew = 1.0;
+        double microsatelliteSkew = Double.NaN;
 
-        if(readCountSum7_15 > 10_000)
+        if(numRepeatCountsOverMin > 1)
         {
             // next we do a weighted least square fitting linear regression through the repeat lengths
             // 7-15 to find the scale
@@ -104,9 +159,9 @@ public class JitterModelFitter
                 double[][] x = new double[xUnweighted.size()][2];
 
                 for (int i = 0; i < y.length; i++) {
-                    y[i] = Math.sqrt(weights.get(i)) * yUnweighted.get(i);
-                    x[i][0] = Math.sqrt(weights.get(i)) * xUnweighted.get(i);
-                    x[i][1] = Math.sqrt(weights.get(i));
+                    y[i] = weights.get(i) * yUnweighted.get(i);
+                    x[i][0] = weights.get(i) * xUnweighted.get(i);
+                    x[i][1] = weights.get(i);
                 }
 
                 OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
@@ -137,17 +192,21 @@ public class JitterModelFitter
         // fall back
         if(Double.isNaN(scaleFitGradient))
         {
-            ScaleSkew scaleSkewAt6 = msRepeatFittedScaleSkew.get(6);
-            if(scaleSkewAt6 != null)
-            {
-                scaleFitGradient = 0.04;
-                scaleFitIntercept = scaleSkewAt6.scale - 0.04 * 6;
-            }
+            scaleFitGradient = relevantDefaults.slope;
+            scaleFitIntercept = relevantDefaults.scale_six - scaleFitGradient * 6;
         }
 
-        double optimalScaleRepeat4 = Double.NaN;
-        double optimalScaleRepeat5 = Double.NaN;
-        double optimalScaleRepeat6 = Double.NaN;
+        if(Double.isNaN(microsatelliteSkew))
+        {
+            if(Math.min(totalShortenedCount, totalLengthenedCount) < 50)
+                microsatelliteSkew = 1.0;
+            else
+                microsatelliteSkew = Math.max(Math.log10((double)totalShortenedCount / totalLengthenedCount) + 1, 0.01);
+        }
+
+        double optimalScaleRepeat4 = relevantDefaults.scale_four;
+        double optimalScaleRepeat5 = relevantDefaults.scale_five;
+        double optimalScaleRepeat6 = relevantDefaults.scale_six;
 
         ScaleSkew scaleSkewAt4 = msRepeatFittedScaleSkew.get(4);
         if(scaleSkewAt4 != null)
@@ -169,19 +228,17 @@ public class JitterModelFitter
 
         // assign the params
         mJitterModelParams = new JitterModelParams(
-                mStatsTable.repeatUnit,
+                mStatsTable.RepeatUnit,
                 optimalScaleRepeat4, optimalScaleRepeat5, optimalScaleRepeat6,
                 scaleFitGradient, scaleFitIntercept, microsatelliteSkew);
     }
 
     @Nullable
-    public ScaleSkew gridSearch(int numRepeats)
+    public ScaleSkew gridSearch(int numRepeats, JitterCountsTable.Row row, Double fallbackScale)
     {
         double minLoss = Double.MAX_VALUE;
         double bestScale = Double.NaN;
         double bestSkew = Double.NaN;
-
-        JitterCountsTable.Row row = mStatsTable.getRow(numRepeats);
 
         if(row == null)
         {
@@ -211,8 +268,8 @@ public class JitterModelFitter
                 }
             }
         }
-
-        return ScaleSkew.of(bestScale, bestSkew, minLoss);
+        double scaleToReturn = row.totalReadCount < 20000 && !Double.isNaN(fallbackScale) ? fallbackScale : bestScale;
+        return ScaleSkew.of(scaleToReturn, bestSkew, minLoss);
     }
 
     private static double searchIncrement(double last)

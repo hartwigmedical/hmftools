@@ -6,20 +6,39 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
+import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_1;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_2;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
+import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
+import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
+import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
@@ -40,8 +59,10 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class VariantFilters
 {
+    private final boolean mIsGermline;
     private final FilterConfig mConfig;
     private final int mReadEdgeDistanceThreshold;
+    private final int mReadEdgeDistanceThresholdPanel;
 
     private final int[] mFilterCounts;
 
@@ -58,13 +79,25 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
-        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
+        mIsGermline = config.IsGermline;
+        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
+        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
+    }
+
+    public int readEdgeDistanceThreshold(final VariantTier tier)
+    {
+        return tier == HOTSPOT || tier == PANEL ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
+    }
+
+    private static double readEdgeDistanceThresholdPerc(final VariantTier tier)
+    {
+        return tier == HOTSPOT || tier == PANEL ? MAX_READ_EDGE_DISTANCE_PERC_PANEL : MAX_READ_EDGE_DISTANCE_PERC;
     }
 
     public boolean passesHardFilters(final ReadContextCounter readCounter)
     {
-        if(readCounter.tier().equals(VariantTier.HOTSPOT))
+        if(readCounter.tier().equals(HOTSPOT))
             return true;
 
         if(readCounter.altSupport() < mConfig.HardMinTumorRawAltSupport)
@@ -127,10 +160,13 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
-            for(int i = 0; i < maxReferenceSamples; ++i)
+            if(!mIsGermline)
             {
-                ReadContextCounter referenceCounter = refReadCounters.get(i);
-                applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                for(int i = 0; i < maxReferenceSamples; ++i)
+                {
+                    ReadContextCounter referenceCounter = refReadCounters.get(i);
+                    applyTumorGermlineFilters(tier, softFilterConfig, referenceCounter, tumorReadContextCounter, tumorFilters);
+                }
             }
 
             if(tumorFilters.isEmpty())
@@ -151,14 +187,14 @@ public class VariantFilters
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
-            if(belowMinTumorQual(config, primaryTumor))
+            if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
             if(belowMinTumorVaf(config, primaryTumor))
                 filters.add(SoftFilter.MIN_TUMOR_VAF);
         }
 
-        if(belowMaxEdgeDistance(primaryTumor))
+        if(belowMaxEdgeDistance(tier, primaryTumor))
         {
             filters.add(SoftFilter.MAX_EDGE_DISTANCE);
         }
@@ -168,13 +204,28 @@ public class VariantFilters
             filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
 
-        if(tier != VariantTier.HOTSPOT)
+        if(belowMinFragmentCoords(primaryTumor))
         {
-            if(primaryTumor.belowMinFragmentCoords())
-            {
-                filters.add(SoftFilter.FRAGMENT_COORDS);
-            }
+            filters.add(SoftFilter.FRAGMENT_COORDS);
+        }
 
+        if(belowMinStrongSupport(primaryTumor))
+        {
+            filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
+        }
+
+        if(exceedsAltFragmentLength(primaryTumor))
+        {
+            filters.add(SoftFilter.FRAGMENT_LENGTH);
+        }
+
+        if(exceedsRealignedPercentage(primaryTumor))
+        {
+            filters.add(SoftFilter.REALIGNED_FREQ);
+        }
+
+        if(tier != HOTSPOT)
+        {
             if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
             {
                 filters.add(SoftFilter.FRAGMENT_STRAND_BIAS);
@@ -185,11 +236,11 @@ public class VariantFilters
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS);
             }
+        }
 
-            if(applyJitterFilter(primaryTumor))
-            {
-                filters.add(SoftFilter.JITTER);
-            }
+        if(applyJitterFilter(primaryTumor))
+        {
+            filters.add(SoftFilter.JITTER);
         }
 
         if(belowMinAverageBaseQuality(primaryTumor, tier))
@@ -200,14 +251,23 @@ public class VariantFilters
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return tier == VariantTier.HOTSPOT
+        return tier == HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
                 && primaryTumor.altBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
     }
 
+    private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
+    {
+        return (tier == HOTSPOT || tier == VariantTier.PANEL)
+                && primaryTumor.isIndel() && !primaryTumor.useMsiErrorRate()
+                && primaryTumor.jitter().lengthened() + primaryTumor.jitter().shortened() == 0
+                && (double)primaryTumor.nonAltNmCountTotal() / (primaryTumor.depth() - primaryTumor.altSupport()) < 0.75;
+    }
+
     // each of the following filters returns true if a variant does not pass the test
-    private static boolean belowMinTumorQual(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
+    private static boolean belowMinTumorQual(final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor,
+                                             final boolean isGermline)
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
@@ -217,32 +277,57 @@ public class VariantFilters
             return true;
 
         int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
-        byte qualPerReadFloored = (byte)max(qualPerRead, 15);
+
+        if(boostNovelIndel(tier, primaryTumor))
+            qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
+
+        int minQualForTqp = primaryTumor.qualCache().isMsiSampleAndVariant() ? MIN_TQP_QUAL_MSI_VARIANT : MIN_TQP_QUAL;
+
+        byte qualPerReadFloored = (byte)max(qualPerRead, minQualForTqp);
         double readQualProb = BaseQualAdjustment.phredQualToProbability(qualPerReadFloored);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+
+        if(isGermline)
+        {
+            BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
+            double hetProb = hetGermlineDistribution.cumulativeProbability(altSupport);
+            if(hetProb < prob)
+                prob /= max(hetProb, GERMLINE_HET_MIN_SAMPLING_PROB);
+        }
+
         primaryTumor.setTumorQualProbability(prob);
+        primaryTumor.setMapQualFactor(mapQualFactor);
 
-        double mapQualFactor = calcMapQualFactor(primaryTumor, depth, altSupport, strongSupport);
-
-        if(mapQualFactor < 0)
+        if(mapQualFactor < config.MapQualFactor)
             return true;
 
-        double scoreCutoff = primaryTumor.useMsiErrorRate() ? config.QualPScoreIndel : config.QualPScore;
+        double scoreCutoff = config.QualPScore;
         return prob >= scoreCutoff;
     }
 
-    private static double calcMapQualFactor(final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
+    private static double calcMapQualFactor(final VariantTier tier, final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
     {
         double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
 
-        double mapQualDiffPenalty = avgMapQual > avgAltMapQual ? 2 * (avgMapQual - avgAltMapQual) : 0;
+        double mapQualDiffPenalty = max(2 * (avgMapQual - avgAltMapQual), 0);
+
+        boolean highlyPolymorphicSite = isHighlyPolymorphic(primaryTumor.variant());
+
+        if(highlyPolymorphicSite)
+        {
+            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
+
+            if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
+                mapQualDiffPenalty = 0;
+        }
 
         double readStrandBiasPenalty;
         StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
@@ -270,7 +355,9 @@ public class VariantFilters
         double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
         double edgeDistancePenalty = 0;
 
-        if(avgAltEdgeDistance / avgEdgeDistance < 2 * MAX_READ_EDGE_DISTANCE_PERC)
+        double readEdgeDistanceThresholdPerc = readEdgeDistanceThresholdPerc(tier);
+
+        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc && !highlyPolymorphicSite)
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
         }
@@ -280,7 +367,8 @@ public class VariantFilters
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1
         && primaryTumor.readContext().MaxRepeat.repeatLength() * primaryTumor.readContext().MaxRepeat.Count >= 15)
         {
-            repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, 24);
+            int maxPenalty = primaryTumor.isIndel() ? 18 : 24;
+            repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
         double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
@@ -302,7 +390,7 @@ public class VariantFilters
 
         int supportCount = primaryTumor.strongAltSupport();
 
-        double altBaseQualAvg = primaryTumor.averageAltBaseQuality();
+        double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
 
         // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
@@ -314,7 +402,7 @@ public class VariantFilters
 
         double pValue = 1.0 - distribution.cumulativeProbability(adjustedAltSupportCount - 1);
 
-        if(primaryTumor.tier() == VariantTier.HOTSPOT)
+        if(primaryTumor.tier() == HOTSPOT)
             return pValue > VAF_PROBABILITY_THRESHOLD_HOTSPOT;
         else
             return pValue > VAF_PROBABILITY_THRESHOLD;
@@ -325,7 +413,7 @@ public class VariantFilters
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(tier == VariantTier.HOTSPOT)
+        if(tier == HOTSPOT)
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
         else
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
@@ -339,14 +427,16 @@ public class VariantFilters
         return primaryTumor.jitter().filterOnNoise();
     }
 
-    private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)
+    private boolean belowMaxEdgeDistance(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
         if(primaryTumor.isLongInsert())
             return false;
 
         int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
 
-        if(altMed >= mReadEdgeDistanceThreshold)
+        int readEdgeDistanceThreshold = readEdgeDistanceThreshold(tier);
+
+        if(altMed >= readEdgeDistanceThreshold)
             return false;
 
         int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
@@ -369,6 +459,58 @@ public class VariantFilters
         double avgAltMapQuality = primaryTumor.altMapQualityTotal() / altSupport;
 
         return avgMapQuality - avgAltMapQuality > MAX_MAP_QUAL_ALT_VS_REF;
+    }
+
+    private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
+    {
+        int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
+        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+    }
+
+    private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)
+    {
+        if(primaryTumor.fragmentCoords() == null)
+            return false;
+
+        int minRequiredUniqueFrags = 1;
+        if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_2)
+            minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_2;
+        else if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
+            minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_1;
+
+        return min(primaryTumor.fragmentCoords().lowerCount(), primaryTumor.fragmentCoords().upperCount()) < minRequiredUniqueFrags;
+    }
+
+    private boolean exceedsRealignedPercentage(final ReadContextCounter primaryTumor)
+    {
+        if(!primaryTumor.isLongIndel())
+        {
+            int altSupport = primaryTumor.altSupport();
+
+            if(altSupport == 0)
+                return false;
+
+            double realignedPerc = primaryTumor.readCounts().Realigned / (double)altSupport;
+
+            if(realignedPerc > REALIGNED_MAX_PERC)
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean exceedsAltFragmentLength(final ReadContextCounter primaryTumor)
+    {
+        int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
+        double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
+        int altSupport = primaryTumor.altSupport();
+        int nonAltCount = primaryTumor.fragmentLengths().nonAltCount();
+
+        if(avgNonAltLength == 0 || maxAltLength == 0 || nonAltCount < 10 || maxAltLength >= avgNonAltLength)
+            return false;
+
+        double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);
+        return ratioFactor < ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
     }
 
     // germline and paired tumor-germline tests
@@ -418,7 +560,7 @@ public class VariantFilters
 
         int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.simpleAltMatches();
 
-        if(refCounter.variant().indelLengthAbs() > LONG_GERMLINE_INSERT_LENGTH)
+        if(refCounter.isLongIndel())
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
@@ -437,12 +579,12 @@ public class VariantFilters
             return false; // will be handled in tumor filters
 
         double refTumorQualRatio = refQual / tumorQual;
-        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineVaf);
+        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineRelativeQual);
     }
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)
     {
-        if(tier == VariantTier.HOTSPOT)
+        if(tier == HOTSPOT)
             return false;
 
         if(refCounter.variant().isMNV() || refCounter.isLongInsert())
@@ -455,7 +597,7 @@ public class VariantFilters
         return false;
     }
 
-    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(HOTSPOT, VariantTier.PANEL);
 
     public static boolean checkFinalFilters(
             final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config, boolean panelOnly)
@@ -469,14 +611,15 @@ public class VariantFilters
         if(config.Filter.DisableHardFilter)
             return true;
 
-        if(variant.tier() == VariantTier.HOTSPOT)
+        if(variant.tier() == HOTSPOT)
             return true;
 
         // Its not always 100% transparent what's happening with the mixed germline dedup logic unless we keep all the associated records
         if(variant.mixedGermlineImpact() > 0)
             return true;
 
-        if(variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
+        if(!config.IsGermline
+        && variant.hasReferenceSamples() && variant.hasTumorSamples() && !MitochondrialChromosome.contains(variant.chromosome())
         && !variant.hasMatchingLps(passingPhaseSets))
         {
             final ReadContextCounter refCounter = variant.referenceReadCounters().get(0);

@@ -7,12 +7,12 @@ import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.calculateDeletedDepthWindows;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.validateCopyNumbers;
 import static com.hartwig.hmftools.purple.fitting.VariantPurityFitter.somaticFitIsWorse;
-import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.useTumorOnlySomaticMode;
+import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.highlyDiploidSomaticOrPanel;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,11 +28,11 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.config.SampleData;
+import com.hartwig.hmftools.purple.AmberData;
+import com.hartwig.hmftools.purple.CobaltData;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.SampleData;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.Segmentation;
@@ -46,6 +46,7 @@ public class PurityPloidyFitter
 
     private final ExecutorService mExecutorService;
     private final PurpleConfig mConfig;
+    private final boolean mTargetedMode;
     private final Segmentation mSegmentation;
 
     private VariantPurityFitter mVariantPurityFitter;
@@ -71,6 +72,7 @@ public class PurityPloidyFitter
     {
         mSampleData = sampleData;
         mConfig = config;
+        mTargetedMode = referenceData.TargetRegions.hasTargetRegions();
         mExecutorService = executorService;
         mRegionFitCalculator = regionFitCalculator;
         mObservedRegions = observedRegions;
@@ -146,7 +148,7 @@ public class PurityPloidyFitter
     {
         FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mConfig, mExecutorService, mSampleData.Cobalt.CobaltChromosomes, mRegionFitCalculator, mObservedRegions,
-                mVariantPurityFitter.fittingSomatics());
+                !mConfig.tumorOnlyMode() ? mVariantPurityFitter.fittingSomatics() : Collections.emptyList());
         try
         {
             fittedPurityFactory.fitPurity();
@@ -172,10 +174,37 @@ public class PurityPloidyFitter
 
     private void performSomaticFit()
     {
-        boolean exceedsPuritySpread = Doubles.greaterOrEqual(mFitPurityScore.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
-        boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
+        if(mConfig.tumorOnlyMode() || mTargetedMode)
+        {
+            if(highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
+            {
+                mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
+                if(mSomaticPurityFit != null)
+                {
+                    mFinalPurityFit = mSomaticPurityFit;
+                    mFitMethod = FittedPurityMethod.SOMATIC;
+                }
+                else
+                {
+                    mFinalPurityFit = ImmutableFittedPurity.builder()
+                            .purity(MIN_PURITY_DEFAULT).ploidy(2)
+                            .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
+                    mFitMethod = FittedPurityMethod.NO_TUMOR;
+                }
+            }
+            else
+            {
+                mFinalPurityFit = mCopyNumberPurityFit;
+                mFitMethod = FittedPurityMethod.NORMAL;
+            }
+
+            return;
+        }
+
+        boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
         boolean hasTumor = !highlyDiploid || mVariantPurityFitter.hasTumor();
+
         List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(mCopyNumberFitCandidates);
 
         PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
@@ -185,34 +214,10 @@ public class PurityPloidyFitter
         FittedPurity lowestPurityFit = diploidCandidates.isEmpty() ?
                 mCopyNumberPurityFit : diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
 
-        // fit decision:
-        // - if no tumor then take lowest score fit, method = NO_TUMOR, exit
-        // - check for a tumor-only somatic fit
-
         if(!hasTumor)
         {
             mFinalPurityFit = mCopyNumberPurityFit;
             mFitMethod = FittedPurityMethod.NO_TUMOR;
-            return;
-        }
-
-        if(mConfig.tumorOnlyMode() && useTumorOnlySomaticMode(mCopyNumberPurityFit))
-        {
-            mSomaticPurityFit = mVariantPurityFitter.tumorOnlySomaticFit(mCopyNumberFitCandidates);
-
-            if(mSomaticPurityFit != null)
-            {
-                mFinalPurityFit = mSomaticPurityFit;
-                mFitMethod = FittedPurityMethod.SOMATIC;
-            }
-            else
-            {
-                mFinalPurityFit = ImmutableFittedPurity.builder()
-                        .purity(MIN_PURITY_DEFAULT).ploidy(2)
-                        .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
-                mFitMethod = FittedPurityMethod.NO_TUMOR;
-            }
-
             return;
         }
 
@@ -224,7 +229,9 @@ public class PurityPloidyFitter
             return;
         }
 
-        boolean useSomatics = mConfig.fitWithSomatics() && exceedsPuritySpread && highlyDiploid;
+        boolean exceedsPuritySpread = Doubles.greaterOrEqual(mFitPurityScore.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
+
+        boolean useSomatics = exceedsPuritySpread && highlyDiploid;
 
         if(!useSomatics)
         {
@@ -258,6 +265,9 @@ public class PurityPloidyFitter
     private void determineFinalFit()
     {
         if(mFitMethod != FittedPurityMethod.SOMATIC)
+            return;
+
+        if(mTargetedMode || mConfig.tumorOnlyMode()) // skip the deleted genes check
             return;
 
         // test the impact on deleted genes from a switch to use the somatic fit

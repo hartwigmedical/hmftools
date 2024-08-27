@@ -25,6 +25,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 public class PhaseGroupBuilder
 {
@@ -72,13 +73,15 @@ public class PhaseGroupBuilder
 
         junctionGroupQueue.addAll(allJunctionGroups);
 
+        TaskQueue taskQueue = new TaskQueue(junctionGroupQueue, "junction groups to local phase groups", 10000);
+
         List<Thread> threadTasks = new ArrayList<>();
 
         List<LocalGroupBuilder> localBuilderTasks = Lists.newArrayList();
 
         for(int i = 0; i < taskCount; ++i)
         {
-            LocalGroupBuilder groupBuilderTask = new LocalGroupBuilder(mConfig, junctionGroupQueue, mWriter);
+            LocalGroupBuilder groupBuilderTask = new LocalGroupBuilder(mConfig, taskQueue, mWriter);
             localBuilderTasks.add(groupBuilderTask);
             threadTasks.add(groupBuilderTask);
         }
@@ -97,6 +100,8 @@ public class PhaseGroupBuilder
 
         junctionGroupQueue.addAll(allJunctionGroups);
 
+        taskQueue = new TaskQueue(junctionGroupQueue, "junction groups to remote phase groups", 10000);
+
         SV_LOGGER.info("building remote phase groups, current group count({})", mPhaseGroups.size());
 
         threadTasks = new ArrayList<>();
@@ -105,7 +110,7 @@ public class PhaseGroupBuilder
 
         for(int i = 0; i < taskCount; ++i)
         {
-            RemoteGroupBuilder groupBuilderTask = new RemoteGroupBuilder(mConfig, junctionGroupQueue, mJunctionGroupMap, mWriter);
+            RemoteGroupBuilder groupBuilderTask = new RemoteGroupBuilder(mConfig, taskQueue, mJunctionGroupMap, mWriter);
             remoteBuilderTasks.add(groupBuilderTask);
             threadTasks.add(groupBuilderTask);
         }

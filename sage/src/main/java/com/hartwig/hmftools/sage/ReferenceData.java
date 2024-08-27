@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -60,6 +61,11 @@ public class ReferenceData
         loadGeneData();
 
         HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.Common.RefGenVersion)));
+    }
+
+    public static boolean isHighlyPolymorphic(final BasePosition position)
+    {
+        return HlaCommon.containsPosition(position);
     }
 
     public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)

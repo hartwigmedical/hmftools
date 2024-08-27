@@ -4,9 +4,9 @@ import static java.lang.String.format;
 
 public class ReadCounts
 {
-    public int Total;
-    public int Duplicates;
-    public int DualStrand;
+    public long Total;
+    public long Duplicates;
+    public long DualStrand;
 
     public ReadCounts()
     {

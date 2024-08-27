@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.esvee.TestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
@@ -81,7 +80,6 @@ public class AlignmentTest
 
         Read read = createRead(READ_ID_GENERATOR.nextId(), readStart, readBases, cigar);
         assembly.addJunctionRead(read);
-        assembly.setReadIndices();
     }
 
     @Test
@@ -94,18 +92,19 @@ public class AlignmentTest
         addAssemblyRead(assembly1, -30);
         addAssemblyRead(assembly1, 10);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
-        assertEquals(80, assembly1.support().get(0).linkedAssemblyIndex());
-        assertEquals(40, assembly1.support().get(1).linkedAssemblyIndex());
+
+        assertEquals(80, assembly1.support().get(0).fullAssemblyIndexStart());
+        assertEquals(40, assembly1.support().get(1).fullAssemblyIndexStart());
 
         refBases1 = REF_BASES_400.substring(100, 200);
         extBases1 = REF_BASES_400.substring(300, 350);
         assemblyBases1 = extBases1 + refBases1;
         assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
-        assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -119,47 +118,54 @@ public class AlignmentTest
         String extBases2 = REF_BASES_400.substring(151, 201);
         String assemblyBases2 = extBases2 + refBases2;
         JunctionAssembly assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, extBases2.length());
+
         addAssemblyRead(assembly2, -30);
-        assertEquals(20, assembly2.support().get(0).junctionAssemblyIndex());
+        assertEquals(30, assembly2.support().get(0).junctionReadStartDistance());
         addAssemblyRead(assembly2, 10);
-        assertEquals(60, assembly2.support().get(1).junctionAssemblyIndex());
+        assertEquals(-10, assembly2.support().get(1).junctionReadStartDistance());
 
         AssemblyLink assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", "");
 
-        assemblyAlignment = new AssemblyAlignment(0, assemblyLink);
+        assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
         String fullSequence = refBases1 + refBases2;
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
-        assertEquals(70, assembly2.support().get(0).linkedAssemblyIndex());
-        assertEquals(110, assembly2.support().get(1).linkedAssemblyIndex());
+        assertEquals(70, assembly2.support().get(0).fullAssemblyIndexStart());
+        assertEquals(110, assembly2.support().get(1).fullAssemblyIndexStart());
 
         // with overlap
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", refBases2.substring(0, 30));
 
-        assemblyAlignment = new AssemblyAlignment(0, assemblyLink);
+        assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
         fullSequence = refBases1 + refBases2.substring(30);
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
 
         // with inserted bases
         String insertedBases = "TTTTT";
+
+        assemblyBases1 = refBases1 + insertedBases + extBases1;
+        assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
+        assemblyBases2 = extBases2 + insertedBases + refBases2;
+        assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, extBases2.length() + insertedBases.length());
+
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, insertedBases, "");
 
-        assemblyAlignment = new AssemblyAlignment(0, assemblyLink);
+        assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
         fullSequence = refBases1 + insertedBases + refBases2;
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
 
         // same again but with matching orientations
-        assemblyBases1 = refBases1 + Nucleotides.reverseComplementBases(extBases1);
+        assemblyBases1 = refBases1 + insertedBases + Nucleotides.reverseComplementBases(extBases1);
         assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
 
-        assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(extBases2);
+        assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(insertedBases) + Nucleotides.reverseComplementBases(extBases2);
         assembly2 = createAssembly(CHR_1, 349, FORWARD, assemblyBases2, refBases2.length() - 1);
 
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, insertedBases, "");
 
-        assemblyAlignment = new AssemblyAlignment(0, assemblyLink);
+        assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
         fullSequence = refBases1 + insertedBases + Nucleotides.reverseComplementBases(refBases2);
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
@@ -176,7 +182,7 @@ public class AlignmentTest
 
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", overlap);
 
-        assemblyAlignment = new AssemblyAlignment(0, assemblyLink);
+        assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
         fullSequence = Nucleotides.reverseComplementBases(refBases1) + refBases2.substring(10);
         assertEquals(fullSequence, assemblyAlignment.fullSequence());
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
@@ -209,7 +215,7 @@ public class AlignmentTest
         assertEquals(250, second.Position);
         assertEquals(REVERSE, second.Orient);
 
-        // test again for a DUP with inserted bases and SGLs on both ends
+        // test again for a DUP with inserted bases
         assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 100, REVERSE, CHR_1, 350, FORWARD, "AAAA");
 
@@ -334,7 +340,7 @@ public class AlignmentTest
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
         // homology at pos 13 and 40
-        alignment = createAlignment(CHR_1, 100, 250, 0, 100, "33M57D60M");
+        alignment = createAlignment(CHR_1, 80, 250, 0, 120, "53M57D60M");
 
         alignments = Lists.newArrayList(alignment);
 
@@ -415,7 +421,6 @@ public class AlignmentTest
         assertEquals(43, validAlignments.get(0).adjustedAlignment());
         assertEquals(29, validAlignments.get(1).adjustedAlignment());
         assertEquals(47, validAlignments.get(2).adjustedAlignment());
-
     }
 
     private AssemblyAlignment createAssemblyAlignment(

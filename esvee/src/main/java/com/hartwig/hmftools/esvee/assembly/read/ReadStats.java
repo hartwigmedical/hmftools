@@ -9,6 +9,7 @@ public class ReadStats
     public int LowBaseQualTrimmed;
     public int IndelSoftClipConverted;
     public int DecoySequences;
+    public int RefBaseAlignmentFails;
     public int IdenticalSupplementaries;
 
     public ReadStats()
@@ -18,6 +19,7 @@ public class ReadStats
         LowBaseQualTrimmed = 0;
         IndelSoftClipConverted = 0;
         DecoySequences = 0;
+        RefBaseAlignmentFails = 0;
         IdenticalSupplementaries = 0;
     }
 
@@ -28,12 +30,14 @@ public class ReadStats
         LowBaseQualTrimmed += other.LowBaseQualTrimmed;
         IndelSoftClipConverted += other.IndelSoftClipConverted;
         DecoySequences += other.DecoySequences;
+        RefBaseAlignmentFails += other.RefBaseAlignmentFails;
         IdenticalSupplementaries += other.IdenticalSupplementaries;
     }
 
     public String toString()
     {
-        return format("reads(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d) decoySequences(%d) identicalSupps(%d)",
-                TotalReads, PolyGTrimmed, LowBaseQualTrimmed, IndelSoftClipConverted, DecoySequences, IdenticalSupplementaries);
+        return format("reads(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d) decoySequences(%d) refBaseAlignFails(%d) identicalSupps(%d)",
+                TotalReads, PolyGTrimmed, LowBaseQualTrimmed, IndelSoftClipConverted, DecoySequences,
+                RefBaseAlignmentFails, IdenticalSupplementaries);
     }
 }

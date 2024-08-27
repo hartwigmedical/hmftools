@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.segment.PurpleSegmentFactory.validateSegments;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -17,14 +16,11 @@ import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.AmberData;
+import com.hartwig.hmftools.purple.CobaltData;
+import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
-import com.hartwig.hmftools.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
 public class Segmentation
 {

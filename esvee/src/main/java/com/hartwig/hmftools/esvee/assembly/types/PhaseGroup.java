@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetMerger;
 
 public class PhaseGroup
 {
@@ -91,6 +93,21 @@ public class PhaseGroup
     {
         mDerivedAssemblies.add(assembly);
         addAssembly(assembly);
+    }
+
+    public void finalisePhaseSetAlignments()
+    {
+        // also set phase set IDs
+        int phaseSetId = 0;
+        for(PhaseSet phaseSet : mPhaseSets)
+        {
+            phaseSet.setId(phaseSetId++);
+
+            AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
+            phaseSet.setAssemblyAlignment(assemblyAlignment);
+        }
+
+        PhaseSetMerger.mergePhaseSets(mPhaseSets);
     }
 
     public String toString() { return format("id(%d) assemblies(%d)", mId, mAssemblies.size()); }

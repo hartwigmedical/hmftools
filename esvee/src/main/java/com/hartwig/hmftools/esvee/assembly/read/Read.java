@@ -5,22 +5,26 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -39,6 +43,7 @@ public class Read
     private String mCigarString;
     private List<CigarElement> mCigarElements;
 
+    private String mId; // initialised and trimmed on demand
     private int mAlignmentStart;
     private int mAlignmentEnd;
     private int mUnclippedStart;
@@ -51,6 +56,7 @@ public class Read
 
     // fragment state
     private Read mMateRead;
+    private boolean mHasJunctionMate; // mate read is a split/junction read
     private boolean mSuppDataExtracted;
     private SupplementaryReadData mSupplementaryData;
 
@@ -63,11 +69,15 @@ public class Read
     private Integer mIndelImpliedUnclippedEnd;
 
     private boolean mIsReference;
+    private boolean mHasLineTail;
     private int mTrimCount;
+    private boolean mLowQualTrimmed;
 
     public Read(final SAMRecord record)
     {
         mRecord = record;
+
+        mId = null;
 
         mOrigCigarString = record.getCigarString();
         mCigarString = null;
@@ -81,6 +91,7 @@ public class Read
         mMateAlignmentEnd = null;
         mIsReference = false;
         mMateRead = null;
+        mHasJunctionMate = false;
         mSuppDataExtracted = false;
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
@@ -92,7 +103,9 @@ public class Read
         mIndelImpliedUnclippedStart = null;
         mIndelImpliedUnclippedEnd = null;
 
+        mHasLineTail = false;
         mTrimCount = 0;
+        mLowQualTrimmed = false;
     }
 
     private void setBoundaries(int newReadStart)
@@ -138,14 +151,23 @@ public class Read
 
     public Read mateRead() { return mMateRead; }
 
-    public String id() { return mRecord.getReadName(); }
+    public boolean hasJunctionMate() { return mHasJunctionMate; }
+    public void markJunctionMate() { mHasJunctionMate = true; }
+
+    public String id()
+    {
+        if(mId == null)
+            mId = READ_ID_TRIMMER.trim(mRecord.getReadName());
+
+        return mId;
+    }
 
     public String chromosome() { return mRecord.getReferenceName(); }
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
     public String cigarString() { return mCigarString != null ? mCigarString : mOrigCigarString; }
     public String originalCigarString() { return mOrigCigarString; }
-    private void updateCigarString() { mCigarString = cigarStringFromElements(mCigarElements); }
+    private void updateCigarString() { mCigarString = cigarElementsToStr(mCigarElements); }
 
     public int alignmentStart() { return mAlignmentStart; }
     public int alignmentEnd() { return mAlignmentEnd; }
@@ -174,30 +196,51 @@ public class Read
     public Orientation orientation() { return mRecord.getReadNegativeStrandFlag() ? REVERSE : FORWARD; }
 
     public boolean firstInPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
-    public boolean secondInPair() { return mRecord.getReadPairedFlag() && mRecord.getSecondOfPairFlag(); }
 
     public int mappingQuality() { return mRecord.getMappingQuality(); }
 
-    public String mateChromosome() { return isMateMapped() ? mRecord.getMateReferenceName() : null; }
-    public int mateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
+    // if the mate read reference is set, use this so it can be clear on any unmapping state
+    public String mateChromosome()
+    {
+        if(mMateRead != null)
+            return mMateRead.chromosome();;
+
+        return isMateMapped() ? mRecord.getMateReferenceName() : null;
+    }
+
+    public int mateAlignmentStart()
+    {
+        if(mMateRead != null)
+            return mMateRead.alignmentStart();
+
+        return mRecord.getMateAlignmentStart();
+    }
 
     public int mateAlignmentEnd()
     {
-        if(mMateAlignmentEnd != null)
-            return mMateAlignmentEnd;
-
-        if(isMateUnmapped())
-            return alignmentEnd();
-
         if(mMateRead != null)
             return mMateRead.alignmentEnd();
 
+        if(mMateAlignmentEnd != null)
+            return mMateAlignmentEnd;
+
         mMateAlignmentEnd = getMateAlignmentEnd(mRecord);
+
+        if(mMateAlignmentEnd == NO_POSITION)
+            mMateAlignmentEnd = mateAlignmentStart() + basesLength() - 1;
+
         return mMateAlignmentEnd;
     }
 
-    public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
-    public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
+    public boolean isMateMapped()
+    {
+        if(mMateRead != null)
+            return !mMateRead.isUnmapped();
+
+        return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag();
+    }
+
+    public boolean isMateUnmapped() { return !isMateMapped(); }
 
     public Orientation mateOrientation()
     {
@@ -256,6 +299,8 @@ public class Read
         return mSnvCount;
     }
 
+    public int numOfEvents() { return snvCount() + totalIndelBases(); }
+
     private void calcNumberOfEvents()
     {
         Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
@@ -282,6 +327,24 @@ public class Read
         return mIndelCoords;
     }
 
+    public boolean matchesFragment(final Read other, boolean allowReadMatch)
+    {
+        if(!id().equals(other.id()))
+            return false;
+
+        return allowReadMatch || getFlags() != other.getFlags();
+    }
+
+    public static boolean hasMatchingFragmentRead(final List<Read> support, final Read read)
+    {
+        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
+    }
+
+    public static List<Read> findMatchingFragmentSupport(final List<Read> support, final Read read)
+    {
+        return support.stream().filter(x -> x.matchesFragment(read, false)).collect(Collectors.toList());
+    }
+
     public String toString()
     {
         return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
@@ -298,6 +361,10 @@ public class Read
     public boolean isReference() { return mIsReference; }
     public void markReference() { mIsReference = true; }
 
+    public boolean hasLineTail() { return mHasLineTail; }
+    public void markLineTail() { mHasLineTail = true; }
+
+
     @VisibleForTesting
     public String getBasesString() { return bytesToString(getBases()); }
 
@@ -312,9 +379,32 @@ public class Read
 
         if(fromStart)
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 CigarElement element = mCigarElements.get(0);
+
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(0);
+                        newReadStart += element.getLength();
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
+                {
+                    mCigarElements.remove(0);
+
+                    if(element.getOperator().consumesReferenceBases())
+                        newReadStart += element.getLength();
+
+                    continue;
+                }
 
                 if(element.getLength() <= remainingBases)
                 {
@@ -340,10 +430,28 @@ public class Read
         }
         else
         {
-            while(mCigarElements.size() > 0 && remainingBases > 0)
+            while(mCigarElements.size() > 0)
             {
                 int lastIndex = mCigarElements.size() - 1;
                 CigarElement element = mCigarElements.get(lastIndex);
+
+                if(remainingBases == 0)
+                {
+                    // remove non-read elements
+                    if(element.getOperator().consumesReferenceBases() && !element.getOperator().consumesReadBases())
+                    {
+                        mCigarElements.remove(lastIndex);
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if(!element.getOperator().consumesReadBases())
+                {
+                    mCigarElements.remove(lastIndex);
+                    continue;
+                }
 
                 if(element.getLength() <= remainingBases)
                 {
@@ -370,6 +478,9 @@ public class Read
     }
 
     public int baseTrimCount() { return mTrimCount; }
+
+    public void markLowQualTrimmed() { mLowQualTrimmed = true; }
+    public boolean lowQualTrimmed() { return mLowQualTrimmed; }
 
     public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
     {

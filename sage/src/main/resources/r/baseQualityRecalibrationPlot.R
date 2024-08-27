@@ -1,10 +1,17 @@
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(patchwork)
+
+args <- commandArgs(trailing=T)
+input <- args[1]
+output <- gsub("tsv","png", input)
+
+bqrDataRaw <- read.table(file = input, sep = "\t", header = T, stringsAsFactors = F)
 
 COLORS6 = c("#2EBAED", "#000000", "#DE1C14", "#D4D2D2", "#ADCC54", "#F0D0CE")
 
-standard_mutation<-function(types){
+standard_mutation <- function(types){
   types = gsub("G>T", "C>A", types)
   types = gsub("G>C", "C>G", types)
   types = gsub("G>A", "C>T", types)
@@ -20,8 +27,10 @@ reverse_complement <- function(triContext) {
   return (reverse)
 }
 
-prepare_data <- function(input) {
-  read.table(file = input, sep = "\t", header = T, stringsAsFactors = F) %>%
+prepare_data <- function(df, readType) {
+  
+  bqrData <- 
+    df %>%
     filter(ref != alt) %>%
     mutate(
       changeInQual = recalibratedQual - originalQual,
@@ -37,6 +46,15 @@ prepare_data <- function(input) {
     gather(originalQual, changeInQual, -1, -2) %>%
     select(substitution, context, originalQual, changeInQual) %>%
     mutate(originalQual = as.numeric(originalQual))
+  
+  uniqueBaseQuals = unique(bqrData$originalQual)
+  if (length(uniqueBaseQuals) > 7) {
+    sampleBy = ceiling(length(uniqueBaseQuals)/7)
+    uniqueBaseQuals <- uniqueBaseQuals[seq(1, length(uniqueBaseQuals), sampleBy)]
+    bqrData = bqrData %>% filter(originalQual %in% uniqueBaseQuals)
+  }
+  
+  return(bqrData)
 }
 
 plot_data <- function(df) {
@@ -53,18 +71,17 @@ plot_data <- function(df) {
           strip.text.y = element_text(size = 9), panel.grid.major.x = element_blank())
 }
 
-args <- commandArgs(trailing=T)
-input <- args[1]
-output <- gsub("tsv","png", input)
+bqrPlotsByReadType <- lapply(unique(bqrDataRaw$readType), function(readType) {
+  
+  bqrData <- prepare_data( bqrDataRaw[bqrDataRaw$readType==readType,] )
+  bqrPlot <- plot_data(bqrData) + ggtitle(paste0("Read type: ", readType))
+  
+  return(bqrPlot)
+})
 
-bqrData = prepare_data(input)
+bqrPlotsMerged <- patchwork::wrap_plots(bqrPlotsByReadType, ncol=1)
 
-uniqueBaseQuals = unique(bqrData$originalQual)
-if (length(uniqueBaseQuals) > 7) {
-  sampleBy = ceiling(length(uniqueBaseQuals)/7)
-  uniqueBaseQuals <- uniqueBaseQuals[seq(1, length(uniqueBaseQuals), sampleBy)]
-  bqrData = bqrData %>% filter(originalQual %in% uniqueBaseQuals)
-}
-
-bqrPlot = plot_data(bqrData)
-ggsave(filename = output, bqrPlot, units = "in", height = length(unique(bqrData$originalQual)), width = 12, scale = 1, dpi = 300)
+ggsave(
+  filename = output, bqrPlotsMerged, 
+  units = "in", height = 15, width = 12, scale = 1, dpi = 300
+)

@@ -94,6 +94,6 @@ public class RefContextCache
         if(mHotspotSelector.isHotspot(altContext))
             return true;
 
-        return altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+        return altContext.aboveMinAltSupport();
     }
 }

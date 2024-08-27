@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
 
 import java.util.StringJoiner;
 
@@ -21,6 +22,7 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
+import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -69,30 +71,34 @@ public class QualityControlChapter implements ReportChapter
         addExcludedPercentages(document);
         addPurpleQCPlots(document);
         addSageBQRPlots(document);
+        if(!report.tumorOnlyMode())
+        {
+            addTumorStats(document);
+        }
     }
 
     private void addKeyQC(@NotNull Document document)
     {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
-                new float[] { 2, 1, 1, 1, 1, 1, 1 },
+                new float[] { 15, 10, 10, 10, 10, 12, 10 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Ref Genome"), cells.createHeader("Fit Method"),
-                        cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments"),
+                        cells.createHeader("Mean Depth"), cells.createHeader("Contamination"), cells.createHeader("Uns. Segments (%)"),
                         cells.createHeader("Deleted Genes") });
 
-        table.addCell(cells.createContent(purpleQCString()));
+        table.addCell(cells.createContent(purpleQCStatusString()));
         table.addCell(cells.createContent(report.refGenomeVersion().toString()));
         table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().amberMeanDepth())));
         table.addCell(cells.createContent(formatPercentage(report.purple().fit().qc().contamination())));
-        table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().unsupportedCopyNumberSegments())));
+        table.addCell(cells.createContent(purpleQCSegmentsString()));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
     @NotNull
-    private String purpleQCString()
+    private String purpleQCStatusString()
     {
         StringJoiner joiner = new StringJoiner(", ");
         for(PurpleQCStatus status : report.purple().fit().qc().status())
@@ -100,6 +106,14 @@ public class QualityControlChapter implements ReportChapter
             joiner.add(status.toString());
         }
         return joiner.toString();
+    }
+
+    @NotNull
+    private String purpleQCSegmentsString()
+    {
+        int unsupportedSegments = report.purple().fit().qc().unsupportedCopyNumberSegments();
+        return unsupportedSegments + " (" + percent(
+                (double) unsupportedSegments / report.purple().fit().qc().totalCopyNumberSegments()) + ")";
     }
 
     private void addPurplePurityFitPlot(@NotNull Document document)
@@ -247,5 +261,31 @@ public class QualityControlChapter implements ReportChapter
         tumorImage.setMaxWidth(contentWidth());
         tumorImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(tumorImage);
+    }
+
+    private void addTumorStats(@NotNull Document document)
+    {
+        Cells cells = new Cells(reportResources);
+        Table tumorStats = new Table(UnitValue.createPercentArray(new float[] { 3, 1 })).setWidth(contentWidth());
+
+        tumorStats.addCell(cells.createContent("Tumor maximum diploid proportion"));
+        tumorStats.addCell(cells.createContent(formatTwoDigitDecimal(report.purple().tumorStats().maxDiploidProportion())));
+
+        tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotMutationCount())));
+
+        tumorStats.addCell(cells.createContent("Number of hotspot structural variants"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
+
+        tumorStats.addCell(cells.createContent("Sum of small variant allele read counts"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantAlleleReadCount())));
+
+        tumorStats.addCell(cells.createContent("Sum of structural variant tumor fragment counts (excluding single breakends)"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantTumorFragmentCount())));
+
+        tumorStats.addCell(cells.createContent("Sum of B-allele frequency points in germline diploid regions with tumor ratio < 0.8 OR > 1.2"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
+
+        document.add(new Tables(reportResources).createWrapping(tumorStats, "Tumor Detection Statistics"));
     }
 }

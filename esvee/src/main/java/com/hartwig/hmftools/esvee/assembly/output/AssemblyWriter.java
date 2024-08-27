@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.output;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingInfo;
@@ -58,7 +59,6 @@ public class AssemblyWriter
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
 
             addSupportHeader(sj);
-            AssemblyStats.addReadTypeHeader(sj);
 
             sj.add("Outcome");
 
@@ -71,7 +71,11 @@ public class AssemblyWriter
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+            sj.add("IsLINE");
 
+            sj.add("RefBaseCandidates");
+            sj.add("UnmappedCandidates");
+            AssemblyStats.addReadTypeHeader(sj);
             addRemoteRegionHeader(sj);
 
             if(mConfig.RunAlignment)
@@ -82,8 +86,6 @@ public class AssemblyWriter
 
             // extra detailed fields
             sj.add("InitialReadId");
-
-            sj.add("InitRefBaseCandidates");
 
             sj.add("MergedAssemblies");
 
@@ -121,7 +123,6 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.refBaseLength()));
 
             addSupportCounts(assembly, sj);
-            assembly.stats().addReadTypeCounts(sj);
 
             sj.add(String.valueOf(assembly.outcome()));
 
@@ -146,6 +147,11 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
+            sj.add(String.valueOf(assembly.hasLineSequence()));
+            sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
+            sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
+            assembly.stats().addReadTypeCounts(sj);
+
             addRemoteRegionInfo(assembly, sj);
 
             if(mConfig.RunAlignment)
@@ -154,9 +160,7 @@ public class AssemblyWriter
                 sj.add(assembly.assemblyAlignmentInfo());
             }
 
-            sj.add(assembly.initialReadId());
-
-            sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
+            sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 

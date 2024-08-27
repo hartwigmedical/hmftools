@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_LENGTH;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY_PERC;
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_LENGTH;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_PLOIDY;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_MIN_PLOIDY_PERC;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -20,8 +21,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.gripss.GripssFilters;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.SvFactoryInterface;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -46,7 +48,7 @@ public class RecoveredVariantFactory implements AutoCloseable
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
 
     private final AbstractFeatureReader<VariantContext,LineIterator> mReader;
-    private final StructuralVariantFactory mSvFactory;
+    private final SvFactoryInterface mSvFactory;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
     private final int mMinMateQual;
     private final int mMinSglQual;
@@ -58,7 +60,7 @@ public class RecoveredVariantFactory implements AutoCloseable
         VCFHeader vcfHeader = (VCFHeader)mReader.getHeader();
         GenotypeIds genotypeIds = GenotypeIds.fromVcfHeader(vcfHeader, config.ReferenceId, config.TumorId);
 
-        mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
+        mSvFactory = buildSvFactory(config.UseGridssSVs, new CompoundFilter(false));
         mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
         mMinMateQual = config.Fitting.RecoveryMinMateQualScore;

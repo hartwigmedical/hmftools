@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;

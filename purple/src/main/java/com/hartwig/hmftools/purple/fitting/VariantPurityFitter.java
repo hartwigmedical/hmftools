@@ -2,11 +2,11 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SV_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_TOTAL_SV_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.NO_TUMOR_BAF_TOTAL;
+import static com.hartwig.hmftools.purple.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
+import static com.hartwig.hmftools.purple.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
 
 import java.util.List;
 
@@ -16,11 +16,10 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.PurpleApplication;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.config.SampleData;
-import com.hartwig.hmftools.purple.config.SomaticFitConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.SampleData;
+import com.hartwig.hmftools.purple.SomaticFitConfig;
 import com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
@@ -112,9 +111,9 @@ public class VariantPurityFitter
         return mSomaticPurityFitter.fromSomatics(mFittingSomatics, diploidCandidates, copyNumbers);
     }
 
-    public FittedPurity tumorOnlySomaticFit(final List<FittedPurity> allCandidates)
+    public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
     {
-        return mSomaticPurityFitter.fromTumorOnlySomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
+        return mSomaticPurityFitter.fitFromSomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
     }
 
     public static boolean somaticFitIsWorse(final FittedPurity lowestScore, final FittedPurity somaticFit, final SomaticFitConfig config)

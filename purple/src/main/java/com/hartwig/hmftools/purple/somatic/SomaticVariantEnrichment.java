@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.PurpleConstants.CLONALITY_BIN_WIDTH;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.ReferenceData;
 
 import htsjdk.variant.vcf.VCFHeader;
 

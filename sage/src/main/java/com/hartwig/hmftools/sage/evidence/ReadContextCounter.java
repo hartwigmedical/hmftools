@@ -15,8 +15,9 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
-import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
@@ -45,7 +46,6 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair
 
 import static htsjdk.samtools.CigarOperator.N;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -62,6 +62,7 @@ import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
+import com.hartwig.hmftools.sage.filter.FragmentLengths;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -84,7 +85,6 @@ public class ReadContextCounter
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
-    private final boolean mIsReferenceSample;
     private final int mMaxCoverage;
     private final VariantVis mVariantVis;
 
@@ -112,16 +112,17 @@ public class ReadContextCounter
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
     private final int mMaxPositionVsReadStart;
-
+    private int mNonAltNmCountTotal;
     private List<Integer> mLocalPhaseSets;
     private List<Integer> mLpsCounts;
     private int[] mUmiTypeCounts;
     private FragmentLengthCounts mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
+    private final FragmentLengths mFragmentLengths;
 
     // info only for VCF
-    private boolean mIsQualitySite;
     private double mTumorQualProbability;
+    private double mMapQualFactor;
 
     public ReadContextCounter(
             final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
@@ -133,7 +134,6 @@ public class ReadContextCounter
         mMaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
         mSample = sampleId;
-        mIsReferenceSample = isReferenceSample;
         mQualityCalculator = qualityCalculator;
         mConfig = config;
 
@@ -172,10 +172,11 @@ public class ReadContextCounter
         mLpsCounts = null;
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
-        mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
+        mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
+        mFragmentLengths = new FragmentLengths();
 
-        mIsQualitySite = false;
         mTumorQualProbability = 0;
+        mMapQualFactor = 0;
     }
 
     public int id() { return mId; }
@@ -186,6 +187,7 @@ public class ReadContextCounter
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
     public boolean isLongInsert() { return SimpleVariant.isLongInsert(mVariant); }
+    public boolean isLongIndel() { return mVariant.indelLengthAbs() >= LONG_INSERT_LENGTH; }
     public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
@@ -204,11 +206,11 @@ public class ReadContextCounter
     public QualCounters qualCounters() { return mQualCounters; }
 
     public int baseQualityTotal() { return mQualCounters.baseQualityTotal(); }
-    public int altBaseQualityTotal() { return mQualCounters.altBaseQualityTotal(); }
+    public int altBaseQualityTotal() { return mQualCounters.altRecalibratedBaseQualityTotal(); }
 
     public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
     public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
-
+    public long nonAltNmCountTotal() { return mNonAltNmCountTotal; }
     public double vaf()
     {
         return mCounts.Total == 0 ? 0d : mCounts.altSupport() / (double)mCounts.Total;
@@ -239,6 +241,8 @@ public class ReadContextCounter
     public StrandBiasData fragmentStrandBiasNonAlt() { return mNonAltFragmentStrandBias; }
     public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
     public StrandBiasData readStrandBiasNonAlt() { return mNonAltReadStrandBias; }
+    public FragmentLengths fragmentLengths() { return mFragmentLengths; }
+
     public int improperPairCount() { return mImproperPairCount; }
 
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
@@ -250,8 +254,15 @@ public class ReadContextCounter
     public double averageAltBaseQuality()
     {
         // excludes realigned
-        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
         return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
+    }
+
+    public double averageAltRecalibratedBaseQuality()
+    {
+        // excludes realigned
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
+        return supportCount > 0 ? mQualCounters.altRecalibratedBaseQualityTotal() / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
@@ -262,11 +273,9 @@ public class ReadContextCounter
     public List<Integer> lpsCounts() { return mLpsCounts; }
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
-    public FragmentLengthCounts fragmentLengths() { return mFragmentLengthData; }
+    public FragmentLengthCounts fragmentLengthCounts() { return mFragmentLengthData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
-
-    public boolean belowMinFragmentCoords() { return mFragmentCoords != null && !mFragmentCoords.atCapacity(); }
 
     public String toString()
     {
@@ -361,6 +370,9 @@ public class ReadContextCounter
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
+            qualityScores = mQualityCalculator.calculateQualityScores(
+                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
+
             if(belowQualThreshold(calcBaseQuality))
             {
                 if(rawContext.PositionType != DELETED)
@@ -368,15 +380,15 @@ public class ReadContextCounter
                     matchType = determineReadContextMatch(record, readVarIndex, splitReadSegment);
 
                     if(matchType.SupportsAlt)
+                    {
                         countAltSupportMetrics(record, fragmentData);
+                        mQualCounters.update(qualityScores);
+                    }
                 }
 
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
                 return UNRELATED;
             }
-
-            qualityScores = mQualityCalculator.calculateQualityScores(
-                    this, readVarIndex, record, adjustedNumOfEvents, calcBaseQuality);
 
             modifiedQuality = qualityScores.ModifiedQuality;
 
@@ -391,7 +403,7 @@ public class ReadContextCounter
 
                 mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
-                mReadEdgeDistance.update(record, fragmentData, true);
+                mReadEdgeDistance.update(record, fragmentData, matchType.FullAltSupport);
 
                 addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
@@ -436,8 +448,11 @@ public class ReadContextCounter
 
                     mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
+                    mReadEdgeDistance.update(record, fragmentData, true);
+
                     addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                     logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
+                    countAltSupportMetrics(record, fragmentData);
 
                     return ALT_SUPPORT;
                 }
@@ -483,9 +498,11 @@ public class ReadContextCounter
 
         registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
         mReadEdgeDistance.update(record, fragmentData, false);
+        mFragmentLengths.processRead(record, false);
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
+        mNonAltNmCountTotal += numberOfEvents;
 
         return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }
@@ -615,6 +632,8 @@ public class ReadContextCounter
             else
                 mFragmentCoords.addRead(record, null);
         }
+
+        mFragmentLengths.processRead(record, true);
     }
 
     public void applyMapQualityRatio()
@@ -636,6 +655,9 @@ public class ReadContextCounter
 
     public double tumorQualProbability() { return mTumorQualProbability; }
     public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
+
+    public double mapQualFactor() { return mMapQualFactor; }
+    public void setMapQualFactor(double factor) { mMapQualFactor = factor; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

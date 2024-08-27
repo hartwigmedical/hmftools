@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
 
 import java.util.Arrays;
@@ -16,8 +15,8 @@ public enum WriteType
     ASSEMBLY_READ("assembly_read.tsv"),
     BREAKEND("breakend.tsv"),
     VCF(RAW_VCF_SUFFIX),
-    ALIGNMENT("alignment.tsv"),
-    ALIGNMENT_DATA("align_detailed.tsv"),
+    PHASED_ASSEMBLY("phased_assembly.tsv"),
+    ALIGNMENTS("alignments.tsv"),
     DECOY_MATCHES("decoy_matches.tsv"),
     PHASE_GROUP_BUILDING("phase_group_building.tsv");
 
@@ -31,7 +30,6 @@ public enum WriteType
     public String fileId() { return mFileId; }
 
     private static final String ALL = "ALL";
-    private static final String ASSEMBLIES_STR = "ASSEMBLIES"; // for backwards compatibility
 
     public static List<WriteType> fromConfig(final String configStr)
     {
@@ -49,10 +47,7 @@ public enum WriteType
 
                 for(String writeType : writeTypeValues)
                 {
-                    if(writeType.equals(ASSEMBLIES_STR))
-                        writeTypes.add(JUNC_ASSEMBLY);
-                    else
-                        writeTypes.add(WriteType.valueOf(writeType));
+                    writeTypes.add(WriteType.valueOf(writeType));
                 }
             }
         }

@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.fitting.FittedPurityFactory.createFittedRegionFactory;
 
 import java.io.IOException;
@@ -68,12 +68,6 @@ import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.config.SampleData;
-import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.germline.GermlineDeletions;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
@@ -261,6 +255,8 @@ public class PurpleApplication
 
             purityPloidyFitter.run();
 
+            fittedRegions.addAll(purityPloidyFitter.fittedRegions());
+
             bestFit = purityPloidyFitter.finalFit();
 
             purityAdjuster = purityPloidyFitter.purityAdjuster();
@@ -272,7 +268,7 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
+            SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
@@ -356,7 +352,7 @@ public class PurpleApplication
 
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
-                        gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
+                        gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
 
                 // clean up any temporary files

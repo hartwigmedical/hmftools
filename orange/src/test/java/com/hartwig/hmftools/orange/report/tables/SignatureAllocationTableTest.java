@@ -16,24 +16,24 @@ public class SignatureAllocationTableTest
     @Test
     public void canSortSignatureAllocations()
     {
-        SignatureAllocation allocation1 = create("Sig1");
-        SignatureAllocation allocation2 = create("Sig2");
-        SignatureAllocation allocation3 = create("Sig10");
-        SignatureAllocation allocation4 = create(SignatureAllocationTable.MISALLOC_SIGNATURE);
+        SignatureAllocation allocation1 = create("Sig1", 120D);
+        SignatureAllocation allocation2 = create("Sig2", 200D);
+        SignatureAllocation allocation3 = create("Sig10", 100D);
+        SignatureAllocation allocation4 = create(SignatureAllocationTable.MISALLOC_SIGNATURE, 50D);
 
         List<SignatureAllocation> allocations = Lists.newArrayList(allocation2, allocation4, allocation3, allocation1);
         List<SignatureAllocation> sorted = SignatureAllocationTable.sort(allocations);
 
         assertEquals(4, sorted.size());
-        assertEquals(allocation1, sorted.get(0));
-        assertEquals(allocation2, sorted.get(1));
+        assertEquals(allocation2, sorted.get(0));
+        assertEquals(allocation1, sorted.get(1));
         assertEquals(allocation3, sorted.get(2));
         assertEquals(allocation4, sorted.get(3));
     }
 
     @NotNull
-    private static SignatureAllocation create(@NotNull String signature)
+    private static SignatureAllocation create(@NotNull String signature, double allocation)
     {
-        return ImmutableSignatureAllocation.builder().signature(signature).allocation(0D).percent(0D).build();
+        return ImmutableSignatureAllocation.builder().signature(signature).allocation(allocation).percent(0D).etiology("test").build();
     }
 }

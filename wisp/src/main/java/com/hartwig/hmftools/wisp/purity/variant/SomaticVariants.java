@@ -319,8 +319,7 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
-        SomaticPurityResult purityResult = mEstimator.calculatePurity(
-                sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
+        SomaticPurityResult purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {
@@ -345,6 +344,9 @@ public class SomaticVariants
 
         if(variant.context().isFiltered())
             filters.add(NO_PASS);
+
+        if(mConfig.ApplyRefVariantFilters) // no others are applied
+            return filters;
 
         if(variant.type() != VariantType.SNP)
             filters.add(NON_SNV);

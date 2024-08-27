@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
@@ -15,21 +16,29 @@ public final class ReadFilters
 
         if(junction.isForward())
         {
-            if(read.isRightClipped())
+            // first check indel-inferred soft-clips
+            if(read.indelImpliedAlignmentEnd() > 0)
                 return read.maxUnclippedEnd() > junction.Position;
+
+            // soft-clip must be close enough to the junction
+            if(read.isRightClipped())
+                return abs(read.alignmentEnd() - junction.Position) <= ASSEMBLY_MAX_JUNC_POS_DIFF && read.unclippedEnd() > junction.Position;
 
             // consider alignments with small junction overlap, which ought to have mismatched bases
             junctionOverlap = read.alignmentEnd() - junction.Position;
         }
         else
         {
-            if(read.isLeftClipped())
+            if(read.indelImpliedAlignmentStart() > 0)
                 return read.minUnclippedStart() < junction.Position;
+
+            if(read.isLeftClipped())
+                return abs(read.alignmentStart() - junction.Position) <= ASSEMBLY_MAX_JUNC_POS_DIFF && read.unclippedStart() < junction.Position;
 
             junctionOverlap = junction.Position - read.alignmentStart();
         }
 
-        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP;
+        return read.snvCount() > 0 && junctionOverlap > 0 && junctionOverlap <= ASSEMBLY_MAX_JUNC_POS_DIFF;
     }
 
     public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)

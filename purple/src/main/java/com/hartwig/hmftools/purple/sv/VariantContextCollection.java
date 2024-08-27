@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.sv;
 
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -8,8 +10,7 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.sv.SvFactoryInterface;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -20,11 +21,14 @@ public class VariantContextCollection
 {
     private final TreeSet<VariantContext> mVariantContexts;
     private final List<StructuralVariant> mVariants;
+    private final boolean mUseGridssSVs;
 
     private boolean mModified;
 
-    public VariantContextCollection(final VCFHeader header)
+    public VariantContextCollection(final VCFHeader header, boolean useGridssSVs)
     {
+        mUseGridssSVs = useGridssSVs;
+
         if(header != null)
             mVariantContexts = new TreeSet<>(new VCComparator(header.getSequenceDictionary()));
         else
@@ -75,11 +79,11 @@ public class VariantContextCollection
         {
             // converts variant contexts into structural variants
             mModified = false;
-            final StructuralVariantFactory factory = StructuralVariantFactory.build(new SegmentationVariantsFilter());
-            mVariantContexts.forEach(factory::addVariantContext);
+            SvFactoryInterface svFactory = buildSvFactory(mUseGridssSVs, new SegmentationVariantsFilter());
+            mVariantContexts.forEach(svFactory::addVariantContext);
 
             mVariants.clear();
-            mVariants.addAll(factory.results());
+            mVariants.addAll(svFactory.results());
         }
 
         return mVariants;

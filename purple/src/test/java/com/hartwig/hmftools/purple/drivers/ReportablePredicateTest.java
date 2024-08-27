@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate.MAX_ONCO_REPEAT_COUNT;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
 
 import static junit.framework.TestCase.assertFalse;
@@ -50,31 +48,7 @@ public class ReportablePredicateTest
 
         ReportablePredicate predicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
 
-        assertTrue(predicate.isReportable(impact, VariantType.SNP, 0, false));
-    }
-
-    @Test
-    public void testIgnoreIndelsWithLargeRepeatCount()
-    {
-        final SomaticVariant variant = SomaticVariantTestFactory.builder()
-                .gene(GENE_AR)
-                .repeatCount(MAX_ONCO_REPEAT_COUNT)
-                .type(VariantType.INDEL)
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .build();
-
-        final SomaticVariant variantLargeRepeatCount =
-                ImmutableSomaticVariantImpl.builder().from(variant).repeatCount(MAX_ONCO_REPEAT_COUNT + 1).build();
-
-        ReportablePredicate oncoPredicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
-
-        assertTrue(oncoPredicate.isReportable(
-                variant.gene(), variant.type(), variant.repeatCount(), variant.isHotspot(),
-                variant.canonicalCodingEffect(), variant.canonicalEffect()));
-
-        assertFalse(oncoPredicate.isReportable(
-                variantLargeRepeatCount.gene(), variantLargeRepeatCount.type(), variantLargeRepeatCount.repeatCount(),
-                variantLargeRepeatCount.isHotspot(), variantLargeRepeatCount.canonicalCodingEffect(), variantLargeRepeatCount.canonicalEffect()));
+        assertTrue(predicate.isReportable(impact, VariantType.SNP, false));
     }
 
     private DriverGenePanel loadTestPanel()

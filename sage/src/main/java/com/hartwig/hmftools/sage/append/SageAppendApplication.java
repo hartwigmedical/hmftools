@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.SageCommon;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -52,7 +52,7 @@ public class SageAppendApplication
 {
     private final SageAppendConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
 
@@ -60,7 +60,7 @@ public class SageAppendApplication
     {
         final VersionInfo version = fromAppName(APP_NAME);
         mConfig = new SageAppendConfig(version.version(), configBuilder);
-        mFragmentLengths = new FragmentLengths(mConfig.Common);
+        mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
 
         if(!mConfig.Common.isValid())
         {

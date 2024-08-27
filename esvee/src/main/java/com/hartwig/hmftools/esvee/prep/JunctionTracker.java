@@ -11,18 +11,16 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -37,7 +35,6 @@ import java.util.stream.Collectors;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -254,10 +251,6 @@ public class JunctionTracker
             if(readGroup.allNoSupport()) // ignore groups with only fully-filtered reads
                 continue;
 
-            // ignore any group with a poly-G insert
-            if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), POLY_G_SC)))
-                continue;
-
             // read groups can be assigned to more than one junction
             if(readGroup.hasReadType(ReadType.JUNCTION))
             {
@@ -419,30 +412,38 @@ public class JunctionTracker
             if(indelCoords != null)
                 handleIndelJunction(readGroup, read, indelCoords);
 
-            ClippedSide scSide = ClippedSide.fromCigar(read.cigar(), false);
-
-            if(scSide == null || ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH) || scSide.Length < MIN_LINE_SOFT_CLIP_LENGTH)
+            if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH))
                 continue;
 
-            Orientation orientation = scSide.isLeft() ? REVERSE : FORWARD;
-            int position = scSide.isLeft() ? read.start() : read.end();
-
-            // junctions cannot fall in blacklist regions
-            if(positionInBlacklist(position))
-                continue;
-
-            if(!mRegion.containsPosition(position))
+            for(int i = 0; i <= 1; ++i)
             {
-                if(mConfig.TrackRemotes)
-                    RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
-            }
-            else
-            {
-                JunctionData junctionData = getOrCreateJunction(read, orientation);
-                junctionData.addReadType(read, ReadType.JUNCTION);
+                int scLength = (i == 0) ? read.leftClipLength() : read.rightClipLength();
 
-                if(!junctions.contains(junctionData))
-                    junctions.add(junctionData);
+                // check with the shorter LINE soft-clip length since the soft-clip filter has already been checked, which takes LINE into account
+                if(scLength < MIN_LINE_SOFT_CLIP_LENGTH)
+                    continue;
+
+                Orientation orientation = (i == 0) ? REVERSE : FORWARD;
+
+                int position = orientation.isReverse() ? read.start() : read.end();
+
+                // junctions cannot fall in blacklist regions
+                if(positionInBlacklist(position))
+                    continue;
+
+                if(!mRegion.containsPosition(position))
+                {
+                    if(mConfig.TrackRemotes)
+                        RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
+                }
+                else
+                {
+                    JunctionData junctionData = getOrCreateJunction(read, orientation);
+                    junctionData.addReadType(read, ReadType.JUNCTION);
+
+                    if(!junctions.contains(junctionData))
+                        junctions.add(junctionData);
+                }
             }
         }
 
@@ -957,7 +958,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
+                if(belowMinQual(read.baseQualities()[i]) || belowMinQual(juncRead.baseQualities()[juncIndex]))
                     continue;
 
                 ++highQualMismatches;
@@ -1040,7 +1041,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
+                if(belowMinQual(read.baseQualities()[i]) || belowMinQual(juncRead.baseQualities()[juncIndex]))
                     continue;
 
                 ++highQualMismatches;
@@ -1126,30 +1127,22 @@ public class JunctionTracker
                 return true;
         }
 
-        boolean hasPassingMapQualRead = false;
-        boolean hasPassingAlignedRead = false;
-
-        for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+        if(!junctionData.internalIndel())
         {
-            hasPassingAlignedRead |= aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinAlignmentBases);
+            boolean hasPassingAlignedRead = false;
 
-            hasPassingMapQualRead |= read.mapQuality() >= MIN_MAP_QUALITY;
+            for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+            {
+                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore))
+                {
+                    hasPassingAlignedRead = true;
+                    break;
+                }
+            }
+
+            if(!hasPassingAlignedRead)
+                return false;
         }
-
-        if(!hasPassingAlignedRead)
-            return false;
-
-        if(hasPassingMapQualRead && junctionFrags >= mFilterConfig.MinJunctionSupport)
-            return true;
-
-        // look in the exact matches for additional support
-        if(!hasPassingMapQualRead)
-        {
-            hasPassingMapQualRead = junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT).stream().anyMatch(x -> x.mapQuality() > MIN_MAP_QUALITY);
-        }
-
-        if(!hasPassingMapQualRead)
-            return false;
 
         if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
             return true;

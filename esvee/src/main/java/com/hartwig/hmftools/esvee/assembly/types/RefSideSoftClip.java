@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
@@ -44,7 +42,7 @@ public class RefSideSoftClip
 
     public void addRead(final Read read, final int readSoftClipLength)
     {
-        mReadIds.add(READ_ID_TRIMMER.trim(read.id()));
+        mReadIds.add(read.id());
         mMaxLength = max(mMaxLength, readSoftClipLength);
     }
 

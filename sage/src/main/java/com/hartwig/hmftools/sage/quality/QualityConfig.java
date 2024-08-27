@@ -2,16 +2,12 @@ package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_BASE_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MQ_RATIO_FACTOR;
 
-import com.hartwig.hmftools.common.hla.HlaCommon;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class QualityConfig
@@ -37,17 +33,15 @@ public class QualityConfig
     public QualityConfig(final ConfigBuilder configBuilder)
     {
         JitterMinRepeatCount = configBuilder.getInteger(JITTER_MIN_REPEAT_COUNT);
-        BaseQualityFixedPenalty = configBuilder.getInteger(BASE_QUAL_FIXED_PENALTY);
+        BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         ReadMapQualEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
         HighDepthMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
 
-        FixedMapQualPenalty = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
-                DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY : configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
+        FixedMapQualPenalty = configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
 
-        MapQualityRatioFactor = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_RATIO_FACTOR) ?
-                DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR : configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
+        MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
 
         HighBaseQualLimit = HighDepthMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
     }
@@ -65,18 +59,10 @@ public class QualityConfig
         HighBaseQualLimit = HighDepthMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
     }
 
-    public boolean isHighlyPolymorphic(final BasePosition position)
-    {
-        return HlaCommon.containsPosition(position);
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addInteger(
                 JITTER_MIN_REPEAT_COUNT,"Minimum repeat count before applying jitter penalty", DEFAULT_JITTER_MIN_REPEAT_COUNT);
-
-        configBuilder.addInteger(
-                BASE_QUAL_FIXED_PENALTY, "Fixed penalty to apply to base quality", DEFAULT_BASE_QUAL_FIXED_PENALTY);
 
         configBuilder.addInteger(
                 MAP_QUAL_FIXED_PENALTY,  "Fixed penalty to apply to map quality", DEFAULT_MAP_QUAL_FIXED_PENALTY);

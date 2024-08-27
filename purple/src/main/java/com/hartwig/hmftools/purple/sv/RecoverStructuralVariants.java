@@ -4,11 +4,11 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
+import static com.hartwig.hmftools.purple.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,9 +30,9 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.SampleData;
-import com.hartwig.hmftools.purple.config.SampleDataFiles;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.SampleData;
+import com.hartwig.hmftools.purple.SampleDataFiles;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
@@ -342,7 +342,7 @@ public class RecoverStructuralVariants implements Closeable
 
         return new VariantContextBuilder("purple", leg.chromosome(), leg.position(), leg.position(), alleles).filter(INFERRED)
                 .id("unbalanced_" + mCounter++)
-                .attribute(SVTYPE, StructuralVariantType.BND.toString())
+                .attribute(SV_TYPE, StructuralVariantType.BND.toString())
                 .attribute(INFERRED, true)
                 .attribute(RECOVERED, true)
                 .attribute(RECOVERY_METHOD, "UNBALANCED_SV_START")

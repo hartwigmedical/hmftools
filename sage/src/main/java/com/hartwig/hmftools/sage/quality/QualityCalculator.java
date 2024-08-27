@@ -5,11 +5,11 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY;
+import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
-import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -31,7 +31,6 @@ public class QualityCalculator
     private final BqrRecordMap mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
-    private final boolean mUseReadType;
     private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
 
@@ -42,7 +41,6 @@ public class QualityCalculator
             final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
-        mUseReadType = useReadType(config);
         mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
@@ -63,9 +61,9 @@ public class QualityCalculator
     public static int modifiedMapQuality(
             final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
-        if(config.isHighlyPolymorphic(position))
+        if(isHighlyPolymorphic(position))
         {
-            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedMapQualPenalty);
+            return min(HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, mapQuality - config.FixedMapQualPenalty);
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
@@ -132,6 +130,8 @@ public class QualityCalculator
 
             if(readContextCounter.qualCache().usesMsiIndelErrorQual())
                 return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual());
+            else if(artefactAdjustedQual != INVALID_BASE_QUAL)
+                return min(avgCoreQuality, artefactAdjustedQual);
             else
                 return avgCoreQuality;
         }
@@ -158,7 +158,7 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        BqrReadType readType = mUseReadType ? extractReadType(record, mSequencingType) : BqrReadType.NONE;
+        BqrReadType readType = extractReadType(record, mSequencingType);
 
         if(readContextCounter.isSnv())
         {

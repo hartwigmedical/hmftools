@@ -7,7 +7,13 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
+import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
@@ -19,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
@@ -38,6 +45,12 @@ public class VariantFilters
 
     public void applyFilters(final Variant var)
     {
+        // keep existing filters eg from assembly
+        applyExistingFilters(var.breakendStart());
+
+        if(!var.isSgl())
+            applyExistingFilters(var.breakendEnd());
+
         if(mFilterConstants.FilterSGLs && var.isSgl())
             var.addFilter(SGL);
 
@@ -56,8 +69,26 @@ public class VariantFilters
         if(belowMinLength(var))
             var.addFilter(MIN_LENGTH);
 
+        if(belowMinAnchorLength(var))
+            var.addFilter(MIN_ANCHOR_LENGTH);
+
         if(belowMinFragmentLength(var))
             var.addFilter(SHORT_FRAG_LENGTH);
+    }
+
+    private void applyExistingFilters(final Breakend breakend)
+    {
+        for(String filterStr : breakend.Context.getFilters())
+        {
+            try
+            {
+                FilterType filterType = FilterType.fromVcfTag(filterStr);
+
+                if(filterType != null && filterType != DUPLICATE) // only required from where assembly marked duplicates
+                    breakend.sv().addFilter(filterType);
+            }
+            catch(Exception e) {}
+        }
     }
 
     private boolean belowMinSupport(final Variant var)
@@ -80,17 +111,35 @@ public class VariantFilters
 
     private boolean belowMinAf(final Variant var)
     {
-        double afThreshold = var.isHotspot() ? mFilterConstants.MinAfHotspot :
-                (var.isSgl() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction);
+        double afThreshold;
 
-        Breakend breakend = var.breakendStart();
-
-        for(Genotype genotype : breakend.Context.getGenotypes())
+        if(var.isHotspot())
         {
-            double af = breakend.calcAllelicFrequency(genotype);
+            afThreshold = mFilterConstants.MinAfHotspot;
+        }
+        else if(var.isSgl() && !var.isLineSite())
+        {
+            afThreshold = mFilterConstants.MinAfSgl;
+        }
+        else
+        {
+            afThreshold = mFilterConstants.MinAfJunction;
+        }
 
-            if(af >= afThreshold)
-                return false;
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(var.breakends()[se] == null)
+                continue;
+
+            Breakend breakend = var.breakends()[se];
+
+            for(Genotype genotype : breakend.Context.getGenotypes())
+            {
+                double af = breakend.calcAllelicFrequency(genotype);
+
+                if(af >= afThreshold)
+                    return false;
+            }
         }
 
         return true;
@@ -108,30 +157,74 @@ public class VariantFilters
         else if(otherBreakend != null && mFilterConstants.LowQualRegion.containsPosition(otherBreakend.Chromosome, otherBreakend.Position))
             qualThreshold *= 0.5;
 
-        return var.qual() < qualThreshold;
+        double variantQual = var.qual();
+
+        if(breakend.lineSiteBreakend() != null)
+            variantQual += breakend.lineSiteBreakend().sv().qual();
+
+        return variantQual < qualThreshold;
     }
 
     private boolean belowMinLength(final Variant var)
     {
-        if(var.type() == DEL)
-            return var.length() + var.insertSequence().length() - 1 < mFilterConstants.MinLength;
-        else if(var.type() == DUP)
-            return var.length() + var.insertSequence().length() < mFilterConstants.MinLength;
-        else if(var.type() == INS)
-            return var.length() + var.insertSequence().length() + 1 < mFilterConstants.MinLength;
-        else
+        if(var.type() == DEL || var.type() == DUP || var.type() == INS)
+            return var.adjustedLength() < mFilterConstants.MinLength;
+
+        return false;
+    }
+
+    private boolean belowMinAnchorLength(final Variant var)
+    {
+        if(var.isLineSite())
             return false;
+
+        // skip for chained breakends
+        if(belowMinAnchorLength(var.breakendStart()))
+            return false;
+
+        if(var.isSgl())
+        {
+            byte[] insertSequence = var.insertSequence().getBytes();
+            List<RepeatInfo> repeats = RepeatInfo.findRepeats(insertSequence);
+            int trimmedSequenceLength = calcTrimmedBaseLength(0, insertSequence.length - 1, repeats);
+
+            return trimmedSequenceLength < MIN_TRIMMED_ANCHOR_LENGTH;
+        }
+        else
+        {
+            return belowMinAnchorLength(var.breakendEnd());
+        }
+    }
+
+    private boolean belowMinAnchorLength(final Breakend breakend)
+    {
+        if(breakend.inChainedAssembly())
+            return false;
+
+        return breakend.anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
     }
 
     private boolean belowMinFragmentLength(final Variant var)
     {
+        if(var.isSgl())
+            return false;
+
+        if(var.isLineSite())
+            return false;
+
+        if(var.inChainedAssembly())
+            return false;
+
+        int svAvgLength = var.averageFragmentLength();
+
+        if(svAvgLength == 0) // for now treat is this as a pass
+            return false;
+
         int medianLength = mFragmentLengthBounds.Median;
         double stdDeviation = mFragmentLengthBounds.StdDeviation;
 
         int totalSplitFrags = var.splitFragmentCount();
         double lowerLengthLimit = medianLength - (mFilterConstants.MinAvgFragFactor * stdDeviation / sqrt(totalSplitFrags));
-
-        int svAvgLength = var.averageFragmentLength();
 
         return svAvgLength < lowerLengthLimit;
     }

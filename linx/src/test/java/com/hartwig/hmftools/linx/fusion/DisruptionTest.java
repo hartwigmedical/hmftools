@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -404,19 +405,17 @@ public class DisruptionTest
 
 
         // test 4: multiple TIs within the same intro within a chain which has its ends outside genic regions
-        // sorounded by a non-disruptive intronic DEL
+        // surrounded by a non-disruptive intronic DEL
         tester.clearClustersAndSVs();
 
         var1 = createDel(tester.nextVarId(), chromosome, 11800, 14500);
         var2 = createBnd(tester.nextVarId(), chromosome, 12000, -1, remoteChr, 100, 1);
         var3 = createInv(tester.nextVarId(), chromosome, 12100, 14100, 1);
 
-        var2.setAssemblyData(true, "asmb_A2_A3");
-        var3.setAssemblyData(true, "asmb_A2_A3");
+        setAssembledLinkInfo(var2, true, var3, true);
 
         var4 = createBnd(tester.nextVarId(), chromosome, 14000, -1, remoteChr, 200, -1);
-        var3.setAssemblyData(false, "asmb_A3_A4");
-        var4.setAssemblyData(true, "asmb_A3_A4");
+        setAssembledLinkInfo(var3, false, var4, true);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -445,8 +444,7 @@ public class DisruptionTest
         var2 = createBnd(tester.nextVarId(), chromosome, 12100, -1, remoteChr, 100, 1);
         var3 = createBnd(tester.nextVarId(), chromosome, 12500, 1, remoteChr, 200, -1);
 
-        var2.setAssemblyData(true, "asmb_A2_A3");
-        var3.setAssemblyData(true, "asmb_A2_A3");
+        setAssembledLinkInfo(var2, true, var3, true);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -463,7 +461,7 @@ public class DisruptionTest
 
 
         // test 5: more complicated example, with 2 TIs spanning an intron, but forming DBs with SVs in another chain in the same cluster
-        // menaning the TIs are not isolated and remain disruptive
+        // meaning the TIs are not isolated and remain disruptive
 
         tester.clearClustersAndSVs();
 

@@ -1,58 +1,67 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS_DESC;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_SEG_INDEX;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_SEG_INDEX_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_ORIENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_ORIENT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_POS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_POS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ORIENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ORIENT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ESVEE_VERSION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGID_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGMAPQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGMAPQ_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGSCO;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGSCO_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_MAPQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_MAPQ_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_SCORE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_SCORE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.toVcfTag;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +73,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
@@ -126,7 +136,7 @@ public class VcfWriter implements AutoCloseable
             String vcfFilename = mConfig.outputFilename(WriteType.VCF);
             final RefGenomeSource refGenomeSource = (RefGenomeSource) config.RefGenome;
 
-            final SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
+            SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
 
             mWriter = new VariantContextWriterBuilder()
                     .setOutputFile(vcfFilename)
@@ -135,7 +145,7 @@ public class VcfWriter implements AutoCloseable
                     .setReferenceDictionary(sequenceDictionary)
                     .build();
 
-            writeHeader();
+            writeHeader(sequenceDictionary);
         }
         else
         {
@@ -143,14 +153,18 @@ public class VcfWriter implements AutoCloseable
         }
     }
 
-    private void writeHeader()
+    private void writeHeader(final SAMSequenceDictionary sequenceDictionary)
     {
         Set<VCFHeaderLine> metaData = Sets.newHashSet();
+
+        VersionInfo versionInfo = fromAppName(APP_NAME);
+        metaData.add(new VCFHeaderLine(ESVEE_VERSION, versionInfo.version()));
 
         metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
 
         metaData.add(new VCFInfoHeaderLine(MATE_ID, 1, VCFHeaderLineType.String, MATE_ID_DESC));
-        metaData.add(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        metaData.add(new VCFInfoHeaderLine(SV_ID, 1, VCFHeaderLineType.String, SV_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(SV_TYPE, 1, VCFHeaderLineType.String, SV_TYPE_DESC));
 
         metaData.add(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
@@ -163,19 +177,20 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(DISC_FRAGS, 1, VCFHeaderLineType.Integer, DISC_FRAGS_DESC));
         metaData.add(new VCFInfoHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
         metaData.add(new VCFInfoHeaderLine(AVG_FRAG_LENGTH, 1, VCFHeaderLineType.Integer, AVG_FRAG_LENGTH_DESC));
+        metaData.add(new VCFInfoHeaderLine(LINE_SITE, 1, VCFHeaderLineType.Flag, LINE_SITE_DESC));
 
-        metaData.add(new VCFInfoHeaderLine(ASMID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMID_DESC));
-        metaData.add(new VCFInfoHeaderLine(ASMLEN, 1, VCFHeaderLineType.Integer, ASMLEN_DESC));
-        metaData.add(new VCFInfoHeaderLine(ASMSEG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMSEG_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEAPOS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEAPOS_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEOR_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEAOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEAOR_DESC));
-        metaData.add(new VCFInfoHeaderLine(SEGID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, SEGID_DESC));
-        metaData.add(new VCFInfoHeaderLine(ASSEMBLY_LINKS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASSEMBLY_LINKS_DESC));
-        metaData.add(new VCFInfoHeaderLine(SEGALEN, 1, VCFHeaderLineType.Integer, SEGALEN_DESC));
-        metaData.add(new VCFInfoHeaderLine(SEGMAPQ, 1, VCFHeaderLineType.Integer, SEGMAPQ_DESC));
-        metaData.add(new VCFInfoHeaderLine(SEGSCO, 1, VCFHeaderLineType.Integer, SEGSCO_DESC));
-        metaData.add(new VCFInfoHeaderLine(SEGRL, 1, VCFHeaderLineType.Integer, SEGRL_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASM_ID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASM_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASM_LENGTH, 1, VCFHeaderLineType.Integer, ASM_LENGTH_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASM_SEG_INDEX, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASM_SEG_INDEX_DESC));
+        metaData.add(new VCFInfoHeaderLine(BE_ASM_POS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BE_ASM_POS_DESC));
+        metaData.add(new VCFInfoHeaderLine(BE_ORIENT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BE_ORIENT_DESC));
+        metaData.add(new VCFInfoHeaderLine(BE_ASM_ORIENT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BE_ASM_ORIENT_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEG_ID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, SEG_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASM_LINKS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASM_LINKS_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEG_ALIGN_LENGTH, 1, VCFHeaderLineType.Integer, SEG_ALIGN_LENGTH_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEG_MAPQ, 1, VCFHeaderLineType.Integer, SEG_MAPQ_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEG_SCORE, 1, VCFHeaderLineType.Integer, SEG_SCORE_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
         for(FilterType filter : FilterType.values())
         {
@@ -192,7 +207,9 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFFormatHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
         metaData.add(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
 
-        final VCFHeader header = new VCFHeader(metaData, mSampleNames);
+        VCFHeader header = new VCFHeader(metaData, mSampleNames);
+
+        header.setSequenceDictionary(sequenceDictionary);
 
         mWriter.writeHeader(header);
     }
@@ -241,9 +258,15 @@ public class VcfWriter implements AutoCloseable
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())
-            builder.attribute(MATE_ID, String.valueOf(breakend.otherBreakend().id()));
+        {
+            int otherBreakendId = breakend.otherBreakend().id();
+            builder.attribute(MATE_ID, String.valueOf(otherBreakendId));
 
-        builder.attribute(SVTYPE, breakend.svType());
+            String svId = format("%d_%d", breakend.id(), otherBreakendId);
+            builder.attribute(SV_ID, String.valueOf(svId));
+        }
+
+        builder.attribute(SV_TYPE, breakend.svType());
 
         if(breakend.Homology != null)
         {
@@ -263,35 +286,41 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
         builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
-        if(breakend.alternativeAlignments() != null)
+        if(breakend.alternativeAlignments() != null && !breakend.alternativeAlignments().isEmpty())
             builder.attribute(INSALN, toVcfTag(breakend.alternativeAlignments()));
 
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 
-        builder.attribute(ASMID, assemblyAlignment.id());
-        builder.attribute(ASMLEN, assemblyAlignment.fullSequenceLength());
+        builder.attribute(ASM_ID, assemblyAlignment.id());
+        builder.attribute(ASM_LENGTH, assemblyAlignment.fullSequenceLength());
+
+        if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())
+        && isMobileLineElement(breakend.Orient, breakend.InsertedBases))
+        {
+            builder.attribute(LINE_SITE, true);
+        }
 
         List<BreakendSegment> segments = breakend.segments();
 
-        builder.attribute(ASMSEG, segments.stream().map(x -> String.valueOf(x.Index)).collect(Collectors.joining(VCF_ITEM_DELIM)));
-        builder.attribute(BEAPOS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
-        builder.attribute(BEOR, breakend.Orient.asByte());
-        builder.attribute(BEAOR, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(ASM_SEG_INDEX, segments.stream().map(x -> String.valueOf(x.Index)).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BE_ASM_POS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BE_ORIENT, breakend.Orient.asByte());
+        builder.attribute(BE_ASM_ORIENT, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
 
-        builder.attribute(SEGID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(SEG_ID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
 
         // NOTE: this is used by Linx to form assembly TIs
         if(!breakend.facingBreakends().isEmpty())
         {
             builder.attribute(
-                    ASSEMBLY_LINKS,
+                    ASM_LINKS,
                     breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(VCF_ITEM_DELIM)));
         }
 
-        builder.attribute(SEGALEN, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
-        builder.attribute(SEGMAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
-        builder.attribute(SEGSCO, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
-        builder.attribute(SEGRL, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
+        builder.attribute(SEG_ALIGN_LENGTH, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(SEG_MAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
+        builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
+        builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
         VariantContext variantContext = builder.make();
 

@@ -25,15 +25,8 @@ public class TaskExecutor
     private static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
 
     public static final String THREADS = "threads";
+    public static final String THREADS_DESC = "Number of threads, 0 or 1 not multi-threaded";
     private static final int DEFAULT_THREAD_COUNT = 1;
-
-    private static String threadDescription(int defaultCount)
-    {
-        if(defaultCount <= 0)
-            return format("Number of threads, default %d = not multi-threaded", defaultCount);
-        else
-            return format("Number of threads, default %d", defaultCount);
-    }
 
     public static void addThreadOptions(final ConfigBuilder configBuilder)
     {
@@ -42,8 +35,7 @@ public class TaskExecutor
 
     public static void addThreadOptions(final ConfigBuilder configBuilder, final int defaultCount)
     {
-        configBuilder.addConfigItem(
-                ConfigItemType.INTEGER, THREADS, false, threadDescription(defaultCount), String.valueOf(defaultCount));
+        configBuilder.addConfigItem(ConfigItemType.INTEGER, THREADS, false, THREADS_DESC, String.valueOf(defaultCount));
 
         setDefaultThreadExceptionHandler();
     }

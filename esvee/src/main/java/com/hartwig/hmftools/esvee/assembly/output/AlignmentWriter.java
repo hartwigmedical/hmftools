@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import htsjdk.samtools.Cigar;
 
@@ -33,7 +32,7 @@ public class AlignmentWriter
         if(config.AlignmentFile == null)
         {
             mWriter = initialiseWriter(config);
-            mDetailedWriter = initialiseDetailedWriter(config);
+            mDetailedWriter = initialiseAlignmentDataWriter(config);
         }
         else
         {
@@ -53,7 +52,7 @@ public class AlignmentWriter
 
     private BufferedWriter initialiseWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ALIGNMENT))
+        if(!config.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
             return null;
 
         if(config.OutputDir == null)
@@ -61,23 +60,15 @@ public class AlignmentWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT));
+            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.PHASED_ASSEMBLY));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add(FLD_ASSEMBLY_IDS);
             sj.add(FLD_ASSEMLY_INFO);
-            sj.add("SvType");
-            sj.add("SvLength");
-            sj.add("RefBaseLength");
+            sj.add("Merged");
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
-
-            sj.add("AlignResults");
-            sj.add("AlignCigar");
-            sj.add("AlignScore");
-            sj.add("AlignedBases");
-
             sj.add("FullSequence");
 
             writer.write(sj.toString());
@@ -93,7 +84,7 @@ public class AlignmentWriter
     }
 
     public synchronized static void writeAssemblyAlignment(
-            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final List<AlignData> alignmentResults)
+            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment)
     {
         if(writer == null)
             return;
@@ -104,32 +95,9 @@ public class AlignmentWriter
 
             sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
-            sj.add(String.valueOf(assemblyAlignment.svType()));
-            sj.add(String.valueOf(assemblyAlignment.svLength()));
-            sj.add(String.valueOf(assemblyAlignment.refBaseLength()));
+            sj.add(String.valueOf(assemblyAlignment.isMerged()));
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
-
-            AlignData topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
-
-            if(topAlignment == null || topAlignment.Score == 0 || topAlignment.Cigar.isEmpty())
-            {
-                sj.add("0").add("").add("0").add("0").add("").add("0");
-                sj.add(assemblyAlignment.fullSequence());
-                writer.write(sj.toString());
-                writer.newLine();
-                return;
-            }
-
-            sj.add(String.valueOf(alignmentResults.size()));
-
-            Cigar cigar = CigarUtils.cigarFromStr(topAlignment.Cigar);
-            int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-
-            sj.add(topAlignment.Cigar);
-            sj.add(String.valueOf(topAlignment.Score));
-            sj.add(String.valueOf(alignedBases));
-
             sj.add(assemblyAlignment.fullSequence());
 
             writer.write(sj.toString());
@@ -154,9 +122,9 @@ public class AlignmentWriter
     public static final String FLD_XA_TAG = "LocTag";
     public static final String FLD_MD_TAG = "MdTag";
 
-    private BufferedWriter initialiseDetailedWriter(final AssemblyConfig config)
+    private BufferedWriter initialiseAlignmentDataWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
+        if(!config.WriteTypes.contains(WriteType.ALIGNMENTS))
             return null;
 
         if(config.OutputDir == null)
@@ -164,7 +132,7 @@ public class AlignmentWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT_DATA));
+            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENTS));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -182,7 +150,7 @@ public class AlignmentWriter
             sj.add(FLD_NMATCHES);
             sj.add(FLD_XA_TAG);
             sj.add(FLD_MD_TAG);
-            sj.add("Requeried");
+            sj.add("DroppedOnRequery");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -225,7 +193,7 @@ public class AlignmentWriter
                 sj.add(String.valueOf(alignment.NMatches));
                 sj.add(alignment.XaTag);
                 sj.add(alignment.MdTag);
-                sj.add(String.valueOf(alignment.isRequeried()));
+                sj.add(String.valueOf(alignment.droppedOnRequery()));
 
                 writer.write(sj.toString());
                 writer.newLine();

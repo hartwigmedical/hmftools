@@ -116,6 +116,14 @@ public class VirusInterpreterAlgoTest
         assertFalse(algo.report(createTestVirusBreakendsFail(0).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
     }
 
+    @Test
+    public void canDetermineBlacklistedVirus()
+    {
+        VirusInterpreterAlgo algo = createTestAlgo();
+        assertTrue(algo.blacklist(11646, 0));
+        assertFalse(algo.blacklist(10000, 0));
+    }
+
     @NotNull
     private static VirusInterpreterAlgo createTestAlgo()
     {
@@ -159,7 +167,7 @@ public class VirusInterpreterAlgoTest
 
         CoveragesAnalysis coveragesAnalysis = new CoveragesAnalysis(34.5);
 
-        return new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+        return new VirusInterpreterAlgo(taxonomyDb, Lists.newArrayList(11646), virusReportingModel, coveragesAnalysis);
     }
 
     private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies)

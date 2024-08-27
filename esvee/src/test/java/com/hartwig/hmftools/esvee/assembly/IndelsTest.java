@@ -15,7 +15,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;

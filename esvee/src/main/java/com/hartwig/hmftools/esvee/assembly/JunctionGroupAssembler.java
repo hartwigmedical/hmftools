@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
+import com.hartwig.hmftools.esvee.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.common.TaskQueue;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -36,27 +38,25 @@ public class JunctionGroupAssembler extends ThreadTask
 {
     private final AssemblyConfig mConfig;
 
-    private final Queue<JunctionGroup> mJunctionGroups;
-    private final int mJunctionCount;
+    private final TaskQueue mJunctionGroups;
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
-    private final DecoyChecker mDecoyChecker;
+    private final AlignmentChecker mAlignmentChecker;
 
     private final Map<String,ReadGroup> mReadGroupMap;
     private final Map<String,SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
     private final ReadStats mReadStats;
 
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
-        mJunctionCount = junctionGroups.size();
 
-        mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome, resultsWriter.decoyMatchWriter());
+        mAlignmentChecker = new AlignmentChecker(mConfig, resultsWriter.decoyMatchWriter());
 
         mReadGroupMap = Maps.newHashMap();
         mSupplementaryRepeats = Maps.newHashMap();
@@ -73,13 +73,15 @@ public class JunctionGroupAssembler extends ThreadTask
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
         junctionGroupQueue.addAll(junctionGroups);
 
+        TaskQueue taskQueue = new TaskQueue(junctionGroupQueue, "junction groups", 10000);
+
         int junctionGroupCount = junctionGroups.size();
 
         for(int i = 0; i < taskCount; ++i)
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -101,20 +103,12 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             try
             {
-                int remainingCount = mJunctionGroups.size();
-                int processedCount = mJunctionCount - remainingCount;
-
-                JunctionGroup junctionGroup = mJunctionGroups.remove();
+                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
 
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
 
-                stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
-
-                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
-                {
-                    SV_LOGGER.debug("processed {} junction groups, remaining({})", processedCount, remainingCount);
-                }
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {
@@ -154,7 +148,6 @@ public class JunctionGroupAssembler extends ThreadTask
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
         RefBaseExtender refBaseExtender = new RefBaseExtender();
-        DiscordantReads discordantReads = new DiscordantReads();
 
         // now pass applicable reads to each junction assembler - any read overlapping the junction
         // due to SvPrep filtering, most reads crossing the junction will have met soft-clip criteria
@@ -177,13 +170,8 @@ public class JunctionGroupAssembler extends ThreadTask
             if(candidateReads.isEmpty())
                 continue;
 
-            if(junction.DiscordantOnly)
-            {
-                if(mConfig.ProcessDiscordant)
-                    discordantReads.processReads(junction, candidateReads);
-
+            if(junction.DiscordantOnly) // ignored for now, requires new functionality to handle without split reads
                 continue;
-            }
 
             List<JunctionAssembly> candidateAssemblies = null;
 
@@ -204,14 +192,18 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                if(mDecoyChecker.enabled())
+                if(mAlignmentChecker.matchesDecoy(assembly))
                 {
-                    if(mDecoyChecker.matchesDecoy(assembly))
-                    {
-                        SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
-                        ++mReadStats.DecoySequences;
-                        continue;
-                    }
+                    SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
+                    ++mReadStats.DecoySequences;
+                    continue;
+                }
+
+                if(mAlignmentChecker.failsMappability(assembly))
+                {
+                    SV_LOGGER.trace("assembly({}) fails ref-base alignment, excluding", assembly);
+                    ++mReadStats.RefBaseAlignmentFails;
+                    continue;
                 }
 
                 refBaseExtender.findAssemblyCandidateExtensions(assembly, junctionAssembler.nonJunctionReads());
@@ -219,19 +211,13 @@ public class JunctionGroupAssembler extends ThreadTask
             }
         }
 
-        if(!discordantReads.groups().isEmpty())
-        {
-            discordantReads.mergeGroups();
-            junctionGroup.addDiscordantGroups(discordantReads.groups());
-        }
-
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
 
         // no longer needs to keep candidate reads since all have been assigned to assemblies
         junctionGroup.clearCandidateReads();
 
-        // clear assembly read info for support fragments - candidates will be cleared after phasing
-        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedRead());
+        // clear assembly read info for supporting fragments
+        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedReads());
 
         mCurrentJunctionGroup = null;
     }
@@ -254,7 +240,9 @@ public class JunctionGroupAssembler extends ThreadTask
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
 
-        if(ReadAdjustments.trimLowQualBases(read))
+        markLineSoftClips(read);
+
+        if(ReadAdjustments.trimLowQualSoftClipBases(read))
             ++mReadStats.LowBaseQualTrimmed;
 
         if(ReadAdjustments.convertEdgeIndelsToSoftClip(read))

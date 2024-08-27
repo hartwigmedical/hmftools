@@ -7,9 +7,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.alignment.Alignment.skipUnlinkedJunctionAssembly;
-import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.formBreakendFacingLinks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
-import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
@@ -32,11 +30,8 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.BreakendFragLengths;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyReadWriter;
@@ -103,8 +98,7 @@ public class AssemblyApplication
 
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
-                    junctionFile, mConfig.SpecificChrRegions, mConfig.ProcessDiscordant);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
 
             if(newJunctionsMap == null)
                 return false;
@@ -164,11 +158,10 @@ public class AssemblyApplication
 
             List<JunctionAssembly> finalAssemblies = Lists.newArrayList();
             List<AssemblyAlignment> assemblyAlignments = Lists.newArrayList();
-            List<List<AssemblyAlignment>> assemblyAlignmentGroups = Lists.newArrayList();
 
-            gatherAssemblies(finalAssemblies, assemblyAlignments, assemblyAlignmentGroups);
+            gatherAssemblies(finalAssemblies, assemblyAlignments);
 
-            runAlignment(assemblyAlignments, assemblyAlignmentGroups);
+            runAlignment(assemblyAlignments);
 
             List<Breakend> breakends = Lists.newArrayList();
             assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
@@ -178,12 +171,6 @@ public class AssemblyApplication
             {
                 breakends.get(i).setId(i);
             }
-
-            formBreakendFacingLinks(breakends);
-
-            new BreakendFragLengths().calcAssemblyFragmentLengths(assemblyAlignmentGroups);
-
-            Deduplication.deduplicateBreakends(breakends);
 
             writeAssemblyOutput(finalAssemblies);
 
@@ -250,7 +237,7 @@ public class AssemblyApplication
         ReadStats combinedReadStats = new ReadStats();
         primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies reads(junc={} candidate={})",
+        SV_LOGGER.info("created {} junction assemblies from reads(junc={} candidate={})",
                 assemblyCount, junctionReadCount, candidateReadCount);
 
         SV_LOGGER.info("extracted read stats: {}", combinedReadStats);
@@ -294,7 +281,7 @@ public class AssemblyApplication
         mergePerfCounters(mPerfCounters, tasks);
     }
 
-    private void runAlignment(final List<AssemblyAlignment> assemblyAlignments, final List<List<AssemblyAlignment>> assemblyAlignmentGroups)
+    private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
         if(!mConfig.RunAlignment)
             return;
@@ -305,9 +292,7 @@ public class AssemblyApplication
         alignment.close();
     }
 
-    private void gatherAssemblies(
-            final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments,
-            final List<List<AssemblyAlignment>> assemblyAlignmentGroups)
+    private void gatherAssemblies(final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments)
     {
         int assemblyId = 0;
 
@@ -331,7 +316,6 @@ public class AssemblyApplication
             }
         }
 
-        int assemblyAlignmentId = 0;
         for(PhaseGroup phaseGroup : phaseGroups)
         {
             allAssemblies.addAll(phaseGroup.derivedAssemblies());
@@ -341,20 +325,7 @@ public class AssemblyApplication
                 // add link assemblies into the same assembly alignment
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())
                 {
-                    List<AssemblyAlignment> phaseSetAlignments = Lists.newArrayList();
-
-                    for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
-                    {
-                        if(assemblyLink.type() != FACING)
-                        {
-                            AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assemblyLink);
-                            assemblyAlignments.add(assemblyAlignment);
-                            phaseSetAlignments.add(assemblyAlignment);
-                        }
-                    }
-
-                    if(!phaseSetAlignments.isEmpty())
-                        assemblyAlignmentGroups.add(phaseSetAlignments);
+                    assemblyAlignments.add(phaseSet.assemblyAlignment());
                 }
 
                 // and then add any assemblies not in a phase set into their own for alignment
@@ -362,9 +333,8 @@ public class AssemblyApplication
                 {
                     if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
                     {
-                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assembly);
+                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
                         assemblyAlignments.add(assemblyAlignment);
-                        assemblyAlignmentGroups.add(List.of(assemblyAlignment));
                     }
                 }
             }
@@ -375,6 +345,13 @@ public class AssemblyApplication
         for(JunctionAssembly assembly : allAssemblies)
         {
             assembly.setId(assemblyId++);
+        }
+
+        int assemblyAlignmentId = 0;
+
+        for(AssemblyAlignment assemblyAlignment : assemblyAlignments)
+        {
+            assemblyAlignment.setId(assemblyAlignmentId++);
         }
     }
 

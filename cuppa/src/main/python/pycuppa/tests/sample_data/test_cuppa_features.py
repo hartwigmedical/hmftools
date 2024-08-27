@@ -12,7 +12,7 @@ class TestCuppaFeaturesPaths:
 
     def test_can_find_files_in_dir_by_pattern(self):
         match_files = CuppaFeaturesDir._find_files_in_dir_by_pattern(
-            directory=MockInputData.dir_new_format,
+            directory=MockInputData.cohort_dir,
             pattern="cuppa_data.cohort.snv.*.tsv",
         )
         assert match_files.tolist() == ['cuppa_data.cohort.snv.tsv.gz']
@@ -61,7 +61,7 @@ class TestCuppaFeaturesPaths:
 class TestFeatureLoader:
 
     def test_can_load_single_sample_from_tsv(self):
-        loader = CuppaFeaturesLoader(MockInputData.path_tsv_new_format, sample_id ="COLO829")
+        loader = CuppaFeaturesLoader(MockInputData.single_sample_tsv, sample_id ="COLO829")
 
         features = loader.load()
         assert features.shape == (1, 6219)
@@ -81,7 +81,7 @@ class TestFeatureLoader:
 
     def test_can_load_multi_sample_from_tsvs(self):
 
-        loader = CuppaFeaturesLoader(MockInputData.dir_new_format)
+        loader = CuppaFeaturesLoader(MockInputData.cohort_dir)
         features = loader.load()
         assert features.shape == (2, 6225)
 

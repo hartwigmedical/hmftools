@@ -28,7 +28,7 @@ import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
@@ -48,7 +48,7 @@ public class ChromosomePipeline implements AutoCloseable
     private  final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
     private final Queue<PartitionTask> mPartitions;
     private final RegionResults mRegionResults;
 
@@ -61,7 +61,7 @@ public class ChromosomePipeline implements AutoCloseable
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
             final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
-            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
+            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengthWriter fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;

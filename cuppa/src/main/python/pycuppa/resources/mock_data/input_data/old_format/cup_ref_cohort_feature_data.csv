@@ -1,5 +1,0 @@
-SampleId,Name,Type,Likelihood,ExtraInfo
-sample_1,driver_1,DRIVER,0.0,TYPE=DEL
-sample_1,fusion_1,FUSION,0.0,
-sample_1,virus_1,VIRUS,0.0,
-sample_1,indel_1,INDEL,0.0,

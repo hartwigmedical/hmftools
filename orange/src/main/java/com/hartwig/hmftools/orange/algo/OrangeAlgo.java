@@ -75,8 +75,11 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
+import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
+import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
+import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -105,6 +108,8 @@ public class OrangeAlgo
     private final CohortPercentilesModel percentilesModel;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final Map<String, String> etiologyPerSignature;
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
@@ -135,6 +140,10 @@ public class OrangeAlgo
         List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
         LOGGER.info(" Read {} driver genes", driverGenes.size());
 
+        LOGGER.info("Reading signatures etiology from {}", config.signaturesEtiologyTsv());
+        Map<String, String> etiologyPerSignature = SigsEtiologiesLoader.read(config.signaturesEtiologyTsv());
+        LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
+
         LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
         KnownFusionCache knownFusionCache = new KnownFusionCache();
         if(!knownFusionCache.loadFile(config.knownFusionFile()))
@@ -150,11 +159,13 @@ public class OrangeAlgo
         String outputDir = config.outputDir();
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache, ensemblDataCache, plotManager);
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, etiologyPerSignature, knownFusionCache, ensemblDataCache,
+                plotManager);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
             @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final Map<String, String> etiologyPerSignature,
             @NotNull final KnownFusionCache knownFusionCache, @NotNull final EnsemblDataCache ensemblDataCache,
             @NotNull final PlotManager plotManager)
     {
@@ -162,6 +173,7 @@ public class OrangeAlgo
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
         this.driverGenes = driverGenes;
+        this.etiologyPerSignature = etiologyPerSignature;
         this.knownFusionCache = knownFusionCache;
         this.ensemblDataCache = ensemblDataCache;
         this.plotManager = plotManager;
@@ -195,8 +207,8 @@ public class OrangeAlgo
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter =
-                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, germlineLOHFactory, driverGenes, linx, chord);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory,
+                germlineLOHFactory, driverGenes, linx, chord, config.convertGermlineToSomatic());
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
@@ -242,11 +254,11 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null))
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
+                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
-                .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
+                .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();

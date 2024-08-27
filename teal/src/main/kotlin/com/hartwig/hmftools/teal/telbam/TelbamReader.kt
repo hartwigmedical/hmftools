@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.teal.ReadGroup
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.ValidationStringency
 import org.apache.logging.log4j.LogManager
 
 // read the telbam file and gives the read groups
@@ -26,7 +27,7 @@ class TelbamReader(
     fun read()
     {
         mLogger.info("processing telbam: {}", mTelbamFile)
-        val factory = SamReaderFactory.makeDefault()
+        val factory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT)
         val samReader = factory.open(mTelbamFile)
         samReader.iterator().use({ iterator ->
             while (iterator.hasNext())

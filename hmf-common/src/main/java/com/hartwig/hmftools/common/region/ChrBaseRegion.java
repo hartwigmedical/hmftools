@@ -89,7 +89,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         if(!Chromosome.equals(other.Chromosome))
             return false;
 
-        return positionsOverlap(mStart, mEnd, other.mStart, other.mEnd);
+        return positionsOverlap(mStart, mEnd, other.start(), other.end());
     }
 
     public boolean overlaps(final String chromosome, final int posStart, final int posEnd)
@@ -302,7 +302,10 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
             if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
             {
-                region.setEnd(nextRegion.end());
+                if(nextRegion.end() > region.end())
+                {
+                    region.setEnd(nextRegion.end());
+                }
                 regions.remove(index + 1);
             }
             else

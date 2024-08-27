@@ -58,9 +58,9 @@ public class MicrosatelliteSiteFile
     public static void write(final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
     {
         Comparator<MicrosatelliteSiteAnalyser> comparator =
-                Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite.chromosome())
-                        .thenComparingInt(o -> o.refGenomeMicrosatellite.referenceStart())
-                        .thenComparing(o -> o.refGenomeMicrosatellite.referenceEnd());
+                Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite().chromosome())
+                        .thenComparingInt(o -> o.refGenomeMicrosatellite().referenceStart())
+                        .thenComparing(o -> o.refGenomeMicrosatellite().referenceEnd());
 
         // sort the bins
         List<MicrosatelliteSiteAnalyser> sortedAnalysers = microsatelliteSiteAnalysers.stream().sorted(comparator).collect(Collectors.toList());
@@ -74,15 +74,15 @@ public class MicrosatelliteSiteFile
 
         DelimFileWriter.write(filename, columns, sortedAnalysers, (repeatAnalyser, row) ->
         {
-            row.set(CHROMOSOME, repeatAnalyser.refGenomeMicrosatellite.chromosome());
-            row.set(START, repeatAnalyser.refGenomeMicrosatellite.referenceStart());
-            row.set(END, repeatAnalyser.refGenomeMicrosatellite.referenceEnd());
-            row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite.unitString());
+            row.set(CHROMOSOME, repeatAnalyser.refGenomeMicrosatellite().chromosome());
+            row.set(START, repeatAnalyser.refGenomeMicrosatellite().referenceStart());
+            row.set(END, repeatAnalyser.refGenomeMicrosatellite().referenceEnd());
+            row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
             row.set(NUM_READS, repeatAnalyser.getReadRepeatMatches().size());
             row.set(NUM_READS_REJECTED, repeatAnalyser.getReadRepeatMatches().stream().filter(o -> o.shouldDropRead).count());
             row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT, JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
-                    JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION));
-            int refNumRepeat = repeatAnalyser.refGenomeMicrosatellite.numRepeat;
+                    JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION, JitterAnalyserConstants.MIN_PASSING_SITE_READS));
+            int refNumRepeat = repeatAnalyser.refGenomeMicrosatellite().numRepeat;
             row.set(COUNT_p0, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat));
 
             row.set(COUNT_p10, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 10));

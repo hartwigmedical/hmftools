@@ -372,7 +372,8 @@ public class PurpleInterpreterTest
                 germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
-                null
+                null,
+                false
         );
     }
 

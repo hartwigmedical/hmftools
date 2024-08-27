@@ -53,7 +53,8 @@ public class AlignData
     private final int mRawSequenceEnd;
     private int mSequenceStart;
     private int mSequenceEnd;
-    private boolean mIsRequeried;
+    private boolean mDroppedOnRequery;
+    private boolean mIsRequery;
 
     private int mAdjustedAlignment;
 
@@ -84,7 +85,8 @@ public class AlignData
 
         mSequenceStart = sequenceStart;
         mSequenceEnd = max(sequenceEnd - 1, 0);
-        mIsRequeried = false;
+        mIsRequery = false;
+        mDroppedOnRequery = false;
         mAdjustedAlignment = mAlignedBases;
     }
 
@@ -101,7 +103,7 @@ public class AlignData
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
-        if(mIsRequeried)
+        if(mIsRequery)
             return;
 
         if(mOrientation.isReverse())
@@ -120,14 +122,17 @@ public class AlignData
         }
     }
 
+    public void markDroppedOnRequery() { mDroppedOnRequery = true; }
+    public boolean droppedOnRequery() { return mDroppedOnRequery; }
+
     public void setRequeriedSequenceCoords(int sequenceStart, int sequenceEnd)
     {
         mSequenceStart = sequenceStart;
         mSequenceEnd = sequenceEnd;
-        mIsRequeried = true;
+        mIsRequery = true;
     }
 
-    public boolean isRequeried() { return mIsRequeried; }
+    public boolean isRequeried() { return mIsRequery; }
 
     public int sequenceStart() { return mSequenceStart; }
     public int sequenceEnd() { return mSequenceEnd; }
@@ -162,7 +167,7 @@ public class AlignData
 
     public double calcModifiedMapQual()
     {
-        double lengthFactor = pow(mAdjustedAlignment/ 100.0, 2);
+        double lengthFactor = pow(mAdjustedAlignment/ (double)max(100, mAlignedBases), 2);
         return (int)round(MapQual * min(1, lengthFactor));
 
     }

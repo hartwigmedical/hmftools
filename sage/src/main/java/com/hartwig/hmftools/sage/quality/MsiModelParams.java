@@ -4,6 +4,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHANGE;
 
 import java.util.Map;
@@ -37,7 +38,7 @@ public class MsiModelParams
         double modifiedSkew = modifiedSkew(scale);
         double calc = calcAsymmetricLaplace(scale, modifiedSkew, repeatCountChange);
 
-        return calc / pdfSum;
+        return Math.max(calc / pdfSum, MSI_JITTER_DEFAULT_ERROR_RATE);
     }
 
     private double modifiedSkew(double scale)

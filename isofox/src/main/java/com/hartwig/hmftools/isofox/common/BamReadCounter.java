@@ -206,7 +206,7 @@ public class BamReadCounter implements Callable
 
             writer.write(String.format(",%s,%s,%s,%s,%s,%s",
                     record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag(),
-                    record.getSecondOfPairFlag(), record.getSupplementaryAlignmentFlag(), suppData != null ? suppData.asCsv() : "N/A"));
+                    record.getSecondOfPairFlag(), record.getSupplementaryAlignmentFlag(), suppData != null ? suppData.asDelimStr() : "N/A"));
 
             writer.newLine();
         }

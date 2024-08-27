@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 
 import java.util.List;
 
@@ -79,7 +79,7 @@ public class SimpleVariant extends BasePosition
 
     public static boolean isLongInsert(final SimpleVariant variant)
     {
-        return variant.isInsert() && variant.indelLength() >= LONG_GERMLINE_INSERT_LENGTH;
+        return variant.isInsert() && variant.indelLength() >= LONG_INSERT_LENGTH;
     }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }

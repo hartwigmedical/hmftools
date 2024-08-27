@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
+
 public final class SvConstants
 {
     public static final String BAM_HEADER_SAMPLE_INDEX_TAG = "sampleId";
@@ -16,7 +18,9 @@ public final class SvConstants
     // qual calcs and filters
     public static final double QUAL_CALC_FRAG_SUPPORT_FACTOR = 5;
 
-
-
-
+    // LINE elements
+    public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
+    public static final int LINE_REF_BASE_TEST_LENGTH = 8;
+    public static final int LINE_INDEL_MAX_OVERLAP = 40;
+    public static final int LINE_INDEL_MAX_GAP = 30;
 }

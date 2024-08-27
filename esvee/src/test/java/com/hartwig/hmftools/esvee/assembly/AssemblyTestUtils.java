@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 
 import htsjdk.samtools.SAMFlag;
 
@@ -116,12 +119,34 @@ public class AssemblyTestUtils
 
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
 
-        JunctionAssembly firstAssembly = new JunctionAssembly(junctionStart, firstAssemblyBases.getBytes(), baseQuals, firstJunctionIndex);
-        JunctionAssembly secondAssembly = new JunctionAssembly(junctionEnd, secondAssemblyBases.getBytes(), baseQuals, secondJunctionIndex);
 
-        AssemblyLink link = new AssemblyLink(secondAssembly, firstAssembly, LinkType.SPLIT, insertedBases, overlapBases);
+        JunctionAssembly assembly1 = new JunctionAssembly(junctionStart, firstAssemblyBases.getBytes(), baseQuals, firstJunctionIndex);
+        JunctionAssembly assembly2 = new JunctionAssembly(junctionEnd, secondAssemblyBases.getBytes(), baseQuals, secondJunctionIndex);
 
-        return new AssemblyAlignment(0, link);
+        JunctionAssembly first, second;
+
+        // match order from AssemblyLinker
+        if(junctionStart.Orient != junctionEnd.Orient)
+        {
+            first = assembly1.junction().isForward() ? assembly1 : assembly2;
+            second = assembly1.junction().isReverse() ? assembly1 : assembly2;
+        }
+        else
+        {
+            first = assembly1;
+            second = assembly2;
+        }
+
+
+        AssemblyLink link = new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
+
+        return createAssemblyAlignment(link);
+    }
+
+    public static AssemblyAlignment createAssemblyAlignment(final AssemblyLink assemblyLink)
+    {
+        PhaseSet phaseSet = new PhaseSet(assemblyLink);
+        return new AssemblyAlignment(phaseSet);
     }
 
     public static AlignData createAlignment(
@@ -145,5 +170,11 @@ public class AssemblyTestUtils
         // note: as per BWA conventions 1 will be subtracted from the segment end
         return new AlignData(
                 new ChrBaseRegion(chromosome, posStart, posEnd), segStart, segEnd, mapQual,score, flags, cigar, DEFAULT_NM, xaTag, mdTag);
+    }
+
+    public static boolean hasAssemblyLink(
+            final List<AssemblyLink> links, final JunctionAssembly assembly1, final JunctionAssembly assembly2, final LinkType linkType)
+    {
+        return links.stream().anyMatch(x -> x.type() == linkType && x.hasAssembly(assembly1) && x.hasAssembly(assembly2));
     }
 }

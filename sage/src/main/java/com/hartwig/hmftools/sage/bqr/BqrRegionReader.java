@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 
 import java.util.Collection;
 import java.util.Map;
@@ -61,7 +60,6 @@ public class BqrRegionReader implements CigarHandler
     private int mReadCounter;
 
     private BqrReadType mCurrentReadType;
-    private final boolean mUseReadType;
     private final SequencingType mSequencingType;
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
@@ -82,7 +80,6 @@ public class BqrRegionReader implements CigarHandler
         mWriteReadData = mConfig.BQR.WriteReads;
         mWritePositionData = mConfig.BQR.WritePositions;
 
-        mUseReadType = useReadType(mConfig);
         mCurrentReadType = BqrReadType.NONE;
         mSequencingType = mConfig.Sequencing.Type;
 
@@ -253,8 +250,7 @@ public class BqrRegionReader implements CigarHandler
 
         setShortFragmentBoundaries(record);
 
-        if(mUseReadType)
-            mCurrentReadType = extractReadType(record, mSequencingType);
+        mCurrentReadType = extractReadType(record, mSequencingType);
 
         CigarHandler.traverseCigar(record, this);
 

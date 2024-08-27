@@ -66,7 +66,7 @@ public class PartitionReader implements Runnable
 
     public void run()
     {
-        BT_LOGGER.debug("processing {}", mName);
+        // BT_LOGGER.debug("processing {}", mName);
 
         // we process the records partition by partition
         // reads are stored inside a hash table and looked up by the read id
@@ -132,8 +132,11 @@ public class PartitionReader implements Runnable
             completePartition(origBamReadCount, newBamReadCount);
         }
 
-        BT_LOGGER.printf(Level.DEBUG, "%s complete: origReads(%,d) newReads(%,d) diff(%,d)",
-                mName, mStats.OrigReadCount, mStats.NewReadCount, mStats.DiffCount);
+        if(mStats.OrigReadCount > 0 || mStats.NewReadCount > 0)
+        {
+            BT_LOGGER.debug("{} complete: origReads({}) newReads({}) diff({})",
+                    mName, mStats.OrigReadCount, mStats.NewReadCount, mStats.DiffCount);
+        }
     }
 
     private void processOrigBamRecord(final SAMRecord origBamRead)

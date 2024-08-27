@@ -8,6 +8,7 @@ public enum SoftFilter
 {
     MIN_TUMOR_QUAL("minTumorQual", "min_tumor_qual", true, false, "Insufficient tumor quality"),
     MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false, "Insufficient tumor VAF"),
+    MIN_TUMOR_SUPPORT("minTumorSupport", "min_tumor_support", true, false, "Insufficient tumor strong support"),
     MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true, "Insufficient germline depth"),
     MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true, "Excess germline VAF"),
     MAX_GERMLINE_RELATIVE_QUAL(
@@ -19,6 +20,8 @@ public enum SoftFilter
     READ_STRAND_BIAS("readStrandBias", "", true, false, "Variant exceeds read strand bias limit"),
     FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge"),
+    REALIGNED_FREQ("realignFrequency", "", true, false, "Support is predominantly realigned"),
+    FRAGMENT_LENGTH("fragmentLength", "", true, false, "Alt max fragment length well below average non-alt"),
     MAP_QUAL_REF_ALT_DIFFERENCE(
             "mapQualRefAltDiff", "", true, false, "Alt support map qual well below ref support"),
     JITTER("jitter", "", true, false, "Jitter filter"),

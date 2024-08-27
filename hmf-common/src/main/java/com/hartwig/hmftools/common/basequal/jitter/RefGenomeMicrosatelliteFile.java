@@ -48,7 +48,7 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         mWriter.close();
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 
@@ -134,6 +135,9 @@ public class RemoteReadSlicer implements Callable
             return;
         }
 
+        if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
+            return;
+
         int readStartPos = read.getAlignmentStart();
 
         int i = 0;
@@ -178,10 +182,9 @@ public class RemoteReadSlicer implements Callable
         if(!read.getMateReferenceName().equals(mChromosome))
             return false;
 
-        int mateStartPos = read.getMateAlignmentStart();
+        int mateReadStart = read.getMateAlignmentStart();
+        int mateReadEnd = getMateAlignmentEnd(read);;
 
-        return positionsOverlap(
-                mCurrentSlice.start(), mCurrentSlice.end(),
-                mateStartPos, mateStartPos + read.getReadBases().length * 2);
+        return positionsOverlap(mCurrentSlice.start(), mCurrentSlice.end(), mateReadStart, mateReadEnd);
     }
 }

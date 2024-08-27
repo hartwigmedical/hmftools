@@ -256,7 +256,7 @@ public class HomologyTest
         assertNotNull(link);
         assertEquals(homologyBasesRev, link.overlapBases());
 
-        assemblyAlignment = new AssemblyAlignment(0, link);
+        assemblyAlignment = createAssemblyAlignment(link);
 
         breakendBuilder = new BreakendBuilder(refGenome, assemblyAlignment);
 

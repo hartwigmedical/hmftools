@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -10,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamOperations;
@@ -38,7 +40,7 @@ public class FileWriterCache
 
     private final JitterAnalyser mJitterAnalyser;
 
-    private static final String BAM_FILE_ID = "redux";
+    public static final String BAM_FILE_ID = "redux";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
 
@@ -94,6 +96,7 @@ public class FileWriterCache
     {
         SAMFileWriter samFileWriter = null;
         String filename = null;
+        SuppBamWriter suppBamReadWriter = null;
 
         if(mConfig.WriteBam)
         {
@@ -111,6 +114,12 @@ public class FileWriterCache
 
             // no option to use library-based sorting
             samFileWriter = initialiseSamFileWriter(filename, isSorted);
+
+            if(mConfig.UseSupplementaryBam && multiId != null)
+            {
+                String suppBamFilename = SuppBamWriter.formBamFilename(mConfig, multiId);
+                suppBamReadWriter = new SuppBamWriter(suppBamFilename, mConfig);
+            }
         }
 
         // initiate the applicable type of BAM writer - synchronised or not
@@ -118,12 +127,13 @@ public class FileWriterCache
 
         if(isSynchronous)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, suppBamReadWriter);
         }
         else
         {
             bamWriter = new BamWriterNoSync(
-                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
+                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted,
+                    mSharedUnsortedWriter, suppBamReadWriter);
         }
 
         mBamWriters.add(bamWriter);
@@ -146,7 +156,7 @@ public class FileWriterCache
         if(sorted != null)
             filename += "." + sorted;
 
-        filename += ".bam";
+        filename += BAM_EXTENSION;
 
         return filename;
     }
@@ -187,6 +197,11 @@ public class FileWriterCache
 
         boolean presorted = isSorted;
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
+    }
+
+    public List<SuppBamWriter> getSupplementaryBamReadWriters()
+    {
+        return mBamWriters.stream().filter(x -> x.suppBamReadWriter() != null).map(x -> x.suppBamReadWriter()).collect(Collectors.toList());
     }
 
     public boolean runSortMergeIndex() { return mConfig.BamToolPath != null; }

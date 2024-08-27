@@ -2,8 +2,8 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_MAX_PLOIDY;
+import static com.hartwig.hmftools.purple.PurpleConstants.CLONALITY_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.PurpleConstants.CLONALITY_MAX_PLOIDY;
 
 import java.util.List;
 

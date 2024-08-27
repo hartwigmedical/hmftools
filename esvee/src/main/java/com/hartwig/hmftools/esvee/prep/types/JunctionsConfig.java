@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.prep.types;
 
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
+import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
 public class JunctionsConfig
 {

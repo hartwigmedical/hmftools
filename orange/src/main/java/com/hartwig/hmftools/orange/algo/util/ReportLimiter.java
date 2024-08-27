@@ -96,6 +96,7 @@ public final class ReportLimiter
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
                 .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .additionalSuspectSomaticFusions(max1(linx.additionalSuspectSomaticFusions()))
+                .additionalViableSomaticFusions(max1(linx.additionalViableSomaticFusions()))
                 .allSomaticBreakends(filteredAllSomaticBreakends)
                 .reportableSomaticBreakends(filteredReportableSomaticBreakends)
                 .additionalSuspectSomaticBreakends(max1(linx.additionalSuspectSomaticBreakends()))

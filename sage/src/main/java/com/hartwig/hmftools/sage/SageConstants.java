@@ -37,9 +37,6 @@ public class SageConstants
     public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
     public static final int BQR_NON_DUAL_AD = 3;
 
-    // dual (illumina)/balanced (ultima): sites where [(AF<1% or AD<3) and AF <7.5%]
-    // other: sites where [(AF<5% or AD<4) and AF <12.5%]
-
     public static final int BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
@@ -57,13 +54,21 @@ public class SageConstants
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
 
-    public static final int LONG_GERMLINE_INSERT_LENGTH = 11;
+    public static final int LONG_INSERT_LENGTH = 11;
     public static final int LONG_GERMLINE_INSERT_READ_VS_REF_DIFF = 2;
 
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
 
     public static final int CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
-    
+
+    public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
+    public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
+    public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
+    public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
+    public static final double MSI_JITTER_NOISE_RATE = 0.00025;
+    public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
+
+
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
@@ -86,24 +91,37 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
+    public static final int MIN_TQP_QUAL = 15;
+    public static final int MIN_TQP_QUAL_MSI_VARIANT = 20;
+
+    public static final double GERMLINE_HET_MIN_EXPECTED_VAF = 0.4;
+    public static final double GERMLINE_HET_MIN_SAMPLING_PROB = 1e-3;
+
+
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
+    public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
     public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
-    // variant deduplication
-    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_1 = 2;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_2 = 3;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_1 = 3;
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS_AD_2 = 5;
+    public static final int REQUIRED_STRONG_SUPPORT = 3;
+    public static final int REQUIRED_STRONG_SUPPORT_HOTSPOT = 2;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
     public static final double STRAND_BIAS_NON_ALT_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_NON_ALT_MIN_BIAS = 0.25;
 
-    public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
-    public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
-    public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
-    public static final double MSI_JITTER_NOISE_RATE = 0.00025;
-    public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
+    public static final double REALIGNED_MAX_PERC = 0.7;
 
-    public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
+    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
+
+
+    // variant deduplication
+    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
+
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -117,7 +135,8 @@ public class SageConstants
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
     public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
-    public static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
+    public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
+    public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
 
 
     // defaults when in high-depth mode
@@ -128,34 +147,111 @@ public class SageConstants
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 1e-3, 1e-3, 0.01,
-            0, 0, 0.1);
+            "hotspot", 1e-2, -6, 0.01,
+            0, 0, 0.1, 0.25);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 1e-5, 1e-5, 0.02,
-            0, 0,0.04);
+            "panel", 1e-5, -6, 0.02,
+            0, 0, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "high_confidence", 1e-8, 1e-8, 0.025,
-            10, 6,0.04);
+            "high_confidence", 1e-8, 0, 0.025,
+            10, 6, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
-            "low_confidence", 1e-14, 1e-14, 0.025,
-            10, 6,
-            0.04);
+            "low_confidence", 1e-14, 0, 0.025,
+            10, 6, 0.04, 0.04);
 
-    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP = new JitterModelParams(
-            "A/C/G/T", 0.05, 0.09, 0.13, 0.04,
-            -0.11, 1);
+    public static double DEFAULT_JITTER_SCALE_GRADIENT = 0.04;
+    public static double DEFAULT_JITTER_SCALE_4_HP = 0.05;
+    public static double DEFAULT_JITTER_SCALE_5_HP = 0.09;
+    public static double DEFAULT_JITTER_SCALE_6_HP = 0.13;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_HP = DEFAULT_JITTER_SCALE_6_HP - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_JITTER_SCALE_4_DN = 0.11;
+    public static double DEFAULT_JITTER_SCALE_5_DN = 0.15;
+    public static double DEFAULT_JITTER_SCALE_6_DN = 0.19;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_DN = DEFAULT_JITTER_SCALE_6_DN - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_JITTER_SCALE_4_3P = 0.15;
+    public static double DEFAULT_JITTER_SCALE_5_3P = 0.19;
+    public static double DEFAULT_JITTER_SCALE_6_3P = 0.23;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_3P = DEFAULT_JITTER_SCALE_6_3P - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
 
-    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN = new JitterModelParams(
-            "AC/AG/AT/CA/CG/CT/GA/GC/GT/TA/TC/TG", 0.11, 0.15, 0.19, 0.04,
-            -0.05, 1);
+    // high depth equivalents
+    public static double DEFAULT_HD_JITTER_SCALE_GRADIENT = 0.06;
+    public static double DEFAULT_HD_JITTER_SCALE_4_HP = 0.1;
+    public static double DEFAULT_HD_JITTER_SCALE_5_HP = 0.15;
+    public static double DEFAULT_HD_JITTER_SCALE_6_HP = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP = DEFAULT_HD_JITTER_SCALE_6_HP - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_HD_JITTER_SCALE_4_DN = 0.15;
+    public static double DEFAULT_HD_JITTER_SCALE_5_DN = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_6_DN = 0.25;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN = DEFAULT_HD_JITTER_SCALE_6_DN - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_HD_JITTER_SCALE_4_3P = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_5_3P = 0.25;
+    public static double DEFAULT_HD_JITTER_SCALE_6_3P = 0.3;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_3P = DEFAULT_HD_JITTER_SCALE_6_3P - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP_1 = new JitterModelParams(
+            "A/T", DEFAULT_JITTER_SCALE_4_HP, DEFAULT_JITTER_SCALE_5_HP, DEFAULT_JITTER_SCALE_6_HP, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP_2 = new JitterModelParams(
+            "C/G", DEFAULT_JITTER_SCALE_4_HP, DEFAULT_JITTER_SCALE_5_HP, DEFAULT_JITTER_SCALE_6_HP, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_1 = new JitterModelParams(
+            "AT/TA", DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_2 = new JitterModelParams(
+            "AC/CA/GT/TG", DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_3 = new JitterModelParams(
+            "AG/GA/CT/TC", DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_4 = new JitterModelParams(
+            "CG/GC", DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
 
     public static final JitterModelParams DEFAULT_JITTER_PARAMS_3P = new JitterModelParams(
-            REPEAT_UNIT_3_PLUS_LABEL, 0.15, 0.19, 0.23, 0.04,
-            -0.01, 1);
+            REPEAT_UNIT_3_PLUS_LABEL, DEFAULT_JITTER_SCALE_4_3P, DEFAULT_JITTER_SCALE_5_3P, DEFAULT_JITTER_SCALE_6_3P, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_3P, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_HP_1 = new JitterModelParams(
+            "A/T", DEFAULT_HD_JITTER_SCALE_4_HP, DEFAULT_HD_JITTER_SCALE_5_HP, DEFAULT_HD_JITTER_SCALE_6_HP, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_HP_2 = new JitterModelParams(
+            "C/G", DEFAULT_HD_JITTER_SCALE_4_HP, DEFAULT_HD_JITTER_SCALE_5_HP, DEFAULT_HD_JITTER_SCALE_6_HP, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_1 = new JitterModelParams(
+            "AT/TA", DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_2 = new JitterModelParams(
+            "AC/CA/GT/TG", DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_3 = new JitterModelParams(
+            "AG/GA/CT/TC", DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_4 = new JitterModelParams(
+            "CG/GC", DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_3P = new JitterModelParams(
+            REPEAT_UNIT_3_PLUS_LABEL, DEFAULT_HD_JITTER_SCALE_4_3P, DEFAULT_HD_JITTER_SCALE_5_3P, DEFAULT_HD_JITTER_SCALE_6_3P, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_3P, 1);
 
     public static final List<JitterModelParams> DEFAULT_JITTER_PARAMS = List.of(
-            DEFAULT_JITTER_PARAMS_HP, DEFAULT_JITTER_PARAMS_DN, DEFAULT_JITTER_PARAMS_3P);
+            DEFAULT_JITTER_PARAMS_HP_1, DEFAULT_JITTER_PARAMS_HP_2, DEFAULT_JITTER_PARAMS_DN_1,
+            DEFAULT_JITTER_PARAMS_DN_2, DEFAULT_JITTER_PARAMS_DN_3, DEFAULT_JITTER_PARAMS_DN_4, DEFAULT_JITTER_PARAMS_3P);
+
+    public static final List<JitterModelParams> DEFAULT_HD_JITTER_PARAMS = List.of(
+            DEFAULT_HD_JITTER_PARAMS_HP_1, DEFAULT_HD_JITTER_PARAMS_HP_2, DEFAULT_HD_JITTER_PARAMS_DN_1,
+            DEFAULT_HD_JITTER_PARAMS_DN_2, DEFAULT_HD_JITTER_PARAMS_DN_3, DEFAULT_HD_JITTER_PARAMS_DN_4, DEFAULT_HD_JITTER_PARAMS_3P);
 }

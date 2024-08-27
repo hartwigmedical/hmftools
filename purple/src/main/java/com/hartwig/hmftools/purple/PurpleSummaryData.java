@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.copynumber.LohCalcData;
 import com.hartwig.hmftools.purple.copynumber.LohCalcs;
 import com.hartwig.hmftools.purple.fitting.BestFit;
@@ -67,6 +67,9 @@ public final class PurpleSummaryData
             final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
             final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final SomaticSvCache svCache)
     {
+        boolean wholeGenomeDuplication = !config.tumorOnlyMode() || bestFit.Method == FittedPurityMethod.NORMAL
+                ? wholeGenomeDuplication(copyNumbers) : false;
+
         return ImmutablePurityContext.builder()
                 .bestFit(bestFit.Fit)
                 .method(bestFit.Method)
@@ -74,7 +77,7 @@ public final class PurpleSummaryData
                 .runMode(config.runMode())
                 .score(bestFit.Score)
                 .polyClonalProportion(polyclonalProportion(copyNumbers))
-                .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
+                .wholeGenomeDuplication(wholeGenomeDuplication)
                 .microsatelliteIndelsPerMb(somaticStream != null ? somaticStream.msiIndelsPerMb() : 0)
                 .microsatelliteStatus(somaticStream != null ? somaticStream.microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalLoad(somaticStream != null ? somaticStream.tumorMutationalLoad() : 0)

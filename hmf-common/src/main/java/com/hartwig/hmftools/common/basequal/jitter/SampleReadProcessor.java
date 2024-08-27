@@ -29,14 +29,16 @@ public class SampleReadProcessor
 
         mMicrosatelliteSiteAnalysersByChromosome = Maps.newHashMap();
         Multimap<String, MicrosatelliteSiteAnalyser> analysersByChromosome =
-                Multimaps.index(mMicrosatelliteSiteAnalysers, analyser -> analyser.refGenomeMicrosatellite.chromosome());
+                Multimaps.index(mMicrosatelliteSiteAnalysers, analyser -> analyser.refGenomeMicrosatellite().chromosome());
+
         for(Map.Entry<String, Collection<MicrosatelliteSiteAnalyser>> chromosomeAnalysers : analysersByChromosome.asMap().entrySet())
         {
             String chromosome = chromosomeAnalysers.getKey();
             Collection<MicrosatelliteSiteAnalyser> analysers = chromosomeAnalysers.getValue();
+
             Collection<Pair<BaseRegion, MicrosatelliteSiteAnalyser>> entries = analysers
                     .stream()
-                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite.genomeRegion.baseRegion(), analyser))
+                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().genomeRegion.baseRegion(), analyser))
                     .collect(Collectors.toList());
 
             mMicrosatelliteSiteAnalysersByChromosome.put(chromosome, new ImmutableIntervalTree<>(entries));

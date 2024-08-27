@@ -163,7 +163,11 @@ public class BamCompare
                 try(SAMRecordIterator itr = origBamReaderProvider.getBamReader().queryUnmapped())
                 {
                     long numReads = unmatchedReadHandler.handleOrigBamReads(itr);
-                    BT_LOGGER.printf(Level.DEBUG, "finished writing %,d unmapped orig bam reads to hash bams", numReads);
+
+                    if(numReads > 0)
+                    {
+                        BT_LOGGER.debug("finished writing {} unmapped orig bam reads to hash bams", numReads);
+                    }
                 }
             });
 
@@ -172,7 +176,11 @@ public class BamCompare
                 try(SAMRecordIterator itr = newBamReaderProvider.getBamReader().queryUnmapped())
                 {
                     long numReads = unmatchedReadHandler.handleNewBamReads(itr);
-                    BT_LOGGER.printf(Level.DEBUG, "finished writing %,d unmapped new bam reads to hash bams", numReads);
+
+                    if(numReads > 0)
+                    {
+                        BT_LOGGER.trace("finished writing {} unmapped new bam reads to hash bams", numReads);
+                    }
                 }
             });
         }

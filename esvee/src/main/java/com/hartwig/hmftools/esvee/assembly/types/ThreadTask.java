@@ -25,7 +25,7 @@ public class ThreadTask extends Thread
 
         if(threshold > 0 && mPerfCounter.getLastTime() > threshold)
         {
-            SV_LOGGER.info("task({}) exceeds perf log time({})", eventDetails, format("%.3f", mPerfCounter.getLastTime()));
+            SV_LOGGER.info("{}: exceeds perf log time({})", eventDetails, format("%.3f", mPerfCounter.getLastTime()));
         }
     }
 

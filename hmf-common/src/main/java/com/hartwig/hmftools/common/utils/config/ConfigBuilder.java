@@ -106,9 +106,9 @@ public class ConfigBuilder
         addConfigItem(DECIMAL, name, true, description, null);
     }
 
-    public void addDecimal(final String name, final String desc, double defaultValue)
+    public void addDecimal(final String name, final String description, double defaultValue)
     {
-        addConfigItem(DECIMAL, name, false, format("%s, default=%.3g", desc, defaultValue), String.valueOf(defaultValue));
+        addConfigItem(DECIMAL, name, false, description, String.valueOf(defaultValue));
     }
 
     public void addRequiredInteger(final String name, final String description)
@@ -118,7 +118,7 @@ public class ConfigBuilder
 
     public void addInteger(final String name, final String description, int defaultValue)
     {
-        addConfigItem(INTEGER, name, false, format("%s, default=%d", description, defaultValue), String.valueOf(defaultValue));
+        addConfigItem(INTEGER, name, false, description, String.valueOf(defaultValue));
     }
 
     public void addFlag(final String name, final String description)

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
-import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -43,7 +43,7 @@ public class RegionAppendTask implements Callable
     private final EvidenceStage mEvidenceStage;
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
-    private final FragmentLengths mFragmentLengths;
+    private final FragmentLengthWriter mFragmentLengths;
 
     private final List<VariantContext> mOriginalVariants;
     private final List<VariantContext> mFinalVariants;
@@ -51,7 +51,7 @@ public class RegionAppendTask implements Callable
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
             final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final FragmentLengths fragmentLengths)
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final FragmentLengthWriter fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -67,7 +67,7 @@ public class RegionAppendTask implements Callable
         SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
         samSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
 
-        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(config.Common.ReferenceIds, config.Common.JitterParamsDir);
+        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(config.Common.ReferenceIds, config.Common.JitterParamsDir, mConfig.Common.Quality.HighDepthMode);
 
         mEvidenceStage = new EvidenceStage(
                 config.Common, mRefGenome, qualityRecalibrationMap, msiJitterCalcs, new PhaseSetCounter(), samSlicerFactory);
@@ -118,7 +118,7 @@ public class RegionAppendTask implements Callable
                 for(int s = 0; s < mConfig.Common.ReferenceIds.size(); ++s)
                 {
                     String sampleId = mConfig.Common.ReferenceIds.get(s);
-                    FragmentLengthCounts fragmentLengthData = sampleCounters.get(s).fragmentLengths();
+                    FragmentLengthCounts fragmentLengthData = sampleCounters.get(s).fragmentLengthCounts();
                     mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
             }

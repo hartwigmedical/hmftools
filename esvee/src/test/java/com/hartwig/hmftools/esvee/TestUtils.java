@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
@@ -69,6 +70,21 @@ public class TestUtils
           + "TGTAGCTGATCGCAGGTCGAACCTGGTGATCGATGTCGATCGACTGATGTAGTAGCTGATCGGATGCATGCGTAGCGATGCTAGCTGATCGATTGGCTAA"
           + "GTCGCTTCCGGTATTTGCGTTCCGGGTTTTTTCCGAGCCTACCCCAGTTGGTTAAAAGGATATTATATATATGGCGGCTATATATGCGGTGTGTGTAACC";
 
+    public static String REF_BASES_600 =
+            "ATCATCGAATGGAATGGAATGGAACAGTCAATGAACTCGAATGGAATCATCATTGAATGGAATCGAATGGAATCATCGAGTGGAATCGAATGGAATTATG"
+    //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+    // index 0         10        20        30        40        50        60        70        80        90
+          + "ATCAAATGGAATCGAATGTAATCATCATCAAATGGAATCAAAAATAACCATAATATGGTCTTTAAAGAAGCAATCTAGCTAAAATGAAATCATTAATCCA"
+    // index 100       110       120       130       140       150       160       170       180       190
+          + "ATAGGACTAACATCCTTATGAGAAGACAAGATTAGGACACAGGCATGAACTGGGGGAAGACCATGTAAAGACACTCAAAGAACTGACCGTACCACCCCCT"
+    // index 200       210       120       130       140       150       160       170       180       190
+          + "TCGAATGAATTGAATGCAATCATCGAATGGTCTCGAATGGAATCATCTTCTAATGTAAAGAAGCATTGAGCTATTTACATAGAAATCTCATTTAACTGTG"
+    // index 300       310       120       130       140       150       160       170       180       190
+          + "ATATAAATTAACCTTTCTTATCCTGCTTCTAAACAAAGGTAAGGGCCACCCAGTCAATGCTTTGTATTCTTCCAATATTCTTTCCTAGAACTTCTTCAAA"
+    // index 400       410       120       130       140       150       160       170       180       190
+          + "GGCTCTCATGAAGCACTGGTGAAACTGGAAATCACTGAATTTTACTACCATTTTCTTATCCTGCTTCTAAACAAAGGTAAGTTTCTTATCCTGCTTCTAA";
+    // index 500       510       120       130       140       150       160       170       180       190
+
     public static final MockRefGenome REF_GENOME = new MockRefGenome();
 
     public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
@@ -90,7 +106,14 @@ public class TestUtils
         if(mateReversed)
             record.setMateNegativeStrandFlag(true);
 
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, format("%dM", readBases.length()));
+
         return new Read(record);
+    }
+
+    public static void setMateCigar(final Read read, final String mateCigar)
+    {
+        read.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
     }
 
     public static Read createConcordantRead(
@@ -124,6 +147,26 @@ public class TestUtils
             sb.append(format("%dS", scRight));
 
         return sb.toString();
+    }
+
+    public static void setSecondInPair(final SAMRecord record)
+    {
+        record.setSecondOfPairFlag(true);
+        record.setFirstOfPairFlag(false);
+    }
+
+    public static void flipFirstInPair(final SAMRecord record)
+    {
+        if(record.getFirstOfPairFlag())
+        {
+            record.setSecondOfPairFlag(true);
+            record.setFirstOfPairFlag(false);
+        }
+        else
+        {
+            record.setSecondOfPairFlag(false);
+            record.setFirstOfPairFlag(true);
+        }
     }
 
     public static List<SAMRecord> createJunctionReads(
@@ -360,29 +403,5 @@ public class TestUtils
     public static int getSupportTypeCount(final JunctionAssembly assembly, final SupportType type)
     {
         return (int)assembly.support().stream().filter(x -> x.type() == type).count();
-    }
-
-    public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
-    {
-        List<String> lines = new BufferedReader(new InputStreamReader(
-                TestUtils.class.getResourceAsStream(testFilename))).lines().collect(Collectors.toList());
-
-        for(String line : lines)
-        {
-            String[] values = line.split(CSV_DELIM, 2);
-            String chr = values[0];
-
-            if(chr.startsWith("#")) // comment lines
-                continue;
-
-            String bases = values[1];
-
-            String existingBases = refGenome.RefGenomeMap.get(chr);
-
-            if(existingBases != null)
-                bases = existingBases + bases;
-
-            refGenome.RefGenomeMap.put(chr, bases);
-        }
     }
 }

@@ -16,12 +16,14 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 
 import java.util.List;
@@ -103,6 +105,7 @@ public final class VariantContextFactory
                         primaryRcCounter.readEdgeDistance().avgAltDistanceFromEdge() } );
 
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
+        builder.attribute(MAP_QUAL_FACTOR, primaryRcCounter.mapQualFactor());
 
         if(primaryRcCounter.ultimaQualModel() != null)
         {
@@ -131,7 +134,7 @@ public final class VariantContextFactory
         int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.altMapQualityTotal() / (double)altSupport) : 0;
         int avgBaseQuality = depth > 0 ? (int)round(qualCounters.baseQualityTotal() / (double)depth) : 0;
-        int avgAltBaseQuality = (int)round(counter.averageAltBaseQuality());
+        int avgAltBaseQuality = (int)round(counter.averageAltRecalibratedBaseQuality());
 
         int avgAltModifiedBaseQuality = strongSupport > 0 ? (int)round(qualCounters.modifiedAltBaseQualityTotal() / (double)strongSupport) : 0;
         int avgAltModifiedMapQuality = strongSupport > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)strongSupport) : 0;
@@ -151,6 +154,7 @@ public final class VariantContextFactory
                 .attribute(
                         READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasNonAlt().bias(), counter.readStrandBiasAlt().bias()))
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
+                .attribute(SIMPLE_ALT_COUNT, counter.simpleAltMatches())
                 .alleles(NO_CALL);
 
         if(counter.umiTypeCounts() != null)

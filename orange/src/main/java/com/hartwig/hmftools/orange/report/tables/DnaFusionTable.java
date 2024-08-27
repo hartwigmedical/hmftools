@@ -146,7 +146,7 @@ public final class DnaFusionTable
                 default:
                     throw new IllegalArgumentException("Unknown unreportable reason: " + item);
             }
-        }).collect(Collectors.joining(","));
+        }).collect(Collectors.joining(", "));
     }
 
     @NotNull

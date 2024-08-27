@@ -37,6 +37,7 @@ public class AssemblyStats
     public int MaxExtBaseMatchCount;
 
     public int CandidateSupportCount;
+    public int UnmappedReadCount;
 
     public int ReadCount;
 
@@ -63,6 +64,7 @@ public class AssemblyStats
         SoftClipSecondMaxLength = 0;
         MaxExtBaseMatchCount = 0;
         CandidateSupportCount = 0;
+        UnmappedReadCount = 0;
     }
 
     public void addRead(final SupportRead supportRead, final Junction junction, @Nullable final Read read)
@@ -197,6 +199,8 @@ public class AssemblyStats
         sj.add(statString(BaseQualTotal, ReadCount));
         sj.add(statString(MapQualTotal, ReadCount));
     }
+
+    public double avgMapQual() { return ReadCount > 0 ? MapQualTotal / (double)ReadCount : 0; }
 
     private static String statString(int count, double readCount)
     {

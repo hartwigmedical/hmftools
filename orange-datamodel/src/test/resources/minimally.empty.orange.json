@@ -44,6 +44,7 @@
       "qc": {
         "status": [
         ],
+        "totalCopyNumberSegments": 0,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 0,
         "contamination": 0,
@@ -56,6 +57,14 @@
       "ploidy": 0,
       "minPloidy": 0,
       "maxPloidy": 0
+    },
+    "tumorStats": {
+      "maxDiploidProportion": 0,
+      "hotspotMutationCount": 0,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantAlleleReadCount": 0,
+      "structuralVariantTumorFragmentCount": 0,
+      "bafCount": 0
     },
     "characteristics": {
       "wholeGenomeDuplication": true,
@@ -87,7 +96,8 @@
     "reportableSomaticBreakends": [],
     "somaticHomozygousDisruptions": [],
     "additionalSuspectSomaticBreakends": [],
-    "additionalSuspectSomaticFusions": []
+    "additionalSuspectSomaticFusions": [],
+    "additionalViableSomaticFusions": []
   },
   "virusInterpreter": {
     "allViruses": [],

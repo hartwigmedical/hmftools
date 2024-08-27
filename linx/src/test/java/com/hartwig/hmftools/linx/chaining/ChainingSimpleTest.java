@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,12 +35,9 @@ public class ChainingSimpleTest
         final SvVarData var3 = createDel(2, "1", 500,600);
         final SvVarData var4 = createDel(3, "1", 700,800);
 
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
-        var2.setAssemblyData(false, "asmb23");
-        var3.setAssemblyData(true, "asmb23");
-        var3.setAssemblyData(false, "asmb34");
-        var4.setAssemblyData(true, "asmb34");
+        setAssembledLinkInfo(var1, false, var2, true);
+        setAssembledLinkInfo(var2, false, var3, true);
+        setAssembledLinkInfo(var3, false, var4, true);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -102,8 +100,7 @@ public class ChainingSimpleTest
         final SvVarData var2 = createDel(2, "1", 500,600);
         final SvVarData var3 = createDel(3, "1", 700,800);
 
-        var1.setAssemblyData(false, "asmb23");
-        var2.setAssemblyData(true, "asmb23");
+        setAssembledLinkInfo(var1, false, var2, true);
 
         // add them out of order which will require partial chain reconciliation
         tester.AllVariants.add(var0);
@@ -136,20 +133,13 @@ public class ChainingSimpleTest
         final SvVarData var3 = createDel(3, "1", 700,800);
         final SvVarData var4 = createDel(4, "1", 900,1000);
 
-        var0.setAssemblyData(false, "asmb01");
-        var1.setAssemblyData(true, "asmb01");
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
-        var2.setAssemblyData(false, "asmb23");
-        var3.setAssemblyData(true, "asmb23");
-        var3.setAssemblyData(false, "asmb34");
-        var4.setAssemblyData(true, "asmb34");
+        setAssembledLinkInfo(var0, false, var1, true);
+        setAssembledLinkInfo(var1, false, var2, true);
+        setAssembledLinkInfo(var2, false, var3, true);
+        setAssembledLinkInfo(var3, false, var4, true);
 
-        // and some spanning assemblies which will be ignored
-        var0.setAssemblyData(false, "asmb02");
-        var2.setAssemblyData(true, "asmb02");
-        var2.setAssemblyData(false, "asmb24");
-        var4.setAssemblyData(true, "asmb24");
+        setAssembledLinkInfo(var0, false, var2, true);
+        setAssembledLinkInfo(var2, false, var4, true);
 
         // add them out of order which will require partial chain reconciliation
         tester.AllVariants.add(var0);

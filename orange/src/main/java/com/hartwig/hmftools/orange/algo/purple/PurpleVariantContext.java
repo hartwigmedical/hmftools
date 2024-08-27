@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import org.immutables.value.Value;
@@ -24,6 +25,9 @@ public interface PurpleVariantContext extends Variant
 
     @NotNull
     List<VariantTranscriptImpact> otherImpacts();
+
+    @NotNull
+    VariantTier tier();
 
     @NotNull
     Hotspot hotspot();

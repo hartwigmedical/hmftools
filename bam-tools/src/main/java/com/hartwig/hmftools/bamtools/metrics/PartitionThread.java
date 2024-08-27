@@ -60,6 +60,8 @@ public class PartitionThread extends Thread
 
                 bamReader.run();
 
+                mMetricsWriter.writePartitionStats(partition.Region, bamReader.partitionStats());
+
                 TargetRegionStats.writeStatistics(mMetricsWriter.targetRegionsWriter(), bamReader.targetRegionStats());
 
                 if(mMetricsWriter.offTargetHighFragmentOverlapWriter() != null)

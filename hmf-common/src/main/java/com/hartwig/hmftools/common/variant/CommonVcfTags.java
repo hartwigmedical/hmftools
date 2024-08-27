@@ -15,12 +15,18 @@ public final class CommonVcfTags
 
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultValue)
     {
+        if(genotype == null)
+            return defaultValue;
+
         Object value = genotype.getExtendedAttribute(attribute);
         return value == null ? defaultValue : Integer.parseInt(value.toString());
     }
 
     public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultValue)
     {
+        if(genotype == null)
+            return defaultValue;
+
         Object value = genotype.getExtendedAttribute(attribute);
         return value == null ? defaultValue : Double.parseDouble(value.toString());
     }

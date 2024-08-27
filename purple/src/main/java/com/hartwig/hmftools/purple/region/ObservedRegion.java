@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_DIPLOID_COPY_NUMBER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_COPY_NUMBER;
+import static com.hartwig.hmftools.purple.PurpleConstants.MAX_DIPLOID_COPY_NUMBER;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_COPY_NUMBER;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;

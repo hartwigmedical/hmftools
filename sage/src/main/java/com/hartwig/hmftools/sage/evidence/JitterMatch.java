@@ -10,6 +10,7 @@ import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
+import java.util.HashSet;
 
 public enum JitterMatch
 {
@@ -37,30 +38,24 @@ public enum JitterMatch
 
                 for(int j = 0; j <= 1; ++j)
                 {
-                    // with or without awareness of an indel
-                    boolean isIndelOffset = (j == 0);
+                    // before or after the variant
+                    boolean jitterAtStart = (j == 0);
 
-                    for(int k = 0; k <= 1; ++k)
+                    if(hasJitterMatchType(
+                            repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
+                            jitterType, jitterAtStart, 1))
                     {
-                        // before or after the variant
-                        boolean jitterAtStart = (k == 0);
+                        return jitterType;
+                    }
 
+                    if(checkDoubleJitter)
+                    {
+                        // for contexts with long repeats, test double jitter
                         if(hasJitterMatchType(
                                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
-                                jitterType, isIndelOffset, jitterAtStart, 1))
+                                jitterType, jitterAtStart, 2))
                         {
                             return jitterType;
-                        }
-
-                        if(isIndelOffset && checkDoubleJitter)
-                        {
-                            // for contexts with long repeats, test double jitter
-                            if(hasJitterMatchType(
-                                    repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(), readVarIndex, readBases, readQuals,
-                                    jitterType, isIndelOffset, jitterAtStart, 2))
-                            {
-                                return jitterType;
-                            }
                         }
                     }
                 }
@@ -74,7 +69,7 @@ public enum JitterMatch
     public static boolean hasJitterMatchType(
             final RepeatInfo repeat, final VariantReadContext readContext, int altIndexLower, int altIndexUpper,
             int readVarIndex, final byte[] readBases, final byte[] readQuals,
-            final JitterMatch jitterType, boolean isIndelOffset, boolean jitterAtStart, int jitterCount)
+            final JitterMatch jitterType, boolean jitterAtStart, int jitterCount)
     {
         int repeatLength = repeat.repeatLength() * jitterCount;
         int repeatEndIndex = repeat.endIndex();
@@ -91,7 +86,7 @@ public enum JitterMatch
         int flankReadIndexStart = readVarIndex - readContext.leftLength();
         int flankReadIndexEnd = readVarIndex + readContext.rightLength() - 1;
 
-        if(isIndelOffset && jitterAtStart)
+        if(jitterAtStart)
         {
             // factor in repeats explained by an indel and which finish before the variant read index by shifting the implied flank start
             if(jitterType == SHORTENED)
@@ -111,7 +106,6 @@ public enum JitterMatch
         int readIndex = flankReadIndexStart;
         boolean allMatched = true;
         boolean indexAdjusted = false;
-        boolean altAdjusted = false;
 
         int altMatchCount = 0;
         int permittedLowQualMismatches = 1;
@@ -123,7 +117,7 @@ public enum JitterMatch
             if(readIndex < 0)
                 continue;
 
-            if(isIndelOffset && !indexAdjusted)
+            if(!indexAdjusted)
             {
                 if(jitterType == SHORTENED && readContextIndex == repeatEndIndex - repeatLength)
                 {
@@ -138,27 +132,6 @@ public enum JitterMatch
 
                 if(readIndex < 0 || readContextIndex < 0)
                     return false;
-            }
-            else if(!isIndelOffset && !altAdjusted)
-            {
-                if(jitterAtStart)
-                {
-                    if((jitterType == SHORTENED && readContextIndex == repeat.Index)
-                    || (jitterType == LENGTHENED && readContextIndex == repeat.Index - repeatLength))
-                    {
-                        altAdjusted = true;
-                        altMatchCount = repeatLength;
-                    }
-                }
-                else
-                {
-                    if((jitterType == SHORTENED && readContextIndex == repeatEndIndex)
-                    || (jitterType == LENGTHENED && readContextIndex == repeatEndIndex + 1))
-                    {
-                        altAdjusted = true;
-                        altMatchCount = repeatLength;
-                    }
-                }
             }
 
             if(readIndex >= readBases.length || readContextIndex >= readContext.ReadBases.length)

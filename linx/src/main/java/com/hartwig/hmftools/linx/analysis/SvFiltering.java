@@ -51,7 +51,6 @@ public class SvFiltering
     private static final int ISOLATED_BND_DISTANCE = 5000;
 
     private static final int PERMITTED_SGL_DUP_BE_DISTANCE = 1;
-    private static final int PERMITTED_DUP_BE_DISTANCE = 35;
 
     public void applyFilters()
     {
@@ -90,14 +89,6 @@ public class SvFiltering
                 if(var.isSglBreakend() && var.getLinkedSVs() != null)
                 {
                     mExcludedSVs.put(var, SGL_MAPPED_INF);
-                    removalList.add(breakend);
-                    continue;
-                }
-
-                // first check for SGLs already marked for removal
-                if(var.type() == SGL && isSingleDuplicateBreakend(breakendList.get(i).getSV()))
-                {
-                    mExcludedSVs.put(var, DUP_BE);
                     removalList.add(breakend);
                     continue;
                 }
@@ -162,53 +153,6 @@ public class SvFiltering
                     {
                         mExcludedSVs.put(nextVar, DUP_BE);
                         removalList.add(nextBreakend);
-                    }
-                }
-                else if(distance <= PERMITTED_DUP_BE_DISTANCE && var.type() == nextVar.type() && var.isEquivBreakend())
-                {
-                    // 2 non-SGL SVs may be duplicates, so check their other ends
-                    SvBreakend otherBe = breakend.getOtherBreakend();
-                    SvBreakend nextOtherBe = nextBreakend.getOtherBreakend();
-
-                    if(otherBe.chromosome().equals(nextOtherBe.chromosome())
-                    && abs(otherBe.position() - nextOtherBe.position()) <= PERMITTED_DUP_BE_DISTANCE)
-                    {
-                        // remove both of the duplicates breakends now
-
-                        // select the one with assembly if only has as them
-                        if((var.getTIAssemblies(true).isEmpty() && !nextVar.getTIAssemblies(true).isEmpty())
-                        || (var.getTIAssemblies(false).isEmpty() && !nextVar.getTIAssemblies(false).isEmpty()))
-                        {
-                            LNX_LOGGER.trace("SV({}) filtered eqv-duplicate breakend", var.id());
-
-                            mExcludedSVs.put(var, DUP_BE);
-                            removalList.add(breakend);
-
-                            if(breakend.chromosome().equals(otherBe.chromosome()))
-                            {
-                                removalList.add(otherBe);
-                            }
-                            else
-                            {
-                                removeRemoteBreakend(otherBe, breakendRemovalMap);
-                            }
-                        }
-                        else
-                        {
-                            LNX_LOGGER.trace("SV({}) filtered eqv-duplicate breakend", nextVar.id());
-
-                            mExcludedSVs.put(nextVar, DUP_BE);
-                            removalList.add(nextBreakend);
-
-                            if(nextBreakend.chromosome().equals(nextOtherBe.chromosome()))
-                            {
-                                removalList.add(nextOtherBe);
-                            }
-                            else
-                            {
-                                removeRemoteBreakend(nextOtherBe, breakendRemovalMap);
-                            }
-                        }
                     }
                 }
                 else if(!var.isSglBreakend() && !nextVar.isSglBreakend())
@@ -304,17 +248,12 @@ public class SvFiltering
         return hasLowJcn(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
     }
 
-    private boolean isSingleDuplicateBreakend(final SvVarData var)
-    {
-        return var.type() == SGL && !var.isInferredSgl() && var.isEquivBreakend();
-    }
-
     private void checkCandidateSpanningVariant(final SvBreakend breakend, final SvBreakend nextBreakend,
             final Set<SvBreakend> removalList, Map<String, Set<SvBreakend>> breakendRemovalMap)
     {
         // one variant has an insert sequence potentially matching the assembled TI of another
         if(breakend.getSV().getSvData().insertSequence().length() >= MIN_TEMPLATED_INSERTION_LENGTH
-        && !nextBreakend.getSV().getTIAssemblies(!nextBreakend.usesStart()).isEmpty())
+        && !nextBreakend.getSV().getAssemblyLinks(!nextBreakend.usesStart()).isEmpty())
         {
             int posLimitDown = nextBreakend.position() - 1;
             int posLimitUp = nextBreakend.position() + 1;

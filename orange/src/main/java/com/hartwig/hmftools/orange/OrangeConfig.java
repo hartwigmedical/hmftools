@@ -73,6 +73,7 @@ public interface OrangeConfig
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
     String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
+    String SIGNATURES_ETIOLOGY_TSV = "signatures_etiology_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -99,6 +100,7 @@ public interface OrangeConfig
         configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
+        configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
         addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
@@ -162,6 +164,9 @@ public interface OrangeConfig
 
     @NotNull
     String cohortPercentilesTsv();
+
+    @NotNull
+    String signaturesEtiologyTsv();
 
     @NotNull
     String driverGenePanelTsv();
@@ -269,6 +274,7 @@ public interface OrangeConfig
                 .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
                 .cohortPercentilesTsv(configBuilder.getValue(COHORT_PERCENTILES_TSV))
                 .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION))
+                .signaturesEtiologyTsv(configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV))
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))

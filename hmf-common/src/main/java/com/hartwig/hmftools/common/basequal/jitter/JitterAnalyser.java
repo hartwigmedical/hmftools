@@ -1,22 +1,22 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
-import static com.hartwig.hmftools.common.basequal.jitter.RefGenomeMicrosatellite.filterMicrosatellites;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_1;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_2;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_3;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_4;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.SINGLE_BASE_1;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.SINGLE_BASE_2;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -38,14 +38,11 @@ public class JitterAnalyser
         mSampleReadProcessor = new SampleReadProcessor(refGenomeMicrosatellites);
     }
 
-    public void processBam() throws InterruptedException
+    public BamSlicerFilter bamSlicerFilter()
     {
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-
-        SampleBamProcessor sampleBamProcessor = new SampleBamProcessor(mConfig, mBamSlicerFilter, mSampleReadProcessor);
-        sampleBamProcessor.queryBam(mConfig, executorService);
+        return mBamSlicerFilter;
     }
+    public SampleReadProcessor sampleReadProcessor() { return mSampleReadProcessor; }
 
     public void processRead(final SAMRecord read)
     {
@@ -60,14 +57,14 @@ public class JitterAnalyser
         MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers);
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
-        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);
+        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
 
         // draw a chart of the 9 ms profiles
         if(mConfig.WritePlots)
             drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
-        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers);
+        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers, mConfig.MaxSingleSiteAltContribution);
 
         JitterModelParamsFile.write(JitterModelParamsFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), jitterModelParamsList);
     }
@@ -79,13 +76,14 @@ public class JitterAnalyser
         mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
 
         filterSpecificRegions(refGenomeMicrosatellites);
-        refGenomeMicrosatellites = filterMicrosatellites(refGenomeMicrosatellites, mConfig.MaxSitesPerType);
+        // refGenomeMicrosatellites = filterMicrosatellites(refGenomeMicrosatellites, mConfig.MaxSitesPerType);
 
         return refGenomeMicrosatellites;
     }
 
-    private static void writeMicrosatelliteStatsTable(@NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
-            final String filename)
+    private static void writeMicrosatelliteStatsTable(
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final String filename,
+            final JitterAnalyserConfig config)
     {
         // write two tables, one with real variant filter, one without
 
@@ -93,7 +91,8 @@ public class JitterAnalyser
 
         for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(s.unitName(),
+            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                    s.unitName(), config.MaxSingleSiteAltContribution,
                     microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
             msStatsTables.add(msStatsTable);
         }
@@ -106,12 +105,12 @@ public class JitterAnalyser
         // create nine summary / pivot table
         // {A/T, C/G, AT/TA, AG/GA/CT/TC, AC/CA/GT/TG, CG/GC, any 3 base, any 4 base, any 5 base}
         List<MicrosatelliteSelector> selectors = new ArrayList<>();
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("A", "T")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("C", "G")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AT", "TA")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AG", "GA", "CT", "TC")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AC", "CA", "GT", "TG")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("CG", "GC")));
+        selectors.add(MicrosatelliteSelector.fromUnits(SINGLE_BASE_1));
+        selectors.add(MicrosatelliteSelector.fromUnits(SINGLE_BASE_2));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_1));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_2));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_3));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_4));
         selectors.add(MicrosatelliteSelector.fromUnitLength(3));
         selectors.add(MicrosatelliteSelector.fromUnitLength(4));
         selectors.add(MicrosatelliteSelector.fromUnitLength(5));
@@ -121,25 +120,27 @@ public class JitterAnalyser
     }
 
     private static List<JitterModelParams> fitJitterModels(
-            @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final double maxSingleSiteAltContribution)
     {
         // create nine summary / pivot table
         // {A/T, C/G, AT/TA, AG/GA/CT/TC, AC/CA/GT/TG, CG/GC, any 3 base, any 4 base, any 5 base}
         List<MicrosatelliteSelector> selectors = new ArrayList<>();
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("A", "T")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("C", "G")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AT", "TA")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AG", "GA", "CT", "TC")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("AC", "CA", "GT", "TG")));
-        selectors.add(MicrosatelliteSelector.fromUnits(List.of("CG", "GC")));
+        selectors.add(MicrosatelliteSelector.fromUnits(SINGLE_BASE_1));
+        selectors.add(MicrosatelliteSelector.fromUnits(SINGLE_BASE_2));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_1));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_2));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_3));
+        selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_4));
         selectors.add(MicrosatelliteSelector.fromUnitLengthRange(3, 5));
 
         List<JitterModelParams> fittedParams = new ArrayList<>();
 
         for(MicrosatelliteSelector selector : selectors)
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(selector.unitName(),
+            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                    selector.unitName(), maxSingleSiteAltContribution,
                     microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
+
             JitterModelFitter fitter = new JitterModelFitter(msStatsTable);
             fitter.performFit();
             fittedParams.add(fitter.getJitterModelParams());
@@ -171,10 +172,5 @@ public class JitterAnalyser
         {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
-    }
-
-    public BamSlicerFilter bamSlicerFilter()
-    {
-        return mBamSlicerFilter;
     }
 }

@@ -522,7 +522,7 @@ public class SampleAnalyser implements Callable
                 continue;
 
             linxSvData.add(ImmutableLinxSvAnnotation.builder()
-                    .vcfId(var.getSvData().vcfId())
+                    .vcfId(var.getSvData().vcfIdStart())
                     .svId(var.id())
                     .clusterId(cluster.id())
                     .clusterReason(var.getClusterReason())

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +85,7 @@ public class SvDataCache
         if(currentSvCount == mSvFactory.results().size())
             return;
 
-        final StructuralVariant sv = popLastSv(); // get and clear from storage
+        StructuralVariant sv = popLastSv(); // get and clear from storage
 
         if(sv == null)
             return;
@@ -113,7 +115,12 @@ public class SvDataCache
 
     public void buildBreakendMap()
     {
-        for(Variant var : mSvData)
+        buildBreakendMap(mSvData, mChromosomeBreakends);
+    }
+
+    public static void buildBreakendMap(final List<Variant> variants, final Map<String,List<Breakend>> chrBreakendMap)
+    {
+        for(Variant var : variants)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -122,32 +129,43 @@ public class SvDataCache
                 if(breakend == null)
                     continue;
 
-                List<Breakend> breakends = mChromosomeBreakends.get(breakend.Chromosome);
+                List<Breakend> breakends = chrBreakendMap.get(breakend.Chromosome);
 
                 if(breakends == null)
                 {
                     breakends = Lists.newArrayList();
-                    mChromosomeBreakends.put(breakend.Chromosome, breakends);
+                    chrBreakendMap.put(breakend.Chromosome, breakends);
                 }
 
-                int index = 0;
-                while(index < breakends.size())
-                {
-                    if(breakend.Position < breakends.get(index).Position)
-                        break;
-
-                    ++index;
-                }
-
-                breakends.add(index, breakend);
+                breakends.add(breakend);
             }
         }
 
-        for(List<Breakend> breakends : mChromosomeBreakends.values())
+        for(List<Breakend> breakends : chrBreakendMap.values())
         {
+            Collections.sort(breakends, new BreakendPositionComparator());
+
             for(int index = 0; index < breakends.size(); ++index)
             {
                 breakends.get(index).setChrLocationIndex(index);
+            }
+        }
+    }
+
+    public static class BreakendPositionComparator implements Comparator<Breakend>
+    {
+        public int compare(final Breakend first, final Breakend second)
+        {
+            if(first.Position == second.Position)
+            {
+                if(first.Orient == second.Orient)
+                    return 0;
+                else
+                    return first.Orient.isForward() ? -1 : 1;
+            }
+            else
+            {
+                return first.Position < second.Position ? -1 : 1;
             }
         }
     }

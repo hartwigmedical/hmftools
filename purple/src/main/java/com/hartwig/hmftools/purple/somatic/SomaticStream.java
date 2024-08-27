@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_ASSUMED_FRACTION;
+import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
 
@@ -36,10 +36,10 @@ import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -63,7 +63,7 @@ public class SomaticStream
     private final List<PeakModelData> mPeakModelData;
     private final Set<String> mReportedGenes;
 
-    private final List<VariantContextDecorator> mDownsampledVariants; // cached for charting
+    private final List<VariantContextDecorator> mPlottingVariants; // cached for charting
     private final int mSnpMod;
     private final int mIndelMod;
     private int mSnpCount;
@@ -96,7 +96,7 @@ public class SomaticStream
         mRChartData = new RChartData(config, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
-        mDownsampledVariants = Lists.newArrayList();
+        mPlottingVariants = Lists.newArrayList();
         mSnpMod = somaticVariantCache.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.snpCount() / CHART_DOWNSAMPLE_FACTOR;
         mIndelMod = somaticVariantCache.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.indelCount() / CHART_DOWNSAMPLE_FACTOR;
 
@@ -139,8 +139,8 @@ public class SomaticStream
             variantTypeCounts.put(VariantType.INDEL, inferredIndelCount);
 
             Map<VariantType,Integer> variantTypeCountsbiallelic = Maps.newHashMap();
-            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * ASSUMED_BIALLELIC_FRACTION));
-            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * ASSUMED_BIALLELIC_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * BIALLELIC_ASSUMED_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * BIALLELIC_ASSUMED_FRACTION));
 
             PPL_LOGGER.debug("target-regions inferred driver variant counts snv({}) indel({})",
                     inferredSnvCount, inferredIndelCount);
@@ -152,7 +152,7 @@ public class SomaticStream
     }
 
     public Set<String> reportedGenes() { return mReportedGenes; }
-    public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
+    public List<VariantContextDecorator> plottingVariants() { return mPlottingVariants; }
     public List<PeakModelData> peakModelData() { return mPeakModelData; }
 
     public void processAndWrite(final PurityAdjuster purityAdjuster)
@@ -255,7 +255,7 @@ public class SomaticStream
             calculateVariantLoadValues();
 
             PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({} snvMod={} indelMod={})",
-                    mSnpCount, mIndelCount, mDownsampledVariants.size(), mSnpMod, mIndelMod);
+                    mSnpCount, mIndelCount, mPlottingVariants.size(), mSnpMod, mIndelMod);
         }
         catch(IOException e)
         {
@@ -386,19 +386,25 @@ public class SomaticStream
         if(!HumanChromosome.contains(variant.chromosome()))
             return;
 
+        if(mReferenceData.TargetRegions.hasTargetRegions())
+        {
+            if(!mReferenceData.TargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+                return;
+        }
+
         if(variant.type() == VariantType.INDEL)
         {
             mIndelCount++;
 
             if(mIndelCount % mIndelMod == 0)
-                mDownsampledVariants.add(variant.decorator());
+                mPlottingVariants.add(variant.decorator());
         }
         else
         {
             mSnpCount++;
 
             if(mSnpCount % mSnpMod == 0)
-                mDownsampledVariants.add(variant.decorator());
+                mPlottingVariants.add(variant.decorator());
         }
     }
 }

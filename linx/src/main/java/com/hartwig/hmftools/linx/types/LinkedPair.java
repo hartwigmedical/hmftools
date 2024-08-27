@@ -149,7 +149,7 @@ public class LinkedPair
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
         return (var == mFirstBreakend.getSV() && mFirstBreakend.usesStart() == useStart)
-                || (var == mSecondBreakend.getSV() && mSecondBreakend.usesStart() == useStart);
+            || (var == mSecondBreakend.getSV() && mSecondBreakend.usesStart() == useStart);
     }
 
     public boolean hasBreakend(final SvBreakend breakend)

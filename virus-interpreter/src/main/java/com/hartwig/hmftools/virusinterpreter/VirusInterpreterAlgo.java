@@ -22,13 +22,16 @@ import org.jetbrains.annotations.Nullable;
 public class VirusInterpreterAlgo
 {
     private final TaxonomyDb taxonomyDb;
+    private final List<Integer> blacklistedTaxids;
     private final VirusReportingDbModel virusReportingDbModel;
     private final CoveragesAnalysis coveragesAnalysis;
 
     public VirusInterpreterAlgo(
-            final TaxonomyDb taxonomyDb, final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
+            final TaxonomyDb taxonomyDb, final List<Integer> blacklistedTaxids,
+            final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
     {
         this.taxonomyDb = taxonomyDb;
+        this.blacklistedTaxids = blacklistedTaxids;
         this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
     }
@@ -42,6 +45,13 @@ public class VirusInterpreterAlgo
 
             int taxid = virusBreakend.referenceTaxid();
             boolean reported = report(virusBreakend, coveragesAnalysis.ExpectedClonalCoverage, purityContext.qc().status());
+            boolean blacklisted = blacklist(virusBreakend.taxidGenus(), virusBreakend.taxidSpecies());
+
+            if(blacklisted && reported)
+            {
+                throw new IllegalStateException("Virus with taxid {} configured as reported and as blacklisted" + taxid);
+            }
+
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
                     .taxid(taxid)
                     .name(taxonomyDb.lookupName(taxid))
@@ -54,6 +64,7 @@ public class VirusInterpreterAlgo
                             ? coveragesAnalysis.ExpectedClonalCoverage
                             : null)
                     .reported(reported)
+                    .blacklisted(blacklisted)
                     .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
                     .build());
         }
@@ -102,6 +113,12 @@ public class VirusInterpreterAlgo
 
         boolean virusQCStatus = virusBreakend.qcStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE;
         return reported && virusQCStatus;
+    }
+
+    @VisibleForTesting
+    boolean blacklist(int taxidGenus, int taxidSpecies)
+    {
+        return blacklistedTaxids.contains(taxidGenus) || blacklistedTaxids.contains(taxidSpecies);
     }
 
     @Nullable

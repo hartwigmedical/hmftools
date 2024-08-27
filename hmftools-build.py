@@ -16,6 +16,12 @@ Example:
 """
 import re
 import subprocess
+import requests
+import os.path
+import sys
+import time
+import jwt
+
 from xml.etree import ElementTree
 from argparse import ArgumentParser
 
@@ -42,6 +48,96 @@ class Maven:
         subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
 
 
+class Docker:
+    def __init__(self, module, version):
+        self.module = module
+        self.version = version
+        self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
+        self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
+
+    def build(self):
+        with open("/workspace/docker.sh", "w") as output:
+            output.write(f'[ ! -f {self.module}/Dockerfile ] && echo "No Dockerfile for {self.module}" && exit 0\n')
+            output.write(f'docker build {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker push {self.internal_image}\n')
+            output.write(f'docker login -u hartwigmedicalfoundation -p $(cat /workspace/dockerhub.password)\n')
+            output.write(f'docker push {self.external_image}\n')
+
+
+class GithubRelease:
+    def __init__(self, tag_name: str, module: str, version: str, artifact_file: str, private_key: str, github_client_id: str,
+            github_installation_id: str):
+        self.tag_name = tag_name
+        self.module = module
+        self.version = version
+        self.artifact_file = artifact_file
+        self.private_key = private_key
+        self.github_client_id = github_client_id
+        self.github_installation_id = github_installation_id
+        self.release_name = f"{module} v{version}"
+
+    def create(self):
+        jwt = self._construct_jwt()
+        token = self._refresh_token(jwt)
+        print("Successfully refreshed token")
+        id = self._create_release(token)
+        print(f"Created release with id {id}")
+        self._upload_artifacts(id, token)
+
+    def _create_release(self, token: str):
+        print(f"Creating release [{self.release_name}]")
+        request = {"tag_name": self.tag_name,
+                "target_commitish": "master",
+                "name": self.release_name,
+                "body": f"Description of release {self.release_name}",
+                "prerelease": True,
+                "generate_release_notes": True
+        }
+
+        response = requests.post(self._construct_url("api"),
+                json = request,
+                headers = self._headers(token))
+        print(f"Response: {response.text}")
+        response.raise_for_status()
+        return response.json()["id"]
+
+    def _upload_artifacts(self, id: str, token: str):
+        print(f"Uploading artifact to release {id}")
+        headers = self._headers(token)
+        headers["Content-Type"] = "application/octet-stream"
+        base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
+        response = requests.post(f"{base_url}={self.module}_v{self.version}.jar", 
+                headers = headers, 
+                data = self.artifact_file.read())
+        response.raise_for_status()
+        print(f"Uploaded {self.artifact_file.name}")
+
+    def _construct_url(self, prefix):
+        return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
+
+    # This method gleaned from Github docs/examples
+    def _construct_jwt(self):
+        payload = {
+            'iat': int(time.time()),
+            # JWT expiration time (10 minutes maximum)
+            'exp': int(time.time()) + 600,
+            'iss': self.github_client_id
+        }
+        return jwt.encode(payload, self.private_key, algorithm='RS256')
+
+    def _refresh_token(self, jwt: str):
+        response = requests.post(f"https://api.github.com/app/installations/{self.github_installation_id}/access_tokens",
+                headers = self._headers(jwt))
+        response.raise_for_status()
+        return response.json()["token"]
+
+    def _headers(self, token: str):
+        return {"Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {token}",
+                "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+
 def extract_hmftools_dependencies(pom_path):
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
     # First, obtain a list of all modules defined in the parent
@@ -64,12 +160,15 @@ def main():
     parser = ArgumentParser(
         description="A tool for automatically building and deploying individual modules in HMF-tools.")
     parser.add_argument('tag', help="The semantic versioning tag in the following format: <tool-name>-<version>")
+    parser.add_argument('github_key_path', help="Path to private key for the Github deployment bot")
+    parser.add_argument('github_client_id', help="Client id for the deployment bot")
+    parser.add_argument('github_installation_id', help="Installation id of the deployment bot")
     args = parser.parse_args()
 
-    build_and_release(args.tag)
+    build_and_release(args.tag, args.github_key_path, args.github_client_id, args.github_installation_id)
 
 
-def build_and_release(raw_tag: str):
+def build_and_release(raw_tag: str, github_key: str, github_client_id: str, github_installation_id: str):
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
@@ -98,6 +197,9 @@ def build_and_release(raw_tag: str):
 
     Maven.deploy_all(module_pom, *dependencies_pom)
 
+    Docker(module, version).build()
+    GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
+            open(github_key, "r").read(), github_client_id, github_installation_id).create()
 
 if __name__ == '__main__':
     main()

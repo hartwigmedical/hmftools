@@ -23,10 +23,9 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantContexts;
 
-import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -40,8 +39,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
@@ -70,7 +69,7 @@ public class GermlineSvCache
     public GermlineSvCache()
     {
         mVcfHeader = Optional.empty();
-        mVariantCollection = new VariantContextCollection(null);
+        mVariantCollection = new VariantContextCollection(null, false);
         mRefGenomeFile = null;
         mPurityContext = null;
         mFittedRegions = null;
@@ -91,7 +90,7 @@ public class GermlineSvCache
 
         mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
 
-        mVariantCollection = new VariantContextCollection(mVcfHeader.get());
+        mVariantCollection = new VariantContextCollection(mVcfHeader.get(), config.UseGridssSVs);
         mRefGenomeFile = referenceData.RefGenome;
 
         for(VariantContext context : vcfReader.iterator())
