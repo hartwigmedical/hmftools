@@ -60,10 +60,11 @@ class Docker:
             output.write('set -ex\n')
             output.write(f'[ ! -f {self.module}/Dockerfile ] && echo "No Dockerfile for {self.module}" && exit 0\n')
             output.write('docker buildx create --name builder --driver docker-container --driver-opt network=cloudbuild --use\n')
-            output.write(f'docker buildx build --add-host metadata.google.internal:169.254.169.254 {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker buildx build --add-host metadata.google.internal:169.254.169.254 {self.module} --load -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
             output.write(f'docker push {self.internal_image}\n')
-            output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
-            output.write(f'docker push {self.external_image}\n')
+            # Disable pending review of contents of build container for security risks after addition of several new steps
+            #output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
+            #output.write(f'docker push {self.external_image}\n')
 
 
 class GithubRelease:
