@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
 import org.junit.Test;
 
@@ -41,7 +44,14 @@ public class UltimaRealignedQualModelBuilderTest
                 new Homopolymer((byte) 'T', 10),
                 new Homopolymer((byte) 'A', 1));
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers, true);
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isIndel()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.corePositionStart()).thenReturn(0);
+
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, true);
         List<Homopolymer> expectedHomopolymers = refHomopolymers;
 
         assertEquals(expectedHomopolymers, mergedHomopolymers.RefHomopolymers);
@@ -56,7 +66,14 @@ public class UltimaRealignedQualModelBuilderTest
         List<Homopolymer> refHomopolymers = getHomopolymers(refBases.getBytes(), 0, refBases.length() - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readBases.getBytes(), 0, readBases.length() - 1);
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, refHomopolymers, readHomopolymers, true);
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isIndel()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.corePositionStart()).thenReturn(0);
+
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, true);
         List<Homopolymer> expectedMergedRefHomopolymers = refHomopolymers;
         List<Homopolymer> expectedMergedReadHomopolymers = Lists.newArrayList(refHomopolymers);
         expectedMergedReadHomopolymers.set(expectedMergedReadHomopolymers.size() - 3, new Homopolymer((byte) 'A', 11));
@@ -90,7 +107,14 @@ public class UltimaRealignedQualModelBuilderTest
 
         public void check()
         {
-            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(null, RefHomopolymers, ReadHomopolymers, true);
+            SimpleVariant mockVariant = mock(SimpleVariant.class);
+            when(mockVariant.isIndel()).thenReturn(true);
+
+            VariantReadContext mockReadContext = mock(VariantReadContext.class);
+            when(mockReadContext.variant()).thenReturn(mockVariant);
+            when(mockReadContext.corePositionStart()).thenReturn(0);
+
+            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, RefHomopolymers, ReadHomopolymers, true);
 
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.RefHomopolymers);
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.ReadHomopolymers);
@@ -166,7 +190,8 @@ public class UltimaRealignedQualModelBuilderTest
         int position = 104;
         SimpleVariant variant = new SimpleVariant(CHR_1, position,"ATTT", "A");
         VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
+        List<RefMask> refMasks = Lists.newArrayList();
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));
@@ -189,10 +214,39 @@ public class UltimaRealignedQualModelBuilderTest
         int position = 104;
         SimpleVariant variant = new SimpleVariant(CHR_1, position,"A", "ATTT");
         VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTTTTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
+        List<RefMask> refMasks = Lists.newArrayList();
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));
+    }
+
+    @Test
+    public void testSandwichRefGenome()
+    {
+        String refBases = "GTAAAAAAAAAAAAGAGAGAAAAAAC";
+        String readCoreBases = "GTGAAAAAAAAAAGAGAGAAAAAAC";
+        List<Homopolymer> refHomopolymers = getHomopolymers(refBases.getBytes(), 0, refBases.length() - 1);
+        List<Homopolymer> readHomopolymers = getHomopolymers(readCoreBases.getBytes(), 0, readCoreBases.length() - 1);
+
+        int corePositionStart = 13;
+
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isIndel()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.corePositionStart()).thenReturn(corePositionStart);
+
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, false);
+
+        int refMaskIndex = 18;
+        assertEquals(1, mergedHomopolymers.refMasks().size());
+
+        RefMask refMask = mergedHomopolymers.refMasks().get(0);
+        assertEquals((byte) 'A', refMask.BaseMask);
+        assertEquals(1, refMask.PosEnd - refMask.PosStart + 1);
+        assertEquals(corePositionStart + refMaskIndex, refMask.PosStart);
     }
 
     // TODO: re-enable tests.

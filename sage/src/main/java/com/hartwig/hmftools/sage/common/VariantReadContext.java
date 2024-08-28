@@ -82,6 +82,7 @@ public class VariantReadContext
     public SimpleVariant variant() { return mVariant; }
     public String ref() { return mVariant.ref(); }
     public String alt() { return mVariant.alt(); }
+    public int corePositionStart() { return CorePositionStart; }
 
     public boolean hasHomology() { return Homology != null; }
     public int coreLength() { return CoreIndexEnd - CoreIndexStart + 1; }

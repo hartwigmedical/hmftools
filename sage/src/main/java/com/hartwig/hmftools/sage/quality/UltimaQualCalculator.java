@@ -13,9 +13,14 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQu
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.safeQualLookup;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -29,13 +34,31 @@ public class UltimaQualCalculator
         mRefGenome = refGenome;
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases) // pass in MH or repeat info
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases)
+    {
+        return buildContext(variant, coreBases, null);
+    }
+
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases, @Nullable final List<RefMask> refMasks) // pass in MH or repeat info
     {
         int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
 
         // extract sufficient ref bases to set the context for most scenarios (only not for homopolymer transition)
         final byte[] refBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
+        if(refMasks != null)
+        {
+            for(RefMask refMask : refMasks)
+            {
+                int startIndex = Math.max(refMask.PosStart - variant.Position + 1, 0);
+                int endIndex = min(refMask.PosEnd - variant.Position + 1, refBases.length - 1);
+                for(int i = startIndex; i <= endIndex; i++)
+                {
+                    refBases[i] = refMask.BaseMask;
+                }
+            }
+        }
+
         int refVarIndex = 1;
 
         if(variant.isIndel())
@@ -176,10 +199,10 @@ public class UltimaQualCalculator
             super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
 
             // TODO: Do we keep this around after testing?
-//            if(hpEndIndex < hpStartIndex)
-//            {
-//                throw new IllegalArgumentException("Homopolymer end index is before start index.");
-//            }
+            if(hpEndIndex < hpStartIndex)
+            {
+                throw new IllegalArgumentException("Homopolymer end index is before start index.");
+            }
 
             mHpStartIndex = hpStartIndex;
             mHpEndIndex = hpEndIndex;
