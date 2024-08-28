@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -12,7 +14,10 @@ import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
 
+import org.apache.commons.compress.utils.Lists;
+
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.TextCigarCodec;
 
 public class VariantReadContext
 {
@@ -141,6 +146,44 @@ public class VariantReadContext
 
     public byte[] extendedRefBases() { return mExtendedRefBases; }
     public void setExtendedRefBases(final byte[] refBases) { mExtendedRefBases = refBases; }
+
+    public List<CigarElement> coreCigarElements()
+    {
+        List<CigarElement> coreCigar = Lists.newArrayList();
+        List<CigarElement> cigar = TextCigarCodec.decode(mReadCigarStr).getCigarElements();
+        int readIndex = 0;
+        for(CigarElement el : cigar)
+        {
+            if(readIndex > CoreIndexEnd)
+            {
+                break;
+            }
+
+            if(!el.getOperator().consumesReadBases())
+            {
+                if(readIndex > CoreIndexStart)
+                {
+                    coreCigar.add(el);
+                }
+                continue;
+            }
+
+            int readIndexEnd = readIndex + el.getLength() - 1;
+            if(readIndexEnd < CoreIndexStart)
+            {
+                readIndex += el.getLength();
+                continue;
+            }
+
+            int readIndexStart = max(readIndex, CoreIndexStart);
+            readIndexEnd = min(readIndexEnd, CoreIndexEnd);
+            coreCigar.add(new CigarElement(readIndexEnd - readIndexStart + 1, el.getOperator()));
+
+            readIndex += el.getLength();
+        }
+
+        return coreCigar;
+    }
 
     public String toString()
     {

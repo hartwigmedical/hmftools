@@ -102,46 +102,6 @@ public class UltimaRealignedQualModelsBuilder
         return true;
     }
 
-    private static boolean readCoreCigarContainsElement(final VariantReadContext readContext, final CigarElement el)
-    {
-        List<CigarElement> cigar = TextCigarCodec.decode(readContext.readCigar()).getCigarElements();
-        int readIndex = 0;
-        for(CigarElement cigarEl : cigar)
-        {
-            if(readIndex > readContext.CoreIndexEnd)
-            {
-                break;
-            }
-
-            if(!cigarEl.getOperator().consumesReadBases())
-            {
-                if(readIndex > readContext.CoreIndexStart && el.equals(cigarEl))
-                {
-                    return true;
-                }
-                continue;
-            }
-
-            int readIndexEnd = readIndex + cigarEl.getLength() - 1;
-            if(readIndexEnd < readContext.CoreIndexStart)
-            {
-                readIndex += cigarEl.getLength();
-                continue;
-            }
-
-            int readIndexStart = max(readIndex, readContext.CoreIndexStart);
-            readIndexEnd = min(readIndexEnd, readContext.CoreIndexEnd);
-            if(el.getLength() == readIndexEnd - readIndexStart + 1 && el.getOperator() == cigarEl.getOperator())
-            {
-                return true;
-            }
-
-            readIndex += cigarEl.getLength();
-        }
-
-        return false;
-    }
-
     public static UltimaRealignedQualModels buildUltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
     {
         return buildUltimaRealignedQualModels(readContext, ultimaQualCalculator, false);
@@ -156,8 +116,9 @@ public class UltimaRealignedQualModelsBuilder
 
         if(!skipSandwichMasking && readContext.variant().isInsert())
         {
-            int insertLength = readContext.alt().length() - 1;
-            if(!readCoreCigarContainsElement(readContext, new CigarElement(insertLength, I)))
+            CigarElement insertEl = new CigarElement(readContext.alt().length() - 1, I);
+            List<CigarElement> coreCigarElements = readContext.coreCigarElements();
+            if(!coreCigarElements.contains(insertEl))
             {
                 return new UltimaRealignedQualModels(readContext, ultimaQualCalculator);
             }
