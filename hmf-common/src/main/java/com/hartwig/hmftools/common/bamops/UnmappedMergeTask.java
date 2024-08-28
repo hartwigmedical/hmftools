@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.bamops;
 
 import static com.hartwig.hmftools.common.bamops.BamMerger.UNMAPPED_READS;
+import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
 import static com.hartwig.hmftools.common.bamops.BamMerger.formBamFilename;
 
 import java.io.File;
@@ -20,8 +21,7 @@ public class UnmappedMergeTask extends Thread
 
     private final String mRefGenomeFile;
 
-    public UnmappedMergeTask(
-            final List<String> inputBams, final String refGenomeFile, final String outputBamPrefix)
+    public UnmappedMergeTask(final List<String> inputBams, final String refGenomeFile, final String outputBamPrefix)
     {
         mOutputBamPrefix = outputBamPrefix;
         mInputBams = inputBams;
@@ -32,14 +32,9 @@ public class UnmappedMergeTask extends Thread
 
     public void run()
     {
-        String sampleBam = mInputBams.get(0);
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(new File(sampleBam));
-
         String unmappedBam = formBamFilename(mOutputBamPrefix, UNMAPPED_READS);
 
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        // fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        SAMFileHeader fileHeader = buildCombinedHeader(mInputBams, mRefGenomeFile);
 
         SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, true, new File(unmappedBam));
 

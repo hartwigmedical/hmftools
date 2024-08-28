@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CRAM_INDEX_EXTENSION;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -21,7 +23,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamMerger
 {
@@ -43,14 +50,19 @@ public class BamMerger
         mBamToolPath = bamToolPath;
         mInputBams = inputBams;
         mRefGenomeFile = refGenomeFile;
-        mThreads = threads;
+        mThreads = max(threads, 1);
         mKeepInterimBams = keepInterimBams;
     }
 
+    public int inputBamCount() { return mInputBams.size(); }
+
     public boolean merge()
     {
-        if(mInputBams.isEmpty())
+        if(mInputBams.size() < 2)
+        {
+            BOP_LOGGER.warn("invalid input BAM file count({})", mInputBams.size());
             return false;
+        }
 
         buildIndexFiles();
 
@@ -69,7 +81,7 @@ public class BamMerger
 
         for(int i = 0; i < min(sequences.size(), mThreads); ++i)
         {
-            BamMergeTask bamMergeTask = new BamMergeTask(mInputBams, mRefGenomeFile, sequenceIntervalsQueue, mOutputBamPrefix);
+            BamMergeTask bamMergeTask = new BamMergeTask(mInputBams, mRefGenomeFile, sequenceIntervalsQueue);
             workers.add(bamMergeTask);
         }
 
@@ -219,5 +231,38 @@ public class BamMerger
                 catch(Exception e) {}
             }
         }
+    }
+
+    public static SAMFileHeader buildCombinedHeader(final List<String> bamFiles, final String refGenomeFile)
+    {
+        if(bamFiles.isEmpty())
+            return null;
+
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(refGenomeFile))
+                .open(new File(bamFiles.get(0)));
+
+        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+
+        if(bamFiles.size() > 1)
+        {
+            for(int i = 1; i < bamFiles.size(); ++i)
+            {
+                SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(refGenomeFile))
+                        .open(new File(bamFiles.get(i)));
+
+                for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
+                {
+                    if(!fileHeader.getReadGroups().contains(readGroupRecord))
+                        fileHeader.addReadGroup(readGroupRecord);
+                }
+
+                final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
+                String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
+
+                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
+            }
+        }
+
+        return fileHeader;
     }
 }

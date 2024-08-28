@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.bamops;
 
+import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
 import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
 
 import java.io.File;
@@ -12,6 +13,8 @@ import com.google.common.collect.Lists;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -27,8 +30,7 @@ public class BamMergeTask extends Thread
 
     private int mReorderCount;
 
-    public BamMergeTask(
-            final List<String> inputBams, final String refGenomeFile, final Queue<SequenceInfo> sequences, final String outputBamPrefix)
+    public BamMergeTask(final List<String> inputBams, final String refGenomeFile, final Queue<SequenceInfo> sequences)
     {
         mSAMSequences = sequences;
         mInputBams = inputBams;
@@ -175,10 +177,7 @@ public class BamMergeTask extends Thread
 
     private SAMFileWriter initialiseWriter(final String outputBam)
     {
-        String sampleBam = mInputBams.get(0);
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(new File(sampleBam));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+        SAMFileHeader fileHeader = buildCombinedHeader(mInputBams, mRefGenomeFile);
 
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 

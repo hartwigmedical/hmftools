@@ -64,7 +64,7 @@ public class MergeBams
     {
         long startTimeMs = System.currentTimeMillis();
 
-        BT_LOGGER.info("starting BAM merge");
+        BT_LOGGER.info("starting BAM merge of {} BAMs", mBamMerger.inputBamCount());
 
         mBamMerger.merge();
 

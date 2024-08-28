@@ -103,7 +103,7 @@ public class RemoteReadSlicer implements Callable
                 break;
         }
 
-        BT_LOGGER.info("chromosome({}) remote positions({}) complete, processed {} reads, slices({})",
+        BT_LOGGER.debug("chromosome({}) remote positions({}) complete, processed {} reads, slices({})",
                 mChromosome, mRemotePositions.size(), mTotalReads, mSliceCount);
 
         return (long)0;
@@ -176,6 +176,9 @@ public class RemoteReadSlicer implements Callable
 
     private boolean expectOtherRead(final SAMRecord read)
     {
+        if(!read.getReadPairedFlag())
+            return false;
+
         if(read.getMateUnmappedFlag())
             return true;
 

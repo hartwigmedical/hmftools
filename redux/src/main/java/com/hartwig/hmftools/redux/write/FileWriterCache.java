@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.write;
 
+import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
@@ -163,30 +164,7 @@ public class FileWriterCache
 
     private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFiles.get(0)));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        if(mConfig.BamFiles.size() > 1)
-        {
-            for(int i = 1; i < mConfig.BamFiles.size(); ++i)
-            {
-                SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                        .open(new File(mConfig.BamFiles.get(i)));
-
-                for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
-                {
-                    if(!fileHeader.getReadGroups().contains(readGroupRecord))
-                        fileHeader.addReadGroup(readGroupRecord);
-                }
-
-                final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
-                String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
-
-                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
-            }
-        }
+        SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
         // the BAM will not actually be sorted by the SAMTools library
