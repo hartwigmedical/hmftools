@@ -86,7 +86,8 @@ public final class LineUtils
 
         lengthFrequency = findLineExtensionFrequency(reads, junction, false, false);
 
-        return calcMedian(lengthFrequency);
+        // take the maximum if from non-terminating sequences
+        return lengthFrequency.keySet().stream().mapToInt(x -> x.intValue()).max().orElse(0);
     }
 
     private static final int MAX_NON_LINE_BASES = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
@@ -97,7 +98,6 @@ public final class LineUtils
     {
         byte lineBase = junction.isForward() ? LINE_BASE_T : LINE_BASE_A;
         boolean isForward = junction.isForward();
-        int maxNonLine = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
 
         Map<Integer,Integer> lengthFrequency = Maps.newHashMap();
 
