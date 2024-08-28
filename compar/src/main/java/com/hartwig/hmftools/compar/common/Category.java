@@ -18,7 +18,8 @@ public enum Category
     GERMLINE_SV,
     CUPPA,
     LILAC,
-    CHORD;
+    CHORD,
+    PEACH;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";

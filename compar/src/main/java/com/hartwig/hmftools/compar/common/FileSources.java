@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
@@ -37,6 +39,7 @@ public class FileSources
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
+    public final String Peach;
     public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
 
@@ -45,7 +48,7 @@ public class FileSources
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf)
+            final String lilac, final String chord,  final String peach, final String somaticVcf, final String somaticUnfilteredVcf)
     {
         Source = source;
         Linx = linx;
@@ -54,6 +57,7 @@ public class FileSources
         Cuppa = cuppa;
         Lilac = lilac;
         Chord = chord;
+        Peach = peach;
         SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
     }
@@ -68,6 +72,7 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.Cuppa, sampleId),
                 convertWildcardSamplePath(fileSources.Lilac, sampleId),
                 convertWildcardSamplePath(fileSources.Chord, sampleId),
+                convertWildcardSamplePath(fileSources.Peach, sampleId),
                 convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId));
     }
@@ -100,6 +105,7 @@ public class FileSources
             addPathConfig(configBuilder, LILAC_DIR_CFG, LILAC_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CHORD_DIR_CFG, CHORD_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, PEACH_DIR_CFG, PEACH_DIR_DESC, sourceName);
 
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_VCF, sourceName), false,
@@ -139,12 +145,13 @@ public class FileSources
         String cuppaDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CUPPA_DIR, CUPPA_DIR_CFG, sourceName);
         String lilacDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LILAC_DIR, LILAC_DIR_CFG, sourceName);
         String chordDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CHORD_DIR, CHORD_DIR_CFG, sourceName);
+        String peachDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PEACH_DIR, PEACH_DIR_CFG, sourceName);
 
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
         return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, somaticUnfilteredVcf);
+                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, somaticVcf, somaticUnfilteredVcf);
     }
 
     private static String getDirectory(
