@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
@@ -297,22 +295,23 @@ public class AssemblyAlignment
             if(overlapLength >= nextAssemblyRefBases.length())
                 return null;
 
-            fullSequence.append(overlapLength > 0 ? nextAssemblyRefBases.substring(overlapLength) : nextAssemblyRefBases);
+            if(overlapLength > 0) // remove the repeated / overlapping bases from the next ref bases
+                nextAssemblyRefBases = nextAssemblyRefBases.substring(overlapLength);
 
-            currentSeqLength -= overlapLength;
+            fullSequence.append(nextAssemblyRefBases);
 
             int nextAssemblyJunctionIndex = link.type() != FACING ? currentSeqLength : currentSeqLength + nextAssemblyRefBases.length();
             setAssemblyReadIndices(nextAssembly, nextReversed, nextAssemblyJunctionIndex);
 
             logBuildInfo(nextAssembly, currentSeqLength, nextAssemblyRefBases.length(), assemblyReversed, "ref-bases");
 
-            currentSeqLength += nextAssemblyRefBases.length();
-
             if(overlapLength > 0)
             {
                 buildSequenceCigar(sequenceCigar, I, overlapLength);
                 mSequenceOverlaps.put(currentSeqLength - 1, link.overlapBases());
             }
+
+            currentSeqLength += nextAssemblyRefBases.length(); // this will have been reduced by any overlapping bases already
 
             buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
 
