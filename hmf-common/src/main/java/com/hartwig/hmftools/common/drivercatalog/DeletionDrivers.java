@@ -20,8 +20,8 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
-    public static final int SHORT_DEL_LENGTH = 10_000_000;
-    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 3;
+    public static final int SHORT_DEL_LENGTH = 100_000_000; // default 10_000_000
+    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 1; // default 3
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
@@ -83,7 +83,8 @@ public class DeletionDrivers
 
     static boolean supportedByTwoSVs(final GeneCopyNumber geneCopyNumber)
     {
-        return geneCopyNumber.minRegionStartSupport().isSV() && geneCopyNumber.minRegionEndSupport().isSV();
+//        return geneCopyNumber.minRegionStartSupport().isSV() && geneCopyNumber.minRegionEndSupport().isSV();
+        return true;
     }
 
     static boolean supportedByOneSVAndMere(final GeneCopyNumber geneCopyNumber)
@@ -94,7 +95,8 @@ public class DeletionDrivers
         if(MERE.contains(geneCopyNumber.minRegionEndSupport()) && geneCopyNumber.minRegionStartSupport().isSV())
             return true;
 
-        return false;
+//        return false;
+        return true;
     }
 
     private DriverCatalog createDelDriver(final GeneCopyNumber geneCopyNumber)
