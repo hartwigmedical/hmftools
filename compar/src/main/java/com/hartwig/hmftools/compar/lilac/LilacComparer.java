@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_NONSENSE_OR_FRAMES
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_REF_TOTAL;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SPLICE;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SYNONYMOUS;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_TOTAL;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
 
@@ -65,6 +66,7 @@ public class LilacComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_INFRAME_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_SYNONYMOUS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_TUMOR_COPY_NUMBER, 0.5, 0.15);
     }
 
     @Override
@@ -82,6 +84,7 @@ public class LilacComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
+        // Not currently supported
         return Lists.newArrayList();
     }
 
