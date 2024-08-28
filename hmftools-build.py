@@ -58,7 +58,7 @@ class Docker:
     def build(self):
         with open("/workspace/docker.sh", "w") as output:
             output.write(f'[ ! -f {self.module}/Dockerfile ] && echo "No Dockerfile for {self.module}" && exit 0\n')
-            output.write(f'docker build {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(f'docker build --network=cloudbuild {self.module} -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
             output.write(f'docker push {self.internal_image}\n')
             output.write(f'docker login -u hartwigmedicalfoundation -p $(cat /workspace/dockerhub.password)\n')
             output.write(f'docker push {self.external_image}\n')
