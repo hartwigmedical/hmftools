@@ -4,10 +4,10 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
 public class LineLink
 {
-    VariantBreakend mPolyASite;
-    VariantBreakend mOtherSite;
-    public LineLinkType mType;
-
+    public final VariantBreakend mPolyASite;
+    public final VariantBreakend mOtherSite;
+    public final LineLinkType mType;
+    
     public LineLink(VariantBreakend polyASite, VariantBreakend otherSite, LineLinkType type)
     {
         checkPolyASite(polyASite);

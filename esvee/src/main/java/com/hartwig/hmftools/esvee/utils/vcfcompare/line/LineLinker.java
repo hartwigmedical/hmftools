@@ -8,8 +8,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 
-import org.jetbrains.annotations.Nullable;
-
 public class LineLinker
 {
     private static final int MIN_POLY_A_OR_T_LENGTH = 10;
@@ -26,7 +24,7 @@ public class LineLinker
                 (breakend.Orientation == 1 && breakend.InsertSequence.startsWith(POLY_T_SEQUENCE));
     }
 
-    private static boolean nearbyBreakendsMeetLineCriteria(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private static boolean breakendPairMeetsLineCriteria(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
     {
         boolean meetsPolyACriteria = (
                 maybeInsertSite.Orientation == -1 &&
@@ -55,32 +53,6 @@ public class LineLinker
         return meetsPolyACriteria || meetsPolyTCriteria;
     }
 
-    private static boolean canLinkBreakendsAsLinePair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
-    {
-        if(maybeInsertSite.hasLineLink() || maybeLinkedSite.hasLineLink())
-            return false;
-
-        if(maybeInsertSite == maybeLinkedSite)
-            return false;
-
-        return nearbyBreakendsMeetLineCriteria(maybeInsertSite, maybeLinkedSite);
-    }
-
-    private static @Nullable LineLink tryLinkLineBreakendPair(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite, LineLinkType linkType)
-    {
-        LineLink lineLink = null;
-
-        if(canLinkBreakendsAsLinePair(maybeInsertSite, maybeLinkedSite))
-        {
-            lineLink = new LineLink(maybeInsertSite, maybeLinkedSite, linkType);
-
-            maybeInsertSite.LinkedLineBreakends = lineLink;
-            maybeLinkedSite.LinkedLineBreakends = lineLink;
-        }
-
-        return lineLink;
-    }
-
     public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
         SV_LOGGER.info("Linking breakends with LINE characteristics");
@@ -93,7 +65,20 @@ public class LineLinker
             {
                 for(VariantBreakend maybeOtherSite : breakends)
                 {
-                    LineLink lineLink = tryLinkLineBreakendPair(maybePolyASite, maybeOtherSite, LineLinkType.LINKED);
+                    LineLink lineLink = null;
+
+                    if(maybePolyASite == maybeOtherSite)
+                        continue;
+
+                    if(maybePolyASite.hasLineLink() || maybeOtherSite.hasLineLink())
+                        continue;
+
+                    if(breakendPairMeetsLineCriteria(maybePolyASite, maybeOtherSite))
+                    {
+                        lineLink = new LineLink(maybePolyASite, maybeOtherSite, LineLinkType.LINKED);
+                        maybePolyASite.LinkedLineBreakends = lineLink;
+                        maybeOtherSite.LinkedLineBreakends = lineLink;
+                    }
 
                     if(lineLink != null)
                         linkCount++;
@@ -118,23 +103,29 @@ public class LineLinker
 
         for(String chromosome : chrMaybePolyASitesMap.keySet())
         {
-            List<VariantBreakend> maybePolyASites = chrMaybePolyASitesMap.get(chromosome);
-            List<VariantBreakend> maybeOtherSites = chrMaybeOtherSitesMap.get(chromosome);
+            List<VariantBreakend> maybePolyASitesList = chrMaybePolyASitesMap.get(chromosome);
+            List<VariantBreakend> maybeOtherSitesList = chrMaybeOtherSitesMap.get(chromosome);
 
-            if(maybeOtherSites == null)
+            if(maybeOtherSitesList == null)
                 continue;
 
-            for(VariantBreakend maybePolyASite : maybePolyASites)
+            for(VariantBreakend maybePolyASite : maybePolyASitesList)
             {
                 if(!maybePolyASite.hasPolyATail())
                     continue;
 
-                for(VariantBreakend maybeOtherSite : maybeOtherSites)
+                for(VariantBreakend maybeOtherSite : maybeOtherSitesList)
                 {
+                    LineLink lineLink = null;
+
                     if(maybeOtherSite.hasLineLink())
                         continue;
 
-                    LineLink lineLink = tryLinkLineBreakendPair(maybePolyASite, maybeOtherSite, linkType);
+                    if(breakendPairMeetsLineCriteria(maybePolyASite, maybeOtherSite))
+                    {
+                        lineLink = new LineLink(maybePolyASite, maybeOtherSite, linkType);
+                        maybePolyASite.InferredLinkedLineBreakends = lineLink;
+                    }
 
                     if(lineLink != null)
                         linkCount++;

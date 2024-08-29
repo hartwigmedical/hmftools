@@ -2,12 +2,18 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_VCF;
 
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.SvVcfFile;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatchWriter;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,28 +35,36 @@ public class BreakendMatchTask implements Runnable
     {
         SV_LOGGER.info("Running task: " + CompareTask.MATCH_BREAKENDS);
 
-        Map<String,List<VariantBreakend>> oldChrBreakendMap = VariantBreakend.loadVariants(mConfig.OldVcf);
-        Map<String,List<VariantBreakend>> newChrBreakendMap = VariantBreakend.loadVariants(mConfig.NewVcf);
+        Map<String,List<VariantBreakend>> oldChrBreakendMap = loadVariants(mConfig.OldVcf, OLD_VCF);
+        Map<String,List<VariantBreakend>> newChrBreakendMap = loadVariants(mConfig.NewVcf, NEW_VCF);
 
         mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMap);
 
         if(mConfig.OldUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = VariantBreakend.loadVariants(mConfig.OldUnfilteredVcf);
+            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = loadVariants(mConfig.OldUnfilteredVcf, OLD_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(newChrBreakendMap, oldChrBreakendMapUnfiltered);
         }
 
         if(mConfig.NewUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = VariantBreakend.loadVariants(mConfig.NewUnfilteredVcf);
+            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = loadVariants(mConfig.NewUnfilteredVcf, NEW_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMapUnfiltered);
         }
 
         mBreakendMatcher.gatherUnmatchedVariants(oldChrBreakendMap, newChrBreakendMap);
 
-        mBreakendMatcher.writeBreakends();
+        BreakendMatchWriter writer = new BreakendMatchWriter(mBreakendMatcher.getBreakendMatches(), mConfig);
+        writer.writeBreakends();
 
         SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
+    }
+
+    private static Map<String, List<VariantBreakend>> loadVariants(String vcfFile, String label)
+    {
+        return new SvVcfFile(vcfFile, label.toUpperCase())
+                .loadVariants()
+                .getVariantsAsMap();
     }
 
     public static void main(@NotNull final String[] args)

@@ -16,6 +16,7 @@ import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LineLinkWriter
@@ -127,7 +128,7 @@ public class LineLinkWriter
         }
     }
 
-    private class OutputRow
+    private class BreakendRowValues
     {
         String VcfType = "";
         String LinkType = "";
@@ -157,15 +158,12 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        public OutputRow(@Nullable VariantBreakend breakend)
+        public BreakendRowValues(@Nullable VariantBreakend breakend)
         {
             if(breakend == null)
-            {
                 return;
-            }
 
             boolean hasLink = breakend.hasLineLink();
-
             LineLink lineLink;
             VariantBreakend polyASite;
             VariantBreakend otherSite;
@@ -187,6 +185,16 @@ public class LineLinkWriter
                 otherSite = null;
             }
 
+            setPolyASiteValues(polyASite, lineLink);
+
+            if(otherSite != null)
+            {
+                setOtherSiteValues(otherSite, lineLink);
+            }
+        }
+
+        private void setPolyASiteValues(@NotNull VariantBreakend polyASite, @Nullable LineLink lineLink)
+        {
             VcfType = polyASite.SourceVcfType.toString();
 
             PolyAId = polyASite.Id;
@@ -197,17 +205,15 @@ public class LineLinkWriter
             PolyAQual = polyASite.qualStr();
             PolyAFrags = polyASite.fragsStr(mSampleId);
 
-            if(!hasLink)
-            {
-                return;
-            }
-
-            if(lineLink.polyAHasRemote())
+            if(!polyASite.isSingle() && (lineLink == null || lineLink.polyAHasRemote()))
             {
                 PolyARemoteCoords = polyASite.otherCoordStr();
                 PolyARemoteId = polyASite.mateId();
             }
+        }
 
+        private void setOtherSiteValues(@NotNull VariantBreakend otherSite, @Nullable LineLink lineLink)
+        {
             OtherId = otherSite.Id;
             OtherCoords = otherSite.coordStr();
             OtherInsertSeq = otherSite.InsertSequence;
@@ -216,11 +222,21 @@ public class LineLinkWriter
             OtherQual = otherSite.qualStr();
             OtherFrags = otherSite.fragsStr(mSampleId);
 
-            if(lineLink.otherHasRemote())
+            if(!otherSite.isSingle() && (lineLink == null || lineLink.otherHasRemote()))
             {
                 OtherRemoteCoords = otherSite.otherCoordStr();
                 OtherRemoteId = otherSite.mateId();
             }
+        }
+
+        private void setInferredOtherSiteValues(@NotNull VariantBreakend otherBreakend)
+        {
+            LineLink inferredLink = otherBreakend.InferredLinkedLineBreakends;
+
+            SV_LOGGER.trace("Used inferred link in breakend[{}] to assign otherSite[{}]", otherBreakend, inferredLink.mOtherSite);
+            setOtherSiteValues(inferredLink.mOtherSite, inferredLink);
+
+            LinkType = inferredLink.mType.toString();
         }
 
         public List<String> getOutputStrings()
@@ -247,6 +263,46 @@ public class LineLinkWriter
                     PolyAFrags,
                     OtherFrags
             );
+        }
+    }
+
+    private class RowValues
+    {
+        BreakendRowValues mBreakend1RowValues;
+        BreakendRowValues mBreakend2RowValues;
+
+        public RowValues(@Nullable VariantBreakend breakend1, @Nullable VariantBreakend breakend2)
+        {
+            if(breakend1 == null && breakend2 == null)
+                throw new IllegalStateException("`breakend1` and `breakend2` cannot both be null");
+
+            mBreakend1RowValues = new BreakendRowValues(breakend1);
+            mBreakend2RowValues = new BreakendRowValues(breakend2);
+
+            if(breakend2 == null && breakend1.hasInferredLineLink())
+            {
+                mBreakend2RowValues.setInferredOtherSiteValues(breakend1);
+            }
+
+            if(breakend1 == null && breakend2.hasInferredLineLink())
+            {
+                mBreakend1RowValues.setInferredOtherSiteValues(breakend2);
+            }
+        }
+
+        public List<String> getAlternatingStrings(){
+
+            List<String> breakend1Strings = mBreakend1RowValues.getOutputStrings();
+            List<String> breakend2Strings = mBreakend2RowValues.getOutputStrings();
+
+            List<String> rowStrings = new ArrayList<>();
+            for(int i = 0; i < breakend1Strings.size(); i++)
+            {
+                rowStrings.add(breakend1Strings.get(i));
+                rowStrings.add(breakend2Strings.get(i));
+            }
+
+            return rowStrings;
         }
     }
 
@@ -350,14 +406,8 @@ public class LineLinkWriter
                 String hasAnyPass = String.valueOf(variantHasAnyPass(oldBreakend) || variantHasAnyPass(newBreakend));
                 rowStrings.add(hasAnyPass);
 
-                List<String> oldStrings = new OutputRow(oldBreakend).getOutputStrings();
-                List<String> newStrings = new OutputRow(newBreakend).getOutputStrings();
-
-                for(int i = 0; i < oldStrings.size(); i++)
-                {
-                    rowStrings.add(oldStrings.get(i));
-                    rowStrings.add(newStrings.get(i));
-                }
+                RowValues rowValuesBreakendPair = new RowValues(oldBreakend, newBreakend);
+                rowStrings.addAll(rowValuesBreakendPair.getAlternatingStrings());
 
                 writer.write(String.join(TSV_DELIM, rowStrings));
                 writer.newLine();
