@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
@@ -29,9 +28,6 @@ public class BreakendMatchWriter
     public final String mOutputDir;
     public final String mOutputId;
 
-    public final RefGenomeVersion mRefGenomeVersion;
-    public final boolean mIncludeNonPass;
-
     private final List<BreakendMatch> mBreakendMatches;
 
     public BreakendMatchWriter(List<BreakendMatch> breakendMatches, CompareConfig config)
@@ -40,8 +36,6 @@ public class BreakendMatchWriter
         mSampleId = config.SampleId;
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
-        mRefGenomeVersion = config.RefGenVersion;
-        mIncludeNonPass = config.IncludeNonPass;
     }
 
     private BufferedWriter initialiseWriter()
