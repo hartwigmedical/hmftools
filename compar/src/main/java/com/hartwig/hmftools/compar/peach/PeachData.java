@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.compar.common.Category.PEACH;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,7 +31,10 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public Category category() { return PEACH; }
+    public Category category()
+    {
+        return PEACH;
+    }
 
     @Override
     public String key()
@@ -52,7 +54,10 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
+    public boolean reportable()
+    {
+        return true;
+    }
 
     @Override
     public boolean matches(final ComparableItem other)
