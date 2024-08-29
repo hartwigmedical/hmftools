@@ -103,6 +103,9 @@ public class AlignData
     }
 
     public ChrBaseRegion refLocation() { return mRefLocation; }
+    public String chromosome() { return mRefLocation.Chromosome; }
+    public int positionStart() { return mRefLocation.start(); }
+    public int positionEnd() { return mRefLocation.end(); }
     public int mapQual() { return mMapQual; }
     public int nMatches() { return mNMatches; }
     public int score() { return mScore; }

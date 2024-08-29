@@ -116,18 +116,18 @@ public class BreakendBuilder
             {
                 int svLength = assemblyLink.length();
                 CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.refLocation().start(), alignment.cigarElements(), specificIndel);
+                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
             }
         }
 
         // if no match was found, just take the longest
         if(indelCoords == null)
-            indelCoords = findIndelCoords(alignment.refLocation().start(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+            indelCoords = findIndelCoords(alignment.positionStart(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
 
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.refLocation().start();
+        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.positionStart();
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         // the indel must have sufficient bases either side of it to be called
@@ -153,10 +153,10 @@ public class BreakendBuilder
             // check for exact homology at the bases either side of the delete
             int maxLength = indelCoords.Length - 1;
             int homPosStart = indelPosStart + 1;
-            String basesStart = mRefGenome.getBaseString( alignment.refLocation().Chromosome, homPosStart, homPosStart + maxLength);
+            String basesStart = mRefGenome.getBaseString( alignment.chromosome(), homPosStart, homPosStart + maxLength);
 
             int homPosEnd = indelPosEnd;
-            String basesEnd = mRefGenome.getBaseString(alignment.refLocation().Chromosome, homPosEnd, homPosEnd + maxLength);
+            String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
 
             homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
 
@@ -175,7 +175,7 @@ public class BreakendBuilder
         }
 
         Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.refLocation().Chromosome, indelPosStart, FORWARD, insertedBases, homology);
+                mAssemblyAlignment, alignment.chromosome(), indelPosStart, FORWARD, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
@@ -184,7 +184,7 @@ public class BreakendBuilder
         lowerBreakend.addSegment(segment);
 
         Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, alignment.refLocation().Chromosome, indelPosEnd, REVERSE, insertedBases, homology);
+                mAssemblyAlignment, alignment.chromosome(), indelPosEnd, REVERSE, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
@@ -217,14 +217,14 @@ public class BreakendBuilder
 
         if(alignment.leftSoftClipLength() >= alignment.rightSoftClipLength())
         {
-            breakendPosition = alignment.refLocation().start();
+            breakendPosition = alignment.positionStart();
             orientation = REVERSE;
             softClipLength = alignment.leftSoftClipLength();
             insertedBases = fullSequence.substring(0, softClipLength);
         }
         else
         {
-            breakendPosition = alignment.refLocation().end();
+            breakendPosition = alignment.positionEnd();
             orientation = FORWARD;
             softClipLength = alignment.rightSoftClipLength();
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
@@ -236,7 +236,7 @@ public class BreakendBuilder
             return;
 
         Breakend breakend = new Breakend(
-                mAssemblyAlignment, alignment.refLocation().Chromosome, breakendPosition, orientation, insertedBases, null);
+                mAssemblyAlignment, alignment.chromosome(), breakendPosition, orientation, insertedBases, null);
 
         BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), orientation, 0, alignment);
 
@@ -338,7 +338,7 @@ public class BreakendBuilder
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
-        int sglPosition = sglRefBaseAtEnd ? alignment.refLocation().start() : alignment.refLocation().end();
+        int sglPosition = sglRefBaseAtEnd ? alignment.positionStart() : alignment.positionEnd();
 
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
@@ -351,7 +351,7 @@ public class BreakendBuilder
             return false;
 
         Breakend breakend = new Breakend(
-                mAssemblyAlignment, alignment.refLocation().Chromosome, sglPosition, sglOrientation, insertSequence, null);
+                mAssemblyAlignment, alignment.chromosome(), sglPosition, sglOrientation, insertSequence, null);
 
         BreakendSegment segment = new BreakendSegment(
                 mAssemblyAlignment.id(), alignment.sequenceStart(), sglOrientation, nextSegmentIndex, alignment);
@@ -399,8 +399,8 @@ public class BreakendBuilder
             }
             else
             {
-                breakendChr = alignment.refLocation().Chromosome;
-                breakendPosition = alignment.isForward() ? alignment.refLocation().end() : alignment.refLocation().start();
+                breakendChr = alignment.chromosome();
+                breakendPosition = alignment.isForward() ? alignment.positionEnd() : alignment.positionStart();
                 breakendOrientation = segmentOrientation(alignment, true);
             }
 
@@ -415,13 +415,10 @@ public class BreakendBuilder
             }
             else
             {
-                nextChr = nextAlignment.refLocation().Chromosome;
-                nextPosition = nextAlignment.isForward() ? nextAlignment.refLocation().start() : nextAlignment.refLocation().end();
+                nextChr = nextAlignment.chromosome();
+                nextPosition = nextAlignment.isForward() ? nextAlignment.positionStart() : nextAlignment.positionEnd();
                 nextOrientation = segmentOrientation(nextAlignment, false);
             }
-
-            // Orientation nextOrientation = segmentOrientation(nextAlignment, false);
-            // int nextPosition = nextAlignment.isForward() ? nextAlignment.refLocation().start() : nextAlignment.refLocation().end();
 
             HomologyData homology = null;
             String insertedBases = "";
