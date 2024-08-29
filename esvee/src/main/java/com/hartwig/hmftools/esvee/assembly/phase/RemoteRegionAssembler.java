@@ -85,9 +85,6 @@ public class RemoteRegionAssembler
         if(assembly.stats().SoftClipSecondMaxLength < MIN_VARIANT_LENGTH)
             return false;
 
-        if(assembly.stats().JuncMateDiscordantRemote < ASSEMBLY_MIN_READ_SUPPORT)
-            return false;
-
         // check for sufficient diversity in the extension bases
         int trimmedExtBaseLength = calcTrimmedExtensionBaseLength(assembly);
 

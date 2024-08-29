@@ -184,10 +184,18 @@ public final class AssemblyLinker
             if(secondSubSeqIndex < 0)
                 continue;
 
-            // also must allow for the first match sequence (ie including all extension bases) to fit/match within the second
+            // check if the first match sequence (ie including all extension bases) to fits/matches within the second
+            // and if not if there is sufficient overlap
             int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-            if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
-                continue; // still possible that a later subsequence will match earlier
+            int impliedSequenceMatchSeqEnd = impliedSequenceMatchSeqStart + firstMatchSeqLength - 1;
+
+            if(impliedSequenceMatchSeqEnd >= secondSeq.BaseLength)
+            {
+                int secondMatchLength = secondSeq.BaseLength - impliedSequenceMatchSeqStart - 1;
+
+                if(secondMatchLength < ASSEMBLY_LINK_OVERLAP_BASES)
+                    continue; // still possible that a later subsequence will match earlier
+            }
 
             alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 

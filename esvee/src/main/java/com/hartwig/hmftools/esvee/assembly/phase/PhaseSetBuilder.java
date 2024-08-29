@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -11,6 +13,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN_READ_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
@@ -303,6 +306,7 @@ public class PhaseSetBuilder
             findUnmappedExtensions();
 
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
+
         findRemoteRefCandidates();
 
         // prioritise and select from all remaining candidates
@@ -434,6 +438,8 @@ public class PhaseSetBuilder
 
     private void findRemoteRefCandidates()
     {
+        boolean applyThresholds = mAssemblies.size() > 50;
+
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
@@ -442,7 +448,7 @@ public class PhaseSetBuilder
             // collect remote regions which aren't only supplementaries nor which overlap another phase assembly
             List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
-                    .filter(x -> x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
+                    .filter(x -> !applyThresholds || x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
                     .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
                     .collect(Collectors.toList());
 
@@ -452,8 +458,19 @@ public class PhaseSetBuilder
             // evaluate by remote regions with most linked reads
             Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.nonSuppReadCount()));
 
+            int minReadCount = applyThresholds ? REMOTE_REGION_REF_MIN_READS : 1;
+
+            if(remoteRegions.size() > 10)
+            {
+                int maxRemoteReads = remoteRegions.get(0).readCount();
+                minReadCount = max(REMOTE_REGION_REF_MIN_READS, (int)ceil(REMOTE_REGION_REF_MIN_READ_PERCENT * maxRemoteReads));
+            }
+
             for(RemoteRegion remoteRegion : remoteRegions)
             {
+                if(remoteRegion.readCount() < minReadCount)
+                    continue;
+
                 Set<String> localReadIds = assembly.support().stream()
                         .filter(x -> remoteRegion.readIds().contains(x.id()))
                         .map(x -> x.id())
@@ -468,7 +485,7 @@ public class PhaseSetBuilder
 
                 int candidateCount = localReadIds.size() - supportCount;
 
-                if(localReadIds.size() < REMOTE_REGION_REF_MIN_READS)
+                if(localReadIds.size() < minReadCount)
                     continue;
 
                 AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReadIds);
