@@ -66,7 +66,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String normalSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 

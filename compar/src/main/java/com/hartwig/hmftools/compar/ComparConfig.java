@@ -214,7 +214,6 @@ public class ComparConfig
 
         if(mapping == null || !mapping.SourceMapping.containsKey(source))
         {
-            CMP_LOGGER.warn("sample({}) source({}) missed mapping", sampleId, source);
             return sampleId;
         }
 
@@ -238,7 +237,6 @@ public class ComparConfig
         }
         else
         {
-            CMP_LOGGER.warn("sample({}) source({}) missed normal sample ID", sampleId, source);
             return sourceSampleId(source, sampleId);
         }
     }
@@ -418,7 +416,7 @@ public class ComparConfig
                 MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
-        configBuilder.addConfigItem(NORMAL, false, "Sample ID of normal sample if tumor-normal run.");
+        configBuilder.addConfigItem(NORMAL, false, "Sample ID of normal sample if tumor-normal run. By default same value as '" + SAMPLE + "' is used");
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");

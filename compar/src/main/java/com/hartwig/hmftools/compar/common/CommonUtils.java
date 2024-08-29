@@ -33,6 +33,7 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
+import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
@@ -122,6 +123,9 @@ public class CommonUtils
             case GERMLINE_SV:
                 return new GermlineSvComparer(config);
 
+            case PEACH:
+                return new PeachComparer(config);
+
             default:
                 return null;
         }
@@ -137,6 +141,7 @@ public class CommonUtils
         for(String sourceName : config.SourceNames)
         {
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
+            String sourceNormalSampleId = config.sourceNormalSampleId(sourceName, sampleId);
             List<ComparableItem> items = null;
 
             if(!config.DbConnections.isEmpty())
@@ -146,7 +151,7 @@ public class CommonUtils
             else
             {
                 FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
-                items = comparer.loadFromFile(sourceSampleId, fileSources);
+                items = comparer.loadFromFile(sourceSampleId, sourceNormalSampleId, fileSources);
             }
 
             if(items != null)
