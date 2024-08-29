@@ -214,21 +214,18 @@ public class BwaTester
                 sj.add(null);
             }
 
-            sj.add(alignment.RefLocation.toString());
+            sj.add(alignment.refLocation().toString());
             sj.add(format("%d-%d", alignment.rawSequenceStart(), alignment.rawSequenceEnd()));
-            sj.add(String.valueOf(alignment.MapQual));
-            sj.add(String.valueOf(alignment.Cigar));
+            sj.add(String.valueOf(alignment.mapQual()));
+            sj.add(String.valueOf(alignment.cigar()));
             sj.add(String.valueOf(alignment.orientation()));
+            sj.add(String.valueOf(alignment.alignedBases()));
 
-            Cigar cigar = CigarUtils.cigarFromStr(alignment.Cigar);
-            int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-            sj.add(String.valueOf(alignedBases));
-
-            sj.add(String.valueOf(alignment.Score));
-            sj.add(String.valueOf(alignment.Flags));
-            sj.add(String.valueOf(alignment.NMatches));
-            sj.add(alignment.XaTag);
-            sj.add(alignment.MdTag);
+            sj.add(String.valueOf(alignment.score()));
+            sj.add(String.valueOf(alignment.flags()));
+            sj.add(String.valueOf(alignment.nMatches()));
+            sj.add(alignment.xaTag());
+            sj.add(alignment.mdTag());
 
             sj.add(sequence);
 

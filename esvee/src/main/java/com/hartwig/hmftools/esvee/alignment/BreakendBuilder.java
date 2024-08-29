@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -79,7 +80,7 @@ public class BreakendBuilder
         List<AlignData> validAlignments = Lists.newArrayList();
         List<AlignData> lowQualAlignments = Lists.newArrayList();
 
-        filterAlignments(alignments, validAlignments, lowQualAlignments);
+        AlignmentFilters.filterAlignments(mAssemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         if(validAlignments.isEmpty())
             return;
@@ -101,70 +102,6 @@ public class BreakendBuilder
         }
     }
 
-    @VisibleForTesting
-    public void filterAlignments(
-            final List<AlignData> alignments, final List<AlignData> validAlignments, final List<AlignData> lowQualAlignments)
-    {
-        // exclude alignments with zero qual
-        final List<AlignData> nonZeroAlignments = Lists.newArrayList();
-
-        for(AlignData alignment : alignments)
-        {
-            if(alignment.MapQual > 0)
-                nonZeroAlignments.add(alignment);
-            else
-                lowQualAlignments.add(alignment);
-        }
-
-        if(nonZeroAlignments.isEmpty())
-            return;
-
-        // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
-        String fullSequence = mAssemblyAlignment.fullSequence();
-
-        nonZeroAlignments.forEach(x -> x.setFullSequenceData(fullSequence, mAssemblyAlignment.fullSequenceLength()));
-
-        // set modified map qual and then filtered low qual alignments
-        Collections.sort(nonZeroAlignments, Comparator.comparingInt(x -> x.sequenceStart()));
-
-        for(int i = 0; i < nonZeroAlignments.size(); ++i)
-        {
-            AlignData alignment = nonZeroAlignments.get(i);
-
-            int overlapStart = 0;
-            int overlapEnd = 0;
-
-            if(i > 0)
-            {
-                AlignData prevAlignment = nonZeroAlignments.get(i - 1);
-                if(prevAlignment.sequenceEnd() >= alignment.sequenceStart())
-                {
-                    overlapStart = prevAlignment.sequenceEnd() - alignment.sequenceStart() + 1;
-                }
-            }
-
-            if(i < nonZeroAlignments.size() - 1)
-            {
-                AlignData nextAlignment = nonZeroAlignments.get(i + 1);
-
-                if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
-                {
-                    overlapEnd = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
-                }
-            }
-
-            alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
-        }
-
-        for(AlignData alignment : nonZeroAlignments)
-        {
-            if(alignment.calcModifiedMapQual() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
-                validAlignments.add(alignment);
-            else
-                lowQualAlignments.add(alignment);
-        }
-    }
-
     private boolean formIndelBreakends(final AlignData alignment)
     {
         // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
@@ -179,18 +116,18 @@ public class BreakendBuilder
             {
                 int svLength = assemblyLink.length();
                 CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
+                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.refLocation().start(), alignment.cigarElements(), specificIndel);
             }
         }
 
         // if no match was found, just take the longest
         if(indelCoords == null)
-            indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+            indelCoords = findIndelCoords(alignment.refLocation().start(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
 
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.RefLocation.start();
+        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.refLocation().start();
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         // the indel must have sufficient bases either side of it to be called
@@ -216,10 +153,10 @@ public class BreakendBuilder
             // check for exact homology at the bases either side of the delete
             int maxLength = indelCoords.Length - 1;
             int homPosStart = indelPosStart + 1;
-            String basesStart = mRefGenome.getBaseString( alignment.RefLocation.Chromosome, homPosStart, homPosStart + maxLength);
+            String basesStart = mRefGenome.getBaseString( alignment.refLocation().Chromosome, homPosStart, homPosStart + maxLength);
 
             int homPosEnd = indelPosEnd;
-            String basesEnd = mRefGenome.getBaseString(alignment.RefLocation.Chromosome, homPosEnd, homPosEnd + maxLength);
+            String basesEnd = mRefGenome.getBaseString(alignment.refLocation().Chromosome, homPosEnd, homPosEnd + maxLength);
 
             homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
 
@@ -238,7 +175,7 @@ public class BreakendBuilder
         }
 
         Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelPosStart, FORWARD, insertedBases, homology);
+                mAssemblyAlignment, alignment.refLocation().Chromosome, indelPosStart, FORWARD, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
@@ -247,7 +184,7 @@ public class BreakendBuilder
         lowerBreakend.addSegment(segment);
 
         Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelPosEnd, REVERSE, insertedBases, homology);
+                mAssemblyAlignment, alignment.refLocation().Chromosome, indelPosEnd, REVERSE, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
@@ -280,14 +217,14 @@ public class BreakendBuilder
 
         if(alignment.leftSoftClipLength() >= alignment.rightSoftClipLength())
         {
-            breakendPosition = alignment.RefLocation.start();
+            breakendPosition = alignment.refLocation().start();
             orientation = REVERSE;
             softClipLength = alignment.leftSoftClipLength();
             insertedBases = fullSequence.substring(0, softClipLength);
         }
         else
         {
-            breakendPosition = alignment.RefLocation.end();
+            breakendPosition = alignment.refLocation().end();
             orientation = FORWARD;
             softClipLength = alignment.rightSoftClipLength();
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
@@ -299,7 +236,7 @@ public class BreakendBuilder
             return;
 
         Breakend breakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
+                mAssemblyAlignment, alignment.refLocation().Chromosome, breakendPosition, orientation, insertedBases, null);
 
         BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), orientation, 0, alignment);
 
@@ -309,7 +246,7 @@ public class BreakendBuilder
         if(!zeroQualAlignments.isEmpty())
         {
             List<AlternativeAlignment> altAlignments = Lists.newArrayList();
-            zeroQualAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
+            zeroQualAlignments.forEach(x -> altAlignments.addAll(x.allAlignments()));
             breakend.setAlternativeAlignments(altAlignments);
         }
 
@@ -355,11 +292,11 @@ public class BreakendBuilder
 
             ChrBaseRegion localRegion = new ChrBaseRegion(assembly.junction().Chromosome, regionStart, regionEnd);
 
-            int score = isOriginalAssembly ? alignment.Score : regionEnd - regionStart + 1;
+            int score = isOriginalAssembly ? alignment.score() : regionEnd - regionStart + 1;
 
             AlignData breakendAlignment = new AlignData(
-                    localRegion, sequenceStart, sequenceEnd, alignment.MapQual, score, alignment.Flags, alignment.Cigar,
-                    alignment.NMatches, alignment.XaTag, alignment.MdTag);
+                    localRegion, sequenceStart, sequenceEnd, alignment.mapQual(), score, alignment.flags(), alignment.cigar(),
+                    alignment.nMatches(), alignment.xaTag(), alignment.mdTag());
 
             breakendAlignment.setFullSequenceData(mAssemblyAlignment.fullSequence(), mAssemblyAlignment.fullSequenceLength());
             breakendAlignment.setAdjustedAlignment(mAssemblyAlignment.fullSequence(), 0, 0);
@@ -372,7 +309,7 @@ public class BreakendBuilder
             if(isOriginalAssembly && !zeroQualAlignments.isEmpty())
             {
                 List<AlternativeAlignment> altAlignments = Lists.newArrayList();
-                zeroQualAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
+                zeroQualAlignments.forEach(x -> altAlignments.addAll(x.allAlignments()));
                 breakend.setAlternativeAlignments(altAlignments);
             }
 
@@ -401,7 +338,7 @@ public class BreakendBuilder
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
-        int sglPosition = sglRefBaseAtEnd ? alignment.RefLocation.start() : alignment.RefLocation.end();
+        int sglPosition = sglRefBaseAtEnd ? alignment.refLocation().start() : alignment.refLocation().end();
 
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
@@ -414,7 +351,7 @@ public class BreakendBuilder
             return false;
 
         Breakend breakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
+                mAssemblyAlignment, alignment.refLocation().Chromosome, sglPosition, sglOrientation, insertSequence, null);
 
         BreakendSegment segment = new BreakendSegment(
                 mAssemblyAlignment.id(), alignment.sequenceStart(), sglOrientation, nextSegmentIndex, alignment);
@@ -449,13 +386,42 @@ public class BreakendBuilder
         {
             AlignData alignment = alignments.get(i);
 
-            Orientation breakendOrientation = segmentOrientation(alignment, true);
-            int breakendPosition = alignment.isForward() ? alignment.RefLocation.end() : alignment.RefLocation.start();
+            String breakendChr, nextChr;
+            Orientation breakendOrientation, nextOrientation;
+            int breakendPosition, nextPosition;
+
+            if(alignment.hasLinkedAltAlignment())
+            {
+                AlternativeAlignment breakendAltAlignment = alignment.linkedAltAlignment();
+                breakendChr = breakendAltAlignment.Chromosome;
+                breakendPosition = breakendAltAlignment.Position;
+                breakendOrientation = breakendAltAlignment.Orient;
+            }
+            else
+            {
+                breakendChr = alignment.refLocation().Chromosome;
+                breakendPosition = alignment.isForward() ? alignment.refLocation().end() : alignment.refLocation().start();
+                breakendOrientation = segmentOrientation(alignment, true);
+            }
 
             AlignData nextAlignment = alignments.get(i + 1);
 
-            Orientation nextOrientation = segmentOrientation(nextAlignment, false);
-            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
+            if(nextAlignment.hasLinkedAltAlignment())
+            {
+                AlternativeAlignment nextAltAlignment = nextAlignment.linkedAltAlignment();
+                nextChr = nextAltAlignment.Chromosome;
+                nextPosition = nextAltAlignment.Position;
+                nextOrientation = nextAltAlignment.Orient;
+            }
+            else
+            {
+                nextChr = nextAlignment.refLocation().Chromosome;
+                nextPosition = nextAlignment.isForward() ? nextAlignment.refLocation().start() : nextAlignment.refLocation().end();
+                nextOrientation = segmentOrientation(nextAlignment, false);
+            }
+
+            // Orientation nextOrientation = segmentOrientation(nextAlignment, false);
+            // int nextPosition = nextAlignment.isForward() ? nextAlignment.refLocation().start() : nextAlignment.refLocation().end();
 
             HomologyData homology = null;
             String insertedBases = "";
@@ -507,7 +473,7 @@ public class BreakendBuilder
             String assemblyInsertedBases = breakendOrientation.isForward() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
 
             Breakend breakend = new Breakend(
-                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, assemblyInsertedBases, firstHomology);
+                    mAssemblyAlignment, breakendChr, breakendPosition, breakendOrientation, assemblyInsertedBases, firstHomology);
 
             mAssemblyAlignment.addBreakend(breakend);
 
@@ -519,7 +485,7 @@ public class BreakendBuilder
             String nextInsertedBases = nextOrientation.isReverse() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
 
             Breakend nextBreakend = new Breakend(
-                    mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, nextInsertedBases, nextHomology);
+                    mAssemblyAlignment, nextChr, nextPosition, nextOrientation, nextInsertedBases, nextHomology);
 
             mAssemblyAlignment.addBreakend(nextBreakend);
 
@@ -603,7 +569,7 @@ public class BreakendBuilder
 
         List<AlternativeAlignment> altAlignments = Lists.newArrayList();
 
-        relatedAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
+        relatedAlignments.forEach(x -> altAlignments.addAll(x.allAlignments()));
 
         return altAlignments;
     }

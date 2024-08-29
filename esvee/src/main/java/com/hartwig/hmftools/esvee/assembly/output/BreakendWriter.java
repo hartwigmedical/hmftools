@@ -51,6 +51,7 @@ public class BreakendWriter
 
             sj.add("Id");
             sj.add("PhaseGroupId");
+            sj.add("PhaseSetId");
             sj.add("AssemblyId");
             sj.add("AssemblyInfo");
 
@@ -116,6 +117,7 @@ public class BreakendWriter
 
                 sj.add(String.valueOf(breakend.id()));
                 sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
+                sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : -1));
                 sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(assemblyInfo);
                 sj.add(String.valueOf(breakend.svType()));
@@ -193,8 +195,8 @@ public class BreakendWriter
                 sj.add(String.valueOf(segment.Orient));
                 sj.add(String.valueOf(segment.Index));
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
-                sj.add(String.valueOf(segment.Alignment.MapQual));
-                sj.add(String.valueOf(segment.Alignment.Score));
+                sj.add(String.valueOf(segment.Alignment.mapQual()));
+                sj.add(String.valueOf(segment.Alignment.score()));
                 sj.add(String.valueOf(segment.Alignment.adjustedAlignment()));
                 sj.add(String.valueOf(breakend.averageFragmentLength()));
                 sj.add(String.valueOf(breakend.incompleteFragmentCount()));

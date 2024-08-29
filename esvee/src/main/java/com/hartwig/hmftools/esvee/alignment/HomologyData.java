@@ -201,12 +201,12 @@ public class HomologyData
         if(orientation.isForward())
         {
             return refGenome.getBaseString(
-                    alignment.RefLocation.Chromosome, alignment.RefLocation.end() - overlap + 1, alignment.RefLocation.end());
+                    alignment.refLocation().Chromosome, alignment.refLocation().end() - overlap + 1, alignment.refLocation().end());
         }
         else
         {
             return refGenome.getBaseString(
-                    alignment.RefLocation.Chromosome, alignment.RefLocation.start(), alignment.RefLocation.start() + overlap - 1);
+                    alignment.refLocation().Chromosome, alignment.refLocation().start(), alignment.refLocation().start() + overlap - 1);
         }
     }
 }

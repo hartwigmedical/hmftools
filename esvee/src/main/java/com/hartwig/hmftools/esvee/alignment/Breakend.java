@@ -186,7 +186,7 @@ public class Breakend implements Comparable<Breakend>
 
         for(BreakendSegment segment : mSegments)
         {
-            int segmentQual = (int)round(segment.Alignment.calcModifiedMapQual());
+            int segmentQual = (int)round(segment.Alignment.modifiedMapQual());
 
             maxSegmentQual = max(segmentQual, maxSegmentQual);
         }

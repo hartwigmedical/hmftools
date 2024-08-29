@@ -95,7 +95,7 @@ public class AlternativeAlignment
 
     public String toString()
     {
-        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient, MapQual);
+        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient.asByte(), MapQual);
     }
 
     public String vcfString()

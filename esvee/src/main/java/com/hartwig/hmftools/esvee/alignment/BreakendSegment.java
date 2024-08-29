@@ -29,6 +29,6 @@ public class BreakendSegment
     {
         return format("asm(%d index=%d:%d) segment(%d M=%d mq=%d score=%d)",
                 AssemblyAlignmentId, SequenceIndex, Orient.asByte(),
-                Index, Alignment.alignedBases(), Alignment.MapQual, Alignment.Score);
+                Index, Alignment.alignedBases(), Alignment.mapQual(), Alignment.score());
     }
 }

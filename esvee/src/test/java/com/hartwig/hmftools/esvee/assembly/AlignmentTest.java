@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignments;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignmentsOld;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 
@@ -227,10 +229,10 @@ public class AlignmentTest
         alignment1 = createAlignment(CHR_1, 251, 350, 0, 100, "100M50S");
 
         AlignData zeroAlignment1 = createAlignment(
-                CHR_2, 1000, 1100, false, 0, 0, 100, 102, "100M", altAlignment1);
+                CHR_2, 20000, 20100, false, 0, 0, 100, 102, "100M", altAlignment1);
 
         AlignData zeroAlignment2 = createAlignment(
-                CHR_2, 2000, 2100, false, 0, 0, 102, 104, "100M", altAlignment2);
+                CHR_2, 40000, 40100, false, 0, 0, 102, 104, "100M", altAlignment2);
 
         alignment2 = createAlignment(CHR_1, 100, 199, 104, 204, "50S100M");
 
@@ -368,8 +370,6 @@ public class AlignmentTest
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "");
 
-        BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
-
         AlignData alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
                 60, 100, 0, "100M", DEFAULT_NM, "", "");
@@ -383,13 +383,13 @@ public class AlignmentTest
         List<AlignData> validAlignments = Lists.newArrayList();
         List<AlignData> lowQualAlignments = Lists.newArrayList();
 
-        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         assertEquals(0, lowQualAlignments.size());
         assertEquals(2, validAlignments.size());
         assertEquals(78, validAlignments.get(0).adjustedAlignment());
         assertEquals(80, validAlignments.get(1).adjustedAlignment());
-        assertEquals(37, validAlignments.get(0).calcModifiedMapQual(), 0.1);
+        assertEquals(37, validAlignments.get(0).modifiedMapQual(), 0.1);
 
         // now with lower alignment score and overlap
         AlignData zeroAlign = new AlignData(
@@ -413,7 +413,8 @@ public class AlignmentTest
         validAlignments.clear();
         lowQualAlignments.clear();
 
-        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+        // filterAlignmentsOld(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         assertEquals(3, lowQualAlignments.size());
         assertEquals(3, validAlignments.size());
