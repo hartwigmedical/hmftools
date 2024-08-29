@@ -252,7 +252,7 @@ public class BamMerger
 
                 for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
                 {
-                    if(!fileHeader.getReadGroups().contains(readGroupRecord))
+                    if(fileHeader.getReadGroups().stream().noneMatch(x -> x.getReadGroupId().equals(readGroupRecord.getReadGroupId())))
                         fileHeader.addReadGroup(readGroupRecord);
                 }
 
