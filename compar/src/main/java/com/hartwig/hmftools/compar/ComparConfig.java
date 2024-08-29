@@ -86,6 +86,7 @@ public class ComparConfig
     private boolean mIsValid;
 
     // config strings
+    public static final String NORMAL = "normal";
     public static final String CATEGORIES = "categories";
     public static final String MATCH_LEVEL = "match_level";
 
@@ -220,31 +221,60 @@ public class ComparConfig
         return mapping.SourceMapping.get(source);
     }
 
+    public String sourceNormalSampleId(final String source, final String sampleId)
+    {
+        if(mSampleIdMappings.isEmpty())
+            return sampleId;
+
+        SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
+
+        if(mapping != null && mapping.NormalSourceMapping.containsKey(source))
+        {
+            return mapping.NormalSourceMapping.get(source);
+        }
+        else if(mapping != null && mapping.NormalSampleId != null)
+        {
+            return mapping.NormalSampleId;
+        }
+        else
+        {
+            CMP_LOGGER.warn("sample({}) source({}) missed normal sample ID", sampleId, source);
+            return sourceSampleId(source, sampleId);
+        }
+    }
+
     public boolean isValid() { return mIsValid; }
     public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
 
-    private class SampleIdMapping
+    private static class SampleIdMapping
     {
         public final String SampleId;
+        public final String NormalSampleId;
         public Map<String,String> SourceMapping;
+        public Map<String,String> NormalSourceMapping;
 
-        public SampleIdMapping(final String sampleId)
+        public SampleIdMapping(final String sampleId, final String normalSampleId)
         {
             SampleId = sampleId;
+            NormalSampleId = normalSampleId;
             SourceMapping = Maps.newHashMap();
+            NormalSourceMapping = Maps.newHashMap();
         }
     }
 
     private static final String COL_SAMPLE_ID = "SampleId";
+    private static final String COL_NORMAL_SAMPLE_ID = "NormalSampleId";
     private static final String COL_REF_SAMPLE_ID = "RefSampleId";
+    private static final String COL_REF_NORMAL_SAMPLE_ID = "RefNormalSampleId";
     private static final String COL_NEW_SAMPLE_ID = "NewSampleId";
+    private static final String COL_NEW_NORMAL_SAMPLE_ID = "NewNormalSampleId";
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
         if(configBuilder.hasValue(SAMPLE))
         {
-            SampleIds.add(configBuilder.getValue(SAMPLE));
+            registerSampleIds(configBuilder.getValue(SAMPLE), configBuilder.getValue(NORMAL, null));
             return;
         }
 
@@ -264,8 +294,11 @@ public class ComparConfig
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int sampleIndex = fieldsIndexMap.get(COL_SAMPLE_ID);
+            Integer normalSampleIndex = fieldsIndexMap.get(COL_NORMAL_SAMPLE_ID);
             Integer refSampleIndex = fieldsIndexMap.get(COL_REF_SAMPLE_ID);
+            Integer refNormalSampleIndex = fieldsIndexMap.get(COL_REF_NORMAL_SAMPLE_ID);
             Integer newSampleIndex = fieldsIndexMap.get(COL_NEW_SAMPLE_ID);
+            Integer newNormalSampleIndex = fieldsIndexMap.get(COL_NEW_NORMAL_SAMPLE_ID);
 
             for(String line : lines)
             {
@@ -275,23 +308,13 @@ public class ComparConfig
                 String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
-
-                SampleIds.add(sampleId);
-
+                String normalSampleId = normalSampleIndex != null ? values[normalSampleIndex] : null;
                 String refSampleId = refSampleIndex != null ? values[refSampleIndex] : null;
+                String refNormalSampleId = refNormalSampleIndex != null ? values[refNormalSampleIndex] : null;
                 String newSampleId = newSampleIndex != null ? values[newSampleIndex] : null;
+                String newNormalSampleId = newNormalSampleIndex != null ? values[newNormalSampleIndex] : null;
 
-                if(refSampleId != null || newSampleId != null)
-                {
-                    SampleIdMapping mapping = new SampleIdMapping(sampleId);
-                    mSampleIdMappings.put(sampleId, mapping);
-
-                    if(refSampleId != null && SourceNames.size() >= 1);
-                        mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
-
-                    if(newSampleId != null && SourceNames.size() >= 2)
-                        mapping.SourceMapping.put(SourceNames.get(1), newSampleId);
-                }
+                registerSampleIds(sampleId, normalSampleId, refSampleId, refNormalSampleId, newSampleId, newNormalSampleId);
             }
 
             CMP_LOGGER.info("loaded {} samples from file", SampleIds.size());
@@ -300,6 +323,30 @@ public class ComparConfig
         {
             CMP_LOGGER.error("failed to load sample IDs: {}", e.toString());
         }
+    }
+
+    private void registerSampleIds(final String sampleId, final String normalSampleId)
+    {
+        registerSampleIds(sampleId, normalSampleId, null, null, null, null);
+    }
+    
+    private void registerSampleIds(final String sampleId, final String normalSampleId, final String refSampleId,
+            final String refNormalSampleId, final String newSampleId, final String newNormalSampleId)
+    {
+        SampleIds.add(sampleId);
+
+        SampleIdMapping mapping = new SampleIdMapping(sampleId, normalSampleId);
+        mSampleIdMappings.put(sampleId, mapping);
+
+        if(refSampleId != null && SourceNames.size() >= 1)
+            mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
+        if(newSampleId != null && SourceNames.size() >= 2)
+            mapping.SourceMapping.put(SourceNames.get(1), newSampleId);
+
+        if(refNormalSampleId != null && SourceNames.size() >= 1)
+            mapping.NormalSourceMapping.put(SourceNames.get(0), refNormalSampleId);
+        if(newNormalSampleId != null && SourceNames.size() >= 2)
+            mapping.NormalSourceMapping.put(SourceNames.get(1), newNormalSampleId);
     }
 
     private static String formConfigSourceStr(final String sourceType, final String sourceName)
@@ -371,6 +418,7 @@ public class ComparConfig
                 MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(NORMAL, false, "Sample ID of normal sample if tumor-normal run.");
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
