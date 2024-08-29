@@ -64,6 +64,7 @@ public class VariantBreakend
 
     public VariantBreakend MatchedBreakend;
     public LineLink LinkedLineBreakends;
+    public LineLink InferredLinkedLineBreakends;
 
     public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
     {
@@ -99,6 +100,7 @@ public class VariantBreakend
 
         MatchedBreakend = null;
         LinkedLineBreakends = null;
+        InferredLinkedLineBreakends = null;
     }
 
     public boolean isSingle()
@@ -185,11 +187,13 @@ public class VariantBreakend
 
     public boolean hasLineLink() { return LinkedLineBreakends != null; }
 
+    public boolean hasInferredLineLink() { return InferredLinkedLineBreakends != null; }
+
     public boolean hasLineInfoFlag() { return Context.getAttributeAsBoolean(LINE_SITE, false); }
 
     public String toString()
     {
-        return String.format("coords(%s) cipos(%d,%d)", coordStr(), Cipos[0], Cipos[1]);
+        return String.format("id(%s) coords(%s) cipos(%d,%d)", Id, coordStr(), Cipos[0], Cipos[1]);
     }
 
     public String coordStr()
@@ -244,12 +248,18 @@ public class VariantBreakend
 
     public String fragsStr(String sampleId)
     {
+        String fragsInfoTag;
+
         if(mSvCaller == SvCaller.GRIDSS)
         {
-            return isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
+            fragsInfoTag = isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
+        }
+        else
+        {
+            fragsInfoTag = TOTAL_FRAGS;
         }
 
-        return getExtendedAttributeAsString(sampleId, TOTAL_FRAGS);
+        return getExtendedAttributeAsString(sampleId, fragsInfoTag);
     }
 
     public StructuralVariantType svType()
