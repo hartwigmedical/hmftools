@@ -203,6 +203,9 @@ public class VariantBreakend
 
     public String otherCoordStr()
     {
+        if(isSingle())
+            return "";
+
         return String.format("%s:%d:%d", OtherChromosome, OtherPosition, OtherOrientation);
     }
 

@@ -158,43 +158,42 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        private boolean mHasLink = false;
-        private LineLink mLineLink = null;
-
-        VariantBreakend mPolyASite;
-        VariantBreakend mOtherSite;
-
         public BreakendRowValues(@Nullable VariantBreakend breakend)
         {
             if(breakend == null)
                 return;
 
-            mHasLink = breakend.hasLineLink();
+            boolean hasLink = breakend.hasLineLink();
+            LineLink lineLink;
+            VariantBreakend polyASite;
+            VariantBreakend otherSite;
 
-            if(mHasLink)
+            if(hasLink)
             {
                 LinkType = breakend.LinkedLineBreakends.mType.toString();
 
-                mLineLink = breakend.LinkedLineBreakends;
-                mPolyASite = mLineLink.mPolyASite;
-                mOtherSite = mLineLink.mOtherSite;
+                lineLink = breakend.LinkedLineBreakends;
+                polyASite = lineLink.mPolyASite;
+                otherSite = lineLink.mOtherSite;
             }
             else
             {
                 LinkType = LineLinkType.NO_LINK.toString();
 
-                mLineLink = null;
-                mPolyASite = breakend;
-                mOtherSite = null;
+                lineLink = null;
+                polyASite = breakend;
+                otherSite = null;
             }
 
-            setPolyASiteValues(mPolyASite);
+            setPolyASiteValues(polyASite, lineLink);
 
-            if(mOtherSite != null)
-                setOtherSiteValues(mOtherSite);
+            if(otherSite != null)
+            {
+                setOtherSiteValues(otherSite, lineLink);
+            }
         }
 
-        private void setPolyASiteValues(@NotNull VariantBreakend polyASite)
+        private void setPolyASiteValues(@NotNull VariantBreakend polyASite, @Nullable LineLink lineLink)
         {
             VcfType = polyASite.SourceVcfType.toString();
 
@@ -206,14 +205,14 @@ public class LineLinkWriter
             PolyAQual = polyASite.qualStr();
             PolyAFrags = polyASite.fragsStr(mSampleId);
 
-            if(mHasLink && mLineLink.polyAHasRemote())
+            if(!polyASite.isSingle() && (lineLink == null || lineLink.polyAHasRemote()))
             {
                 PolyARemoteCoords = polyASite.otherCoordStr();
                 PolyARemoteId = polyASite.mateId();
             }
         }
 
-        private void setOtherSiteValues(@NotNull VariantBreakend otherSite)
+        private void setOtherSiteValues(@NotNull VariantBreakend otherSite, @Nullable LineLink lineLink)
         {
             OtherId = otherSite.Id;
             OtherCoords = otherSite.coordStr();
@@ -223,7 +222,7 @@ public class LineLinkWriter
             OtherQual = otherSite.qualStr();
             OtherFrags = otherSite.fragsStr(mSampleId);
 
-            if(mHasLink && mLineLink.otherHasRemote())
+            if(!otherSite.isSingle() && (lineLink == null || lineLink.otherHasRemote()))
             {
                 OtherRemoteCoords = otherSite.otherCoordStr();
                 OtherRemoteId = otherSite.mateId();
@@ -235,8 +234,7 @@ public class LineLinkWriter
             LineLink inferredLink = otherBreakend.InferredLinkedLineBreakends;
 
             SV_LOGGER.trace("Used inferred link in breakend[{}] to assign otherSite[{}]", otherBreakend, inferredLink.mOtherSite);
-            setPolyASiteValues(otherBreakend);
-            setOtherSiteValues(inferredLink.mOtherSite);
+            setOtherSiteValues(inferredLink.mOtherSite, inferredLink);
 
             LinkType = inferredLink.mType.toString();
         }
