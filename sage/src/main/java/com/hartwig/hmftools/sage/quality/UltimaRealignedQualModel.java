@@ -64,6 +64,8 @@ public class UltimaRealignedQualModel
         return mMsiJitterQualCache;
     }
 
+    public UltimaQualModel baseQualModel() { return mBaseQualModel; }
+    public int varReadIndexOffset() { return mVarReadIndexOffset; }
     public SimpleVariant variant() { return mVariant; }
 
     public UltimaModelType type()

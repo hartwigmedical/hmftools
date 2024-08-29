@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.safeQualLook
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -188,7 +189,8 @@ public class UltimaQualCalculator
         return repeatCount;
     }
 
-    private class HomopolymerAdjustment extends UltimaQualModel
+    @VisibleForTesting
+    public static class HomopolymerAdjustment extends UltimaQualModel
     {
         private final int mHpStartIndex;
         private final int mHpEndIndex;
@@ -214,6 +216,10 @@ public class UltimaQualCalculator
             return calcTpBaseQual(
                     record, varReadIndex + mHpStartIndex, varReadIndex + mHpEndIndex, mRefAdjustCount);
         }
+
+        public int hpStartIndex() { return mHpStartIndex; }
+        public int hpEndIndex() { return mHpEndIndex; }
+        public int refAdjustCount() { return mRefAdjustCount; }
 
         public String toString()
         {

@@ -82,7 +82,10 @@ public class VariantReadContext
     public SimpleVariant variant() { return mVariant; }
     public String ref() { return mVariant.ref(); }
     public String alt() { return mVariant.alt(); }
+
     public int corePositionStart() { return CorePositionStart; }
+    public int coreIndexStart() { return CoreIndexStart; }
+    public int varIndex() { return VarIndex; }
 
     public boolean hasHomology() { return Homology != null; }
     public int coreLength() { return CoreIndexEnd - CoreIndexStart + 1; }
@@ -119,6 +122,7 @@ public class VariantReadContext
     public String rightFlankStr() { return new String(ReadBases, CoreIndexEnd + 1, rightFlankLength()); }
 
     public String readBases() { return new String(ReadBases); }
+    public byte[] readBasesBytes() { return ReadBases; }
     public String refBases() { return new String(RefBases); }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }
