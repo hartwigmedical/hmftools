@@ -2,11 +2,16 @@ package com.hartwig.hmftools.esvee.utils.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_VCF;
 
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.utils.vcfcompare.common.SvVcfFile;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinkType;
 import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinkWriter;
@@ -32,20 +37,20 @@ public class LineCompareTask implements Runnable
     {
         SV_LOGGER.info("Running task: " + CompareTask.LINE_COMPARE);
 
-        Map<String, List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf);
-        Map<String, List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf);
+        Map<String,List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf, OLD_VCF);
+        Map<String,List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf, NEW_VCF);
 
         mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMap, false);
 
         if(mConfig.OldUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = loadAndLinkVariants(mConfig.OldUnfilteredVcf);
+            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = loadAndLinkVariants(mConfig.OldUnfilteredVcf, OLD_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(newChrBreakendMap, oldChrBreakendMapUnfiltered, false);
         }
 
         if(mConfig.NewUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = loadAndLinkVariants(mConfig.NewUnfilteredVcf);
+            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = loadAndLinkVariants(mConfig.NewUnfilteredVcf, NEW_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMapUnfiltered, false);
         }
 
@@ -60,9 +65,11 @@ public class LineCompareTask implements Runnable
         SV_LOGGER.info("Completed task: " + CompareTask.LINE_COMPARE);
     }
 
-    public static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile)
+    private static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile, String label)
     {
-        Map<String, List<VariantBreakend>> chrBreakendMap = VariantBreakend.loadVariants(vcfFile);
+        Map<String, List<VariantBreakend>> chrBreakendMap =  new SvVcfFile(vcfFile, label.toUpperCase())
+                .loadVariants()
+                .getVariantsAsMap();
 
         LineLinker.linkBreakends(chrBreakendMap);
 

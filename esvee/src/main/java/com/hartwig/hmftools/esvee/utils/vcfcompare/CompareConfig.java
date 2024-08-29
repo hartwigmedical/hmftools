@@ -35,11 +35,11 @@ public class CompareConfig
     public final boolean IncludeNonPass;
     public RefGenomeVersion RefGenVersion;
 
-    private static final String OLD_VCF = "old_vcf";
-    private static final String NEW_VCF = "new_vcf";
+    static final String OLD_VCF = "old_vcf";
+    static final String NEW_VCF = "new_vcf";
 
-    private static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
-    private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
+    static final String OLD_UNFILTERED_VCF = "old_unfiltered_vcf";
+    static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
 
