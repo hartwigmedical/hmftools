@@ -11,8 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -55,8 +57,8 @@ public class PeachComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        // TODO
-        return Lists.newArrayList();
+        List<PeachGenotype> genotypes = dbAccess.readPeachGenotypes(sampleId);
+        return genotypes.stream().map(g -> new PeachData(g)).collect(Collectors.toList());
     }
 
     public List<ComparableItem> loadFromFile(final String sampleId, final String normalSampleId, final FileSources fileSources)
