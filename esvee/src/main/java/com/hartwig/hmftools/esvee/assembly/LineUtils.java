@@ -23,24 +23,21 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 public final class LineUtils
 {
-    public static boolean isLineSequence(final byte[] bases, final int indexStart, final int indexEnd)
+    public static int findBaseRepeatCount(final byte[] bases, int index, boolean moveForward, byte testBase)
     {
-        // returns true if the whole sequence matches a LINE base
-        if(indexStart < 0 || indexEnd >= bases.length)
-            return false;
-
-        byte lineBase = bases[indexStart];
-
-        if(lineBase != LINE_BASE_A && lineBase != LINE_BASE_T)
-            return false;
-
-        for(int i = indexStart + 1; i <= indexEnd; ++i)
+        // count matching bases until the end of the read
+        int matchCount = 0;
+        while(index >= 0 && index < bases.length)
         {
-            if(bases[i] != lineBase)
-                return false;
+            if(bases[index] == testBase)
+                ++matchCount;
+            else
+                break;
+
+            index += moveForward ? 1 : -1;
         }
 
-        return true;
+        return matchCount;
     }
 
     public static int findLineSequenceCount(final byte[] bases, final int indexStart, final int indexEnd, final byte lineBase)

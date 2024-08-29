@@ -201,6 +201,16 @@ public class ReadAdjustmentsTest
         assertEquals(82, read.unclippedStart());
         assertEquals("18S100M", read.cigarString());
 
+        // test no LINE trimming if an extension of a matching repeat
+        readBases = softClipBases + lineSequence + REF_BASES_RANDOM_100;
+
+        read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, softClipBases.length(), 0));
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
+
 
         // test the other orientation
         lineSequence = Nucleotides.reverseComplementBases(lineSequence);
@@ -222,6 +232,15 @@ public class ReadAdjustmentsTest
         assertEquals(200, read.alignmentEnd());
         assertEquals(218, read.unclippedEnd());
         assertEquals("100M18S", read.cigarString());
+
+
+        // expansion of local repeat
+        readBases = REF_BASES_RANDOM_100 + lineSequence + softClipBases;
+        read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
     }
 
     private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)

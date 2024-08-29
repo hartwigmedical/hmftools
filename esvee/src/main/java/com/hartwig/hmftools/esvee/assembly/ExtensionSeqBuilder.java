@@ -123,7 +123,6 @@ public class ExtensionSeqBuilder
     public byte[] extensionBases() { return mBases; }
     public int extensionLength() { return mBases.length - 1; } // since includes the first ref base
     public byte[] baseQualities() { return mBaseQuals; }
-    public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
 
@@ -437,7 +436,7 @@ public class ExtensionSeqBuilder
         boolean hasMinLengthSoftClipRead = false;
 
         int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int reqSecondaryExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH / 2 : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         for(ReadState read : mReads)
         {

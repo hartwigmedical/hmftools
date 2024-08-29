@@ -113,8 +113,6 @@ public class JunctionAssemblyTest
 
         assertTrue(extSeqBuilder.isValid());
 
-        assertEquals(36, extSeqBuilder.minSupportLength());
-
         String sequence = refBases.substring(19) + extBases;
         assertEquals(sequence, extSeqBuilder.junctionSequence());
 
@@ -174,8 +172,6 @@ public class JunctionAssemblyTest
         ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
-
-        assertEquals(36, extSeqBuilder.minSupportLength());
 
         String sequence = extBases + refBases.substring(0, 1);
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -245,8 +241,6 @@ public class JunctionAssemblyTest
         ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
-
-        assertEquals(consensusExtBases.length() + 1, extSeqBuilder.minSupportLength());
 
         String consensusSequence = extSeqBuilder.junctionSequence();
         String sequence = refBases.substring(19) + consensusExtBases;
