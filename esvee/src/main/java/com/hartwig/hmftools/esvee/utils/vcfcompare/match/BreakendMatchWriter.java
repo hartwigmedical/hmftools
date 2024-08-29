@@ -129,7 +129,7 @@ public class BreakendMatchWriter
             oldFilter = oldBreakend.filtersStr();
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
-            oldVF = oldBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            oldVF = oldBreakend.fragsStr(mSampleId);
             oldIsLine = String.valueOf(oldBreakend.hasLineInfoFlag());
         }
 
@@ -159,7 +159,7 @@ public class BreakendMatchWriter
             newFilter = newBreakend.filtersStr();
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
-            newVF = newBreakend.getExtendedAttributeAsString(mSampleId, TOTAL_FRAGS);
+            newVF = newBreakend.fragsStr(mSampleId);
             newIsLine = String.valueOf(newBreakend.hasLineInfoFlag());
         }
 
