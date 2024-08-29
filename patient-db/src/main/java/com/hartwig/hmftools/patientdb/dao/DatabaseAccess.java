@@ -395,6 +395,12 @@ public class DatabaseAccess implements AutoCloseable
         return structuralVariantFusionDAO.readBreakends(sample);
     }
 
+    @NotNull
+    public List<PeachGenotype> readPeachGenotypes(@NotNull String sample)
+    {
+        return peachDAO.readPeachGenotypes(sample);
+    }
+
     public void writeCanonicalTranscripts(final String refGenomeVersion, final List<GeneData> geneDataList,
             final List<TranscriptData> transcripts)
     {
