@@ -63,6 +63,7 @@ public final class AnnotatedVirusFile
         Integer meanCoverageIndex = fieldsIndexMap.get("meanCoverage");
         Integer expectedClonalCoverageIndex = fieldsIndexMap.get("expectedClonalCoverage");
         Integer driverLikelihoodIndex = fieldsIndexMap.get("driverLikelihood");
+        Integer blacklistedIndex = fieldsIndexMap.get("blacklisted");
 
         for(String line : lines)
         {
@@ -89,7 +90,7 @@ public final class AnnotatedVirusFile
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
-                    .blacklisted(Boolean.parseBoolean(values[fieldsIndexMap.get("blacklisted")]))
+                    .blacklisted(blacklistedIndex != null ? Boolean.parseBoolean(values[blacklistedIndex]) : null)
                     .virusDriverLikelihoodType(driverLikelihoodIndex != null ?
                             VirusLikelihoodType.valueOf(values[driverLikelihoodIndex]) : UNKNOWN)
                     .build());
