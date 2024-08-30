@@ -2,7 +2,9 @@
 
 The WiGiTS tool suite fully supports targeted panel sequencing as well as WGS and WTS.  
 
+<p align="center">
 ![HMF_Pipeline](./hmf_tools_panel_pipeline.png)
+</p>
 
 The output from the pipeline largely matches that of WGS/WTS but with some modules excluded:
 * germline analysis is typically disabled (unless the panel is also run for a normal sample)
