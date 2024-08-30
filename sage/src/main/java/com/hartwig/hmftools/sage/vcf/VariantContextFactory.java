@@ -16,8 +16,8 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.TQP_QUAL_LOG_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
@@ -33,9 +33,9 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.evidence.QualCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.common.SageVariant;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;

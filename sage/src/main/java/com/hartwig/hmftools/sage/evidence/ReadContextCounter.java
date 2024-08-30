@@ -56,10 +56,11 @@ import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.ReadContextMatcher;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.FragmentLengths;
@@ -68,10 +69,9 @@ import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
-import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
-import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 import htsjdk.samtools.SAMRecord;
 

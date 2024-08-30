@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
@@ -12,16 +12,12 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
 
-import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
-import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.List;
-import java.util.OptionalInt;
 
 import javax.annotation.Nullable;
 
@@ -56,6 +52,7 @@ public class VariantReadContextBuilder
     {
         if(!variant.isIndel())
             return false;
+
         String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
         for(String unit : units)
         {
@@ -67,19 +64,29 @@ public class VariantReadContextBuilder
         return false;
     }
 
-    public boolean isAdjacentToLongHomopolymer(final SimpleVariant variant, final SAMRecord read, final int varIndexInRead, final int longLength)
+    public boolean isAdjacentToLongHomopolymer(final SimpleVariant variant, final SAMRecord read, final int varIndexInRead,
+            final int longLength)
     {
         boolean roomOnRight = varIndexInRead + longLength < read.getReadBases().length;
         boolean roomOnLeft = varIndexInRead >= longLength;
-        for (byte base : DNA_BASE_BYTES)
+        for(byte base : DNA_BASE_BYTES)
         {
             byte[] longHomopolymer = new byte[longLength];
             Arrays.initialise(longHomopolymer, base);
-            if(roomOnRight && Arrays.subsetArray(read.getReadBases(), varIndexInRead+1, varIndexInRead+longLength).equals(longHomopolymer))
+            if(roomOnRight &&
+                    Arrays.subsetArray(read.getReadBases(), varIndexInRead + 1, varIndexInRead + longLength).equals(longHomopolymer))
+            {
                 return true;
-            if(roomOnLeft && Arrays.equalArray(Arrays.subsetArray(read.getReadBases(), varIndexInRead-longLength, varIndexInRead-1), longHomopolymer))
+            }
+
+            if(roomOnLeft &&
+                    Arrays.equalArray(longHomopolymer,
+                            Arrays.subsetArray(read.getReadBases(), varIndexInRead - longLength, varIndexInRead - 1)))
+            {
                 return true;
+            }
         }
+
         return false;
     }
 
@@ -180,8 +187,10 @@ public class VariantReadContextBuilder
         int longLength = 20;
         if(isMsiIndelOfType(variant, List.of("A", "C", "G", "T")) && homology != null && homology.Length >= longLength - 5)
             return null; // Ultima cannot call variants of this type
+
         if(isMsiIndelOfType(variant, List.of("TA", "AT")) && homology != null && homology.Length >= longLength)
             return null; // Ultima cannot call variants of this type
+
         if(isAdjacentToLongHomopolymer(variant, read, varIndexInRead, longLength))
             return null;  // Ultima gets confused near variants of this type
 

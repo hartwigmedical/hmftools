@@ -19,7 +19,8 @@ public class UltimaRealignedQualModels
     private final UltimaQualModel mOriginalQualModel;
     private final List<UltimaRealignedQualModel> mRealignedQualModels;
 
-    public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator, final List<UltimaRealignedQualModel> realignedQualModels)
+    public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator,
+            final List<UltimaRealignedQualModel> realignedQualModels)
     {
         mOriginalQualModel = originalQualModel(readContext, ultimaQualCalculator);
         mRealignedQualModels = realignedQualModels;
@@ -66,7 +67,12 @@ public class UltimaRealignedQualModels
 
         for(UltimaRealignedQualModel realignedUltimaQualModel : mRealignedQualModels)
         {
-            MsiJitterQualCache qualCache = realignedUltimaQualModel.qualCache(readContextCounter.readContext().RefBases, readContextCounter.readContext().ReadBases, readContextCounter.qualityCalculator(), readContextCounter.sampleId());
+            MsiJitterQualCache qualCache = realignedUltimaQualModel.qualCache(
+                    readContextCounter.readContext().RefBases,
+                    readContextCounter.readContext().ReadBases,
+                    readContextCounter.qualityCalculator(),
+                    readContextCounter.sampleId());
+
             double modelQual;
             if(realignedUltimaQualModel.type() == MICROSAT_ADJUSTMENT && qualCache.usesMsiIndelErrorQual())
             {

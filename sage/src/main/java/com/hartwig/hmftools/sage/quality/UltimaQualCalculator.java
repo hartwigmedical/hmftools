@@ -28,7 +28,7 @@ import htsjdk.samtools.SAMRecord;
 public class UltimaQualCalculator
 {
     // TODO: temporarily since we don't fall back to MSI model properly.
-    private static final int MAX_HOMOPOLYMER = 15; 
+    private static final int MAX_HOMOPOLYMER = 15;
     private final RefGenomeInterface mRefGenome;
 
     public UltimaQualCalculator(final RefGenomeInterface refGenome)
@@ -41,7 +41,8 @@ public class UltimaQualCalculator
         return buildContext(variant, coreBases, null);
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases, @Nullable final List<RefMask> refMasks) // pass in MH or repeat info
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases,
+            @Nullable final List<RefMask> refMasks) // pass in MH or repeat info
     {
         int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
@@ -238,7 +239,8 @@ public class UltimaQualCalculator
         private final boolean mInCyclePosStrand;
         private final boolean mInCycleNegStrand;
 
-        public HomopolymerDeletion(final SimpleVariant variant, final byte deletedHpBase, final byte straddleBaseStart, final byte straddleBaseEnd)
+        public HomopolymerDeletion(final SimpleVariant variant, final byte deletedHpBase, final byte straddleBaseStart,
+                final byte straddleBaseEnd)
         {
             super(UltimaModelType.HOMOPOLYMER_DELETION);
 
@@ -379,8 +381,8 @@ public class UltimaQualCalculator
         private final HomopolymerDeletion mLeftDeletion;
         private final HomopolymerDeletion mRightDeletion;
 
-        public SnvMnv(
-                final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final byte leftReadBase, final byte rightReadBase)
+        public SnvMnv(final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final byte leftReadBase,
+                final byte rightReadBase)
         {
             super(UltimaModelType.SNV);
 

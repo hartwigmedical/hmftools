@@ -57,8 +57,9 @@ public class UltimaCoreExtender
         }
     }
 
-    // TODO: Can probably simplify.
-    public static UltimaCoreInfo extendCore(final SAMRecord read, final RefSequence refSequence, final int readAlignmentStart, final List<CigarElement> cigarElements, final int readCoreStart, final int readCoreEnd, final ReadCigarInfo readCigarInfo, final int flankSize)
+    public static UltimaCoreInfo extendCore(final SAMRecord read, final RefSequence refSequence, final int readAlignmentStart,
+            final List<CigarElement> cigarElements, final int readCoreStart, final int readCoreEnd, final ReadCigarInfo readCigarInfo,
+            final int flankSize)
     {
         final byte[] readBases = read.getReadBases();
         final int refStartIndex = readAlignmentStart - refSequence.Start;
@@ -108,7 +109,9 @@ public class UltimaCoreExtender
             {
                 for(int j = 0; j < cigarElement.getLength(); j++)
                 {
-                    AlignedBase alignedBase = new AlignedBase(pos, readIndex, refBases[refIndex], readBases[readIndex],  cigarElement.getOperator());
+                    AlignedBase alignedBase = new AlignedBase(
+                            pos, readIndex, refBases[refIndex], readBases[readIndex], cigarElement.getOperator());
+
                     alignedBases.add(alignedBase);
                     pos++;
                     refIndex++;
@@ -122,7 +125,9 @@ public class UltimaCoreExtender
             {
                 for(int j = 0; j < cigarElement.getLength(); j++)
                 {
-                    AlignedBase alignedBase = new AlignedBase(pos, readIndex - 1, refBases[refIndex], MISSING_BASE, cigarElement.getOperator());
+                    AlignedBase alignedBase = new AlignedBase(
+                            pos, readIndex - 1, refBases[refIndex], MISSING_BASE, cigarElement.getOperator());
+
                     alignedBases.add(alignedBase);
                     pos++;
                     refIndex++;
@@ -133,7 +138,9 @@ public class UltimaCoreExtender
 
             for(int j = 0; j < cigarElement.getLength(); j++)
             {
-                AlignedBase alignedBase = new AlignedBase(pos - 1, readIndex, MISSING_BASE, readBases[readIndex], cigarElement.getOperator());
+                AlignedBase alignedBase = new AlignedBase(
+                        pos - 1, readIndex, MISSING_BASE, readBases[readIndex], cigarElement.getOperator());
+
                 alignedBases.add(alignedBase);
                 readIndex++;
             }

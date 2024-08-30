@@ -440,8 +440,8 @@ public class UltimaQualModelTest
         record.setAttribute(TP_TAG, tpValues);
         for(int i = 0; i < t0Values.length; ++i)
             t0Values[i] += 33;
-        record.setAttribute(T0_TAG, new String(t0Values));
 
+        record.setAttribute(T0_TAG, new String(t0Values));
         return record;
     }
 
@@ -449,21 +449,21 @@ public class UltimaQualModelTest
     {
         byte[] coreBases = new byte[3];
         int refVarIndex = variant.position() - 1;
-        coreBases[0] = (byte)refBases.charAt(refVarIndex - 1);
+        coreBases[0] = (byte) refBases.charAt(refVarIndex - 1);
         if(variant.refLength() > 1 && variant.altLength() > 1)  // MNV
         {
-            coreBases[1] = (byte)variant.alt().charAt(0);
-            coreBases[2] = (byte)variant.alt().charAt(1);
+            coreBases[1] = (byte) variant.alt().charAt(0);
+            coreBases[2] = (byte) variant.alt().charAt(1);
         }
         else if(variant.refLength() > 1 || variant.altLength() > 1) // indel
         {
-            coreBases[1] = (byte)refBases.charAt(refVarIndex);
-            coreBases[2] = (byte)refBases.charAt(refVarIndex + variant.refLength());
+            coreBases[1] = (byte) refBases.charAt(refVarIndex);
+            coreBases[2] = (byte) refBases.charAt(refVarIndex + variant.refLength());
         }
         else  // SNV
         {
-            coreBases[1] = (byte)variant.alt().charAt(0);
-            coreBases[2] = (byte)refBases.charAt(refVarIndex + 1);
+            coreBases[1] = (byte) variant.alt().charAt(0);
+            coreBases[2] = (byte) refBases.charAt(refVarIndex + 1);
         }
         return coreBases;
     }

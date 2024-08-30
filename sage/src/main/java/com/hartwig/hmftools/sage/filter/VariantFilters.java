@@ -8,10 +8,15 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -28,14 +33,9 @@ import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORD
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_AD_2;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_BIAS;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
-import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
-import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
-import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
-import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
-import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
@@ -50,9 +50,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -204,10 +204,10 @@ public class VariantFilters
             filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
 
-//        if(belowMinFragmentCoords(primaryTumor))
-//        {
-//            filters.add(SoftFilter.FRAGMENT_COORDS);
-//        }
+        //        if(belowMinFragmentCoords(primaryTumor))
+        //        {
+        //            filters.add(SoftFilter.FRAGMENT_COORDS);
+        //        }
 
         if(belowMinStrongSupport(primaryTumor))
         {
@@ -416,7 +416,7 @@ public class VariantFilters
     {
         if(primaryTumor.useMsiErrorRate())
             return false;
-        
+
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() == 1 &&
                 primaryTumor.readContext().MaxRepeat.Count >= 5)
             return false;
@@ -426,6 +426,7 @@ public class VariantFilters
                 !(primaryTumor.readStrandBiasNonAlt().minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS &&
                         (primaryTumor.readStrandBiasAlt().bias() < 0.5) == (primaryTumor.readStrandBiasNonAlt().bias() < 0.5)))
             threshold += 10;
+
         return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), threshold);
     }
 

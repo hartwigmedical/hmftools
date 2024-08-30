@@ -15,7 +15,8 @@ public class UltimaRealignedQualModel
 
     private MsiJitterQualCache mMsiJitterQualCache;
 
-    public UltimaRealignedQualModel(final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset, int varIndex, int variantRefIndex)
+    public UltimaRealignedQualModel(final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset, int varIndex,
+            int variantRefIndex)
     {
         mVariant = variant;
         mBaseQualModel = baseQualModel;
@@ -54,11 +55,13 @@ public class UltimaRealignedQualModel
         return mBaseQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);
     }
 
-    public MsiJitterQualCache qualCache(final byte[] refBases, final byte[] readBases, final QualityCalculator qualityCalculator, final String sampleId)
+    public MsiJitterQualCache qualCache(final byte[] refBases, final byte[] readBases, final QualityCalculator qualityCalculator,
+            final String sampleId)
     {
         if(mMsiJitterQualCache == null)
         {
-            mMsiJitterQualCache = new MsiJitterQualCache(mVariant, mVarIndex, mVariantRefIndex, refBases, readBases, qualityCalculator, sampleId);
+            mMsiJitterQualCache = new MsiJitterQualCache(
+                    mVariant, mVarIndex, mVariantRefIndex, refBases, readBases, qualityCalculator, sampleId);
         }
 
         return mMsiJitterQualCache;

@@ -2,10 +2,10 @@ package com.hartwig.hmftools.common.sequencing;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
-import java.util.Arrays;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 
+import java.util.Arrays;
 
 import htsjdk.samtools.SAMRecord;
 

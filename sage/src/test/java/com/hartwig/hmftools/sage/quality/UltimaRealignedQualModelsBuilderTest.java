@@ -193,10 +193,14 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = 4;
         int corePositionStart = 100;
         int position = 104;
-        SimpleVariant variant = new SimpleVariant(CHR_1, position,"ATTT", "A");
-        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        SimpleVariant variant = new SimpleVariant(CHR_1, position, "ATTT", "A");
+        VariantReadContext readContext = new VariantReadContext(
+                variant, -1, -1, null, "AAAAATTAAAAA".getBytes(), Lists.newArrayList(),
+                coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                readContext, null, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));
@@ -217,10 +221,14 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = 4;
         int corePositionStart = 100;
         int position = 104;
-        SimpleVariant variant = new SimpleVariant(CHR_1, position,"A", "ATTT");
-        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTTTTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        SimpleVariant variant = new SimpleVariant(CHR_1, position, "A", "ATTT");
+        VariantReadContext readContext = new VariantReadContext(
+                variant, -1, -1, null, "AAAAATTTTTAAAAA".getBytes(), Lists.newArrayList(),
+                coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                readContext, null, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));
@@ -268,7 +276,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -293,7 +303,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -319,7 +330,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -344,7 +357,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -376,7 +390,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -401,7 +417,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -434,7 +451,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -459,7 +478,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -503,7 +523,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -528,7 +550,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -566,7 +589,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -591,7 +616,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -627,7 +653,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -652,7 +680,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -684,7 +713,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -709,7 +740,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -741,7 +773,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -766,7 +800,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -811,7 +846,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -836,7 +873,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -880,7 +918,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -905,7 +945,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -949,7 +990,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -974,7 +1017,8 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -1017,7 +1061,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
@@ -1042,9 +1088,16 @@ public class UltimaRealignedQualModelsBuilderTest
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
-        List<UltimaRealignedQualModel> delRealignedVariants = realignedVariants.stream().filter(x -> x.type() == HOMOPOLYMER_DELETION).collect(Collectors.toList());
-        List<UltimaRealignedQualModel> adjRealignedVariants = realignedVariants.stream().filter(x -> x.type() == HOMOPOLYMER_ADJUSTMENT).collect(Collectors.toList());
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+
+        List<UltimaRealignedQualModel> delRealignedVariants = realignedVariants.stream()
+                .filter(x -> x.type() == HOMOPOLYMER_DELETION)
+                .collect(Collectors.toList());
+
+        List<UltimaRealignedQualModel> adjRealignedVariants = realignedVariants.stream()
+                .filter(x -> x.type() == HOMOPOLYMER_ADJUSTMENT)
+                .collect(Collectors.toList());
 
         assertEquals(1, delRealignedVariants.size());
         assertEquals(1, adjRealignedVariants.size());

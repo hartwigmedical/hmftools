@@ -11,18 +11,14 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.MICROSAT_ADJUSTMENT;
-
-import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -58,7 +54,9 @@ public class QualityCalculator
 
     public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
-        return mUltimaQualCalculator != null ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator) : null;
+        return mUltimaQualCalculator != null
+                ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
+                : null;
     }
 
     public static int modifiedMapQuality(

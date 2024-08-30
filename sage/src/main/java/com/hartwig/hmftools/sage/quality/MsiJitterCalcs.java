@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.quality;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HD_JITTER_PARAMS;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
@@ -171,7 +171,8 @@ public class MsiJitterCalcs
         return calcErrorRate(readContext.variant(), readContext.VarIndex, readContext.variantRefIndex(), readContext.RefBases, readContext.ReadBases, sampleId);
     }
 
-    public double calcErrorRate(final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases, final byte[] readBases, final String sampleId)
+    public double calcErrorRate(final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases,
+            final byte[] readBases, final String sampleId)
     {
         if(!variant.isIndel())
             return 0;

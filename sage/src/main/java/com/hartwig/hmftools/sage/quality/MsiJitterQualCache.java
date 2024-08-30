@@ -16,9 +16,12 @@ public class MsiJitterQualCache
         this(readContext.variant(), readContext.VarIndex, readContext.variantRefIndex(), readContext.RefBases, readContext.ReadBases, qualityCalculator, sampleId);
     }
 
-    public MsiJitterQualCache(final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases, final byte[] readBases, final QualityCalculator qualityCalculator, final String sampleId)
+    public MsiJitterQualCache(final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases, final byte[] readBases,
+            final QualityCalculator qualityCalculator, final String sampleId)
     {
-        double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(variant, varIndex, variantRefIndex, refBases, readBases, sampleId);
+        double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(
+                variant, varIndex, variantRefIndex, refBases, readBases, sampleId);
+
         mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
         mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
     }

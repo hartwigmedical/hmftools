@@ -19,7 +19,7 @@ public class UltimaCoreExtenderTest
     @Test
     public void testBuildContextNoCoreExtension()
     {
-        String middleRefBases  = "CTCGGCCTCCCGGAGGTGCCGG";
+        String middleRefBases = "CTCGGCCTCCCGGAGGTGCCGG";
         String middleReadBases = "CTCGGCCTCCCTGAGGTGCCGG";
         int variantMiddleIndex = 11;
         int refPaddingSize = 1000;
@@ -52,13 +52,15 @@ public class UltimaCoreExtenderTest
         assertEquals(variant.Position + 2, readContext.CorePositionEnd);
         assertEquals("TCCCGGA", readContext.refBases());
         assertEquals("TCCCTGA", readContext.coreStr());
-        assertEquals(readBases.substring(varIndexInRead - 4 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH), readContext.readBases());
+        assertEquals(
+                readBases.substring(varIndexInRead - 4 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH),
+                readContext.readBases());
     }
 
     @Test
     public void testBuildContextWithExtension()
     {
-        String middleRefBases  = "CTTTTTTTTTTAATTGCAA";
+        String middleRefBases = "CTTTTTTTTTTAATTGCAA";
         String middleReadBases = "CTTTTTTTTTAATTGGCAA";
         int variantMiddleIndex = 14;
         int refPaddingSize = 1000;
@@ -89,6 +91,8 @@ public class UltimaCoreExtenderTest
         assertEquals(variant.Position + 2, readContext.CorePositionEnd);
         assertEquals("CTTTTTTTTTTAATTGC", readContext.refBases());
         assertEquals("CTTTTTTTTTAATTGGC", readContext.coreStr());
-        assertEquals(readBases.substring(varIndexInRead - 14 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH), readContext.readBases());
+        assertEquals(
+                readBases.substring(varIndexInRead - 14 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH),
+                readContext.readBases());
     }
 }

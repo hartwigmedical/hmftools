@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
@@ -35,7 +35,8 @@ public class ReadContextCounterFactory
         {
             if(qualityCalculator.ultimaEnabled())
             {
-                candidate.readContext().setUltimaRealignedQualModels(qualityCalculator.createRealignedUltimaQualModels(candidate.readContext()));
+                candidate.readContext().setUltimaRealignedQualModels(
+                        qualityCalculator.createRealignedUltimaQualModels(candidate.readContext()));
             }
 
             try
