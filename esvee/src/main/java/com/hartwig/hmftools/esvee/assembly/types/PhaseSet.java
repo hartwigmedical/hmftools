@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,8 @@ public class PhaseSet
 
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
     public List<AssemblyLink> secondaryLinks() { return mSecondaryLinks; }
+
+    public boolean isSecondaryLineLink() { return mAssemblyLinks.size() == 1 && mAssemblies.stream().anyMatch(x -> x.outcome() == SECONDARY); }
 
     public AssemblyAlignment assemblyAlignment() { return mAssemblyAlignment; }
     public void setAssemblyAlignment(final AssemblyAlignment assemblyAlignment) { mAssemblyAlignment = assemblyAlignment; }

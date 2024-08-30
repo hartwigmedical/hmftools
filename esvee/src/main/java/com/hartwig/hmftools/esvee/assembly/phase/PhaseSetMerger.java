@@ -32,14 +32,14 @@ public final class PhaseSetMerger
         {
             PhaseSet first = phaseSets.get(i);
 
-            if(!first.assemblyAlignment().isValid())
+            if(!first.assemblyAlignment().isValid() || first.isSecondaryLineLink())
                 continue;
 
             for(int j = i + 1; j < phaseSets.size(); ++j)
             {
                 PhaseSet second = phaseSets.get(j);
 
-                if(!second.assemblyAlignment().isValid())
+                if(!second.assemblyAlignment().isValid() || second.isSecondaryLineLink())
                     continue;
 
                 tryMergePhaseSets(first, second);

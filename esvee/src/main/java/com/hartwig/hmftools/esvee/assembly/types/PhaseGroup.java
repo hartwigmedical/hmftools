@@ -49,7 +49,19 @@ public class PhaseGroup
 
     public PhaseSet findPhaseSet(final JunctionAssembly assembly)
     {
-        return mPhaseSets.stream().filter(x -> x.hasAssembly(assembly)).findFirst().orElse(null);
+        for(PhaseSet phaseSet : mPhaseSets)
+        {
+            if(phaseSet.hasAssembly(assembly))
+                return phaseSet;
+
+            if(assembly.outcome() == AssemblyOutcome.SECONDARY)
+            {
+                if(phaseSet.secondaryLinks().stream().anyMatch(x -> x.hasAssembly(assembly)))
+                    return phaseSet;
+            }
+        }
+
+        return null;
     }
 
     public List<AssemblyLink> findSecondarySplitLinks(final JunctionAssembly assembly)
