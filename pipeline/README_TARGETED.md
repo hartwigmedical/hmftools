@@ -56,11 +56,11 @@ There are 2 steps in the training procedure
 - Run COBALT , AMBER & SAGE in WGTS mode
 - Run training normalisation scripts
 
-### Run COBALT, AMBER & SAGE on the targeted samples in WGTS mode
+### Run COBALT, AMBER, SAGE & ISOFOX on the targeted samples in WGTS mode
 
 This can be done by running the samples through oncoanalyser in WGTS mode.
 
-Alternatively COBALT, AMBER & SAGE can be run on each sample with the below configurations
+Alternatively COBALT, AMBER & SAGE & ISOFOX can be run on each sample with the below configurations
 
 COBALT
 ```
@@ -84,6 +84,10 @@ java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
     -threads 10 \
 ```
 SAGE
+```
+<TO DO>
+```
+ISOFOX (RNA panels only)
 ```
 <TO DO>
 ```
@@ -147,11 +151,8 @@ java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
 
 #### TPM normalisation
 
-The TPM normalisation is only required for panels with RNA coverage (eg. TSO500).  This can be generated with 2 steps.
+The TPM normalisation is only required for panels with RNA coverage (eg. TSO500).  This can be generated using the Isofox Normalisation Builder
 
-1. Run Isofox for each sample
-
-2. Call the Isofox Normalisation Builder
 <TO DO - link to this code>
 
 In order to adjust for the degree of amplification in panel sequencing relative to WGS,
@@ -166,15 +167,10 @@ Note: The adjustment factors are calculated at the gene level and not at the tra
 <TO DO: make into a table>
 
 ### Cobalt
-Cobalt normalises copy number and masks off target regions according to the CN normalisation file
-
-If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
-Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. 
-Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.   
-The GC bias is calculated using on target regions only.
+Cobalt normalises copy number and masks off-target regions according to the CN normalisation file. If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
+Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment. The GC bias is calculated using on target regions only.
 
 ### Amber
-
 The following filters are applied:
 * min_depth (in tumor) > 25
 * Tumor ref and alt support >= 2
@@ -186,7 +182,6 @@ The following filters are applied:
 To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
 #### MSI estimate
-
 For a set of microsatellite sites defined in the MSI target bed file count the number of passing variants at MSI sites ignoring SNV, MNV and 1 base deletes and requiring a VAF cutoff of > 0.15 for 2 and 3 base deletes or 0.08 for 4+ base deletes or any length insertion.
 
 We estimate MSI rate as:
@@ -195,7 +190,6 @@ MSIndelsPerMb = 220 * # of MSI variants / # of MSI sites in panel
 ```
 
 #### TML & TMB estimate
-
 A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to determine variants are included in the TMB estimate. PURPLE selects variants that meet the following criteria:
 - Coding effect <> NONE
 - GNDFreq <0.00005
