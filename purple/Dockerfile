@@ -12,4 +12,5 @@ RUN apt update && apt install -y hmf-circos hmf-r-ggplot2 hmf-r-dplyr hmf-r-bioc
 ADD target/purple-$VERSION-jar-with-dependencies.jar /usr/share/hartwig/purple.jar
 #&& apt install -y circos liblist-moreutils-perl
 
-ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/purple.jar"]
+#ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/purple.jar"]
+ENTRYPOINT ["sleep", "3600"]
