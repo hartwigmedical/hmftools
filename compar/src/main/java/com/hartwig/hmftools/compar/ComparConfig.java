@@ -224,23 +224,20 @@ public class ComparConfig
 
     public String sourceNormalSampleId(final String source, final String sampleId)
     {
-        if(mSampleIdMappings.isEmpty())
-            return sampleId;
+        if(!mSampleIdMappings.isEmpty())
+        {
+            SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
 
-        SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
-
-        if(mapping != null && mapping.NormalSourceMapping.containsKey(source))
-        {
-            return mapping.NormalSourceMapping.get(source);
+            if(mapping != null && mapping.NormalSourceMapping.containsKey(source))
+            {
+                return mapping.NormalSourceMapping.get(source);
+            }
+            else if(mapping != null && mapping.NormalSampleId != null)
+            {
+                return mapping.NormalSampleId;
+            }
         }
-        else if(mapping != null && mapping.NormalSampleId != null)
-        {
-            return mapping.NormalSampleId;
-        }
-        else
-        {
-            return sourceSampleId(source, sampleId);
-        }
+        return sourceSampleId(source, sampleId) + "-ref";
     }
 
     public boolean isValid() { return mIsValid; }
@@ -418,7 +415,7 @@ public class ComparConfig
                 MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
-        configBuilder.addConfigItem(NORMAL, false, "Sample ID of normal sample if tumor-normal run. By default same value as '" + SAMPLE + "' is used");
+        configBuilder.addConfigItem(NORMAL, false, "Sample ID of normal sample if tumor-normal run");
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
