@@ -140,10 +140,17 @@ public class ConfigUtils
 
     public static String convertWildcardSamplePath(final String samplePath, final String sampleId)
     {
-        if(samplePath == null)
-            return samplePath;
-
-        return samplePath.replaceAll("\\*", sampleId);
+        return convertWildcardSamplePath(samplePath, sampleId, null);
     }
 
+    public static String convertWildcardSamplePath(final String samplePath, final String sampleId, final String normalSampleId)
+    {
+        if(samplePath == null)
+            return null;
+
+        if(normalSampleId == null)
+            return samplePath.replaceAll("\\*", sampleId);
+        else
+            return samplePath.replaceAll("\\$", normalSampleId).replaceAll("\\*", sampleId);
+    }
 }
