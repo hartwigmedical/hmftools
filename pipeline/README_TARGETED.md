@@ -227,14 +227,13 @@ The 0.05 conversion from TML to TMB is the empirically observed relationship in 
 
 For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
-#### Other differences in targeted mode
+#### Purple
 
 The following special rules apply to the consrtuction of the driver catalog
 - **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 3 depth windows (unless supported by SV on both sides)
 - **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 There is also no somatic fit mode or somatic penalty and no SV recovery in PURPLE in targeted mode.
-
 
 ### Isofox
 TPM is normalised to bring panel gene expression in-line with WGS expression rates.
