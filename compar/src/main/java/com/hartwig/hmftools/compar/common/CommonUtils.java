@@ -40,6 +40,7 @@ import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class CommonUtils
 {
@@ -125,6 +126,9 @@ public class CommonUtils
 
             case PEACH:
                 return new PeachComparer(config);
+
+            case VIRUS:
+                return new VirusComparer(config);
 
             default:
                 return null;

@@ -19,7 +19,8 @@ public enum Category
     CUPPA,
     LILAC,
     CHORD,
-    PEACH;
+    PEACH,
+    VIRUS;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";
