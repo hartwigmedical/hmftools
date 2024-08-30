@@ -28,6 +28,7 @@ public class ReadTableColumn
     public static final ReadTableColumn MATE_TYPE_COL = new ReadTableColumn("Mate", (final ReadEvidenceRecord record) ->
     {
         SAMRecord read = record.Fragment == null ? record.Read : record.Fragment.First;
+        // TODO: Fix SageViz for unaired reads.
         if(true) // if(read.getMateUnmappedFlag())
         {
             return new ContentAndStyle(td("UN"), CssBuilder.EMPTY);

@@ -200,6 +200,7 @@ public class SoftFilterTest
 
         FILTERS.applySoftFilters(variant);
 
+        // TODO: This is because it is no longer applying it.
 //        assertTrue(variant.filters().contains(FRAGMENT_COORDS));
 
         // different frag coords pass the filter

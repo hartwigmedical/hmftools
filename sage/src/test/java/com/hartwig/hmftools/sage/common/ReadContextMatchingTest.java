@@ -291,6 +291,7 @@ public class ReadContextMatchingTest
         read = buildSamRecord(40, readCigar, readBases);
         read.getBaseQualities()[26] = 11;
 
+        // TODO: Was this because the ultima stuff was not gaurded?
         assertEquals(NONE, matcher.determineReadMatch(read, 24));
 
         readBases = REF_BASES_200.substring(40, position + 1) + "AAAC" + REF_BASES_200.substring(position + 1, 90);

@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class UltimaQualCalculator
 {
+    // TODO: ASK THOMAS? Is this used in illumina code? Change this back now that we should be fall back to MSI model properly now?
     private static final int MAX_HOMOPOLYMER = 15; // temporarily since we don't fall back to MSI model properly
     private final RefGenomeInterface mRefGenome;
 

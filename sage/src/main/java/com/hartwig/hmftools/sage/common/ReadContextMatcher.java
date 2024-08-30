@@ -111,6 +111,7 @@ public class ReadContextMatcher
 
         if(allowMismatches)
         {
+            // TODO: START. ASK THOMAS. Just for ultima?
             Set<Integer> excludedBases = Sets.newHashSet();
             List<RepeatInfo> longHomopolymerRepeats = readContext.AllRepeats.stream().filter(x->(x.Bases.length() == 1) && (x.Count >= 5)).collect(Collectors.toList());
             for(RepeatInfo repeat : longHomopolymerRepeats)
@@ -118,6 +119,8 @@ public class ReadContextMatcher
                 for(int i = -1; i <= repeat.Count; ++i)
                     excludedBases.add(repeat.Index + i);
             }
+            // TODO: END
+
             if(mContext.variant().isIndel())
             {
                 int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
@@ -142,9 +145,12 @@ public class ReadContextMatcher
             {
                 // just the alt bases themselves - for both ref and read
                 int altRange = mContext.variant().altLength() - 1;
+
+                // TODO: START. ASK THOMAS. Just for ultima?
                 for(int i = 0; i <= altRange; ++i)
                     excludedBases.add(mContext.VarIndex + i);
                 mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
+                // TODO: END
 
                 int refIndex = mContext.leftCoreLength();
                 mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);

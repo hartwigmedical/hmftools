@@ -25,9 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 
-// TODO: clean up unneeded functions.
 // TODO: run "Reformat code"
-// TODO: comprehensive unit tests.
 public class UltimaRealignedQualModelsBuilder
 {
     private static final byte INVALID_BASE = -1;
@@ -309,6 +307,7 @@ public class UltimaRealignedQualModelsBuilder
                     boolean contracted = false;
                     if(refIndex < refHomopolymers.size() - 1)
                     {
+                        // TODO: ASK THOMAS. Ref cycle count?
                         int extraRefIndex = 1;
                         Homopolymer forwardRefHompolymer = refHomopolymers.get(refIndex + extraRefIndex);
                         int extraRefBasesConsumed = forwardRefHompolymer.Length;
@@ -728,6 +727,7 @@ public class UltimaRealignedQualModelsBuilder
     @VisibleForTesting
     public static List<UltimaRealignedQualModel> getQualVariants(boolean variantInMergedHomopolymers, final SimpleVariant variant, final List<UltimaRealignedQualModel> realignedVariants)
     {
+        // TODO: ASK THOMAS. Just returning all variants?
         if(variantInMergedHomopolymers)
         {
             // sandwiched snv/mnv case

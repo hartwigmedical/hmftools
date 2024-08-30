@@ -411,13 +411,16 @@ public class VariantFilters
             return pValue > VAF_PROBABILITY_THRESHOLD;
     }
 
+    // TODO: ASK THOMAS. Different just for ultima?
     private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
         if(primaryTumor.useMsiErrorRate())
             return false;
+        
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() == 1 &&
                 primaryTumor.readContext().MaxRepeat.Count >= 5)
             return false;
+
         int threshold = tier == HOTSPOT ? mConfig.MinAvgBaseQualHotspot : mConfig.MinAvgBaseQual;
         if(primaryTumor.readStrandBiasAlt().minBias() < STRAND_BIAS_CHECK_THRESHOLD &&
                 !(primaryTumor.readStrandBiasNonAlt().minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS &&

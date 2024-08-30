@@ -630,6 +630,7 @@ public class VariantVis
 
         String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
         String mateAlignmentStr = "unmapped";
+        // TODO: SageVis for unpaired reads.
         if(!true) // !firstRead.getMateUnmappedFlag()
         {
             String mateChromosome = firstRead.getMateReferenceName();

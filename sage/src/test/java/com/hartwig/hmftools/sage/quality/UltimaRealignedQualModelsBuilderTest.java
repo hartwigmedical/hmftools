@@ -27,7 +27,7 @@ import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMas
 
 import org.junit.Test;
 
-public class UltimaRealignedQualModelBuilderTest
+public class UltimaRealignedQualModelsBuilderTest
 {
     @Test
     public void testMergeSandwichedHomopolymersMultiHomopolymerSkip()
@@ -151,6 +151,7 @@ public class UltimaRealignedQualModelBuilderTest
         }
     }
 
+    // TODO: Tests around getQualVariants now that this method has been modified?
     @Test
     public void testGetQualVariantsNonHomopolymerInsert()
     {
