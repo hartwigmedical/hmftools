@@ -278,16 +278,7 @@ Purple
 -gc_ratio_exponent 3.0
 ```
 
-## Future improvements
-
-* **Off Target normalisation and integration** - This is implemented, but not used as currently does not yield a benefit over on target alone.
-MSI thresholds - We could better estimate if we had a more diverse range of samples for testing with known MSIndelsPerMb rates around and above the MSI cutoff.
-* **Purity & ploidy estimates** - There are two known issues in panel's purity and ploidy estimations. Relative to the WGS truth set, Purple can at times estimate ploidy at 1/2 of whole genome and estimate purity to be 100%. A somatic readjustment to fix these issues is currently work-in-progress.
-* **Exon validation** - Validation on exon sequencing to further inform parameterisation in targeted mode is expected by release 5.35.
-
-
 ## Example Pipeline Scripts
-
 These scripts demonstrate how to run the HMF pipeline in targeted panel mode on a panel tumor BAM.
 
 1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
@@ -312,3 +303,6 @@ These scripts demonstrate how to run the HMF pipeline in targeted panel mode on 
 ```
 ./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ COLO829T V38 PANEL 10 16 \
 ```  
+
+## Future improvements
+* **HRD** - a panel based HRD classifier will be made available in v6
