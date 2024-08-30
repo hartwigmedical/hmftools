@@ -25,8 +25,6 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.jetbrains.annotations.NotNull;
-
 public class PeachComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -78,7 +76,6 @@ public class PeachComparer implements ItemComparer
         return comparableItems;
     }
 
-    @NotNull
     private static String determineFileName(final String sampleId, final String normalSampleId, final FileSources fileSources)
     {
         final String currentFileName = PeachGenotypeFile.generateFileName(fileSources.Peach, normalSampleId);
