@@ -26,10 +26,14 @@ The following files define the panel and are typically compiled manually and rep
 
 | File Name             | Tool(s)  | Purpose                                                                                                 |
 |-----------------------|----------|---------------------------------------------------------------------------------------------------------|
-| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc) |
 | Panel regions BED     | Multiple | Panel's targeted regions, often gene exonic regions, tiles introns for fusions                          |
+| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc) |
+| Coverage Coding Regions BED<sup>1</sup>      | Sage   | Gene regions to assess coverage|
+| Actionable Coding Regions BED<sup>1</sup>    | Sage   | Gene coding regions for sensitive variant calling       |
 | MSI Indels TSV                   | Purple | List of MSI loci to consider in MSI model                 |
 | TMB/L Calculation Adjustments    | Purple | Adjustments for TMB/L estimation                          |
+
+<sup>1. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files" </sup>
 
 <TO DO: add detailed descriptions of files>
 
@@ -39,8 +43,6 @@ There 2 coding region BED files are used by SAFE to define panel regions for var
  
 | File Name                        | Tool(s) | Purpose                                                   |
 |----------------------------------|--------|-----------------------------------------------------------|
-| Coverage Coding Regions BED      | Sage   | Gene regions to assess coverage                           |
-| Actionable Coding Regions BED    | Sage   | Gene coding regions for sensitive variant calling       |
 
 These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
 
