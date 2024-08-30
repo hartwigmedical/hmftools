@@ -31,7 +31,9 @@ public abstract class AnnotatedVirus
 
     public abstract boolean reported();
 
-    public abstract boolean blacklisted();
+    // Nullable for backwards compatibility
+    @Nullable
+    public abstract Boolean blacklisted();
 
     @NotNull
     public abstract VirusLikelihoodType virusDriverLikelihoodType();
