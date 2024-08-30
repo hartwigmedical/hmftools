@@ -32,9 +32,6 @@ The following files define the panel and are typically compiled manually and rep
 | Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc) |
 | Coverage Coding Regions BED<sup>1</sup>      | Sage   | Gene regions to assess coverage|
 | Actionable Coding Regions BED<sup>1</sup>    | Sage   | Gene coding regions for sensitive variant calling       |
-
-
-Notes:
 1. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
 
 <TO DO: add detailed descriptions of files>
