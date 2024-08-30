@@ -45,13 +45,18 @@ public class FileSources
     public final String Virus;
     public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
+    public final String TumorFlagstat;
+    public final String NormalFlagstat;
 
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
+    private static final String TUMOR_FLAGSTAT = "tumor_flagstat_dir";
+    private static final String NORMAL_FLAGSTAT = "normal_flagstat_dir";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String peach, final String virus, final String somaticVcf, final String somaticUnfilteredVcf)
+            final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
+            final String somaticUnfilteredVcf, final String tumorFlagstat, final String normalFlagstat)
     {
         Source = source;
         Linx = linx;
@@ -64,22 +69,26 @@ public class FileSources
         Virus = virus;
         SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
+        TumorFlagstat = tumorFlagstat;
+        NormalFlagstat = normalFlagstat;
     }
 
-    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
+    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String normalSampleId)
     {
         return new FileSources(
                 fileSources.Source,
-                convertWildcardSamplePath(fileSources.Linx, sampleId),
-                convertWildcardSamplePath(fileSources.Purple, sampleId),
-                convertWildcardSamplePath(fileSources.LinxGermline, sampleId),
-                convertWildcardSamplePath(fileSources.Cuppa, sampleId),
-                convertWildcardSamplePath(fileSources.Lilac, sampleId),
-                convertWildcardSamplePath(fileSources.Chord, sampleId),
-                convertWildcardSamplePath(fileSources.Peach, sampleId),
-                convertWildcardSamplePath(fileSources.Virus, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId));
+                convertWildcardSamplePath(fileSources.Linx, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Purple, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.LinxGermline, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Cuppa, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Lilac, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Chord, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Peach, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.Virus, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, normalSampleId),
+                convertWildcardSamplePath(fileSources.NormalFlagstat, sampleId, normalSampleId));
     }
 
     public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
@@ -120,6 +129,13 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
+
+            configBuilder.addPath(
+                    formSourceConfig(TUMOR_FLAGSTAT, sourceName), false,
+                    formSourceDescription("Tumor flagstat", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(NORMAL_FLAGSTAT, sourceName), false,
+                    formSourceDescription("Normal flagstat", sourceName));
         }
     }
 
@@ -157,8 +173,11 @@ public class FileSources
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
+        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/flagstat", TUMOR_FLAGSTAT, sourceName);
+        String normalFlagstat = getDirectory(configBuilder, sampleDir, "$/flagstat", NORMAL_FLAGSTAT, sourceName);
+
         return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
-                somaticVcf, somaticUnfilteredVcf);
+                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, normalFlagstat);
     }
 
     private static String getDirectory(

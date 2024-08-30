@@ -113,8 +113,9 @@ public class ComparTask implements Callable
         for(String sourceName : mConfig.SourceNames)
         {
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
+            String sourceNormalSampleId = mConfig.sourceNormalSampleId(sourceName, sampleId);
 
-            FileSources fileSources = FileSources.sampleInstance(mConfig.FileSources.get(sourceName), sourceSampleId);
+            FileSources fileSources = FileSources.sampleInstance(mConfig.FileSources.get(sourceName), sourceSampleId, sourceNormalSampleId);
 
             try
             {

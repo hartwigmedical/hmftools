@@ -33,6 +33,8 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
+import com.hartwig.hmftools.compar.metrics.NormalFlagstatComparer;
+import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
@@ -130,6 +132,12 @@ public class CommonUtils
             case VIRUS:
                 return new VirusComparer(config);
 
+            case TUMOR_FLAGSTAT:
+                return new TumorFlagstatComparer(config);
+
+            case NORMAL_FLAGSTAT:
+                return new NormalFlagstatComparer(config);
+
             default:
                 return null;
         }
@@ -154,7 +162,8 @@ public class CommonUtils
             }
             else
             {
-                FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
+                FileSources fileSources =
+                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceNormalSampleId);
                 items = comparer.loadFromFile(sourceSampleId, sourceNormalSampleId, fileSources);
             }
 

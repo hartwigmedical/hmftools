@@ -86,6 +86,7 @@ public class SomaticVariantComparer implements ItemComparer
             final String sourceName = mConfig.SourceNames.get(i);
 
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
+            String sourceNormalSampleId = mConfig.sourceNormalSampleId(sourceName, sampleId);
 
             if(!mConfig.DbConnections.isEmpty())
             {
@@ -94,7 +95,8 @@ public class SomaticVariantComparer implements ItemComparer
             else
             {
                 FileSources fileSources = mConfig.FileSources.get(sourceName);
-                List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
+                List<SomaticVariantData> fileVariants =
+                        loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceNormalSampleId));
 
                 if(fileVariants == null)
                     continue;
