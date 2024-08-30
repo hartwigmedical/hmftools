@@ -2,7 +2,7 @@ FROM openjdk:17-slim
 
 RUN mkdir /usr/share/hartwig
 ARG VERSION
-RUN apt update && apt install -y curl gnupg2
+RUN apt update && apt install -y curl gnupg2 r-base
 RUN curl https://europe-west4-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 RUN echo 'deb http://packages.cloud.google.com/apt apt-transport-artifact-registry-stable main' | tee -a /etc/apt/sources.list.d/artifact-registry.list
 RUN apt update && apt install -y apt-transport-artifact-registry
