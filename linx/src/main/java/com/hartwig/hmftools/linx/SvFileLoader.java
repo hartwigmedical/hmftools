@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -50,8 +51,8 @@ public final class SvFileLoader
 
         try
         {
-            List<StructuralVariant> variants = StructuralVariantFileLoader.fromGridssFile(vcfFile, new AlwaysPassFilter());
-            // List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+            // List<StructuralVariant> variants = StructuralVariantFileLoader.fromGridssFile(vcfFile, new AlwaysPassFilter());
+            List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             // generate a unique ID for each SV record
@@ -74,8 +75,8 @@ public final class SvFileLoader
 
     private static List<StructuralVariantData> loadGermlineVariantsFromVcf(final String vcfFile, final String sampleId)
     {
-        // StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
-        GridssSvFactory svFactory = GridssSvFactory.build(new GermlineFilter());
+        StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
+        // GridssSvFactory svFactory = GridssSvFactory.build(new GermlineFilter());
 
         VcfFileReader vcfReader = new VcfFileReader(vcfFile);
 
@@ -165,6 +166,8 @@ public final class SvFileLoader
 
         return ImmutableStructuralVariantData.builder()
                 .id(svId)
+                .vcfIdStart(valueNotNull(var.id()))
+                .vcfIdEnd(valueNotNull(var.mateId()))
                 .startChromosome(var.chromosome(true))
                 .endChromosome(var.end() == null ? "0" : var.chromosome(false))
                 .startPosition(var.position(true).intValue())
@@ -204,7 +207,6 @@ public final class SvFileLoader
                 .inexactHomologyOffsetEnd(valueNotNull(var.start().inexactHomologyOffsetEnd()))
                 .startLinkedBy(valueNotNull(var.startLinkedBy()))
                 .endLinkedBy(valueNotNull(var.endLinkedBy()))
-                .vcfId(valueNotNull(var.id()))
                 .startRefContext("") // getValueNotNull(var.start().refGenomeContext())
                 .endRefContext(var.end() == null ? "" : "") // getValueNotNull(var.end().refGenomeContext())
                 .recovered(var.recovered())

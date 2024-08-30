@@ -164,7 +164,7 @@ public class JunctionSequence
         }
     }
 
-    public JunctionSequence(final byte[] bases, final byte[] baseQuals, final Orientation orientation,final boolean reverseCompliment)
+    public JunctionSequence(final byte[] bases, final byte[] baseQuals, final Orientation orientation, final boolean reverseCompliment)
     {
         mOriginalBases = bases;
         mOriginalBaseQuals = baseQuals;

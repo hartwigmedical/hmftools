@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import com.hartwig.hmftools.common.bam.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 
 import org.jetbrains.annotations.Nullable;
 

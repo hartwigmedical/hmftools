@@ -157,9 +157,32 @@ public class Variant
     public void markGermline() { mGermline = true; }
     public boolean isGermline() { return mGermline; }
 
+    public boolean isLineSite()
+    {
+        for(Breakend breakend : mBreakends)
+        {
+            if(breakend != null && (breakend.isLine() || breakend.lineSiteBreakend() != null))
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean inChainedAssembly()
+    {
+        for(Breakend breakend : mBreakends)
+        {
+            if(breakend != null && breakend.inChainedAssembly())
+                return true;
+        }
+
+        return false;
+    }
+
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }
     public boolean isPass() { return mFilters.isEmpty(); }
+    public boolean isFiltered() { return !mFilters.isEmpty(); }
 
     private void addExistingFilters(final VariantContext variantContext)
     {

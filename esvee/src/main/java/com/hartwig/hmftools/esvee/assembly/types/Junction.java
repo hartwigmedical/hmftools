@@ -35,9 +35,9 @@ public class Junction implements Comparable<Junction>
     public final Orientation Orient;
 
     public final boolean DiscordantOnly;
-    public final boolean IndelBased;
     public final boolean Hotspot;
 
+    private boolean mIndelBased;
     public final String mDetails;
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
@@ -53,15 +53,15 @@ public class Junction implements Comparable<Junction>
         Position = position;
         Orient = orientation;
         DiscordantOnly = discordantOnly;
-        IndelBased = indelBased;
+        mIndelBased = indelBased;
         Hotspot = hotspot;
 
-        if(DiscordantOnly || IndelBased || Hotspot)
+        if(DiscordantOnly || mIndelBased || Hotspot)
         {
             StringJoiner sj = new StringJoiner("/");
             if(DiscordantOnly)
                 sj.add("disc-only");
-            if(IndelBased)
+            if(mIndelBased)
                 sj.add("indel");
             if(Hotspot)
                 sj.add("hotspot");
@@ -77,9 +77,12 @@ public class Junction implements Comparable<Junction>
     public boolean isForward() { return Orient.isForward(); }
     public boolean isReverse() { return Orient.isReverse(); }
 
+    public void markAsIndel() { mIndelBased = true; }
+    public boolean indelBased() { return mIndelBased; }
+
     public String toString()
     {
-        if(DiscordantOnly || IndelBased || Hotspot)
+        if(DiscordantOnly || mIndelBased || Hotspot)
         {
             return format("%s:%d:%d %s",Chromosome, Position, Orient.asByte(), mDetails);
         }

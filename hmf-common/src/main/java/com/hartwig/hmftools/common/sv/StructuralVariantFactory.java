@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.sv;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.SvUtils.SMALL_DELDUP_SIZE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
@@ -17,7 +19,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
@@ -40,7 +42,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +68,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
     {
         CompoundFilter compoundfilter = new CompoundFilter(true);
         compoundfilter.add(new HumanChromosomeFilter());
-        compoundfilter.add(new ExcludeCNVFilter());
         compoundfilter.add(filter);
         return new StructuralVariantFactory(compoundfilter);
     }
@@ -160,12 +160,12 @@ public class StructuralVariantFactory implements SvFactoryInterface
     public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
     public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
 
-    public StructuralVariant createSV(final VariantContext first, final VariantContext second)
+    public StructuralVariant createSV(final VariantContext contextStart, final VariantContext contextEnd)
     {
-        final int start = first.getStart();
-        final int end = second.getStart();
+        int start = contextStart.getStart();
+        int end = contextEnd.getStart();
 
-        final String alt = first.getAlternateAllele(0).getDisplayString();
+        final String alt = contextStart.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
         if(!match.matches())
         {
@@ -182,19 +182,19 @@ public class StructuralVariantFactory implements SvFactoryInterface
         String insertedSequence = match.group(1).length() > 0 ?
                 match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
 
-        final boolean isSmallDelDup = first.getContig().equals(second.getContig())
-                && Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE
+        boolean isSmallDelDup = contextStart.getContig().equals(contextEnd.getContig())
+                && abs(contextStart.getStart() - contextEnd.getStart()) <= SMALL_DELDUP_SIZE
                 && startOrientation != endOrientation;
 
-        final StructuralVariantLeg startLeg = setLegCommon(first, isSmallDelDup, startOrientation)
+        StructuralVariantLeg startLeg = setLegCommon(contextStart, isSmallDelDup, startOrientation)
                 .position(start)
-                .homology(first.getAttributeAsString(HOMSEQ, ""))
+                .homology(contextStart.getAttributeAsString(HOMSEQ, ""))
                 .alleleFrequency(0.0)
                 .build();
 
-        final StructuralVariantLeg endLeg = setLegCommon(second, isSmallDelDup, endOrientation)
+        StructuralVariantLeg endLeg = setLegCommon(contextEnd, isSmallDelDup, endOrientation)
                 .position(end)
-                .homology(second.getAttributeAsString(HOMSEQ, ""))
+                .homology(contextEnd.getAttributeAsString(HOMSEQ, ""))
                 .alleleFrequency(0.0)
                 .build();
 
@@ -209,8 +209,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
             {
                 inferredType = StructuralVariantType.DUP;
             }
-            else if(insertedSequence != null && insertedSequence.length() > 0
-                    && Math.abs(endLeg.position() - startLeg.position()) <= 1)
+            else if(insertedSequence != null && insertedSequence.length() > 0 && abs(endLeg.position() - startLeg.position()) <= 1)
             {
                 inferredType = StructuralVariantType.INS;
             }
@@ -220,16 +219,21 @@ public class StructuralVariantFactory implements SvFactoryInterface
             }
         }
 
-        return setCommon(first)
-                .start(startLeg)
+        ImmutableStructuralVariantImpl.Builder svBuilder = setCommon(contextStart);
+
+        svBuilder.start(startLeg)
                 .end(endLeg)
-                .mateId(second.getID())
+                .mateId(contextEnd.getID())
                 .insertSequence(insertedSequence)
                 .type(inferredType)
-                .filter(filters(first, second))
-                .startContext(first)
-                .endContext(second)
-                .build();
+                .filter(filters(contextStart, contextEnd))
+                .startContext(contextStart)
+                .endContext(contextEnd);
+
+        svBuilder.startLinkedBy(contextStart.getAttributeAsString(ASM_LINKS, ""));
+        svBuilder.endLinkedBy(contextEnd.getAttributeAsString(ASM_LINKS, ""));
+
+        return svBuilder.build();
     }
 
     public StructuralVariant createSingleBreakend(final VariantContext context)
@@ -271,8 +275,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
                 .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
                 .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event("")
-                .startLinkedBy(context.getAttributeAsString(ASM_LINKS, ""))
-                .endLinkedBy("")
                 .imprecise(false)
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(context.getAttributeAsString(INSALN, ""));
@@ -387,6 +389,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
     private static StructuralVariantType type(final VariantContext context)
     {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(SVTYPE));
+        return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
     }
 }

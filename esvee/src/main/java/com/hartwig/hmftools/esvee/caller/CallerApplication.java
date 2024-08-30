@@ -13,11 +13,13 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
+import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -48,16 +50,21 @@ public class CallerApplication
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
 
+    private final long mStartTimeMs;
+
     public CallerApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new CallerConfig(configBuilder);
         mFilterConstants = FilterConstants.from(configBuilder);
 
+        mStartTimeMs = System.currentTimeMillis();
+
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.SampleId);
+        String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
+        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.SampleId);
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -89,11 +96,9 @@ public class CallerApplication
             System.exit(1);
         }
 
-        long startTimeMs = System.currentTimeMillis();
-
         processVcf(mConfig.VcfFile);
 
-        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee caller complete, mins({})", runTimeMinsStr(mStartTimeMs));
     }
 
     private void processVcf(final String vcfFile)
@@ -160,29 +165,32 @@ public class CallerApplication
             return;
         }
 
-        SV_LOGGER.info("applying soft-filters");
+        mSvDataCache.buildBreakendMap();
+
+        LineChecker.markLineSites(mSvDataCache.getBreakendMap());
+
+        SV_LOGGER.info("applying filters");
 
         for(Variant var : mSvDataCache.getSvList())
         {
             if(mHotspotCache.isHotspotVariant(var))
                 var.markHotspot();
 
-            markGermline(var);
-
             mVariantFilters.applyFilters(var);
         }
 
-        mSvDataCache.buildBreakendMap();
+        // set germline status and final filters based on LINE
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            markGermline(var);
+        }
 
-        SV_LOGGER.info("deduplication of paired end single breakends");
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            adjustLineSites(var);
+        }
 
-        /*
-        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
-        // duplicateFinder.findDuplicateSVs(alternatePaths);
-
-        SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
-                duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
-        */
+        Deduplication.deduplicateVariants(mSvDataCache.getBreakendMap());
 
         if(mPonCache.hasValidData())
         {

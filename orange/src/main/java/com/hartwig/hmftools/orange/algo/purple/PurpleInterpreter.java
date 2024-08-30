@@ -70,11 +70,13 @@ public class PurpleInterpreter
     private final LinxRecord linx;
     @Nullable
     private final ChordData chord;
+    boolean convertGermlineToSomatic;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory,
             @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord)
+            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord,
+            boolean convertGermlineToSomatic)
     {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
@@ -82,6 +84,7 @@ public class PurpleInterpreter
         this.driverGenes = driverGenes;
         this.linx = linx;
         this.chord = chord;
+        this.convertGermlineToSomatic = convertGermlineToSomatic;
     }
 
     @NotNull
@@ -161,6 +164,7 @@ public class PurpleInterpreter
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
+                .tumorStats(TumorStatsFactory.compute(purple))
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))

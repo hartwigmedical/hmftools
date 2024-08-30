@@ -39,6 +39,8 @@ public class ReadDataWriter
         mWriter = initialiseReadWriter();
     }
 
+    public boolean enabled() { return mWriter != null; }
+
     private BufferedWriter initialiseReadWriter()
     {
         if(mConfig.LogReadType == NONE)
@@ -120,7 +122,7 @@ public class ReadDataWriter
             }
 
             mWriter.write(format("\t%.2f\t%d\t%s\t%d",
-                    avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+                    avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asDelimStr() : "N/A", read.getFlags()));
 
             boolean isPaired = read.getReadPairedFlag();
             mWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",

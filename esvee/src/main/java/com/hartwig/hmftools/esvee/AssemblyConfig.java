@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
-import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -28,9 +28,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.PHASED_ASSEMBLY;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENTS;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
@@ -48,7 +50,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -64,7 +66,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.ValidationStringency;
 
 public class AssemblyConfig
 {
@@ -194,12 +195,9 @@ public class AssemblyConfig
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
         RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null
-                || WriteTypes.contains(BREAKEND) ||  WriteTypes.contains(ALIGNMENT_DATA);
+                || WriteTypes.contains(BREAKEND) || WriteTypes.contains(ALIGNMENTS) || WriteTypes.contains(PHASED_ASSEMBLY);
 
-        String bwaLibPath = configBuilder.getValue(BWA_LIB_PATH);
-
-        if(RunAlignment || DecoyGenome != null)
-            loadAlignerLibrary(bwaLibPath);
+        loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -323,7 +321,8 @@ public class AssemblyConfig
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
         configBuilder.addInteger(
-                ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",  1);
+                ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",
+                DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD);
 
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
 

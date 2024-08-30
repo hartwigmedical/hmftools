@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignmentChecker;
+import com.hartwig.hmftools.esvee.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -41,7 +42,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
-    private final AssemblyAlignmentChecker mAssemblyAlignmentChecker;
+    private final AlignmentChecker mAlignmentChecker;
 
     private final Map<String,ReadGroup> mReadGroupMap;
     private final Map<String,SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
@@ -55,7 +56,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
 
-        mAssemblyAlignmentChecker = new AssemblyAlignmentChecker(mConfig, resultsWriter.decoyMatchWriter());
+        mAlignmentChecker = new AlignmentChecker(mConfig, resultsWriter.decoyMatchWriter());
 
         mReadGroupMap = Maps.newHashMap();
         mSupplementaryRepeats = Maps.newHashMap();
@@ -191,14 +192,14 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                if(mAssemblyAlignmentChecker.matchesDecoy(assembly))
+                if(mAlignmentChecker.matchesDecoy(assembly))
                 {
                     SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
                     ++mReadStats.DecoySequences;
                     continue;
                 }
 
-                if(mAssemblyAlignmentChecker.failsMappability(assembly))
+                if(mAlignmentChecker.failsMappability(assembly))
                 {
                     SV_LOGGER.trace("assembly({}) fails ref-base alignment, excluding", assembly);
                     ++mReadStats.RefBaseAlignmentFails;
@@ -238,6 +239,8 @@ public class JunctionGroupAssembler extends ThreadTask
 
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
+
+        markLineSoftClips(read);
 
         if(ReadAdjustments.trimLowQualSoftClipBases(read))
             ++mReadStats.LowBaseQualTrimmed;

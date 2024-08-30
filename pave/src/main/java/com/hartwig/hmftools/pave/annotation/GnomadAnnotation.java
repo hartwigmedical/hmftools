@@ -44,7 +44,6 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
-    private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
 
     public static final String PON_GNOMAD_FILTER = "PONGnomad";
 

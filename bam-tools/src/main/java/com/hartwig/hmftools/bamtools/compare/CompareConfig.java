@@ -89,9 +89,10 @@ public class CompareConfig
         MatchOrigUnmapped = configBuilder.hasFlag(MATCH_ORIG_UNMAPPED);
         MatchNewUnmapped = configBuilder.hasFlag(MATCH_NEW_UNMAPPED);
 
-        BT_LOGGER.info("refGenomeVersion({}) origBam({}) newBam({})", RefGenVersion, OrigBamFile, NewBamFile);
         BT_LOGGER.info("origBam({}) newBam({})", OrigBamFile, NewBamFile);
+
         BT_LOGGER.info("outputFile({})", OutputFile);
+
         BT_LOGGER.info("ignoreDupDiffs({}) ignoreAlterations({}) ignoreConsensusReads({}) ignoreSupplementaryReads({})",
                 IgnoreDupDiffs, IgnoreAlterations, IgnoreConsensusReads, IgnoreSupplementaryReads);
 
@@ -118,7 +119,7 @@ public class CompareConfig
             MaxCachedReadsPerThread = maxCachedReadsPerThread;
         }
 
-        BT_LOGGER.printf(Level.INFO, "maxCachedReadsPerThread(%,d)", MaxCachedReadsPerThread);
+        BT_LOGGER.trace("maxCachedReadsPerThread({})", MaxCachedReadsPerThread);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

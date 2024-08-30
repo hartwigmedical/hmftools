@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -103,8 +104,7 @@ public class SimpleMergeRuleTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
 
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
+        setAssembledLinkInfo(var1, false, var2, true);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();

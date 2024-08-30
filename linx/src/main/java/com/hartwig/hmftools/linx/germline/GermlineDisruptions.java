@@ -493,7 +493,7 @@ public class GermlineDisruptions
             allFilters.forEach(x -> filters.add(x));
 
             germlineSVs.add(new LinxGermlineSv(
-                    var.id(), svData.vcfId(),
+                    var.id(), svData.vcfIdStart(),
                     var.chromosome(true), var.chromosome(false),
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),

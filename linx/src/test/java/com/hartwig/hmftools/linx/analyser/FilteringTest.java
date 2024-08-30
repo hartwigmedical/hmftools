@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
-import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,30 +42,22 @@ public class FilteringTest
 
         SvVarData var4 = createSgl(tester.nextVarId(), "1", 3000, -1);
 
-        SvVarData var5 = createSgl(tester.nextVarId(), "1", 3002, -1);
-        var5.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
-
         SvVarData var6 = createDel(tester.nextVarId(), "1", 5000, 6000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);
         tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(3, tester.getAllClusters().size());
+        assertEquals(2, tester.getAllClusters().size());
 
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var3, var4, var6)));
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2));
-        assertNotNull(cluster);
-        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
-
-        cluster = tester.findClusterWithSVs(Lists.newArrayList(var5));
         assertNotNull(cluster);
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
 
@@ -78,8 +70,7 @@ public class FilteringTest
         var2 = createBnd(tester.nextVarId(), "1", 999, 1, "2", 100, -1);
         var3 = createBnd(tester.nextVarId(), "1", 2001, -1, "2", 200, 1);
 
-        var2.setAssemblyData(false, "asmn23");
-        var3.setAssemblyData(false, "asmn23");
+        setAssembledLinkInfo(var2, false, var3, false);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

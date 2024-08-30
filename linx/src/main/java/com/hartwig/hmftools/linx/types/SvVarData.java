@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
@@ -46,8 +48,6 @@ public class SvVarData
     private final boolean[] mFragileSite;
     private final StartEndPair<Set<LineElementType>> mLineElements;
 
-    private final String[] mAssemblyData;
-
     private SvCluster mCluster;
     private String mClusterReason;
 
@@ -61,7 +61,7 @@ public class SvVarData
     private final StartEndPair<List<LinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
 
     private final DbPair[] mDbLink; // deletion bridge formed from this breakend to another
-    private final StartEndPair<List<String>> mTIAssemblies;
+    private final StartEndPair<List<String>> mAssemblyLinks;
 
     private final StartEndPair<List<BreakendGeneData>> mGenes;
 
@@ -86,10 +86,6 @@ public class SvVarData
     public static final String INF_SV_TYPE = "INF";
     public static final String SGL_CENTRO_SATELLITE = "Satellite/centr";
     public static final String SGL_TELO_SATELLITE = "Satellite/telo";
-
-    public static final String ASSEMBLY_TYPE_TI = "asm";
-    public static final String TRANSITIVE_TYPE_TI = "trs";
-    public static final String ASSEMBLY_TYPE_EQV = "eqv";
 
     public static final String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static final String RELATION_TYPE_OVERLAP = "OVRL";
@@ -120,8 +116,7 @@ public class SvVarData
 
         mGenes = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
-        mAssemblyData = new String[SE_PAIR];
-        mTIAssemblies = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
+        mAssemblyLinks = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         mCopyNumber = new double[] { mSVData.adjustedStartCopyNumber(),  mSVData.adjustedEndCopyNumber() };
         mCopyNumberChange = new double[] {mSVData.adjustedStartCopyNumberChange(), mSVData.adjustedEndCopyNumberChange() };
@@ -135,7 +130,8 @@ public class SvVarData
         mCnDataPrevEnd = null;
         mCnDataPostEnd = null;
 
-        setAssemblyData(false);
+        setAssemblyData(true, mSVData.startLinkedBy());
+        setAssemblyData(false, mSVData.endLinkedBy());
 
         if(isSglBreakend())
         {
@@ -414,22 +410,6 @@ public class SvVarData
         return (type() == DEL || type() == DUP || type() == INS);
     }
 
-   public String getAssemblyData(boolean isStart) { return mAssemblyData[seIndex(isStart)]; }
-
-    // unit testing only
-    public void setAssemblyData(boolean isStart, final String data)
-    {
-        mAssemblyData[seIndex(isStart)] = data;
-        setAssemblyData(true);
-    }
-
-    public List<String> getTIAssemblies(boolean isStart) { return mTIAssemblies.get(isStart); }
-
-    public boolean isEquivBreakend()
-    {
-        return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
-    }
-
     public void setLinkedSVs(final SvVarData var1, final SvVarData var2)
     {
         mLinkedSVs = new SvVarData[] {var1, var2};
@@ -465,32 +445,28 @@ public class SvVarData
         return mTiLinks.get(isStart).stream().anyMatch(LinkedPair::isAssembled);
     }
 
-    private void setAssemblyData(boolean useExisting)
+    public List<String> getAssemblyLinks(boolean isStart) { return mAssemblyLinks.get(isStart); }
+
+    public String assemblyInfoStr(boolean isStart) { return mAssemblyLinks.get(isStart).stream().collect(Collectors.joining(ITEM_DELIM)); }
+
+    @VisibleForTesting
+    public void addAssemblyInfo(boolean isStart, final String assemblyData)
     {
-        for(int se = SE_START; se <= SE_END; ++se)
+        mAssemblyLinks.get(isStart).add(assemblyData);
+    }
+
+    private void setAssemblyData(boolean isStart, final String assemblyData)
+    {
+        if(assemblyData.isEmpty() || assemblyData.equals("."))
+            return;
+
+        String delim = assemblyData.contains(ITEM_DELIM) ? ITEM_DELIM : CSV_DELIM;
+
+        String[] assemblyLinks = assemblyData.split(delim, -1);
+
+        for(String assemblyLink : assemblyLinks)
         {
-            if(!useExisting)
-            {
-                mAssemblyData[se] = "";
-
-                final String linkedByData = se == SE_START ? mSVData.startLinkedBy() : mSVData.endLinkedBy();
-
-                if(!linkedByData.isEmpty() && !linkedByData.equals("."))
-                {
-                    mAssemblyData[se] = linkedByData.replaceAll(",", ";");
-                }
-            }
-
-            if(!mAssemblyData[se].isEmpty())
-            {
-                String[] assemblyList = mAssemblyData[se].split(";");
-
-                for(String assembly : assemblyList)
-                {
-                    if(assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
-                        mTIAssemblies.get(se).add(assembly);
-                }
-            }
+            mAssemblyLinks.get(isStart).add(assemblyLink);
         }
     }
 

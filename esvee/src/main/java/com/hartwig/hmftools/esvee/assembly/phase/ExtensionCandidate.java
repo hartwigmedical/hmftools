@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
+
+import java.util.Comparator;
 
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -71,18 +75,52 @@ public class ExtensionCandidate
 
     public boolean isValid() { return mIsValid && totalSupport() > 0; }
 
+    protected static class StandardComparator implements Comparator<ExtensionCandidate>
+    {
+        @Override
+        public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
+        {
+            return Integer.compare(-first.adjustedSupportScore(), -second.adjustedSupportScore());
+        }
+    }
+
+    private int adjustedSupportScore()
+    {
+        int support = totalSupport();
+
+        if(Type == ExtensionType.SPLIT_LINK)
+        {
+            int junctionDiff = max(Link.insertedBases().length(), Link.overlapBases().length());
+            support = max(support - junctionDiff, 0);
+        }
+
+        return support;
+    }
+
+    protected static class LocalLinkComparator implements Comparator<ExtensionCandidate>
+    {
+        @Override
+        public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
+        {
+            if(first.Type != second.Type)
+                return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
+
+            return Integer.compare(-first.totalSupport(), -second.totalSupport());
+        }
+    }
+
     public String toString()
     {
         if(Link != null)
         {
-            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) %s",
+            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
                     Type, Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
-                    SecondAssemblyCandidateReads, ExtraInfo);
+                    SecondAssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
         else
         {
-            return format("%s assembly(%s) support(s=%d c=%d) %s",
-                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, ExtraInfo);
+            return format("%s assembly(%s) support(s=%d c=%d) total(%d) %s",
+                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
     }
 }

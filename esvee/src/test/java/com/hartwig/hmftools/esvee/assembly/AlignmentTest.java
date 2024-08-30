@@ -92,7 +92,7 @@ public class AlignmentTest
         addAssemblyRead(assembly1, -30);
         addAssemblyRead(assembly1, 10);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -104,7 +104,7 @@ public class AlignmentTest
         assemblyBases1 = extBases1 + refBases1;
         assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
-        assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -143,6 +143,12 @@ public class AlignmentTest
 
         // with inserted bases
         String insertedBases = "TTTTT";
+
+        assemblyBases1 = refBases1 + insertedBases + extBases1;
+        assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
+        assemblyBases2 = extBases2 + insertedBases + refBases2;
+        assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, extBases2.length() + insertedBases.length());
+
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, insertedBases, "");
 
         assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(assemblyLink);
@@ -151,10 +157,10 @@ public class AlignmentTest
         assertEquals(fullSequence.length(), assemblyAlignment.fullSequenceLength());
 
         // same again but with matching orientations
-        assemblyBases1 = refBases1 + Nucleotides.reverseComplementBases(extBases1);
+        assemblyBases1 = refBases1 + insertedBases + Nucleotides.reverseComplementBases(extBases1);
         assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
 
-        assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(extBases2);
+        assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(insertedBases) + Nucleotides.reverseComplementBases(extBases2);
         assembly2 = createAssembly(CHR_1, 349, FORWARD, assemblyBases2, refBases2.length() - 1);
 
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, insertedBases, "");

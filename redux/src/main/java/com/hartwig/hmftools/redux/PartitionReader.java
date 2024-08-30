@@ -160,6 +160,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
+        if(mConfig.JitterMsiOnly)
+        {
+            mBamWriter.processJitterRead(read);
+            return;
+        }
+
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
 
@@ -265,6 +271,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                     mBamWriter.writeRead(read, partitionResults.fragmentStatus());
                 }
 
+                if(partitionResults.supplementaries() != null)
+                {
+                    partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+                }
+
                 ++mStats.LocalComplete;
             }
             else
@@ -316,6 +327,10 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             if(partitionResults.resolvedFragments() != null)
                 mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
+
+            if(partitionResults.supplementaries() != null)
+                partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+
         }
 
         mPendingIncompleteReads.clear();

@@ -20,7 +20,7 @@ public final class ReadUtils
     public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)
     {
         // cannot cross the junction since will already have considered all junction candidate reads
-        // and must read in the direction of the junction. Also cannot be soft-clipped prior to the junction.
+        // and must read in the direction of the junction, and cannot be soft-clipped prior to the junction
         if(isForwardJunction)
         {
             if(read.negativeStrand() || read.isRightClipped())
@@ -127,41 +127,5 @@ public final class ReadUtils
         }
 
         return qualitySum / (indexEnd - indexStart + 1);
-    }
-
-    public static Byte findLineSequenceBase(final byte[] bases, final int indexStart, final int indexEnd)
-    {
-        if(indexEnd - indexStart + 1 < LINE_POLY_AT_REQ)
-            return null;
-
-        int aCount = 0;
-        int tCount = 0;
-        int otherCount = 0;
-        for(int i = indexStart; i <= indexEnd; ++i)
-        {
-            if(bases[i] == LINE_BASE_A)
-            {
-                ++aCount;
-            }
-            else if(bases[i] == LINE_BASE_T)
-            {
-                ++tCount;
-            }
-            else
-            {
-                ++otherCount;
-
-                if(otherCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
-                    break;
-            }
-        }
-
-        if(aCount >= LINE_POLY_AT_REQ)
-            return LINE_BASE_A;
-
-        if(tCount >= LINE_POLY_AT_REQ)
-            return LINE_BASE_T;
-
-        return null;
     }
 }

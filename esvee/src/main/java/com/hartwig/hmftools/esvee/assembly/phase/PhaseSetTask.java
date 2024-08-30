@@ -77,10 +77,12 @@ public class PhaseSetTask extends ThreadTask
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
                 PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteRegionAssembler, phaseGroup);
+                phaseSetBuilder.setPerfLogTime(mConfig.PerfLogTime);
 
                 try
                 {
                     phaseSetBuilder.buildPhaseSets();
+                    phaseGroup.finalisePhaseSetAlignments();
                 }
                 catch(Exception e)
                 {
@@ -93,13 +95,6 @@ public class PhaseSetTask extends ThreadTask
 
                     e.printStackTrace();
                     System.exit(1);
-                }
-
-                // also set phase set IDs
-                int phaseSetId = 0;
-                for(PhaseSet phaseSet : phaseGroup.phaseSets())
-                {
-                    phaseSet.setId(phaseSetId++);
                 }
 
                 stopCheckLog(format("phaseGroupId(%d) assemblies(%d)", phaseGroup.id(), phaseGroup.assemblyCount()), mConfig.PerfLogTime);

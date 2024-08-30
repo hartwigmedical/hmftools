@@ -28,6 +28,7 @@ import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
+import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
 public class PartitionData
@@ -46,6 +47,8 @@ public class PartitionData
     private final Map<String,CandidateDuplicates> mCandidateDuplicatesMap;
 
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
+
+    private boolean mCacheSupplementaries;
 
     // any update to the maps is done under a lock
     private Lock mLock;
@@ -68,6 +71,8 @@ public class PartitionData
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mUpdatedDuplicateGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
+
+        mCacheSupplementaries = !config.UseSupplementaryBam;
 
         mLock = new ReentrantLock();
         mLockAcquireTime = 0;
@@ -209,6 +214,11 @@ public class PartitionData
 
     public PartitionResults processIncompleteFragments(final List<SAMRecord> reads)
     {
+        return processIncompleteFragments(reads, true);
+    }
+
+    public PartitionResults processIncompleteFragments(final List<SAMRecord> reads, boolean checkSupplementaries)
+    {
         try
         {
             acquireLock();
@@ -217,13 +227,17 @@ public class PartitionData
 
             for(SAMRecord read : reads)
             {
-                ReadMatch readMatch = handleIncompleteFragment(read);
+                ReadMatch readMatch = handleIncompleteFragment(read, checkSupplementaries);
 
                 if(readMatch.Status != null && readMatch.Status.isResolved())
                 {
                     Fragment fragment = new Fragment(read);
                     fragment.setStatus(readMatch.Status);
                     partitionResults.addResolvedFragment(fragment);
+                }
+                else if(!readMatch.Matched && checkSupplementaries && isUnhandledSupplementary(read))
+                {
+                    partitionResults.addSupplementary(read);
                 }
             }
 
@@ -242,10 +256,12 @@ public class PartitionData
         try
         {
             acquireLock();
-            ReadMatch readMatch = handleIncompleteFragment(read);
+            ReadMatch readMatch = handleIncompleteFragment(read, true);
 
             if(!readMatch.Matched)
-                return null;
+            {
+                return isUnhandledSupplementary(read) ? new PartitionResults(read) : null;
+            }
 
             // only create results if the fragment is part of a group
             PartitionResults partitionResults = new PartitionResults();
@@ -264,7 +280,12 @@ public class PartitionData
         }
     }
 
-    private ReadMatch handleIncompleteFragment(final SAMRecord read)
+    private boolean isUnhandledSupplementary(final SAMRecord read)
+    {
+        return !mCacheSupplementaries && read.getSupplementaryAlignmentFlag();
+    }
+
+    private ReadMatch handleIncompleteFragment(final SAMRecord read, boolean checkSupplementary)
     {
         // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
 
@@ -311,6 +332,9 @@ public class PartitionData
 
             return NO_READ_MATCH;
         }
+
+        if(checkSupplementary && isUnhandledSupplementary(read))
+            return NO_READ_MATCH;
 
         // store the new fragment
         mIncompleteFragments.put(read.getReadName(), new Fragment(read));

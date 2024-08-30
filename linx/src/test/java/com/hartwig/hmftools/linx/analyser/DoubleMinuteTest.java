@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.setAssembledLinkInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -175,13 +176,11 @@ public class DoubleMinuteTest
         // this time assembled links will be ignored
         var3 = createTestSv(tester.nextVarId(),"1","3",2000,100,1,-1, BND,1.5);
         var4 = createTestSv(tester.nextVarId(),"1","3",2100,200,-1,1, BND,1.5);
-        var3.setAssemblyData(false, "asmb34");
-        var4.setAssemblyData(false, "asmb34");
+        setAssembledLinkInfo(var3, false, var4, false);
 
         var5 = createTestSv(tester.nextVarId(),"1","4",3000,100,-1,1, BND,1.5);
         var6 = createTestSv(tester.nextVarId(),"1","4",3100,200,1,-1, BND,1.5);
-        var5.setAssemblyData(true, "asmb56");
-        var5.setAssemblyData(true, "asmb56");
+        setAssembledLinkInfo(var5, true, var6, true);
 
         tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
         tester.preClusteringInit();
@@ -237,8 +236,8 @@ public class DoubleMinuteTest
 
         SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
         SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);
-        var1.setAssemblyData(true, "asmb12");
-        var2.setAssemblyData(true, "asmb12");
+
+        setAssembledLinkInfo(var1, true, var2, true);
 
         SvVarData var3 = createTestSv(3,"1","1",12000,12500,-1,-1, INV,8);
         SvVarData var4 = createTestSv(4,"1","1",20000,20500,1,1, INV,8);

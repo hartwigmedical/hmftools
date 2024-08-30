@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.write;
 
+import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -10,13 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamOperations;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.merge.BamMerger;
+import com.hartwig.hmftools.common.bamops.BamMerger;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +41,7 @@ public class FileWriterCache
 
     private final JitterAnalyser mJitterAnalyser;
 
-    private static final String BAM_FILE_ID = "redux";
+    public static final String BAM_FILE_ID = "redux";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
 
@@ -94,6 +97,7 @@ public class FileWriterCache
     {
         SAMFileWriter samFileWriter = null;
         String filename = null;
+        SuppBamWriter suppBamReadWriter = null;
 
         if(mConfig.WriteBam)
         {
@@ -111,6 +115,12 @@ public class FileWriterCache
 
             // no option to use library-based sorting
             samFileWriter = initialiseSamFileWriter(filename, isSorted);
+
+            if(mConfig.UseSupplementaryBam && multiId != null)
+            {
+                String suppBamFilename = SuppBamWriter.formBamFilename(mConfig, multiId);
+                suppBamReadWriter = new SuppBamWriter(suppBamFilename, mConfig);
+            }
         }
 
         // initiate the applicable type of BAM writer - synchronised or not
@@ -118,12 +128,13 @@ public class FileWriterCache
 
         if(isSynchronous)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, suppBamReadWriter);
         }
         else
         {
             bamWriter = new BamWriterNoSync(
-                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
+                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted,
+                    mSharedUnsortedWriter, suppBamReadWriter);
         }
 
         mBamWriters.add(bamWriter);
@@ -146,37 +157,14 @@ public class FileWriterCache
         if(sorted != null)
             filename += "." + sorted;
 
-        filename += ".bam";
+        filename += BAM_EXTENSION;
 
         return filename;
     }
 
     private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFiles.get(0)));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        if(mConfig.BamFiles.size() > 1)
-        {
-            for(int i = 1; i < mConfig.BamFiles.size(); ++i)
-            {
-                SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                        .open(new File(mConfig.BamFiles.get(i)));
-
-                for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
-                {
-                    if(!fileHeader.getReadGroups().contains(readGroupRecord))
-                        fileHeader.addReadGroup(readGroupRecord);
-                }
-
-                final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
-                String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
-
-                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
-            }
-        }
+        SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
         // the BAM will not actually be sorted by the SAMTools library
@@ -187,6 +175,11 @@ public class FileWriterCache
 
         boolean presorted = isSorted;
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
+    }
+
+    public List<SuppBamWriter> getSupplementaryBamReadWriters()
+    {
+        return mBamWriters.stream().filter(x -> x.suppBamReadWriter() != null).map(x -> x.suppBamReadWriter()).collect(Collectors.toList());
     }
 
     public boolean runSortMergeIndex() { return mConfig.BamToolPath != null; }

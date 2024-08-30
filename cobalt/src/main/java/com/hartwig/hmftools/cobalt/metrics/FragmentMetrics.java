@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_E
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -36,10 +37,12 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class FragmentMetrics
 {
     private final MetricsConfig mConfig;
+    private final BufferedWriter mReadDataWriter;
 
     public FragmentMetrics(final ConfigBuilder configBuilder)
     {
         mConfig = new MetricsConfig(configBuilder);
+        mReadDataWriter = PartitionReader.initialiseReadWriter(mConfig);
     }
 
     public void run()
@@ -115,7 +118,7 @@ public class FragmentMetrics
 
         if(allRegions.size() == 1 || mConfig.Threads <= 1)
         {
-            PartitionReader partitionReader = new PartitionReader(mConfig, partitions);
+            PartitionReader partitionReader = new PartitionReader(mConfig, partitions, mReadDataWriter);
             partitionReader.run();
             partitionReaders.add(partitionReader);
         }
@@ -127,7 +130,7 @@ public class FragmentMetrics
 
             for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
             {
-                PartitionReader partitionReader = new PartitionReader(mConfig, partitions);
+                PartitionReader partitionReader = new PartitionReader(mConfig, partitions, mReadDataWriter);
                 partitionReader.start();
 
                 partitionReaders.add(partitionReader);
@@ -152,6 +155,8 @@ public class FragmentMetrics
         }
 
         writeResults(combinedAllFragGcMap, combinedTargedFragGcMap, combinedNonTargedFragGcMap, targetRegionData);
+
+        closeBufferedWriter(mReadDataWriter);
 
         CB_LOGGER.info("FragmentGcMetrics complete, mins({})", runTimeMinsStr(startTimeMs));
     }

@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -17,7 +18,7 @@ import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public final class SequenceCompare
 {
-    private static final int MISMATCH_RECOVERY_BASE_COUNT = 4;
+    private static final int MISMATCH_RECOVERY_BASE_COUNT = 3;
 
     public static int calcReadSequenceMismatches(
             final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
@@ -31,14 +32,28 @@ public final class SequenceCompare
         // so the comparison offset in the extension sequence is
         int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
 
+        if(extSeqReadStartIndex < 0)
+        {
+            readStartIndex += -extSeqReadStartIndex;
+            extSeqReadStartIndex = 0;
+        }
+
         byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
         byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
         List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
 
-        return compareSequences(
+        int mismatches = compareSequences(
                 extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
                 readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
                 readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches);
+
+        if(mismatches <= maxMismatches)
+            return mismatches;
+
+        return compareSequences(
+                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
+                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
+                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, false);
     }
 
     public static boolean matchedAssemblySequences(final JunctionAssembly first, final JunctionAssembly second)
@@ -96,7 +111,7 @@ public final class SequenceCompare
         if(firstIndexEnd <= firstIndexStart || secondIndexEnd <= secondIndexStart)
             return false;
 
-        int mismatchCount = SequenceCompare.compareSequences(
+        int mismatchCount = compareSequences(
                 first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
                 second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
 
@@ -108,40 +123,55 @@ public final class SequenceCompare
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches)
     {
+        return compareSequences(
+                firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
+                secondIndexEnd, secondRepeats, maxMismatches, true);
+    }
+
+    public static int compareSequences(
+            final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
+            final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
+            int maxMismatches, boolean checkForwards)
+    {
+        if(firstIndexStart < 0 || firstIndexEnd >= firstBases.length || firstIndexEnd >= firstBaseQuals.length
+        || secondIndexStart < 0 || secondIndexEnd >= secondBases.length || secondIndexEnd >= secondBaseQuals.length)
+        {
+            return maxMismatches < 0 ? maxMismatches : maxMismatches + 1; // invalid
+        }
+
         int mismatchCount = 0;
 
-        int firstIndex = firstIndexStart;
-        int secondIndex = secondIndexStart;
+        int firstIndex = checkForwards ? firstIndexStart : firstIndexEnd;
+        int secondIndex = checkForwards ? secondIndexStart : secondIndexEnd;
 
         int lastRepeatSkipBases = 0;
 
-        while(firstIndex <= firstIndexEnd && secondIndex <= secondIndexEnd)
+        while(firstIndex >= 0 && firstIndex <= firstIndexEnd && secondIndex >= 0 && secondIndex <= secondIndexEnd)
         {
             // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
             // the solution may be to start the matching process from the other end
-            if(basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            if(basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
-                ++firstIndex;
-                ++secondIndex;
+                firstIndex += checkForwards ? 1 : -1;
+                secondIndex += checkForwards ? 1 : -1;
                 continue;
             }
 
             // check if the mismatch is a single-base INDEL and if so skip it
-            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex);
+            int recoverySkipBases = checkSkipShortIndel(
+                    firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex, checkForwards);
 
             if(recoverySkipBases != 0)
             {
                 if(recoverySkipBases > 0)
-                    firstIndex += recoverySkipBases;
+                    firstIndex += checkForwards ? recoverySkipBases : -recoverySkipBases;
                 else
-                    secondIndex += -recoverySkipBases;
+                    secondIndex += checkForwards ? -recoverySkipBases : recoverySkipBases;
 
                 if(lastRepeatSkipBases == 0)
                 {
-                    if((recoverySkipBases == 1 && matchesRepeatStart(secondIndex, secondRepeats))
-                    || (recoverySkipBases == -1 && matchesRepeatStart(firstIndex, firstRepeats)))
+                    if((recoverySkipBases == 1 && matchesRepeat(secondIndex, secondRepeats, checkForwards))
+                    || (recoverySkipBases == -1 && matchesRepeat(firstIndex, firstRepeats, checkForwards)))
                     {
                         lastRepeatSkipBases = recoverySkipBases;
                     }
@@ -157,7 +187,7 @@ public final class SequenceCompare
             }
 
             // check for a repeat diff - must be of the same type and just a different count
-            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats);
+            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats, checkForwards);
 
             if(expectedRepeatBaseDiff != 0)
             {
@@ -165,9 +195,9 @@ public final class SequenceCompare
 
                 // positive means the first's repeat was longer so move it ahead
                 if(expectedRepeatBaseDiff > 0)
-                    firstIndex += expectedRepeatBaseDiff;
+                    firstIndex += checkForwards ? expectedRepeatBaseDiff : expectedRepeatBaseDiff;
                 else
-                    secondIndex += -expectedRepeatBaseDiff;
+                    secondIndex += checkForwards ? -expectedRepeatBaseDiff : expectedRepeatBaseDiff;
 
                 ++mismatchCount;
                 continue; // check the next base again
@@ -178,15 +208,58 @@ public final class SequenceCompare
             if(maxMismatches >= 0 && mismatchCount > maxMismatches)
                 return mismatchCount;
 
-            ++firstIndex;
-            ++secondIndex;
+            firstIndex += checkForwards ? 1 : -1;
+            secondIndex += checkForwards ? 1 : -1;
         }
 
         return mismatchCount;
     }
 
+    private static boolean hasCompatibleRepeats(
+            int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
+            int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
+    {
+        List<RepeatInfo> firstRepeatsInRange = firstRepeats.stream()
+                .filter(x -> x.Index >= firstIndexStart && x.postRepeatIndex() <= firstIndexEnd).collect(Collectors.toList());
+
+        List<RepeatInfo> secondRepeatsInRange = secondRepeats.stream()
+                .filter(x -> x.Index >= secondIndexStart && x.postRepeatIndex() <= secondIndexEnd).collect(Collectors.toList());
+
+        int minRepeatCount = min(firstRepeatsInRange.size(), secondRepeatsInRange.size());
+
+        int firstIndex = 0;
+        int matchedCount = 0;
+
+        while(firstIndex < firstRepeatsInRange.size())
+        {
+            RepeatInfo firstRepeat = firstRepeatsInRange.get(firstIndex);
+
+            RepeatInfo matchedRepeat = secondRepeatsInRange.stream()
+                    .filter(x -> x.Bases.equals(firstRepeat.Bases) && x.Count == firstRepeat.Count).findFirst().orElse(null);
+
+            if(matchedRepeat == null)
+            {
+                matchedRepeat = secondRepeatsInRange.stream()
+                        .filter(x -> x.Bases.equals(firstRepeat.Bases) && abs(x.Count - firstRepeat.Count) <= 2).findFirst().orElse(null);
+            }
+
+            if(matchedRepeat != null)
+            {
+                ++matchedCount;
+                firstRepeatsInRange.remove(firstIndex);
+                secondRepeatsInRange.remove(matchedRepeat);
+            }
+            else
+            {
+                ++firstIndex;
+            }
+        }
+
+        return minRepeatCount - matchedCount <= 2;
+    }
+
     private static int checkRepeatDifference(
-            int firstIndex, final List<RepeatInfo> firstRepeats, int secondIndex, final List<RepeatInfo> secondRepeats)
+            int firstIndex, final List<RepeatInfo> firstRepeats, int secondIndex, final List<RepeatInfo> secondRepeats, boolean checkForwards)
     {
         // look for matching repeats, and if found return the expected difference in bases if the repeats have diff counts
 
@@ -195,31 +268,74 @@ public final class SequenceCompare
         // second index = 15, repeat length = 2, count = 7, so goes from 15-28
         // so would expect the repeat mismatch to occur at the base after either repeat ends
 
-        RepeatInfo firstRepeat = findRepeat(firstIndex, firstRepeats);
-        RepeatInfo secondRepeat = findRepeat(secondIndex, secondRepeats);
+        RepeatInfo firstRepeat = findRepeat(firstIndex, firstRepeats, checkForwards);
+        RepeatInfo secondRepeat = findRepeat(secondIndex, secondRepeats, checkForwards);
 
-        if(firstRepeat == null || secondRepeat == null)
+        if(firstRepeat == null && secondRepeat == null)
             return 0;
 
-        if(!firstRepeat.matchesType(secondRepeat))
-            return 0;
+        if(firstRepeat != null && secondRepeat != null)
+        {
+            if(!firstRepeat.matchesType(secondRepeat))
+            {
+                // consider the longer repeat if it contains the shorter and has the minimum count
+                if(firstRepeat.Bases.contains(secondRepeat.Bases) && firstRepeat.Count == 2)
+                    return firstRepeat.Bases.length();
+                else if(secondRepeat.Bases.contains(firstRepeat.Bases) && secondRepeat.Count == 2)
+                    return secondRepeat.Bases.length();
+                return 0;
+            }
 
-        if(firstRepeat.Count == secondRepeat.Count)
-            return 0;
+            if(firstRepeat.Count == secondRepeat.Count)
+                return 0;
 
-        return (firstRepeat.Count - secondRepeat.Count) * firstRepeat.Bases.length();
+            return (firstRepeat.Count - secondRepeat.Count) * firstRepeat.Bases.length();
+        }
+
+        /*
+        // also permitted is a repeat in only one of the sequences at the limit of min repeat count
+        // NOTE: this would require checking the other sequence's bases at this location to ensure they maatched the repeat
+        if(firstRepeat != null && secondRepeat == null)
+        {
+            if(firstRepeat.Count == minRequiredRepeatCount(firstRepeat.baseLength()))
+                return firstRepeat.baseLength();
+        }
+        else if(firstRepeat == null && secondRepeat != null)
+        {
+            if(secondRepeat.Count == minRequiredRepeatCount(secondRepeat.baseLength()))
+                return -secondRepeat.baseLength();
+        }
+        */
+
+        return 0; // no valid repeat adjustment
     }
 
-    private static RepeatInfo findRepeat(int currentIndex, final List<RepeatInfo> repeats)
+    private static RepeatInfo findRepeat(int currentIndex, final List<RepeatInfo> repeats, boolean checkForwards)
     {
         // find any repeat which covers or ends just prior to the current index
         for(RepeatInfo repeat: repeats)
         {
-            if(repeat.postRepeatIndex() == currentIndex || (repeat.Index < currentIndex && repeat.postRepeatIndex() > currentIndex))
+            if(repeat.Index < currentIndex && repeat.postRepeatIndex() > currentIndex)
                 return repeat;
+
+            if(checkForwards)
+            {
+                if(repeat.postRepeatIndex() == currentIndex)
+                    return repeat;
+            }
+            else
+            {
+                if(repeat.Index == currentIndex)
+                    return repeat;
+            }
         }
 
         return null;
+    }
+
+    private static boolean matchesRepeat(int currentIndex, final List<RepeatInfo> repeats, boolean checkForwards)
+    {
+        return checkForwards ? matchesRepeatStart(currentIndex, repeats) : matchesRepeatEnd(currentIndex, repeats);
     }
 
     private static boolean matchesRepeatStart(int currentIndex, final List<RepeatInfo> repeats)
@@ -228,15 +344,23 @@ public final class SequenceCompare
         return repeats.stream().anyMatch(x -> x.Index == currentIndex || x.Index == currentIndex + 1);
     }
 
+    private static boolean matchesRepeatEnd(int currentIndex, final List<RepeatInfo> repeats)
+    {
+        // find any repeat which starts at the current index or next
+        return repeats.stream().anyMatch(x -> x.postRepeatIndex() == currentIndex || x.postRepeatIndex() == currentIndex - 1);
+    }
+
     private static int checkSkipShortIndel(
             final byte[] firstBases, final byte[] firstBaseQuals, final int firstIndex,
-            final byte[] secondBases, final byte[] secondBaseQuals, final int secondIndex)
+            final byte[] secondBases, final byte[] secondBaseQuals, final int secondIndex, boolean checkForwards)
     {
         // test up to 2 skipped INDEL bases on each sequence, moving ahead 1 then 2 bases on the first sequence
         for(int diff = 1; diff <= 2; ++diff)
         {
+            int adjustedFirstIndex = firstIndex + (checkForwards ? diff : -diff);
+
             if(canRecoverMatch(
-                    firstBases, firstBaseQuals, firstIndex + diff, secondBases, secondBaseQuals, secondIndex))
+                    firstBases, firstBaseQuals, adjustedFirstIndex, secondBases, secondBaseQuals, secondIndex, checkForwards))
             {
                 return diff;
             }
@@ -245,8 +369,10 @@ public final class SequenceCompare
         // then the same on the second sequence
         for(int diff = 1; diff <= 2; ++diff)
         {
+            int adjustedSecondIndex = secondIndex + (checkForwards ? diff : -diff);
+
             if(canRecoverMatch(
-                    firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex + diff))
+                    firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, adjustedSecondIndex, checkForwards))
             {
                 return -diff;
             }
@@ -256,25 +382,43 @@ public final class SequenceCompare
     }
 
     private static boolean canRecoverMatch(
-            final byte[] firstBases, final byte[] firstBaseQuals, final int firstIndexStart,
-            final byte[] secondBases, final byte[] secondBaseQuals, final int secondIndexStart)
+            final byte[] firstBases, final byte[] firstBaseQuals, final int firstCurrentIndex,
+            final byte[] secondBases, final byte[] secondBaseQuals, final int secondCurrentStart, boolean checkForwards)
     {
-        int firstIndex = firstIndexStart;
-        int secondIndex = secondIndexStart;
-        int firstEndIndex = firstIndexStart + MISMATCH_RECOVERY_BASE_COUNT;
-        int secondEndIndex = secondIndexStart + MISMATCH_RECOVERY_BASE_COUNT;
+        int firstIndex = firstCurrentIndex;
+        int secondIndex = secondCurrentStart;
 
-        if(firstEndIndex > firstBases.length || secondEndIndex > secondBases.length)
-            return false;
+        int firstIndexEnd, secondIndexEnd;
 
-        for(; firstIndex < firstEndIndex && secondIndex < secondEndIndex; ++firstIndex, ++secondIndex)
+        if(checkForwards)
         {
-            if(!basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            firstIndexEnd = firstCurrentIndex + MISMATCH_RECOVERY_BASE_COUNT;
+            secondIndexEnd = secondCurrentStart + MISMATCH_RECOVERY_BASE_COUNT;
+
+            if(firstIndexEnd >= firstBases.length || secondIndexEnd >= secondBases.length)
+                return false;
+        }
+        else
+        {
+            firstIndexEnd = firstCurrentIndex - MISMATCH_RECOVERY_BASE_COUNT;
+            secondIndexEnd = secondCurrentStart - MISMATCH_RECOVERY_BASE_COUNT;
+
+            if(firstIndexEnd < 0 || secondIndexEnd < 0)
+                return false;
+        }
+
+        while(true)
+        {
+            if(!basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
                 return false;
             }
+
+            if(firstIndex == firstIndexEnd && secondIndex == secondIndexEnd)
+                break;
+
+            firstIndex += checkForwards ? 1 : -1;
+            secondIndex += checkForwards ? 1 : -1;
         }
 
         return true;
@@ -293,9 +437,7 @@ public final class SequenceCompare
         {
             // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
             // the solution may be to start the matching process from the other end
-            if(basesMatch(
-                    firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
-                    LOW_BASE_QUAL_THRESHOLD))
+            if(basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
             {
                 ++firstIndex;
                 ++secondIndex;
@@ -303,7 +445,7 @@ public final class SequenceCompare
             }
 
             // check if the mismatch is a single-base INDEL and if so skip it
-            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex);
+            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex, true);
 
             if(recoverySkipBases != 0)
             {
@@ -321,7 +463,7 @@ public final class SequenceCompare
             }
 
             // check for a repeat diff - must be of the same type and just a different count
-            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats);
+            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats, true);
 
             if(expectedRepeatBaseDiff != 0)
             {

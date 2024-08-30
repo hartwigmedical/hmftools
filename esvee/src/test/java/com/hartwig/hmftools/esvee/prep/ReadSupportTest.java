@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasOtherJunctionSu
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
-import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isRepetitiveSectionBreak;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.isRepetitiveSectionBreak;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;

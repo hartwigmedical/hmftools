@@ -48,7 +48,9 @@ public class Alignment
     public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
         // apply filters on what to run alignment on
-        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED || assembly.outcome() == AssemblyOutcome.SECONDARY)
+        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
+        || assembly.outcome() == AssemblyOutcome.SECONDARY
+        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY)
         {
             // since identical to or associated with other links
             return true;
@@ -152,6 +154,12 @@ public class Alignment
                 return;
             }
 
+            if(assemblyAlignment.isMerged())
+            {
+                writeAssemblyData(assemblyAlignment, Collections.emptyList(), Collections.emptyList());
+                return;
+            }
+
             List<AlignData> alignments;
             List<AlignData> requeriedAlignments;
 
@@ -177,25 +185,7 @@ public class Alignment
             AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
             alignmentFragments.allocateBreakendSupport();
 
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
-                AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
-
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
-            {
-                List<AlignData> alignmentsToWrite;
-
-                if(!requeriedAlignments.isEmpty())
-                {
-                    alignmentsToWrite = Lists.newArrayList(alignments);
-                    alignmentsToWrite.addAll(requeriedAlignments);
-                }
-                else
-                {
-                    alignmentsToWrite = alignments;
-                }
-
-                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
-            }
+            writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
         }
 
         private List<AlignData> requerySupplementaryAlignments(
@@ -263,6 +253,8 @@ public class Alignment
                 convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
 
                 convertedAlignments.add(convertedAlignment);
+
+                alignData.markDroppedOnRequery();
             }
 
             return convertedAlignments;
@@ -270,6 +262,9 @@ public class Alignment
 
         private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
+            if(alignments.isEmpty())
+                return;
+
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
 
@@ -293,6 +288,33 @@ public class Alignment
 
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
+        }
+    }
+
+    private void writeAssemblyData(
+            final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+    {
+        if(!assemblyAlignment.isValid())
+            return;
+
+        if(mConfig.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
+            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment);
+
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENTS))
+        {
+            List<AlignData> alignmentsToWrite;
+
+            if(!requeriedAlignments.isEmpty())
+            {
+                alignmentsToWrite = Lists.newArrayList(alignments);
+                alignmentsToWrite.addAll(requeriedAlignments);
+            }
+            else
+            {
+                alignmentsToWrite = alignments;
+            }
+
+            AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
         }
     }
 }

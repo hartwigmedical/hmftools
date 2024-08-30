@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
+
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -28,6 +30,7 @@ public final class TestPurpleInterpretationFactory
     {
         return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
+                .tumorStats(createMinimalTumorStatsBuilder().build())
                 .characteristics(createMinimalTestCharacteristicsData());
     }
 

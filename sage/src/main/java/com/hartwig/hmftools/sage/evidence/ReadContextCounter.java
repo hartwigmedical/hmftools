@@ -206,7 +206,7 @@ public class ReadContextCounter
     public QualCounters qualCounters() { return mQualCounters; }
 
     public int baseQualityTotal() { return mQualCounters.baseQualityTotal(); }
-    public int altBaseQualityTotal() { return mQualCounters.altBaseQualityTotal(); }
+    public int altBaseQualityTotal() { return mQualCounters.altRecalibratedBaseQualityTotal(); }
 
     public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
     public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
@@ -251,18 +251,18 @@ public class ReadContextCounter
     @Nullable
     public VariantVis variantVis() { return mVariantVis; }
 
-    public double averageRawAltBaseQuality()
-    {
-        // excludes realigned
-        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
-        return supportCount > 0 ? mQualCounters.altRawBaseQualityTotal() / (double)supportCount : 0;
-    }
-
     public double averageAltBaseQuality()
     {
         // excludes realigned
-        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
         return supportCount > 0 ? mQualCounters.altBaseQualityTotal() / (double)supportCount : 0;
+    }
+
+    public double averageAltRecalibratedBaseQuality()
+    {
+        // excludes realigned
+        int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
+        return supportCount > 0 ? mQualCounters.altRecalibratedBaseQualityTotal() / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }

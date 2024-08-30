@@ -146,7 +146,7 @@ public class AssemblyTestUtils
     public static AssemblyAlignment createAssemblyAlignment(final AssemblyLink assemblyLink)
     {
         PhaseSet phaseSet = new PhaseSet(assemblyLink);
-        return new AssemblyAlignment(0, phaseSet);
+        return new AssemblyAlignment(phaseSet);
     }
 
     public static AlignData createAlignment(

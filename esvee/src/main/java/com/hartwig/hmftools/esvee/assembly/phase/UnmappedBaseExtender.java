@@ -9,12 +9,11 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Collections;
 import java.util.List;
@@ -251,12 +250,12 @@ public class UnmappedBaseExtender
             }
             else
             {
-                if(mBases[extBaseIndex] == base || qual < LOW_BASE_QUAL_THRESHOLD)
+                if(mBases[extBaseIndex] == base || belowMinQual(qual))
                 {
                     if((int)qual > (int)mBaseQuals[extBaseIndex])
                         mBaseQuals[extBaseIndex] = qual;
                 }
-                else if(mBaseQuals[extBaseIndex] < LOW_BASE_QUAL_THRESHOLD)
+                else if(belowMinQual(mBaseQuals[extBaseIndex]))
                 {
                     mBases[extBaseIndex] = base;
                     mBaseQuals[extBaseIndex] = qual;

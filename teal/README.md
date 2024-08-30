@@ -35,7 +35,7 @@ Arguments:
 Example Usage:
 
 ```
-java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
+java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealPipelineApp \
    -reference COLO829R -reference_bam COLO829R.bam \
    -tumor COLO829T -tumor_bam COLO829T.bam \
    -purple /path/to/COLO829/purple \
@@ -61,7 +61,7 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
 Example Usage:
 
 ```
-java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
+java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealPipelineApp \
    -reference COLO829R -reference_bam COLO829R.bam \
    -cobalt /path/to/COLO829/cobalt \
    -reference_wgs_metrics /path/to/COLO829/bam_metrics/COLO829R_WGSMetrics.txt \
@@ -301,6 +301,9 @@ details the estimated  telomeric length and content and finally a file which pre
 * TEAL could aslo count relative amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
+- [1.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.1)
+  - Always use lenient BAM validation
+  - Change the pipeline mode calling to allow separating bam processing and telomere calculation stages.
 - [1.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.0)
   - Ignore consensus reads
 - [1.2.2](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.2)

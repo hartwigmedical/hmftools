@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_ORIENTATION;
@@ -52,7 +52,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvFactoryInterface;
-import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +84,6 @@ public class GridssSvFactory implements SvFactoryInterface
     {
         CompoundFilter compoundfilter = new CompoundFilter(true);
         compoundfilter.add(new HumanChromosomeFilter());
-        compoundfilter.add(new ExcludeCNVFilter());
         compoundfilter.add(filter);
         return new GridssSvFactory(compoundfilter);
     }
@@ -483,6 +481,6 @@ public class GridssSvFactory implements SvFactoryInterface
 
     private static StructuralVariantType type(final VariantContext context)
     {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(SVTYPE));
+        return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
     }
 }

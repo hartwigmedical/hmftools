@@ -3,25 +3,33 @@ package com.hartwig.hmftools.cobalt.metrics;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundDuplicateCount;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundFragmentLength;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundGcPercent;
+import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.TARGET_REGION_PROXIMITY;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.sv.SvUtils;
@@ -39,6 +47,7 @@ public class PartitionReader extends Thread
     private final int mPartitionCount;
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
+    private final BufferedWriter mReadDataWriter;
 
     private Partition mCurrentPartition;
 
@@ -48,12 +57,13 @@ public class PartitionReader extends Thread
 
     private final Map<String,SAMRecord> mReadGroupMap;
 
-    public PartitionReader(final MetricsConfig config, final Queue<Partition> partitions)
+    public PartitionReader(final MetricsConfig config, final Queue<Partition> partitions, final BufferedWriter readDataWriter)
     {
         mConfig = config;
 
         mPartitions = partitions;
         mPartitionCount = partitions.size();
+        mReadDataWriter = readDataWriter;
         mCurrentPartition = null;
 
         mSamReader = mConfig.BamFile != null ?
@@ -132,13 +142,18 @@ public class PartitionReader extends Thread
         // process overlapping groups
         for(SAMRecord read : mReadGroupMap.values())
         {
-            processSamRecord(read);
+            processSingleRecord(read);
         }
 
         mReadGroupMap.clear();
     }
 
     private void processSamRecord(final SAMRecord read)
+    {
+        processSamRecord(read, true);
+    }
+
+    private void processSamRecord(final SAMRecord read, boolean removeFragments)
     {
         int readStart = read.getAlignmentStart();
 
@@ -160,46 +175,72 @@ public class PartitionReader extends Thread
         }
 
         processFragment(read, mateRead);
+
+        if(removeFragments)
+            mReadGroupMap.remove(read.getReadName());
     }
 
     private void processSingleRecord(final SAMRecord read)
     {
         int duplicateCount = getDuplicateReadCount(read);
-        double gcContent = getReadGcContent(read);
 
-        addFragmentData(read.getAlignmentStart(), read.getAlignmentEnd(), duplicateCount, gcContent, 0);
+        String alignedBases = getAlignedReadBases(read, 0);
+        double gcContent = GcCalcs.calcGcPercent(alignedBases);
+
+        int readPosStart = read.getAlignmentStart();
+        int readPosEnd = read.getAlignmentEnd();
+
+        if(read.getReadNegativeStrandFlag())
+            readPosEnd += CigarUtils.rightSoftClipLength(read);
+        else
+            readPosStart -= CigarUtils.leftSoftClipLength(read);
+
+        addFragmentData(
+                read.getReadName(), 1, readPosStart, readPosEnd, 0, alignedBases.length(), gcContent, duplicateCount);
     }
 
     private void processFragment(final SAMRecord read, final SAMRecord mate)
     {
+        if(read.getMappingQuality() < MIN_MAPPING_QUALITY || mate.getMappingQuality() < MIN_MAPPING_QUALITY)
+            return;
+
         int duplicateCount = getDuplicateReadCount(read);
 
-        int fragmentLength = abs(read.getInferredInsertSize());
-
-        // CHECK: should soft-clipped bases be included or ignored?
         int readPosStart = read.getAlignmentStart();
         int readPosEnd = read.getAlignmentEnd();
 
+        if(read.getReadNegativeStrandFlag())
+            readPosEnd += CigarUtils.rightSoftClipLength(read);
+        else
+            readPosStart -= CigarUtils.leftSoftClipLength(read);
+
         int matePosStart = mate.getAlignmentStart();
         int matePosEnd = mate.getAlignmentEnd();
+
+        if(mate.getReadNegativeStrandFlag())
+            matePosEnd += CigarUtils.rightSoftClipLength(mate);
+        else
+            matePosStart -= CigarUtils.leftSoftClipLength(mate);
 
         int fragPosStart = min(readPosStart, matePosStart);
         int fragPosEnd = max(readPosEnd, matePosEnd);
 
         double gcContent;
+        String alignedBases;
 
         if(positionsOverlap(readPosStart, readPosEnd, matePosStart, matePosEnd))
         {
-            // CHECK: how accurate to make this for overlapping fragments? for now just take the lower read's bases
-            // and append with GC content of upper non-overlapping bases
-            SAMRecord lowerRead = read.getAlignmentStart() <= mate.getAlignmentStart() ? read : mate;
+            SAMRecord lowerRead = readPosStart <= matePosStart ? read : mate;
             SAMRecord upperRead = read == lowerRead ? mate : read;
 
-            String alignedBases = getAlignedReadBases(lowerRead, 0);
+            alignedBases = getAlignedReadBases(lowerRead, 0);
 
-            if(upperRead.getAlignmentEnd() > lowerRead.getAlignmentEnd())
+            int minReadEnd = min(readPosEnd, matePosEnd);
+            int maxReadEnd = max(readPosEnd, matePosEnd);
+
+            if(maxReadEnd > minReadEnd)
             {
-                alignedBases += getAlignedReadBases(upperRead, lowerRead.getAlignmentEnd());
+                alignedBases += getAlignedReadBases(upperRead, minReadEnd + 1);
             }
 
             gcContent = GcCalcs.calcGcPercent(alignedBases);
@@ -208,6 +249,7 @@ public class PartitionReader extends Thread
         {
             String fragmentBases = getAlignedReadBases(read, 0);
             fragmentBases += getAlignedReadBases(mate, 0);
+            alignedBases = fragmentBases;
 
             int gapPosStart = readPosEnd < matePosStart ? readPosEnd : matePosEnd + 1;
             int gapPosEnd = readPosEnd < matePosStart ? matePosStart - 1 : readPosStart - 1;
@@ -218,7 +260,9 @@ public class PartitionReader extends Thread
             gcContent = GcCalcs.calcGcPercent(fragmentBases);
         }
 
-        addFragmentData(fragPosStart, fragPosEnd, duplicateCount, gcContent, fragmentLength);
+        int insertSize = abs(read.getInferredInsertSize());
+
+        addFragmentData(read.getReadName(), 2, fragPosStart, fragPosEnd, insertSize, alignedBases.length(), gcContent, duplicateCount);
     }
 
     private static int getDuplicateReadCount(final SAMRecord read)
@@ -234,19 +278,17 @@ public class PartitionReader extends Thread
         return Integer.parseInt(consensusReadAttr.toString());
     }
 
-    private static double getReadGcContent(final SAMRecord read)
-    {
-        return GcCalcs.calcGcPercent(getAlignedReadBases(read, 0));
-    }
-
-    private void addFragmentData(int fragmentPosStart, int fragmentPosEnd, int duplicateCount, double rawGcPercent, int rawFragmentLength)
+    private void addFragmentData(
+            final String readId, int readCount, int fragmentPosStart, int fragmentPosEnd, int rawFragmentLength, int baseCount,
+            double rawGcPercent, int duplicateCount)
     {
         double gcPercent = roundGcPercent(rawGcPercent, mConfig.GcPercentUnits);
-        int fragmentLength = roundFragmentLength(rawFragmentLength, mConfig.FragmentLengthUnits);
+        int fragmentLength = fragmentPosEnd - fragmentPosStart + 1;
+        int roundedFragmentLength = roundFragmentLength(rawFragmentLength, mConfig.FragmentLengthUnits);
 
         int dupCountRounded = roundDuplicateCount(duplicateCount);
 
-        mAllFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+        mAllFragmentGcMap.add(roundedFragmentLength, gcPercent, dupCountRounded);
 
         boolean matchesRegion = false;
 
@@ -260,16 +302,23 @@ public class PartitionReader extends Thread
                 matchesRegion = true;
 
                 if(mConfig.CaptureRegionCounts)
-                    targetRegion.FragmentGcCounts.add(fragmentLength, gcPercent, dupCountRounded);
+                    targetRegion.FragmentGcCounts.add(roundedFragmentLength, gcPercent, dupCountRounded);
                 else
                     break;
             }
         }
 
         if(matchesRegion)
-            mTargetedFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+            mTargetedFragmentGcMap.add(roundedFragmentLength, gcPercent, dupCountRounded);
         else
-            mNonTargetedFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+            mNonTargetedFragmentGcMap.add(roundedFragmentLength, gcPercent, dupCountRounded);
+
+        if(mReadDataWriter != null)
+        {
+            PartitionReader.writeReadData(
+                    mReadDataWriter, readId, readCount, mCurrentPartition.Chromosome, fragmentPosStart, fragmentPosEnd,
+                    rawFragmentLength, fragmentLength, baseCount, rawGcPercent);
+        }
     }
 
     private static String getAlignedReadBases(final SAMRecord read, final int minReadStartPos)
@@ -289,16 +338,29 @@ public class PartitionReader extends Thread
             }
         }
 
+        boolean useLeftClip = minReadStartPos == 0 && !read.getReadNegativeStrandFlag();
+        boolean useRightClip = read.getReadNegativeStrandFlag();
+
         int readIndex = 0;
         int position = read.getAlignmentStart();
 
         String alignedReadBases = "";
 
-        for(CigarElement element : read.getCigar().getCigarElements())
+        for(int i = 0; i < read.getCigar().getCigarElements().size(); ++i)
         {
+            CigarElement element = read.getCigar().getCigarElements().get(i);
+
             switch(element.getOperator())
             {
                 case S:
+
+                    if((i == 0 && useLeftClip) || (i > 0 && useRightClip))
+                    {
+                        int readIndexStart = readIndex;
+                        int readIndexEnd = readIndexStart + element.getLength() - 1;
+                        alignedReadBases += readBasesStr.substring(readIndexStart, readIndexEnd);
+                    }
+
                     readIndex += element.getLength();
                     break;
 
@@ -339,4 +401,62 @@ public class PartitionReader extends Thread
 
         return alignedReadBases;
     }
+
+    public static BufferedWriter initialiseReadWriter(final MetricsConfig config)
+    {
+        try
+        {
+            // write summary metrics
+            String filename = config.OutputDir + config.SampleId + ".read_data";
+
+            if(config.OutputId != null)
+                filename += "." + config.OutputId;
+
+            filename += TSV_EXTENSION;
+
+            BufferedWriter writer = createBufferedWriter(filename);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("ReadId").add("ReadCount").add("Chromosome").add("FragmentStart").add("FragmentEnd").add("RawInsertSize");
+            sj.add("FragmentLength").add("BaseCount").add("GcRatio");
+            writer.write(sj.toString());
+            writer.newLine();
+            return writer;
+
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to initialise read data writer: {}", e.toString());
+            return null;
+        }
+    }
+
+    public synchronized static void writeReadData(
+            final BufferedWriter writer, final String readId, int readCount, final String chromosome, int fragmentStart, int fragmentEnd,
+            int rawInsertSize, int fragmentLength, int baseCount, double gcRatio)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(readId);
+            sj.add(String.valueOf(readCount));
+            sj.add(chromosome);
+            sj.add(String.valueOf(fragmentStart));
+            sj.add(String.valueOf(fragmentEnd));
+            sj.add(String.valueOf(rawInsertSize));
+            sj.add(String.valueOf(fragmentLength));
+            sj.add(String.valueOf(baseCount));
+            sj.add(format("%.3f", gcRatio));
+            writer.write(sj.toString());
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to write read data: {}", e.toString());
+        }
+    }
+
 }

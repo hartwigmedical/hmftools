@@ -59,7 +59,6 @@ public class AssemblyWriter
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
 
             addSupportHeader(sj);
-            AssemblyStats.addReadTypeHeader(sj);
 
             sj.add("Outcome");
 
@@ -74,6 +73,9 @@ public class AssemblyWriter
             sj.add("RefBaseSequence");
             sj.add("IsLINE");
 
+            sj.add("RefBaseCandidates");
+            sj.add("UnmappedCandidates");
+            AssemblyStats.addReadTypeHeader(sj);
             addRemoteRegionHeader(sj);
 
             if(mConfig.RunAlignment)
@@ -84,8 +86,6 @@ public class AssemblyWriter
 
             // extra detailed fields
             sj.add("InitialReadId");
-
-            sj.add("InitRefBaseCandidates");
 
             sj.add("MergedAssemblies");
 
@@ -123,7 +123,6 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.refBaseLength()));
 
             addSupportCounts(assembly, sj);
-            assembly.stats().addReadTypeCounts(sj);
 
             sj.add(String.valueOf(assembly.outcome()));
 
@@ -149,6 +148,9 @@ public class AssemblyWriter
             }
 
             sj.add(String.valueOf(assembly.hasLineSequence()));
+            sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
+            sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
+            assembly.stats().addReadTypeCounts(sj);
 
             addRemoteRegionInfo(assembly, sj);
 
@@ -159,8 +161,6 @@ public class AssemblyWriter
             }
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
-
-            sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 

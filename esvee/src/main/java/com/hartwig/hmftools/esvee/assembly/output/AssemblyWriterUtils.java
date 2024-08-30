@@ -95,7 +95,6 @@ public final class AssemblyWriterUtils
         sj.add("InsertedBases");
         sj.add("OverlapBases");
         sj.add("RefLinkedFrags");
-
         sj.add("SecondaryLinks");
     }
 
@@ -107,7 +106,7 @@ public final class AssemblyWriterUtils
 
         int phaseGroupId = NO_PHASE_ID;
         int phaseGroupCount = 0;
-        int phaseSetId = NO_PHASE_ID;
+        String phaseSetId = String.valueOf(NO_PHASE_ID);
         int phaseSetCount = 0;
         String splitLinkInfo = "";
         String facingLinkInfo = "";
@@ -127,7 +126,11 @@ public final class AssemblyWriterUtils
 
             if(phaseSet != null)
             {
-                phaseSetId = phaseSet.id();
+                if(phaseSet.merged())
+                    phaseSetId = format("%d_%d", phaseSet.id(), phaseSet.mergedPhaseSetId());
+                else
+                    phaseSetId = String.valueOf(phaseSet.id());
+
                 phaseSetCount = phaseSet.assemblies().size();
 
                 List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);

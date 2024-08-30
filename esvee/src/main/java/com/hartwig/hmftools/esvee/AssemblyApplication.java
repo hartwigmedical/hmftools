@@ -31,7 +31,6 @@ import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -172,8 +171,6 @@ public class AssemblyApplication
             {
                 breakends.get(i).setId(i);
             }
-
-            Deduplication.deduplicateBreakends(breakends);
 
             writeAssemblyOutput(finalAssemblies);
 
@@ -319,7 +316,6 @@ public class AssemblyApplication
             }
         }
 
-        int assemblyAlignmentId = 0;
         for(PhaseGroup phaseGroup : phaseGroups)
         {
             allAssemblies.addAll(phaseGroup.derivedAssemblies());
@@ -329,8 +325,7 @@ public class AssemblyApplication
                 // add link assemblies into the same assembly alignment
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())
                 {
-                    AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, phaseSet);
-                    assemblyAlignments.add(assemblyAlignment);
+                    assemblyAlignments.add(phaseSet.assemblyAlignment());
                 }
 
                 // and then add any assemblies not in a phase set into their own for alignment
@@ -338,7 +333,7 @@ public class AssemblyApplication
                 {
                     if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
                     {
-                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assemblyAlignmentId++, assembly);
+                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
                         assemblyAlignments.add(assemblyAlignment);
                     }
                 }
@@ -350,6 +345,13 @@ public class AssemblyApplication
         for(JunctionAssembly assembly : allAssemblies)
         {
             assembly.setId(assemblyId++);
+        }
+
+        int assemblyAlignmentId = 0;
+
+        for(AssemblyAlignment assemblyAlignment : assemblyAlignments)
+        {
+            assemblyAlignment.setId(assemblyAlignmentId++);
         }
     }
 

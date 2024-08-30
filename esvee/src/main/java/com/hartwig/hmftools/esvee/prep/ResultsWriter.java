@@ -341,7 +341,7 @@ public class ResultsWriter
             sj.add(String.valueOf(read.mapQuality()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
-            sj.add(suppData != null ? suppData.asCsv() : "N/A");
+            sj.add(suppData != null ? suppData.asDelimStr() : "N/A");
 
             sj.add(String.valueOf(read.flags()));
             sj.add(String.valueOf(read.filters()));

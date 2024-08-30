@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 
@@ -70,6 +71,38 @@ public class ReadAdjustmentsTest
         assertEquals(103 + otherBases.length() - 1, read.alignmentEnd());
         assertEquals(otherBases, read.getBasesString());
         assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
+
+        // test trimming into delete
+        readBases = otherBases + polyGSection.substring(0, 5);
+        read = createRead(TEST_READ_ID, 100, readBases, "16M2D5M");
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(115, read.alignmentEnd());
+        assertEquals("16M", read.cigarString());
+
+        readBases = otherBases + polyGSection.substring(0, 6);
+        read = createRead(TEST_READ_ID, 100, readBases, "16M2D5M");
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(114, read.alignmentEnd());
+        assertEquals("15M", read.cigarString());
+
+        // again from the other end
+        readBases = polyCSection.substring(0, 5) + otherBases;
+        read = createRead(TEST_READ_ID, 100, readBases, "5M2D16M");
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(107, read.alignmentStart());
+        assertEquals("16M", read.cigarString());
+
+        readBases = polyCSection.substring(0, 6) + otherBases;
+        read = createRead(TEST_READ_ID, 100, readBases, "5M2D16M");
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(108, read.alignmentStart());
+        assertEquals("15M", read.cigarString());
     }
 
     @Test
@@ -150,6 +183,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(84, read.unclippedStart());
         assertEquals("16S100M", read.cigarString());
@@ -162,12 +196,24 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(82, read.unclippedStart());
         assertEquals("18S100M", read.cigarString());
 
+        // test no LINE trimming if an extension of a matching repeat
+        readBases = softClipBases + lineSequence + REF_BASES_RANDOM_100;
+
+        read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, softClipBases.length(), 0));
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
+
 
         // test the other orientation
+        lineSequence = Nucleotides.reverseComplementBases(lineSequence);
         softClipBases = "CC" + lineSequence + "GCTGCTGTCGTGTCC";
         readBases = REF_BASES_RANDOM_100 + softClipBases;
 
@@ -181,10 +227,20 @@ public class ReadAdjustmentsTest
         read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
         read.bamRecord().setBaseQualities(baseQualities);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(200, read.alignmentEnd());
         assertEquals(218, read.unclippedEnd());
         assertEquals("100M18S", read.cigarString());
+
+
+        // expansion of local repeat
+        readBases = REF_BASES_RANDOM_100 + lineSequence + softClipBases;
+        read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
     }
 
     private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)

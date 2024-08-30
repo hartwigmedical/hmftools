@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,5 +41,10 @@ public enum FilterType
             return PASS;
 
         return filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(";"));
+    }
+
+    public static FilterType fromVcfTag(final String vcfTag)
+    {
+        return Arrays.stream(FilterType.values()).filter(x -> x.vcfTag().equals(vcfTag)).findFirst().orElse(null);
     }
 }
