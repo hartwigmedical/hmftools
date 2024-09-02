@@ -1,0 +1,230 @@
+package com.hartwig.hmftools.bamtools.biomodalcollapse;
+
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
+import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
+import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_DELIMITER;
+import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_HEADERS;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.fastq.FastqRecord;
+
+public class BiomodalCollapse
+{
+    private final BiomodalCollapseConfig mConfig;
+
+    public BiomodalCollapse(final BiomodalCollapseConfig config)
+    {
+        mConfig = config;
+    }
+
+    private Map<String, FastqRecord> loadRefResolvedFastq()
+    {
+        if(mConfig.RefResolvedFastqPath == null)
+        {
+            return Collections.emptyMap();
+        }
+
+        Map<String, FastqRecord> refResolvesFastqMap = Maps.newHashMap();
+        try(BufferedReader fastqReader = createBufferedReader(mConfig.RefResolvedFastqPath))
+        {
+            FastqRecord fastq = nextFastqRecord(fastqReader);
+            while(fastq != null)
+            {
+                refResolvesFastqMap.put(fastq.getReadName(), fastq);
+                fastq = nextFastqRecord(fastqReader);
+            }
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        return refResolvesFastqMap;
+    }
+
+    public void run()
+    {
+        BT_LOGGER.info("starting BimodalCollapse");
+        long startTimeMs = System.currentTimeMillis();
+
+        Map<String, FastqRecord> refResolvesFastqMap = loadRefResolvedFastq();
+
+        BiomodalCollapseStats stats = new BiomodalCollapseStats();
+        List<BiomodalCollapseWorker> workers = Lists.newArrayList();
+
+        BufferedReader fastq1Reader = null;
+        BufferedReader fastq2Reader = null;
+        BufferedWriter resolvedFastqWriter = null;
+        BufferedWriter debugStatsWriter = null;
+
+        // TODO: remove this
+        BufferedWriter badFastq1Writer = null;
+        BufferedWriter badFastq2Writer = null;
+        try
+        {
+            fastq1Reader = createBufferedReader(mConfig.Fastq1Path);
+            fastq2Reader = createBufferedReader(mConfig.Fastq2Path);
+            resolvedFastqWriter = createBufferedWriter(mConfig.CollapsedFastqOutputPath);
+            debugStatsWriter = mConfig.DebugStatsOutputPath == null ? null : createBufferedWriter(mConfig.DebugStatsOutputPath);
+
+            badFastq1Writer = mConfig.BadFastq1OutputPath == null ? null : createBufferedWriter(mConfig.BadFastq1OutputPath);
+            badFastq2Writer = mConfig.BadFastq2OutputPath == null ? null : createBufferedWriter(mConfig.BadFastq2OutputPath);
+
+            if(debugStatsWriter != null)
+            {
+                debugStatsWriter.write(Arrays.stream(STAT_HEADERS).collect(Collectors.joining(STAT_DELIMITER)));
+                debugStatsWriter.newLine();
+            }
+
+            SynchronizedPairedFastqReader fastqPairReader =
+                    new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, mConfig.MaxFastqPairsProcessed);
+            SynchronizedPairedFastqWriter badFastqPairWriter =
+                    badFastq1Writer == null ? null : new SynchronizedPairedFastqWriter(badFastq1Writer, badFastq2Writer);
+            if(mConfig.Threads == 1)
+            {
+                BiomodalCollapseWorker worker =
+                        new BiomodalCollapseWorker(0, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats, badFastqPairWriter);
+                worker.run();
+                workers.add(worker);
+            }
+            else
+            {
+                for(int i = 0; i < mConfig.Threads; i++)
+                {
+                    BiomodalCollapseWorker worker =
+                            new BiomodalCollapseWorker(i, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats, badFastqPairWriter);
+                    worker.start();
+                    workers.add(worker);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+
+            if(workers.size() > 1)
+            {
+                for(BiomodalCollapseWorker worker : workers)
+                {
+                    try
+                    {
+                        worker.join();
+                    }
+                    catch(InterruptedException e)
+                    {
+                        BT_LOGGER.warn("Failed to join worker thread: threadId({}) {}", worker.ThreadId, e);
+                    }
+                }
+            }
+
+            closeBufferedReader(fastq1Reader);
+            closeBufferedReader(fastq2Reader);
+            closeBufferedWriter(resolvedFastqWriter);
+            closeBufferedWriter(debugStatsWriter);
+            closeBufferedWriter(badFastq1Writer);
+            closeBufferedWriter(badFastq2Writer);
+        }
+
+        BT_LOGGER.info(stats.toString());
+        BT_LOGGER.info("BimodalCollapse complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    public synchronized static void writeResolvedFastqRecord(final BufferedWriter writer, final FastqRecord resolvedFastq)
+    {
+        StringBuilder readStr = new StringBuilder(resolvedFastq.getReadString());
+        StringBuilder MMTagSkipsStr = new StringBuilder();
+        int skip = 0;
+        for(int i = 0; i < readStr.length(); i++)
+        {
+            char base = readStr.charAt(i);
+            if(base == 'C')
+            {
+                skip++;
+            }
+            else if(base == (char) MODC_BASE)
+            {
+                readStr.setCharAt(i, 'C');
+                MMTagSkipsStr.append(',');
+                MMTagSkipsStr.append(skip);
+                skip = 0;
+            }
+        }
+
+        try
+        {
+            writer.write('@');
+            writer.write(resolvedFastq.getReadName());
+            writer.write('\t');
+            writer.write(format("MM:Z:C+C.%s;", MMTagSkipsStr));
+            writer.newLine();
+            writer.write(readStr.toString());
+            writer.newLine();
+            writer.write(resolvedFastq.getBaseQualityHeader());
+            writer.newLine();
+            writer.write(resolvedFastq.getBaseQualityString());
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public synchronized static void writeStatLine(final BufferedWriter writer, final String statLine)
+    {
+        try
+        {
+            writer.write(statLine);
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(final String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        BiomodalCollapseConfig.registerConfig(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
+
+        // set default exception handler for all threads
+        // must do this otherwise unhandled exception in other threads might not be reported
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
+            e.printStackTrace(System.err);
+            System.exit(1);
+        });
+
+        BiomodalCollapseConfig config = new BiomodalCollapseConfig(configBuilder);
+        BiomodalCollapse bimodalCollapse = new BiomodalCollapse(config);
+        bimodalCollapse.run();
+    }
+}
