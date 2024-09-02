@@ -16,14 +16,12 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -88,8 +86,20 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public List<AlternativeAlignment> alternativeAlignments() { return mAlternativeAlignments; }
+    public List<AlternativeAlignment> alternativeAlignments()
+    {
+        return mAlternativeAlignments != null ? mAlternativeAlignments : Collections.emptyList();
+    }
+
     public void setAlternativeAlignments(final List<AlternativeAlignment> altAlignments) { mAlternativeAlignments = altAlignments; }
+
+    public List<AlternativeAlignment> lowQualAltAlignments()
+    {
+        if(!mSegments.isEmpty() && mSegments.get(0).Alignment.hasLowMapQualAlignment())
+            return mSegments.get(0).Alignment.unselectedAltAlignments();
+
+        return Collections.emptyList();
+    }
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 
@@ -187,7 +197,7 @@ public class Breakend implements Comparable<Breakend>
         {
             int segmentQual = (int)round(segment.Alignment.modifiedMapQual());
 
-            if(segment.Alignment.useLowMapQualAlignment() || segment.Alignment.hasLinkedAltAlignment())
+            if(segment.Alignment.hasLowMapQualAlignment())
                 segmentQual += ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 
             maxSegmentQual = max(segmentQual, maxSegmentQual);

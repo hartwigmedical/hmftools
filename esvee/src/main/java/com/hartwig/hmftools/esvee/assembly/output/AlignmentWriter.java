@@ -8,19 +8,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
-import static htsjdk.samtools.CigarOperator.M;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-
-import htsjdk.samtools.Cigar;
 
 public class AlignmentWriter
 {
@@ -194,8 +189,8 @@ public class AlignmentWriter
                 sj.add(alignment.mdTag());
                 sj.add(String.valueOf(alignment.droppedOnRequery()));
 
-                if(alignment.hasLinkedAltAlignment())
-                    sj.add(alignment.linkedAltAlignment().vcfString());
+                if(alignment.hasSelectedAltAlignment())
+                    sj.add(alignment.selectedAltAlignment().vcfString());
                 else
                     sj.add("");
 

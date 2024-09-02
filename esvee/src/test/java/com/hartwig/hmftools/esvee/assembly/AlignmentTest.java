@@ -235,7 +235,7 @@ public class AlignmentTest
 
         alignment2 = createAlignment(CHR_1, 100, 199, 104, 204, "50S100M");
 
-        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+        alignments = Lists.newArrayList(alignment1, zeroAlignment1, zeroAlignment2, alignment2);
 
         breakendBuilder.formBreakends(alignments);
 
@@ -263,16 +263,16 @@ public class AlignmentTest
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
         zeroAlignment1 = createAlignment(
-                CHR_2, 3000, 3100, false, 0, 0, 0, 2, "50S2M", altAlignment1);
+                CHR_2, 20000, 20100, false, 0, 0, 0, 2, "50S2M", altAlignment1);
 
         alignment1 = createAlignment(CHR_1, 101, 200, 2, 101, "50S100M50S");
 
         alignment2 = createAlignment(CHR_1, 250, 349, 101, 199, "50S100M50S");
 
         zeroAlignment2 = createAlignment(
-                CHR_2, 4000, 4100, false, 0, 0, 199, 200, "2M50S", altAlignment2);
+                CHR_2, 40000, 40100, false, 0, 0, 199, 200, "2M50S", altAlignment2);
 
-        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+        alignments = Lists.newArrayList(zeroAlignment1, alignment1, alignment2, zeroAlignment2);
 
         breakendBuilder.formBreakends(alignments);
 

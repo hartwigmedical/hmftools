@@ -3,14 +3,12 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -127,7 +125,7 @@ public final class AlignmentFilters
             if(alignment.exceedsMapQualThreshold() || nextAlignment.exceedsMapQualThreshold())
                 continue;
 
-            if(alignment.hasLinkedAltAlignment() && nextAlignment.hasLinkedAltAlignment())
+            if(alignment.hasLowMapQualAlignment() && nextAlignment.hasLowMapQualAlignment())
                 continue;
 
             findShortestLocalVariant(alignment, nextAlignment);
@@ -135,7 +133,7 @@ public final class AlignmentFilters
 
         for(AlignData alignment : candidateAlignments)
         {
-            if(alignment.exceedsMapQualThreshold() || alignment.hasLinkedAltAlignment() || alignment.useLowMapQualAlignment())
+            if(alignment.exceedsMapQualThreshold() || alignment.hasLowMapQualAlignment())
                 validAlignments.add(alignment);
             else
                 lowQualAlignments.add(alignment);
@@ -146,9 +144,9 @@ public final class AlignmentFilters
     {
         List<AlternativeAlignment> alignments;
 
-        if(alignment.linkedAltAlignment() != null)
+        if(alignment.selectedAltAlignment() != null)
         {
-            AlternativeAlignment initialAlignment = alignment.linkedAltAlignment();
+            AlternativeAlignment initialAlignment = alignment.selectedAltAlignment();
             alignments = List.of(initialAlignment);
         }
         else
@@ -167,7 +165,7 @@ public final class AlignmentFilters
             {
                 alignments = Lists.newArrayList(initialAlignment);
 
-                for(AlternativeAlignment altAlignment : alignment.altAlignments())
+                for(AlternativeAlignment altAlignment : alignment.rawAltAlignments())
                 {
                     // apply orientation info
                     Orientation altOrientation = segmentOrientation(altAlignment.Orient, linksEnd);
@@ -222,24 +220,26 @@ public final class AlignmentFilters
             }
         }
 
-        markAltAlignment(first, firstInitialAlignment, firstSelectedAlt);
-        markAltAlignment(second, secondInitialAlignment, secondSelectedAlt);
+        markAltAlignment(first, firstInitialAlignment, firstSelectedAlt, firstAlignments);
+        markAltAlignment(second, secondInitialAlignment, secondSelectedAlt, secondAlignments);
 
         return firstSelectedAlt != null && secondSelectedAlt != null;
     }
 
     private static void markAltAlignment(
-            final AlignData alignment, final AlternativeAlignment initialAlignment, final AlternativeAlignment altAlignment)
+            final AlignData alignment, final AlternativeAlignment initialAlignment, final AlternativeAlignment selectedAlignment,
+            final List<AlternativeAlignment> allAlignments)
     {
-        if(altAlignment == null)
+        if(selectedAlignment == null)
             return;
 
         if(alignment.exceedsMapQualThreshold()) // only applicable for alignments failing the initial qual test
             return;
 
-        if(initialAlignment == altAlignment) // allow the default alignment to be used
-            alignment.markUseLowMapQualAlignment();
-        else
-            alignment.setLinkedAltAlignment(altAlignment);
+        List<AlternativeAlignment> unselectedAltAlignments = allAlignments.stream()
+                .filter(x -> x != selectedAlignment).collect(Collectors.toList());
+
+        alignment.setSelectedAltAlignments(
+                selectedAlignment != initialAlignment ? selectedAlignment : null, unselectedAltAlignments);
     }
 }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.exp;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -12,7 +11,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
@@ -30,7 +28,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -390,9 +387,9 @@ public class BreakendBuilder
             Orientation breakendOrientation, nextOrientation;
             int breakendPosition, nextPosition;
 
-            if(alignment.hasLinkedAltAlignment())
+            if(alignment.hasSelectedAltAlignment())
             {
-                AlternativeAlignment breakendAltAlignment = alignment.linkedAltAlignment();
+                AlternativeAlignment breakendAltAlignment = alignment.selectedAltAlignment();
                 breakendChr = breakendAltAlignment.Chromosome;
                 breakendPosition = breakendAltAlignment.Position;
                 breakendOrientation = breakendAltAlignment.Orient;
@@ -406,9 +403,9 @@ public class BreakendBuilder
 
             AlignData nextAlignment = alignments.get(i + 1);
 
-            if(nextAlignment.hasLinkedAltAlignment())
+            if(nextAlignment.hasSelectedAltAlignment())
             {
-                AlternativeAlignment nextAltAlignment = nextAlignment.linkedAltAlignment();
+                AlternativeAlignment nextAltAlignment = nextAlignment.selectedAltAlignment();
                 nextChr = nextAltAlignment.Chromosome;
                 nextPosition = nextAltAlignment.Position;
                 nextOrientation = nextAltAlignment.Orient;

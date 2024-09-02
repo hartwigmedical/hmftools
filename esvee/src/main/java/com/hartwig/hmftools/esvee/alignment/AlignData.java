@@ -61,9 +61,9 @@ public class AlignData
     private int mAdjustedAlignment;
     private int mModifiedMapQual;
 
-    private List<AlternativeAlignment> mAltAlignments; // lazy instantiation
-    private boolean mUseLowMapQualAlignment;
-    private AlternativeAlignment mLinkedAltAlignment;
+    private List<AlternativeAlignment> mRawAltAlignments; // lazy instantiation of BWA-returned alt alignments
+    private AlternativeAlignment mSelectedAltAlignment; // set if the default is not selected
+    private List<AlternativeAlignment> mUnselectedAltAlignments; // those other than the one selected
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
@@ -97,9 +97,9 @@ public class AlignData
         mAdjustedAlignment = mAlignedBases;
         mModifiedMapQual = 0;
 
-        mAltAlignments = null;
-        mUseLowMapQualAlignment = false;
-        mLinkedAltAlignment = null;
+        mRawAltAlignments = null;
+        mSelectedAltAlignment = null;
+        mUnselectedAltAlignments = null;
     }
 
     public ChrBaseRegion refLocation() { return mRefLocation; }
@@ -193,12 +193,56 @@ public class AlignData
         mModifiedMapQual = (int)round(mMapQual * min(1, lengthFactor));
     }
 
-    public void markUseLowMapQualAlignment() { mUseLowMapQualAlignment = true; }
-    public boolean useLowMapQualAlignment() { return mUseLowMapQualAlignment; }
+    public boolean hasAltAlignments() { return !mXaTag.isEmpty(); }
 
-    public boolean hasLinkedAltAlignment() { return mLinkedAltAlignment != null; }
-    public AlternativeAlignment linkedAltAlignment() { return mLinkedAltAlignment; }
-    public void setLinkedAltAlignment(final AlternativeAlignment alignment) { mLinkedAltAlignment = alignment; }
+    public List<AlternativeAlignment> rawAltAlignments()
+    {
+        if(mXaTag.isEmpty())
+            return Collections.emptyList();
+
+        if(mRawAltAlignments != null)
+            return mRawAltAlignments;
+
+        mRawAltAlignments = AlternativeAlignment.fromLocationTag(mXaTag);
+
+        return mRawAltAlignments;
+    }
+
+    public List<AlternativeAlignment> allAlignments()
+    {
+        List<AlternativeAlignment> altAlignments = rawAltAlignments();
+
+        if(altAlignments.isEmpty())
+            return altAlignments;
+
+        // otherwise include the default alignment as well
+        List<AlternativeAlignment> allAlignments = Lists.newArrayListWithCapacity(altAlignments.size() + 1);
+
+        allAlignments.add(new AlternativeAlignment(mRefLocation.Chromosome, mRefLocation.start(), orientation(), mCigar, mMapQual));
+        allAlignments.addAll(altAlignments);
+        return allAlignments;
+    }
+
+    public boolean hasLowMapQualAlignment() { return mSelectedAltAlignment != null || mUnselectedAltAlignments != null; }
+    public boolean hasSelectedAltAlignment() { return mSelectedAltAlignment != null; }
+    public AlternativeAlignment selectedAltAlignment() { return mSelectedAltAlignment; }
+
+    public void setSelectedAltAlignments(final AlternativeAlignment selectedAlignment, final List<AlternativeAlignment> otherAlignments)
+    {
+        mSelectedAltAlignment = selectedAlignment;
+        mUnselectedAltAlignments = otherAlignments;
+    }
+
+    public List<AlternativeAlignment> unselectedAltAlignments()
+    {
+        return mUnselectedAltAlignments != null ? mUnselectedAltAlignments : Collections.emptyList();
+    }
+
+    public boolean isLowerAlignment(final AlignData other)
+    {
+        // returns true if this alignment is lower in genome position terms than the comparison alignment
+        return mRefLocation.compareTo(other.mRefLocation) < 0;
+    }
 
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
@@ -214,42 +258,6 @@ public class AlignData
                 new ChrBaseRegion(chromosome, alignment.getRefStart() + 1, alignment.getRefEnd()),
                 alignment.getSeqStart(), alignment.getSeqEnd(), alignment.getMapQual(), alignment.getAlignerScore(),
                 alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
-    }
-
-    public boolean hasAltAlignments() { return !mXaTag.isEmpty(); }
-
-    public List<AlternativeAlignment> altAlignments()
-    {
-        if(mXaTag.isEmpty())
-            return Collections.emptyList();
-
-        if(mAltAlignments != null)
-            return mAltAlignments;
-
-        mAltAlignments = AlternativeAlignment.fromLocationTag(mXaTag);
-
-        return mAltAlignments;
-    }
-
-    public List<AlternativeAlignment> allAlignments()
-    {
-        List<AlternativeAlignment> altAlignments = altAlignments();
-
-        if(altAlignments.isEmpty())
-            return altAlignments;
-
-        // otherwise include the default alignment as well
-        List<AlternativeAlignment> allAlignments = Lists.newArrayListWithCapacity(altAlignments.size() + 1);
-
-        allAlignments.add(new AlternativeAlignment(mRefLocation.Chromosome, mRefLocation.start(), orientation(), mCigar, mMapQual));
-        allAlignments.addAll(altAlignments);
-        return allAlignments;
-    }
-
-    public boolean isLowerAlignment(final AlignData other)
-    {
-        // returns true if this alignment is lower in genome position terms than the comparison alignment
-        return mRefLocation.compareTo(other.mRefLocation) < 0;
     }
 
     public String toString()
