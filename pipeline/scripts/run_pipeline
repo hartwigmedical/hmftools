@@ -242,7 +242,7 @@ ${scripts_dir}/run_pave_somatic ${pave_jar} \
   ${tumor_id}  \
   ${sage_vcf} ${pave_somatic_dir} ${pave_vcf} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
-  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${pon_artefact_file} ${mappability_bed} ${gnomad_path} \
+  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${pon_artefact_file} ${mappability_bed} ${clinvar_vcf} ${gnomad_path} \
   ${threads} ${max_memory} \
 
 
