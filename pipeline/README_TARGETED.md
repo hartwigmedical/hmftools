@@ -52,11 +52,9 @@ These files are then used by the pipeline in panel mode to produce well-calibrat
 
 An initial set of input samples, recommended to number at least 20, are use to 'train' the pipeline. In particular this identifies variance in read depth and variant calling compared with whole genome and transcriptome.   Note that the assumption of this training is that the _median_ relative copy number for any given gene should not deviate too systematically from the ploidy across the cohort.  In general this is a realtively safe assumption for a pan-cancer dataset, but in cancer specific training sets, there may be certain recurrentlye copy number altered genes that violate this assumption.   
 
-There are 2 steps in the training procedure
-- Run COBALT, AMBER & SAGE in WGTS mode
-- Run training normalisation scripts
+There are 2 steps in the training procedure:
 
-### Run COBALT, AMBER, SAGE & ISOFOX on the targeted samples in WGTS mode
+### STEP 1: Run COBALT, AMBER, SAGE & ISOFOX on the targeted samples in WGTS mode
 
 This can be done by running the samples through oncoanalyser in WGTS mode.
 
@@ -92,7 +90,7 @@ ISOFOX (RNA panels only)
 <TO DO>
 ```
 
-### Run training normalisation scripts
+### STEP 2: Run training normalisation scripts
 
 #### Target Regions Normalisation TSV
 
