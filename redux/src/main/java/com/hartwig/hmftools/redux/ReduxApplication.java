@@ -118,7 +118,7 @@ public class ReduxApplication
 
         if(mConfig.UseSupplementaryBam)
         {
-            SuppBamReprocessor.reprocessSupplememtaries(
+            SuppBamReprocessor.reprocessSupplementaries(
                     mConfig, recordWriter, partitionDataStore, fileWriterCache.getSupplementaryBamReadWriters(), consensusReads);
         }
 

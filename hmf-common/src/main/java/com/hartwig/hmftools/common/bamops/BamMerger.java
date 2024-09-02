@@ -259,7 +259,8 @@ public class BamMerger
                 final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
                 String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
 
-                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
+                if(fileHeader.getProgramRecords().stream().noneMatch(x -> x.getProgramGroupId().equals(newProgramId)))
+                    fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
             }
         }
 

@@ -145,7 +145,7 @@ public class SuppBamReprocessor implements Callable
         }
     }
 
-    public static void reprocessSupplememtaries(
+    public static void reprocessSupplementaries(
             final ReduxConfig config, final BamWriter bamWriter, final PartitionDataStore partitionDataStore,
             final List<SuppBamWriter> suppBamWriters, final ConsensusReads consensusReads)
     {

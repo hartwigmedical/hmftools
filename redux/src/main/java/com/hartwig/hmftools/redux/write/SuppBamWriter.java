@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.write;
 
+import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.redux.write.FileWriterCache.BAM_FILE_ID;
 
@@ -24,10 +25,8 @@ public class SuppBamWriter
     {
         mFilename = filename;
 
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile))
-                .open(new File(config.BamFiles.get(0)));
+        SAMFileHeader fileHeader = buildCombinedHeader(config.BamFiles, config.RefGenomeFile);
 
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
         mBamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
