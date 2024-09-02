@@ -135,7 +135,7 @@ interesting and added to the report:
 
 - Other potentially relevant variants:
     1. Variants that are hotspots or near hotspots but not part of the reporting gene panel.
-    2. Variants that are not reported but are phased with variants that are reported.
+    2. Exonic variants that are not reported but are phased with variants that are reported.
     3. Variants that are considered relevant for tumor type classification according to Cuppa.
     4. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
     5. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
