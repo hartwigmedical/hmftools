@@ -10,17 +10,18 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.createOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
 
 import java.io.BufferedWriter;
@@ -39,7 +40,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 public class GenerateFusionFiles
 {
@@ -55,7 +55,7 @@ public class GenerateFusionFiles
         GU_LOGGER.info("starting known fusion file generation");
 
         mKnownFusionDbFile = configBuilder.getValue(KNOWN_FUSION_DB_FILE);
-        mResourceRepoDir = configBuilder.getValue(RESOURCE_REPO_DIR);
+        mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
     }
 
@@ -78,19 +78,20 @@ public class GenerateFusionFiles
 
                 if(ref1.isDuplicate(ref2))
                 {
-                    GU_LOGGER.error("duplicate fusion entry: {} {}-{}", ref1.toString());
+                    GU_LOGGER.error("duplicate fusion entry: {}", ref1.toString());
                     System.exit(1);
                 }
             }
         }
 
+        createOutputDir(mOutputDir);
         createFusionFiles(RefGenomeVersion.V37, fusionRefData);
         createFusionFiles(RefGenomeVersion.V38, fusionRefData);
 
         GU_LOGGER.info("fusion reference file generation complete");
     }
 
-    public void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
+    private void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
     {
         // step 3: load Ensembl data cache files
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
@@ -161,9 +162,20 @@ public class GenerateFusionFiles
                 fusionData.add(fusion.ThreeGene);
                 fusionData.add(fusion.CancerTypes);
                 fusionData.add(fusion.PubMedId);
-                fusionData.add(fusion.KnownExonTranscript);
-                fusionData.add(fusion.KnownExonUpRange);
-                fusionData.add(fusion.KnownExonDownRange);
+
+                if(refGenomeVersion.is37())
+                {
+                    fusionData.add(fusion.KnownExonTranscript);
+                    fusionData.add(fusion.KnownExonUpRange);
+                    fusionData.add(fusion.KnownExonDownRange);
+                }
+                else
+                {
+                    fusionData.add(fusion.KnownExonTranscriptRef38);
+                    fusionData.add(fusion.KnownExonUpRangeRef38);
+                    fusionData.add(fusion.KnownExonDownRangeRef38);
+                }
+
                 fusionData.add(fusion.HighImpactPromiscuous);
 
                 if(refGenomeVersion.is37())
@@ -183,7 +195,7 @@ public class GenerateFusionFiles
         }
     }
 
-    private class FusionBedData implements Comparable<FusionBedData>
+    private static class FusionBedData implements Comparable<FusionBedData>
     {
         public final String Name;
         public final String ChrUp;
@@ -409,7 +421,7 @@ public class GenerateFusionFiles
                 String line = lines.get(i);
                 String[] values = line.split(TSV_DELIM, -1);
 
-                if(values.length < 10)
+                if(values.length < 13)
                 {
                     GU_LOGGER.error("entry({}) missing data: {}", i, line);
                     return Collections.emptyList();
@@ -429,6 +441,8 @@ public class GenerateFusionFiles
                         values[fieldsIndexMap.get(KnownFusionData.FLD_HIGH_IMPACT_PROM)],
                         values[fieldsIndexMap.get(KnownFusionData.FLD_OVERRIDES)],
                         values[fieldsIndexMap.get("KnownExonTranscriptRef38")],
+                        values[fieldsIndexMap.get("KnownExonUpRangeRef38")],
+                        values[fieldsIndexMap.get("KnownExonDownRangeRef38")],
                         values[fieldsIndexMap.get("OverridesRef38")]));
             }
 
@@ -442,7 +456,7 @@ public class GenerateFusionFiles
         }
     }
 
-    private class FusionRefData
+    private static class FusionRefData
     {
         public final KnownFusionType Type;
         public final String FiveGene;
@@ -455,12 +469,15 @@ public class GenerateFusionFiles
         public final String HighImpactPromiscuous;
         public final String Overrides;
         public final String KnownExonTranscriptRef38;
+        public final String KnownExonUpRangeRef38;
+        public final String KnownExonDownRangeRef38;
         public final String OverridesRef38;
 
         public FusionRefData(
                 final KnownFusionType type, final String fiveGene, final String threeGene, final String cancerTypes, final String pubMedId,
                 final String knownExonTranscript, final String knownExonUpRange, final String knownExonDownRange,
-                final String highImpactPromiscuous, final String overrides, final String knownExonTranscriptRef38, final String overridesRef38)
+                final String highImpactPromiscuous, final String overrides, final String knownExonTranscriptRef38,
+                final String knownExonUpRangeRef38, final String knownExonDownRangeRef38, final String overridesRef38)
         {
             Type = type;
             FiveGene = fiveGene;
@@ -473,6 +490,8 @@ public class GenerateFusionFiles
             HighImpactPromiscuous = highImpactPromiscuous;
             Overrides = overrides;
             KnownExonTranscriptRef38 = knownExonTranscriptRef38;
+            KnownExonUpRangeRef38 = knownExonUpRangeRef38;
+            KnownExonDownRangeRef38 = knownExonDownRangeRef38;
             OverridesRef38 = overridesRef38;
         }
 
@@ -481,8 +500,16 @@ public class GenerateFusionFiles
             if(Type != other.Type)
                 return false;
 
-            return FiveGene.equals(other.FiveGene) && ThreeGene.equals(other.ThreeGene)
-                    && KnownExonUpRange.equals(other.KnownExonUpRange) && KnownExonDownRange.equals(other.KnownExonDownRange);
+            if(!FiveGene.equals(other.FiveGene) || !ThreeGene.equals(other.ThreeGene))
+                return false;
+
+            boolean equalKnownExonRange37 =
+                    KnownExonTranscript.equals(other.KnownExonTranscript) && KnownExonUpRange.equals(other.KnownExonUpRange)
+                            && KnownExonDownRange.equals(other.KnownExonDownRange);
+            boolean equalKnownExonRange38 = KnownExonTranscriptRef38.equals(other.KnownExonTranscriptRef38)
+                    && KnownExonUpRangeRef38.equals(other.KnownExonUpRangeRef38)
+                    && KnownExonDownRangeRef38.equals(other.KnownExonDownRangeRef38);
+            return equalKnownExonRange37 || equalKnownExonRange38;
         }
 
         public String toString()
