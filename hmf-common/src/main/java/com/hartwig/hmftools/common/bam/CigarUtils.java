@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;

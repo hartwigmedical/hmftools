@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;

@@ -1,12 +1,9 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.common.sequencing;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-
-import java.util.Arrays;
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -28,7 +25,7 @@ public final class UltimaBamUtils
     private static final double PPM_STRAND_BALANCED_LOW = 0.27;
     private static final double PPM_STRAND_BALANCED_HIGH = 1 - PPM_STRAND_BALANCED_LOW;
 
-    public static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
+    public static final byte[] CYCLE_BASES = new byte[] { (byte) 'T', (byte) 'G', (byte) 'C', (byte) 'A' };
 
     public static byte[] extractTpValues(final SAMRecord record)
     {
@@ -70,7 +67,6 @@ public final class UltimaBamUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
-        // TODO: Look into this rare corner case.
         if(indexStart < 0)
         {
             return ULTIMA_INVALID_QUAL;
@@ -124,8 +120,9 @@ public final class UltimaBamUtils
     {
         if(startBase == endBase || startBase == testBase)
             return false;
-        if(Arrays.binarySearch(DNA_BASE_BYTES, startBase) < 0 || Arrays.binarySearch(DNA_BASE_BYTES, endBase) < 0)
-            return false;  // either base is not TGCA
+
+        if(baseIndex(startBase) == -1 || baseIndex(endBase) == -1)
+            return false;
 
         boolean started = false;
         int index = 0;
