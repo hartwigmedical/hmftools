@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
@@ -242,8 +243,6 @@ public class VcfWriter implements AutoCloseable
             totalDiscFrags += breakendSupport.DiscordantFragments;
         }
 
-        Set<String> filters = breakend.filters().stream().map(x -> x.vcfTag()).collect(Collectors.toSet());
-
         int qual = breakend.calcSvQual();
 
         List<Allele> alleles = buildAlleleInfo(breakend);
@@ -254,7 +253,7 @@ public class VcfWriter implements AutoCloseable
                 .start(breakend.Position)
                 .alleles(alleles)
                 .log10PError(qual / -10.0)
-                .filters(filters)
+                // .filters(PASS)
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())

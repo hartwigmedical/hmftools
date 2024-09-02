@@ -60,8 +60,6 @@ public class BreakendWriter
             sj.add("MateChr").add("MatePos").add("MateOrient").add("Length");
             sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
 
-            sj.add("Filters");
-
             sj.add("Qual");
             sj.add("SplitFragments");
             sj.add("RefSplitFragments");
@@ -150,8 +148,6 @@ public class BreakendWriter
                 {
                     sj.add("").add("0,0").add("0,0");
                 }
-
-                sj.add(filtersAsStr(breakend.filters()));
 
                 sj.add(String.valueOf(breakend.calcSvQual()));
 

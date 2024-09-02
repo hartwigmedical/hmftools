@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
@@ -46,7 +47,6 @@ public class Breakend implements Comparable<Breakend>
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
     private int mIncompleteFragmentCount;
-    private final Set<FilterType> mFilters;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -69,7 +69,6 @@ public class Breakend implements Comparable<Breakend>
 
         mAlternativeAlignments = null;
 
-        mFilters = Sets.newHashSet();
         mFragmentLengthTotal = 0;
         mFragmentLengthCount = 0;
         mIncompleteFragmentCount = 0;
@@ -188,15 +187,14 @@ public class Breakend implements Comparable<Breakend>
         {
             int segmentQual = (int)round(segment.Alignment.modifiedMapQual());
 
+            if(segment.Alignment.useLowMapQualAlignment() || segment.Alignment.hasLinkedAltAlignment())
+                segmentQual += ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
+
             maxSegmentQual = max(segmentQual, maxSegmentQual);
         }
 
         return maxSegmentQual;
     }
-
-    public Set<FilterType> filters() { return mFilters; }
-    public boolean passing() { return mFilters.isEmpty(); }
-    public void addFilter(final FilterType filterType) { mFilters.add(filterType); }
 
     public boolean matches(final String chromosome, final int position, final Orientation orientation)
     {

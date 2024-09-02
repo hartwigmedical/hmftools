@@ -537,7 +537,12 @@ public class BreakendBuilder
 
     protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)
     {
-        return (linksEnd == (alignment.orientation().isForward())) ? FORWARD : REVERSE;
+        return segmentOrientation(alignment.orientation(), linksEnd);
+    }
+
+    protected static Orientation segmentOrientation(final Orientation segmentOrientation, boolean linksEnd)
+    {
+        return (linksEnd == (segmentOrientation.isForward())) ? FORWARD : REVERSE;
     }
 
     private static List<AlternativeAlignment> buildAltAlignments(

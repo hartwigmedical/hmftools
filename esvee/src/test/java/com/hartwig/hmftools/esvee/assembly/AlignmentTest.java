@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignments;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignmentsOld;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 
@@ -414,7 +413,6 @@ public class AlignmentTest
         lowQualAlignments.clear();
 
         filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
-        // filterAlignmentsOld(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         assertEquals(3, lowQualAlignments.size());
         assertEquals(3, validAlignments.size());

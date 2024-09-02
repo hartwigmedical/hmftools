@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
@@ -42,8 +44,6 @@ public final class AlignmentFilters
         }
 
         // set modified map qual and then filtered low qual alignments
-        Collections.sort(candidateAlignments, Comparator.comparingInt(x -> x.sequenceStart()));
-
         for(int i = 0; i < candidateAlignments.size(); ++i)
         {
             AlignData alignment = candidateAlignments.get(i);
@@ -142,59 +142,57 @@ public final class AlignmentFilters
         }
     }
 
+    private static List<AlternativeAlignment> collectAlignmentCandidates(final AlignData alignment, boolean linksEnd)
+    {
+        List<AlternativeAlignment> alignments;
+
+        if(alignment.linkedAltAlignment() != null)
+        {
+            AlternativeAlignment initialAlignment = alignment.linkedAltAlignment();
+            alignments = List.of(initialAlignment);
+        }
+        else
+        {
+            Orientation orientation = segmentOrientation(alignment, linksEnd);
+            int firstPosition = alignment.isForward() ? alignment.positionEnd() : alignment.positionStart();
+
+            AlternativeAlignment initialAlignment = new AlternativeAlignment(
+                    alignment.chromosome(), firstPosition, orientation, "", alignment.mapQual());
+
+            if(alignment.exceedsMapQualThreshold())
+            {
+                alignments = List.of(initialAlignment);
+            }
+            else
+            {
+                alignments = Lists.newArrayList(initialAlignment);
+
+                for(AlternativeAlignment altAlignment : alignment.altAlignments())
+                {
+                    // apply orientation info
+                    Orientation altOrientation = segmentOrientation(altAlignment.Orient, linksEnd);
+                    int position = altAlignment.Position;
+
+                    if(altOrientation.isForward())
+                        position += calcCigarAlignedLength(altAlignment.Cigar) - 1;
+
+                    alignments.add(new AlternativeAlignment(
+                            altAlignment.Chromosome,  position, altOrientation, altAlignment.Cigar, altAlignment.MapQual));
+                }
+            }
+        }
+
+        return alignments;
+    }
+
     private static boolean findShortestLocalVariant(final AlignData first, AlignData second)
     {
         // form alt alignments from the top alignment to make comparison easier
-        List<AlternativeAlignment> firstAlignments, secondAlignments;
-        AlternativeAlignment firstInitialAlignment, secondInitialAlignment;
+        List<AlternativeAlignment> firstAlignments = collectAlignmentCandidates(first, true);
+        List<AlternativeAlignment> secondAlignments = collectAlignmentCandidates(second, false);
 
-        if(first.linkedAltAlignment() != null)
-        {
-            firstInitialAlignment = first.linkedAltAlignment();
-            firstAlignments = List.of(firstInitialAlignment);
-        }
-        else
-        {
-            Orientation firstOrientation = segmentOrientation(first, true);
-            int firstPosition = first.isForward() ? first.positionEnd() : first.positionStart();
-
-            firstInitialAlignment = new AlternativeAlignment(
-                    first.chromosome(), firstPosition, firstOrientation, "", first.mapQual());
-
-            if(first.exceedsMapQualThreshold())
-            {
-                firstAlignments = List.of(firstInitialAlignment);
-            }
-            else
-            {
-                firstAlignments = Lists.newArrayList(firstInitialAlignment);
-                firstAlignments.addAll(first.altAlignments());
-            }
-        }
-
-        if(second.linkedAltAlignment() != null)
-        {
-            secondInitialAlignment = second.linkedAltAlignment();
-            secondAlignments = List.of(secondInitialAlignment);
-        }
-        else
-        {
-            Orientation secondOrientation = segmentOrientation(second, false);
-            int secondPosition = second.isForward() ? second.positionStart() : second.positionEnd();
-
-            secondInitialAlignment = new AlternativeAlignment(
-                    second.chromosome(), secondPosition, secondOrientation, "", second.mapQual());
-
-            if(second.exceedsMapQualThreshold())
-            {
-                secondAlignments = List.of(secondInitialAlignment);
-            }
-            else
-            {
-                secondAlignments = Lists.newArrayList(secondInitialAlignment);
-                secondAlignments.addAll(second.altAlignments());
-            }
-        }
+        AlternativeAlignment firstInitialAlignment = firstAlignments.get(0);
+        AlternativeAlignment secondInitialAlignment = secondAlignments.get(0);
 
         if(firstAlignments.size() < 2 && secondAlignments.size() < 2)
             return false;
@@ -243,71 +241,5 @@ public final class AlignmentFilters
             alignment.markUseLowMapQualAlignment();
         else
             alignment.setLinkedAltAlignment(altAlignment);
-    }
-
-    @Deprecated
-    @VisibleForTesting
-    public static void filterAlignmentsOld(
-            final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> validAlignments,
-            final List<AlignData> lowQualAlignments)
-    {
-        // exclude alignments with zero qual
-        final List<AlignData> nonZeroAlignments = Lists.newArrayList();
-
-        for(AlignData alignment : alignments)
-        {
-            if(alignment.mapQual() > 0)
-                nonZeroAlignments.add(alignment);
-            else
-                lowQualAlignments.add(alignment);
-        }
-
-        if(nonZeroAlignments.isEmpty())
-            return;
-
-        // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
-        String fullSequence = assemblyAlignment.fullSequence();
-
-        nonZeroAlignments.forEach(x -> x.setFullSequenceData(fullSequence, assemblyAlignment.fullSequenceLength()));
-
-        // set modified map qual and then filtered low qual alignments
-        Collections.sort(nonZeroAlignments, Comparator.comparingInt(x -> x.sequenceStart()));
-
-        for(int i = 0; i < nonZeroAlignments.size(); ++i)
-        {
-            AlignData alignment = nonZeroAlignments.get(i);
-
-            int overlapStart = 0;
-            int overlapEnd = 0;
-
-            if(i > 0)
-            {
-                AlignData prevAlignment = nonZeroAlignments.get(i - 1);
-                if(prevAlignment.sequenceEnd() >= alignment.sequenceStart())
-                {
-                    overlapStart = prevAlignment.sequenceEnd() - alignment.sequenceStart() + 1;
-                }
-            }
-
-            if(i < nonZeroAlignments.size() - 1)
-            {
-                AlignData nextAlignment = nonZeroAlignments.get(i + 1);
-
-                if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
-                {
-                    overlapEnd = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
-                }
-            }
-
-            alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
-        }
-
-        for(AlignData alignment : nonZeroAlignments)
-        {
-            if(alignment.exceedsMapQualThreshold())
-                validAlignments.add(alignment);
-            else
-                lowQualAlignments.add(alignment);
-        }
     }
 }
