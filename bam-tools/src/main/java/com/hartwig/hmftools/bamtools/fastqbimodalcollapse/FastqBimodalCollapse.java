@@ -199,7 +199,9 @@ public class FastqBimodalCollapse
             "exact_matches",
             "exact_mismatches",
             "read1",
+            "qual1",
             "read2",
+            "qual2",
             "consensus_read"
     };
 
@@ -276,11 +278,37 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(exactMatches));
         statLine.add(String.valueOf(exactMismatches));
         statLine.add(fastq1.getReadString());
+        statLine.add(fastq1.getBaseQualityString());
         statLine.add(fastq2.getReadString());
-        statLine.add(consensusRead);
+        statLine.add(fastq2.getBaseQualityString());
+        statLine.add(consensusReadForOutput(consensusRead));
 
         writer.write(statLine.toString());
         writer.newLine();
+    }
+
+    private static String consensusReadForOutput(final String consensusRead)
+    {
+        StringBuilder output = new StringBuilder();
+        for(int i = 0; i < consensusRead.length(); i++)
+        {
+            char c = consensusRead.charAt(i);
+            if(c == 'X')
+            {
+                output.append('N');
+                continue;
+            }
+
+            if(c == MODC_BASE)
+            {
+                output.append('X');
+                continue;
+            }
+
+            output.append(c);
+        }
+
+        return output.toString();
     }
 
     public static void main(final String[] args)
