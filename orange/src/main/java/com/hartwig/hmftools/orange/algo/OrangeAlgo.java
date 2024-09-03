@@ -23,6 +23,8 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.metrics.OldFlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -356,11 +358,11 @@ public class OrangeAlgo
         }
 
         String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.wgsRefConfig().refSampleWGSMetricsFile();
-        WGSMetrics metrics = OrangeConversion.convert(OldWGSMetricsFile.read(metricsFile));
+        WGSMetrics metrics = OrangeConversion.convert(BamMetricsSummary.read(metricsFile));
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
         String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.wgsRefConfig().refSampleFlagstatFile();
-        Flagstat flagstat = OrangeConversion.convert(OldFlagstatFile.read(flagstatFile));
+        Flagstat flagstat = OrangeConversion.convert(BamFlagStats.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();

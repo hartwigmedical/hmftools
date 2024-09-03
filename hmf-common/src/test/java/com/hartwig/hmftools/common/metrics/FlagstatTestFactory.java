@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 public final class FlagstatTestFactory
 {
     @NotNull
-    public static OldFlagstat createMinimalTestFlagstat()
+    public static BamFlagStats createMinimalTestFlagstat()
     {
-        return ImmutableOldFlagstat.builder()
+        return ImmutableBamFlagStats.builder()
                 .uniqueReadCount(0)
                 .secondaryCount(0)
                 .supplementaryCount(0)
