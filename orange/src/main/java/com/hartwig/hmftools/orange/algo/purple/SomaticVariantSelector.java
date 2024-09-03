@@ -77,7 +77,7 @@ final class SomaticVariantSelector
     }
 
     private static boolean isExonic(@NotNull PurpleVariant variant) {
-        return variant.canonicalImpact().affectedExon() != null && variant.canonicalImpact().affectedExon() > 0;
+        return variant.canonicalImpact().affectedExon() != null;
     }
 
     private static boolean isRelevantForCuppa(@NotNull PurpleVariant variant)
