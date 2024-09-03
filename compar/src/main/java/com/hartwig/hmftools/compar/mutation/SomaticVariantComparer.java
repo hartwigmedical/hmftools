@@ -298,7 +298,7 @@ public class SomaticVariantComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
         thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
         thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.5, 0.2);
-        thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0.2);
+        thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
         thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 0, 0.2);
         thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 0, 0.2);
     }
