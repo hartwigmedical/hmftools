@@ -59,11 +59,11 @@ public class PeachComparer implements ItemComparer
         return genotypes.stream().map(g -> new PeachData(g)).collect(Collectors.toList());
     }
 
-    public List<ComparableItem> loadFromFile(final String sampleId, final String normalSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        String fileName = determineFileName(sampleId, normalSampleId, fileSources);
+        String fileName = determineFileName(sampleId, germlineSampleId, fileSources);
         try
         {
             PeachGenotypeFile.read(fileName).forEach(g -> comparableItems.add(new PeachData(g)));
@@ -76,9 +76,9 @@ public class PeachComparer implements ItemComparer
         return comparableItems;
     }
 
-    private static String determineFileName(final String sampleId, final String normalSampleId, final FileSources fileSources)
+    private static String determineFileName(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        final String currentFileName = PeachGenotypeFile.generateFileName(fileSources.Peach, normalSampleId);
+        final String currentFileName = PeachGenotypeFile.generateFileName(fileSources.Peach, germlineSampleId);
         final String oldFileName = PeachGenotypeFile.generateOldPythonFileName(fileSources.Peach, sampleId);
         if(!fileExists(currentFileName) && fileExists(oldFileName))
         {

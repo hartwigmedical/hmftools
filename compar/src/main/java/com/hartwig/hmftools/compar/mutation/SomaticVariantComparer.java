@@ -86,7 +86,7 @@ public class SomaticVariantComparer implements ItemComparer
             final String sourceName = mConfig.SourceNames.get(i);
 
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-            String sourceNormalSampleId = mConfig.sourceNormalSampleId(sourceName, sampleId);
+            String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
 
             if(!mConfig.DbConnections.isEmpty())
             {
@@ -96,7 +96,7 @@ public class SomaticVariantComparer implements ItemComparer
             {
                 FileSources fileSources = mConfig.FileSources.get(sourceName);
                 List<SomaticVariantData> fileVariants =
-                        loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceNormalSampleId));
+                        loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceGermlineSampleId));
 
                 if(fileVariants == null)
                     continue;
@@ -344,7 +344,7 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String normalSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> items = Lists.newArrayList();
         loadVariants(sampleId, fileSources).forEach(x -> items.add(x));

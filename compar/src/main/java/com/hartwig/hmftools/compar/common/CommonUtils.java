@@ -33,7 +33,7 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
-import com.hartwig.hmftools.compar.metrics.NormalFlagstatComparer;
+import com.hartwig.hmftools.compar.metrics.GermlineFlagstatComparer;
 import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
@@ -135,8 +135,8 @@ public class CommonUtils
             case TUMOR_FLAGSTAT:
                 return new TumorFlagstatComparer(config);
 
-            case NORMAL_FLAGSTAT:
-                return new NormalFlagstatComparer(config);
+            case GERMLINE_FLAGSTAT:
+                return new GermlineFlagstatComparer(config);
 
             default:
                 return null;
@@ -153,7 +153,7 @@ public class CommonUtils
         for(String sourceName : config.SourceNames)
         {
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
-            String sourceNormalSampleId = config.sourceNormalSampleId(sourceName, sampleId);
+            String sourceGermlineSampleId = config.sourceGermlineSampleId(sourceName, sampleId);
             List<ComparableItem> items = null;
 
             if(!config.DbConnections.isEmpty())
@@ -163,8 +163,8 @@ public class CommonUtils
             else
             {
                 FileSources fileSources =
-                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceNormalSampleId);
-                items = comparer.loadFromFile(sourceSampleId, sourceNormalSampleId, fileSources);
+                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
+                items = comparer.loadFromFile(sourceSampleId, sourceGermlineSampleId, fileSources);
             }
 
             if(items != null)

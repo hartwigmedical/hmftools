@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.NORMAL_FLAGSTAT;
+import static com.hartwig.hmftools.compar.common.Category.GERMLINE_FLAGSTAT;
 import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.FLD_MAPPED_PROPORTION;
 import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
@@ -22,11 +22,11 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class NormalFlagstatComparer implements ItemComparer
+public class GermlineFlagstatComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
 
-    public NormalFlagstatComparer(final ComparConfig config)
+    public GermlineFlagstatComparer(final ComparConfig config)
     {
         mConfig = config;
     }
@@ -34,7 +34,7 @@ public class NormalFlagstatComparer implements ItemComparer
     @Override
     public Category category()
     {
-        return NORMAL_FLAGSTAT;
+        return GERMLINE_FLAGSTAT;
     }
 
     @Override
@@ -63,17 +63,17 @@ public class NormalFlagstatComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String normalSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            Flagstat flagstat = FlagstatFile.read(FlagstatFile.generateFilename(fileSources.NormalFlagstat, normalSampleId));
-            comparableItems.add(new NormalFlagstatData(flagstat));
+            Flagstat flagstat = FlagstatFile.read(FlagstatFile.generateFilename(fileSources.GermlineFlagstat, germlineSampleId));
+            comparableItems.add(new GermlineFlagstatData(flagstat));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load normal flagstat data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load germline flagstat data: {}", sampleId, e.toString());
             return null;
         }
         return comparableItems;

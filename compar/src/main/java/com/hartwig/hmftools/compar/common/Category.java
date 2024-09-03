@@ -22,7 +22,7 @@ public enum Category
     PEACH,
     VIRUS,
     TUMOR_FLAGSTAT,
-    NORMAL_FLAGSTAT;
+    GERMLINE_FLAGSTAT;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";

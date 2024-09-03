@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.NORMAL_FLAGSTAT;
+import static com.hartwig.hmftools.compar.common.Category.GERMLINE_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.FLD_MAPPED_PROPORTION;
@@ -17,11 +17,11 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
-public class NormalFlagstatData implements ComparableItem
+public class GermlineFlagstatData implements ComparableItem
 {
     public final Flagstat mFlagstat;
 
-    public NormalFlagstatData(final Flagstat flagstat)
+    public GermlineFlagstatData(final Flagstat flagstat)
     {
         mFlagstat = flagstat;
     }
@@ -29,7 +29,7 @@ public class NormalFlagstatData implements ComparableItem
     @Override
     public Category category()
     {
-        return NORMAL_FLAGSTAT;
+        return GERMLINE_FLAGSTAT;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class NormalFlagstatData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
-        final NormalFlagstatData otherData = (NormalFlagstatData) other;
+        final GermlineFlagstatData otherData = (GermlineFlagstatData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
