@@ -10,9 +10,6 @@ RUN echo 'deb ar+https://europe-west4-apt.pkg.dev/projects/hmf-build hmf-apt mai
 RUN apt update && apt install -y hmf-r-base hmf-circos hmf-r-ggplot2 hmf-r-dplyr hmf-r-bioconductor-variantannotation
 
 ADD target/purple-$VERSION-jar-with-dependencies.jar /usr/share/hartwig/purple.jar
-#&& apt install -y circos liblist-moreutils-perl
 
-ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/purple.jar"]
 ENV PATH="$PATH:/opt/tools/R/bin"
-
-#ENTRYPOINT ["sleep", "3600"]
+ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/purple.jar"]
