@@ -2,9 +2,9 @@ package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.TUMOR_FLAGSTAT;
-import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.FLD_MAPPED_PROPORTION;
-import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
-import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
 
 import java.io.IOException;
 import java.util.List;

@@ -47,16 +47,21 @@ public class FileSources
     public final String SomaticUnfilteredVcf;
     public final String TumorFlagstat;
     public final String GermlineFlagstat;
+    public final String TumorBamMetrics;
+    public final String GermlineBamMetrics;
 
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
     private static final String TUMOR_FLAGSTAT = "tumor_flagstat_dir";
     private static final String GERMLINE_FLAGSTAT = "germline_flagstat_dir";
+    private static final String TUMOR_BAM_METRICS = "tumor_bam_metrics_dir";
+    private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
-            final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat)
+            final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
+            final String germlineBamMetrics)
     {
         Source = source;
         Linx = linx;
@@ -71,6 +76,8 @@ public class FileSources
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
         TumorFlagstat = tumorFlagstat;
         GermlineFlagstat = germlineFlagstat;
+        TumorBamMetrics = tumorBamMetrics;
+        GermlineBamMetrics = germlineBamMetrics;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String germlineSampleId)
@@ -88,7 +95,9 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.SomaticVcf, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, germlineSampleId));
+                convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.TumorBamMetrics, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.GermlineBamMetrics, sampleId, germlineSampleId));
     }
 
     public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
@@ -136,6 +145,12 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(GERMLINE_FLAGSTAT, sourceName), false,
                     formSourceDescription("Germline flagstat", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(TUMOR_BAM_METRICS, sourceName), false,
+                    formSourceDescription("Tumor BAM metrics", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(GERMLINE_BAM_METRICS, sourceName), false,
+                    formSourceDescription("Germline BAM metrics", sourceName));
         }
     }
 
@@ -175,9 +190,11 @@ public class FileSources
 
         String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/flagstat", TUMOR_FLAGSTAT, sourceName);
         String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/flagstat", GERMLINE_FLAGSTAT, sourceName);
+        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_BAM_METRICS, sourceName);
+        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_BAM_METRICS, sourceName);
 
         return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
-                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat);
+                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics);
     }
 
     private static String getDirectory(

@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
-import static com.hartwig.hmftools.compar.metrics.FlagstatCommon.FLD_MAPPED_PROPORTION;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 
 import java.util.List;
 

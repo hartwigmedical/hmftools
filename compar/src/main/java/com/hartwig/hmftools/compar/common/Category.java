@@ -22,7 +22,9 @@ public enum Category
     PEACH,
     VIRUS,
     TUMOR_FLAGSTAT,
-    GERMLINE_FLAGSTAT;
+    GERMLINE_FLAGSTAT,
+    TUMOR_BAM_METRICS,
+    GERMLINE_BAM_METRICS;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";
@@ -38,6 +40,6 @@ public enum Category
 
     public static List<Category> panelCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT);
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS);
     }
 }

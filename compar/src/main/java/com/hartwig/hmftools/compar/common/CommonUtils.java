@@ -33,7 +33,9 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
+import com.hartwig.hmftools.compar.metrics.GermlineBamMetricsComparer;
 import com.hartwig.hmftools.compar.metrics.GermlineFlagstatComparer;
+import com.hartwig.hmftools.compar.metrics.TumorBamMetricsComparer;
 import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
@@ -137,6 +139,12 @@ public class CommonUtils
 
             case GERMLINE_FLAGSTAT:
                 return new GermlineFlagstatComparer(config);
+
+            case TUMOR_BAM_METRICS:
+                return new TumorBamMetricsComparer(config);
+
+            case GERMLINE_BAM_METRICS:
+                return new GermlineBamMetricsComparer(config);
 
             default:
                 return null;
