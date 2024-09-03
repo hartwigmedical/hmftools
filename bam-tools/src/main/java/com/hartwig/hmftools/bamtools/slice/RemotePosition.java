@@ -2,8 +2,6 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static java.lang.String.format;
 
-import htsjdk.samtools.SAMRecord;
-
 public class RemotePosition implements Comparable<RemotePosition>
 {
     public final String ReadId;
