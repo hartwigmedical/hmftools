@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
@@ -22,12 +21,9 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.alignment.AlignmentOutcome;
 import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -66,7 +62,6 @@ public class JunctionAssembly
 
     private PhaseGroup mPhaseGroup;
     private AssemblyOutcome mOutcome;
-    private AlignmentOutcome mAlignmentOutcome;
     private String mAssemblyAlignmentInfo;
 
     // info only
@@ -132,7 +127,6 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mPhaseGroup = null;
         mOutcome = UNSET;
-        mAlignmentOutcome = NO_SET;
         mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
 
@@ -591,16 +585,15 @@ public class JunctionAssembly
 
     public AssemblyOutcome outcome() { return mOutcome; }
 
-    public void setOutcome(final AssemblyOutcome outcome)
+    public void setOutcome(final AssemblyOutcome outcome) { setOutcome(outcome, false); }
+
+    public void setOutcome(final AssemblyOutcome outcome, boolean override)
     {
-        if(mOutcome.ordinal() <= outcome.ordinal()) // only override if a stronger type of link
+        if(!override && mOutcome.ordinal() <= outcome.ordinal()) // only override if a stronger type of link
             return;
 
         mOutcome = outcome;
     }
-
-    public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }
-    public void setAlignmentOutcome(final AlignmentOutcome outcome) { mAlignmentOutcome = outcome; }
 
     public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
     public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
@@ -685,7 +678,6 @@ public class JunctionAssembly
         mInitialReadId = initialRead != null ? initialRead.id() : (!mSupport.isEmpty() ? mSupport.get(0).id() : "");
         mIndelCoords = initialAssembly.indelCoords();
         mOutcome = UNSET;
-        mAlignmentOutcome = NO_SET;
     }
 
     public String toString()
@@ -799,7 +791,6 @@ public class JunctionAssembly
         mRefSideSoftClips = Lists.newArrayList();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
-        mAlignmentOutcome = NO_SET;
         mMismatchReadCount = 0;
         mStats = new AssemblyStats();
         mIndelCoords = null;

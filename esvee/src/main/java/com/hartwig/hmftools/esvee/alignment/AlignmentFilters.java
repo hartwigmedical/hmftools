@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +42,9 @@ public final class AlignmentFilters
                 lowQualAlignments.add(alignment);
             }
         }
+
+        // sort alignments but leave any matching sequence starts as they are
+        Collections.sort(candidateAlignments, new AlignmentOrderComparator());
 
         // set modified map qual and then filtered low qual alignments
         for(int i = 0; i < candidateAlignments.size(); ++i)
@@ -82,6 +87,18 @@ public final class AlignmentFilters
 
         // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
         checkLocalVariants(candidateAlignments, validAlignments, lowQualAlignments);
+    }
+
+    private static class AlignmentOrderComparator implements Comparator<AlignData>
+    {
+        @Override
+        public int compare(final AlignData first, final AlignData second)
+        {
+            if(first.sequenceStart() == second.sequenceStart())
+                return -1;
+
+            return first.sequenceStart() < second.sequenceStart() ? -1 : 1;
+        }
     }
 
     private static void checkLocalVariants(
@@ -140,7 +157,7 @@ public final class AlignmentFilters
         }
     }
 
-    private static List<AlternativeAlignment> collectAlignmentCandidates(final AlignData alignment, boolean linksEnd)
+    private static List<AlternativeAlignment> collectAlignmentCandidates(final AlignData alignment, boolean linksAtEnd)
     {
         List<AlternativeAlignment> alignments;
 
@@ -151,11 +168,14 @@ public final class AlignmentFilters
         }
         else
         {
-            Orientation orientation = segmentOrientation(alignment, linksEnd);
-            int firstPosition = alignment.isForward() ? alignment.positionEnd() : alignment.positionStart();
+            Orientation orientation = segmentOrientation(alignment, linksAtEnd);
+
+            // links at end, meaning this segment's end is linked to the start of another, so use its end position if not reversed
+            boolean useEndPosition = alignment.isForward() == linksAtEnd;
+            int position = useEndPosition ? alignment.positionEnd() : alignment.positionStart();
 
             AlternativeAlignment initialAlignment = new AlternativeAlignment(
-                    alignment.chromosome(), firstPosition, orientation, "", alignment.mapQual());
+                    alignment.chromosome(), position, orientation, "", alignment.mapQual());
 
             if(alignment.exceedsMapQualThreshold())
             {
@@ -168,10 +188,12 @@ public final class AlignmentFilters
                 for(AlternativeAlignment altAlignment : alignment.rawAltAlignments())
                 {
                     // apply orientation info
-                    Orientation altOrientation = segmentOrientation(altAlignment.Orient, linksEnd);
-                    int position = altAlignment.Position;
+                    Orientation altOrientation = segmentOrientation(altAlignment.Orient, linksAtEnd);
 
-                    if(altOrientation.isForward())
+                    useEndPosition = altAlignment.Orient.isForward() == linksAtEnd;
+                    position = altAlignment.Position;
+
+                    if(useEndPosition)
                         position += calcCigarAlignedLength(altAlignment.Cigar) - 1;
 
                     alignments.add(new AlternativeAlignment(
@@ -236,6 +258,7 @@ public final class AlignmentFilters
         if(alignment.exceedsMapQualThreshold()) // only applicable for alignments failing the initial qual test
             return;
 
+        // by marking either the selected alt alignment or registered alternatives, the low map-qual alignment can now be used as a breakend
         List<AlternativeAlignment> unselectedAltAlignments = allAlignments.stream()
                 .filter(x -> x != selectedAlignment).collect(Collectors.toList());
 

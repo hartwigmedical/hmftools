@@ -104,22 +104,31 @@ public class BreakendBuilder
         // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
         IndelCoords indelCoords = null;
 
+        boolean isChained = false;
+
         if(mAssemblyAlignment.phaseSet() != null)
         {
-            AssemblyLink assemblyLink = mAssemblyAlignment.phaseSet().assemblyLinks().get(0);
-            StructuralVariantType svType = assemblyLink.svType();
-
-            if(svType == DEL || svType == DUP || svType == INS)
+            if(mAssemblyAlignment.phaseSet().assemblyLinks().size() == 1)
             {
-                int svLength = assemblyLink.length();
-                CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-                indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
+                AssemblyLink assemblyLink = mAssemblyAlignment.phaseSet().assemblyLinks().get(0);
+                StructuralVariantType svType = assemblyLink.svType();
+
+                if(svType == DEL || svType == DUP || svType == INS)
+                {
+                    int svLength = assemblyLink.length();
+                    CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
+                    indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
+                }
+            }
+            else
+            {
+                isChained = true;
             }
         }
 
         // if no match was found, just take the longest
         if(indelCoords == null)
-            indelCoords = findIndelCoords(alignment.positionStart(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+            indelCoords = findIndelCoords(alignment.positionStart(), alignment.cigarElements(), MIN_INDEL_LENGTH);
 
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
@@ -127,12 +136,15 @@ public class BreakendBuilder
         int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.positionStart();
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
-        // the indel must have sufficient bases either side of it to be called
-        int leftAnchorLength = indelSeqStart + 1;
-        int rightAnchorLength = alignment.segmentLength() - indelSeqEnd - 1;
+        if(!isChained)
+        {
+            // the indel must have sufficient bases either side of it to be called
+            int leftAnchorLength = indelSeqStart + 1;
+            int rightAnchorLength = alignment.segmentLength() - indelSeqEnd - 1;
 
-        if(leftAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH || rightAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH)
-            return false;
+            if(leftAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH || rightAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH)
+                return false;
+        }
 
         String insertedBases = "";
         HomologyData homology = null;
@@ -366,11 +378,15 @@ public class BreakendBuilder
         return true;
     }
 
+    private void checkAlignmentIndel(final AlignData alignment)
+    {
+        if(alignment.cigarElements().stream().anyMatch(x -> x.getOperator().isIndel() && x.getLength() >= MIN_INDEL_LENGTH))
+            formIndelBreakends(alignment);
+    }
+
     private void formMultipleBreakends(final List<AlignData> alignments, final List<AlignData> zeroQualAlignments)
     {
         // look for consecutive non-zero-MQ alignments from which to form breakends
-        Collections.sort(alignments, Comparator.comparingInt(x -> x.sequenceStart()));
-
         String fullSequence = mAssemblyAlignment.fullSequence();
 
         int nextSegmentIndex = 0;
@@ -382,6 +398,9 @@ public class BreakendBuilder
         for(int i = 0; i < alignments.size() - 1; ++i)
         {
             AlignData alignment = alignments.get(i);
+
+            if(i == 0)
+                checkAlignmentIndel(alignment);
 
             String breakendChr, nextChr;
             Orientation breakendOrientation, nextOrientation;
@@ -498,6 +517,8 @@ public class BreakendBuilder
                 breakend.setAlternativeAlignments(altAlignments);
                 nextBreakend.setAlternativeAlignments(altAlignments);
             }
+
+            checkAlignmentIndel(nextAlignment);
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);

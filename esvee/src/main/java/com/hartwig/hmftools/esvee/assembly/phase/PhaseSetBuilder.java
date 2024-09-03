@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.UNMAPPED;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyLink.swapAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
@@ -73,6 +74,7 @@ public class PhaseSetBuilder
     private final List<ExtensionCandidate> mExtensionCandidates;
 
     private final Set<JunctionAssembly> mLineRelatedAssemblies;
+    private final List<JunctionAssembly> mBranchedAssemblies;
 
     // working cache only
     private final Set<JunctionAssembly> mLocallyLinkedAssemblies;
@@ -100,6 +102,7 @@ public class PhaseSetBuilder
         mExtensionCandidates = Lists.newArrayList();
         mSplitLinks = Lists.newArrayList();
         mFacingLinks = Lists.newArrayList();
+        mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
         mPerfLogTime = 0;
@@ -130,6 +133,8 @@ public class PhaseSetBuilder
         addUnlinkedAssemblyRefSupport();
 
         formFacingLinks();
+
+        checkBranchedAssemblies();
 
         formPhaseSets();
 
@@ -705,6 +710,12 @@ public class PhaseSetBuilder
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
 
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.outcome() == DUP_BRANCHED && !mBranchedAssemblies.contains(assembly))
+                mBranchedAssemblies.add(assembly);
+        }
+
         return true;
     }
 
@@ -843,6 +854,50 @@ public class PhaseSetBuilder
                 facingAssemblies.add(assembly2);
             }
         }
+    }
+
+    private void checkBranchedAssemblies()
+    {
+        for(JunctionAssembly assembly : mBranchedAssemblies)
+        {
+            boolean hasSplitLink = mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+            boolean hasFacingLink = mFacingLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+
+            if(!hasSplitLink && !hasFacingLink) // will be removed later on
+                continue;
+
+            // check if the original assembly could be swapped out for this one if it's in a facing link but not a split link
+            if(hasFacingLink && !hasSplitLink)
+            {
+                JunctionAssembly originalAssembly = findBranchedOriginalAssembly(assembly);
+
+                if(originalAssembly == null)
+                    continue;
+
+                AssemblyLink existingLink = mSplitLinks.stream().filter(x -> x.hasAssembly(originalAssembly)).findFirst().orElse(null);
+                boolean origHasFacingLink = mFacingLinks.stream().anyMatch(x -> x.hasAssembly(originalAssembly));
+
+                if(!origHasFacingLink && existingLink != null)
+                {
+                    // swap the assemblies
+                    AssemblyLink replacementLink = swapAssemblies(existingLink, originalAssembly, assembly);
+                    mSplitLinks.remove(existingLink);
+                    mSplitLinks.add(replacementLink);
+                    mPhaseGroup.derivedAssemblies().remove(assembly);
+                    originalAssembly.setOutcome(DUP_BRANCHED, true);
+                    assembly.setOutcome(LINKED);
+                }
+            }
+        }
+    }
+
+    private JunctionAssembly findBranchedOriginalAssembly(final JunctionAssembly assembly)
+    {
+        return mAssemblies.stream()
+                .filter(x -> x != assembly)
+                .filter(x -> x.junction().compareTo(assembly.junction()) == 0)
+                .filter(x -> x.extensionLength() == assembly.extensionLength())
+                .findFirst().orElse(null);
     }
 
     private void formPhaseSets()

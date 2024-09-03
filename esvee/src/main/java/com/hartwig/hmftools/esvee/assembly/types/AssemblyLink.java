@@ -61,6 +61,25 @@ public class AssemblyLink
                 abs(mFirst.junction().Position - mSecond.junction().Position) : 0;
     }
 
+    public static AssemblyLink swapAssemblies(
+            final AssemblyLink existingLink, final JunctionAssembly originalAssembly, final JunctionAssembly newAssembly)
+    {
+        JunctionAssembly first, second;
+
+        if(existingLink.first() == originalAssembly)
+        {
+            first = newAssembly;
+            second = existingLink.second();
+        }
+        else
+        {
+            first = existingLink.first();
+            second = newAssembly;
+        }
+
+        return new AssemblyLink(first, second, existingLink.type(), existingLink.insertedBases(), existingLink.overlapBases());
+    }
+
     public String toString()
     {
         return format("%s: %s - %s len(%d) extras(overlap=%d insert=%d)",

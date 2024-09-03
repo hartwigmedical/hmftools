@@ -267,27 +267,6 @@ public class Alignment
 
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
-
-            for(JunctionAssembly assembly : assemblyAlignment.assemblies())
-            {
-                boolean matched = false;
-
-                for(Breakend breakend : assemblyAlignment.breakends())
-                {
-                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient))
-                    {
-                        assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if(!matched)
-                    assembly.setAlignmentOutcome(AlignmentOutcome.NO_MATCH);
-            }
-
-            if(assemblyAlignment.breakends().isEmpty())
-                assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
         }
     }
 
