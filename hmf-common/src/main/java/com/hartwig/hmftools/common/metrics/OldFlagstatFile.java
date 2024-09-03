@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 public final class OldFlagstatFile
 {
     public static final String FILE_EXTENSION = ".flagstat";
@@ -22,7 +23,7 @@ public final class OldFlagstatFile
         return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
     }
 
-    public static Flagstat read(final String flagstatPath) throws IOException
+    public static OldFlagstat read(final String flagstatPath) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(flagstatPath).toPath());
         String total = valueBySubstring(lines, "total");
@@ -55,7 +56,7 @@ public final class OldFlagstatFile
         long uniqueReadCount = totalReadCount - secondaryCount - supplementaryCount;
 
         // Paired-in-sequencing and properly-paired should be calculated over unique reads.
-        return ImmutableFlagstat.builder()
+        return ImmutableOldFlagstat.builder()
                 .uniqueReadCount(uniqueReadCount)
                 .secondaryCount(secondaryCount)
                 .supplementaryCount(supplementaryCount)

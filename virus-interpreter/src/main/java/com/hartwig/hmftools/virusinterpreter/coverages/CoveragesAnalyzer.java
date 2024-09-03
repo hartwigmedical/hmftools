@@ -2,8 +2,8 @@ package com.hartwig.hmftools.virusinterpreter.coverages;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.metrics.OldWGSMetrics;
+import com.hartwig.hmftools.common.metrics.OldWGSMetricsFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 
 public final class CoveragesAnalyzer
@@ -18,7 +18,7 @@ public final class CoveragesAnalyzer
         double ploidy = purityContext.bestFit().ploidy();
         double purity = purityContext.bestFit().purity();
 
-        WGSMetrics metrics = WGSMetricsFile.read(tumorSampleWGSMetricsFile);
+        OldWGSMetrics metrics = OldWGSMetricsFile.read(tumorSampleWGSMetricsFile);
         double tumorMeanCoverage = metrics.meanCoverage();
         return (tumorMeanCoverage * purity) / ploidy;
     }

@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 public final class WGSMetricsTestFactory
 {
     @NotNull
-    public static WGSMetrics createMinimalTestWGSMetrics()
+    public static OldWGSMetrics createMinimalTestWGSMetrics()
     {
-        return ImmutableWGSMetrics.builder()
+        return ImmutableOldWGSMetrics.builder()
                 .meanCoverage(0D)
                 .sdCoverage(0D)
                 .medianCoverage(0)

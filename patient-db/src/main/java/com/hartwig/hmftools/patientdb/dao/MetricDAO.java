@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.hasSufficientCoverage;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.METRIC;
 
-import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-class MetricDAO
+public class MetricDAO
 {
-
     private final DSLContext context;
 
     MetricDAO(final DSLContext context)
@@ -18,12 +16,11 @@ class MetricDAO
         this.context = context;
     }
 
-    void writeMetrics(final String sample, final WGSMetricWithQC metrics)
+    void writeMetrics(final String sample, final BamMetricsSummary tumorMetrics, final BamMetricsSummary refMetrics)
     {
         deleteMetricForSample(sample);
 
-        WGSMetrics refMetrics = metrics.refMetrics();
-        WGSMetrics tumorMetrics = metrics.tumorMetrics();
+        boolean sufficientCoverage = hasSufficientCoverage(tumorMetrics, refMetrics);
 
         context.insertInto(METRIC,
                         METRIC.SAMPLEID,
@@ -67,37 +64,37 @@ class MetricDAO
                         DatabaseUtil.decimal(refMetrics.sdCoverage()),
                         refMetrics.medianCoverage(),
                         refMetrics.madCoverage(),
-                        DatabaseUtil.decimal(refMetrics.pctExcAdapter()),
-                        DatabaseUtil.decimal(refMetrics.pctExcMapQ()),
-                        DatabaseUtil.decimal(refMetrics.pctExcDupe()),
-                        DatabaseUtil.decimal(refMetrics.pctExcUnpaired()),
-                        DatabaseUtil.decimal(refMetrics.pctExcBaseQ()),
-                        DatabaseUtil.decimal(refMetrics.pctExcOverlap()),
-                        DatabaseUtil.decimal(refMetrics.pctExcCapped()),
-                        DatabaseUtil.decimal(refMetrics.pctExcTotal()),
-                        DatabaseUtil.decimal(refMetrics.coverage1xPercentage()),
-                        DatabaseUtil.decimal(refMetrics.coverage10xPercentage()),
-                        DatabaseUtil.decimal(refMetrics.coverage20xPercentage()),
-                        DatabaseUtil.decimal(refMetrics.coverage30xPercentage()),
-                        DatabaseUtil.decimal(refMetrics.coverage60xPercentage()),
+                        DatabaseUtil.decimal(0),
+                        DatabaseUtil.decimal(refMetrics.lowMapQualPercent()),
+                        DatabaseUtil.decimal(refMetrics.duplicatePercent()),
+                        DatabaseUtil.decimal(refMetrics.unpairedPercent()),
+                        DatabaseUtil.decimal(refMetrics.lowBaseQualPercent()),
+                        DatabaseUtil.decimal(refMetrics.overlappingReadPercent()),
+                        DatabaseUtil.decimal(refMetrics.cappedCoveragePercent()),
+                        DatabaseUtil.decimal(refMetrics.totalFilteredPercent()),
+                        DatabaseUtil.decimal(refMetrics.coveragePercent(1)),
+                        DatabaseUtil.decimal(refMetrics.coveragePercent(10)),
+                        DatabaseUtil.decimal(refMetrics.coveragePercent(20)),
+                        DatabaseUtil.decimal(refMetrics.coveragePercent(30)),
+                        DatabaseUtil.decimal(refMetrics.coveragePercent(60)),
                         DatabaseUtil.decimal(tumorMetrics.meanCoverage()),
                         DatabaseUtil.decimal(tumorMetrics.sdCoverage()),
                         tumorMetrics.medianCoverage(),
                         tumorMetrics.madCoverage(),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcAdapter()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcMapQ()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcDupe()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcUnpaired()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcBaseQ()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcOverlap()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcCapped()),
-                        DatabaseUtil.decimal(tumorMetrics.pctExcTotal()),
-                        DatabaseUtil.decimal(tumorMetrics.coverage1xPercentage()),
-                        DatabaseUtil.decimal(tumorMetrics.coverage10xPercentage()),
-                        DatabaseUtil.decimal(tumorMetrics.coverage20xPercentage()),
-                        DatabaseUtil.decimal(tumorMetrics.coverage30xPercentage()),
-                        DatabaseUtil.decimal(tumorMetrics.coverage60xPercentage()),
-                        metrics.sufficientCoverage() ? (byte) 1 : (byte) 0)
+                        DatabaseUtil.decimal(0),
+                        DatabaseUtil.decimal(tumorMetrics.lowMapQualPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.duplicatePercent()),
+                        DatabaseUtil.decimal(tumorMetrics.unpairedPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.lowBaseQualPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.overlappingReadPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.cappedCoveragePercent()),
+                        DatabaseUtil.decimal(tumorMetrics.totalFilteredPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.coveragePercent(1)),
+                        DatabaseUtil.decimal(tumorMetrics.coveragePercent(10)),
+                        DatabaseUtil.decimal(tumorMetrics.coveragePercent(20)),
+                        DatabaseUtil.decimal(tumorMetrics.coveragePercent(30)),
+                        DatabaseUtil.decimal(tumorMetrics.coveragePercent(60)),
+                        sufficientCoverage ? (byte) 1 : (byte) 0)
                 .execute();
     }
 

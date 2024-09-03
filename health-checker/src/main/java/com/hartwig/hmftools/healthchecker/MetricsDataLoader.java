@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.healthchecker;
 
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.REF_COVERAGE_LEVEL_10x;
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.REF_COVERAGE_LEVEL_20x;
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.TUMOR_COVERAGE_LEVEL_30x;
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.TUMOR_COVERAGE_LEVEL_60x;
 import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.HC_LOGGER;
-import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.REF_COVERAGE_LEVEL_10x;
-import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.REF_COVERAGE_LEVEL_20x;
-import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.TUMOR_COVERAGE_LEVEL_30x;
-import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.TUMOR_COVERAGE_LEVEL_60x;
 import static com.hartwig.hmftools.healthchecker.QCValueType.REF_COVERAGE_10X;
 import static com.hartwig.hmftools.healthchecker.QCValueType.REF_COVERAGE_20X;
 import static com.hartwig.hmftools.healthchecker.QCValueType.REF_PROPORTION_DUPLICATE;

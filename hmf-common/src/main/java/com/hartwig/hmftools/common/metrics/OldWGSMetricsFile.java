@@ -13,8 +13,8 @@ import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 // Picard WgsMetrics file output, internally superceded with BamMetricsSummary
-
-public final class WGSMetricsFile
+@Deprecated
+public final class OldWGSMetricsFile
 {
     public static final String GENOME_TERRITORY_COLUMN = "GENOME_TERRITORY";
     public static final String MEAN_COVERAGE_COLUMN = "MEAN_COVERAGE";
@@ -44,7 +44,7 @@ public final class WGSMetricsFile
     }
 
     @NotNull
-    public static WGSMetrics read(final String filename) throws IOException
+    public static OldWGSMetrics read(final String filename) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
 
@@ -71,7 +71,7 @@ public final class WGSMetricsFile
 
         // NOTE: adapter and 1x coverage not exist in older versions
 
-        return ImmutableWGSMetrics.builder()
+        return ImmutableOldWGSMetrics.builder()
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
                 .medianCoverage((int) Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))

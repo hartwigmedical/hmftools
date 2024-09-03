@@ -4,9 +4,10 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Flagstat
+public abstract class OldFlagstat
 {
     public abstract long uniqueReadCount();
 
@@ -25,4 +26,15 @@ public abstract class Flagstat
     public abstract double withItselfAndMateMappedProportion();
 
     public abstract double singletonProportion();
+
+    public static final double MIN_MAPPED_PROPORTION = 0.95;
+    public static boolean pass(@NotNull OldFlagstat flagstat)
+    {
+        return pass(flagstat.mappedProportion());
+    }
+    public static boolean pass(double mappedProportion)
+    {
+        return mappedProportion >= MIN_MAPPED_PROPORTION;
+    }
+
 }

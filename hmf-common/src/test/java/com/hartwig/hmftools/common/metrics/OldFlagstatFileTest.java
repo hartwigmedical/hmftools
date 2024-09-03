@@ -18,7 +18,7 @@ public class OldFlagstatFileTest
     @Test
     public void canReadFlagstatFile() throws IOException
     {
-        Flagstat flagstat = OldFlagstatFile.read(FLAGSTAT_FILE);
+        OldFlagstat flagstat = OldFlagstatFile.read(FLAGSTAT_FILE);
 
         assertEquals(970, flagstat.uniqueReadCount());
         assertEquals(10, flagstat.secondaryCount());

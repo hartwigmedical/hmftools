@@ -6,7 +6,7 @@ public final class FlagstatQC
 {
     public static final double MIN_MAPPED_PROPORTION = 0.95;
 
-    public static boolean pass(@NotNull Flagstat flagstat)
+    public static boolean pass(@NotNull OldFlagstat flagstat)
     {
         return pass(flagstat.mappedProportion());
     }

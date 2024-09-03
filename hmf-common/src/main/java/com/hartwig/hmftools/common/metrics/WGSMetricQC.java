@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.metrics;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class WGSMetricQC
 {
     public static final double MIN_REF_10X_COVERAGE = 0.9;
@@ -9,20 +7,31 @@ public final class WGSMetricQC
     public static final double MIN_TUMOR_30X_COVERAGE = 0.8;
     public static final double MIN_TUMOR_60X_COVERAGE = 0.65;
 
-    @NotNull
-    public static WGSMetricWithQC buildWithQCMetric(final WGSMetrics refMetrics, final WGSMetrics tumorMetrics)
+    public static final int TUMOR_COVERAGE_LEVEL_30x = 30;
+    public static final int TUMOR_COVERAGE_LEVEL_60x = 60;
+    public static final int REF_COVERAGE_LEVEL_10x = 10;
+    public static final int REF_COVERAGE_LEVEL_20x = 20;
+
+    public static boolean hasSufficientCoverage(final BamMetricsSummary tumorMetrics, final BamMetricsSummary refMetrics)
     {
-        boolean wgsQCRef10 = refMetrics.coverage10xPercentage() >= MIN_REF_10X_COVERAGE;
-        boolean wgsQCRef20 = refMetrics.coverage20xPercentage() >= MIN_REF_20X_COVERAGE;
-        boolean wgsQCTumor30 = tumorMetrics.coverage30xPercentage() >= MIN_TUMOR_30X_COVERAGE;
-        boolean wgsQCTumor60 = tumorMetrics.coverage60xPercentage() >= MIN_TUMOR_60X_COVERAGE;
+        boolean wgsQCRef10 = refMetrics.coveragePercent(REF_COVERAGE_LEVEL_10x) >= MIN_REF_10X_COVERAGE;
+        boolean wgsQCRef20 = refMetrics.coveragePercent(REF_COVERAGE_LEVEL_20x) >= MIN_REF_20X_COVERAGE;
+        boolean wgsQCTumor30 = tumorMetrics.coveragePercent(TUMOR_COVERAGE_LEVEL_30x) >= MIN_TUMOR_30X_COVERAGE;
+        boolean wgsQCTumor60 = tumorMetrics.coveragePercent(TUMOR_COVERAGE_LEVEL_60x) >= MIN_TUMOR_60X_COVERAGE;
 
-        boolean sufficientCoverage = wgsQCRef10 && wgsQCRef20 && wgsQCTumor30 && wgsQCTumor60;
-
-        return ImmutableWGSMetricWithQC.builder()
-                .refMetrics(refMetrics)
-                .tumorMetrics(tumorMetrics)
-                .sufficientCoverage(sufficientCoverage)
-                .build();
+        return wgsQCRef10 && wgsQCRef20 && wgsQCTumor30 && wgsQCTumor60;
     }
+
+    public static final double MIN_MAPPED_PROPORTION = 0.95;
+
+    public static boolean hasSufficientMappedProportion(final BamFlagStats flagstat)
+    {
+        return hasSufficientMappedProportion(flagstat.mappedProportion());
+    }
+
+    public static boolean hasSufficientMappedProportion(double mappedProportion)
+    {
+        return mappedProportion >= MIN_MAPPED_PROPORTION;
+    }
+
 }

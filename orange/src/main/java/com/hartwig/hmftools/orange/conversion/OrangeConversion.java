@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.conversion;
 
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.metrics.Flagstat;
+import com.hartwig.hmftools.common.metrics.OldFlagstat;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.OldWGSMetrics;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 public final class OrangeConversion
 {
     @NotNull
-    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(@NotNull Flagstat flagstat)
+    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(@NotNull OldFlagstat flagstat)
     {
         return ImmutableFlagstat.builder()
                 .uniqueReadCount(flagstat.uniqueReadCount())
@@ -41,7 +41,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(@NotNull WGSMetrics wgsMetrics)
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(@NotNull OldWGSMetrics wgsMetrics)
     {
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(wgsMetrics.meanCoverage())

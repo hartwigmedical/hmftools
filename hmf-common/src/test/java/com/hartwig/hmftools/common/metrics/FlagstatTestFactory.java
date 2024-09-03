@@ -1,15 +1,13 @@
 package com.hartwig.hmftools.common.metrics;
 
-import com.hartwig.hmftools.common.metrics.Flagstat;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class FlagstatTestFactory
 {
     @NotNull
-    public static Flagstat createMinimalTestFlagstat()
+    public static OldFlagstat createMinimalTestFlagstat()
     {
-        return ImmutableFlagstat.builder()
+        return ImmutableOldFlagstat.builder()
                 .uniqueReadCount(0)
                 .secondaryCount(0)
                 .supplementaryCount(0)

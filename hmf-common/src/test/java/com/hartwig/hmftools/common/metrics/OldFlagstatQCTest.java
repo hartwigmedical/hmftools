@@ -6,21 +6,21 @@ import static org.junit.Assert.assertTrue;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class FlagstatQCTest
+public class OldFlagstatQCTest
 {
     @Test
     public void canEvaluateFlagstatQC()
     {
-        Flagstat qcPass = withMappedProportion(0.99);
-        Flagstat qcFail = withMappedProportion(0.01);
+        OldFlagstat qcPass = withMappedProportion(0.99);
+        OldFlagstat qcFail = withMappedProportion(0.01);
 
         assertTrue(FlagstatQC.pass(qcPass));
         assertFalse(FlagstatQC.pass(qcFail));
     }
 
     @NotNull
-    private static Flagstat withMappedProportion(double mappedProportion)
+    private static OldFlagstat withMappedProportion(double mappedProportion)
     {
-        return ImmutableFlagstat.builder().from(FlagstatTestFactory.createMinimalTestFlagstat()).mappedProportion(mappedProportion).build();
+        return ImmutableOldFlagstat.builder().from(FlagstatTestFactory.createMinimalTestFlagstat()).mappedProportion(mappedProportion).build();
     }
 }

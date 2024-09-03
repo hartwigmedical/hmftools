@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_BASEQ_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_CAPPED_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_DUPE_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_MAPQ_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_OVERLAP_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_UNPAIRED_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_BASEQ_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_CAPPED_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_DUPE_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_MAPQ_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_OVERLAP_COLUMN;
+import static com.hartwig.hmftools.common.metrics.OldWGSMetricsFile.PCT_EXC_UNPAIRED_COLUMN;
 
 public enum FilterType
 {

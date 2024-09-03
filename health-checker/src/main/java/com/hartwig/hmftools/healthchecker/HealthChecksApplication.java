@@ -4,8 +4,12 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -24,14 +28,7 @@ public class HealthChecksApplication
 {
     public static final Logger HC_LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
-    private static final String REF_METRICS_DIR = "ref_metrics_dir";
-    private static final String TUMOR_METRICS_DIR = "tumor_metrics_dir";
     private static final String DO_NOT_WRITE_EVALUATION_FILE = "do_not_write_evaluation_file";
-
-    public static final int TUMOR_COVERAGE_LEVEL_30x = 30;
-    public static final int TUMOR_COVERAGE_LEVEL_60x = 60;
-    public static final int REF_COVERAGE_LEVEL_10x = 10;
-    public static final int REF_COVERAGE_LEVEL_20x = 20;
 
     private final String mTumorId;
     private final String mReferenceId;
@@ -46,8 +43,8 @@ public class HealthChecksApplication
     {
         mReferenceId = configBuilder.getValue(REFERENCE);
         mTumorId = configBuilder.getValue(TUMOR);
-        mReferenceMetricsDir = configBuilder.getValue(REF_METRICS_DIR);
-        mTumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR);
+        mReferenceMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
+        mTumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
 
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mOutputDir = parseOutputDir(configBuilder);
@@ -123,8 +120,8 @@ public class HealthChecksApplication
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addConfigItem(TUMOR, TUMOR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(REF_METRICS_DIR, false, "Reference BAM metrics directory");
-        configBuilder.addPath(TUMOR_METRICS_DIR, false, "Tumor BAM metrics directory");
+        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
+        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
         configBuilder.addFlag(DO_NOT_WRITE_EVALUATION_FILE, "Do not write final success or failure file");
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);

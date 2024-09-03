@@ -42,7 +42,7 @@ public abstract class BamMetricsSummary
     public abstract double overlappingReadPercent();
     public abstract double cappedCoveragePercent();
 
-    double totalFilteredPercent()
+    public double totalFilteredPercent()
     {
         return lowMapQualPercent() + duplicatePercent() + unpairedPercent() + lowBaseQualPercent()
                 + overlappingReadPercent() + cappedCoveragePercent();
@@ -60,6 +60,12 @@ public abstract class BamMetricsSummary
         }
 
         return null;
+    }
+
+    public double coveragePercent(int coverageLevel)
+    {
+        Double percent = getCoveragePercent(coverageLevel);
+        return percent != null ? percent : 0;
     }
 
     // load coverage dynamic

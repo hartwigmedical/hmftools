@@ -9,22 +9,22 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class WGSMetricsFileTest
+public class OldWGSMetricsFileTest
 {
     private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
     private static final double EPSILON = 1.0E-10;
 
-    private static final String PV4_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv4");
-    private static final String PV5_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv5");
+    private static final String PV4_FILE = OldWGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv4");
+    private static final String PV5_FILE = OldWGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv5");
 
-    private static final String EMPTY_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.empty");
-    private static final String INCORRECT_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.incorrect");
-    private static final String NON_EXISTING_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.non-existing");
+    private static final String EMPTY_FILE = OldWGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.empty");
+    private static final String INCORRECT_FILE = OldWGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.incorrect");
+    private static final String NON_EXISTING_FILE = OldWGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.non-existing");
 
     @Test
     public void worksForPv4Input() throws IOException
     {
-        WGSMetrics metrics = WGSMetricsFile.read(PV4_FILE);
+        OldWGSMetrics metrics = OldWGSMetricsFile.read(PV4_FILE);
 
         assertEquals(0.000856, metrics.meanCoverage(), EPSILON);
         assertEquals(0.257469, metrics.sdCoverage(), EPSILON);
@@ -50,7 +50,7 @@ public class WGSMetricsFileTest
     @Test
     public void worksForPv5Input() throws IOException
     {
-        WGSMetrics metrics = WGSMetricsFile.read(PV5_FILE);
+        OldWGSMetrics metrics = OldWGSMetricsFile.read(PV5_FILE);
 
         assertEquals(31.440964, metrics.meanCoverage(), EPSILON);
         assertEquals(10.111387, metrics.sdCoverage(), EPSILON);
@@ -76,18 +76,18 @@ public class WGSMetricsFileTest
     @Test(expected = IOException.class)
     public void emptyFileYieldsIOException() throws IOException
     {
-        WGSMetricsFile.read(EMPTY_FILE);
+        OldWGSMetricsFile.read(EMPTY_FILE);
     }
 
     @Test(expected = IOException.class)
     public void nonExistingFileYieldsIOException() throws IOException
     {
-        WGSMetricsFile.read(NON_EXISTING_FILE);
+        OldWGSMetricsFile.read(NON_EXISTING_FILE);
     }
 
     @Test(expected = IOException.class)
     public void incorrectRefFileYieldsIOException() throws IOException
     {
-        WGSMetricsFile.read(INCORRECT_FILE);
+        OldWGSMetricsFile.read(INCORRECT_FILE);
     }
 }
