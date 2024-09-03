@@ -4,10 +4,9 @@ import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.HC_LOGG
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.flagstat.FlagstatQC;
+import com.hartwig.hmftools.common.metrics.FlagstatQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 final class HealthCheckEvaluation
 {

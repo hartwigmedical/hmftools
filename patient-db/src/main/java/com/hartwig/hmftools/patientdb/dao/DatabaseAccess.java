@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.metrics.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;

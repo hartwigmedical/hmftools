@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.flagstat.Flagstat;
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.metrics.Flagstat;
+import com.hartwig.hmftools.common.metrics.OldFlagstatFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -43,9 +43,9 @@ public class LoadFlagstatData
         {
             LOGGER.info("Extracting and writing flagstats for {}", sample);
 
-            Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
+            Flagstat refFlagstat = OldFlagstatFile.read(refFlagstatFile);
             LOGGER.info(" Read reference sample flagstats from {}", refFlagstatFile);
-            Flagstat tumorFlagstat = FlagstatFile.read(tumorFlagstatFile);
+            Flagstat tumorFlagstat = OldFlagstatFile.read(tumorFlagstatFile);
             LOGGER.info(" Read tumor sample flagstats from {}", tumorFlagstatFile);
 
             dbWriter.writeFlagstats(sample, refFlagstat, tumorFlagstat);

@@ -24,7 +24,10 @@ public final class SvVcfTags
     public static final String IHOMPOS_DESC = "Position of inexact homology";
 
     public static final String INSALN = "INSALN";
-    public static final String INSALN_DESC = "Alternative alignment locations of insert sequence";
+    public static final String INSALN_DESC = "Alternative alignments of insert sequence";
+
+    public static final String ALTALN = "ALTALN";
+    public static final String ALTALN_DESC = "Alternative alignments for low map-qual breakends";
 
     public static final String ASM_ID = "ASMID";
     public static final String ASM_ID_DESC = "Unique id(s) of assembly(s) containing the breakend";

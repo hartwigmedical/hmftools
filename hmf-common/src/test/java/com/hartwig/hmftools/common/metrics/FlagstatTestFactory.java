@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.flagstat;
+package com.hartwig.hmftools.common.metrics;
+
+import com.hartwig.hmftools.common.metrics.Flagstat;
 
 import org.jetbrains.annotations.NotNull;
 

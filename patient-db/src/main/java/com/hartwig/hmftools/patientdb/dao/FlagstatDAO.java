@@ -2,10 +2,9 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Flagstat.FLAGSTAT;
 
-import com.hartwig.hmftools.common.flagstat.Flagstat;
-import com.hartwig.hmftools.common.flagstat.FlagstatQC;
+import com.hartwig.hmftools.common.metrics.Flagstat;
+import com.hartwig.hmftools.common.metrics.FlagstatQC;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 public class FlagstatDAO

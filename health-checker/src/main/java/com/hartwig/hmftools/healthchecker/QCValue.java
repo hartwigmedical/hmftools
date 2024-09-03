@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.healthchecker.result;
+package com.hartwig.hmftools.healthchecker;
+
+import static java.lang.String.format;
 
 public class QCValue
 {
@@ -10,4 +12,6 @@ public class QCValue
         Type = type;
         Value = value;
     }
+
+    public String toString() { return format("%s=%s", Type, Value); }
 }

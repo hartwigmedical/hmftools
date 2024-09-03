@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.result;
+package com.hartwig.hmftools.healthchecker;
 
 public enum QCValueType
 {

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.conversion;
 
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.metrics.Flagstat;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.virus.VirusType;

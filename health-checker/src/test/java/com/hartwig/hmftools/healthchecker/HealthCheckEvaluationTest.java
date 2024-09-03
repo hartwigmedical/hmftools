@@ -4,8 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.junit.Test;
 

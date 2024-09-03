@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.metrics.OldFlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
@@ -360,7 +360,7 @@ public class OrangeAlgo
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
         String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.wgsRefConfig().refSampleFlagstatFile();
-        Flagstat flagstat = OrangeConversion.convert(FlagstatFile.read(flagstatFile));
+        Flagstat flagstat = OrangeConversion.convert(OldFlagstatFile.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();

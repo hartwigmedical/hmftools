@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.flagstat;
+package com.hartwig.hmftools.common.metrics;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,7 +8,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class FlagstatFileTest
+public class OldFlagstatFileTest
 {
     private static final String FLAGSTAT_FILE = Resources.getResource("flagstat/example.flagstat").getPath();
     private static final String MALFORMED_FILE = Resources.getResource("flagstat/malformed.flagstat").getPath();
@@ -18,7 +18,7 @@ public class FlagstatFileTest
     @Test
     public void canReadFlagstatFile() throws IOException
     {
-        Flagstat flagstat = FlagstatFile.read(FLAGSTAT_FILE);
+        Flagstat flagstat = OldFlagstatFile.read(FLAGSTAT_FILE);
 
         assertEquals(970, flagstat.uniqueReadCount());
         assertEquals(10, flagstat.secondaryCount());
@@ -35,6 +35,6 @@ public class FlagstatFileTest
     @Test(expected = IOException.class)
     public void crashesOnMalformed() throws IOException
     {
-        FlagstatFile.read(MALFORMED_FILE);
+        OldFlagstatFile.read(MALFORMED_FILE);
     }
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.flagstat;
+package com.hartwig.hmftools.common.metrics;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

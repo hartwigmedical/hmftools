@@ -10,7 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
-import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;

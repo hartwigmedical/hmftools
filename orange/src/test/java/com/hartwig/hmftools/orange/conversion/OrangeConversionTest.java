@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
-import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;

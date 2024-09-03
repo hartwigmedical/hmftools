@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.flagstat;
+package com.hartwig.hmftools.common.metrics;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
@@ -11,10 +11,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FlagstatFile
+public final class OldFlagstatFile
 {
     public static final String FILE_EXTENSION = ".flagstat";
 
