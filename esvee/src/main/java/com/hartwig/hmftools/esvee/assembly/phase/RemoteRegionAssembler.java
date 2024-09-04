@@ -94,17 +94,6 @@ public class RemoteRegionAssembler
         return true;
     }
 
-    public static boolean assemblyOverlapsRemoteRegion(final JunctionAssembly assembly, final RemoteRegion remoteRegion)
-    {
-        if(!assembly.junction().Chromosome.equals(remoteRegion.Chromosome))
-            return false;
-
-        if(assembly.isForwardJunction())
-            return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
-        else
-            return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
-    }
-
     public List<Read> extractRemoteReads(final RemoteRegion remoteRegion)
     {
         mRemoteRegion = remoteRegion;
