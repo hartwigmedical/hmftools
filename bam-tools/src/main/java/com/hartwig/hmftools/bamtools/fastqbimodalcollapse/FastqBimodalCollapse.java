@@ -34,6 +34,10 @@ public class FastqBimodalCollapse
     private static final char MISMATCH_BASE = 'X';
     private static final char MODC_BASE = 'c';
 
+    private static final int ROLLING_WINDOW_SIZE = 20;
+    private static final int MIN_GOOD_ROLLING_COUNT = 18;
+    private static final int NO_HAIRPIN = Integer.MAX_VALUE;
+
     private final FastqBimodalCollapseConfig mConfig;
 
     private int mFastqPairCount;
@@ -186,6 +190,118 @@ public class FastqBimodalCollapse
         return consensusRead.toString();
     }
 
+    private static int findHairpinStart(final FastqRecord fastq1, final FastqRecord fastq2, final String consensusRead)
+    {
+        int[] isConcordant = new int[consensusRead.length()];
+        int[] isConcordantGG = new int[consensusRead.length()];
+        for(int i = 0; i < consensusRead.length(); i++)
+        {
+            isConcordant[i] = 0;
+            isConcordantGG[i] = 0;
+
+            char consensusBase = consensusRead.charAt(i);
+            char base1 = fastq1.getReadString().charAt(i);
+            char base2 = fastq2.getReadString().charAt(i);
+
+            if(!(base1 == MISSING_BASE || base2 == MISSING_BASE || consensusBase == MISMATCH_BASE))
+            {
+                isConcordant[i] = 1;
+            }
+
+            if(!(base1 == MISSING_BASE || base2 == MISSING_BASE || consensusBase == MISMATCH_BASE) || (base1 == 'G' && base2 == 'G'))
+            {
+                isConcordantGG[i] = 1;
+            }
+        }
+
+        int[] rollingCount = new int[consensusRead.length() - ROLLING_WINDOW_SIZE + 1];
+        int[] rollingCountGG = new int[consensusRead.length() - ROLLING_WINDOW_SIZE + 1];
+        rollingCount[0] = 0;
+        rollingCountGG[0] = 0;
+        for(int i = 0; i < ROLLING_WINDOW_SIZE; i++)
+        {
+            rollingCount[0] += isConcordant[i];
+            rollingCountGG[0] += isConcordantGG[i];
+        }
+
+        for(int i = 1; i < rollingCount.length; i++)
+        {
+            rollingCount[i] = rollingCount[i - 1] - isConcordant[i - 1] + isConcordant[i + ROLLING_WINDOW_SIZE - 1];
+            rollingCountGG[i] = rollingCountGG[i - 1] - isConcordantGG[i - 1] + isConcordantGG[i + ROLLING_WINDOW_SIZE - 1];
+        }
+
+        for(int i = 0; i < rollingCount.length; i++)
+        {
+            if(rollingCount[i] >= MIN_GOOD_ROLLING_COUNT)
+            {
+                continue;
+            }
+
+            int j = i + 1;
+            for(; j < rollingCount.length; j++)
+            {
+                if(rollingCount[j] >= MIN_GOOD_ROLLING_COUNT)
+                {
+                    break;
+                }
+            }
+
+            if(j == rollingCount.length)
+            {
+                continue;
+            }
+
+            boolean found = false;
+            for(int k = 0; k < i; k++)
+            {
+                if(rollingCount[k] < MIN_GOOD_ROLLING_COUNT - 1)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(found)
+            {
+                continue;
+            }
+
+            found = false;
+            for(int k = j + 1; k < rollingCount.length; k++)
+            {
+                if(rollingCountGG[k] < MIN_GOOD_ROLLING_COUNT - 1)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(found)
+            {
+                continue;
+            }
+
+            found = false;
+            for(int k = i + 1; k < j; k++)
+            {
+                if(rollingCount[k] < 14)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                continue;
+            }
+
+            return i + 5;
+        }
+
+        return NO_HAIRPIN;
+    }
+
     private static final String STAT_DELIMITER = "\t";
     private static final String[] STAT_HEADERS = {
             "read_name",
@@ -198,6 +314,7 @@ public class FastqBimodalCollapse
             "modc_without_g_count",
             "exact_matches",
             "exact_mismatches",
+            "hairpin_start",
             "read1",
             "qual1",
             "read2",
@@ -208,6 +325,7 @@ public class FastqBimodalCollapse
     private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
     {
         String consensusRead = getConsensusRead(fastq1, fastq2);
+        int hairpinStart = findHairpinStart(fastq1, fastq2, consensusRead);
 
         int missingCount = 0;
         int consensusCount = 0;
@@ -216,7 +334,7 @@ public class FastqBimodalCollapse
         int modCWithoutG = 0;
         int exactMatches = 0;
         int exactMismatches = 0;
-        for(int i = 0; i < consensusRead.length(); i++)
+        for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
         {
             char consensusBase = consensusRead.charAt(i);
             char base1 = fastq1.getReadString().charAt(i);
@@ -277,6 +395,7 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(modCWithoutG));
         statLine.add(String.valueOf(exactMatches));
         statLine.add(String.valueOf(exactMismatches));
+        statLine.add(String.valueOf(hairpinStart == NO_HAIRPIN ? -1 : hairpinStart + 1));
         statLine.add(fastq1.getReadString());
         statLine.add(fastq1.getBaseQualityString());
         statLine.add(fastq2.getReadString());
