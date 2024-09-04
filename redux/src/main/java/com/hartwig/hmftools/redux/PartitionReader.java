@@ -150,7 +150,10 @@ public class PartitionReader implements Consumer<List<Fragment>>
         RD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
 
         if(mConfig.PerfDebug)
+        {
             mCurrentPartitionData.logCacheCounts();
+            mPartitionDataStore.logTotalCacheSize();
+        }
 
         mPartitionRecordCount = 0;
     }

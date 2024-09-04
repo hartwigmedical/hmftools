@@ -28,7 +28,6 @@ import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
-import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
 public class PartitionData
@@ -559,6 +558,31 @@ public class PartitionData
             acquireLock();
 
             RD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
+    public static final int PARTITION_CACHE_INCOMPLETE_FRAGS = 0;
+    public static final int PARTITION_CACHE_CANDIDATE_DUP_GROUPS = 1;
+    public static final int PARTITION_CACHE_RESOLVED_STATUS = 2;
+    public static final int PARTITION_CACHE_DUP_GROUPS = 3;
+    public static final int PARTITION_CACHE_DUP_GROUP_READS = 4;
+
+    public int[] collectCacheCounts()
+    {
+        try
+        {
+            acquireLock();
+
+            int[] cachedCounts = new int[PARTITION_CACHE_DUP_GROUP_READS+1];
+            cachedCounts[PARTITION_CACHE_INCOMPLETE_FRAGS] = mIncompleteFragments.size();
+            cachedCounts[PARTITION_CACHE_CANDIDATE_DUP_GROUPS] = mCandidateDuplicatesMap.size();
+            cachedCounts[PARTITION_CACHE_RESOLVED_STATUS] = mFragmentStatus.size();
+            cachedCounts[PARTITION_CACHE_DUP_GROUPS] = mDuplicateGroupMap.size();
+            return cachedCounts;
         }
         finally
         {
