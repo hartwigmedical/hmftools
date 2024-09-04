@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.consensus.TemplateReadData;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -46,7 +47,7 @@ public class DuplicateGroup
     private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
 
-    private SAMRecord mPrimaryTemplateRead; // read on which the primary consensus read is based
+    private TemplateReadData mPrimaryTemplateRead; // read data from the primary consensus read
     private String mGroupReadId;
     private boolean mDualStrand;
 
@@ -350,7 +351,7 @@ public class DuplicateGroup
                     // cache to ensure subsequent consensus reads use the same properties
                     if(mPrimaryTemplateRead == null)
                     {
-                        mPrimaryTemplateRead = consensusReadInfo.TemplateRead;
+                        mPrimaryTemplateRead = TemplateReadData.fromRead(consensusReadInfo.TemplateRead);
                         mGroupReadId = consensusReadInfo.ConsensusRead.getReadName();
 
                     }

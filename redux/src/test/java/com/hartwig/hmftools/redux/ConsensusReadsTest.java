@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.ReadParseState;
+import com.hartwig.hmftools.redux.consensus.TemplateReadData;
 
 import org.junit.Test;
 
@@ -761,7 +762,8 @@ public class ConsensusReadsTest
 
         // now send through only the non template read, for the scenario where the primary's mate is unmapped
         ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(mate2), readConsensusInfo.TemplateRead, readConsensusInfo.ConsensusRead.getReadName(), "");
+                List.of(mate2), TemplateReadData.fromRead(readConsensusInfo.TemplateRead),
+                readConsensusInfo.ConsensusRead.getReadName(), "");
 
         assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
