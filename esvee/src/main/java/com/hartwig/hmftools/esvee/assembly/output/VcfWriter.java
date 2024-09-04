@@ -275,7 +275,9 @@ public class VcfWriter implements AutoCloseable
         {
             builder.attribute(CIPOS, new int[] { breakend.Homology.ExactStart, breakend.Homology.ExactEnd });
             builder.attribute(IHOMPOS, new int[] { breakend.Homology.InexactStart, breakend.Homology.InexactEnd });
-            builder.attribute(HOMSEQ, breakend.Homology.Homology);
+
+            if(!breakend.Homology.Homology.isEmpty())
+                builder.attribute(HOMSEQ, breakend.Homology.Homology);
         }
         else
         {

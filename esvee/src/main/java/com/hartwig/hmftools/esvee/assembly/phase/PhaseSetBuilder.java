@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
@@ -571,7 +572,7 @@ public class PhaseSetBuilder
         {
             // only form one remote link for each assembly
             applySplitLinkSupport(initialAssembly, remoteAssembly, true);
-            initialAssembly.setOutcome(REMOTE_REGION);
+            initialAssembly.setOutcome(REMOTE_LINK);
             mSplitLinks.add(assemblyLink);
         }
         else

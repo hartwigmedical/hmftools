@@ -155,7 +155,7 @@ public class BreakendBuilder
         if(indelCoords.isInsert())
         {
             if(indelSeqStart >= 0 && indelSeqEnd < mAssemblyAlignment.fullSequenceLength())
-                insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart, indelSeqEnd);
+                insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart + 1, indelSeqEnd + 1);
         }
         else
         {

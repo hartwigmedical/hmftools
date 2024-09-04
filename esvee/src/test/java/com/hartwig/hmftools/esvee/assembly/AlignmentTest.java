@@ -397,15 +397,15 @@ public class AlignmentTest
 
         alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 80,
-                60, 75, 0, "110M", DEFAULT_NM, "", "");
+                60, 80, 0, "110M", DEFAULT_NM, "", "");
 
         alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_2, 1, 100), 60, 140,
-                60, 75, 0, "100M", DEFAULT_NM, "", "");
+                100, 80, 0, "100M", DEFAULT_NM, "", "");
 
         AlignData alignment3 = new AlignData(
                 new ChrBaseRegion(CHR_2, 1, 100), 130, 200,
-                60, 65, 0, "100M", DEFAULT_NM, "", "");
+                60, 70, 0, "100M", DEFAULT_NM, "", "");
 
         alignments = Lists.newArrayList(zeroAlign, alignment1, zeroAlign, alignment2, zeroAlign, alignment3);
 
@@ -417,9 +417,9 @@ public class AlignmentTest
         assertEquals(3, lowQualAlignments.size());
         assertEquals(3, validAlignments.size());
 
-        assertEquals(43, validAlignments.get(0).adjustedAlignment());
-        assertEquals(29, validAlignments.get(1).adjustedAlignment());
-        assertEquals(47, validAlignments.get(2).adjustedAlignment());
+        assertEquals(48, validAlignments.get(0).adjustedAlignment());
+        assertEquals(34, validAlignments.get(1).adjustedAlignment());
+        assertEquals(52, validAlignments.get(2).adjustedAlignment());
     }
 
     private AssemblyAlignment createAssemblyAlignment(
