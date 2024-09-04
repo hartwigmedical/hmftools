@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.Math.round;
+import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -75,7 +77,9 @@ public final class VariantContextFactory
     {
         VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
 
-        builder.log10PError(variant.totalQuality() / -10d);
+        double tqp = variant.tumorReadCounters().get(0).tumorQualProbability();
+        double logTqp = log10(max(tqp, 1e-20));
+        builder.log10PError((double)round(logTqp * 10d) / 10d);
         builder.genotypes(genotypes);
         builder.filters(variant.filtersStringSet());
 
