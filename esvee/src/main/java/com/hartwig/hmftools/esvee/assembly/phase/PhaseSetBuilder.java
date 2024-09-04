@@ -424,7 +424,6 @@ public class PhaseSetBuilder
                 // collect remote regions if from LINE assemblies or those very close to a LINE assembly
                 lineSiteAssembly.remoteRegions().stream()
                         .filter(x -> !x.isSuppOnlyRegion())
-                        .filter(x -> mAssemblies.stream().filter(y -> y != lineSiteAssembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
                         .forEach(x -> combinedRemoteRegions.add(x));
             }
 
@@ -478,11 +477,12 @@ public class PhaseSetBuilder
             if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
                 continue;
 
-            // collect remote regions which aren't only supplementaries nor which overlap another phase assembly
+            // collect remote regions which aren't only supplementaries
+            // the check for overlaps with other assemblies in the phase group has been removed since was hiding valid links
             List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
                     .filter(x -> !applyThresholds || x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
-                    .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
+                    // .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
                     .collect(Collectors.toList());
 
             if(remoteRegions.isEmpty())
