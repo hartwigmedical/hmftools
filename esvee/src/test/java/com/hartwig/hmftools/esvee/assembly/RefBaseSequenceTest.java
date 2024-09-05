@@ -411,8 +411,8 @@ public class RefBaseSequenceTest
         assertEquals("10M5D5M5I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
-        assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
+        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
     }
 
     @Test
@@ -492,13 +492,19 @@ public class RefBaseSequenceTest
         assertEquals("10M5D5M5I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
-        assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
+        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
     }
 
     private static int getReadMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)
     {
         ReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
         return readState.mismatches();
+    }
+
+    private static int getReadIndelMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)
+    {
+        ReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
+        return readState.indelMismatches();
     }
 }
