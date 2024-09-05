@@ -30,6 +30,7 @@ public class DisruptionData implements ComparableItem
     protected static final String FLD_GENE_ORIENT = "GeneOrientation";
     protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
     protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
+    protected static final String FLD_UNDISRUPTED_COPY_NUMBER = "UndisruptedCopyNumber";
     protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
     public DisruptionData(
@@ -73,6 +74,7 @@ public class DisruptionData implements ComparableItem
         values.add(String.format("%s", Breakend.geneOrientation()));
         values.add(String.format("%d", Breakend.nextSpliceExonRank()));
         values.add(String.format("%.2f", Breakend.junctionCopyNumber()));
+        values.add(String.format("%.2f", Breakend.undisruptedCopyNumber()));
         values.add(String.format("%s", Breakend.chrBand()));
         return values;
     }
@@ -121,6 +123,7 @@ public class DisruptionData implements ComparableItem
         checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
         checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
         checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Breakend.junctionCopyNumber(), otherBreakend.Breakend.junctionCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_UNDISRUPTED_COPY_NUMBER, Breakend.junctionCopyNumber(), otherBreakend.Breakend.junctionCopyNumber(), thresholds);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, Breakend.chrBand(), otherBreakend.Breakend.chrBand());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;

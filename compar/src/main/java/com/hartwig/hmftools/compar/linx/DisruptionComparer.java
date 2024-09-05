@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_REGION_TYPE;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_UNDISRUPTED_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class DisruptionComparer implements ItemComparer
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        thresholds.addFieldThreshold(FLD_UNDISRUPTED_COPY_NUMBER, 0.5, 0.2);
     }
 
     @Override
@@ -64,7 +66,7 @@ public class DisruptionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE,
-                FLD_JUNCTION_COPY_NUMBER, FLD_CHROMOSOME_BAND);
+                FLD_JUNCTION_COPY_NUMBER, FLD_UNDISRUPTED_COPY_NUMBER, FLD_CHROMOSOME_BAND);
     }
 
     @Override
