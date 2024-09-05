@@ -67,6 +67,8 @@ public final class AssemblyConstants
     // alignment
     public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
+    public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
+    public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.85;
     public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = 50;
     public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 10000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;

@@ -9,6 +9,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
@@ -189,8 +191,15 @@ public class AlignData
         int trimmedAlignmentLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
         mAdjustedAlignment = max(trimmedAlignmentLength - scoreAdjustment, 0);
 
-        double lengthFactor = pow(mAdjustedAlignment/ (double)max(100, mAlignedBases), 2);
-        mModifiedMapQual = (int)round(mMapQual * min(1, lengthFactor));
+        if((mScore + ALIGNMENT_CALC_SCORE_FACTOR) / (double)sequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
+        {
+            mModifiedMapQual = 0;
+        }
+        else
+        {
+            double lengthFactor = pow(mAdjustedAlignment / (double) max(100, mAlignedBases), 2);
+            mModifiedMapQual = (int) round(mMapQual * min(1, lengthFactor));
+        }
     }
 
     public boolean hasAltAlignments() { return !mXaTag.isEmpty(); }

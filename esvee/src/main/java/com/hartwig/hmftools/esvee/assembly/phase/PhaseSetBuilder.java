@@ -563,20 +563,35 @@ public class PhaseSetBuilder
     {
         JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(initialAssembly);
 
-        remoteAssembly.setOutcome(REMOTE_REGION);
-        mPhaseGroup.addDerivedAssembly(remoteAssembly);
+        // check for an exact match with an existing assembly, either standard or remote
+        JunctionAssembly matchedAssembly = findMatchingAssembly(remoteAssembly, false);
+
+        AssemblyLink remoteLink;
+
+        if(matchedAssembly != null)
+        {
+            remoteLink = AssemblyLink.swapAssemblies(assemblyLink, remoteAssembly, matchedAssembly);
+            remoteAssembly = matchedAssembly;
+            isPrimaryLink = false;
+        }
+        else
+        {
+            remoteLink = assemblyLink;
+            remoteAssembly.setOutcome(REMOTE_REGION);
+            mPhaseGroup.addDerivedAssembly(remoteAssembly);
+        }
 
         if(isPrimaryLink)
         {
             // only form one remote link for each assembly
             applySplitLinkSupport(initialAssembly, remoteAssembly, true);
             initialAssembly.setOutcome(REMOTE_LINK);
-            mSplitLinks.add(assemblyLink);
+            mSplitLinks.add(remoteLink);
         }
         else
         {
             applySplitLinkSupport(initialAssembly, remoteAssembly, false);
-            mSecondarySplitLinks.add(assemblyLink);
+            mSecondarySplitLinks.add(remoteLink);
         }
     }
 
@@ -868,7 +883,7 @@ public class PhaseSetBuilder
             // check if the original assembly could be swapped out for this one if it's in a facing link but not a split link
             if(hasFacingLink && !hasSplitLink)
             {
-                JunctionAssembly originalAssembly = findBranchedOriginalAssembly(assembly);
+                JunctionAssembly originalAssembly = findMatchingAssembly(assembly, true);
 
                 if(originalAssembly == null)
                     continue;
@@ -890,12 +905,12 @@ public class PhaseSetBuilder
         }
     }
 
-    private JunctionAssembly findBranchedOriginalAssembly(final JunctionAssembly assembly)
+    private JunctionAssembly findMatchingAssembly(final JunctionAssembly assembly, boolean requireExtensionMatch)
     {
         return mAssemblies.stream()
                 .filter(x -> x != assembly)
                 .filter(x -> x.junction().compareTo(assembly.junction()) == 0)
-                .filter(x -> x.extensionLength() == assembly.extensionLength())
+                .filter(x -> !requireExtensionMatch || x.extensionLength() == assembly.extensionLength())
                 .findFirst().orElse(null);
     }
 
@@ -1127,9 +1142,7 @@ public class PhaseSetBuilder
                         if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(assembly)))
                         {
                             // set outcome to original assembly
-                            JunctionAssembly originalAssembly = mAssemblies.stream()
-                                    .filter(x -> x != assembly)
-                                    .filter(x -> x.junction().compareTo(assembly.junction()) == 0).findFirst().orElse(null);
+                            JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
 
                             if(originalAssembly != null)
                                 assembly.setOutcome(originalAssembly.outcome());
