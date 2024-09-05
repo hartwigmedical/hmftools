@@ -37,9 +37,21 @@ public class SomaticVariantSelectorTest
     @Test
     public void canSelectExonicVariantsWithReportedPhaseSet()
     {
-        PurpleVariant exonicWithPhaseMatch = TestPurpleVariantFactory.builder().gene("gene").canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(1).build()).addLocalPhaseSets(1).build();
-        PurpleVariant exonicWithoutPhaseMatch = TestPurpleVariantFactory.builder().gene("gene").canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(1).build()).addLocalPhaseSets(2).build();
-        PurpleVariant intronicWithPhaseMatch = TestPurpleVariantFactory.builder().gene("gene").canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(null).build()).addLocalPhaseSets(1).build();
+        PurpleVariant exonicWithPhaseMatch = TestPurpleVariantFactory.builder()
+                .gene("gene")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(1).build())
+                .addLocalPhaseSets(1)
+                .build();
+        PurpleVariant exonicWithoutPhaseMatch = TestPurpleVariantFactory.builder()
+                .gene("gene")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(1).build())
+                .addLocalPhaseSets(2)
+                .build();
+        PurpleVariant intronicWithPhaseMatch = TestPurpleVariantFactory.builder()
+                .gene("gene")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().affectedExon(null).build())
+                .addLocalPhaseSets(1)
+                .build();
         PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").build();
 
         PurpleVariant withPhase = TestPurpleVariantFactory.builder().addLocalPhaseSets(1).build();
