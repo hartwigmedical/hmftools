@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.common;
+package com.hartwig.hmftools.esvee.vcfcompare.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
@@ -29,8 +29,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLink;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.line.LineLinker;
+import com.hartwig.hmftools.esvee.vcfcompare.line.LineLink;
+import com.hartwig.hmftools.esvee.vcfcompare.line.LineLinker;
 
 import org.apache.commons.lang3.NotImplementedException;
 

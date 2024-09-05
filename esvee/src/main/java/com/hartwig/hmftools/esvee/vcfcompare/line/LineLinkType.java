@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare.line;
 
 public enum LineLinkType
 {

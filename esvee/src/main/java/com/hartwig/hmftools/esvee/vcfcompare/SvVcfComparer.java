@@ -1,9 +1,7 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareTask.LINE_COMPARE;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareTask.MATCH_BREAKENDS;
 
 import java.util.List;
 
@@ -31,10 +29,10 @@ public class SvVcfComparer
     {
         SV_LOGGER.info("Comparing VCFs for sample: " + mSampleId);
 
-        if(mCompareTasks.contains(MATCH_BREAKENDS))
+        if(mCompareTasks.contains(CompareTask.MATCH_BREAKENDS))
             new BreakendMatchTask(mConfig).run();
 
-        if(mCompareTasks.contains(LINE_COMPARE))
+        if(mCompareTasks.contains(CompareTask.LINE_COMPARE))
             new LineCompareTask(mConfig).run();
     }
 

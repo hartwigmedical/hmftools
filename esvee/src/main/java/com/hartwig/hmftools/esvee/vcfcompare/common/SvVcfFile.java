@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.common;
+package com.hartwig.hmftools.esvee.vcfcompare.common;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 

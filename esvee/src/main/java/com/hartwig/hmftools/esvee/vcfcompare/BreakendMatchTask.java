@@ -1,20 +1,20 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.NEW_VCF;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
-import static com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig.OLD_VCF;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_VCF;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_VCF;
 
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.SvVcfFile;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatchWriter;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
+import com.hartwig.hmftools.esvee.vcfcompare.common.SvVcfFile;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatchWriter;
+import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 

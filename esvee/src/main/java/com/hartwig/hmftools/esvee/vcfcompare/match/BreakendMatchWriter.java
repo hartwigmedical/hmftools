@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
+package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
 
 public class BreakendMatchWriter
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.match;
+package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
@@ -8,8 +8,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
 
 public class BreakendMatcher
 {

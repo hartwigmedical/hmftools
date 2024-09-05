@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare.line;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatch;
-import com.hartwig.hmftools.esvee.utils.vcfcompare.match.BreakendMatcher;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatch;
+import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

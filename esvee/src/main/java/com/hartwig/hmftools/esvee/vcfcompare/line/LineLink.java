@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.esvee.utils.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare.line;
 
-import com.hartwig.hmftools.esvee.utils.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
 
 public class LineLink
 {
