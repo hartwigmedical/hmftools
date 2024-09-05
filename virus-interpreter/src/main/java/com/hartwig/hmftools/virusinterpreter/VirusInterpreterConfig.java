@@ -27,7 +27,6 @@ public class VirusInterpreterConfig
     private static final String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
     private static final String VIRUS_REPORTING_DB_TSV = "virus_reporting_db_tsv";
     private static final String VIRUS_BLACKLISTING_DB_TSV = "virus_blacklisting_db_tsv";
-    private static final String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {

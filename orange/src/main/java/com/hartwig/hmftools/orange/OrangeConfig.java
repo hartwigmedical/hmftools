@@ -25,10 +25,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -47,6 +50,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
@@ -77,8 +82,6 @@ public interface OrangeConfig
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
-    String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
-    String TUMOR_SAMPLE_FLAGSTAT_FILE = "tumor_sample_flagstat_file";
 
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
@@ -108,8 +111,7 @@ public interface OrangeConfig
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
         // tool output
-        configBuilder.addPath(TUMOR_SAMPLE_WGS_METRICS_FILE, false, "Path towards the tumor sample WGS metrics file.");
-        configBuilder.addPath(TUMOR_SAMPLE_FLAGSTAT_FILE, false, "Path towards the tumor sample flagstat file.");
+        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
 
         // per tool directory config options are supported, but simpler is to specific the root sample directory containing all tool
         // subdirectories or a single directory containing all pipeline output
@@ -278,8 +280,6 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .tumorSampleWGSMetricsFile(pathResolver.resolveMandatoryMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, tumorSampleId))
-                .tumorSampleFlagstatFile(pathResolver.resolveMandatoryMetricsFile(TUMOR_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, tumorSampleId))
                 .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, PURPLE_DIR))
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
                 .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, LINX_SOMATIC_DIR))
@@ -294,6 +294,11 @@ public interface OrangeConfig
         String lilacDir = pathResolver.resolveMandatoryToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
         builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
         builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
+
+        String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, METRICS_DIR);
+        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(metricsDir, tumorSampleId)));
+        builder.tumorSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(metricsDir, tumorSampleId)));
+
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {

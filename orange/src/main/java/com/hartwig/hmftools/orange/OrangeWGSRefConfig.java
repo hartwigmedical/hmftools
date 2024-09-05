@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
@@ -34,6 +36,8 @@ import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
@@ -50,16 +54,13 @@ import org.jetbrains.annotations.Nullable;
 public interface OrangeWGSRefConfig
 {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
-    String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
-    String REF_SAMPLE_FLAGSTAT_FILE = "ref_sample_flagstat_file";
 
     static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
                 false,
                 "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
-        configBuilder.addPath(REF_SAMPLE_WGS_METRICS_FILE, false, "Path towards the ref sample WGS metrics file.");
-        configBuilder.addPath(REF_SAMPLE_FLAGSTAT_FILE, false, "Path towards the ref sample flagstat file.");
+        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
@@ -152,8 +153,9 @@ public interface OrangeWGSRefConfig
             }
             builder.peachGenotypeTsv(peachGenotypeTsv);
 
-            builder.refSampleWGSMetricsFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, refSampleId));
-            builder.refSampleFlagstatFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, refSampleId));
+            String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, METRICS_DIR);
+            builder.refSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(refMetricsDir, refSampleId)));
+            builder.refSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(refMetricsDir, refSampleId)));
         }
 
         return builder.build();
