@@ -252,6 +252,10 @@ public class Alignment
                 int adjSequenceEnd = alignData.sequenceEnd() - rqSeqOffsetEnd;
                 convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
 
+                convertedAlignment.setSoftClipLengths(
+                        convertedAlignment.leftSoftClipLength() + alignData.leftSoftClipLength(),
+                        convertedAlignment.rightSoftClipLength() + alignData.rightSoftClipLength());
+
                 convertedAlignments.add(convertedAlignment);
 
                 alignData.markDroppedOnRequery();

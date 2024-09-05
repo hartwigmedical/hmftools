@@ -47,8 +47,8 @@ public class AlignData
     private final String mMdTag;
 
     private final List<CigarElement> mCigarElements;
-    private final int mSoftClipLeft;
-    private final int mSoftClipRight;
+    private int mSoftClipLeft;
+    private int mSoftClipRight;
 
     private final Orientation mOrientation;
     private final int mAlignedBases;
@@ -125,6 +125,12 @@ public class AlignData
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
+
+    public void setSoftClipLengths(int left, int right)
+    {
+        mSoftClipLeft = left;
+        mSoftClipRight = right;
+    }
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {

@@ -145,6 +145,8 @@ public class AlignmentWriter
             sj.add(FLD_NMATCHES);
             sj.add(FLD_XA_TAG);
             sj.add(FLD_MD_TAG);
+            sj.add("CalcAlignLength");
+            sj.add("ModMapQual");
             sj.add("DroppedOnRequery");
             sj.add("LinkedAltAlignment");
 
@@ -187,6 +189,8 @@ public class AlignmentWriter
                 sj.add(String.valueOf(alignment.nMatches()));
                 sj.add(alignment.xaTag());
                 sj.add(alignment.mdTag());
+                sj.add(String.valueOf(alignment.adjustedAlignment()));
+                sj.add(format("%.0f", alignment.modifiedMapQual()));
                 sj.add(String.valueOf(alignment.droppedOnRequery()));
 
                 if(alignment.hasSelectedAltAlignment())

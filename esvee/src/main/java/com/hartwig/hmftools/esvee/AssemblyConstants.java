@@ -70,7 +70,7 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
     public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.85;
     public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = 50;
-    public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 10000;
+    public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 100000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
