@@ -161,15 +161,7 @@ public class Breakend implements Comparable<Breakend>
         return svType() == DUP ? posLength + 1 : posLength;
     }
 
-    public boolean isShortLocalDelDupIns()
-    {
-        StructuralVariantType type = svType();
-
-        if(type == DEL || type == DUP || type == INS)
-            return svLength() <= SHORT_DEL_DUP_INS_LENGTH;
-        else
-            return false;
-    }
+    public boolean isShortLocalDelDupIns() { return AlignmentFragments.isShortLocalDelDupIns(svType(), svLength()); }
 
     public int minPosition() { return Position + (Homology != null ? Homology.ExactStart : 0); }
     public int maxPosition() { return Position + (Homology != null ? Homology.ExactEnd : 0); }

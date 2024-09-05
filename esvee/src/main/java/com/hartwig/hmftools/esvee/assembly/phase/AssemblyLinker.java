@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_T
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
+import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
 import java.util.List;
@@ -158,6 +159,14 @@ public final class AssemblyLinker
 
         if(!allowMismatches)
             return null;
+
+        // extend to use full extension sequence from the first assembly for subsequence testing
+        if(first.extensionLength() > 2 * PHASED_ASSEMBLY_MATCH_SEQ_LENGTH)
+        {
+            firstSeq = JunctionSequence.formFullExtensionMatchSequence(first, firstReversed);
+            firstMatchSequence = firstSeq.matchSequence();
+            firstMatchSeqLength = firstMatchSequence.length();
+        }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int matchSeqStartIndex = 0;

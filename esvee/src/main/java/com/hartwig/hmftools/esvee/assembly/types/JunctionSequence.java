@@ -3,8 +3,6 @@ package com.hartwig.hmftools.esvee.assembly.types;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -35,24 +33,20 @@ public class JunctionSequence
     private byte[] mBases;
     private byte[] mBaseQuals;
 
-    /*
-    public JunctionSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
-    {
-        this(assembly, reverseCompliment, 0, PHASED_ASSEMBLY_JUNCTION_OVERLAP * 2);
-    }
-    */
-
     private enum MatchSequenceMode
     {
         STRADDLE,
         FULL_EXTENSION,
-        OUTER_EXTENSION;
+        OUTER_EXTENSION,
+        INNER_EXTENSION;
     }
+
+    public static final int PHASED_ASSEMBLY_MATCH_SEQ_LENGTH = 100;
 
     public static JunctionSequence formOuterExtensionMatchSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
     {
         return new JunctionSequence(
-                assembly, reverseCompliment, 0, PHASED_ASSEMBLY_JUNCTION_OVERLAP * 2,
+                assembly, reverseCompliment, 0, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH,
                 MatchSequenceMode.OUTER_EXTENSION);
     }
 
@@ -67,6 +61,14 @@ public class JunctionSequence
     {
         return new JunctionSequence(
                 assembly, reverseCompliment, 0, -1, MatchSequenceMode.FULL_EXTENSION);
+    }
+
+    // currently unused
+    public static JunctionSequence formInnerExtensionMatchSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
+    {
+        return new JunctionSequence(
+                assembly, reverseCompliment, 0, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH,
+                MatchSequenceMode.INNER_EXTENSION);
     }
 
     public JunctionSequence(
@@ -119,7 +121,6 @@ public class JunctionSequence
             matchSeqExtLength = ExtensionLength; // take the full length
         }
 
-        // int matchSeqExtLength = maxMatchSeqExtensionLength > 0 ? min(ExtensionLength, maxMatchSeqExtensionLength) : ExtensionLength;
         int matchSeqRefLength = min(RefBaseLength, maxMatchSeqRefBaseLength + matchSeqRefExtension);
 
         int matchIndexStart, matchIndexEnd;
@@ -135,6 +136,32 @@ public class JunctionSequence
             {
                 matchIndexStart = 0;
                 matchIndexEnd = matchIndexStart + matchSeqExtLength - 1;
+            }
+        }
+        else if(matchSequenceMode == MatchSequenceMode.INNER_EXTENSION && matchSeqExtLength < ExtensionLength)
+        {
+            if(assembly.isForwardJunction())
+            {
+                matchIndexStart = mJunctionIndex + 1;
+                matchIndexEnd = matchIndexStart + matchSeqExtLength - 1;
+            }
+            else
+            {
+                matchIndexEnd = mJunctionIndex - 1;
+                matchIndexStart = matchIndexEnd - matchSeqExtLength + 1;
+            }
+        }
+        else if(matchSequenceMode == MatchSequenceMode.FULL_EXTENSION)
+        {
+            if(assembly.isForwardJunction())
+            {
+                matchIndexStart = mJunctionIndex + 1;
+                matchIndexEnd = BaseLength - 1;
+            }
+            else
+            {
+                matchIndexStart = 0;
+                matchIndexEnd = mJunctionIndex - 1;
             }
         }
         else
