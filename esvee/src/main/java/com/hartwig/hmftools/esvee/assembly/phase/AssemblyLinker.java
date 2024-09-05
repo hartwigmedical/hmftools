@@ -253,7 +253,7 @@ public final class AssemblyLinker
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int firstJunctionSeqLength = firstSeq.matchSequence().length();
+        int firstJunctionSeqLength = min(firstSeq.matchSequence().length(), PHASED_ASSEMBLY_MATCH_SEQ_LENGTH);
 
         // take each of the subsequence match locations, build out a longer sequence around it and check for a match
         // then return the longest of these
@@ -280,6 +280,8 @@ public final class AssemblyLinker
             if(secondIndexStart < 0)
             {
                 firstMatchIndexStart += -(secondIndexStart);
+                firstMatchIndexEnd += -(secondIndexStart);
+                secondIndexEnd += -(secondIndexStart);
                 secondIndexStart = 0;
             }
 
