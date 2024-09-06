@@ -6,12 +6,9 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
@@ -189,7 +186,7 @@ public class Breakend implements Comparable<Breakend>
         {
             int segmentQual = (int)round(segment.Alignment.modifiedMapQual());
 
-            if(segment.Alignment.hasLowMapQualAlignment())
+            if(segment.Alignment.hasLowMapQualShortSvLink())
                 segmentQual += ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 
             maxSegmentQual = max(segmentQual, maxSegmentQual);

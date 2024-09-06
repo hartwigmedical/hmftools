@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
 import java.util.Collections;
@@ -33,7 +34,7 @@ public final class AlignmentFilters
 
         for(AlignData alignment : alignments)
         {
-            if(alignment.mapQual() >= ALIGNMENT_MIN_MOD_MAP_QUAL || alignment.hasAltAlignments())
+            if(exceedsInitialMapQualThreshold(alignment) || alignment.hasAltAlignments())
             {
                 candidateAlignments.add(alignment);
             }
@@ -76,8 +77,12 @@ public final class AlignmentFilters
             alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
         }
 
+        // re-test candidates now modified map qual has been computed
+        candidateAlignments = candidateAlignments.stream()
+                .filter(x -> exceedsNoAltsModMapQualThreshold(x) || x.hasAltAlignments()).collect(Collectors.toList());
+
         // first filter alignments with low modified map qual and no alt alignment info
-        int validCount = (int)candidateAlignments.stream().filter(x -> x.exceedsMapQualThreshold()).count();
+        int validCount = (int)candidateAlignments.stream().filter(x -> exceedsModMapQualThreshold(x)).count();
 
         if(candidateAlignments.size() == validCount)
         {
@@ -87,6 +92,27 @@ public final class AlignmentFilters
 
         // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
         checkLocalVariants(candidateAlignments, validAlignments, lowQualAlignments);
+    }
+
+    private static boolean exceedsInitialMapQualThreshold(final AlignData alignment)
+    {
+        return exceedsMapQualThreshold(alignment, false, ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA);
+    }
+
+    private static boolean exceedsModMapQualThreshold(final AlignData alignment)
+    {
+        return exceedsMapQualThreshold(alignment, true, ALIGNMENT_MIN_MOD_MAP_QUAL);
+    }
+
+    private static boolean exceedsNoAltsModMapQualThreshold(final AlignData alignment)
+    {
+        return exceedsMapQualThreshold(alignment, true, ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA);
+    }
+
+    private static boolean exceedsMapQualThreshold(final AlignData alignment, boolean useModified, int threshold)
+    {
+        double mapQual = useModified ? alignment.modifiedMapQual() : alignment.mapQual();
+        return mapQual >= threshold;
     }
 
     private static class AlignmentOrderComparator implements Comparator<AlignData>
@@ -104,11 +130,12 @@ public final class AlignmentFilters
     private static void checkLocalVariants(
             final List<AlignData> candidateAlignments, final List<AlignData> validAlignments, final List<AlignData> lowQualAlignments)
     {
+        // first exit if there aren't enough alignments to consider making links using those of lower map qual
         if(candidateAlignments.size() < 2)
         {
             for(AlignData alignment : candidateAlignments)
             {
-                if(alignment.exceedsMapQualThreshold())
+                if(exceedsModMapQualThreshold(alignment))
                     validAlignments.add(alignment);
                 else
                     lowQualAlignments.add(alignment);
@@ -125,7 +152,7 @@ public final class AlignmentFilters
             AlignData nextAlignment = candidateAlignments.get(i + 1);
 
             // process if one valid and the other not
-            if(alignment.exceedsMapQualThreshold() == nextAlignment.exceedsMapQualThreshold())
+            if(exceedsModMapQualThreshold(alignment) == exceedsModMapQualThreshold(nextAlignment))
                 continue;
 
             findShortestLocalVariant(alignment, nextAlignment);
@@ -139,7 +166,7 @@ public final class AlignmentFilters
             AlignData nextAlignment = candidateAlignments.get(i + 1);
 
             // process any unlinked alignments
-            if(alignment.exceedsMapQualThreshold() || nextAlignment.exceedsMapQualThreshold())
+            if(exceedsModMapQualThreshold(alignment) || exceedsModMapQualThreshold(nextAlignment))
                 continue;
 
             if(alignment.hasLowMapQualAlignment() && nextAlignment.hasLowMapQualAlignment())
@@ -150,7 +177,7 @@ public final class AlignmentFilters
 
         for(AlignData alignment : candidateAlignments)
         {
-            if(alignment.exceedsMapQualThreshold() || alignment.hasLowMapQualAlignment())
+            if(exceedsModMapQualThreshold(alignment) || alignment.hasLowMapQualAlignment())
                 validAlignments.add(alignment);
             else
                 lowQualAlignments.add(alignment);
@@ -177,7 +204,7 @@ public final class AlignmentFilters
             AlternativeAlignment initialAlignment = new AlternativeAlignment(
                     alignment.chromosome(), position, orientation, "", alignment.mapQual());
 
-            if(alignment.exceedsMapQualThreshold())
+            if(exceedsModMapQualThreshold(alignment))
             {
                 alignments = List.of(initialAlignment);
             }
@@ -211,11 +238,11 @@ public final class AlignmentFilters
         List<AlternativeAlignment> firstAlignments = collectAlignmentCandidates(first, true);
         List<AlternativeAlignment> secondAlignments = collectAlignmentCandidates(second, false);
 
+        if(firstAlignments.isEmpty() || secondAlignments.isEmpty())
+            return false;
+
         AlternativeAlignment firstInitialAlignment = firstAlignments.get(0);
         AlternativeAlignment secondInitialAlignment = secondAlignments.get(0);
-
-        if(firstAlignments.size() < 2 && secondAlignments.size() < 2)
-            return false;
 
         int shortestLength = -1;
         AlternativeAlignment firstSelectedAlt = null;
@@ -242,20 +269,27 @@ public final class AlignmentFilters
             }
         }
 
-        markAltAlignment(first, firstInitialAlignment, firstSelectedAlt, firstAlignments);
-        markAltAlignment(second, secondInitialAlignment, secondSelectedAlt, secondAlignments);
+        if(firstSelectedAlt == null)
+            firstSelectedAlt = firstInitialAlignment;
+
+        if(secondSelectedAlt == null)
+            secondSelectedAlt = secondInitialAlignment;
+
+        boolean hasShortSvLink = shortestLength >= 0;
+        markAltAlignment(first, firstInitialAlignment, firstSelectedAlt, firstAlignments, hasShortSvLink);
+        markAltAlignment(second, secondInitialAlignment, secondSelectedAlt, secondAlignments, hasShortSvLink);
 
         return firstSelectedAlt != null && secondSelectedAlt != null;
     }
 
     private static void markAltAlignment(
             final AlignData alignment, final AlternativeAlignment initialAlignment, final AlternativeAlignment selectedAlignment,
-            final List<AlternativeAlignment> allAlignments)
+            final List<AlternativeAlignment> allAlignments, boolean hasShortSvLink)
     {
         if(selectedAlignment == null)
             return;
 
-        if(alignment.exceedsMapQualThreshold()) // only applicable for alignments failing the initial qual test
+        if(exceedsModMapQualThreshold(alignment)) // only applicable for alignments failing the initial qual test
             return;
 
         // by marking either the selected alt alignment or registered alternatives, the low map-qual alignment can now be used as a breakend
@@ -263,6 +297,6 @@ public final class AlignmentFilters
                 .filter(x -> x != selectedAlignment).collect(Collectors.toList());
 
         alignment.setSelectedAltAlignments(
-                selectedAlignment != initialAlignment ? selectedAlignment : null, unselectedAltAlignments);
+                selectedAlignment != initialAlignment ? selectedAlignment : null, unselectedAltAlignments, hasShortSvLink);
     }
 }

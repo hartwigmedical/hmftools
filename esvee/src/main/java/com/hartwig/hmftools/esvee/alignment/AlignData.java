@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -66,6 +65,7 @@ public class AlignData
     private List<AlternativeAlignment> mRawAltAlignments; // lazy instantiation of BWA-returned alt alignments
     private AlternativeAlignment mSelectedAltAlignment; // set if the default is not selected
     private List<AlternativeAlignment> mUnselectedAltAlignments; // those other than the one selected
+    private boolean mHasLowMapQualShortSvLink;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
@@ -102,6 +102,7 @@ public class AlignData
         mRawAltAlignments = null;
         mSelectedAltAlignment = null;
         mUnselectedAltAlignments = null;
+        mHasLowMapQualShortSvLink = false;
     }
 
     public ChrBaseRegion refLocation() { return mRefLocation; }
@@ -175,7 +176,6 @@ public class AlignData
 
     public int adjustedAlignment() { return mAdjustedAlignment; }
     public double modifiedMapQual() { return mModifiedMapQual; }
-    public boolean exceedsMapQualThreshold() { return mModifiedMapQual >= ALIGNMENT_MIN_MOD_MAP_QUAL; }
 
     public void setAdjustedAlignment(final String fullSequence, int inexactHomologyStart, int inexactHomologyEnd)
     {
@@ -240,12 +240,15 @@ public class AlignData
 
     public boolean hasLowMapQualAlignment() { return mSelectedAltAlignment != null || mUnselectedAltAlignments != null; }
     public boolean hasSelectedAltAlignment() { return mSelectedAltAlignment != null; }
+    public boolean hasLowMapQualShortSvLink() { return mHasLowMapQualShortSvLink; }
     public AlternativeAlignment selectedAltAlignment() { return mSelectedAltAlignment; }
 
-    public void setSelectedAltAlignments(final AlternativeAlignment selectedAlignment, final List<AlternativeAlignment> otherAlignments)
+    public void setSelectedAltAlignments(
+            final AlternativeAlignment selectedAlignment, final List<AlternativeAlignment> otherAlignments, boolean hasShortSvLink)
     {
         mSelectedAltAlignment = selectedAlignment;
         mUnselectedAltAlignments = otherAlignments;
+        mHasLowMapQualShortSvLink = hasShortSvLink;
     }
 
     public List<AlternativeAlignment> unselectedAltAlignments()
