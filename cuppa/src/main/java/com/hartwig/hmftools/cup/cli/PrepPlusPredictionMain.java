@@ -20,8 +20,13 @@ public class PrepPlusPredictionMain {
                 accumulator.add("-" + arg.substring(argPrefix.length()));
             }
             else {
-                if (!(arg.startsWith("-") || accumulator.isEmpty())) {
-                    accumulator.add(arg);
+                if (arg.startsWith("-")) {
+                    matchingArgs.addAll(accumulator);
+                    accumulator.clear();
+                } else {
+                    if (!accumulator.isEmpty()) {
+                        accumulator.add(arg);
+                    }
                 }
             }
         }
