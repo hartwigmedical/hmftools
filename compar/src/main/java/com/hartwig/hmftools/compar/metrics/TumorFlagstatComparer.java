@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.compar.metrics;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.TUMOR_FLAGSTAT;
+import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.OLD_FLAGSTAT_FILE_EXTENSION;
 
 import java.io.IOException;
 import java.util.List;
@@ -68,7 +71,7 @@ public class TumorFlagstatComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            Flagstat flagstat = FlagstatFile.read(FlagstatFile.generateFilename(fileSources.TumorFlagstat, sampleId));
+            Flagstat flagstat = FlagstatFile.read(determineFilePath(sampleId, fileSources));
             comparableItems.add(new TumorFlagstatData(flagstat));
         }
         catch(IOException e)
@@ -77,5 +80,19 @@ public class TumorFlagstatComparer implements ItemComparer
             return null;
         }
         return comparableItems;
+    }
+
+    private static String determineFilePath(final String sampleId, final FileSources fileSources)
+    {
+        String currentFileName = FlagstatFile.generateFilename(fileSources.TumorFlagstat, sampleId);
+        String oldFileName = checkAddDirSeparator(fileSources.TumorFlagstat) + sampleId + OLD_FLAGSTAT_FILE_EXTENSION;
+        if(!fileExists(currentFileName) && fileExists(oldFileName))
+        {
+            return oldFileName;
+        }
+        else
+        {
+            return currentFileName;
+        }
     }
 }

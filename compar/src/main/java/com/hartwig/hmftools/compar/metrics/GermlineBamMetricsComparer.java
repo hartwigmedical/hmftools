@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.compar.metrics;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_10X;
 import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_20X;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.OLD_BAM_METRICS_FILE_EXTENSION;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,7 +75,7 @@ public class GermlineBamMetricsComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            WGSMetrics metrics = WGSMetricsFile.read(WGSMetricsFile.generateFilename(fileSources.GermlineBamMetrics, germlineSampleId));
+            WGSMetrics metrics = WGSMetricsFile.read(determineFilePath(germlineSampleId, fileSources));
             comparableItems.add(new GermlineBamMetricsData(metrics));
         }
         catch(IOException e)
@@ -81,5 +84,19 @@ public class GermlineBamMetricsComparer implements ItemComparer
             return null;
         }
         return comparableItems;
+    }
+
+    private static String determineFilePath(final String germlineSampleId, final FileSources fileSources)
+    {
+        String currentFileName = WGSMetricsFile.generateFilename(fileSources.GermlineBamMetrics, germlineSampleId);
+        String oldFileName = checkAddDirSeparator(fileSources.GermlineBamMetrics) + germlineSampleId + OLD_BAM_METRICS_FILE_EXTENSION;
+        if(!fileExists(currentFileName) && fileExists(oldFileName))
+        {
+            return oldFileName;
+        }
+        else
+        {
+            return currentFileName;
+        }
     }
 }
