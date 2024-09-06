@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
@@ -12,6 +13,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -21,6 +23,8 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberComparer implements ItemComparer
 {
@@ -61,7 +65,7 @@ public class CopyNumberComparer implements ItemComparer
     {
         final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
-        copyNumbers.forEach(x -> items.add(new CopyNumberData(x)));
+        copyNumbers.forEach(x -> items.add(createCopyNumberData(x, sourceName)));
         return items;
     }
 
@@ -75,7 +79,7 @@ public class CopyNumberComparer implements ItemComparer
             List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(
                     fileSources.Purple, sampleId));
 
-            copyNumbers.forEach(x -> comparableItems.add(new CopyNumberData(x)));
+            copyNumbers.forEach(x -> comparableItems.add(createCopyNumberData(x, fileSources.Source)));
         }
         catch(IOException e)
         {
@@ -84,5 +88,15 @@ public class CopyNumberComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    @NotNull
+    private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber, final String fileSource)
+    {
+        BasePosition comparisonPositionStart = determineComparisonGenomePosition(
+                copyNumber.chromosome(), copyNumber.start(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+        BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
+                copyNumber.chromosome(), copyNumber.end(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+        return new CopyNumberData(copyNumber, comparisonPositionStart, comparisonPositionEnd);
     }
 }
