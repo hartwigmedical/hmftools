@@ -179,8 +179,11 @@ public class VariantFilters
             return false;
 
         // skip for chained breakends
-        if(belowMinAnchorLength(var.breakendStart()))
+        if(var.inChainedAssembly())
             return false;
+
+        if(belowMinAnchorLength(var.breakendStart()))
+            return true;
 
         if(var.isSgl())
         {
@@ -198,9 +201,6 @@ public class VariantFilters
 
     private boolean belowMinAnchorLength(final Breakend breakend)
     {
-        if(breakend.inChainedAssembly())
-            return false;
-
         return breakend.anchorLength() < MIN_TRIMMED_ANCHOR_LENGTH;
     }
 
