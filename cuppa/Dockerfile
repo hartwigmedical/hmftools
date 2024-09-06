@@ -8,4 +8,4 @@ ADD target/cuppa-$VERSION-jar-with-dependencies.jar /usr/share/hartwig/cuppa.jar
 RUN cd /opt/tools && jar xvf /usr/share/hartwig/cuppa.jar pycuppa 
 RUN pip3 install --upgrade pip && pip3 install /opt/tools/pycuppa
 
-ENTRYPOINT ["java", "-cp", "/usr/share/hartwig/cuppa.jar", "com.hartwig.hmftools.cup.prep.CuppaDataPrep"]
+ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/cuppa.jar"]
