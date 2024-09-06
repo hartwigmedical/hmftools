@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
 
 public class PrepPlusPredictionMain {
-    private static String[] extract(String prefix, String[] allArgs) {
+    private static String[] extractArgs(String prefix, String[] allArgs) {
         List<String> allAsString = Arrays.stream(allArgs).collect(Collectors.toList());
         List<String> matchingArgs = new ArrayList<>();
         List<String> accumulator = new ArrayList<>();
@@ -31,8 +31,12 @@ public class PrepPlusPredictionMain {
 
     public static void main(String[] args) {
         try {
-            CuppaDataPrep.main(extract("prep", args));
-            PredictionRunner.main(extract("prediction", args));
+            String[] prepArgs = extractArgs("prep", args);
+            String[] predArgs = extractArgs("prediction", args);
+            System.out.println("Prep args: " + String.join(" ", prepArgs));
+            System.out.println("Prediction args: " + String.join(" ", predArgs));
+            CuppaDataPrep.main(prepArgs);
+            PredictionRunner.main(predArgs);
             System.exit(0);
         } catch (Exception e) {
             System.err.println("Failed to run combined Cuppa applications");
