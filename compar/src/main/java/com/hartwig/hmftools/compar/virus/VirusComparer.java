@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.compar.virus;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_INTERPRETER_DIR;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.VIRUS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_MEAN_COVERAGE;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -21,6 +24,8 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.NotNull;
 
 public class VirusComparer implements ItemComparer
 {
@@ -68,7 +73,7 @@ public class VirusComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            AnnotatedVirusFile.read(AnnotatedVirusFile.generateFileName(fileSources.Virus, sampleId))
+            AnnotatedVirusFile.read(determineFileName(sampleId, fileSources))
                     .forEach(v -> comparableItems.add(new VirusData(v)));
         }
         catch(IOException e)
@@ -77,5 +82,23 @@ public class VirusComparer implements ItemComparer
             return null;
         }
         return comparableItems;
+    }
+
+    @NotNull
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        // dirty hack to get old virus directory working automatically most of the time
+        final String currentFileName = AnnotatedVirusFile.generateFileName(fileSources.Virus, sampleId);
+        final String oldFileName =
+                AnnotatedVirusFile.generateFileName(fileSources.Virus.replaceAll(VIRUS_INTERPRETER_DIR, "virus_interpreter"), sampleId);
+        ;
+        if(!fileExists(currentFileName) && fileExists(oldFileName))
+        {
+            return oldFileName;
+        }
+        else
+        {
+            return currentFileName;
+        }
     }
 }

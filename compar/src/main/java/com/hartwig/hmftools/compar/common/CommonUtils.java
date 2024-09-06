@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -285,5 +287,10 @@ public class CommonUtils
         {
             return chromosome;
         }
+    }
+
+    public static boolean fileExists(final String filename)
+    {
+        return Files.exists(new File(filename).toPath());
     }
 }

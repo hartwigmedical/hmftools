@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.peach;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.PEACH;
+import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.peach.PeachData.FLD_ALLELE_COUNT;
 import static com.hartwig.hmftools.compar.peach.PeachData.FLD_DRUGS;
 import static com.hartwig.hmftools.compar.peach.PeachData.FLD_FUNCTION;
@@ -88,10 +89,5 @@ public class PeachComparer implements ItemComparer
         {
             return currentFileName;
         }
-    }
-
-    private static boolean fileExists(final String filename)
-    {
-        return Files.exists(new File(filename).toPath());
     }
 }
