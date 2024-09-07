@@ -36,12 +36,8 @@ public class PrepPlusPredictionMain {
 
     public static void main(String[] args) {
         try {
-            String[] prepArgs = extractArgs("prep", args);
-            String[] predArgs = extractArgs("prediction", args);
-            System.out.println("Prep args: " + String.join(" ", prepArgs));
-            System.out.println("Prediction args: " + String.join(" ", predArgs));
-            CuppaDataPrep.main(prepArgs);
-            PredictionRunner.main(predArgs);
+            CuppaDataPrep.main(extractArgs("prep", args));
+            PredictionRunner.main(extractArgs("prediction", args));
             System.exit(0);
         } catch (Exception e) {
             System.err.println("Failed to run combined Cuppa applications");
