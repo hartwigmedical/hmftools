@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.redux.common;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
 import static com.hartwig.hmftools.common.bam.UmiReadType.SINGLE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
@@ -149,7 +144,8 @@ public class DuplicateGroup
 
     public void addRead(final SAMRecord read)
     {
-        int readTypeIndex = getReadTypeIndex(read);
+        ReadType readType = getReadTypeIndex(read);
+        int readTypeIndex = readType.ordinal();
 
         if(mReadGroups[readTypeIndex] == null)
             mReadGroups[readTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
@@ -227,22 +223,22 @@ public class DuplicateGroup
         }
     }
 
-    private int getReadTypeIndex(final SAMRecord read)
+    private ReadType getReadTypeIndex(final SAMRecord read)
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
             // determine if matches the designed initial read or its mate
             boolean matchesInitial = matchesInitialPrimaryRead(read);
-            return matchesInitial ? ReadType.INITIAL_PRIMARY.ordinal() : ReadType.MATE.ordinal();
+            return matchesInitial ? ReadType.INITIAL_PRIMARY : ReadType.MATE;
         }
         else
         {
             Boolean isInitialRead = mReadIdInitialIsFirst.get(read.getReadName());
 
             if(isInitialRead == null)
-                return ReadType.INITIAL_SUPPLEMENTARY.ordinal(); // should not happen since primaries are processed first
+                return ReadType.INITIAL_SUPPLEMENTARY; // should not happen since primaries are processed first
 
-            return isInitialRead == read.getFirstOfPairFlag() ? ReadType.INITIAL_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+            return isInitialRead == read.getFirstOfPairFlag() ? ReadType.INITIAL_SUPPLEMENTARY : ReadType.MATE_SUPPLEMENTARY;
         }
     }
 
