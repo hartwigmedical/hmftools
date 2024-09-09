@@ -11,6 +11,7 @@
     <modules>
         <module>amber</module>
         <module>bam-tools</module>
+        <module>chord</module>
         <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
@@ -63,6 +64,8 @@
 
         <amber.version>4.1</amber.version>
         <bam-tools.version>1.3</bam-tools.version>
+        <chord.version>2.1.0</chord.version>
+        <cuppa.version>2.2.1</cuppa.version>
         <cider.version>1.0.2</cider.version>
         <cobalt.version>2.0</cobalt.version>
         <compar.version>1.3</compar.version>
