@@ -464,8 +464,11 @@ public class PartitionData
 
             if(cachedReadCount == 0)
             {
-                RD_LOGGER.debug("dupGroup({}) coords({}) has no cached reads",
-                        duplicateGroup.toString(), duplicateGroup.coordinatesKey());
+                if(logCachedReads)
+                {
+                    RD_LOGGER.debug("dupGroup({}) coords({}) has no cached reads", duplicateGroup, duplicateGroup.coordinatesKey());
+                }
+
                 continue;
             }
 

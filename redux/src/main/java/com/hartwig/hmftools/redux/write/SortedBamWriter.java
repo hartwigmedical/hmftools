@@ -157,11 +157,13 @@ public class SortedBamWriter
         mRecords.add(new ReadOrAlignmentStart(mReadCount++, read));
         mMaxCached = max(mMaxCached, mRecords.size());
 
+        /*
         if(mPerfDebug && (mReadCount % LOG_COUNT) == 0)
         {
             RD_LOGGER.debug("sorted read cache chr({}:{}) records({}) avgWrite({})",
                     mCurrentChromosome, mLastWrittenPosition, mRecords.size(), avgWriteCount());
         }
+        */
 
         if(mMinCachedPosition == 0)
             mMinCachedPosition = read.getAlignmentStart();
