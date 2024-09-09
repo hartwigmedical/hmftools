@@ -132,7 +132,7 @@ public class ReduxApplication
 
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
-        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
+        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 1000 : 0;
         int totalUnwrittenFragments = 0;
 
         for(PartitionData partitionData : partitionDataStore.partitions())

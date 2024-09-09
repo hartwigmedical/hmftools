@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.Fragment;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
@@ -36,6 +37,8 @@ public final class TestUtils
     public static final String REF_BASES_REPEAT_40 = REF_BASES.repeat(40);
 
     public static final int DEFAULT_QUAL = SamRecordTestUtils.DEFAULT_BASE_QUAL;
+
+    public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     public static ReduxConfig createTestConfig()
     {

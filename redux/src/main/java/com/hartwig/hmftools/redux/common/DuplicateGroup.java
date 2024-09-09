@@ -43,9 +43,14 @@ public class DuplicateGroup
 
     // reads from each fragment are organised into their like-types from which consensus reads can be formed
     private final List<SAMRecord>[] mReadGroups;
+    private final int[] mReadGroupExpectedCounts;
     private final boolean[] mReadGroupComplete;
-    private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
+    private final Map<String,Boolean> mReadIdInitialIsFirst;
+    private ReadTypeId mInitialPrimaryDetails;
+
+    @Deprecated
+    private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
 
     private TemplateReadData mPrimaryTemplateRead; // read data from the primary consensus read
     private String mGroupReadId;
@@ -61,12 +66,18 @@ public class DuplicateGroup
         mReadIds = null;
         mReadGroups = new List[MAX_READ_TYPES];
         mReadGroupComplete = new boolean[MAX_READ_TYPES];
-        mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
+        mReadGroupExpectedCounts = new int[MAX_READ_TYPES];
+
+        mInitialPrimaryDetails = null;
+        mReadIdInitialIsFirst = Maps.newHashMap();
+
         mFragmentCount = 0;
         mCoordinatesKey = fragment.coordinates().keyOriented();
         mPrimaryTemplateRead = null;
         mGroupReadId = null;
         mDualStrand = false;
+
+        mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
     }
 
     public List<Fragment> fragments() { return mFragments; }
@@ -92,7 +103,8 @@ public class DuplicateGroup
         // establish expected lists by read type
         Fragment firstFragment = mFragments.get(0);
 
-        mReadGroups[ReadType.PRIMARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+        mReadGroups[ReadType.INITIAL_PRIMARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+        mReadGroupExpectedCounts[ReadType.INITIAL_PRIMARY.ordinal()] = mFragmentCount;
 
         for(int i = 0; i < firstFragment.reads().size(); ++i)
         {
@@ -104,14 +116,21 @@ public class DuplicateGroup
             if(i == 0)
             {
                 if(read.getReadPairedFlag() && HumanChromosome.contains(read.getMateReferenceName()))
+                {
                     mReadGroups[ReadType.MATE.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+                    mReadGroupExpectedCounts[ReadType.MATE.ordinal()] = mFragmentCount;
+                }
 
                 if(hasValidSupp)
-                    mReadGroups[ReadType.PRIMARY_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+                {
+                    mReadGroups[ReadType.INITIAL_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+                    mReadGroupExpectedCounts[ReadType.INITIAL_SUPPLEMENTARY.ordinal()] = 0;
+                }
             }
             else if(!read.getSupplementaryAlignmentFlag() && hasValidSupp)
             {
                 mReadGroups[ReadType.MATE_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+                mReadGroupExpectedCounts[ReadType.MATE_SUPPLEMENTARY.ordinal()] = 0;
             }
         }
 
@@ -140,21 +159,36 @@ public class DuplicateGroup
 
     private void addRead(final SAMRecord read, boolean checkFirstInPair)
     {
-        int readTypeIndex = getReadTypeIndex(read, checkFirstInPair);
+        int readTypeIndex = getReadTypeIndex(read);
+        // int readTypeIndex = getReadTypeIndexOld(read, checkFirstInPair);
 
         if(mReadGroups[readTypeIndex] == null)
-        {
             mReadGroups[readTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
-        }
 
         mReadGroups[readTypeIndex].add(read);
+
+        // check expected supplementary counts
+        if(read.getSupplementaryAlignmentFlag())
+            return;
+
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+        if(suppData != null && HumanChromosome.contains(suppData.Chromosome))
+        {
+            // create and/or increment expected supplementary counts
+            int suppReadTypeIndex = readTypeIndex + 2;
+
+            if(mReadGroups[suppReadTypeIndex] == null)
+                mReadGroups[suppReadTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+
+            ++mReadGroupExpectedCounts[suppReadTypeIndex];
+        }
     }
 
     private enum ReadType
     {
-        PRIMARY,
-        MATE,
-        PRIMARY_SUPPLEMENTARY,
+        INITIAL_PRIMARY, // meaning the first read of the two primaries in the fragment coordinates - could be first or second in pair
+        MATE, // the other primary read
+        INITIAL_SUPPLEMENTARY, // a supplementary linked to the designated primary read
         MATE_SUPPLEMENTARY;
     }
 
@@ -201,10 +235,11 @@ public class DuplicateGroup
             if(orientation(read) != Orientation)
                 return false;
 
-            if(checkFirstInPair && FirstInPair != read.getFirstOfPairFlag())
-                return false;
+            if(getFivePrimeUnclippedPosition(read) == UnclippedPosition)
+                return true;
 
-            return getFivePrimeUnclippedPosition(read) == UnclippedPosition;
+            // only relevant for inversions with identical fragment start positions
+            return FirstInPair == read.getFirstOfPairFlag();
         }
 
         public boolean supplementaryMatches(final SAMRecord read, final SupplementaryReadData suppData)
@@ -227,7 +262,61 @@ public class DuplicateGroup
         }
     }
 
-    private int getReadTypeIndex(final SAMRecord read, boolean checkFirstInPair)
+    private int getReadTypeIndex(final SAMRecord read)
+    {
+        if(!read.getSupplementaryAlignmentFlag())
+        {
+            // determine if matches the designed initial read or its mate
+            boolean matchesInitial = matchesInitialPrimaryRead(read);
+            return matchesInitial ? ReadType.INITIAL_PRIMARY.ordinal() : ReadType.MATE.ordinal();
+        }
+        else
+        {
+            Boolean isInitialRead = mReadIdInitialIsFirst.get(read.getReadName());
+
+            if(isInitialRead == null)
+                return ReadType.INITIAL_SUPPLEMENTARY.ordinal(); // should not happen since primaries are processed first
+
+            return isInitialRead == read.getFirstOfPairFlag() ? ReadType.INITIAL_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+        }
+    }
+
+    private boolean matchesInitialPrimaryRead(final SAMRecord read)
+    {
+        // tests if the read matches the coordinates of designed initial read (typically the lower of the primary pair)
+        if(!read.getReadPairedFlag())
+            return true;
+
+        Boolean initialIsFirst = mReadIdInitialIsFirst.get(read.getReadName());
+
+        if(initialIsFirst != null)
+            return initialIsFirst == read.getFirstOfPairFlag();
+
+        // must be a primary, not supplementary read
+        if(mInitialPrimaryDetails == null)
+        {
+            mInitialPrimaryDetails = new ReadTypeId(
+                    read.getReferenceName(),
+                    read.getReadUnmappedFlag() ? 0 : getFivePrimeUnclippedPosition(read), read.getAlignmentStart(),
+                    read.getReadUnmappedFlag() ? 0 : orientation(read),
+                    false, read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
+
+            initialIsFirst = read.getFirstOfPairFlag();
+        }
+        else
+        {
+            // if the read's coordinates match the intial primary then record first-in-pair status
+            if(mInitialPrimaryDetails.primaryMatches(read, true))
+                initialIsFirst = read.getFirstOfPairFlag();
+            else
+                initialIsFirst = !read.getFirstOfPairFlag();
+        }
+
+        mReadIdInitialIsFirst.put(read.getReadName(), initialIsFirst);
+        return initialIsFirst == read.getFirstOfPairFlag();
+    }
+
+    private int getReadTypeIndexOld(final SAMRecord read, boolean checkFirstInPair)
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
@@ -264,8 +353,8 @@ public class DuplicateGroup
             // register the expected supplementary read group
             if(hasValidSupp)
             {
-                int suppReadTypeIndex = index == ReadType.PRIMARY.ordinal() ?
-                        ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+                int suppReadTypeIndex = index == ReadType.INITIAL_PRIMARY.ordinal() ?
+                        ReadType.INITIAL_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
 
                 if(mReadGroups[suppReadTypeIndex] == null)
                     mReadGroups[suppReadTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
@@ -289,7 +378,7 @@ public class DuplicateGroup
             matchedPrimaryIndex = mPrimaryReadTypeIndex[0] != null && mPrimaryReadTypeIndex[0].supplementaryMatches(read, suppData) ? 0 : 1;
         }
 
-        return matchedPrimaryIndex == 0 ? ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+        return matchedPrimaryIndex == 0 ? ReadType.INITIAL_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
     }
 
     public boolean allReadsReceived()
@@ -301,7 +390,10 @@ public class DuplicateGroup
 
             List<SAMRecord> readGroup = mReadGroups[i];
 
-            if(readGroup != null && readGroup.size() < mFragmentCount)
+            if(readGroup == null)
+                continue;
+
+            if(!isGroupComplete(readGroup, i))
                 return false;
         }
 
@@ -310,7 +402,30 @@ public class DuplicateGroup
 
     public boolean hasCompleteReadGroup()
     {
-        return Arrays.stream(mReadGroups).anyMatch(x -> x != null && !x.isEmpty() && x.size() >= mFragmentCount);
+        for(int i = 0; i < mReadGroups.length; ++i)
+        {
+            if(mReadGroupComplete[i])
+                continue;
+
+            List<SAMRecord> readGroup = mReadGroups[i];
+
+            if(isGroupComplete(readGroup, i))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean isGroupComplete(final List<SAMRecord> readGroup, final int readGroupIndex)
+    {
+        if(mReadGroupComplete[readGroupIndex])
+            return true;
+
+        if(readGroup == null)
+            return false;
+
+        int expectedCount = mReadGroupExpectedCounts[readGroupIndex] == 0 ? mFragmentCount : mReadGroupExpectedCounts[readGroupIndex];
+        return readGroup.size() >= expectedCount;
     }
 
     public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
@@ -329,7 +444,7 @@ public class DuplicateGroup
             if(readGroup == null || readGroup.isEmpty())
                 continue;
 
-            if(readGroup.size() < mFragmentCount && !processIncompletes)
+            if(!isGroupComplete(readGroup, i) && !processIncompletes)
                 continue;
 
             reads.addAll(readGroup);
@@ -338,7 +453,7 @@ public class DuplicateGroup
             {
                 ConsensusReadInfo consensusReadInfo;
 
-                if(i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
+                if(i == ReadType.INITIAL_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
                 {
                     // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
                     consensusReadInfo = consensusReads.createConsensusRead(
@@ -360,7 +475,7 @@ public class DuplicateGroup
                 // set consensus read attributes
                 int firstInPairCount = (int)readGroup.stream().filter(x -> x.getFirstOfPairFlag()).count();
                 int readCount = readGroup.size();
-                boolean isPrimaryGroup = (i == ReadType.PRIMARY.ordinal() || i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal());
+                boolean isPrimaryGroup = (i == ReadType.INITIAL_PRIMARY.ordinal() || i == ReadType.INITIAL_SUPPLEMENTARY.ordinal());
 
                 if(!isPrimaryGroup)
                     firstInPairCount = readCount - firstInPairCount; // adjusted so both reads report the same ratio
@@ -459,10 +574,15 @@ public class DuplicateGroup
             if(readGroup == null)
                 continue;
 
-            String state = mReadGroupComplete[readTypeIndex] ?
-                    (readGroup.isEmpty() ? "complete" : "extras") : (readGroup.size() == mFragmentCount ? "ready" : "pending");
-
-            sj.add(format("%s=%d %s", readType, readGroup.size(), state));
+            if(mReadGroupComplete[readTypeIndex])
+            {
+                sj.add(format("%s=%d complete", readType, mReadGroupExpectedCounts[readTypeIndex]));
+            }
+            else
+            {
+                String state = readGroup.size() >= mReadGroupExpectedCounts[readTypeIndex] ? "ready" : "pending";
+                sj.add(format("%s=%d/%d %s", readType, readGroup.size(), mReadGroupExpectedCounts[readTypeIndex], state));
+            }
         }
 
         return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mUmiId, mFragmentCount, mCoordinatesKey, sj);

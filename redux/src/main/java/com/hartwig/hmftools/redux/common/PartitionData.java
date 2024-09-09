@@ -440,7 +440,7 @@ public class PartitionData
         // a clean-up routine for cached fragments
         Set<DuplicateGroup> processedDuplicateGroups = Sets.newHashSet();
 
-        int cachedReadCount = 0;
+        int totalCachedReadCount = 0;
 
         for(DuplicateGroup duplicateGroup : mDuplicateGroupMap.values())
         {
@@ -460,20 +460,24 @@ public class PartitionData
                 }
             }
 
-            int cachedUmiReads = duplicateGroup.cachedReadCount();
+            int cachedReadCount = duplicateGroup.cachedReadCount();
 
-            if(cachedUmiReads == 0)
+            if(cachedReadCount == 0)
+            {
+                RD_LOGGER.debug("dupGroup({}) coords({}) has no cached reads",
+                        duplicateGroup.toString(), duplicateGroup.coordinatesKey());
                 continue;
+            }
 
-            cachedReadCount += cachedUmiReads;
+            totalCachedReadCount += cachedReadCount;
 
             List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(consensusReads, true);
             recordWriter.writeDuplicateGroup(duplicateGroup, completeReads);
 
             if(logCachedReads)
             {
-                RD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
-                        cachedUmiReads, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
+                RD_LOGGER.debug("writing {} cached reads for dupGroup({}) coords({})",
+                        cachedReadCount, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
 
                 for(SAMRecord read : completeReads)
                 {
@@ -493,10 +497,7 @@ public class PartitionData
             {
                 for(SAMRecord read : fragment.reads())
                 {
-                    if(read.getSupplementaryAlignmentFlag())
-                        continue;
-
-                    ++cachedReadCount;
+                    ++totalCachedReadCount;
                     RD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
                 }
             }
@@ -515,7 +516,7 @@ public class PartitionData
         mCandidateDuplicatesMap.clear();
         mDuplicateGroupMap.clear();
 
-        return cachedReadCount;
+        return totalCachedReadCount;
     }
 
     private void checkCachedCounts()
