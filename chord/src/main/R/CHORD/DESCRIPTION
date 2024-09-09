@@ -1,0 +1,20 @@
+Package: CHORD
+Type: Package
+Title: Classifier of Homologous Recombination Deficiency
+Version: 2.03
+Author: Luan N. Nguyen
+Maintainer: Luan N. Nguyen <n.l.nguyen-2@umcutrecht.nl>
+Description: CHORD is a random forest model that uses the relative counts of somatic mutation contexts to predict
+	homologous recombination deficiency (HRD). The primary contexts used by CHORD are deletions with
+	flanking microhomology and 1-100kb structural duplications. Additionally, 1-100kb structural
+	duplications are used to distinguish BRCA1-type HRD from BRCA2-type HRD.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+biocViews:
+Remotes: github::UMCUGenetics/mutSigExtractor
+Imports:
+	mutSigExtractor,
+	randomForest
+
