@@ -80,21 +80,24 @@ public class ExtensionCandidate
         @Override
         public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
         {
-            return Integer.compare(-first.adjustedSupportScore(), -second.adjustedSupportScore());
+            int firstSupport = first.totalSupport();
+            int secondSupport = second.totalSupport();
+
+            if(firstSupport != secondSupport)
+                return firstSupport > secondSupport ? -1 : 1;
+
+            if(first.Type == ExtensionType.SPLIT_LINK && second.Type == ExtensionType.SPLIT_LINK)
+            {
+                int firstJuncOffset = max(first.Link.insertedBases().length(), first.Link.overlapBases().length());
+                int secondJuncOffset = max(first.Link.insertedBases().length(), first.Link.overlapBases().length());
+
+                if(firstJuncOffset != secondJuncOffset)
+                    return firstJuncOffset < secondJuncOffset ? -1 : 1; // favour a more precise link
+            }
+
+            // revert to type of link
+            return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
         }
-    }
-
-    private int adjustedSupportScore()
-    {
-        int support = totalSupport();
-
-        if(Type == ExtensionType.SPLIT_LINK)
-        {
-            int junctionDiff = max(Link.insertedBases().length(), Link.overlapBases().length());
-            support = max(support - junctionDiff, 0);
-        }
-
-        return support;
     }
 
     protected static class LocalLinkComparator implements Comparator<ExtensionCandidate>

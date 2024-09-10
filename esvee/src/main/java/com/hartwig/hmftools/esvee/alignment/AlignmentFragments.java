@@ -106,7 +106,8 @@ public class AlignmentFragments
                 int fragmentLength = reads.stream().mapToInt(x -> x.inferredFragmentLength()).max().orElse(-1);
                 reads.forEach(x -> x.setInferredFragmentLength(fragmentLength));
 
-                // only process a fragment once even if it belongs to multiple assemblies, and cache its length for subsequent supplementaries
+                // only process a fragment once even if it belongs to multiple assemblies, and cache its length for
+                // subsequent reads (typically supplementaries)
                 processedFragmentLengths.put(read.id(), fragmentLength);
             }
         }
