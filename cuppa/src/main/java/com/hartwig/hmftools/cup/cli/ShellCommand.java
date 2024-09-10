@@ -18,7 +18,7 @@ public abstract class ShellCommand
 
     @Nullable
     private Level mLogLevel = Level.INFO;
-    private boolean mShowCommand = false;
+    private boolean mShowCommand = true;
     private long mTimeout = Long.MAX_VALUE;
     private TimeUnit mTimeoutUnit = TimeUnit.SECONDS;
 
@@ -68,77 +68,56 @@ public abstract class ShellCommand
         return this;
     }
 
-    public String toString()
-    {
-        return mProcessBuilder.command().toString();
-    };
-
     public ShellCommand run()
     {
         checkComplete();
-
         try
         {
             if(mShowCommand)
-                CUP_LOGGER.info("Running command: " + this);
+                CUP_LOGGER.info("Running command: [{}]", this);
 
             Process process = mProcessBuilder
                     .redirectErrorStream(true) // Merge stdout and stderr
                     .start();
 
-            mStdout = captureStdout(process, mLogLevel);
-
             mComplete = process.waitFor(mTimeout, mTimeoutUnit);
-            process.destroy();
-
+            mStdout = captureStdout(process, mLogLevel);
             mExitCode = process.exitValue();
-            if(mExitCode > 0)
-                throw new RuntimeException();
         }
         catch(InterruptedException | IllegalThreadStateException e)
         {
             CUP_LOGGER.error("Failed to run command({}) due to time out after {} {}", mProcessBuilder.command(), mTimeout, mTimeoutUnit.toString().toLowerCase());
-            System.exit(mExitCode);
+            mExitCode = 1;
         }
         catch(IOException | RuntimeException e)
         {
-            CUP_LOGGER.error("Failed to run command({}) with exit code({})", mProcessBuilder.command(), String.valueOf(mExitCode));
-            System.exit(mExitCode);
+            CUP_LOGGER.error("Failed to run command({})", mProcessBuilder.command());
+            mExitCode = 1;
         }
 
         return this;
     }
 
-    private static List<String> captureStdout(Process process, Level logLevel)
-    {
+    private static List<String> captureStdout(Process process, Level logLevel) {
         List<String> stdout = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-        // Use a separate thread to avoid reader blocking the main thread (which would cause the process to never finish)
-        Thread thread = new Thread(() -> {
-            try
-            {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-                String line;
-                while( (line = reader.readLine()) != null )
-                {
-                    stdout.add(line);
-                    if(logLevel != null)
-                        CUP_LOGGER.log(logLevel, line);
-                }
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stdout.add(line);
+                if (logLevel != null)
+                    CUP_LOGGER.log(logLevel, line);
             }
-            catch(IOException ignore){}
-        });
-
-        thread.setName(THREAD_NAME);
-        thread.start();
-
-        return stdout;
+            return stdout;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to caputre output from process!", e);
+        }
     }
 
     public List<String> getStdout(boolean warnEmpty)
     {
-        if(warnEmpty & mStdout.size()==0)
+        if(warnEmpty & mStdout.isEmpty())
             CUP_LOGGER.warn("stdout is empty for command({})", mProcessBuilder.command());
 
         return mStdout;
@@ -147,5 +126,11 @@ public abstract class ShellCommand
     public List<String> getStdout()
     {
         return getStdout(true);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.join(" ", mProcessBuilder.command());
     }
 }

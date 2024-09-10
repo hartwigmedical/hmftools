@@ -32,7 +32,7 @@ public class PythonInterpreter
     {
         public PythonCommand(final String command)
         {
-            super(new ProcessBuilder("bash", "-c", mBinaryPath + " " + command));
+            super(new ProcessBuilder("/bin/bash", "-c", mBinaryPath + " " + command));
         }
     }
 
