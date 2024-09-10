@@ -9,7 +9,7 @@
 #' @return A dataframe in the same structure as a bed file with an extra column stating the context
 #' of each variant
 #' @export
-getContextsSv <- function(df, sv.caller='gridss', return.raw=F, verbose=F){
+getContextsSv <- function(df, sv.caller='gridss', verbose=F){
 
    if(nrow(df)==0){
       return(data.frame())
@@ -65,6 +65,11 @@ getContextsSv <- function(df, sv.caller='gridss', return.raw=F, verbose=F){
    ## Select 5prime pairs
    df_ss <- df[df$pair_id %in% c(1,0),]
 
+   if(nrow(df_ss)==0){
+      # return(data.frame(sv_type=character(), sv_len=integer()))
+      return(data.frame())
+   }
+
    ## Get ALT coordinates
    alt_coord <- regmatches(df_ss$alt, gregexpr('\\d|\\w+:\\d+', df_ss$alt))
    alt_coord <- as.data.frame(do.call(rbind, lapply(alt_coord, function(i){
@@ -100,12 +105,7 @@ getContextsSv <- function(df, sv.caller='gridss', return.raw=F, verbose=F){
 
    df_ss[df_ss$sv_type  %in% c('TRA','SGL'),'sv_len'] <- NA
 
-   if(!return.raw){
-      df_ss[,c('sv_type','sv_len')]
-   } else {
-      df_ss
-   }
-
+   return(df_ss[,c('sv_type','sv_len')])
 }
 
 ####################################################################################################
