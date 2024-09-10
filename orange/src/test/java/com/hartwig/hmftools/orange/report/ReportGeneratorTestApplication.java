@@ -96,6 +96,7 @@ public class ReportGeneratorTestApplication {
         return ImmutableOrangeConfig.builder()
                 .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
                 .outputDir(REPORT_BASE_DIR)
+                .addDisclaimer(true)
                 .build();
     }
 
