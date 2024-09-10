@@ -7,7 +7,7 @@ RUN curl https://europe-west4-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add
 RUN echo 'deb http://packages.cloud.google.com/apt apt-transport-artifact-registry-stable main' | tee -a /etc/apt/sources.list.d/artifact-registry.list
 RUN apt update && apt install -y apt-transport-artifact-registry
 RUN echo 'deb ar+https://europe-west4-apt.pkg.dev/projects/hmf-build hmf-apt main' | tee -a  /etc/apt/sources.list.d/artifact-registry.list
-RUN apt update && apt install -y hmf-r-base 
+RUN apt update && apt install -y hmf-r-base hmf-r-ggplot2 hmf-r-ggh4x hmf-r-stringr hmf-r-patchwork
 
 ADD target/cuppa-$VERSION-jar-with-dependencies.jar /usr/share/hartwig/cuppa.jar
 RUN cd /opt/tools && jar xvf /usr/share/hartwig/cuppa.jar pycuppa 

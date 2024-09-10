@@ -81,6 +81,7 @@ public abstract class ShellCommand
                     .start();
 
             mComplete = process.waitFor(mTimeout, mTimeoutUnit);
+            CUP_LOGGER.info("Command [{}] complete", this);
             mStdout = captureStdout(process, mLogLevel);
             mExitCode = process.exitValue();
         }
