@@ -43,6 +43,7 @@ public class AssemblyAlignment
     private String mSequenceCigar;
 
     private final List<Breakend> mBreakends;
+    private final List<Integer> mLinkIndices; // indices within the full sequence of each break junction
 
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
 
@@ -69,6 +70,7 @@ public class AssemblyAlignment
         mSequenceOverlaps = Maps.newHashMap();
         mFragmentReadsMap = Maps.newHashMap();
         mBreakends = Lists.newArrayList();
+        mLinkIndices = Lists.newArrayList();
 
         mAssemblies.forEach(x -> x.setAssemblyAlignmentInfo(info())); // set for output TSV only
 
@@ -102,6 +104,7 @@ public class AssemblyAlignment
     public int fullSequenceLength() { return mFullSequenceLength; }
 
     public String assemblyCigar() { return mSequenceCigar; }
+    public List<Integer> linkIndices() { return mLinkIndices; }
 
     public Map<Integer,String> sequenceOverlaps() { return mSequenceOverlaps; }
 
@@ -143,9 +146,15 @@ public class AssemblyAlignment
         }
 
         if(assembly.isForwardJunction())
+        {
             mSequenceCigar = format("%dM%dS", refBaseLength, extensionLength);
+            mLinkIndices.add(refBaseLength);
+        }
         else
+        {
             mSequenceCigar = format("%dS%dM", extensionLength, refBaseLength);
+            mLinkIndices.add(extensionLength);
+        }
 
         return assembly.formFullSequence();
     }
@@ -217,32 +226,35 @@ public class AssemblyAlignment
                 {
                     // add on the extension sequence instead of the ref base sequence
                     String assemblyExtensionBases = assembly.formJunctionSequence();
+                    int assemblyExtensionBaseLength = assemblyExtensionBases.length();
 
                     fullSequence.append(assemblyExtensionBases);
 
                     // add the extra base since the junction index itself is not included in these extension bases
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length());
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBaseLength);
 
-                    logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+                    logBuildInfo(assembly, currentSeqLength, assemblyExtensionBaseLength, assemblyReversed, "outer-ext-bases");
 
-                    currentSeqLength = assemblyExtensionBases.length();
+                    currentSeqLength = assemblyExtensionBaseLength;
 
-                    buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
+                    buildSequenceCigar(sequenceCigar, S, assemblyExtensionBaseLength);
+                    mLinkIndices.add(assemblyExtensionBaseLength);
                 }
                 else
                 {
                     String assemblyRefBases = startReversed ?
                             Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
+                    int assemblyRefBaseLength = assemblyRefBases.length();
 
                     fullSequence.append(assemblyRefBases);
 
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyRefBases.length() - 1);
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyRefBaseLength - 1);
 
-                    currentSeqLength += assemblyRefBases.length();
+                    currentSeqLength += assemblyRefBaseLength;
 
-                    buildSequenceCigar(sequenceCigar, M, assemblyRefBases.length());
+                    buildSequenceCigar(sequenceCigar, M, assemblyRefBaseLength);
 
-                    logBuildInfo(assembly, currentSeqLength, assemblyRefBases.length(), assemblyReversed, "ref-bases");
+                    logBuildInfo(assembly, currentSeqLength, assemblyRefBaseLength, assemblyReversed, "ref-bases");
                 }
             }
             else
@@ -299,6 +311,7 @@ public class AssemblyAlignment
                 nextAssemblyRefBases = nextAssemblyRefBases.substring(overlapLength);
 
             fullSequence.append(nextAssemblyRefBases);
+            mLinkIndices.add(currentSeqLength);
 
             int nextAssemblyJunctionIndex = link.type() != FACING ? currentSeqLength : currentSeqLength + nextAssemblyRefBases.length();
             setAssemblyReadIndices(nextAssembly, nextReversed, nextAssemblyJunctionIndex);

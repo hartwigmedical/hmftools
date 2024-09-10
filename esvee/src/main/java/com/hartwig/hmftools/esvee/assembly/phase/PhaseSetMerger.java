@@ -5,8 +5,11 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
+import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 
 import java.util.List;
 import java.util.Map;
@@ -56,8 +59,6 @@ public final class PhaseSetMerger
 
         AssemblyAlignment primaryAssembly, otherAssembly;
 
-        // PhaseSet primaryPhaseSet = selectPrimaryPhaseSet(firstPhaseSet, secondPhaseSet);
-
         PhaseSet primaryPhaseSet, otherPhaseSet;
 
         if(firstIsPrimary)
@@ -80,12 +81,12 @@ public final class PhaseSetMerger
 
         for(int i = 0; i <= 1; ++i)
         {
-            Orientation otherOrientation = (i == 0) ? REVERSE : FORWARD;
+            Orientation otherOrientation = (i == 0) ? FORWARD : REVERSE;
 
             String otherSequence = otherOrientation == FORWARD ?
                     otherFullSequence : Nucleotides.reverseComplementBases(otherFullSequence);
 
-            int[] matchIndices = findMergeIndices(primaryAssembly.fullSequence(), otherSequence);
+            int[] matchIndices = findMergeIndices(primaryAssembly, primarySequence, otherAssembly, otherSequence, otherOrientation);
 
             if(matchIndices != null)
             {
@@ -101,7 +102,9 @@ public final class PhaseSetMerger
 
     public static final int MATCH_SUBSEQUENCE_LENGTH = 50;
 
-    private static int[] findMergeIndices(final String firstSequence, final String secondSequence)
+    private static int[] findMergeIndices(
+            final AssemblyAlignment firstAssembly, final String firstSequence,
+            final AssemblyAlignment secondAssembly, final String secondSequence, final Orientation secondOrientation)
     {
         // if a match is found, returns the first and seconds' match start indices
         // one or the other will have a value of zero, meaning the start of its sequence matches within the other
@@ -151,8 +154,11 @@ public final class PhaseSetMerger
 
             int overlapLength = min(firstLength - firstMatchIndexStart - 1, secondLength - secondMatchIndexStart - 1);
 
-            int firstMatchIndexEnd = overlapLength + 1;
-            int secondMatchIndexEnd = overlapLength + 1;
+            if(overlapLength < PHASED_ASSEMBLY_MATCH_SEQ_LENGTH)
+                continue;
+
+            int firstMatchIndexEnd = firstMatchIndexStart + overlapLength - 1;
+            int secondMatchIndexEnd = secondMatchIndexStart + overlapLength - 1;
 
             if(firstBases == null && secondBases == null)
             {
@@ -171,13 +177,48 @@ public final class PhaseSetMerger
                     firstBases, firstBaseQuals, firstMatchIndexStart, firstMatchIndexEnd, firstRepeats,
                     secondBases, secondBaseQuals, secondMatchIndexStart, secondMatchIndexEnd, secondRepeats, permittedMismatches);
 
-            if(mismatchCount <= permittedMismatches)
+            if(mismatchCount > permittedMismatches)
+                continue;
+
+            if(!canMergePhaseSets(
+                    firstAssembly, firstMatchIndexStart, firstMatchIndexEnd, secondAssembly, secondMatchIndexStart, secondMatchIndexEnd))
             {
-                return new int[] { firstMatchIndexStart, secondMatchIndexStart };
+                continue;
             }
+
+            return new int[] { firstMatchIndexStart, secondMatchIndexStart };
         }
 
         return null;
+    }
+
+    private static boolean canMergePhaseSets(
+            final AssemblyAlignment first, int firstOverlapStart, int firstOverlapEnd,
+            final AssemblyAlignment second, final int secondOverlapStart, final int secondOverlapEnd)
+    {
+        if(matchSequenceOverlapsJunctions(first, firstOverlapStart, firstOverlapEnd))
+            return true;
+
+        if(matchSequenceOverlapsJunctions(second, secondOverlapStart, secondOverlapEnd))
+            return true;
+
+        for(JunctionAssembly firstAssembly : first.assemblies())
+        {
+            boolean firstIsLineSite = firstAssembly.hasLineSequence();
+
+            for(JunctionAssembly secondAssembly : second.assemblies())
+            {
+                if((firstIsLineSite || secondAssembly.hasLineSequence()) && isLineInsertPair(firstAssembly, secondAssembly))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean matchSequenceOverlapsJunctions(final AssemblyAlignment assemblyAlignment, int overlapStart, int overlapEnd)
+    {
+        return assemblyAlignment.linkIndices().stream().anyMatch(x -> positionWithin(x, overlapStart, overlapEnd));
     }
 
     public static void mergeAssemblyAlignments(
@@ -199,7 +240,7 @@ public final class PhaseSetMerger
 
         if(otherMatchStart > primaryMatchStart)
         {
-            // the non-primary assemblie starts earlier than the primrary so extend at the start
+            // the non-primary assembly starts earlier than the primary so extend at the start
             primaryOffsetAdjust = otherMatchStart - primaryMatchStart;
             newSequence = otherSequence.substring(0, primaryOffsetAdjust);
             newSequence += primarySequence;
@@ -274,14 +315,5 @@ public final class PhaseSetMerger
                 }
             }
         }
-    }
-
-    public static PhaseSet selectPrimaryPhaseSet(final PhaseSet first, final PhaseSet second)
-    {
-        // for now just select based on total support but will reconsider other factors just as length, mismatches
-        int firstSupport = first.assemblies().stream().mapToInt(x -> x.supportCount()).sum();
-        int secondSupport = second.assemblies().stream().mapToInt(x -> x.supportCount()).sum();
-
-        return firstSupport >= secondSupport ? first : second;
     }
 }

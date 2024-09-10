@@ -37,6 +37,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 
 import java.util.Collections;
@@ -404,7 +405,7 @@ public class PhaseSetBuilder
             if(assembly.hasLineSequence())
                 continue;
 
-            JunctionAssembly lineAssembly = mLineRelatedAssemblies.stream().filter(x -> isProximateIndel(assembly, x)).findFirst().orElse(null);
+            JunctionAssembly lineAssembly = mLineRelatedAssemblies.stream().filter(x -> isLineInsertPair(assembly, x)).findFirst().orElse(null);
 
             if(lineAssembly == null)
                 continue;
@@ -456,15 +457,6 @@ public class PhaseSetBuilder
         }
 
         mLineRelatedAssemblies.addAll(proximateLineAssemblies);
-    }
-
-    private static boolean isProximateIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
-            return false;
-
-        return withLineProximity(
-                assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
     }
 
     private void findRemoteRefCandidates()
