@@ -387,10 +387,10 @@ public class LineLinkWriter
                 VariantBreakend oldBreakend = match.OldBreakend;
                 VariantBreakend newBreakend = match.NewBreakend;
 
+                List<String> rowStrings = new ArrayList<>();
+
                 if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
                     continue;
-
-                List<String> rowStrings = new ArrayList<>();
 
                 rowStrings.add(mSampleId);
 
