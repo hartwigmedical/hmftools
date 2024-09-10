@@ -23,7 +23,7 @@ class RscriptExecutor(LoggerMixin):
 
     def check_R_installed(self) -> None:
 
-        result = subprocess.run(["which", "Rscript"], capture_output=True)
+        result = subprocess.run(["/usr/bin/which", "Rscript"], capture_output=True)
 
         if result.returncode > 0:
             self.logger.error("R is not installed!")
