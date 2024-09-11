@@ -16,10 +16,6 @@ public abstract class ShellCommand
 {
     public final ProcessBuilder mProcessBuilder;
 
-    @Nullable
-    private long mTimeout = Long.MAX_VALUE;
-    private TimeUnit mTimeoutUnit = TimeUnit.SECONDS;
-
     private int mExitCode;
     private boolean mComplete = false;
 
@@ -37,6 +33,7 @@ public abstract class ShellCommand
     public ShellCommand run()
     {
         checkComplete();
+
         try
         {
             CUP_LOGGER.info("Running command: [{}]", this);
@@ -46,19 +43,21 @@ public abstract class ShellCommand
                     .inheritIO()
                     .start();
 
-            mComplete = process.waitFor(mTimeout, mTimeoutUnit);
-            CUP_LOGGER.info("Command complete: [{}]", this);
+            mComplete = process.waitFor(Long.MAX_VALUE, TimeUnit.SECONDS);
             mExitCode = process.exitValue();
+
+            if(mExitCode != 0)
+            {
+                CUP_LOGGER.error("Failed to run command: {}", mProcessBuilder.command());
+                throw new RuntimeException();
+            }
+
+            CUP_LOGGER.info("Command complete: [{}]", this);
         }
-        catch(InterruptedException | IllegalThreadStateException e)
+        catch(IOException | InterruptedException e)
         {
-            CUP_LOGGER.error("Failed to run command({}) due to time out after {} {}", mProcessBuilder.command(), mTimeout, mTimeoutUnit.toString().toLowerCase());
-            mExitCode = 1;
-        }
-        catch(IOException | RuntimeException e)
-        {
-            CUP_LOGGER.error("Failed to run command({})", mProcessBuilder.command());
-            mExitCode = 1;
+            CUP_LOGGER.error("Failed to run command: {}", mProcessBuilder.command());
+            throw new RuntimeException();
         }
 
         return this;
