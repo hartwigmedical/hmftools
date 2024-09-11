@@ -78,6 +78,7 @@ public abstract class ShellCommand
 
             Process process = mProcessBuilder
                     .redirectErrorStream(true) // Merge stdout and stderr
+                    .inheritIO()
                     .start();
 
             mComplete = process.waitFor(mTimeout, mTimeoutUnit);
