@@ -39,7 +39,7 @@ public class PredictionRunnerTest
     }
 
     @Test
-    public void canPredictFromInputFeatures() throws IOException
+    public void canPredictFromInputFeatures()
     {
         String[] args = new String[] {
                 "-sample","COLO829v003T",
@@ -53,7 +53,7 @@ public class PredictionRunnerTest
     }
 
     @Test
-    public void canPredictFromPipelineOutput() throws IOException
+    public void canPredictFromPipelineOutput()
     {
         String[] args = new String[] {
                 "-sample",SAMPLE_ID,
