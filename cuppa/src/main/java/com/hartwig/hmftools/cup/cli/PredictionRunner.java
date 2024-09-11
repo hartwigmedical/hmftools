@@ -19,8 +19,7 @@ public class PredictionRunner
 
     private String mFeaturesPath;
 
-    private static final String PYTHON_LOG_FORMAT = "'[python] %(levelname)s %(name)s | %(message)s'";
-    private static final String PYCUPPA_PKG_NAME = "pycuppa";
+    private static final String PYTHON_LOG_FORMAT = "'%(asctime)s.%(msecs)03d [python] %(levelname)s %(name)s.%(funcName)s | %(message)s'";
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
@@ -55,8 +54,7 @@ public class PredictionRunner
 
     public void predict()
     {
-        PythonInterpreter pythonInterpreter = new PythonInterpreter(mPredictionConfig.PythonPath)
-                .requirePackages(PYCUPPA_PKG_NAME);
+        PythonInterpreter pythonInterpreter = new PythonInterpreter(mPredictionConfig.PythonPath);
 
         StringJoiner args = new StringJoiner(" ");
 
