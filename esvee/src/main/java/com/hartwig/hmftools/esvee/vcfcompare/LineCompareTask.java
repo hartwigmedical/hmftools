@@ -71,9 +71,11 @@ public class LineCompareTask implements Runnable
                 .loadVariants()
                 .getVariantsAsMap();
 
-        LineLinker.linkBreakends(chrBreakendMap);
+        Map<String, List<VariantBreakend>> chrBreakendMapDeduped = LineLinker.dedupBreakends(chrBreakendMap);
 
-        return chrBreakendMap;
+        LineLinker.linkBreakends(chrBreakendMapDeduped);
+
+        return chrBreakendMapDeduped;
     }
 
     public static void main(@NotNull final String[] args)

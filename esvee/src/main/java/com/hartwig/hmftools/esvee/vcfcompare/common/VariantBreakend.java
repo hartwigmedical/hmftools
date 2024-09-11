@@ -244,9 +244,14 @@ public class VariantBreakend
         return isPassVariant() ? PASS : String.join(",", Filters);
     }
 
+    public double qual()
+    {
+        return Context.getPhredScaledQual();
+    }
+
     public String qualStr()
     {
-        return String.format("%.0f", Context.getPhredScaledQual());
+        return String.format("%.0f", qual());
     }
 
     public String fragsStr(String sampleId)

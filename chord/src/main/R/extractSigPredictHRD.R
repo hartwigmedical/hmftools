@@ -30,7 +30,7 @@ for (pkgName in c("mutSigExtractor", "CHORD")){
 ## Convert genome name to BSGenome name
 if (refGenomeVsn == "HG37") {
   suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
-  refGenome <- getRefGenome(refGenomeVsn)
+  refGenome <- BSgenome.Hsapiens.UCSC.hg19
 } else if (refGenomeVsn == "HG38") {
   suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg38))
   refGenome <- BSgenome.Hsapiens.UCSC.hg38

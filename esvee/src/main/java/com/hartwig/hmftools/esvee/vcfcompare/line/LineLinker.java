@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.vcfcompare.line;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +53,62 @@ public class LineLinker
         );
 
         return meetsPolyACriteria || meetsPolyTCriteria;
+    }
+
+    public static Map<String, List<VariantBreakend>> dedupBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
+    {
+        SV_LOGGER.info("Selecting unique variants by coords");
+
+        Map<String, List<VariantBreakend>> chrBreakendMapDeduped = new LinkedHashMap<>();
+        int selectedCount = 0;
+
+        for(String chromosome : chrBreakendMap.keySet())
+        {
+            List<VariantBreakend> chrBreakends = chrBreakendMap.get(chromosome);
+
+            // Group breakends by exact coords
+            Map<String, List<VariantBreakend>> coordsBreakendsMap = new LinkedHashMap<>();
+            for(VariantBreakend breakend : chrBreakends)
+            {
+                String coords = breakend.coordStr();
+
+                coordsBreakendsMap.putIfAbsent(coords, new ArrayList<>());
+                coordsBreakendsMap.get(coords).add(breakend);
+            }
+
+            // Dedup each breakend group
+            List<VariantBreakend> chrBreakendsDeduped = new ArrayList<>();
+
+            for(List<VariantBreakend> sameCoordBreakends : coordsBreakendsMap.values())
+            {
+                VariantBreakend selectedBreakend = sameCoordBreakends.get(0);
+
+                if(sameCoordBreakends.size() > 1)
+                {
+                    for(int nextIndex = 1; nextIndex < sameCoordBreakends.size(); nextIndex++)
+                    {
+                        VariantBreakend nextBreakend = sameCoordBreakends.get(nextIndex);
+
+                        // Prefer variant with poly A, then highest qual
+                        if((nextBreakend.hasPolyATail() && !selectedBreakend.hasPolyATail()) ||
+                                nextBreakend.qual() > selectedBreakend.qual())
+                        {
+                            selectedBreakend = nextBreakend;
+                        }
+                    }
+                }
+
+                chrBreakendsDeduped.add(selectedBreakend);
+                selectedCount++;
+            }
+
+            // Add the deduped breakends for this chromosome to the map
+            chrBreakendMapDeduped.put(chromosome, chrBreakendsDeduped);
+        }
+
+        SV_LOGGER.debug("Found unique {} variants preferring poly A, then highest qual", selectedCount);
+
+        return chrBreakendMapDeduped;
     }
 
     public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)

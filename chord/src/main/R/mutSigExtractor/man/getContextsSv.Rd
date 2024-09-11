@@ -4,7 +4,7 @@
 \alias{getContextsSv}
 \title{Determine SV type and length}
 \usage{
-getContextsSv(df, sv.caller = "gridss", return.raw = F, verbose = F)
+getContextsSv(df, sv.caller = "gridss", verbose = F)
 }
 \arguments{
 \item{df}{A dataframe containing the columns: chrom, pos, ref, alt, filter, id, info}
