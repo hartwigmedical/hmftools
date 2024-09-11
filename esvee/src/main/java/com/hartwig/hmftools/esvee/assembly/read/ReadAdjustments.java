@@ -21,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
 
 public final class ReadAdjustments
 {
@@ -151,6 +152,33 @@ public final class ReadAdjustments
         }
     }
 
+    public static boolean filterLowQualRead(final SAMRecord read)
+    {
+        int baseLength = read.getReadBases().length;
+        int qualCountThreshold = baseLength / 2 + 1;
+        int lowQualCount = 0;
+
+        for(int i = 0; i < baseLength; ++i)
+        {
+            if(belowMinQual(read.getBaseQualities()[i]))
+            {
+                ++lowQualCount;
+
+                if(lowQualCount >= qualCountThreshold)
+                    return true;
+            }
+            else
+            {
+                // exit early if majority will be high-qual
+                int highQualCount = i + 1 - lowQualCount;
+                if(highQualCount >= qualCountThreshold)
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean trimLowQualSoftClipBases(final Read read)
     {
         boolean fromStart = read.negativeStrand();
@@ -164,7 +192,7 @@ public final class ReadAdjustments
 
         if(scBaseCount >= LINE_POLY_AT_REQ)
         {
-            int scIndexStart, scIndexEnd, refIndexStart, refIndexEnd;
+            int scIndexStart, scIndexEnd;
             int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
 
             if(fromStart)
@@ -240,31 +268,61 @@ public final class ReadAdjustments
 
         int baseLength = read.basesLength();
         int baseIndex = fromStart ? 0 : baseLength - 1;
-        int halfLength = baseLength / 2; // at most half the read will be trimmed
+
+        int lowQualCount = 0;
+        int lastLowQualPercIndex = 0;
+        int checkedBases = 0;
+
+        while(baseIndex >= 0 && baseIndex < baseLength)
+        {
+            ++checkedBases;
+
+            if(belowMinQual(read.getBaseQuality()[baseIndex]))
+            {
+                lowQualCount++;
+
+                if(lowQualCount / (double)checkedBases >= LOW_BASE_TRIM_PERC)
+                    lastLowQualPercIndex = checkedBases;
+            }
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
+        }
+
+        if(lastLowQualPercIndex > 0)
+        {
+            read.trimBases(lastLowQualPercIndex, fromStart);
+            read.markLowQualTrimmed();
+        }
+    }
+
+    public synchronized static void trimLowQualBasesStrict(final Read read)
+    {
+        // breaks at the first non-low-qual base from the 3' end
+        if(read.lowQualTrimmed())
+            return;
+
+        boolean fromStart = read.negativeStrand();
+
+        int baseLength = read.basesLength();
+        int baseIndex = fromStart ? 0 : baseLength - 1;
 
         int lowQualCount = 0;
 
-        while(true)
+        while(baseIndex >= 0 && baseIndex < baseLength)
         {
             if(belowMinQual(read.getBaseQuality()[baseIndex]))
+            {
                 lowQualCount++;
-            else
                 break;
+            }
 
             if(fromStart)
-            {
                 ++baseIndex;
-
-                if(baseIndex >= halfLength)
-                    break;
-            }
             else
-            {
                 --baseIndex;
-
-                if(baseIndex <= halfLength)
-                    break;
-            }
         }
 
         if(lowQualCount > 0)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -9,17 +10,21 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
+import static org.apache.commons.lang3.StringUtils.lowerCase;
+
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -30,7 +35,7 @@ import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 public class UnmappedBaseExtender
 {
     private final JunctionAssembly mJunctionAssembly;
-    private final Orientation mJunctionOrientation;
+    private final boolean mIsForwardJunction;
 
     private byte[] mBases;
     private byte[] mBaseQuals;
@@ -43,12 +48,12 @@ public class UnmappedBaseExtender
     {
         mJunctionAssembly = assembly;
 
-        mJunctionOrientation = assembly.junction().Orient;
+        mIsForwardJunction = assembly.junction().isForward();
 
         int extensionIndexStart, extensionIndexEnd;
 
         // do not include the junction (ref) bases from the assembly, only the unmapped extension bases
-        if(mJunctionOrientation.isForward())
+        if(mIsForwardJunction)
         {
             extensionIndexStart = assembly.junctionIndex() + 1;
             extensionIndexEnd = assembly.baseLength() - 1;
@@ -101,7 +106,11 @@ public class UnmappedBaseExtender
 
             if(readSequenceMatch != null)
             {
-                readSequenceMatches.add(readSequenceMatch);
+                int readExtensionLength = readSequenceMatch.maxReadExtension();
+
+                if(readExtensionLength > 0)
+                    readSequenceMatches.add(readSequenceMatch);
+
                 reads.remove(readIndex);
             }
             else
@@ -115,10 +124,16 @@ public class UnmappedBaseExtender
 
         // build out extension bases from these overlapping reads
         int newExtensionLength = readSequenceMatches.stream().mapToInt(x -> x.maxReadExtension()).max().orElse(0);
-        int baseOffset = newExtensionLength - mBases.length;
 
-        if(baseOffset > 0)
+        int baseOffset = 0;
+
+        if(newExtensionLength > mBases.length)
+        {
+            if(!mIsForwardJunction)
+                baseOffset =newExtensionLength - mBases.length;
+
             extendBases(newExtensionLength);
+        }
 
         // now add reads to extend the new bases
         int addedReads = 0;
@@ -129,22 +144,17 @@ public class UnmappedBaseExtender
         {
             if(addRead(readSequenceMatch, baseOffset))
             {
-                /*
-                SV_LOGGER.debug("junc({}) added read({}), new sequence {}",
-                        mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), new String(mBases));
-                */
-
                 ++addedReads;
             }
         }
 
-        /*
-        if(addedReads > 0)
+        trimUnsetBases();
+
+        if(addedReads > 0 && AssemblyConfig.AssemblyBuildDebug)
         {
             SV_LOGGER.debug("junc({}) added {} unmapped reads, new sequence {}",
                     mJunctionAssembly.junction().coords(), addedReads, new String(mBases));
         }
-        */
 
         return addedReads > 0;
     }
@@ -162,7 +172,7 @@ public class UnmappedBaseExtender
 
         for(int i = 0; i < newExtensionLength; ++i)
         {
-            if(mJunctionOrientation.isForward())
+            if(mIsForwardJunction)
             {
                 if(i < existingBases.length)
                 {
@@ -191,32 +201,58 @@ public class UnmappedBaseExtender
         }
     }
 
+    private void trimUnsetBases()
+    {
+        boolean isForward = mJunctionAssembly.isForwardJunction();
+        int currentIndex = isForward ? 0 : mBases.length - 1;
+        int validLength = 0;
+
+        while(currentIndex >= 0 && currentIndex < mBases.length)
+        {
+            if(mBases[currentIndex] == 0)
+                break;
+
+            ++validLength;
+            currentIndex += isForward ? 1 : -1;
+        }
+
+        if(validLength == mBases.length)
+            return;
+
+        int reduction = mBases.length - validLength;
+        int startIndex = isForward ? 0 : reduction;
+        int endIndex = startIndex + validLength - 1;
+        mBases = subsetArray(mBases, startIndex, endIndex);
+        mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
+    }
+
+
     private boolean addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
     {
         int mismatchCount = 0;
 
         // add in new bases to the extension sequence
-        int readIndexStart, readIndexEnd, junctionReadStartDistance, extBaseIndex;
+        int readIndexStart, readIndexEnd, junctionReadStartDistance, extBaseIndexStart;
 
         Read read = readSequenceMatch.Read;
 
-        if(mJunctionOrientation.isForward())
+        if(mIsForwardJunction)
         {
             readIndexStart = readSequenceMatch.ReadSeqStart;
             readIndexEnd = read.basesLength() - 1;
-            extBaseIndex = readSequenceMatch.ExtensionBaseSeqStart;
+            extBaseIndexStart = readSequenceMatch.ExtensionBaseSeqStart;
             junctionReadStartDistance = -readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
         }
         else
         {
             readIndexStart = 0;
-            readIndexEnd = readSequenceMatch.ReadSeqStart - 1;
-            extBaseIndex = baseOffset + readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
+            readIndexEnd = readSequenceMatch.Overlap - 1;
+            extBaseIndexStart = baseOffset + readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
 
-            if(extBaseIndex < 0)
+            if(extBaseIndexStart < 0)
             {
-                readIndexStart += abs(extBaseIndex);
-                extBaseIndex = 0;
+                readIndexStart += abs(extBaseIndexStart);
+                extBaseIndexStart = 0;
             }
 
             // say 0-9 is extension and junction index = 10
@@ -229,6 +265,40 @@ public class UnmappedBaseExtender
 
         boolean reverseBases = reverseReadBases(read);
         int readBaseLength = read.basesLength();
+
+        int extBaseIndex = extBaseIndexStart;
+
+        // first pass checks for mismatches only
+        for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
+        {
+            int readIndex = reverseBases ? readBaseLength - 1 - i : i;
+            byte base = read.getBases()[readIndex];
+
+            if(reverseBases)
+                base = swapDnaBase(base);
+
+            byte qual = read.getBaseQuality()[readIndex];
+
+            if(extBaseIndex >= mBases.length)
+                break;
+
+            if(mBases[extBaseIndex] == 0)
+                continue;
+
+            if(mBases[extBaseIndex] == base || belowMinQual(qual) || belowMinQual(mBaseQuals[extBaseIndex]))
+                continue;
+
+            ++mismatchCount;
+        }
+
+        int readBaseOverlap = readIndexEnd - readIndexStart + 1;
+        int permittedMismatches = permittedReadMismatches(readBaseOverlap);
+
+        if(mismatchCount > permittedMismatches)
+            return false;
+
+        mismatchCount = 0;
+        extBaseIndex = extBaseIndexStart;
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
         {
@@ -267,11 +337,32 @@ public class UnmappedBaseExtender
             }
         }
 
-        int readBaseOverlap = readIndexEnd - readIndexStart + 1;
-        int permittedMismatches = permittedReadMismatches(readBaseOverlap);
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            char[] overlapReadBases = new char[readBaseOverlap];
+            int baseIndex = 0;
 
-        if(mismatchCount > permittedMismatches)
-            return false;
+            for(int i = readIndexStart; i <= readIndexEnd; ++i, ++extBaseIndex)
+            {
+                int readIndex = reverseBases ? readBaseLength - 1 - i : i;
+                byte base = read.getBases()[readIndex];
+
+                if(reverseBases)
+                    base = swapDnaBase(base);
+
+                byte qual = read.getBaseQuality()[readIndex];
+                char baseChr = (char)base;
+
+                overlapReadBases[baseIndex++] = belowMinQual(qual) ? toLowerCase(baseChr) : baseChr;
+            }
+
+            SV_LOGGER.debug("junc({}) added read({}) overlap({} index={}-{}), readBases: {}",
+                    mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), readBaseOverlap, readIndexStart, readIndexEnd,
+                    new String(overlapReadBases));
+
+            SV_LOGGER.debug("junc({}) added read({}) new sequence {}",
+                    mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), new String(mBases));
+        }
 
         int matchedCount = readBaseOverlap - mismatchCount;
         SupportRead supportRead = new SupportRead(read, SupportType.EXTENSION, junctionReadStartDistance, matchedCount, mismatchCount);
@@ -300,7 +391,7 @@ public class UnmappedBaseExtender
         {
             // say extension bases = 0-99 (100 in length), ext base match start = 50, corresponds to read index of 0, and read length = 151
             // then max read extension = 50 + 151 - 0 - 1 = 200
-            if(mJunctionOrientation.isForward())
+            if(mIsForwardJunction)
                 return ExtensionBaseSeqStart + Read.basesLength() - ReadSeqStart;
             else
                 return mBases.length - ExtensionBaseSeqStart + ReadSeqStart;

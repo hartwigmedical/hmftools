@@ -441,15 +441,6 @@ public class AlignmentTest
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 200, FORWARD, CHR_1, 250, REVERSE, "");
 
-        /*
-        Case	Alignment behaviour
-        Has XATag with <100kb alignment	Use shortest (or default if equal).  Add 15 to QUAL
-        Has XATag but no short alignment	Use default aligngment
-        No XA Tag. modMAPQ>=5	Use default aligngment
-        No XA Tag.  modMAPQ < 5
-        No alignment (convert to insert sequence)
-        */
-
         // scenario 1: based on chr7-comp 1c:
         String cigar = "100M";
 
@@ -513,7 +504,6 @@ public class AlignmentTest
         AlignData alignment4 = new AlignData(
                 new ChrBaseRegion(CHR_2, 20000, 20100), 301, 400,
                 0, 100, 0, cigar, DEFAULT_NM, altAlignment4, "");
-
 
         alignments = Lists.newArrayList(alignment1, alignment2, alignment3, alignment4);
 
