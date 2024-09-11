@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
@@ -77,11 +78,31 @@ public final class AlignmentFilters
             alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
         }
 
-        // re-test candidates now modified map qual has been computed
-        candidateAlignments = candidateAlignments.stream()
-                .filter(x -> exceedsNoAltsModMapQualThreshold(x) || x.hasAltAlignments()).collect(Collectors.toList());
+        // re-test candidates now adjusted alignment length and modified map qual have been computed
+        int index = 0;
+        while(index < candidateAlignments.size())
+        {
+            AlignData alignment = candidateAlignments.get(index);
 
-        // first filter alignments with low modified map qual and no alt alignment info
+            boolean isValidCandidate = true;
+
+            // inner alignments must exceed min aligned length
+            if(index > 0 && index < candidateAlignments.size() - 1)
+                isValidCandidate = alignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
+
+            isValidCandidate &= exceedsNoAltsModMapQualThreshold(alignment) || alignment.hasAltAlignments();
+
+            if(!isValidCandidate)
+            {
+                candidateAlignments.remove(index);
+                lowQualAlignments.add(alignment);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
         int validCount = (int)candidateAlignments.stream().filter(x -> exceedsModMapQualThreshold(x)).count();
 
         if(candidateAlignments.size() == validCount)

@@ -226,7 +226,6 @@ public class UnmappedBaseExtender
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
     }
 
-
     private boolean addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
     {
         int mismatchCount = 0;
@@ -469,12 +468,6 @@ public class UnmappedBaseExtender
 
             if(mismatchCount > permittedMismatches)
                 continue;
-
-            /*
-            SV_LOGGER.debug("junc({}) adding unmapped readId({}) orient({} mate={}) overlap({}) mismatches({}) bases({})",
-                    mJunctionAssembly.junction().coords(), read.id(), read.orientation().asByte(), read.mateOrientation().asByte(),
-                    totalOverlap, mismatchCount, new String(readBases));
-            */
 
             return new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount);
         }

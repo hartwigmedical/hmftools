@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -73,6 +74,7 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = 50;
     public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 50000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;
+    public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 }

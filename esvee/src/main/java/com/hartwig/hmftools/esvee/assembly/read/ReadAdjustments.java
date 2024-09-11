@@ -297,38 +297,4 @@ public final class ReadAdjustments
             read.markLowQualTrimmed();
         }
     }
-
-    public synchronized static void trimLowQualBasesStrict(final Read read)
-    {
-        // breaks at the first non-low-qual base from the 3' end
-        if(read.lowQualTrimmed())
-            return;
-
-        boolean fromStart = read.negativeStrand();
-
-        int baseLength = read.basesLength();
-        int baseIndex = fromStart ? 0 : baseLength - 1;
-
-        int lowQualCount = 0;
-
-        while(baseIndex >= 0 && baseIndex < baseLength)
-        {
-            if(belowMinQual(read.getBaseQuality()[baseIndex]))
-            {
-                lowQualCount++;
-                break;
-            }
-
-            if(fromStart)
-                ++baseIndex;
-            else
-                --baseIndex;
-        }
-
-        if(lowQualCount > 0)
-        {
-            read.trimBases(lowQualCount, fromStart);
-            read.markLowQualTrimmed();
-        }
-    }
 }

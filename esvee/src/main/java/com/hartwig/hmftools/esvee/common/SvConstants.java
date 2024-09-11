@@ -18,6 +18,8 @@ public final class SvConstants
     // qual calcs and filters
     public static final double QUAL_CALC_FRAG_SUPPORT_FACTOR = 5;
 
+    public static final int MIN_ANCHOR_LENGTH = 50;
+
     // LINE elements
     public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
     public static final double LINE_REF_BASE_REPEAT_FACTOR = 1.5;
