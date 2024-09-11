@@ -46,7 +46,7 @@ public class Header
 
         if(addDisclaimer)
         {
-            title = title.add(new Text(" (research use only)").setFont(reportResources.fontBold())
+            title = title.add(new Text(" (Research Use Only)").setFont(reportResources.fontBold())
                     .setFontSize(9)
                     .setFontColor(ReportResources.PALETTE_BLACK));
         }
