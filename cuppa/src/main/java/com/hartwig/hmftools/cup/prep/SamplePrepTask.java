@@ -8,22 +8,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jetbrains.annotations.Nullable;
 
-public class SampleOneCategoryTask implements Callable
+public class SamplePrepTask implements Callable
 {
-    public final PrepConfig mConfig;
-    public final int mSampleIndex;
-    public final String mSampleName;
+    private final PrepConfig mConfig;
+    private final int mSampleIndex;
+    private final String mSampleName;
 
-    @Nullable public CategoryPrep mCategoryPrep;
+    @Nullable private CategoryPrep mCategoryPrep;
 
-    @Nullable public List<DataItem> mDataItems;
-    @Nullable public ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
+    @Nullable private List<DataItem> mDataItems;
+    @Nullable private ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
-    public SampleOneCategoryTask(
+    public SamplePrepTask(
             final int sampleIndex,
             final PrepConfig prepConfig,
-            CategoryPrep categoryPrep,
-            @Nullable ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix)
+            final CategoryPrep categoryPrep,
+            @Nullable final ConcurrentHashMap<DataItem.Index,String[]> featureBySampleMatrix)
     {
         mConfig = prepConfig;
         mCategoryPrep = categoryPrep;
@@ -63,15 +63,11 @@ public class SampleOneCategoryTask implements Callable
         }
     }
 
-    public void clearDataItems()
-    {
-        mDataItems = null;
-    }
+    public List<DataItem> dataItems() { return mDataItems; }
 
-    public void clearCategoryPrep()
-    {
-        mCategoryPrep = null;
-    }
+    public void clearDataItems() { mDataItems = null; }
+
+    public void clearCategoryPrep() { mCategoryPrep = null; }
 
     public void run()
     {

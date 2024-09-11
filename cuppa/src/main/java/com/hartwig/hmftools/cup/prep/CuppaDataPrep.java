@@ -98,9 +98,9 @@ public class CuppaDataPrep
         for(CategoryType categoryType : mConfig.Categories)
         {
             CategoryPrep categoryPrep = createCategoryPrep(categoryType);
-            SampleOneCategoryTask sampleTask = new SampleOneCategoryTask(0, mConfig, categoryPrep, null);
+            SamplePrepTask sampleTask = new SamplePrepTask(0, mConfig, categoryPrep, null);
             sampleTask.run();
-            dataItems.addAll(sampleTask.mDataItems);
+            dataItems.addAll(sampleTask.dataItems());
         }
 
         if(keepDataItems)
@@ -116,11 +116,11 @@ public class CuppaDataPrep
 
         ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
-        List<SampleOneCategoryTask> sampleTasks = new ArrayList<>();
+        List<SamplePrepTask> sampleTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
             CategoryPrep categoryPrep = createCategoryPrep(categoryType);
-            sampleTasks.add(new SampleOneCategoryTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
+            sampleTasks.add(new SamplePrepTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
         }
 
         List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
