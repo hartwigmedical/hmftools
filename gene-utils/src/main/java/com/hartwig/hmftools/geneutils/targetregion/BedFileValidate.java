@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.targetregion;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -12,9 +13,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -32,7 +36,7 @@ public class BedFileValidate
 
         try
         {
-            List<ChrBaseRegion> chrRegions = BedFileReader.loadBedFile(inputFile);
+            List<ChrBaseRegion> chrRegions = BedFileReader.loadBedFile(inputFile, false);
 
             GU_LOGGER.info("loaded {} regions from BED file({})", chrRegions.size(), inputFile);
 
@@ -65,7 +69,7 @@ public class BedFileValidate
 
             if(!HumanChromosome.contains(region.chromosome()) || region.start() > region.end())
             {
-                GU_LOGGER.trace("region({}) invalid", region);
+                GU_LOGGER.debug("region({}) invalid", region);
                 ++invalidRegions;
                 continue;
             }
@@ -76,18 +80,18 @@ public class BedFileValidate
             {
                 if(region.start() > nextRegion.start())
                 {
-                    GU_LOGGER.trace("region({}) ordered after next({})", region, nextRegion);
+                    GU_LOGGER.debug("region({}) ordered after next({})", region, nextRegion);
                     ++orderingErrors;
                 }
                 else if(region.end() >= nextRegion.start())
                 {
-                    GU_LOGGER.trace("region({}) overlaps next({})", region, nextRegion);
+                    GU_LOGGER.debug("region({}) overlaps next({})", region, nextRegion);
                     ++overlaps;
                 }
             }
             else if(!lowerChromosome(region.chromosome(), nextRegion.chromosome()))
             {
-                GU_LOGGER.trace("region({}) later chromosome than next({})", region, nextRegion);
+                GU_LOGGER.debug("region({}) later chromosome than next({})", region, nextRegion);
                 ++orderingErrors;
             }
         }
@@ -173,7 +177,7 @@ public class BedFileValidate
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(INPUT_FILE, true, "Input BED file");
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output BED filename");
+        configBuilder.addConfigItem(OUTPUT_FILE, false, "Output BED filename");
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
