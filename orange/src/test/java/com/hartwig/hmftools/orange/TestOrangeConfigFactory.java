@@ -93,6 +93,7 @@ public final class TestOrangeConfigFactory
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
+                .addDisclaimer(true)
                 .build();
     }
 
