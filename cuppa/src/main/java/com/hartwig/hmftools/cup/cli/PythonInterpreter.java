@@ -45,11 +45,4 @@ public class PythonInterpreter
     {
         return new PythonCommand(String.join(" ", args));
     }
-
-    public String getVersion()
-    {
-        return command("-c 'import platform; print(platform.python_version())'")
-            .logLevel(null).timeout(10).run()
-            .getStdout().get(0);
-    }
 }

@@ -75,8 +75,6 @@ public class PredictionRunner
         args.add("--log_format").add(PYTHON_LOG_FORMAT);
 
         ShellCommand command = pythonInterpreter.command(args.toString());
-        command.logLevel(Level.INFO);
-        CUP_LOGGER.info("Predicting using command: {}", command);
         command.run();
     }
 
