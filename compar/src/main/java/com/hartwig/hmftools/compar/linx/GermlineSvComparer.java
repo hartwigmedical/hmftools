@@ -64,7 +64,6 @@ public class GermlineSvComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        // final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantGe(sampleId);
         // currently unsupported
         return Lists.newArrayList();
     }
@@ -81,55 +80,24 @@ public class GermlineSvComparer implements ItemComparer
 
             String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
 
-            // germline breakend file was introduced in v5.32, for old versions extract reported from the SV file
-            if(Files.exists(Paths.get(germlineBreakendFile)))
+            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
+                    .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+
+            CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
+
+
+            for(LinxGermlineSv germlineSv : germlineSvs)
             {
-                List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
-                        .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+                boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
 
-                CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
+                BasePosition comparisonStartPosition = determineComparisonGenomePosition(
+                        germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
+                BasePosition comparisonEndPosition = determineComparisonGenomePosition(
+                        germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-                for(LinxGermlineSv germlineSv : germlineSvs)
-                {
-                    boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
-
-                    BasePosition comparisonStartPosition = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    BasePosition comparisonEndPosition = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartPosition, comparisonEndPosition));
-                }
+                items.add(new GermlineSvData(germlineSv, isReported, comparisonStartPosition, comparisonEndPosition));
             }
-            else
-            {
-                List<String> rawGermlineSvs = Files.readAllLines(Paths.get(germlineSvFile));
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(rawGermlineSvs.get(0), TSV_DELIM);
-                Integer reportedIndex = fieldsIndexMap.get("reported");
-
-                if(reportedIndex == null)
-                    return null;
-
-                rawGermlineSvs.remove(0);
-
-                for(int i = 0; i < germlineSvs.size(); ++i)
-                {
-                    LinxGermlineSv germlineSv = germlineSvs.get(i);
-                    String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
-                    boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
-
-                    BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonPositionStart, comparisonPositionEnd));
-                }
-            }
-
         }
         catch(IOException e)
         {
