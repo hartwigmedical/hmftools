@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_T
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
@@ -141,6 +142,12 @@ public final class AssemblyLinker
             else
                 firstReversed = true;
         }
+
+        AssemblyLink lineLink = tryLineSequenceLink(first, second, firstReversed, secondReversed);
+
+        if(lineLink != null)
+            return lineLink;
+
 
         firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
         secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
@@ -317,6 +324,7 @@ public final class AssemblyLinker
             }
         }
 
+        /* disabled until seen it is required
         // if there were mismatches, check for a need to factor this into the distance between the first start index and its junction
         if(topMatchMismatches > 0)
         {
@@ -345,6 +353,7 @@ public final class AssemblyLinker
 
             topMatchIndices[2] = firstJunctionRepeatDiff;
         }
+        */
 
         return topMatchIndices;
     }

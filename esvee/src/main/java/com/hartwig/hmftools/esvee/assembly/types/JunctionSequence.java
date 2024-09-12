@@ -228,9 +228,6 @@ public class JunctionSequence
     public int matchSeqStartIndex() { return mMatchSeqIndexStart; }
     public int matchSeqEndIndex() { return mMatchSeqIndexEnd; }
 
-    public byte[] originalBases() { return mOriginalBases; }
-    public byte[] originalBaseQuals() { return mOriginalBaseQuals; }
-
     public byte[] bases()
     {
         if(!Reversed)
