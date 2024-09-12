@@ -53,6 +53,7 @@ public class BreakendWriter
             sj.add("PhaseGroupId");
             sj.add("PhaseSetId");
             sj.add("AssemblyId");
+            sj.add("MateId");
             sj.add("AssemblyInfo");
 
             sj.add("Type").add("Chromosome").add("Position").add("Orientation");
@@ -117,6 +118,7 @@ public class BreakendWriter
                 sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
                 sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : -1));
                 sj.add(String.valueOf(assemblyAlignment.id()));
+                sj.add(!breakend.isSingle() ? String.valueOf(breakend.otherBreakend().id()) : "");
                 sj.add(assemblyInfo);
                 sj.add(String.valueOf(breakend.svType()));
                 sj.add(breakend.Chromosome);

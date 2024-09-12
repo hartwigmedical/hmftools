@@ -353,35 +353,16 @@ public class AssemblyAlignment
             int currentSeqLength, boolean assemblyReversed, final List<AssemblyLink> assemblyLinks)
     {
         // if the assembly is linked to another assembly at the start then repeat those other ref bases, otherwise take the extension
-        String assemblyExtensionBases;
-        CigarOperator extensionCigarType;
-        String extensionInfo;
-
         JunctionAssembly matchedAssembly = assemblyLinks.get(0).findMatchedAssembly(assembly);
 
         if(matchedAssembly != null)
-        {
-            /* omit the repeated ref bases to avoid non-identical breakends being called
-
-            JunctionAssembly linkedAssembly = assemblyLinks.get(0).otherAssembly(matchedAssembly);
-            boolean nextReversed = linkedAssembly.isForwardJunction();
-
-            assemblyExtensionBases = nextReversed ?
-                    Nucleotides.reverseComplementBases(linkedAssembly.formRefBaseSequence()) : linkedAssembly.formRefBaseSequence();
-
-            extensionCigarType = M;
-            extensionInfo = "linked ref-bases";
-            */
             return;
-        }
-        else
-        {
-            assemblyExtensionBases = assembly.isReverseJunction() ?
-                    Nucleotides.reverseComplementBases(assembly.formJunctionSequence()) : assembly.formJunctionSequence();
 
-            extensionCigarType = S;
-            extensionInfo = "outer-ext-bases";
-        }
+        String assemblyExtensionBases = assembly.isReverseJunction() ?
+                Nucleotides.reverseComplementBases(assembly.formJunctionSequence()) : assembly.formJunctionSequence();
+
+        CigarOperator extensionCigarType = S;
+        String extensionInfo = "outer-ext-bases";
 
         fullSequence.append(assemblyExtensionBases);
 
