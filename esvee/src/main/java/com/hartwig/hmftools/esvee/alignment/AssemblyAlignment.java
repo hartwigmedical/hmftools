@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
@@ -271,7 +272,9 @@ public class AssemblyAlignment
                     if(i == assemblyCount - 2)
                     {
                         // add on the extension sequence for the last assembly
-                        addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, lastAddedReversed);
+                        addFinalFacingExtensionBases(
+                                nextAssembly, fullSequence, sequenceCigar, currentSeqLength, lastAddedReversed, assemblyLinks);
+
                         currentSeqLength = nextAssembly.extensionLength();
                     }
 
@@ -331,7 +334,7 @@ public class AssemblyAlignment
             if(hasFacingAtEnd && i == assemblyCount - 2)
             {
                 // add on the extension sequence for the last assembly
-                addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, assemblyReversed);
+                addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, assemblyReversed, assemblyLinks);
                 currentSeqLength = nextAssembly.extensionLength();
             }
 
@@ -347,18 +350,44 @@ public class AssemblyAlignment
 
     private void addFinalFacingExtensionBases(
             final JunctionAssembly assembly, final StringBuilder fullSequence, final List<CigarElement> sequenceCigar,
-            int currentSeqLength, boolean assemblyReversed)
+            int currentSeqLength, boolean assemblyReversed, final List<AssemblyLink> assemblyLinks)
     {
-        String assemblyExtensionBases = assembly.formJunctionSequence();
+        // if the assembly is linked to another assembly at the start then repeat those other ref bases, otherwise take the extension
+        String assemblyExtensionBases;
+        CigarOperator extensionCigarType;
+        String extensionInfo;
 
-        if(assembly.isReverseJunction())
-            assemblyExtensionBases = Nucleotides.reverseComplementBases(assemblyExtensionBases);
+        JunctionAssembly matchedAssembly = assemblyLinks.get(0).findMatchedAssembly(assembly);
+
+        if(matchedAssembly != null)
+        {
+            /* omit the repeated ref bases to avoid non-identical breakends being called
+
+            JunctionAssembly linkedAssembly = assemblyLinks.get(0).otherAssembly(matchedAssembly);
+            boolean nextReversed = linkedAssembly.isForwardJunction();
+
+            assemblyExtensionBases = nextReversed ?
+                    Nucleotides.reverseComplementBases(linkedAssembly.formRefBaseSequence()) : linkedAssembly.formRefBaseSequence();
+
+            extensionCigarType = M;
+            extensionInfo = "linked ref-bases";
+            */
+            return;
+        }
+        else
+        {
+            assemblyExtensionBases = assembly.isReverseJunction() ?
+                    Nucleotides.reverseComplementBases(assembly.formJunctionSequence()) : assembly.formJunctionSequence();
+
+            extensionCigarType = S;
+            extensionInfo = "outer-ext-bases";
+        }
 
         fullSequence.append(assemblyExtensionBases);
 
-        logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+        logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, extensionInfo);
 
-        buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
+        buildSequenceCigar(sequenceCigar, extensionCigarType, assemblyExtensionBases.length());
     }
 
     private static void logBuildInfo(

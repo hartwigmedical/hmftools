@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -899,11 +900,7 @@ public class PhaseSetBuilder
 
     private JunctionAssembly findMatchingAssembly(final JunctionAssembly assembly, boolean requireExtensionMatch)
     {
-        return mAssemblies.stream()
-                .filter(x -> x != assembly)
-                .filter(x -> x.junction().compareTo(assembly.junction()) == 0)
-                .filter(x -> !requireExtensionMatch || x.extensionLength() == assembly.extensionLength())
-                .findFirst().orElse(null);
+        return AssemblyUtils.findMatchingAssembly(mAssemblies, assembly, requireExtensionMatch);
     }
 
     private void formPhaseSets()

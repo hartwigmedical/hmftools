@@ -5,7 +5,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 
 public class AssemblyLink
 {
@@ -51,6 +54,11 @@ public class AssemblyLink
     }
 
     public boolean hasAssembly(final JunctionAssembly assembly) { return mFirst.equals(assembly) || mSecond.equals(assembly); }
+
+    public JunctionAssembly findMatchedAssembly(final JunctionAssembly assembly)
+    {
+        return AssemblyUtils.findMatchingAssembly(List.of(mFirst, mSecond), assembly, true);
+    }
 
     public int length()
     {
