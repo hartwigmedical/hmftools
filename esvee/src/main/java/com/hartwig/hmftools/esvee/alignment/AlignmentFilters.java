@@ -78,21 +78,14 @@ public final class AlignmentFilters
             alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
         }
 
-        // re-test candidates now adjusted alignment length and modified map qual have been computed
-        int index = 0;
-        while(index < candidateAlignments.size())
+        // check adjusted alignment lengths for inner alignments  only
+        int index = 1;
+        while(index < candidateAlignments.size() - 1)
         {
             AlignData alignment = candidateAlignments.get(index);
 
-            boolean isValidCandidate = true;
-
             // inner alignments must exceed min aligned length
-            if(index > 0 && index < candidateAlignments.size() - 1)
-                isValidCandidate = alignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
-
-            isValidCandidate &= exceedsNoAltsModMapQualThreshold(alignment) || alignment.hasAltAlignments();
-
-            if(!isValidCandidate)
+            if(alignment.adjustedAlignment() < ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH)
             {
                 candidateAlignments.remove(index);
                 lowQualAlignments.add(alignment);
@@ -103,6 +96,22 @@ public final class AlignmentFilters
             }
         }
 
+        // check modified map quals
+        index = 0;
+        while(index < candidateAlignments.size())
+        {
+            AlignData alignment = candidateAlignments.get(index);
+
+            if(!exceedsNoAltsModMapQualThreshold(alignment) && !alignment.hasAltAlignments())
+            {
+                candidateAlignments.remove(index);
+                lowQualAlignments.add(alignment);
+            }
+            else
+            {
+                ++index;
+            }
+        }
         int validCount = (int)candidateAlignments.stream().filter(x -> exceedsModMapQualThreshold(x)).count();
 
         if(candidateAlignments.size() == validCount)
