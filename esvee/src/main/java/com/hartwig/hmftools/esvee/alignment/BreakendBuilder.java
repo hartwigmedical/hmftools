@@ -34,8 +34,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
@@ -524,6 +527,11 @@ public class BreakendBuilder
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);
 
         // finally look for any facing breakends
+        setFacingBreakends();
+    }
+
+    private void setFacingBreakends()
+    {
         for(int i = 0; i < mAssemblyAlignment.breakends().size() - 1; ++i)
         {
             Breakend breakend = mAssemblyAlignment.breakends().get(i);
@@ -535,6 +543,37 @@ public class BreakendBuilder
                 nextBreakend.addFacingBreakend(breakend);
             }
         }
+
+        // add links for any assemblies with multiple facing breakends in the phase set
+        if(mAssemblyAlignment.phaseSet() == null || !mAssemblyAlignment.phaseSet().hasFacingLinks())
+            return;
+
+        for(AssemblyLink link : mAssemblyAlignment.phaseSet().assemblyLinks())
+        {
+            if(link.type() != LinkType.FACING)
+                continue;
+
+            Breakend firstBreakend = findAssemblyBreakend(link.first());
+            Breakend secondBreakend = findAssemblyBreakend(link.second());
+
+            if(firstBreakend != null && secondBreakend != null)
+            {
+                if(!firstBreakend.facingBreakends().contains(secondBreakend))
+                    firstBreakend.addFacingBreakend(secondBreakend);
+
+                if(!secondBreakend.facingBreakends().contains(firstBreakend))
+                    secondBreakend.addFacingBreakend(firstBreakend);
+            }
+        }
+    }
+
+    private Breakend findAssemblyBreakend(final JunctionAssembly assembly)
+    {
+        Junction junction = assembly.junction();
+
+        return mAssemblyAlignment.breakends().stream()
+                .filter(x -> x.matchesCoordinates(junction.Chromosome, junction.Position, junction.Orient))
+                .findFirst().orElse(null);
     }
 
     private static boolean areFacingBreakends(

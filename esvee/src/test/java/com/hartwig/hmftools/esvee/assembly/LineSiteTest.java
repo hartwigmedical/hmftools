@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
@@ -146,5 +147,26 @@ public class LineSiteTest
         assertNotNull(link);
         assertEquals(firstExtBases, link.insertedBases());
         assertEquals(INV, link.svType());
+
+        // first assembly has the poly-T sequence
+        String extraBases2 = "GTCGT";
+        firstExtBases = polyT + extraBases2 + polyT;
+        firstAssemblyBases = firstRefBases + firstExtBases;
+
+        firstJunction = new Junction(CHR_1, 120, FORWARD);
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
+        firstAssembly.markLineSequence();
+
+        secondExtBases = polyT + extraBases;
+        secondAssemblyBases = secondExtBases + secondRefBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
+
+        link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, false, false);
+        assertNotNull(link);
+        assertEquals(firstExtBases + extraBases, link.insertedBases());
+        assertEquals(DUP, link.svType());
+
+
     }
 }

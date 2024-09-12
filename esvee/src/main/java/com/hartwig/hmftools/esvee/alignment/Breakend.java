@@ -195,13 +195,13 @@ public class Breakend implements Comparable<Breakend>
         return maxSegmentQual;
     }
 
-    public boolean matches(final String chromosome, final int position, final Orientation orientation)
+    public boolean matchesCoordinates(final String chromosome, final int position, final Orientation orientation)
     {
         if(!Chromosome.equals(chromosome) || Orient != orientation)
             return false;
 
         if(Homology != null)
-            return positionWithin(position, Position + Homology.InexactStart, Position + Homology.InexactEnd);
+            return positionWithin(position, Position + Homology.ExactStart, Position + Homology.ExactEnd);
         else
             return Position == position;
     }
