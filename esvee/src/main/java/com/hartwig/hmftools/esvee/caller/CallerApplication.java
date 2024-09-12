@@ -64,7 +64,7 @@ public class CallerApplication
         mHotspotCache = new HotspotCache(configBuilder);
 
         String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
-        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.SampleId);
+        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -113,11 +113,11 @@ public class CallerApplication
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH_PAIR, 1, VCFHeaderLineType.Integer, REF_DEPTH_PAIR_DESC));
         }
 
-        SV_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
+        SV_LOGGER.info("sample({}) processing VCF({})", mConfig.fileSampleId(), vcfFile);
 
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
-        if(genotypeIds.TumorOrdinal < 0 || (!mConfig.ReferenceId.isEmpty() && genotypeIds.ReferenceOrdinal < 0))
+        if((mConfig.hasTumor() && genotypeIds.TumorOrdinal < 0) || (mConfig.hasReference() && genotypeIds.ReferenceOrdinal < 0))
         {
             SV_LOGGER.error("missing sample names in VCF: {}", vcfHeader.getGenotypeSamples());
             System.exit(1);
@@ -125,7 +125,7 @@ public class CallerApplication
 
         mSvDataCache.setGenotypeOrdinals(genotypeIds);
 
-        if(mConfig.GermlineOnly)
+        if(mConfig.germlineOnly())
         {
             SV_LOGGER.info("germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
@@ -216,6 +216,12 @@ public class CallerApplication
 
     private void markGermline(final Variant var)
     {
+        if(mConfig.germlineOnly())
+        {
+            var.markGermline();
+            return;
+        }
+
         Breakend breakend = var.breakendStart();
 
         double maxGermlineAf = 0;

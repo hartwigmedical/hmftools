@@ -93,7 +93,7 @@ public class Breakend
             final Variant variant, final boolean isStart, final StructuralVariantLeg svLeg,
             final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
-        final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
+        final Genotype tumorGenotype = tumorOrdinal >= 0 ? variantContext.getGenotype(tumorOrdinal) : null;
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
         return new Breakend(
