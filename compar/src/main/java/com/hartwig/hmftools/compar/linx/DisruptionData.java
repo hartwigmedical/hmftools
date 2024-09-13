@@ -122,7 +122,7 @@ public class DisruptionData implements ComparableItem
         checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
         checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
         checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Breakend.junctionCopyNumber(), otherBreakend.Breakend.junctionCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_UNDISRUPTED_COPY_NUMBER, Breakend.junctionCopyNumber(), otherBreakend.Breakend.junctionCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_UNDISRUPTED_COPY_NUMBER, Breakend.undisruptedCopyNumber(), otherBreakend.Breakend.undisruptedCopyNumber(), thresholds);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, Breakend.chrBand(), otherBreakend.Breakend.chrBand());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
