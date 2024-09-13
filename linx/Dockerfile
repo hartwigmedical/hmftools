@@ -3,30 +3,28 @@ FROM mambaorg/micromamba:0.24.0
 ARG VERSION
 USER root
 
-RUN mkdir -p /opt/purple
+RUN mkdir /opt/linx
 RUN \
   apt-get update && \
   apt-get install -y procps wget && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-ADD target/purple-$VERSION-jar-with-dependencies.jar /opt/purple/purple.jar
+ADD target/linx-$VERSION-jar-with-dependencies.jar /opt/linx/linx.jar
 
 USER mambauser
 
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
-    bcftools \
-    bioconductor-variantannotation \
+    bioconductor-gviz \
     'circos >=0.69.6' \
     'openjdk >=8' \
-    r-cairo \
     r-cowplot \
     r-dplyr \
     r-ggplot2 \
+    r-magick \
     r-tidyr \
-    xorg-libxtst \
-    zlib && \
+    xorg-libxtst && \
   micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
