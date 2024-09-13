@@ -209,7 +209,7 @@ public class AssemblyAlignment
 
         boolean lastAddedReversed = false;
         int currentSeqLength = 0;
-        boolean nextIsFacing = false;
+        // boolean nextIsFacing = hasFacingAtStart;
 
         List<CigarElement> sequenceCigar = Lists.newArrayList();
 
@@ -217,6 +217,7 @@ public class AssemblyAlignment
         {
             AssemblyLink link = assemblyLinks.get(i);
             JunctionAssembly assembly = assemblies.get(i);
+            boolean isFacingLink = link.type() == FACING;
 
             boolean assemblyReversed;
 
@@ -224,7 +225,7 @@ public class AssemblyAlignment
             {
                 assemblyReversed = startReversed;
 
-                if(hasFacingAtStart)
+                if(isFacingLink) // nextIsFacing
                 {
                     // add on the extension sequence instead of the ref base sequence
                     String assemblyExtensionBases = assembly.formJunctionSequence();
@@ -261,9 +262,9 @@ public class AssemblyAlignment
             }
             else
             {
-                if(nextIsFacing)
+                if(isFacingLink) // nextIsFacing
                 {
-                    nextIsFacing = false;
+                    // nextIsFacing = false;
 
                     // ref bases for this segment have already been added so only set assembly indices
                     JunctionAssembly nextAssembly = assemblies.get(i + 1);
@@ -341,7 +342,7 @@ public class AssemblyAlignment
 
             lastAddedReversed = nextReversed;
 
-            nextIsFacing = true;
+            // nextIsFacing = true;
         }
 
         mSequenceCigar = cigarElementsToStr(sequenceCigar);
