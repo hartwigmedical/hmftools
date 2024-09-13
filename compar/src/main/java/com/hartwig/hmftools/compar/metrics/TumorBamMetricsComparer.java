@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.compar.metrics;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.TUMOR_BAM_METRICS;
-import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
-import static com.hartwig.hmftools.compar.metrics.MetricsCommon.OLD_BAM_METRICS_FILE_EXTENSION;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.loadBamMetricsSummary;
 import static com.hartwig.hmftools.compar.metrics.TumorBamMetricsData.FLD_PERCENTAGE_30X;
 import static com.hartwig.hmftools.compar.metrics.TumorBamMetricsData.FLD_PERCENTAGE_60X;
 
@@ -15,8 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -75,7 +72,7 @@ public class TumorBamMetricsComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            WGSMetrics metrics = WGSMetricsFile.read(determineFilePath(sampleId, fileSources));
+            BamMetricsSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
             comparableItems.add(new TumorBamMetricsData(metrics));
         }
         catch(IOException e)
@@ -84,19 +81,5 @@ public class TumorBamMetricsComparer implements ItemComparer
             return null;
         }
         return comparableItems;
-    }
-
-    private static String determineFilePath(final String sampleId, final FileSources fileSources)
-    {
-        String currentFileName = WGSMetricsFile.generateFilename(fileSources.TumorBamMetrics, sampleId);
-        String oldFileName = checkAddDirSeparator(fileSources.TumorBamMetrics) + sampleId + OLD_BAM_METRICS_FILE_EXTENSION;
-        if(!fileExists(currentFileName) && fileExists(oldFileName))
-        {
-            return oldFileName;
-        }
-        else
-        {
-            return currentFileName;
-        }
     }
 }

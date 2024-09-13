@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PE
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -19,12 +19,12 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineBamMetricsData implements ComparableItem
 {
-    public final WGSMetrics Metrics;
+    public final BamMetricsSummary Metrics;
 
     protected static final String FLD_PERCENTAGE_10X = "Percentage10X";
     protected static final String FLD_PERCENTAGE_20X = "Percentage20X";
 
-    public GermlineBamMetricsData(final WGSMetrics metrics)
+    public GermlineBamMetricsData(final BamMetricsSummary metrics)
     {
         Metrics = metrics;
     }
@@ -45,9 +45,9 @@ public class GermlineBamMetricsData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("%.2f", Metrics.pctExcDupe()));
-        values.add(format("%.2f", Metrics.coverage10xPercentage()));
-        values.add(format("%.2f", Metrics.coverage20xPercentage()));
+        values.add(format("%.2f", Metrics.duplicatePercent()));
+        values.add(format("%.2f", Metrics.coveragePercent(10)));
+        values.add(format("%.2f", Metrics.coveragePercent(20)));
         return values;
     }
 
@@ -71,9 +71,9 @@ public class GermlineBamMetricsData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, Metrics.pctExcDupe(), otherData.Metrics.pctExcDupe(), thresholds);
-        checkDiff(diffs, FLD_PERCENTAGE_10X, Metrics.coverage10xPercentage(), otherData.Metrics.coverage10xPercentage(), thresholds);
-        checkDiff(diffs, FLD_PERCENTAGE_20X, Metrics.coverage20xPercentage(), otherData.Metrics.coverage20xPercentage(), thresholds);
+        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, Metrics.duplicatePercent(), otherData.Metrics.duplicatePercent(), thresholds);
+        checkDiff(diffs, FLD_PERCENTAGE_10X, Metrics.coveragePercent(10), otherData.Metrics.coveragePercent(10), thresholds);
+        checkDiff(diffs, FLD_PERCENTAGE_20X, Metrics.coveragePercent(20), otherData.Metrics.coveragePercent(20), thresholds);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

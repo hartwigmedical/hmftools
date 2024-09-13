@@ -1,20 +1,17 @@
 package com.hartwig.hmftools.compar.metrics;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_FLAGSTAT;
-import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
-import static com.hartwig.hmftools.compar.metrics.MetricsCommon.OLD_FLAGSTAT_FILE_EXTENSION;
+import static com.hartwig.hmftools.compar.metrics.MetricsCommon.determineFlagStatsFilePath;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -71,7 +68,7 @@ public class GermlineFlagstatComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            Flagstat flagstat = FlagstatFile.read(determineFilePath(germlineSampleId, fileSources));
+            BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(germlineSampleId, fileSources.GermlineFlagstat));
             comparableItems.add(new GermlineFlagstatData(flagstat));
         }
         catch(IOException e)
@@ -80,19 +77,5 @@ public class GermlineFlagstatComparer implements ItemComparer
             return null;
         }
         return comparableItems;
-    }
-
-    private static String determineFilePath(final String germlineSampleId, final FileSources fileSources)
-    {
-        String currentFileName = FlagstatFile.generateFilename(fileSources.GermlineFlagstat, germlineSampleId);
-        String oldFileName = checkAddDirSeparator(fileSources.GermlineFlagstat) + germlineSampleId + OLD_FLAGSTAT_FILE_EXTENSION;
-        if(!fileExists(currentFileName) && fileExists(oldFileName))
-        {
-            return oldFileName;
-        }
-        else
-        {
-            return currentFileName;
-        }
     }
 }

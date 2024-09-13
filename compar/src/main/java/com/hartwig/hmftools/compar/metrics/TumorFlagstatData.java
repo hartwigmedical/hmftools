@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPO
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -19,9 +19,9 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class TumorFlagstatData implements ComparableItem
 {
-    public final Flagstat mFlagstat;
+    public final BamFlagStats mFlagstat;
 
-    public TumorFlagstatData(final Flagstat flagstat)
+    public TumorFlagstatData(final BamFlagStats flagstat)
     {
         mFlagstat = flagstat;
     }
