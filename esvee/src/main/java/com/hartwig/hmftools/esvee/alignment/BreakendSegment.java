@@ -7,28 +7,36 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 public class BreakendSegment
 {
     public final int AssemblyAlignmentId;
-    public final int SequenceIndex;
-    public final Orientation Orient;
-    public final int Index;
+    public final int SequenceIndex; // the index in the full alignment sequence where this segment starts
+    public final int Index; // the index of this sequence out of all segments in the full assembly
 
     public final AlignData Alignment;
 
+    private final int[] mIndelSeqenceIndices; // if from a CIGAR indel, then the full sequence indices of the indel
+
     public BreakendSegment(
-            final int assemblyAlignmentId, final int sequenceIndex, final Orientation orientation, final int index, final AlignData alignment)
+            final int assemblyAlignmentId, final int sequenceIndex, final int index, final AlignData alignment)
+    {
+        this(assemblyAlignmentId, sequenceIndex, index, alignment, null);
+    }
+
+    public BreakendSegment(
+            final int assemblyAlignmentId, final int sequenceIndex, final int index, final AlignData alignment, final int[] indelIndices)
     {
         AssemblyAlignmentId = assemblyAlignmentId;
         SequenceIndex = sequenceIndex;
-        Orient = orientation;
         Index = index;
         Alignment = alignment;
+        mIndelSeqenceIndices = indelIndices;
     }
+
+    public int[] indelSeqenceIndices() { return mIndelSeqenceIndices; }
 
     public String uniqueId() { return format("%d_%d", AssemblyAlignmentId, Index); }
 
     public String toString()
     {
-        return format("asm(%d index=%d:%d) segment(%d M=%d mq=%d score=%d)",
-                AssemblyAlignmentId, SequenceIndex, Orient.asByte(),
-                Index, Alignment.alignedBases(), Alignment.mapQual(), Alignment.score());
+        return format("%d: seqIndex(%d) alignment(M=%d mq=%d score=%d)",
+                Index, SequenceIndex, Alignment.alignedBases(), Alignment.mapQual(), Alignment.score());
     }
 }

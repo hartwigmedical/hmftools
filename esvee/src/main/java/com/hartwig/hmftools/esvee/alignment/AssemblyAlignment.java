@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -371,17 +372,6 @@ public class AssemblyAlignment
         buildSequenceCigar(sequenceCigar, extensionCigarType, assemblyExtensionBases.length());
     }
 
-    private static void logBuildInfo(
-            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
-    {
-        if(SV_LOGGER.isTraceEnabled())
-        {
-            SV_LOGGER.trace("seqLength({} -> {}) adding assembly({}) {} {}",
-                    currentSeqLength, currentSeqLength + assemblyBaseLength,
-                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
-        }
-    }
-
     private static void buildSequenceCigar(final List<CigarElement> elements, final CigarOperator operator, int length)
     {
         if(length == 0)
@@ -492,6 +482,17 @@ public class AssemblyAlignment
         SupportRead matchedRead = fragmentReads.stream().filter(x -> x.firstInPair() == read.firstInPair()).findFirst().orElse(null);
         fragmentReads.add(read);
         return matchedRead;
+    }
+
+    private static void logBuildInfo(
+            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
+    {
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("seqLength({} -> {}) adding assembly({}) {} {}",
+                    currentSeqLength, currentSeqLength + assemblyBaseLength,
+                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
+        }
     }
 
     public void updateSequenceInfo(final String newSequence, final Map<Integer,String> newSequenceOverlaps, int primaryOffsetAdjust)

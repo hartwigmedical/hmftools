@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.FilterType.filtersAsStr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -71,9 +70,8 @@ public class BreakendWriter
 
             sj.add("SequenceLength");
             sj.add("SegmentCount");
-            sj.add("SequenceIndex");
-            sj.add("SegmentOrientation");
             sj.add("SegmentIndex");
+            sj.add("SequenceIndex");
             sj.add("AlignedBases");
             sj.add("MapQual");
             sj.add("Score");
@@ -189,9 +187,8 @@ public class BreakendWriter
                 // for now just the first segment - no showing branching or duplicates
                 BreakendSegment segment = breakend.segments().get(0);
                 sj.add(String.valueOf(breakend.segments().size()));
-                sj.add(String.valueOf(segment.SequenceIndex));
-                sj.add(String.valueOf(segment.Orient));
                 sj.add(String.valueOf(segment.Index));
+                sj.add(String.valueOf(segment.SequenceIndex));
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
                 sj.add(String.valueOf(segment.Alignment.mapQual()));
                 sj.add(String.valueOf(segment.Alignment.score()));

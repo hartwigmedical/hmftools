@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -261,7 +263,6 @@ public class AlignmentFragments
 
         if(svType != null && isIndel(svType) && indelLength != 0)
         {
-            // inferredFragmentLength = abs(read.insertSize()) + read.leftClipLength() + read.rightClipLength();
             if(svType == DEL)
                 indelLength = -abs(indelLength);
 
@@ -372,7 +373,7 @@ public class AlignmentFragments
         return breakendMatches;
     }
 
-    private static boolean readSpansJunction(final Breakend breakend, final SupportRead read)
+    private boolean readSpansJunction(final Breakend breakend, final SupportRead read)
     {
         // first an aligned junction read
         if(read.unclippedStart() < breakend.Position && read.unclippedEnd() > breakend.Position)
@@ -382,14 +383,42 @@ public class AlignmentFragments
         int readSeqIndexStart = read.fullAssemblyIndexStart();
         int readSeqIndexEnd = read.fullAssemblyIndexEnd();
 
-        // look for a read crossing a segment boundary
+        int fullSequenceEndIndex = mAssemblyAlignment.fullSequenceLength() - 1;
+
+        // look for a read crossing any segment boundary
         for(BreakendSegment segment : breakend.segments())
         {
-            int segmentBreakendIndex = segment.Orient.isForward() ? segment.Alignment.sequenceEnd() : segment.Alignment.sequenceStart();
+            int segmentSeqStart = segment.Alignment.sequenceStart();
+
+            if(segmentSeqStart > 0 && readSeqIndexStart < segmentSeqStart && readSeqIndexEnd > segmentSeqStart)
+                return true;
+
+            int segmentSeqEnd = segment.Alignment.sequenceEnd();
+
+            if(segmentSeqEnd < fullSequenceEndIndex && readSeqIndexStart < segmentSeqEnd && readSeqIndexEnd > segmentSeqEnd)
+                return true;
+
+            if(segment.indelSeqenceIndices() != null)
+            {
+                int[] indelSequenceIndices = segment.indelSeqenceIndices();
+
+                if(readSeqIndexStart < indelSequenceIndices[0] && readSeqIndexEnd > indelSequenceIndices[0])
+                    return true;
+
+                if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd > indelSequenceIndices[1])
+                    return true;
+            }
+        }
+
+        /*
+        for(BreakendSegment segment : breakend.segments())
+        {
+            int segmentBreakendIndex = segment.SegmentOrient.isForward() ? segment.Alignment.sequenceEnd() : segment.Alignment.sequenceStart();
 
             if(readSeqIndexStart < segmentBreakendIndex && readSeqIndexEnd > segmentBreakendIndex)
                 return true;
         }
+        */
 
         return false;
     }
@@ -422,10 +451,33 @@ public class AlignmentFragments
 
         for(BreakendSegment segment : breakend.segments())
         {
-            if(read.fullAssemblyOrientation() != segment.Orient)
+            // read must lie within the segment for it be applicable
+            if(!positionsWithin(readSeqIndexStart, readSeqIndexEnd, segment.Alignment.sequenceStart(), segment.Alignment.sequenceEnd()))
                 continue;
 
-            if(segment.Orient.isForward())
+            int discordantDistance;
+
+            if(read.fullAssemblyOrientation().isForward())
+            {
+                // calculate the distance between the read's end and the segment end
+                discordantDistance = segment.Alignment.sequenceEnd() - readSeqIndexEnd;
+            }
+            else
+            {
+                discordantDistance = readSeqIndexStart - segment.Alignment.sequenceStart();
+            }
+
+            if(discordantDistance > 0 && discordantDistance < DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
+                return discordantDistance;
+        }
+
+        /*
+        for(BreakendSegment segment : breakend.segments())
+        {
+            if(read.fullAssemblyOrientation() != segment.SegmentOrient)
+                continue;
+
+            if(segment.SegmentOrient.isForward())
             {
                 int segmentBreakendIndex = segment.Alignment.sequenceEnd();
 
@@ -440,6 +492,7 @@ public class AlignmentFragments
                     return readSeqIndexStart - segmentBreakendIndex;
             }
         }
+        */
 
         return INVALID_DISCORANT_DISTANCE;
     }
