@@ -222,15 +222,9 @@ public class PhaseSetBuilder
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
             // allow linking assemblies to be included, so as to allow secondary links to be found
-            // if(mLocallyLinkedAssemblies.contains(assembly1))
-            //    continue;
-
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
-
-                // if(mLocallyLinkedAssemblies.contains(assembly2))
-                //    continue;
 
                 // avoid a second check of the same pair
                 if(existingCandidates.stream().anyMatch(x -> x.Assembly == assembly1 && x.SecondAssembly == assembly2))
@@ -243,7 +237,8 @@ public class PhaseSetBuilder
                 if(localOnly && !isLocalLink)
                     continue;
 
-                boolean hasSharedFragments = hasSharedFragments(assembly1, assembly2);
+                // proximate breakends may not share reads esp if indels vs soft-clips are the source of differences
+                boolean hasSharedFragments = localOnly || hasSharedFragments(assembly1, assembly2);
 
                 AssemblyLink assemblyLink = null;
 
