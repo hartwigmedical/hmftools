@@ -2,7 +2,9 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
@@ -26,8 +28,6 @@ public class GermlineDeletionData implements ComparableItem
     protected static final String FLD_TUMOR_STATUS = "TumorStatus";
     protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
     protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
-    protected static final String FLD_CHROMOSOME = "Chromosome";
-    protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
     public GermlineDeletionData(final GermlineDeletion germlineDeletion, final String comparisonChromosome)
     {

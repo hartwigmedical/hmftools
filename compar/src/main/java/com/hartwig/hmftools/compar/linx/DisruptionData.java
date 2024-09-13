@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -25,13 +24,8 @@ public class DisruptionData implements ComparableItem
     private final BasePosition mComparisonPositionEnd;
     private final boolean mCheckTranscript;
 
-    protected static final String FLD_REGION_TYPE = "RegionType";
     protected static final String FLD_CODING_CONTEXT = "CodingContext";
     protected static final String FLD_GENE_ORIENT = "GeneOrientation";
-    protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
-    protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
-    protected static final String FLD_UNDISRUPTED_COPY_NUMBER = "UndisruptedCopyNumber";
-    protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
     public DisruptionData(
             final StructuralVariantData svData, final LinxBreakend breakend, final BasePosition comparisonPositionStart,
@@ -67,14 +61,9 @@ public class DisruptionData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
-        List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", Breakend.reportedDisruption()));
-        values.add(String.format("%s", Breakend.regionType()));
+        List<String> values = LinxCommon.displayValuesBreakend(Breakend);
         values.add(String.format("%s", Breakend.codingType()));
         values.add(String.format("%s", Breakend.geneOrientation()));
-        values.add(String.format("%d", Breakend.nextSpliceExonRank()));
-        values.add(String.format("%.2f", Breakend.junctionCopyNumber()));
-        values.add(String.format("%.2f", Breakend.undisruptedCopyNumber()));
         return values;
     }
 
@@ -116,14 +105,9 @@ public class DisruptionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_REGION_TYPE, Breakend.regionType().toString(), otherBreakend.Breakend.regionType().toString());
+        LinxCommon.checkDiffsBreakends(diffs, Breakend, otherBreakend.Breakend, thresholds);
         checkDiff(diffs, FLD_CODING_CONTEXT, Breakend.codingType().toString(), otherBreakend.Breakend.codingType().toString());
-        checkDiff(diffs, FLD_REPORTED, reportable(), otherBreakend.reportable());
         checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
-        checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
-        checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Breakend.junctionCopyNumber(), otherBreakend.Breakend.junctionCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_UNDISRUPTED_COPY_NUMBER, Breakend.undisruptedCopyNumber(), otherBreakend.Breakend.undisruptedCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_CHROMOSOME_BAND, Breakend.chrBand(), otherBreakend.Breakend.chrBand());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

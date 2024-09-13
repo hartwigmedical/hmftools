@@ -1,20 +1,15 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_JUNCTION_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_UNDISRUPTED_COPY_NUMBER;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -49,6 +44,7 @@ public class GermlineSvComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
         thresholds.addFieldThreshold(FLD_GERMLINE_FRAGS, 5, 0.1);
         thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        thresholds.addFieldThreshold(FLD_UNDISRUPTED_COPY_NUMBER, 0.5, 0.2);
     }
 
     @Override
@@ -60,7 +56,10 @@ public class GermlineSvComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_GERMLINE_FRAGS, FLD_QUAL, FLD_JUNCTION_COPY_NUMBER);
+        List<String> fieldNames = LinxCommon.comparedFieldNamesBreakends();
+        fieldNames.add(FLD_GERMLINE_FRAGS);
+        fieldNames.add(FLD_QUAL);
+        return fieldNames;
     }
 
     @Override
@@ -83,55 +82,26 @@ public class GermlineSvComparer implements ItemComparer
 
             String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
 
-            // germline breakend file was introduced in v5.32, for old versions extract reported from the SV file
-            if(Files.exists(Paths.get(germlineBreakendFile)))
+            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
+
+            CMP_LOGGER.debug("sample({}) loaded {} germline breakends", sampleId, germlineBreakends.size());
+
+            for(LinxGermlineSv germlineSv : germlineSvs)
             {
-                List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
-                        .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
-
-                CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
-
-
-                for(LinxGermlineSv germlineSv : germlineSvs)
+                List<LinxBreakend> matchingBreakends =
+                        germlineBreakends.stream().filter(x -> x.svId() == germlineSv.SvId).collect(Collectors.toList());
+                for(LinxBreakend breakend : matchingBreakends)
                 {
-                    boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
+                    germlineBreakends.remove(breakend);
 
                     BasePosition comparisonStartPosition = determineComparisonGenomePosition(
                             germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
                     BasePosition comparisonEndPosition = determineComparisonGenomePosition(
                             germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartPosition, comparisonEndPosition));
+                    items.add(new GermlineSvData(germlineSv, breakend, comparisonStartPosition, comparisonEndPosition));
                 }
             }
-            else
-            {
-                List<String> rawGermlineSvs = Files.readAllLines(Paths.get(germlineSvFile));
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(rawGermlineSvs.get(0), TSV_DELIM);
-                Integer reportedIndex = fieldsIndexMap.get("reported");
-
-                if(reportedIndex == null)
-                    return null;
-
-                rawGermlineSvs.remove(0);
-
-                for(int i = 0; i < germlineSvs.size(); ++i)
-                {
-                    LinxGermlineSv germlineSv = germlineSvs.get(i);
-                    String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
-                    boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
-
-                    BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonPositionStart, comparisonPositionEnd));
-                }
-            }
-
         }
         catch(IOException e)
         {

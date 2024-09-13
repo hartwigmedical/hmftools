@@ -9,12 +9,12 @@ import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_JUNCTION_COPY_NUMBER;
 
 import java.io.IOException;
 import java.util.List;

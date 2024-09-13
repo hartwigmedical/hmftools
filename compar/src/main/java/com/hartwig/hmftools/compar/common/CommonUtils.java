@@ -55,6 +55,7 @@ public class CommonUtils
 
     public static final String FLD_REPORTED = "Reported";
     public static final String FLD_QUAL = "Qual";
+    public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {

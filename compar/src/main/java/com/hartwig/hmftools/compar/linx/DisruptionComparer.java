@@ -2,16 +2,12 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_REGION_TYPE;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_UNDISRUPTED_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_JUNCTION_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_UNDISRUPTED_COPY_NUMBER;
 
 import java.io.IOException;
 import java.util.List;
@@ -65,8 +61,10 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE,
-                FLD_JUNCTION_COPY_NUMBER, FLD_UNDISRUPTED_COPY_NUMBER);
+        List<String> fieldNames = LinxCommon.comparedFieldNamesBreakends();
+        fieldNames.add(FLD_CODING_CONTEXT);
+        fieldNames.add(FLD_GENE_ORIENT);
+        return fieldNames;
     }
 
     @Override

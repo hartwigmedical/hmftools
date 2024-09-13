@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_
 import static com.hartwig.hmftools.compar.common.Category.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;

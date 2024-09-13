@@ -2,7 +2,9 @@ package com.hartwig.hmftools.compar.driver;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.Category.DRIVER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -25,8 +27,6 @@ public class DriverData implements ComparableItem
 
     protected static final String FLD_LIKELIHOOD = "Likelihood";
     protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
-    protected static final String FLD_CHROMOSOME = "Chromosome";
-    protected static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
     protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
     protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
 
@@ -52,9 +52,6 @@ public class DriverData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
-        String chromosomeDisplay = DriverCatalog.chromosome().equals(mComparisonChromosome)
-                ? DriverCatalog.chromosome()
-                : format("%s compared(%s)", DriverCatalog.chromosome(), mComparisonChromosome);
         List<String> values = Lists.newArrayList();
         values.add(format("%s", DriverCatalog.likelihoodMethod()));
         values.add(format("%.2f", DriverCatalog.driverLikelihood()));

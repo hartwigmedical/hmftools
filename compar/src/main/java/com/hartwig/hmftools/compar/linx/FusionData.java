@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.compar.common.Category.FUSION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.linx.LinxCommon.FLD_JUNCTION_COPY_NUMBER;
 
 import java.util.List;
 
@@ -31,7 +32,6 @@ public class FusionData implements ComparableItem
     protected static final String FLD_CHAIN_TERM = "chainTerminated";
     protected static final String FLD_DOMAINS_KEPT = "domainsKept";
     protected static final String FLD_DOMAINS_LOST = "domainsLost";
-    protected static final String FLD_JUNCTION_COPY_NUMBER = "junctionCopyNumber";
 
     public FusionData(final LinxFusion fusion, final String geneMappedName)
     {
