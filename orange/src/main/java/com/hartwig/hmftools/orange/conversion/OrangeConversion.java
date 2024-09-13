@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.conversion;
 
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 public final class OrangeConversion
 {
     @NotNull
-    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(@NotNull Flagstat flagstat)
+    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(final BamFlagStats flagstat)
     {
         return ImmutableFlagstat.builder()
                 .uniqueReadCount(flagstat.uniqueReadCount())
@@ -41,21 +41,21 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(@NotNull WGSMetrics wgsMetrics)
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(final BamMetricsSummary metricsSummary)
     {
         return ImmutableWGSMetrics.builder()
-                .meanCoverage(wgsMetrics.meanCoverage())
-                .sdCoverage(wgsMetrics.sdCoverage())
-                .medianCoverage(wgsMetrics.medianCoverage())
-                .madCoverage(wgsMetrics.madCoverage())
-                .pctExcAdapter(wgsMetrics.pctExcAdapter())
-                .pctExcMapQ(wgsMetrics.pctExcMapQ())
-                .pctExcDupe(wgsMetrics.pctExcDupe())
-                .pctExcUnpaired(wgsMetrics.pctExcUnpaired())
-                .pctExcBaseQ(wgsMetrics.pctExcBaseQ())
-                .pctExcOverlap(wgsMetrics.pctExcOverlap())
-                .pctExcCapped(wgsMetrics.pctExcCapped())
-                .pctExcTotal(wgsMetrics.pctExcTotal())
+                .meanCoverage(metricsSummary.meanCoverage())
+                .sdCoverage(metricsSummary.sdCoverage())
+                .medianCoverage(metricsSummary.medianCoverage())
+                .madCoverage(metricsSummary.madCoverage())
+                .pctExcAdapter(0.0)
+                .pctExcMapQ(metricsSummary.lowMapQualPercent())
+                .pctExcDupe(metricsSummary.duplicatePercent())
+                .pctExcUnpaired(metricsSummary.unpairedPercent())
+                .pctExcBaseQ(metricsSummary.lowBaseQualPercent())
+                .pctExcOverlap(metricsSummary.overlappingReadPercent())
+                .pctExcCapped(metricsSummary.cappedCoveragePercent())
+                .pctExcTotal(metricsSummary.totalFilteredPercent())
                 .build();
     }
 

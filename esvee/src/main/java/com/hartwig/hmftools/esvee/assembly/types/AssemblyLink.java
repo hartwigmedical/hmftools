@@ -5,7 +5,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 
 public class AssemblyLink
 {
@@ -52,6 +55,11 @@ public class AssemblyLink
 
     public boolean hasAssembly(final JunctionAssembly assembly) { return mFirst.equals(assembly) || mSecond.equals(assembly); }
 
+    public JunctionAssembly findMatchedAssembly(final JunctionAssembly assembly)
+    {
+        return AssemblyUtils.findMatchingAssembly(List.of(mFirst, mSecond), assembly, true);
+    }
+
     public int length()
     {
         if(mType == LinkType.FACING)
@@ -59,6 +67,25 @@ public class AssemblyLink
 
         return mFirst.junction().Chromosome.equals(mSecond.junction().Chromosome) ?
                 abs(mFirst.junction().Position - mSecond.junction().Position) : 0;
+    }
+
+    public static AssemblyLink swapAssemblies(
+            final AssemblyLink existingLink, final JunctionAssembly originalAssembly, final JunctionAssembly newAssembly)
+    {
+        JunctionAssembly first, second;
+
+        if(existingLink.first() == originalAssembly)
+        {
+            first = newAssembly;
+            second = existingLink.second();
+        }
+        else
+        {
+            first = existingLink.first();
+            second = newAssembly;
+        }
+
+        return new AssemblyLink(first, second, existingLink.type(), existingLink.insertedBases(), existingLink.overlapBases());
     }
 
     public String toString()

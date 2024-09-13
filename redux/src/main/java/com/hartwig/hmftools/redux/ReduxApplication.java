@@ -110,6 +110,9 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
+        if(mConfig.PerfDebug)
+            partitionDataStore.logTotalCacheSize();
+
         // write any orphaned or remaining fragments (can be supplementaries)
         BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
 
@@ -118,15 +121,18 @@ public class ReduxApplication
 
         if(mConfig.UseSupplementaryBam)
         {
-            SuppBamReprocessor.reprocessSupplememtaries(
+            SuppBamReprocessor.reprocessSupplementaries(
                     mConfig, recordWriter, partitionDataStore, fileWriterCache.getSupplementaryBamReadWriters(), consensusReads);
         }
+
+        if(mConfig.PerfDebug)
+            partitionDataStore.logTotalCacheSize();
 
         long unmappedReads = writeUnmappedReads(fileWriterCache);
 
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
-        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
+        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 1000 : 0;
         int totalUnwrittenFragments = 0;
 
         for(PartitionData partitionData : partitionDataStore.partitions())

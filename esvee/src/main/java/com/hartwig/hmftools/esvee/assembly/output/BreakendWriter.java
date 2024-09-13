@@ -51,15 +51,15 @@ public class BreakendWriter
 
             sj.add("Id");
             sj.add("PhaseGroupId");
+            sj.add("PhaseSetId");
             sj.add("AssemblyId");
+            sj.add("MateId");
             sj.add("AssemblyInfo");
 
             sj.add("Type").add("Chromosome").add("Position").add("Orientation");
 
             sj.add("MateChr").add("MatePos").add("MateOrient").add("Length");
             sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
-
-            sj.add("Filters");
 
             sj.add("Qual");
             sj.add("SplitFragments");
@@ -116,7 +116,9 @@ public class BreakendWriter
 
                 sj.add(String.valueOf(breakend.id()));
                 sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
+                sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : -1));
                 sj.add(String.valueOf(assemblyAlignment.id()));
+                sj.add(!breakend.isSingle() ? String.valueOf(breakend.otherBreakend().id()) : "");
                 sj.add(assemblyInfo);
                 sj.add(String.valueOf(breakend.svType()));
                 sj.add(breakend.Chromosome);
@@ -148,8 +150,6 @@ public class BreakendWriter
                 {
                     sj.add("").add("0,0").add("0,0");
                 }
-
-                sj.add(filtersAsStr(breakend.filters()));
 
                 sj.add(String.valueOf(breakend.calcSvQual()));
 
@@ -193,8 +193,8 @@ public class BreakendWriter
                 sj.add(String.valueOf(segment.Orient));
                 sj.add(String.valueOf(segment.Index));
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
-                sj.add(String.valueOf(segment.Alignment.MapQual));
-                sj.add(String.valueOf(segment.Alignment.Score));
+                sj.add(String.valueOf(segment.Alignment.mapQual()));
+                sj.add(String.valueOf(segment.Alignment.score()));
                 sj.add(String.valueOf(segment.Alignment.adjustedAlignment()));
                 sj.add(String.valueOf(breakend.averageFragmentLength()));
                 sj.add(String.valueOf(breakend.incompleteFragmentCount()));

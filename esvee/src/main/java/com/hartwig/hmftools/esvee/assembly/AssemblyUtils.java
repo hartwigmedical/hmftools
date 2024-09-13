@@ -131,8 +131,6 @@ public final class AssemblyUtils
     public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
     public static byte[] createLowBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD - 1)); }
 
-    public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
-
     public static String extractInsertSequence(
             final JunctionAssembly first, boolean firstReversed, final JunctionAssembly second, boolean secondReversed, int insertLength)
     {
@@ -205,6 +203,16 @@ public final class AssemblyUtils
         return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
     }
 
+    public static JunctionAssembly findMatchingAssembly(
+            final List<JunctionAssembly> assemblies, final JunctionAssembly assembly, boolean requireExtensionMatch)
+    {
+        return assemblies.stream()
+                .filter(x -> x != assembly)
+                .filter(x -> x.junction().compareTo(assembly.junction()) == 0)
+                .filter(x -> !requireExtensionMatch || x.extensionLength() == assembly.extensionLength())
+                .findFirst().orElse(null);
+    }
+
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {
         if(assembly.outcome() != AssemblyOutcome.UNSET)
@@ -233,6 +241,8 @@ public final class AssemblyUtils
 
         assembly.setOutcome(NO_LINK);
     }
+
+    public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
 
     public static List<int[]> findUnsetBases(final byte[] bases)
     {

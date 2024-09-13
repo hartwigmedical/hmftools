@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal
 import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary
 import com.hartwig.hmftools.common.purple.PurityContextFile
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
@@ -64,18 +64,17 @@ class TealPipelineApp
         if (pipelineParams.tumorWgsMetrics != null)
         {
             // we need to try to guess the file name
-            val metrics = WGSMetricsFile.read(pipelineParams.tumorWgsMetrics!!)
+            val metrics = BamMetricsSummary.read(pipelineParams.tumorWgsMetrics!!)
             logger.info("Loaded tumor WGS metrics from {}", pipelineParams.tumorWgsMetrics)
-
-            tealParams.tumorDuplicateProportion = metrics.pctExcDupe()
+            tealParams.tumorDuplicateProportion = metrics.duplicatePercent()
         }
 
         if (pipelineParams.referenceWgsMetrics != null)
         {
             // we need to try to guess the file name
-            val metrics = WGSMetricsFile.read(pipelineParams.referenceWgsMetrics!!)
+            val metrics = BamMetricsSummary.read(pipelineParams.referenceWgsMetrics!!)
             logger.info("Loaded reference WGS metrics from {}", pipelineParams.referenceWgsMetrics)
-            tealParams.germlineDuplicateProportion = metrics.pctExcDupe()
+            tealParams.germlineDuplicateProportion = metrics.duplicatePercent()
         }
 
         logger.info("loaded teal params {} from pipeline files", tealParams)

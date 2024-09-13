@@ -126,8 +126,6 @@ public class RefBaseSeqBuilder
 
     public List<ReadParseState> reads() { return mReads; }
 
-    // public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
-
     private static final byte NO_BASE = 0;
 
     private void buildSequence()
@@ -328,7 +326,7 @@ public class RefBaseSeqBuilder
                     read.moveNext();
             }
 
-            if(read.exhausted())
+            if(read.exhausted() || read.exceedsMaxMismatches())
                 reads.remove(index);
             else
                 ++index;
@@ -343,7 +341,7 @@ public class RefBaseSeqBuilder
             if(currentElementType == D)
             {
                 if(read.operator() != currentElementType)
-                    read.addMismatch();
+                    read.addIndelMismatch();
 
                 continue;
             }
@@ -354,7 +352,7 @@ public class RefBaseSeqBuilder
             if(read.operator() != currentElementType)
             {
                 if(read.operator() == D || aboveMinQual)
-                    read.addMismatch();
+                    read.addIndelMismatch();
             }
             else if(read.currentBase() != consensusBase)
             {

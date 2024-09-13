@@ -70,7 +70,7 @@ public class ConsensusReads
     public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
     public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, @Nullable final SAMRecord previousTemplateRead,
+            final List<SAMRecord> reads, @Nullable final TemplateReadData previousTemplateRead,
             @Nullable final String groupReadId, @Nullable final String umiId)
     {
         String consensusReadId;
@@ -84,7 +84,7 @@ public class ConsensusReads
         else
         {
             // match the mate or supplmentary template read to that of the primary
-            templateRead = reads.stream().filter(x -> x.getReadName().equals(previousTemplateRead.getReadName())).findFirst().orElse(null);
+            templateRead = reads.stream().filter(x -> x.getReadName().equals(previousTemplateRead.ReadId)).findFirst().orElse(null);
             consensusReadId = groupReadId;
         }
 
@@ -268,7 +268,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, @Nullable final SAMRecord primaryTemplateRead)
+    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, @Nullable final TemplateReadData primaryTemplateRead)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
@@ -284,23 +284,22 @@ public class ConsensusReads
         {
             // rather than use this duplicate's unmapped fields, infer from the mapped primary used for the consensus for consistency
             record.setReadUnmappedFlag(true);
-            record.setMateReferenceName(primaryTemplateRead.getReferenceName());
-            record.setMateAlignmentStart(primaryTemplateRead.getAlignmentStart());
-            record.setMateReferenceIndex(primaryTemplateRead.getReferenceIndex());
+            record.setMateReferenceName(primaryTemplateRead.Chromosome);
+            record.setMateAlignmentStart(primaryTemplateRead.AlignmentStart);
 
-            record.setAlignmentStart(primaryTemplateRead.getAlignmentStart());
+            record.setAlignmentStart(primaryTemplateRead.AlignmentStart);
             record.setCigarString(NO_CIGAR);
 
-            record.setAttribute(MATE_CIGAR_ATTRIBUTE, primaryTemplateRead.getCigarString());
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, primaryTemplateRead.Cigar);
             record.setReadPairedFlag(true);
 
-            if(primaryTemplateRead.getFirstOfPairFlag())
+            if(primaryTemplateRead.firstInPair())
                 record.setSecondOfPairFlag(true);
             else
                 record.setFirstOfPairFlag(true);
 
-            record.setMateNegativeStrandFlag(primaryTemplateRead.getReadNegativeStrandFlag());
-            record.setReadNegativeStrandFlag(primaryTemplateRead.getMateNegativeStrandFlag());
+            record.setMateNegativeStrandFlag(primaryTemplateRead.readNegativeStrandFlag());
+            record.setReadNegativeStrandFlag(primaryTemplateRead.mateNegativeStrandFlag());
         }
         else
         {

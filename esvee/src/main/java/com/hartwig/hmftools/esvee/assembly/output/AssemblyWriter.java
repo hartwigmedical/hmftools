@@ -78,11 +78,7 @@ public class AssemblyWriter
             AssemblyStats.addReadTypeHeader(sj);
             addRemoteRegionHeader(sj);
 
-            if(mConfig.RunAlignment)
-            {
-                sj.add("AlignResult");
-                sj.add("AssemblyInfo");
-            }
+            sj.add("AssemblyInfo");
 
             // extra detailed fields
             sj.add("InitialReadId");
@@ -154,11 +150,7 @@ public class AssemblyWriter
 
             addRemoteRegionInfo(assembly, sj);
 
-            if(mConfig.RunAlignment)
-            {
-                sj.add(String.valueOf(assembly.alignmentOutcome()));
-                sj.add(assembly.assemblyAlignmentInfo());
-            }
+            sj.add(assembly.assemblyAlignmentInfo());
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
 

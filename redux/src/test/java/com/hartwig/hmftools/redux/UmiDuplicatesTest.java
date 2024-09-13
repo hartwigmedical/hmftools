@@ -129,196 +129,6 @@ public class UmiDuplicatesTest
     }
 
     @Test
-    public void testUmiGroupMultipleSupplementaries()
-    {
-        // one primary has multiple supplementaries and the other has a different supp
-        String umidId = "TATTAT";
-        int readPos = 100;
-        int matePos = 200;
-        int suppPos = 1800;
-
-        SAMRecord read1 = createSamRecord(
-                nextReadId(umidId), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
-                null);
-
-        List<SupplementaryReadData> read1Supps = Lists.newArrayList(
-                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1),
-                new SupplementaryReadData(CHR_2, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1),
-                new SupplementaryReadData(CHR_3, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read1.setAttribute(SUPPLEMENTARY_ATTRIBUTE, alignmentsToSamTag(read1Supps));
-        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
-
-        SAMRecord read2 = createSamRecord(
-                nextReadId(umidId), CHR_1, readPos + 2, TEST_READ_BASES, "2S98M", CHR_1, matePos, false, false,
-                new SupplementaryReadData(CHR_2, suppPos + 1, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
-
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
-
-        mPartitionReaderUMIs.processRead(read1);
-        mPartitionReaderUMIs.processRead(read2);
-        mPartitionReaderUMIs.flushReadPositions();
-
-        PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-
-        assertEquals(2, partitionData.duplicateGroupMap().size());
-
-        SAMRecord mate1 = createSamRecord(
-                read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
-                false, null);
-        setSecondInPair(mate1);
-
-        SAMRecord mate2 = createSamRecord(
-                read2.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos + 2, true,
-                false, null);
-        setSecondInPair(mate2);
-
-        mPartitionReaderUMIs.processRead(mate1);
-        mPartitionReaderUMIs.processRead(mate2);
-
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
-
-        SAMRecord read1Supp1 = createSamRecord(
-                read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        mPartitionReaderUMIs.processRead(read1Supp1);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord read1Supp2 = createSamRecord(
-                read1.getReadName(), CHR_2, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        SAMRecord read2Supp1 = createSamRecord(
-                read2.getReadName(), CHR_2, suppPos + 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos + 2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_2, 1001, 2000));
-
-        mPartitionReaderUMIs.processRead(read1Supp2);
-        mPartitionReaderUMIs.processRead(read2Supp1);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord read1Supp3 = createSamRecord(
-                read1.getReadName(), CHR_3, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_3, 1001, 2000));
-
-        mPartitionReaderUMIs.processRead(read1Supp3);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        assertEquals(7, mWriter.nonConsensusWriteCount());
-        assertEquals(3, mWriter.consensusWriteCount());
-        assertTrue(partitionData.duplicateGroupMap().isEmpty());
-        assertEquals(1, partitionData.incompleteFragmentMap().size());
-
-        partitionData.writeRemainingReads(mWriter, mPartitionReaderUMIs.consensusReads(), false);
-        assertEquals(8, mWriter.nonConsensusWriteCount());
-        assertTrue(partitionData.incompleteFragmentMap().isEmpty());
-    }
-
-    @Test
-    public void testUmiGroupInconsistentSupplementaries()
-    {
-        // supplementaries arriving out of order and mapped to different locations
-        String umidId = "TATTAT";
-
-        int supp2Pos1 = 950;
-        int readPos = 1950;
-        int supp2Pos2 = 2950;
-        int matePos = 3500;
-        int supp1Pos1 = 4500;
-        int supp1Pos2 = 5500;
-
-        String readId1 = nextReadId(umidId);
-        String readId2 = nextReadId(umidId);
-
-        SAMRecord read2Supp1 = createSamRecord(
-                readId2, CHR_1, supp2Pos1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1, 999));
-        mPartitionReaderUMIs.processRead(read2Supp1);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord read1 = createSamRecord(
-                readId1, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
-                new SupplementaryReadData(CHR_1, supp1Pos2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
-
-        SAMRecord read2 = createSamRecord(
-                readId2, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
-                new SupplementaryReadData(CHR_1, supp2Pos1, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
-
-        int regionStart = 1000;
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, regionStart, regionStart + 999));
-        mPartitionReaderUMIs.processRead(read1);
-        mPartitionReaderUMIs.processRead(read2);
-
-        // mChrReaderUMIs.flushReadPositions();
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord read2Supp2 = createSamRecord(
-                readId2, CHR_1, supp2Pos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
-                true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        regionStart += 1000;
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, regionStart, regionStart + 999));
-        mPartitionReaderUMIs.processRead(read2Supp2);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord mate1 = createSamRecord(
-                readId1, CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
-                false, new SupplementaryReadData(CHR_1, supp1Pos1, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-        setSecondInPair(mate1);
-
-        SAMRecord mate2 = createSamRecord(
-                readId2, CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
-                false, new SupplementaryReadData(CHR_1, supp2Pos2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-        setSecondInPair(mate2);
-
-        regionStart += 1000;
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, regionStart, regionStart + 999));
-        mPartitionReaderUMIs.processRead(mate1);
-        mPartitionReaderUMIs.processRead(mate2);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        SAMRecord read1Supp1 = createSamRecord(
-                read1.getReadName(), CHR_1, supp1Pos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
-                true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        SAMRecord read1Supp2 = createSamRecord(
-                read1.getReadName(), CHR_1, supp1Pos1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
-                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        // note last 2 regions are out of order
-        regionStart = 5000;
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, regionStart, regionStart + 999));
-        mPartitionReaderUMIs.processRead(read1Supp1);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        regionStart = 4000;
-        mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, regionStart, regionStart + 999));
-        mPartitionReaderUMIs.processRead(read1Supp2);
-        mPartitionReaderUMIs.postProcessRegion();
-
-        assertEquals(8, mWriter.nonConsensusWriteCount());
-        assertEquals(4, mWriter.consensusWriteCount());
-
-        for(PartitionData partitionData : mPartitionReaderUMIs.partitionDataStore().partitions())
-        {
-            assertTrue(partitionData.duplicateGroupMap().isEmpty());
-            assertTrue(partitionData.incompleteFragmentMap().isEmpty());
-        }
-    }
-
-    @Test
     public void testSingleUmiGroup()
     {
         // 2 UMI groups and a single fragment with the forward orientation, 1 fragment and UMI group on the reverse
@@ -510,6 +320,137 @@ public class UmiDuplicatesTest
         assertEquals(2, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.size());
         assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandFrequency);
         assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandFrequency);
+    }
+
+    @Test
+    public void testAlternativeFirstInPairGroups()
+    {
+        // 4 primary reads with alternating first in pair designation for the same lower / upper reads
+        int readPos = 100;
+        int matePos = 1500;
+        int suppPos = 2200;
+        int suppPos2 = 2400;
+
+        String umidId1Part1 = "TATTAT";
+        String umidId1Part2 = "GCGGCG";
+        String umiId1 = umidId1Part1 + DEFAULT_DUPLEX_UMI_DELIM + umidId1Part2;
+        String umiId1Reversed = umidId1Part2 + DEFAULT_DUPLEX_UMI_DELIM + umidId1Part1;
+
+        SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1);
+        SupplementaryReadData suppData2 = new SupplementaryReadData(CHR_1, suppPos2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1);
+
+        SAMRecord read1 = createSamRecord(
+                nextReadId(umiId1), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                false, suppData1);
+        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        SAMRecord read2 = createSamRecord(
+                nextReadId(umiId1Reversed), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                false, null);
+        setSecondInPair(read2);
+        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        SAMRecord read3 = createSamRecord(
+                nextReadId(umiId1), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                false, suppData1);
+        read3.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        SAMRecord read4 = createSamRecord(
+                nextReadId(umiId1Reversed), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                false, suppData1);
+        setSecondInPair(read4);
+        read4.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        mPartitionReaderDuplexUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        mPartitionReaderDuplexUMIs.processRead(read1);
+        mPartitionReaderDuplexUMIs.processRead(read2);
+        mPartitionReaderDuplexUMIs.processRead(read3);
+        mPartitionReaderDuplexUMIs.processRead(read4);
+        mPartitionReaderDuplexUMIs.flushReadPositions();
+        mPartitionReaderDuplexUMIs.postProcessRegion();
+
+        PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+
+        assertEquals(4, partitionData.duplicateGroupMap().size());
+        SAMRecord mate1 = createSamRecord(
+                read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, suppData2);
+        mate1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+        setSecondInPair(mate1);
+
+        SAMRecord mate2 = createSamRecord(
+                read2.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, suppData2);
+        mate1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        SAMRecord mate3 = createSamRecord(
+                read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, null);
+        mate3.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+        setSecondInPair(mate3);
+
+        SAMRecord mate4 = createSamRecord(
+                read2.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, null);
+        mate4.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        mPartitionReaderDuplexUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
+
+        mPartitionReaderDuplexUMIs.processRead(mate1);
+        mPartitionReaderDuplexUMIs.processRead(mate2);
+        mPartitionReaderDuplexUMIs.processRead(mate3);
+        mPartitionReaderDuplexUMIs.processRead(mate4);
+        mPartitionReaderDuplexUMIs.flushReadPositions();
+        mPartitionReaderDuplexUMIs.postProcessRegion();
+
+        partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        assertEquals(4, partitionData.duplicateGroupMap().size());
+
+        // finally the expected supplementaries
+
+        mPartitionReaderDuplexUMIs.setupRegion(new ChrBaseRegion(CHR_1, 2001, 3000));
+
+        SupplementaryReadData suppDataRead1 = new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1);
+        SupplementaryReadData suppDataRead2 = new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1);
+
+        SAMRecord supp1 = createSamRecord(
+                read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                true, suppDataRead1);
+
+        // read 2 has no supp
+
+        SAMRecord supp3 = createSamRecord(
+                read3.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                true, suppDataRead1);
+
+        SAMRecord supp4 = createSamRecord(
+                read4.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                true, suppDataRead1);
+        setSecondInPair(supp4);
+
+        SAMRecord mateSupp1 = createSamRecord(
+                read1.getReadName(), CHR_1, suppPos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                true, suppDataRead2);
+        setSecondInPair(mateSupp1);
+
+        SAMRecord mateSupp2 = createSamRecord(
+                read2.getReadName(), CHR_1, suppPos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                true, suppDataRead2);
+
+        mPartitionReaderDuplexUMIs.processRead(supp1);
+        mPartitionReaderDuplexUMIs.processRead(supp3);
+        mPartitionReaderDuplexUMIs.processRead(supp4);
+        mPartitionReaderDuplexUMIs.processRead(mateSupp1);
+        mPartitionReaderDuplexUMIs.processRead(mateSupp2);
+        mPartitionReaderDuplexUMIs.postProcessRegion();
+
+        partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        assertTrue(partitionData.duplicateGroupMap().isEmpty());
+
+        assertEquals(13, mWriter.nonConsensusWriteCount());
+        assertEquals(4, mWriter.consensusWriteCount());
+
     }
 
     private String nextReadId(final String umiId)

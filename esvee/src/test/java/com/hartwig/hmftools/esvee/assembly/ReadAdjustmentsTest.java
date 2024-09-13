@@ -106,7 +106,28 @@ public class ReadAdjustmentsTest
     }
 
     @Test
-    public void testLowBaseQualTrimming()
+    public void testLowBaseFiltering()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        byte lowQualBase = 10;
+        for(int i = 0; i < 50; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertFalse(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+
+        baseQualities[50] = lowQualBase;
+        assertTrue(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+    }
+
+    @Test
+    public void testSoftClipLowBaseQualTrimming()
     {
         // wrong end
         String readBases = REF_BASES_RANDOM_100;
@@ -161,6 +182,43 @@ public class ReadAdjustmentsTest
         assertEquals(110, read.alignmentStart());
         assertEquals(108, read.unclippedStart());
         assertEquals("2S80M10S", read.cigarString());
+    }
+
+    @Test
+    public void testLowBaseQualTrimming()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        // low qual will be 70% of outer bases
+        byte lowQualBase = 10;
+        for(int i = 3; i < 10; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+            baseQualities[baseQualities.length - i - 1] = lowQualBase;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        assertTrue(read.lowQualTrimmed());
+        assertEquals("90M", read.cigarString());
+        assertEquals(10, read.baseTrimCount());
+        assertEquals(189, read.alignmentEnd());
+
+        read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        assertTrue(read.lowQualTrimmed());
+        assertEquals("90M", read.cigarString());
+        assertEquals(10, read.baseTrimCount());
+        assertEquals(110, read.alignmentStart());
     }
 
     @Test

@@ -354,7 +354,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
             builder.normalReferenceFragmentCount(refFrags + (ignoreRefpair ? 0 : refPairFrags));
         }
 
-        if(context.getGenotype(tumorOrdinal) != null)
+        if(tumorOrdinal >= 0 && context.getGenotype(tumorOrdinal) != null)
         {
             Genotype genotype = context.getGenotype(tumorOrdinal);
 

@@ -6,23 +6,19 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -46,7 +42,6 @@ public class Breakend implements Comparable<Breakend>
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
     private int mIncompleteFragmentCount;
-    private final Set<FilterType> mFilters;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -69,7 +64,6 @@ public class Breakend implements Comparable<Breakend>
 
         mAlternativeAlignments = null;
 
-        mFilters = Sets.newHashSet();
         mFragmentLengthTotal = 0;
         mFragmentLengthCount = 0;
         mIncompleteFragmentCount = 0;
@@ -89,8 +83,20 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public List<AlternativeAlignment> alternativeAlignments() { return mAlternativeAlignments; }
+    public List<AlternativeAlignment> alternativeAlignments()
+    {
+        return mAlternativeAlignments != null ? mAlternativeAlignments : Collections.emptyList();
+    }
+
     public void setAlternativeAlignments(final List<AlternativeAlignment> altAlignments) { mAlternativeAlignments = altAlignments; }
+
+    public List<AlternativeAlignment> lowQualAltAlignments()
+    {
+        if(!mSegments.isEmpty() && mSegments.get(0).Alignment.hasLowMapQualAlignment())
+            return mSegments.get(0).Alignment.unselectedAltAlignments();
+
+        return Collections.emptyList();
+    }
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 
@@ -152,15 +158,7 @@ public class Breakend implements Comparable<Breakend>
         return svType() == DUP ? posLength + 1 : posLength;
     }
 
-    public boolean isShortLocalDelDupIns()
-    {
-        StructuralVariantType type = svType();
-
-        if(type == DEL || type == DUP || type == INS)
-            return svLength() <= SHORT_DEL_DUP_INS_LENGTH;
-        else
-            return false;
-    }
+    public boolean isShortLocalDelDupIns() { return AlignmentFragments.isShortLocalDelDupIns(svType(), svLength()); }
 
     public int minPosition() { return Position + (Homology != null ? Homology.ExactStart : 0); }
     public int maxPosition() { return Position + (Homology != null ? Homology.ExactEnd : 0); }
@@ -186,7 +184,10 @@ public class Breakend implements Comparable<Breakend>
 
         for(BreakendSegment segment : mSegments)
         {
-            int segmentQual = (int)round(segment.Alignment.calcModifiedMapQual());
+            int segmentQual = (int)round(segment.Alignment.modifiedMapQual());
+
+            if(segment.Alignment.hasLowMapQualShortSvLink())
+                segmentQual += ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 
             maxSegmentQual = max(segmentQual, maxSegmentQual);
         }
@@ -194,17 +195,13 @@ public class Breakend implements Comparable<Breakend>
         return maxSegmentQual;
     }
 
-    public Set<FilterType> filters() { return mFilters; }
-    public boolean passing() { return mFilters.isEmpty(); }
-    public void addFilter(final FilterType filterType) { mFilters.add(filterType); }
-
-    public boolean matches(final String chromosome, final int position, final Orientation orientation)
+    public boolean matchesCoordinates(final String chromosome, final int position, final Orientation orientation)
     {
         if(!Chromosome.equals(chromosome) || Orient != orientation)
             return false;
 
         if(Homology != null)
-            return positionWithin(position, Position + Homology.InexactStart, Position + Homology.InexactEnd);
+            return positionWithin(position, Position + Homology.ExactStart, Position + Homology.ExactEnd);
         else
             return Position == position;
     }

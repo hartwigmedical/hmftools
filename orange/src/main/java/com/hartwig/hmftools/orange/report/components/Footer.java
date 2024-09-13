@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +34,7 @@ public class Footer
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
-        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 450, 20));
+        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 465, 20));
         canvas.addXObject(pageNumberTemplate, 58, 20);
         footerTemplates.add(new FooterTemplate(pageNumber, pageNumberTemplate, addDisclaimer));
 
@@ -74,9 +75,17 @@ public class Footer
 
             if(addDisclaimer)
             {
-                String disclaimer = "All results and data described in this report are for research use only and have not "
-                        + "been generated using a clinically validated and controlled procedure.";
-                Paragraph disclaimerParagraph = new Paragraph(disclaimer).setMaxWidth(420).addStyle(reportResources.disclaimerStyle());
+                List<Text> disclaimerParts = List.of(
+                        new Text("This report is for '"),
+                        new Text("Research Use Only (RUO)").setFont(reportResources.fontBold()),
+                        new Text("' and is "),
+                        new Text("not").setUnderline(),
+                        new Text(" suitable for diagnostic or clinical applications. "),
+                        new Text("No rights").setUnderline(),
+                        new Text(" can be derived from the contents of this report.")
+                );
+                Paragraph disclaimerParagraph = new Paragraph().setMaxWidth(430).addStyle(reportResources.disclaimerStyle());
+                disclaimerParagraph.addAll(disclaimerParts);
                 canvas.showTextAligned(disclaimerParagraph, 40, 0, TextAlignment.LEFT);
             }
         }

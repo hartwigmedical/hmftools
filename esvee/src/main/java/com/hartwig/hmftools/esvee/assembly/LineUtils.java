@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_CHAR_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_CHAR_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,8 +20,13 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 
 public final class LineUtils
 {
@@ -194,5 +201,59 @@ public final class LineUtils
 
         int medianIndex = totalEntries / 2;
         return lengths.get(medianIndex);
+    }
+
+    public static AssemblyLink tryLineSequenceLink(
+            final JunctionAssembly first, final JunctionAssembly second, boolean firstReversed, boolean secondReversed)
+    {
+        if(!first.hasLineSequence() && !second.hasLineSequence())
+            return null;
+
+        // look for a poly A/T match of sufficient length at the ends of each sequence
+        String firstExtensionBases = first.formJunctionSequence();
+        String firstMatchBases = firstReversed ? Nucleotides.reverseComplementBases(firstExtensionBases) : firstExtensionBases;
+
+        String secondExtensionBases = second.formJunctionSequence();
+
+        if(secondReversed)
+            secondExtensionBases = Nucleotides.reverseComplementBases(firstExtensionBases);
+
+        int firstPolyAtLength = calcLineSequenceLength(firstMatchBases, false);
+        int secondPolyAtLength = calcLineSequenceLength(secondExtensionBases, true);
+
+        if(firstPolyAtLength < LINE_POLY_AT_REQ || secondPolyAtLength < LINE_POLY_AT_REQ)
+            return null;
+
+        String insertedBases = firstExtensionBases;
+
+        int minOverlap = min(firstPolyAtLength, secondPolyAtLength);
+
+        String secondExtraInsertBases = secondExtensionBases.substring(minOverlap);
+        insertedBases += secondExtraInsertBases;
+
+        return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+    }
+
+    public static int calcLineSequenceLength(final String sequence, boolean fromStart)
+    {
+        int sequenceLength = sequence.length();
+        char lineBase = fromStart ? sequence.charAt(0) : sequence.charAt(sequenceLength - 1);
+
+        if(lineBase != LINE_CHAR_A && lineBase != LINE_CHAR_T)
+            return 0;
+
+        int count = 1;
+        int index = fromStart ? 1 : sequenceLength - 2;
+        while(index >= 0 && index < sequenceLength)
+        {
+            if(sequence.charAt(index) != lineBase)
+                break;
+
+            ++count;
+
+            index += fromStart ? 1 : -1;
+        }
+
+        return count;
     }
 }

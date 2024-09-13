@@ -34,7 +34,6 @@ public class CallerConfig
     // run config
     public final String SampleId;
     public final String ReferenceId;
-    public final boolean GermlineOnly;
     public final RefGenomeVersion RefGenVersion;
     public final String VcfFile;
 
@@ -49,8 +48,6 @@ public class CallerConfig
     {
         SampleId = configBuilder.getValue(SAMPLE);
         ReferenceId = configBuilder.getValue(REFERENCE);
-
-        GermlineOnly = ReferenceId != null && SampleId == null;
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -69,10 +66,13 @@ public class CallerConfig
 
     public boolean hasTumor() { return SampleId != null; }
     public boolean hasReference() { return ReferenceId != null; }
+    public boolean germlineOnly() { return ReferenceId != null && SampleId == null;}
+
+    public String fileSampleId() { return SampleId != null ? SampleId : ReferenceId; }
 
     public boolean isValid()
     {
-        if(SampleId.isEmpty())
+        if(SampleId == null && ReferenceId == null)
         {
             SV_LOGGER.error("missing sample config");
             return false;
@@ -101,7 +101,7 @@ public class CallerConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addInteger(MANUAL_REF_DEPTH, "Manually set ref depth for testing", 0);

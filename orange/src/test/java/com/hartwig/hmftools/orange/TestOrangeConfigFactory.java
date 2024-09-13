@@ -32,9 +32,9 @@ public final class TestOrangeConfigFactory
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
-    private static final String REF_SAMPLE_WGS_METRICS_FILE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref_sample.wgsmetrics";
+    private static final String REF_SAMPLE_WGS_METRICS_FILE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref.bam_metric.summary.tsv";
     private static final String REF_SAMPLE_FLAGSTAT_FILE = RUN_DIRECTORY + "/ref_sample/flagstat/ref_sample.flagstat";
-    private static final String TUMOR_SAMPLE_WGS_METRICS_FILE = RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor_sample.wgsmetrics";
+    private static final String TUMOR_SAMPLE_WGS_METRICS_FILE = RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor.bam_metric.summary.tsv";
     private static final String TUMOR_SAMPLE_FLAGSTAT_FILE = RUN_DIRECTORY + "/tumor_sample/flagstat/tumor_sample.flagstat";
     private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/sage_germline/ref_sample.sage.gene.coverage.tsv";
     private static final String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/ref_sample.sage.bqr.png";
@@ -96,6 +96,7 @@ public final class TestOrangeConfigFactory
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
+                .addDisclaimer(true)
                 .build();
     }
 

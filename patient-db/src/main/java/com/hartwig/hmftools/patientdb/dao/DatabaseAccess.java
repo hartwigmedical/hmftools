@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
@@ -19,7 +21,6 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -29,7 +30,6 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -171,12 +171,12 @@ public class DatabaseAccess implements AutoCloseable
         configBuilder.addConfigItem(DB_URL, isRequired, DB_URL_DESC);
     }
 
-    public static void addDatabaseCmdLineArgs(@NotNull Options options)
+    public static void addDatabaseCmdLineArgs(final Options options)
     {
         addDatabaseCmdLineArgs(options, false);
     }
 
-    public static void addDatabaseCmdLineArgs(@NotNull Options options, boolean isRequired)
+    public static void addDatabaseCmdLineArgs(final Options options, boolean isRequired)
     {
         options.addOption(Option.builder(DB_USER).desc("Database username").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
@@ -199,18 +199,18 @@ public class DatabaseAccess implements AutoCloseable
                 configBuilder.getValue(DB_USER), configBuilder.getValue(DB_PASS), configBuilder.getValue(DB_URL), applyDefaultArgs);
     }
 
-    public static boolean hasDatabaseConfig(@NotNull CommandLine cmd)
+    public static boolean hasDatabaseConfig(final CommandLine cmd)
     {
         return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
     }
 
     @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException
+    public static DatabaseAccess databaseAccess(final CommandLine cmd) throws SQLException
     {
         return databaseAccess(cmd, false);
     }
 
-    public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException
+    public static DatabaseAccess databaseAccess(final CommandLine cmd, boolean applyDefaultArgs) throws SQLException
     {
         return databaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL), applyDefaultArgs);
     }
@@ -246,7 +246,7 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @Nullable
-    public static DatabaseAccess createDatabaseAccess(@NotNull CommandLine cmd)
+    public static DatabaseAccess createDatabaseAccess(final CommandLine cmd)
     {
         if(!hasDatabaseConfig(cmd))
             return null;
@@ -282,7 +282,7 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @Nullable
-    private static Settings settings(@NotNull String catalog)
+    private static Settings settings(final String catalog)
     {
         if(catalog.equals(DEV_CATALOG))
         {
@@ -312,25 +312,25 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @Nullable
-    public PurityContext readPurityContext(@NotNull String sampleId)
+    public PurityContext readPurityContext(final String sampleId)
     {
         return purityDAO.readPurityContext(sampleId);
     }
 
     @NotNull
-    public List<PurpleCopyNumber> readCopynumbers(@NotNull String sample)
+    public List<PurpleCopyNumber> readCopynumbers(final String sample)
     {
         return copyNumberDAO.read(sample);
     }
 
     @NotNull
-    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull String sample, @NotNull List<String> genes)
+    public List<GeneCopyNumber> readGeneCopynumbers(final String sample, final List<String> genes)
     {
         return geneCopyNumberDAO.readCopyNumbers(sample, genes);
     }
 
     @NotNull
-    public List<GermlineDeletion> readGermlineDeletions(@NotNull String sample)
+    public List<GermlineDeletion> readGermlineDeletions(final String sample)
     {
         return geneCopyNumberDAO.readGermlineDeletions(sample);
     }
@@ -342,55 +342,55 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public List<SomaticVariant> readSomaticVariants(@NotNull String sample, VariantType type)
+    public List<SomaticVariant> readSomaticVariants(final String sample, VariantType type)
     {
         return somaticVariantDAO.read(sample, type);
     }
 
     @NotNull
-    public List<StructuralVariantData> readStructuralVariantData(@NotNull String sample)
+    public List<StructuralVariantData> readStructuralVariantData(final String sample)
     {
         return structuralVariantDAO.read(sample);
     }
 
     @NotNull
-    public List<LinxCluster> readClusters(@NotNull String sample)
+    public List<LinxCluster> readClusters(final String sample)
     {
         return structuralVariantClusterDAO.readClusters(sample);
     }
 
     @NotNull
-    public List<LinxSvAnnotation> readSvAnnotations(@NotNull String sample)
+    public List<LinxSvAnnotation> readSvAnnotations(final String sample)
     {
         return structuralVariantClusterDAO.readAnnotations(sample);
     }
 
     @NotNull
-    public List<DriverCatalog> readDriverCatalog(@NotNull String sample)
+    public List<DriverCatalog> readDriverCatalog(final String sample)
     {
         return driverCatalogDAO.readDriverData(sample);
     }
 
     @NotNull
-    public List<LinxDriver> readSvDriver(@NotNull String sample)
+    public List<LinxDriver> readSvDriver(final String sample)
     {
         return structuralVariantClusterDAO.readSvDrivers(sample);
     }
 
     @NotNull
-    public List<SignatureAllocation> readSignatureAllocations(@NotNull String sample)
+    public List<SignatureAllocation> readSignatureAllocations(final String sample)
     {
         return signatureDAO.readAllocations(sample);
     }
 
     @NotNull
-    public List<LinxFusion> readFusions(@NotNull String sample)
+    public List<LinxFusion> readFusions(final String sample)
     {
         return structuralVariantFusionDAO.readFusions(sample);
     }
 
     @NotNull
-    public List<LinxBreakend> readBreakends(@NotNull String sample)
+    public List<LinxBreakend> readBreakends(final String sample)
     {
         return structuralVariantFusionDAO.readBreakends(sample);
     }
@@ -407,22 +407,22 @@ public class DatabaseAccess implements AutoCloseable
         canonicalTranscriptDAO.write(refGenomeVersion, geneDataList, transcripts);
     }
 
-    public void writePurity(@NotNull String sampleId, @NotNull PurityContext context, @NotNull PurpleQC checks)
+    public void writePurity(final String sampleId, final PurityContext context, final PurpleQC checks)
     {
         purityDAO.write(sampleId, context, checks);
     }
 
-    public void writeBestFitPerPurity(@NotNull String sampleId, @NotNull List<FittedPurity> bestFitPerPurity)
+    public void writeBestFitPerPurity(final String sampleId, final List<FittedPurity> bestFitPerPurity)
     {
         purityDAO.write(sampleId, bestFitPerPurity);
     }
 
-    public void writeCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers)
+    public void writeCopynumbers(final String sample, final List<PurpleCopyNumber> copyNumbers)
     {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
-    public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping)
+    public void writeAmberMapping(final String sample, List<AmberMapping> mapping)
     {
         amberDAO.writeMapping(sample, mapping);
     }
@@ -437,7 +437,7 @@ public class DatabaseAccess implements AutoCloseable
         amberDAO.writeAnonymous(mapping);
     }
 
-    public void writeAmberSample(@NotNull AmberSample identity)
+    public void writeAmberSample(final AmberSample identity)
     {
         amberDAO.writeIdentity(identity);
     }
@@ -471,103 +471,103 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public BufferedWriter<SomaticVariant> somaticVariantWriter(@NotNull final String sampleId)
+    public BufferedWriter<SomaticVariant> somaticVariantWriter(final String sampleId)
     {
         return somaticVariantDAO.writer(sampleId);
     }
 
-    public void writeStructuralVariants(@NotNull String sampleId, @NotNull List<StructuralVariantData> variants)
+    public void writeStructuralVariants(final String sampleId, final List<StructuralVariantData> variants)
     {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    public void writeSvClusters(@NotNull String sample, @NotNull List<LinxCluster> clusters)
+    public void writeSvClusters(final String sample, final List<LinxCluster> clusters)
     {
         structuralVariantClusterDAO.writeClusters(sample, clusters);
     }
 
-    public void writeSvLinxData(@NotNull String sample, @NotNull List<LinxSvAnnotation> svData)
+    public void writeSvLinxData(final String sample, final List<LinxSvAnnotation> svData)
     {
         structuralVariantClusterDAO.writeSvData(sample, svData);
     }
 
-    public void writeSvLinks(@NotNull String sample, @NotNull List<LinxLink> links)
+    public void writeSvLinks(final String sample, final List<LinxLink> links)
     {
         structuralVariantClusterDAO.writeLinks(sample, links);
     }
 
-    public void writeSvDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers)
+    public void writeSvDrivers(final String sample, final List<LinxDriver> drivers)
     {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeGermlineSVs(@NotNull String sample, @NotNull List<LinxGermlineSv> germlineSvs)
+    public void writeGermlineSVs(final String sample, final List<LinxGermlineSv> germlineSvs)
     {
         germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
     }
 
-    public void writeGermlineBreakends(@NotNull String sample, @NotNull List<LinxBreakend> germlineBreakends)
+    public void writeGermlineBreakends(final String sample, final List<LinxBreakend> germlineBreakends)
     {
         germlineVariantDAO.writeGermlineBreakends(sample, germlineBreakends);
     }
 
-    public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations)
+    public void writeSignatures(final String sample, final List<SignatureAllocation> sigAllocations)
     {
         signatureDAO.write(sample, sigAllocations);
     }
 
-    public void writeGeneCopyNumbers(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers)
+    public void writeGeneCopyNumbers(final String sample, final List<GeneCopyNumber> geneCopyNumbers)
     {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeGermlineDeletions(@NotNull String sample, @NotNull List<GermlineDeletion> deletions)
+    public void writeGermlineDeletions(final String sample, final List<GermlineDeletion> deletions)
     {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
-    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog,
-            final EnumSet<DriverType> driverTypes)
+    public void writeLinxDriverCatalog(
+            final String sample, final List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes)
     {
         driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(@NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog,
-            @Nullable List<DriverCatalog> germlineCatalog)
+    public void writePurpleDriverCatalog(
+            final String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable final List<DriverCatalog> germlineCatalog)
     {
         driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 
-    public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics)
+    public void writeMetrics(final String sample, final BamMetricsSummary tumorMetrics, final BamMetricsSummary referenceMetrics)
     {
-        metricDAO.writeMetrics(sample, metrics);
+        metricDAO.writeMetrics(sample, tumorMetrics, referenceMetrics);
     }
 
-    public void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat)
+    public void writeFlagstats(final String sample, final BamFlagStats refFlagStats, final BamFlagStats tumorFlagStats)
     {
-        flagstatDAO.writeFlagstats(sample, refFlagstat, tumorFlagstat);
+        flagstatDAO.writeFlagstats(sample, refFlagStats, tumorFlagStats);
     }
 
-    public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes)
+    public void writePeach(final String sample, final List<PeachGenotype> peachGenotypes)
     {
         peachDAO.writePeach(sample, peachGenotypes);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
+    public void writeCuppa(final String sample, final CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
         cuppaDAO.writeCuppa2(sample, cuppaPredictions, topNProbs);
     }
 
-    public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends)
+    public void writeVirusBreakend(final String sample, final List<VirusBreakend> virusBreakends)
     {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
     }
 
-    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations)
+    public void writeVirusInterpreter(final String sample, final List<AnnotatedVirus> virusAnnotations)
     {
         virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 
-    public void writeChord(@NotNull String sample, @NotNull ChordData chordData)
+    public void writeChord(final String sample, final ChordData chordData)
     {
         chordDAO.writeChord(sample, chordData);
     }
@@ -577,32 +577,32 @@ public class DatabaseAccess implements AutoCloseable
         return chordDAO.readChord(sampleId);
     }
 
-    public void writeSnpCheck(@NotNull String sample, boolean isPass)
+    public void writeSnpCheck(final String sample, boolean isPass)
     {
         snpCheckDAO.write(sample, isPass);
     }
 
-    public void writeGenePanel(@NotNull final List<DriverGene> driverGenes)
+    public void writeGenePanel(final List<DriverGene> driverGenes)
     {
         driverGenePanelDAO.writeDriverGenes(driverGenes);
     }
 
-    public void writeCdr3Sequences(@NotNull String sample, @NotNull List<Cdr3Sequence> cdr3Sequences)
+    public void writeCdr3Sequences(final String sample, final List<Cdr3Sequence> cdr3Sequences)
     {
         ciderDAO.writeCdr3Sequence(sample, cdr3Sequences);
     }
 
-    public void writeCdr3LocusSummaries(@NotNull String sample, @NotNull List<Cdr3LocusSummary> locusSummaries)
+    public void writeCdr3LocusSummaries(final String sample, final List<Cdr3LocusSummary> locusSummaries)
     {
         ciderDAO.writeLocusSummaries(sample, locusSummaries);
     }
 
-    public void writeTelomereLength(@NotNull String sample, @Nullable TelomereLength germlineTelomereLength, @Nullable TelomereLength somaticTelomereLength)
+    public void writeTelomereLength(final String sample, @Nullable TelomereLength germlineTelomereLength, @Nullable TelomereLength somaticTelomereLength)
     {
         tealDAO.writeTelomereLength(sample, germlineTelomereLength, somaticTelomereLength);
     }
 
-    public void deletePipelineDataForSample(@NotNull String sample)
+    public void deletePipelineDataForSample(final String sample)
     {
         LOGGER.info("Deleting metric data for sample: {}", sample);
         metricDAO.deleteMetricForSample(sample);

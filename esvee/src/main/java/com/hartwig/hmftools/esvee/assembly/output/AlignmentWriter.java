@@ -8,19 +8,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
-import static htsjdk.samtools.CigarOperator.M;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-
-import htsjdk.samtools.Cigar;
 
 public class AlignmentWriter
 {
@@ -150,7 +145,10 @@ public class AlignmentWriter
             sj.add(FLD_NMATCHES);
             sj.add(FLD_XA_TAG);
             sj.add(FLD_MD_TAG);
+            sj.add("CalcAlignLength");
+            sj.add("ModMapQual");
             sj.add("DroppedOnRequery");
+            sj.add("LinkedAltAlignment");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -178,22 +176,27 @@ public class AlignmentWriter
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
                 sj.add(assemblyStr);
-                sj.add(alignment.RefLocation.toString());
+                sj.add(alignment.refLocation().toString());
                 sj.add(format("%d-%d", alignment.rawSequenceStart(), alignment.rawSequenceEnd()));
-                sj.add(String.valueOf(alignment.MapQual));
-                sj.add(String.valueOf(alignment.Cigar));
+                sj.add(String.valueOf(alignment.mapQual()));
+                sj.add(String.valueOf(alignment.cigar()));
                 sj.add(String.valueOf(alignment.orientation()));
 
-                Cigar cigar = CigarUtils.cigarFromStr(alignment.Cigar);
-                int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-                sj.add(String.valueOf(alignedBases));
+                sj.add(String.valueOf(alignment.alignedBases()));
 
-                sj.add(String.valueOf(alignment.Score));
-                sj.add(String.valueOf(alignment.Flags));
-                sj.add(String.valueOf(alignment.NMatches));
-                sj.add(alignment.XaTag);
-                sj.add(alignment.MdTag);
+                sj.add(String.valueOf(alignment.score()));
+                sj.add(String.valueOf(alignment.flags()));
+                sj.add(String.valueOf(alignment.nMatches()));
+                sj.add(alignment.xaTag());
+                sj.add(alignment.mdTag());
+                sj.add(String.valueOf(alignment.adjustedAlignment()));
+                sj.add(format("%.0f", alignment.modifiedMapQual()));
                 sj.add(String.valueOf(alignment.droppedOnRequery()));
+
+                if(alignment.hasSelectedAltAlignment())
+                    sj.add(alignment.selectedAltAlignment().vcfString());
+                else
+                    sj.add("");
 
                 writer.write(sj.toString());
                 writer.newLine();

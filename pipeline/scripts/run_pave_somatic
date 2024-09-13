@@ -13,6 +13,7 @@ driver_gene_panel=$1 && shift
 pon_file=$1 && shift
 pon_artefact_file=$1 && shift
 mappability_bed=$1 && shift
+clinvar_vcf=$1 && shift
 gnomad_path=$1 && shift
 threads=$1 && shift
 max_memory=$1 && shift
@@ -45,6 +46,7 @@ args="-sample ${sample_id} \
   -pon_file ${pon_file} \
   -pon_filters ${pon_filters} \
   -mappability_bed ${mappability_bed} \
+  -clinvar_vcf ${clinvar_vcf} \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
   -output_vcf_file ${pave_vcf} \

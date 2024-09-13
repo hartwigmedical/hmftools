@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
@@ -105,7 +106,8 @@ public class AlignmentFragments
                 int fragmentLength = reads.stream().mapToInt(x -> x.inferredFragmentLength()).max().orElse(-1);
                 reads.forEach(x -> x.setInferredFragmentLength(fragmentLength));
 
-                // only process a fragment once even if it belongs to multiple assemblies, and cache its length for subsequent supplementaries
+                // only process a fragment once even if it belongs to multiple assemblies, and cache its length for
+                // subsequent reads (typically supplementaries)
                 processedFragmentLengths.put(read.id(), fragmentLength);
             }
         }
@@ -246,17 +248,10 @@ public class AlignmentFragments
         int indelLength = 0;
         StructuralVariantType svType = null;
 
-        if(mAssemblyAlignment.assemblies().size() == 2)
+        if(isLocalIndel())
         {
-            if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel())
-            || mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
-            {
-                if(mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() == 1)
-                {
-                    indelLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
-                    svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
-                }
-            }
+            indelLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
+            svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
         }
         else if(!read.isDiscordant() && breakends.size() <= 2)
         {
@@ -264,7 +259,7 @@ public class AlignmentFragments
             svType = breakends.iterator().next().svType();
         }
 
-        if(svType != null && (svType == DUP || svType == INS || svType == DEL) && indelLength != 0)
+        if(svType != null && isIndel(svType) && indelLength != 0)
         {
             // inferredFragmentLength = abs(read.insertSize()) + read.leftClipLength() + read.rightClipLength();
             if(svType == DEL)
@@ -294,6 +289,40 @@ public class AlignmentFragments
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
             }
         }
+    }
+
+    public static boolean isIndel(final StructuralVariantType type)
+    {
+        return type == DEL || type == DUP || type == INS;
+    }
+
+    public static boolean isShortLocalDelDupIns(final StructuralVariantType svType, final int svLength)
+    {
+        if(isIndel(svType))
+            return svLength <= SHORT_DEL_DUP_INS_LENGTH;
+        else
+            return false;
+    }
+
+    private boolean isLocalIndel()
+    {
+        if(mAssemblyAlignment.assemblies().size() != 2)
+            return false;
+
+        if(mAssemblyAlignment.phaseSet() == null || mAssemblyAlignment.phaseSet().assemblyLinks().size() != 1)
+            return false;
+
+        if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.indel()))
+            return true;
+
+        if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
+            return true;
+
+        // otherwise check the characteristics of the link
+        StructuralVariantType svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
+        int svLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
+
+        return isShortLocalDelDupIns(svType, svLength);
     }
 
     private class ReadBreakendMatch

@@ -109,6 +109,8 @@ public class AssemblyConfig
     public final String TruthsetFile;
     public final String AlignmentFile;
 
+    public static boolean AssemblyBuildDebug = false;
+
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
@@ -126,6 +128,7 @@ public class AssemblyConfig
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
+    private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
@@ -234,6 +237,7 @@ public class AssemblyConfig
 
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
+        AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
@@ -326,6 +330,8 @@ public class AssemblyConfig
 
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
 
+        configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
+
         TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
@@ -379,6 +385,7 @@ public class AssemblyConfig
         AlignmentFile = null;
 
         ApplyRemotePhasingReadCheckThreshold = false;
+        AssemblyBuildDebug = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }

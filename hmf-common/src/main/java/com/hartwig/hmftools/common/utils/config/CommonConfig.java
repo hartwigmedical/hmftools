@@ -105,6 +105,12 @@ public final class CommonConfig
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");
 
+    public static final String TUMOR_METRICS_DIR_CFG = "tumor_metrics_dir";
+    public static final String TUMOR_METRICS_DIR_DESC = "Path to sample metrics directory";
+
+    public static final String REF_METRICS_DIR_CFG = "ref_metrics_dir";
+    public static final String REF_METRICS_DIR_DESC = "Path to reference metrics directory";
+
     private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
     private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
     private static String toolPlotsDirectoryDesc(final String toolName) { return format("Path to %s plots", toolName); }

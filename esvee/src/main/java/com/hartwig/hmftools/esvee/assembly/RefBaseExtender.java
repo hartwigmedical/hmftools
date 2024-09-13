@@ -252,6 +252,26 @@ public class RefBaseExtender
         RefSideSoftClip candidateRefSideSoftClip = refSideSoftClips.get(0);
 
         int nonSoftClipSupport = 0;
+        int junctionSoftClipped = 0;
+        int junctionNonSoftClipped = 0;
+
+        for(SupportRead read : assembly.support())
+        {
+            if(isForwardJunction)
+            {
+                if(read.isLeftClipped() && read.alignmentStart() == candidateRefSideSoftClip.Position)
+                    ++junctionSoftClipped;
+                else if(!read.isLeftClipped() && read.alignmentStart() < candidateRefSideSoftClip.Position)
+                    ++junctionNonSoftClipped;
+            }
+            else
+            {
+                if(read.isRightClipped() && read.alignmentEnd() == candidateRefSideSoftClip.Position)
+                    ++junctionSoftClipped;
+                else if(!read.isRightClipped() && read.alignmentEnd() > candidateRefSideSoftClip.Position)
+                    ++junctionNonSoftClipped;
+            }
+        }
 
         if(isForwardJunction)
         {
@@ -268,18 +288,20 @@ public class RefBaseExtender
         int primaryRefPosition, primaryRefPositionSupport, secondRefPositionSupport;
         boolean usesSoftClippedPosition = false;
 
-        if(nonSoftClipSupport > candidateRefSideSoftClip.readCount())
-        {
-            primaryRefPosition = nonSoftClipRefPosition;
-            primaryRefPositionSupport = nonSoftClipSupport;
-            secondRefPositionSupport = candidateRefSideSoftClip.readCount();
-        }
-        else
+        boolean majorityJuncReadsSoftClipped = junctionSoftClipped > junctionNonSoftClipped;
+
+        if(majorityJuncReadsSoftClipped || nonSoftClipSupport <= candidateRefSideSoftClip.readCount())
         {
             primaryRefPosition = candidateRefSideSoftClip.Position;
             primaryRefPositionSupport = candidateRefSideSoftClip.readCount();
             secondRefPositionSupport = nonSoftClipSupport;
             usesSoftClippedPosition = true;
+        }
+        else
+        {
+            primaryRefPosition = nonSoftClipRefPosition;
+            primaryRefPositionSupport = nonSoftClipSupport;
+            secondRefPositionSupport = candidateRefSideSoftClip.readCount();
         }
 
         double secondRefPositionSupportPerc = secondRefPositionSupport / (double)primaryRefPositionSupport;
@@ -403,7 +425,6 @@ public class RefBaseExtender
         List<Read> secondarySupportReads = Lists.newArrayList();
 
         int permittedMismatches = ASSEMBLY_EXTENSION_BASE_MISMATCH;
-        int requiredOverlap = ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 
         for(Read read : nonJunctionReads)
         {

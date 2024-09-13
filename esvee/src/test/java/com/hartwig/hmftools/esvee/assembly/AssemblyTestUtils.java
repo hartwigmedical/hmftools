@@ -41,12 +41,19 @@ public class AssemblyTestUtils
             final RefGenomeInterface refGenome, final String chrStart, int posStart, Orientation orientStart,
             final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases, final String overlapBases)
     {
+        return createAssemblyAlignment(
+                refGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases, overlapBases,
+                50, 100);
+    }
+
+    public static AssemblyAlignment createAssemblyAlignment(
+            final RefGenomeInterface refGenome, final String chrStart, int posStart, Orientation orientStart,
+            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases, final String overlapBases,
+            int extBaseLength, int refBaseLength)
+    {
         // first a basic exact match junction
         Junction junctionStart = new Junction(chrStart, posStart, orientStart);
         Junction junctionEnd = new Junction(chrEnd, posEnd, orientEnd);
-
-        int refBaseLength = 100;
-        int extBaseLength = 50;
 
         String firstRefBases, secondRefBases;
 

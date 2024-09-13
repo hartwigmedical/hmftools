@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_T
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
+import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
 import java.util.List;
@@ -141,6 +143,12 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
+        AssemblyLink lineLink = tryLineSequenceLink(first, second, firstReversed, secondReversed);
+
+        if(lineLink != null)
+            return lineLink;
+
+
         firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
         secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
 
@@ -158,6 +166,14 @@ public final class AssemblyLinker
 
         if(!allowMismatches)
             return null;
+
+        // extend to use full extension sequence from the first assembly for subsequence testing
+        if(first.extensionLength() > 2 * PHASED_ASSEMBLY_MATCH_SEQ_LENGTH)
+        {
+            firstSeq = JunctionSequence.formFullExtensionMatchSequence(first, firstReversed);
+            firstMatchSequence = firstSeq.matchSequence();
+            firstMatchSeqLength = firstMatchSequence.length();
+        }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int matchSeqStartIndex = 0;
@@ -244,7 +260,7 @@ public final class AssemblyLinker
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int firstJunctionSeqLength = firstSeq.matchSequence().length();
+        int firstJunctionSeqLength = min(firstSeq.matchSequence().length(), PHASED_ASSEMBLY_MATCH_SEQ_LENGTH);
 
         // take each of the subsequence match locations, build out a longer sequence around it and check for a match
         // then return the longest of these
@@ -271,6 +287,8 @@ public final class AssemblyLinker
             if(secondIndexStart < 0)
             {
                 firstMatchIndexStart += -(secondIndexStart);
+                firstMatchIndexEnd += -(secondIndexStart);
+                secondIndexEnd += -(secondIndexStart);
                 secondIndexStart = 0;
             }
 
@@ -306,6 +324,7 @@ public final class AssemblyLinker
             }
         }
 
+        /* disabled until seen it is required
         // if there were mismatches, check for a need to factor this into the distance between the first start index and its junction
         if(topMatchMismatches > 0)
         {
@@ -334,6 +353,7 @@ public final class AssemblyLinker
 
             topMatchIndices[2] = firstJunctionRepeatDiff;
         }
+        */
 
         return topMatchIndices;
     }

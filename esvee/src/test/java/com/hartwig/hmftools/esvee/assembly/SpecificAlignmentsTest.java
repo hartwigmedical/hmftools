@@ -801,8 +801,10 @@ public class SpecificAlignmentsTest
         String bases3 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
         String bases4 = refGenome.getBaseString(CHR_2, 100, 200);
 
-        // String fullSequence = bases1 + bases2 + bases3;
-        String fullSequence = bases1 + bases2 + bases3 + bases4;
+        String fullSequence = bases1 + bases2 + bases3;
+
+        // the bases from the repeated link are now omitted
+        // String fullSequence = bases1 + bases2 + bases3 + bases4;
 
         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
 

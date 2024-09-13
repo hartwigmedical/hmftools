@@ -36,6 +36,7 @@ public class ReadParseState
 
     private final int mPermittedMismatches;
     private int mMismatches;
+    private int mIndelMismatches;
     public int mHighQualMatches;
 
     public ReadParseState(final boolean isForwardJunction, final Read read, final int junctionIndex, final int refBaseCount)
@@ -60,6 +61,7 @@ public class ReadParseState
 
         mPermittedMismatches = mismatchesPerComparisonLength(mRefBaseCount);
         mMismatches = 0;
+        mIndelMismatches = 0;
         mHighQualMatches = 1; // assumes junction ref base matches
     }
 
@@ -80,10 +82,14 @@ public class ReadParseState
     public byte currentBase() { return mRead.getBases()[mReadIndex]; }
     public byte currentQual() { return mRead.getBaseQuality()[mReadIndex]; }
 
-    public int mismatches() { return mMismatches; }
     public int highQualMatches() { return mHighQualMatches; }
-    public void addMismatch() { ++mMismatches; }
     public void addHighQualMatch() { ++mHighQualMatches; }
+
+    public int mismatches() { return mMismatches; }
+    public void addMismatch() { ++mMismatches; }
+
+    public int indelMismatches() { return mIndelMismatches; }
+    public void addIndelMismatch() { ++mIndelMismatches; }
 
     public boolean exceedsMaxMismatches() { return mMismatches > mPermittedMismatches; }
 
@@ -253,9 +259,10 @@ public class ReadParseState
 
     public String toString()
     {
-        return format("%s: cigar(%s) refBases(%d) index(%d junc=%d) refPos(%d) element(%d/%s %d/%d) %s match(high=%d mis=%d)",
+        return format("%s: cigar(%s) refBases(%d) index(%d junc=%d) refPos(%d) element(%d/%s %d/%d) %s match(%d) mismatch(%d indel=%d)",
                 mRead.id(), mRead.cigarString(), mRefBaseCount, mReadIndex, mJunctionIndex, mRefPosition,
                 mElementIndex + 1, mElement.toString(), mCigarIndex + 1, mElementCount,
-                mExhausted ? "exhausted" : "active", mHighQualMatches, mMismatches);
+                mIsValid ? (mExhausted ? "exhausted" : "active") : "invalid",
+                mHighQualMatches, mMismatches, mIndelMismatches);
     }
 }

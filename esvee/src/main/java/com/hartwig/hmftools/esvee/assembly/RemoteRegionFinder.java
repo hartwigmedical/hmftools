@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
@@ -21,6 +22,8 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class RemoteRegionFinder
 {
+    private static final int MAX_REMOTE_REGION_LENGTH = 10000;
+
     public static void findRemoteRegions(
             final JunctionAssembly assembly, final List<Read> discordantReads, final List<Read> remoteJunctionMates,
             final List<Read> suppJunctionReads)
@@ -50,15 +53,39 @@ public final class RemoteRegionFinder
         // purge regions with only weak supplementary support
         purgeWeakSupplementaryRegions(remoteRegions);
 
-        for(RemoteRegion remoteRegion : remoteRegions)
+        // remove regions which overlap the assembly
+        int index = 0;
+        while(index < remoteRegions.size())
         {
-            if(remoteRegion.length() > 100000)
+            RemoteRegion remoteRegion = remoteRegions.get(index);
+
+            if(assemblyOverlapsRemoteRegion(assembly, remoteRegion))
             {
-                SV_LOGGER.warn("assembly({}) long remote region({})", assembly, remoteRegion);
+                remoteRegions.remove(index);
+            }
+            else if(remoteRegion.length() > MAX_REMOTE_REGION_LENGTH)
+            {
+                SV_LOGGER.warn("assembly({}) excluding long remote region({})", assembly, remoteRegion);
+                remoteRegions.remove(index);
+            }
+            else
+            {
+                ++index;
             }
         }
 
         assembly.addRemoteRegions(remoteRegions);
+    }
+
+    private static boolean assemblyOverlapsRemoteRegion(final JunctionAssembly assembly, final RemoteRegion remoteRegion)
+    {
+        if(!assembly.junction().Chromosome.equals(remoteRegion.Chromosome))
+            return false;
+
+        if(assembly.isForwardJunction())
+            return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
+        else
+            return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
     }
 
     private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)

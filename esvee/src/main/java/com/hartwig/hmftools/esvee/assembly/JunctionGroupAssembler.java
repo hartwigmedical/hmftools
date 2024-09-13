@@ -230,6 +230,12 @@ public class JunctionGroupAssembler extends ThreadTask
         if(ignoreIdenticalSupplementary(record))
             return;
 
+        if(ReadAdjustments.filterLowQualRead(record))
+        {
+            ++mReadStats.LowBaseQualFiltered;
+            return;
+        }
+
         Read read = new Read(record);
 
         ++mReadStats.TotalReads;

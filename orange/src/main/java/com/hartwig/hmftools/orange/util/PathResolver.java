@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
 import java.io.File;
 
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -116,7 +116,7 @@ public class PathResolver
         }
 
         return defaultPipelineToolDir.equals(METRICS_DIR) ?
-                WGSMetricsFile.generateFilename(directory, sampleId) : FlagstatFile.generateFilename(directory, sampleId);
+                BamMetricsSummary.generateFilename(directory, sampleId) : BamFlagStats.generateFilename(directory, sampleId);
     }
 
     @Nullable

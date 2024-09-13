@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -52,6 +53,15 @@ public final class CommonUtils
         int fragmentSize = abs(read.getInferredInsertSize());
 
         return fragmentSize == 0 || (fragmentLengthUpperBound > 0 && fragmentSize >= fragmentLengthUpperBound);
+    }
+
+    public static boolean isLineInsertPair(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
+            return false;
+
+        return withLineProximity(
+                assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
     }
 
     public static boolean withLineProximity(final int pos1, final int pos2, final Orientation orient1, final Orientation orient2)

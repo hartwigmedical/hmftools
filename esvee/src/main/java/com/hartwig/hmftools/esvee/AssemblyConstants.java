@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -57,7 +58,6 @@ public final class AssemblyConstants
     public static final int REMOTE_REGION_REF_MIN_READS = REMOTE_PHASING_MIN_READS;
     public static final double REMOTE_REGION_REF_MIN_READ_PERCENT = 0.1;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
-    public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
     public static final int PROXIMATE_DUP_LENGTH = 500;
@@ -67,9 +67,14 @@ public final class AssemblyConstants
 
     // alignment
     public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
-    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 3;
+    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
+    public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
+    public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
+    public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.85;
     public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = 50;
-
+    public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 50000;
+    public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;
+    public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 }

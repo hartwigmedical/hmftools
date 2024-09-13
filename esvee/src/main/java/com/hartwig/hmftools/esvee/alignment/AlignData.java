@@ -9,6 +9,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -19,6 +21,7 @@ import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -33,18 +36,18 @@ import htsjdk.samtools.CigarElement;
 
 public class AlignData
 {
-    public final ChrBaseRegion RefLocation;
-    public final int MapQual;
-    public final int NMatches;
-    public final int Score;
-    public final int Flags;
-    public final String Cigar;
-    public final String XaTag;
-    public final String MdTag;
+    private final ChrBaseRegion mRefLocation;
+    private final int mMapQual;
+    private final int mNMatches;
+    private final int mScore;
+    private final int mFlags;
+    private final String mCigar;
+    private final String mXaTag;
+    private final String mMdTag;
 
     private final List<CigarElement> mCigarElements;
-    private final int mSoftClipLeft;
-    private final int mSoftClipRight;
+    private int mSoftClipLeft;
+    private int mSoftClipRight;
 
     private final Orientation mOrientation;
     private final int mAlignedBases;
@@ -57,22 +60,28 @@ public class AlignData
     private boolean mIsRequery;
 
     private int mAdjustedAlignment;
+    private int mModifiedMapQual;
+
+    private List<AlternativeAlignment> mRawAltAlignments; // lazy instantiation of BWA-returned alt alignments
+    private AlternativeAlignment mSelectedAltAlignment; // set if the default is not selected
+    private List<AlternativeAlignment> mUnselectedAltAlignments; // those other than the one selected
+    private boolean mHasLowMapQualShortSvLink;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
             final int score, final int flags, final String cigar, final int nMatches, final String xaTag, final String mdTag)
     {
-        RefLocation = refLocation;
+        mRefLocation = refLocation;
         mRawSequenceStart = sequenceStart;
         mRawSequenceEnd = sequenceEnd;
-        MapQual = mapQual;
-        NMatches = nMatches;
-        Score = score;
-        Flags = flags;
+        mMapQual = mapQual;
+        mNMatches = nMatches;
+        mScore = score;
+        mFlags = flags;
 
-        Cigar = cigar;
-        XaTag = xaTag;
-        MdTag = mdTag;
+        mCigar = cigar;
+        mXaTag = xaTag == null ? "" : xaTag;
+        mMdTag = mdTag;
 
         mCigarElements = CigarUtils.cigarElementsFromStr(cigar);
 
@@ -80,7 +89,7 @@ public class AlignData
         int lastIndex = mCigarElements.size() - 1;
         mSoftClipRight = mCigarElements.get(lastIndex).getOperator() == S ? mCigarElements.get(lastIndex).getLength() : 0;
 
-        mOrientation = SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? REVERSE : FORWARD;
+        mOrientation = SamRecordUtils.isFlagSet(mFlags, READ_REVERSE_STRAND) ? REVERSE : FORWARD;
         mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
         mSequenceStart = sequenceStart;
@@ -88,18 +97,41 @@ public class AlignData
         mIsRequery = false;
         mDroppedOnRequery = false;
         mAdjustedAlignment = mAlignedBases;
+        mModifiedMapQual = 0;
+
+        mRawAltAlignments = null;
+        mSelectedAltAlignment = null;
+        mUnselectedAltAlignments = null;
+        mHasLowMapQualShortSvLink = false;
     }
+
+    public ChrBaseRegion refLocation() { return mRefLocation; }
+    public String chromosome() { return mRefLocation.Chromosome; }
+    public int positionStart() { return mRefLocation.start(); }
+    public int positionEnd() { return mRefLocation.end(); }
+    public int mapQual() { return mMapQual; }
+    public int nMatches() { return mNMatches; }
+    public int score() { return mScore; }
+    public int flags() { return mFlags; }
+    public String cigar() { return mCigar; }
+    public String xaTag() { return mXaTag; }
+    public String mdTag() { return mMdTag; }
 
     public Orientation orientation() { return mOrientation; }
     public boolean isForward() { return mOrientation.isForward(); }
     public boolean isReverse() { return mOrientation.isReverse(); }
-    public boolean isSupplementary() { return SamRecordUtils.isFlagSet(Flags, SUPPLEMENTARY_ALIGNMENT); }
+    public boolean isSupplementary() { return SamRecordUtils.isFlagSet(mFlags, SUPPLEMENTARY_ALIGNMENT); }
 
-    public int maxSoftClipLength() { return max(mSoftClipLeft, mSoftClipRight); }
     public int leftSoftClipLength() { return mSoftClipLeft; }
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
+
+    public void setSoftClipLengths(int left, int right)
+    {
+        mSoftClipLeft = left;
+        mSoftClipRight = right;
+    }
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
@@ -143,11 +175,12 @@ public class AlignData
     public List<CigarElement> cigarElements() { return mCigarElements; }
 
     public int adjustedAlignment() { return mAdjustedAlignment; }
+    public double modifiedMapQual() { return mModifiedMapQual; }
 
     public void setAdjustedAlignment(final String fullSequence, int inexactHomologyStart, int inexactHomologyEnd)
     {
         int sequenceLength = mSequenceEnd - mSequenceStart + 1;
-        int scoreAdjustment = sequenceLength - Score;
+        int scoreAdjustment = sequenceLength - mScore;
 
         int seqStart = inexactHomologyStart > 0 ? mSequenceStart + inexactHomologyStart : mSequenceStart;
         int seqEnd = inexactHomologyEnd > 0 ? mSequenceEnd - inexactHomologyEnd : mSequenceEnd;
@@ -163,14 +196,72 @@ public class AlignData
 
         int trimmedAlignmentLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
         mAdjustedAlignment = max(trimmedAlignmentLength - scoreAdjustment, 0);
+
+        if((mScore + ALIGNMENT_CALC_SCORE_FACTOR) / (double)sequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
+        {
+            mModifiedMapQual = 0;
+        }
+        else
+        {
+            double lengthFactor = pow(mAdjustedAlignment / (double) max(100, mAlignedBases), 2);
+            mModifiedMapQual = (int) round(mMapQual * min(1, lengthFactor));
+        }
     }
 
-    public double calcModifiedMapQual()
+    public boolean hasAltAlignments() { return !mXaTag.isEmpty(); }
+
+    public List<AlternativeAlignment> rawAltAlignments()
     {
-        double lengthFactor = pow(mAdjustedAlignment/ (double)max(100, mAlignedBases), 2);
-        return (int)round(MapQual * min(1, lengthFactor));
+        if(mXaTag.isEmpty())
+            return Collections.emptyList();
 
+        if(mRawAltAlignments != null)
+            return mRawAltAlignments;
+
+        mRawAltAlignments = AlternativeAlignment.fromLocationTag(mXaTag);
+
+        return mRawAltAlignments;
     }
+
+    public List<AlternativeAlignment> allAlignments()
+    {
+        List<AlternativeAlignment> altAlignments = rawAltAlignments();
+
+        if(altAlignments.isEmpty())
+            return altAlignments;
+
+        // otherwise include the default alignment as well
+        List<AlternativeAlignment> allAlignments = Lists.newArrayListWithCapacity(altAlignments.size() + 1);
+
+        allAlignments.add(new AlternativeAlignment(mRefLocation.Chromosome, mRefLocation.start(), orientation(), mCigar, mMapQual));
+        allAlignments.addAll(altAlignments);
+        return allAlignments;
+    }
+
+    public boolean hasLowMapQualAlignment() { return mSelectedAltAlignment != null || mUnselectedAltAlignments != null; }
+    public boolean hasSelectedAltAlignment() { return mSelectedAltAlignment != null; }
+    public boolean hasLowMapQualShortSvLink() { return mHasLowMapQualShortSvLink; }
+    public AlternativeAlignment selectedAltAlignment() { return mSelectedAltAlignment; }
+
+    public void setSelectedAltAlignments(
+            final AlternativeAlignment selectedAlignment, final List<AlternativeAlignment> otherAlignments, boolean hasShortSvLink)
+    {
+        mSelectedAltAlignment = selectedAlignment;
+        mUnselectedAltAlignments = otherAlignments;
+        mHasLowMapQualShortSvLink = hasShortSvLink;
+    }
+
+    public List<AlternativeAlignment> unselectedAltAlignments()
+    {
+        return mUnselectedAltAlignments != null ? mUnselectedAltAlignments : Collections.emptyList();
+    }
+
+    public boolean isLowerAlignment(final AlignData other)
+    {
+        // returns true if this alignment is lower in genome position terms than the comparison alignment
+        return mRefLocation.compareTo(other.mRefLocation) < 0;
+    }
+
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
         int chrIndex = alignment.getRefId();
@@ -187,29 +278,10 @@ public class AlignData
                 alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
     }
 
-    public List<AlternativeAlignment> altAlignments()
-    {
-        if(XaTag == null || XaTag.isEmpty())
-            return Collections.emptyList();
-
-        List<AlternativeAlignment> alternativeAlignments = AlternativeAlignment.fromLocationTag(XaTag);
-
-        alternativeAlignments.add(
-                0, new AlternativeAlignment(RefLocation.Chromosome, RefLocation.start(), orientation(), Cigar, MapQual));
-
-        return alternativeAlignments;
-    }
-
-    public boolean isLowerAlignment(final AlignData other)
-    {
-        // returns true if this alignment is lower in genome position terms than the comparison alignment
-        return RefLocation.compareTo(other.RefLocation) < 0;
-    }
-
     public String toString()
     {
-        return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d align=%d adj=%d)",
-                RefLocation, Cigar, mOrientation.isForward() ? "fwd" : "rev",  mRawSequenceStart, mRawSequenceEnd,
-                mSequenceStart, mSequenceEnd, Score, Flags, MapQual, mAlignedBases, mAdjustedAlignment);
+        return format("%s:%d %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d adj=%d) aligned(%d adj=%d)",
+                mRefLocation, mOrientation.asByte(), mCigar, mRawSequenceStart, mRawSequenceEnd,
+                mSequenceStart, mSequenceEnd, mScore, mFlags, mMapQual, mModifiedMapQual, mAlignedBases, mAdjustedAlignment);
     }
 }

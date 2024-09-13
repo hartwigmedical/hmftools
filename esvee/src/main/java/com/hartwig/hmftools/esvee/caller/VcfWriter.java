@@ -62,7 +62,7 @@ public class VcfWriter
         mGenotypeIds = genotypeIds;
         mDataCache = dataCache;
 
-        String fileSampleId = config.SampleId != null ? config.SampleId : config.ReferenceId;
+        String fileSampleId = config.fileSampleId();
 
         String unfilteredVcf = formVcfFilename(fileSampleId, "unfiltered");
         mUnfilteredWriter = initialiseWriter(vcfHeader, gripssVersion, unfilteredVcf);
@@ -106,10 +106,10 @@ public class VcfWriter
         // ensure genotype sample IDs match the config - also done per variant
         List<String> genotypeSampleNames = Lists.newArrayList();
 
-        if(!mConfig.ReferenceId.isEmpty())
+        if(mConfig.hasReference())
             genotypeSampleNames.add(mConfig.ReferenceId);
 
-        if(!mConfig.SampleId.isEmpty())
+        if(mConfig.hasTumor())
             genotypeSampleNames.add(mConfig.SampleId);
 
         VCFHeader newHeader = new VCFHeader(vcfHeader.getMetaDataInInputOrder(), genotypeSampleNames);

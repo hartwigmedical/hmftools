@@ -28,7 +28,6 @@ import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
-import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
 public class PartitionData
@@ -441,7 +440,7 @@ public class PartitionData
         // a clean-up routine for cached fragments
         Set<DuplicateGroup> processedDuplicateGroups = Sets.newHashSet();
 
-        int cachedReadCount = 0;
+        int totalCachedReadCount = 0;
 
         for(DuplicateGroup duplicateGroup : mDuplicateGroupMap.values())
         {
@@ -461,20 +460,27 @@ public class PartitionData
                 }
             }
 
-            int cachedUmiReads = duplicateGroup.cachedReadCount();
+            int cachedReadCount = duplicateGroup.cachedReadCount();
 
-            if(cachedUmiReads == 0)
+            if(cachedReadCount == 0)
+            {
+                if(logCachedReads)
+                {
+                    RD_LOGGER.debug("dupGroup({}) coords({}) has no cached reads", duplicateGroup, duplicateGroup.coordinatesKey());
+                }
+
                 continue;
+            }
 
-            cachedReadCount += cachedUmiReads;
+            totalCachedReadCount += cachedReadCount;
 
             List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(consensusReads, true);
             recordWriter.writeDuplicateGroup(duplicateGroup, completeReads);
 
             if(logCachedReads)
             {
-                RD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
-                        cachedUmiReads, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
+                RD_LOGGER.debug("writing {} cached reads for dupGroup({}) coords({})",
+                        cachedReadCount, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
 
                 for(SAMRecord read : completeReads)
                 {
@@ -494,10 +500,7 @@ public class PartitionData
             {
                 for(SAMRecord read : fragment.reads())
                 {
-                    if(read.getSupplementaryAlignmentFlag())
-                        continue;
-
-                    ++cachedReadCount;
+                    ++totalCachedReadCount;
                     RD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
                 }
             }
@@ -516,7 +519,7 @@ public class PartitionData
         mCandidateDuplicatesMap.clear();
         mDuplicateGroupMap.clear();
 
-        return cachedReadCount;
+        return totalCachedReadCount;
     }
 
     private void checkCachedCounts()
@@ -559,6 +562,31 @@ public class PartitionData
             acquireLock();
 
             RD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
+    public static final int PARTITION_CACHE_INCOMPLETE_FRAGS = 0;
+    public static final int PARTITION_CACHE_CANDIDATE_DUP_GROUPS = 1;
+    public static final int PARTITION_CACHE_RESOLVED_STATUS = 2;
+    public static final int PARTITION_CACHE_DUP_GROUPS = 3;
+    public static final int PARTITION_CACHE_DUP_GROUP_READS = 4;
+
+    public int[] collectCacheCounts()
+    {
+        try
+        {
+            acquireLock();
+
+            int[] cachedCounts = new int[PARTITION_CACHE_DUP_GROUP_READS+1];
+            cachedCounts[PARTITION_CACHE_INCOMPLETE_FRAGS] = mIncompleteFragments.size();
+            cachedCounts[PARTITION_CACHE_CANDIDATE_DUP_GROUPS] = mCandidateDuplicatesMap.size();
+            cachedCounts[PARTITION_CACHE_RESOLVED_STATUS] = mFragmentStatus.size();
+            cachedCounts[PARTITION_CACHE_DUP_GROUPS] = mDuplicateGroupMap.size();
+            return cachedCounts;
         }
         finally
         {

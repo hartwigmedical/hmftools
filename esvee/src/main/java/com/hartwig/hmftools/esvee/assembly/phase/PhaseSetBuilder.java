@@ -22,13 +22,14 @@ import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.UNMAPPED;
-import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.assemblyOverlapsRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyLink.swapAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
@@ -36,6 +37,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 
 import java.util.Collections;
@@ -48,6 +50,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -72,7 +75,8 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mSecondarySplitLinks;
     private final List<ExtensionCandidate> mExtensionCandidates;
 
-    private boolean mHasLineExtensions;
+    private final Set<JunctionAssembly> mLineRelatedAssemblies;
+    private final List<JunctionAssembly> mBranchedAssemblies;
 
     // working cache only
     private final Set<JunctionAssembly> mLocallyLinkedAssemblies;
@@ -94,11 +98,13 @@ public class PhaseSetBuilder
         mPhaseSets = mPhaseGroup.phaseSets();
         mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
-        mHasLineExtensions = mAssemblies.stream().anyMatch(x -> x.hasLineSequence());
+
+        mLineRelatedAssemblies = Sets.newHashSet();
 
         mExtensionCandidates = Lists.newArrayList();
         mSplitLinks = Lists.newArrayList();
         mFacingLinks = Lists.newArrayList();
+        mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
         mPerfLogTime = 0;
@@ -116,6 +122,8 @@ public class PhaseSetBuilder
             SV_LOGGER.debug("pgId({}) assemblies({}) starting phase set building", mPhaseGroup.id(), mAssemblies.size());
         }
 
+        findLineExtensions();
+
         findLocalLinks();
 
         checkLogPerfTime("findLocalLinks");
@@ -127,6 +135,8 @@ public class PhaseSetBuilder
         addUnlinkedAssemblyRefSupport();
 
         formFacingLinks();
+
+        checkBranchedAssemblies();
 
         formPhaseSets();
 
@@ -140,9 +150,6 @@ public class PhaseSetBuilder
     private void findLocalLinks()
     {
         // find local candidate links
-        if(mHasLineExtensions)
-            findLineExtensions();
-
         findSplitLinkCandidates(true);
 
         // prioritise and capture local links
@@ -302,8 +309,7 @@ public class PhaseSetBuilder
 
     private void findOtherLinksAndExtensions()
     {
-        if(!mHasLineExtensions)
-            findUnmappedExtensions();
+        findUnmappedExtensions();
 
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
 
@@ -364,6 +370,9 @@ public class PhaseSetBuilder
             if(assembly.unmappedReads().isEmpty())
                 continue;
 
+            if(mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site
+                continue;
+
             UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
             unmappedBaseExtender.processReads(assembly.unmappedReads());
 
@@ -381,59 +390,74 @@ public class PhaseSetBuilder
 
     private void findLineExtensions()
     {
-        List<Read> sharedUnmappedReads = Lists.newArrayList();
+        // find line insertion sites - pairs of proximate INDEL-type junctions with a line motif - and jointly search
+        // for extension reads across the two assemblies
+        mAssemblies.stream().filter(x -> x.hasLineSequence()).forEach(x -> mLineRelatedAssemblies.add(x));
 
-        List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
-
-        List<JunctionAssembly> lineAssemblies = mAssemblies.stream().filter(x -> x.hasLineSequence()).collect(Collectors.toList());
-
-        for(JunctionAssembly assembly : mAssemblies)
-        {
-            sharedUnmappedReads.addAll(assembly.unmappedReads());
-
-            boolean isLineOrProximate = lineAssemblies.stream().anyMatch(x -> x == assembly || isProximateIndel(assembly, x));
-
-            if(!isLineOrProximate)
-                continue;
-
-            // collect remote regions if from LINE assemblies or those very close to a LINE assembly
-            assembly.remoteRegions().stream()
-                    .filter(x -> !x.isSuppOnlyRegion())
-                    .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
-                    .forEach(x -> combinedRemoteRegions.add(x));
-        }
-
-        RemoteRegion.mergeRegions(combinedRemoteRegions);
-
-        for(RemoteRegion remoteRegion : combinedRemoteRegions)
-        {
-            List<Read> remoteReads = mRemoteRegionAssembler.extractRemoteReads(remoteRegion);
-            sharedUnmappedReads.addAll(remoteReads);
-        }
-
-        if(sharedUnmappedReads.isEmpty())
+        if(mLineRelatedAssemblies.isEmpty())
             return;
 
+        List<JunctionAssembly> proximateLineAssemblies = Lists.newArrayList();
+
+        Set<JunctionAssembly> extendedAssemblies = Sets.newHashSet();
+
         for(JunctionAssembly assembly : mAssemblies)
         {
-            UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
-            unmappedBaseExtender.processReads(Lists.newArrayList(sharedUnmappedReads)); // list copied so it is given to all assemblies in full
+            if(assembly.hasLineSequence())
+                continue;
 
-            if(!unmappedBaseExtender.supportReads().isEmpty())
+            JunctionAssembly lineAssembly = mLineRelatedAssemblies.stream().filter(x -> isLineInsertPair(assembly, x)).findFirst().orElse(null);
+
+            if(lineAssembly == null)
+                continue;
+
+            proximateLineAssemblies.add(assembly);
+
+            List<Read> sharedUnmappedReads = Lists.newArrayList();
+            List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
+
+            List<JunctionAssembly> lineSiteAssemblies = List.of(assembly, lineAssembly);
+
+            for(JunctionAssembly lineSiteAssembly : lineSiteAssemblies)
             {
-                assembly.expandExtensionBases(
-                        unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
+                sharedUnmappedReads.addAll(lineSiteAssembly.unmappedReads());
+
+                // collect remote regions if from LINE assemblies or those very close to a LINE assembly
+                lineSiteAssembly.remoteRegions().stream()
+                        .filter(x -> !x.isSuppOnlyRegion())
+                        .forEach(x -> combinedRemoteRegions.add(x));
+            }
+
+            RemoteRegion.mergeRegions(combinedRemoteRegions);
+
+            for(RemoteRegion remoteRegion : combinedRemoteRegions)
+            {
+                List<Read> remoteReads = mRemoteRegionAssembler.extractRemoteReads(remoteRegion);
+                sharedUnmappedReads.addAll(remoteReads);
+            }
+
+            if(sharedUnmappedReads.isEmpty())
+                continue;
+
+            for(JunctionAssembly lineSiteAssembly : lineSiteAssemblies)
+            {
+                if(extendedAssemblies.contains(lineSiteAssembly))
+                    continue;
+
+                extendedAssemblies.add(lineSiteAssembly);
+
+                UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(lineSiteAssembly);
+                unmappedBaseExtender.processReads(Lists.newArrayList(sharedUnmappedReads)); // list copied so it is given to all assemblies in full
+
+                if(!unmappedBaseExtender.supportReads().isEmpty())
+                {
+                    lineSiteAssembly.expandExtensionBases(
+                            unmappedBaseExtender.extensionBases(), unmappedBaseExtender.baseQualities(), unmappedBaseExtender.supportReads());
+                }
             }
         }
-    }
 
-    private static boolean isProximateIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
-            return false;
-
-        return withLineProximity(
-                assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
+        mLineRelatedAssemblies.addAll(proximateLineAssemblies);
     }
 
     private void findRemoteRefCandidates()
@@ -445,11 +469,11 @@ public class PhaseSetBuilder
             if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
                 continue;
 
-            // collect remote regions which aren't only supplementaries nor which overlap another phase assembly
+            // collect remote regions which aren't only supplementaries
+            // the check for overlaps with other assemblies in the phase group has been removed since was hiding valid links
             List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
                     .filter(x -> !x.isSuppOnlyRegion())
                     .filter(x -> !applyThresholds || x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
-                    .filter(x -> mAssemblies.stream().filter(y -> y != assembly).noneMatch(y -> assemblyOverlapsRemoteRegion(y, x)))
                     .collect(Collectors.toList());
 
             if(remoteRegions.isEmpty())
@@ -532,20 +556,35 @@ public class PhaseSetBuilder
     {
         JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(initialAssembly);
 
-        remoteAssembly.setOutcome(REMOTE_REGION);
-        mPhaseGroup.addDerivedAssembly(remoteAssembly);
+        // check for an exact match with an existing assembly, either standard or remote
+        JunctionAssembly matchedAssembly = findMatchingAssembly(remoteAssembly, false);
+
+        AssemblyLink remoteLink;
+
+        if(matchedAssembly != null)
+        {
+            remoteLink = AssemblyLink.swapAssemblies(assemblyLink, remoteAssembly, matchedAssembly);
+            remoteAssembly = matchedAssembly;
+            isPrimaryLink = false;
+        }
+        else
+        {
+            remoteLink = assemblyLink;
+            remoteAssembly.setOutcome(REMOTE_REGION);
+            mPhaseGroup.addDerivedAssembly(remoteAssembly);
+        }
 
         if(isPrimaryLink)
         {
             // only form one remote link for each assembly
             applySplitLinkSupport(initialAssembly, remoteAssembly, true);
-            initialAssembly.setOutcome(REMOTE_REGION);
-            mSplitLinks.add(assemblyLink);
+            initialAssembly.setOutcome(REMOTE_LINK);
+            mSplitLinks.add(remoteLink);
         }
         else
         {
             applySplitLinkSupport(initialAssembly, remoteAssembly, false);
-            mSecondarySplitLinks.add(assemblyLink);
+            mSecondarySplitLinks.add(remoteLink);
         }
     }
 
@@ -677,6 +716,12 @@ public class PhaseSetBuilder
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
+
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.outcome() == DUP_BRANCHED && !mBranchedAssemblies.contains(assembly))
+                mBranchedAssemblies.add(assembly);
+        }
 
         return true;
     }
@@ -818,6 +863,46 @@ public class PhaseSetBuilder
         }
     }
 
+    private void checkBranchedAssemblies()
+    {
+        for(JunctionAssembly assembly : mBranchedAssemblies)
+        {
+            boolean hasSplitLink = mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+            boolean hasFacingLink = mFacingLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+
+            if(!hasSplitLink && !hasFacingLink) // will be removed later on
+                continue;
+
+            // check if the original assembly could be swapped out for this one if it's in a facing link but not a split link
+            if(hasFacingLink && !hasSplitLink)
+            {
+                JunctionAssembly originalAssembly = findMatchingAssembly(assembly, true);
+
+                if(originalAssembly == null)
+                    continue;
+
+                AssemblyLink existingLink = mSplitLinks.stream().filter(x -> x.hasAssembly(originalAssembly)).findFirst().orElse(null);
+                boolean origHasFacingLink = mFacingLinks.stream().anyMatch(x -> x.hasAssembly(originalAssembly));
+
+                if(!origHasFacingLink && existingLink != null)
+                {
+                    // swap the assemblies
+                    AssemblyLink replacementLink = swapAssemblies(existingLink, originalAssembly, assembly);
+                    mSplitLinks.remove(existingLink);
+                    mSplitLinks.add(replacementLink);
+                    mPhaseGroup.derivedAssemblies().remove(assembly);
+                    originalAssembly.setOutcome(DUP_BRANCHED, true);
+                    assembly.setOutcome(LINKED);
+                }
+            }
+        }
+    }
+
+    private JunctionAssembly findMatchingAssembly(final JunctionAssembly assembly, boolean requireExtensionMatch)
+    {
+        return AssemblyUtils.findMatchingAssembly(mAssemblies, assembly, requireExtensionMatch);
+    }
+
     private void formPhaseSets()
     {
         // use split and facing links to assign assemblies to phase sets
@@ -853,13 +938,38 @@ public class PhaseSetBuilder
             }
         }
 
-        for(PhaseSet phaseSet : mPhaseSets)
+        Set<JunctionAssembly> processedSecondaries = Sets.newHashSet();
+
+        for(AssemblyLink link : mSecondarySplitLinks)
         {
-            // gather in secondaries
-            for(AssemblyLink link : mSecondarySplitLinks)
+            boolean firstIsLineSite = link.first().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.first());
+            boolean secondIsLineSite = link.second().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.second());
+
+            if(firstIsLineSite || secondIsLineSite)
             {
-                if(phaseSet.hasAssembly(link.first()) || phaseSet.hasAssembly(link.second()))
-                    phaseSet.addSecondaryLink(link);
+                boolean processed = (firstIsLineSite && processedSecondaries.contains(link.first()))
+                        || (secondIsLineSite && processedSecondaries.contains(link.second()));
+
+                if(!processed)
+                {
+                    PhaseSet phaseSet = new PhaseSet(link);
+                    mPhaseSets.add(phaseSet);
+
+                    if(firstIsLineSite)
+                        processedSecondaries.add(link.first());
+
+                    if(secondIsLineSite)
+                        processedSecondaries.add(link.second());
+                }
+            }
+            else
+            {
+                // add to the the related phase
+                for(PhaseSet phaseSet : mPhaseSets)
+                {
+                    if(phaseSet.hasAssembly(link.first()) || phaseSet.hasAssembly(link.second()))
+                        phaseSet.addSecondaryLink(link);
+                }
             }
         }
     }
@@ -1021,9 +1131,7 @@ public class PhaseSetBuilder
                         if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(assembly)))
                         {
                             // set outcome to original assembly
-                            JunctionAssembly originalAssembly = mAssemblies.stream()
-                                    .filter(x -> x != assembly)
-                                    .filter(x -> x.junction().compareTo(assembly.junction()) == 0).findFirst().orElse(null);
+                            JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
 
                             if(originalAssembly != null)
                                 assembly.setOutcome(originalAssembly.outcome());
@@ -1071,9 +1179,9 @@ public class PhaseSetBuilder
                 sj.add(mAssemblies.get(i).junction().coords());
             }
 
-            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d isLine=%s remoteRefReads=%d)",
-                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(), mHasLineExtensions,
-                    mRemoteRegionAssembler != null ? mRemoteRegionAssembler.totalRemoteReadsSearch() : 0));
+            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d line=%d remoteRefReads=%d)",
+                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
+                    mLineRelatedAssemblies.size(), mRemoteRegionAssembler != null ? mRemoteRegionAssembler.totalRemoteReadsSearch() : 0));
         }
 
         mStartTimeMs = System.currentTimeMillis();

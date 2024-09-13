@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegions
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class FilterConstants
     public static final double SGL_MAX_STRAND_BIAS = 0.95;
     public static final double MAX_STRAND_BIAS = 0.95;
 
-    public static final int MIN_TRIMMED_ANCHOR_LENGTH = 50;
+    public static final int MIN_TRIMMED_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
