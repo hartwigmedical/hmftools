@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.CUPPA;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_CLASSIFIER_NAME;
 import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
 import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
 

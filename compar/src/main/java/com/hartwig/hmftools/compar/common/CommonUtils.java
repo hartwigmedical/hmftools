@@ -51,8 +51,6 @@ import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class CommonUtils
 {
-    public static final String SUB_ITEM_DELIM = "=";
-
     public static final String FLD_REPORTED = "Reported";
     public static final String FLD_QUAL = "Qual";
     public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";

@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGI
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_START;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -74,8 +74,7 @@ public class GeneCopyNumberComparer implements ItemComparer
         if(driverGenes.isEmpty())
             return items;
 
-        final List<GeneCopyNumber> copyNumbers = dbAccess.readGeneCopynumbers(
-                sampleId, driverGenes.stream().collect(Collectors.toList()));
+        final List<GeneCopyNumber> copyNumbers = dbAccess.readGeneCopynumbers(sampleId, new ArrayList<>(driverGenes));
 
         copyNumbers.forEach(x -> items.add(new GeneCopyNumberData(x)));
         return items;

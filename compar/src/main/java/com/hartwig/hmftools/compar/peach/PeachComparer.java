@@ -8,9 +8,7 @@ import static com.hartwig.hmftools.compar.peach.PeachData.FLD_DRUGS;
 import static com.hartwig.hmftools.compar.peach.PeachData.FLD_FUNCTION;
 import static com.hartwig.hmftools.compar.peach.PeachData.FLD_PRESCRIPTION_URLS;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 

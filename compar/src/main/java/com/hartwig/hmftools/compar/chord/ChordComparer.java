@@ -62,7 +62,7 @@ public class ChordComparer implements ItemComparer
         ChordData chordData = dbAccess.readChord(sampleId);
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         comparableItems.add(new ChordComparData(chordData));
-        return Lists.newArrayList();
+        return comparableItems;
     }
 
     @Override

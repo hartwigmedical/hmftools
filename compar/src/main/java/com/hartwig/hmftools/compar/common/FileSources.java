@@ -2,8 +2,6 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
@@ -28,7 +26,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -102,11 +99,6 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.TumorBamMetrics, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.GermlineBamMetrics, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.SnpGenotype, sampleId, germlineSampleId));
-    }
-
-    public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
-    {
-        return source.equals(REF_SOURCE) ? V37 : V38;
     }
 
     private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)

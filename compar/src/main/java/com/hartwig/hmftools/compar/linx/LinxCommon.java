@@ -33,7 +33,7 @@ public class LinxCommon
         values.add(String.format("%.2f", breakend.undisruptedCopyNumber()));
         return values;
     }
-    
+
     protected static void checkDiffsBreakends(List<String> diffs, final LinxBreakend breakend, final LinxBreakend otherBreakend, final DiffThresholds thresholds)
     {
         checkDiff(diffs, FLD_REPORTED, breakend.reportedDisruption(), otherBreakend.reportedDisruption());

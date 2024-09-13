@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_MEAN_COVERAGE;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -91,7 +90,7 @@ public class VirusComparer implements ItemComparer
         final String currentFileName = AnnotatedVirusFile.generateFileName(fileSources.Virus, sampleId);
         final String oldFileName =
                 AnnotatedVirusFile.generateFileName(fileSources.Virus.replaceAll(VIRUS_INTERPRETER_DIR, "virus_interpreter"), sampleId);
-        ;
+
         if(!fileExists(currentFileName) && fileExists(oldFileName))
         {
             return oldFileName;

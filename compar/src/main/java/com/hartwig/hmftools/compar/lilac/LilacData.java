@@ -112,7 +112,7 @@ public class LilacData implements ComparableItem
             StringJoiner newDiffsSj = new StringJoiner(ALLELE_DELIM);
             newDiffs.forEach(x -> newDiffsSj.add(x.allele()));
 
-            diffs.add(String.format("%s(%s/%s)", FLD_ALLELES, origDiffsSj, newDiffsSj.toString()));
+            diffs.add(String.format("%s(%s/%s)", FLD_ALLELES, origDiffsSj, newDiffsSj));
         }
 
         // matches alleles in order when an allele is homozygous

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
