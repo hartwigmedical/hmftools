@@ -66,7 +66,7 @@ public class DisruptionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE,
-                FLD_JUNCTION_COPY_NUMBER, FLD_UNDISRUPTED_COPY_NUMBER, FLD_CHROMOSOME_BAND);
+                FLD_JUNCTION_COPY_NUMBER, FLD_UNDISRUPTED_COPY_NUMBER);
     }
 
     @Override

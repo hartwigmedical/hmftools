@@ -55,7 +55,7 @@ public class GermlineDeletionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
-                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
+                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
     }
 
     @Override

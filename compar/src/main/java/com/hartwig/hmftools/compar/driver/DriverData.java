@@ -60,8 +60,6 @@ public class DriverData implements ComparableItem
         values.add(format("%.2f", DriverCatalog.driverLikelihood()));
         values.add(format("%.2f", DriverCatalog.minCopyNumber()));
         values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
-        values.add(format("%s", chromosomeDisplay));
-        values.add(format("%s", DriverCatalog.chromosomeBand()));
         return values;
     }
 

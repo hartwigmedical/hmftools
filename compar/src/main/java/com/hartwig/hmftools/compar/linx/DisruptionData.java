@@ -75,7 +75,6 @@ public class DisruptionData implements ComparableItem
         values.add(String.format("%d", Breakend.nextSpliceExonRank()));
         values.add(String.format("%.2f", Breakend.junctionCopyNumber()));
         values.add(String.format("%.2f", Breakend.undisruptedCopyNumber()));
-        values.add(String.format("%s", Breakend.chrBand()));
         return values;
     }
 

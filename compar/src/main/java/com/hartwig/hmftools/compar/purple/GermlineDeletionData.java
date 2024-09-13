@@ -48,17 +48,12 @@ public class GermlineDeletionData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
-        String chromosomeDisplay = Deletion.Chromosome.equals(mComparisonChromosome)
-                ? Deletion.Chromosome
-                : format("%s compared(%s)", Deletion.Chromosome, mComparisonChromosome);
         List<String> values = Lists.newArrayList();
         values.add(format("%s", Deletion.Reported));
         values.add(format("%s", Deletion.NormalStatus));
         values.add(format("%s", Deletion.TumorStatus));
         values.add(format("%s", Deletion.GermlineCopyNumber));
         values.add(format("%s", Deletion.TumorCopyNumber));
-        values.add(format("%s", chromosomeDisplay));
-        values.add(format("%s", Deletion.ChromosomeBand));
         return values;
     }
 
