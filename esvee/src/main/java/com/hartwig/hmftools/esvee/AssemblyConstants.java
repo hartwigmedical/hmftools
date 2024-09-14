@@ -58,6 +58,7 @@ public final class AssemblyConstants
     public static final int REMOTE_REGION_REF_MIN_READS = REMOTE_PHASING_MIN_READS;
     public static final double REMOTE_REGION_REF_MIN_READ_PERCENT = 0.1;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
+    public static final int PHASED_ASSEMBLY_MIN_TI = 30;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
     public static final int PROXIMATE_DUP_LENGTH = 500;
