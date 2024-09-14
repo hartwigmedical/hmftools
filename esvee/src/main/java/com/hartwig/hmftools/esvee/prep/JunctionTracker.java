@@ -240,6 +240,7 @@ public class JunctionTracker
             if(mExpectedReadIds.contains(readGroup.id()))
             {
                 readGroup.markHasRemoteJunctionReads();
+                readGroup.setGroupState(ReadGroupStatus.EXPECTED);
                 mExpectedReadGroups.add(readGroup);
                 mExpectedReadIds.remove(readGroup.id());
             }

@@ -144,7 +144,7 @@ public class ReadGroup
         {
             if(mReads.size() == 2)
                 mStatus = ReadGroupStatus.PAIRED;
-            else
+            else if(mStatus != ReadGroupStatus.EXPECTED)
                 mStatus = ReadGroupStatus.SUPPLEMENTARY;
 
             mExpectedReadCount = mReads.size();
