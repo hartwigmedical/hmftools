@@ -80,4 +80,7 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
+
+    @NotNull
+    ChromosomalRearrangements chromosomalRearrangements();
 }
