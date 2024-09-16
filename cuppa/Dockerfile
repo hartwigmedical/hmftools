@@ -1,17 +1,29 @@
-FROM openjdk:17-slim
+FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
-RUN mkdir -p /usr/share/hartwig /opt/tools
-RUN apt update && apt install -y curl gnupg2 python3 python3-pip
-RUN curl https://europe-west4-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-RUN echo 'deb http://packages.cloud.google.com/apt apt-transport-artifact-registry-stable main' | tee -a /etc/apt/sources.list.d/artifact-registry.list
-RUN apt update && apt install -y apt-transport-artifact-registry
-RUN echo 'deb ar+https://europe-west4-apt.pkg.dev/projects/hmf-build hmf-apt main' | tee -a  /etc/apt/sources.list.d/artifact-registry.list
-RUN apt update && apt install -y hmf-r-base hmf-r-ggplot2 hmf-r-ggh4x hmf-r-stringr hmf-r-patchwork
+USER root
 
-ADD target/cuppa-$VERSION-jar-with-dependencies.jar /usr/share/hartwig/cuppa.jar
-RUN cd /opt/tools && jar xvf /usr/share/hartwig/cuppa.jar pycuppa 
-RUN pip3 install --upgrade pip && pip3 install /opt/tools/pycuppa
+RUN \
+  apt-get update && \
+  apt-get install -y python3 python3-pip && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
-ENV PATH="$PATH:/opt/tools/R/bin"
-ENTRYPOINT ["java", "-jar", "/usr/share/hartwig/cuppa.jar"]
+ADD target/cuppa-$VERSION-jar-with-dependencies.jar /opt/cuppa/cuppa.jar
+
+USER mambauser
+
+RUN \
+  micromamba install -y -n base -c bioconda -c conda-forge \
+    'openjdk >=8' \
+    r-ggplot2 \
+    r-reshape2 \
+    r-patchwork && \
+  micromamba clean --all --yes
+
+USER root
+
+RUN cd /opt/cuppa && /opt/conda/bin/jar xvf /opt/cuppa/cuppa.jar pycuppa
+RUN pip3 install --upgrade pip && pip3 install /opt/cuppa/pycuppa
+
+ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
