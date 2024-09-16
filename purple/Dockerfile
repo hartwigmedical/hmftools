@@ -1,25 +1,14 @@
 FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
-USER root
-
-RUN mkdir -p /opt/purple
-RUN \
-  apt-get update && \
-  apt-get install -y procps wget && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-
-ADD target/purple-$VERSION-jar-with-dependencies.jar /opt/purple/purple.jar
 
 USER mambauser
-
+RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
     bcftools \
     bioconductor-variantannotation \
     'circos >=0.69.6' \
-    'openjdk >=8' \
     r-cairo \
     r-cowplot \
     r-dplyr \
@@ -28,5 +17,9 @@ RUN \
     xorg-libxtst \
     zlib && \
   micromamba clean --all --yes
+
+USER root
+RUN mkdir -p /opt/purple
+ADD target/purple-$VERSION-jar-with-dependencies.jar /opt/purple/purple.jar
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
