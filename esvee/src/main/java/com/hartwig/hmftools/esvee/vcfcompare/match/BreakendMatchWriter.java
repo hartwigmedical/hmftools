@@ -21,6 +21,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
 import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.common.VcfType;
 
 public class BreakendMatchWriter
 {
@@ -160,7 +161,7 @@ public class BreakendMatchWriter
         String diffs = "";
         if(oldBreakend != null && newBreakend != null)
         {
-            diffs = String.join(",", compareBreakendAttributes(oldBreakend, newBreakend, matchType));
+            diffs = String.join(",", getBreakendAttributeDiffs(oldBreakend, newBreakend, matchType));
         }
 
         try
@@ -197,19 +198,20 @@ public class BreakendMatchWriter
     private static final String DIFF_PASS = "PASS_FILTER";
     private static final String DIFF_COORDS = "COORDS";
     private static final String DIFF_INSSEQ = "INSSEQ";
-
-    private static boolean hasDiffWithinTolerance(double value1, double value2, double maxDiff, double maxDiffPerc)
-    {
-        double diff = abs(value1 - value2);
-        double diffPerc = diff / max(value1, value2);
-        return diff > maxDiff && diffPerc > maxDiffPerc;
-    }
+    private static final String DIFF_VCF_TYPE = "VCF_TYPE";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
 
+    private static boolean hasDiffWithinTolerance(double value1, double value2)
+    {
+        double diff = abs(value1 - value2);
+        double diffPerc = diff / max(value1, value2);
+        return diff > DEFAULT_MAX_DIFF && diffPerc > DEFAULT_MAX_DIFF_PERC;
+    }
+
     // TODO: Make this a method in `BreakendMatch`
-    private List<String> compareBreakendAttributes(VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
+    private List<String> getBreakendAttributeDiffs(VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
     {
         List<String> diffSet = new ArrayList<>();
 
@@ -218,7 +220,7 @@ public class BreakendMatchWriter
             diffSet.add(DIFF_PASS);
         }
 
-        if((matchType == MatchType.APPROX_MATCH ||  matchType == MatchType.COORDS_ONLY))
+        if((matchType == MatchType.APPROX_MATCH || matchType == MatchType.COORDS_ONLY))
         {
             if(!oldBreakend.coordStr().equals(newBreakend.coordStr()))
                 diffSet.add(DIFF_COORDS);
@@ -239,15 +241,17 @@ public class BreakendMatchWriter
                 diffSet.add(SV_TYPE);
         }
 
-        if(hasDiffWithinTolerance(
-                oldBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS),
-                newBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS),
-                DEFAULT_MAX_DIFF,
-                DEFAULT_MAX_DIFF_PERC
-        ))
-        {
+        VcfType oldSourceVcfType = (oldBreakend.SourceVcfType == VcfType.TRUTH) ? VcfType.SOMATIC : oldBreakend.SourceVcfType;
+        VcfType newSourceVcfType = (newBreakend.SourceVcfType == VcfType.TRUTH) ? VcfType.SOMATIC : newBreakend.SourceVcfType;
+
+        if(!oldSourceVcfType.equals(newSourceVcfType))
+            diffSet.add(DIFF_VCF_TYPE);
+
+        double oldTotalFrags = oldBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS);
+        double newTotalFrags = newBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS);
+
+        if(hasDiffWithinTolerance(oldTotalFrags, newTotalFrags))
             diffSet.add(TOTAL_FRAGS);
-        }
 
         return diffSet;
     }
