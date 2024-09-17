@@ -1,5 +1,5 @@
 FROM openjdk:17-alpine
 
 ARG VERSION
-RUN mkdir /opt/virusinterpreter
-ADD target/virusinterpreter-$VERSION-jar-with-dependencies.jar /opt/virusinterpreter/virusinterpreter.jar
+RUN mkdir /opt/virus-interpreter
+ADD target/virus-interpreter-$VERSION-jar-with-dependencies.jar /opt/virus-interpreter/virus-interpreter.jar
