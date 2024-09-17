@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.compar;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
@@ -90,6 +91,9 @@ public class ComparTask implements Callable
                 CMP_LOGGER.error("sample({}) failed processing: {}", sampleId, e.toString());
                 e.printStackTrace();
                 ++failedTypes;
+
+                InvalidDataItem invalidDataItem = new InvalidDataItem(comparer.category());
+                mismatches = List.of(new Mismatch(invalidDataItem, null, INVALID_ERROR, Collections.emptyList()));
             }
 
             mWriter.writeSampleMismatches(sampleId, comparer, mismatches);
