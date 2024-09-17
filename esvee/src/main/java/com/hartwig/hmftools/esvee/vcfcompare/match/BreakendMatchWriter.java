@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
@@ -25,7 +27,9 @@ import com.hartwig.hmftools.esvee.vcfcompare.common.VcfType;
 
 public class BreakendMatchWriter
 {
-    public final String mSampleId;
+    public final String mTumorId;
+    public final String mNormalId;
+
     public final String mOutputDir;
     public final String mOutputId;
 
@@ -34,16 +38,37 @@ public class BreakendMatchWriter
     public BreakendMatchWriter(List<BreakendMatch> breakendMatches, CompareConfig config)
     {
         mBreakendMatches = breakendMatches;
-        mSampleId = config.SampleId;
+
+        mTumorId = config.SampleId;
+        mNormalId = inferNormalId(config.SampleId);
+
         mOutputDir = config.OutputDir;
         mOutputId = config.OutputId;
+    }
+
+    private static String inferNormalId(String tumorId)
+    {
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]+T");
+        Matcher matcher = pattern.matcher(tumorId);
+
+        String trimmedTumorId = null;
+        if(matcher.find()){
+            trimmedTumorId = matcher.group();
+        }
+
+        if(trimmedTumorId == null)
+        {
+            throw new IllegalStateException("Could not infer normal id from tumor id: " + tumorId);
+        }
+
+        return trimmedTumorId.substring(0, trimmedTumorId.length()-1) + "R";
     }
 
     private BufferedWriter initialiseWriter()
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".sv_compare.breakends";
+            String fileName = mOutputDir + mTumorId + ".sv_compare.breakends";
 
             if(mOutputId != null)
                 fileName += "." + mOutputId;
@@ -56,21 +81,22 @@ public class BreakendMatchWriter
 
             String header = String.join(
                     TSV_DELIM, "SampleId",
-                    "OldId",       "NewId",
+                    "OldId",         "NewId",
                     "MatchType",
                     "Diffs",
-                    "OldSvCoords", "NewSvCoords",
-                    "OldCoords",   "NewCoords",
-                    "OldCipos",    "NewCipos",
-                    "OldIhompos",  "NewIhompos",
-                    "OldHomSeq",   "NewHomSeq",
-                    "OldInsSeq",   "NewInsSeq",
-                    "OldSvType",   "NewSvType",
-                    "OldFilter",   "NewFilter",
-                    "OldVcfType",  "NewVcfType",
-                    "OldQual",     "NewQual",
-                    "OldVF",       "NewVF",
-                    "OldIsLine",   "NewIsLine"
+                    "OldSvCoords",   "NewSvCoords",
+                    "OldCoords",     "NewCoords",
+                    "OldCipos",      "NewCipos",
+                    "OldIhompos",    "NewIhompos",
+                    "OldHomSeq",     "NewHomSeq",
+                    "OldInsSeq",     "NewInsSeq",
+                    "OldSvType",     "NewSvType",
+                    "OldFilter",     "NewFilter",
+                    "OldVcfType",    "NewVcfType",
+                    "OldQual",       "NewQual",
+                    "OldTumorFrags", "NewTumorFrags",
+                    "OldNormalFrags","NewNormalFrags",
+                    "OldIsLine",     "NewIsLine"
             );
 
             writer.write(header);
@@ -98,19 +124,20 @@ public class BreakendMatchWriter
 
     private void writeBreakend(BufferedWriter writer, VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
     {
-        String oldId       = "";
-        String oldSvCoords = "";
-        String oldCoords   = "";
-        String oldCipos    = "";
-        String oldIhompos  = "";
-        String oldHomSeq   = "";
-        String oldInsSeq   = "";
-        String oldSvtype   = "";
-        String oldFilter   = "";
-        String oldVcfType  = "";
-        String oldQual     = "";
-        String oldVF       = "";
-        String oldIsLine   = "";
+        String oldId          = "";
+        String oldSvCoords    = "";
+        String oldCoords      = "";
+        String oldCipos       = "";
+        String oldIhompos     = "";
+        String oldHomSeq      = "";
+        String oldInsSeq      = "";
+        String oldSvtype      = "";
+        String oldFilter      = "";
+        String oldVcfType     = "";
+        String oldQual        = "";
+        String oldTumorFrags  = "";
+        String oldNormalFrags = "";
+        String oldIsLine      = "";
         if(oldBreakend != null)
         {
             oldId = oldBreakend.Context.getID();
@@ -124,23 +151,25 @@ public class BreakendMatchWriter
             oldFilter = oldBreakend.filtersStr();
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
-            oldVF = oldBreakend.fragsStr(mSampleId);
+            oldTumorFrags = oldBreakend.fragsStr(mTumorId);
+            oldNormalFrags = oldBreakend.fragsStr(mNormalId);
             oldIsLine = String.valueOf(oldBreakend.hasLineInfoFlag());
         }
 
-        String newId       = "";
-        String newSvCoords = "";
-        String newCoords   = "";
-        String newCipos    = "";
-        String newIhompos  = "";
-        String newHomSeq   = "";
-        String newInsSeq   = "";
-        String newSvtype   = "";
-        String newFilter   = "";
-        String newVcfType  = "";
-        String newQual     = "";
-        String newVF       = "";
-        String newIsLine   = "";
+        String newId          = "";
+        String newSvCoords    = "";
+        String newCoords      = "";
+        String newCipos       = "";
+        String newIhompos     = "";
+        String newHomSeq      = "";
+        String newInsSeq      = "";
+        String newSvtype      = "";
+        String newFilter      = "";
+        String newVcfType     = "";
+        String newQual        = "";
+        String newTumorFrags  = "";
+        String newNormalFrags = "";
+        String newIsLine      = "";
         if(newBreakend != null)
         {
             newId = newBreakend.Context.getID();
@@ -154,7 +183,8 @@ public class BreakendMatchWriter
             newFilter = newBreakend.filtersStr();
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
-            newVF = newBreakend.fragsStr(mSampleId);
+            newTumorFrags = newBreakend.fragsStr(mTumorId);
+            newNormalFrags = newBreakend.fragsStr(mNormalId);
             newIsLine = String.valueOf(newBreakend.hasLineInfoFlag());
         }
 
@@ -168,22 +198,23 @@ public class BreakendMatchWriter
         {
             String line = String.join(
                     TSV_DELIM,
-                    mSampleId,
-                    oldId,      newId,
+                    mTumorId,
+                    oldId,          newId,
                     matchType.toString(),
                     diffs,
-                    oldSvCoords, newSvCoords,
-                    oldCoords,   newCoords,
-                    oldCipos,    newCipos,
-                    oldIhompos,  newIhompos,
-                    oldHomSeq,   newHomSeq,
-                    oldInsSeq,   newInsSeq,
-                    oldSvtype,   newSvtype,
-                    oldFilter,   newFilter,
-                    oldVcfType,  newVcfType,
-                    oldQual,     newQual,
-                    oldVF,       newVF,
-                    oldIsLine,   newIsLine
+                    oldSvCoords,    newSvCoords,
+                    oldCoords,      newCoords,
+                    oldCipos,       newCipos,
+                    oldIhompos,     newIhompos,
+                    oldHomSeq,      newHomSeq,
+                    oldInsSeq,      newInsSeq,
+                    oldSvtype,      newSvtype,
+                    oldFilter,      newFilter,
+                    oldVcfType,     newVcfType,
+                    oldQual,        newQual,
+                    oldTumorFrags,  newTumorFrags,
+                    oldNormalFrags, newNormalFrags,
+                    oldIsLine,      newIsLine
             );
 
             writer.write(line);
@@ -199,6 +230,8 @@ public class BreakendMatchWriter
     private static final String DIFF_COORDS = "COORDS";
     private static final String DIFF_INSSEQ = "INSSEQ";
     private static final String DIFF_VCF_TYPE = "VCF_TYPE";
+    private static final String DIFF_TUMOR_FRAGS = "VF_TUMOR";
+    private static final String DIFF_NORMAL_FRAGS = "VF_NORMAL";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
@@ -220,6 +253,7 @@ public class BreakendMatchWriter
             diffSet.add(DIFF_PASS);
         }
 
+        // Coords
         if((matchType == MatchType.APPROX_MATCH || matchType == MatchType.COORDS_ONLY))
         {
             if(!oldBreakend.coordStr().equals(newBreakend.coordStr()))
@@ -241,17 +275,25 @@ public class BreakendMatchWriter
                 diffSet.add(SV_TYPE);
         }
 
+        // VCF type
         VcfType oldSourceVcfType = (oldBreakend.SourceVcfType == VcfType.TRUTH) ? VcfType.SOMATIC : oldBreakend.SourceVcfType;
         VcfType newSourceVcfType = (newBreakend.SourceVcfType == VcfType.TRUTH) ? VcfType.SOMATIC : newBreakend.SourceVcfType;
 
         if(!oldSourceVcfType.equals(newSourceVcfType))
             diffSet.add(DIFF_VCF_TYPE);
 
-        double oldTotalFrags = oldBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS);
-        double newTotalFrags = newBreakend.getExtendedAttributeAsDouble(mSampleId, TOTAL_FRAGS);
+        // VF
+        double oldTumorFrags = oldBreakend.getExtendedAttributeAsDouble(mTumorId, TOTAL_FRAGS);
+        double newTumorFrags = newBreakend.getExtendedAttributeAsDouble(mTumorId, TOTAL_FRAGS);
 
-        if(hasDiffWithinTolerance(oldTotalFrags, newTotalFrags))
-            diffSet.add(TOTAL_FRAGS);
+        if(hasDiffWithinTolerance(oldTumorFrags, newTumorFrags))
+            diffSet.add(DIFF_TUMOR_FRAGS);
+
+        double oldNormalFrags = oldBreakend.getExtendedAttributeAsDouble(mNormalId, TOTAL_FRAGS);
+        double newNormalFrags = newBreakend.getExtendedAttributeAsDouble(mNormalId, TOTAL_FRAGS);
+
+        if(hasDiffWithinTolerance(oldNormalFrags, newNormalFrags))
+            diffSet.add(DIFF_NORMAL_FRAGS);
 
         return diffSet;
     }
