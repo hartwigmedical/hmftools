@@ -4,11 +4,11 @@ ARG VERSION
 
 USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
+RUN micromamba install -y -n base -c bioconda -c conda-forge 'circos >=0.69.6' perl-gd && micromamba clean --all --yes
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
     bcftools \
     bioconductor-variantannotation \
-    'circos >=0.69.6' \
     r-cairo \
     r-cowplot \
     r-dplyr \

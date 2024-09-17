@@ -4,10 +4,10 @@ ARG VERSION
 
 USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
+RUN micromamba install -y -n base -c bioconda -c conda-forge 'circos >=0.69.6' perl-gd && micromamba clean --all --yes
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
     bioconductor-gviz \
-    'circos >=0.69.6' \
     r-cowplot \
     r-dplyr \
     r-ggplot2 \
