@@ -78,9 +78,9 @@ public final class AlignmentFilters
             alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
         }
 
-        // check adjusted alignment lengths for inner alignments  only
-        int index = 1;
-        while(index < candidateAlignments.size() - 1)
+        // remove any alignments with short adjusted alignment lengths
+        int index = 0;
+        while(index < candidateAlignments.size())
         {
             AlignData alignment = candidateAlignments.get(index);
 

@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.Math.round;
+import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
@@ -16,7 +19,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
@@ -75,7 +77,9 @@ public final class VariantContextFactory
     {
         VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
 
-        builder.log10PError(variant.totalQuality() / -10d);
+        double tqp = variant.tumorReadCounters().get(0).tumorQualProbability();
+        double logTqp = log10(max(tqp, 1e-20));
+        builder.log10PError((double)round(logTqp * 10d) / 10d);
         builder.genotypes(genotypes);
         builder.filters(variant.filtersStringSet());
 

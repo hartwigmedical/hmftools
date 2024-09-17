@@ -32,7 +32,7 @@ public class GenotypeFragments
 
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
 
-    public boolean isLowQual() { return AlleleCount > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
+    public boolean isLowQual() { return AlleleCount > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }  // also require that MQF > 10
 
     public void setBqrErrorRate(double errorRate) { mBqrErrorRate = errorRate; }
     public double bqrErrorRate() { return mBqrErrorRate; }

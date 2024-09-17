@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
@@ -48,7 +49,7 @@ public final class AssemblyLinker
 
         int linkDistance = upper.junction().Position - lower.junction().Position + 1;
 
-        if(linkDistance < 0 || linkDistance > PHASED_ASSEMBLY_MAX_TI)
+        if(linkDistance < PHASED_ASSEMBLY_MIN_TI || linkDistance > PHASED_ASSEMBLY_MAX_TI)
             return null;
 
         if(!first.refSideSoftClips().isEmpty() && !second.refSideSoftClips().isEmpty())

@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -208,7 +209,6 @@ public class AssemblyAlignment
 
         boolean lastAddedReversed = false;
         int currentSeqLength = 0;
-        boolean nextIsFacing = false;
 
         List<CigarElement> sequenceCigar = Lists.newArrayList();
 
@@ -216,6 +216,7 @@ public class AssemblyAlignment
         {
             AssemblyLink link = assemblyLinks.get(i);
             JunctionAssembly assembly = assemblies.get(i);
+            boolean isFacingLink = link.type() == FACING;
 
             boolean assemblyReversed;
 
@@ -223,7 +224,7 @@ public class AssemblyAlignment
             {
                 assemblyReversed = startReversed;
 
-                if(hasFacingAtStart)
+                if(isFacingLink)
                 {
                     // add on the extension sequence instead of the ref base sequence
                     String assemblyExtensionBases = assembly.formJunctionSequence();
@@ -260,10 +261,8 @@ public class AssemblyAlignment
             }
             else
             {
-                if(nextIsFacing)
+                if(isFacingLink)
                 {
-                    nextIsFacing = false;
-
                     // ref bases for this segment have already been added so only set assembly indices
                     JunctionAssembly nextAssembly = assemblies.get(i + 1);
 
@@ -339,8 +338,6 @@ public class AssemblyAlignment
             }
 
             lastAddedReversed = nextReversed;
-
-            nextIsFacing = true;
         }
 
         mSequenceCigar = cigarElementsToStr(sequenceCigar);
@@ -369,17 +366,6 @@ public class AssemblyAlignment
         logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, extensionInfo);
 
         buildSequenceCigar(sequenceCigar, extensionCigarType, assemblyExtensionBases.length());
-    }
-
-    private static void logBuildInfo(
-            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
-    {
-        if(SV_LOGGER.isTraceEnabled())
-        {
-            SV_LOGGER.trace("seqLength({} -> {}) adding assembly({}) {} {}",
-                    currentSeqLength, currentSeqLength + assemblyBaseLength,
-                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
-        }
     }
 
     private static void buildSequenceCigar(final List<CigarElement> elements, final CigarOperator operator, int length)
@@ -492,6 +478,17 @@ public class AssemblyAlignment
         SupportRead matchedRead = fragmentReads.stream().filter(x -> x.firstInPair() == read.firstInPair()).findFirst().orElse(null);
         fragmentReads.add(read);
         return matchedRead;
+    }
+
+    private static void logBuildInfo(
+            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
+    {
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("seqLength({} -> {}) adding assembly({}) {} {}",
+                    currentSeqLength, currentSeqLength + assemblyBaseLength,
+                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
+        }
     }
 
     public void updateSequenceInfo(final String newSequence, final Map<Integer,String> newSequenceOverlaps, int primaryOffsetAdjust)

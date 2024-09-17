@@ -323,6 +323,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private boolean ignoreIdenticalSupplementary(final SAMRecord read)
     {
+        if(!mConfig.DevDebug)
+            return false;
+
         if(!read.getSupplementaryAlignmentFlag())
             return false;
 

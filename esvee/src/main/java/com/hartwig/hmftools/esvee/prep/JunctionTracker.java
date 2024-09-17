@@ -176,7 +176,9 @@ public class JunctionTracker
     {
         // gather groups with a read in another partition and not linked to a junction
         // to then pass to the combined cache
-        return mRemoteCandidateReadGroups.stream().filter(x -> x.noRegisteredJunctionPositions()).collect(Collectors.toList());
+        return mRemoteCandidateReadGroups.stream()
+                .filter(x -> !mExpectedReadGroups.contains(x))
+                .filter(x -> x.noRegisteredJunctionPositions()).collect(Collectors.toList());
     }
 
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
@@ -237,11 +239,11 @@ public class JunctionTracker
         // NOTE: the read groups are not ordered by position until the discordant group routine below
         for(ReadGroup readGroup : mReadGroupMap.values())
         {
-            if(mExpectedReadIds.contains(readGroup.id()))
+            if(mExpectedReadIds.remove(readGroup.id()))
             {
                 readGroup.markHasRemoteJunctionReads();
+                readGroup.setGroupState(ReadGroupStatus.EXPECTED);
                 mExpectedReadGroups.add(readGroup);
-                mExpectedReadIds.remove(readGroup.id());
             }
 
             // ignore any group with a short overlapping fragment, likely adapter
