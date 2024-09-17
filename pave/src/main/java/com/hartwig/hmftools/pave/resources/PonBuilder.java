@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
@@ -126,7 +127,7 @@ public class PonBuilder
             for(VariantContext variantContext : vcfReader.iterator())
             {
                 double qual = variantContext.getPhredScaledQual();
-                double mqf = variantContext.getAttributeAsDouble("MQF", 0);
+                double mqf = variantContext.getAttributeAsDouble(MAP_QUAL_FACTOR, 0);
 
                 if(qual < mQualCutoff || mqf < mMqfCutoff)
                     continue;
