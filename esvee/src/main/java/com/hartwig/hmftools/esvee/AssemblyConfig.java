@@ -108,6 +108,7 @@ public class AssemblyConfig
 
     public static boolean AssemblyBuildDebug = false;
     public static boolean RunRemoteRefLinking = false;
+    public static boolean DevDebug = false;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 

@@ -39,8 +39,8 @@ public class ReadStats
 
     public String toString()
     {
-        return format("reads(%d) lowBaseQual(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d) decoySequences(%d) refBaseAlignFails(%d) identicalSupps(%d)",
+        return format("reads(%d) lowBaseQual(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d) decoySequences(%d) refBaseAlignFails(%d)",
                 TotalReads, LowBaseQualFiltered, PolyGTrimmed, LowBaseQualTrimmed, IndelSoftClipConverted, DecoySequences,
-                RefBaseAlignmentFails, IdenticalSupplementaries);
+                RefBaseAlignmentFails);
     }
 }
