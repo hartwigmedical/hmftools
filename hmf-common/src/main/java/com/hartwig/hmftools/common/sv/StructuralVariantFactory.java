@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
@@ -28,6 +29,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.BREAKEND_REGEX;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_BYTE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_STR;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -189,13 +191,13 @@ public class StructuralVariantFactory implements SvFactoryInterface
         StructuralVariantLeg startLeg = setLegCommon(contextStart, isSmallDelDup, startOrientation)
                 .position(start)
                 .homology(contextStart.getAttributeAsString(HOMSEQ, ""))
-                .alleleFrequency(0.0)
+                .alleleFrequency(contextStart.getAttributeAsDouble(ALLELE_FRACTION, 0.0))
                 .build();
 
         StructuralVariantLeg endLeg = setLegCommon(contextEnd, isSmallDelDup, endOrientation)
                 .position(end)
                 .homology(contextEnd.getAttributeAsString(HOMSEQ, ""))
-                .alleleFrequency(0.0)
+                .alleleFrequency(contextEnd.getAttributeAsDouble(ALLELE_FRACTION, 0.0))
                 .build();
 
         StructuralVariantType inferredType = BND;
@@ -230,10 +232,19 @@ public class StructuralVariantFactory implements SvFactoryInterface
                 .startContext(contextStart)
                 .endContext(contextEnd);
 
-        svBuilder.startLinkedBy(contextStart.getAttributeAsString(ASM_LINKS, ""));
-        svBuilder.endLinkedBy(contextEnd.getAttributeAsString(ASM_LINKS, ""));
+        svBuilder.startLinkedBy(parseAssemblyLinks(contextStart));
+        svBuilder.endLinkedBy(parseAssemblyLinks(contextEnd));
 
         return svBuilder.build();
+    }
+
+    private static String parseAssemblyLinks(final VariantContext variantContext)
+    {
+        String assemblyInfo = variantContext.getAttributeAsString(ASM_LINKS, "");
+        assemblyInfo = assemblyInfo.replaceAll("\\[", "");
+        assemblyInfo = assemblyInfo.replaceAll("]", "");
+        assemblyInfo = assemblyInfo.replaceAll(" ", "");
+        return assemblyInfo;
     }
 
     public StructuralVariant createSingleBreakend(final VariantContext context)

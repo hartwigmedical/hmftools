@@ -306,7 +306,7 @@ public class ChainDiagnostics implements CohortFileInterface
         {
             SvBreakend breakend = entry.getKey();
 
-            List<SvBreakend> breakendList = Lists.newArrayList(); // mUnlinkedBreakendMap.get(breakend);
+            List<SvBreakend> breakendList = Lists.newArrayList();
 
             if(breakendList == null)
             {

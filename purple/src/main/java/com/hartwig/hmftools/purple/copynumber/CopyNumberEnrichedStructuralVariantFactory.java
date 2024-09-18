@@ -35,16 +35,17 @@ public final class CopyNumberEnrichedStructuralVariantFactory
 
     public List<EnrichedStructuralVariant> enrich(final List<StructuralVariant> variants)
     {
-        final StructuralVariantLegCopyNumberChangeFactory changeFactory = new StructuralVariantLegCopyNumberChangeFactory(
+        StructuralVariantLegCopyNumberChangeFactory changeFactory = new StructuralVariantLegCopyNumberChangeFactory(
                 mPurityAdjuster, mCopyNumbers, variants);
 
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new StructuralVariantLegPloidyFactory<>(
+        StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new StructuralVariantLegPloidyFactory<>(
                 mPurityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
-        final StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(
+        StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(
                 PurpleCopyNumber::averageTumorCopyNumber);
 
-        final List<EnrichedStructuralVariant> result = Lists.newArrayList();
+        List<EnrichedStructuralVariant> result = Lists.newArrayList();
+
         for(final StructuralVariant variant : variants)
         {
             ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
