@@ -297,7 +297,10 @@ public class VariantFilters
             BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
             double hetProb = hetGermlineDistribution.cumulativeProbability(altSupport);
             if(hetProb < prob)
+            {
                 prob /= max(hetProb, GERMLINE_HET_MIN_SAMPLING_PROB);
+                prob = min(prob, 1.0);
+            }
         }
 
         primaryTumor.setTumorQualProbability(prob);
