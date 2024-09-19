@@ -35,8 +35,8 @@ public class ChromosomalRearrangementsDeterminerTest
     @Test
     public void canDetermine1qTrisomyV38()
     {
-        int centromere1 = REF_COORDINATES_38.centromere("1");
-        int endChromosome1 = REF_COORDINATES_38.length("1");
+        int centromere1 = REF_COORDINATES_38.centromere("chr1");
+        int endChromosome1 = REF_COORDINATES_38.length("chr1");
         canDetermine1qTrisomy(centromere1, endChromosome1, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V38);
     }
 
@@ -52,13 +52,13 @@ public class ChromosomalRearrangementsDeterminerTest
     @Test
     public void canDetermine1p19qCoDeletionV38()
     {
-        int centromere1 = REF_COORDINATES_38.centromere("1");
-        int centromere19 = REF_COORDINATES_38.centromere("19");
-        int endChromosome19 = REF_COORDINATES_38.length("19");
+        int centromere1 = REF_COORDINATES_38.centromere("chr1");
+        int centromere19 = REF_COORDINATES_38.centromere("chr19");
+        int endChromosome19 = REF_COORDINATES_38.length("chr19");
         canDetermine1p19qCoDeletion(centromere1, centromere19, endChromosome19, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V38);
     }
 
-    private void canDetermine1qTrisomy(int centromere1, int endChromosome1,
+    private static void canDetermine1qTrisomy(int centromere1, int endChromosome1,
             ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
     {
         int stepSize = (endChromosome1 - centromere1) / 4;
@@ -77,7 +77,7 @@ public class ChromosomalRearrangementsDeterminerTest
         assertFalse(chromosomalRearrangementsDeterminer.determine1qTrisomy(without1qTrisomy));
     }
 
-    private void canDetermine1p19qCoDeletion(int centromere1, int centromere19, int endChromosome19,
+    private static void canDetermine1p19qCoDeletion(int centromere1, int centromere19, int endChromosome19,
             ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
     {
         int stepSize1 = centromere1 / 4;
