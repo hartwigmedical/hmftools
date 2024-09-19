@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ChromosomalRearrangements
 {
-    boolean trisomy1q();
+    boolean hasTrisomy1q();
 
-    boolean codeletion1p19q();
+    boolean hasCodeletion1p19q();
 }

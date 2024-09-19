@@ -80,8 +80,8 @@ public final class TestPurpleInterpretationFactory
     private static ChromosomalRearrangements createMinimalChromosomalRearrangements()
     {
         return ImmutableChromosomalRearrangements.builder()
-                .trisomy1q(false)
-                .codeletion1p19q(false)
+                .hasTrisomy1q(false)
+                .hasCodeletion1p19q(false)
                 .build();
     }
 }

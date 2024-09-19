@@ -22,6 +22,9 @@ public interface PurpleRecord
     PurpleCharacteristics characteristics();
 
     @NotNull
+    ChromosomalRearrangements chromosomalRearrangements();
+
+    @NotNull
     List<PurpleDriver> somaticDrivers();
 
     @Nullable
@@ -80,7 +83,4 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
-
-    @NotNull
-    ChromosomalRearrangements chromosomalRearrangements();
 }

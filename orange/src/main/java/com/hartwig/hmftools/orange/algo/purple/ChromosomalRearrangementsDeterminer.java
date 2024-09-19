@@ -2,14 +2,16 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-final class ChromosomalRearrangementsDeterminer
+public final class ChromosomalRearrangementsDeterminer
 {
+    @NotNull
     private final RefGenomeCoordinates refGenomeCoordinates;
 
     public ChromosomalRearrangementsDeterminer(@NotNull final OrangeRefGenomeVersion refGenomeVersion)
@@ -17,11 +19,11 @@ final class ChromosomalRearrangementsDeterminer
         refGenomeCoordinates = getRefGenomeCoordinates(refGenomeVersion);
     }
 
-    public static final double LOWER_THRESHOLD_TRISOMY = 2.8;
-    public static final double UPPER_THRESHOLD_TRISOMY = 3.5;
-    public static final double THRESHOLD_DELETION = 0.2;
-    public static final double PCT_98 = 0.98;
-    public static final double PCT_90 = 0.90;
+    private static final double LOWER_THRESHOLD_TRISOMY = 2.8;
+    private static final double UPPER_THRESHOLD_TRISOMY = 3.5;
+    private static final double THRESHOLD_DELETION = 0.2;
+    private static final double PCT_98 = 0.98;
+    private static final double PCT_90 = 0.90;
 
     private static final String CHR_1 = "1";
     private static final String CHR_19 = "19";
@@ -35,7 +37,8 @@ final class ChromosomalRearrangementsDeterminer
 
         for(PurpleCopyNumber copyNumber : allSomaticCopyNumbers)
         {
-            if(CHR_1.equals(copyNumber.chromosome()) && isQArm(copyNumber, centromere1))
+            String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
+            if(chromosome.equals(CHR_1) && overlapsWithQArm(copyNumber, centromere1))
             {
                 int length = copyNumber.start() > centromere1 ? copyNumber.length() : copyNumber.end() - centromere1 + 1;
 
@@ -63,13 +66,13 @@ final class ChromosomalRearrangementsDeterminer
 
         for(PurpleCopyNumber copyNumber : allSomaticCopyNumbers)
         {
-            if(CHR_1.equals(copyNumber.chromosome()) && copyNumber.start() < centromere1
-                    && copyNumber.minorAlleleCopyNumber() < THRESHOLD_DELETION)
+            String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
+            if(chromosome.equals(CHR_1) && copyNumber.start() < centromere1 && copyNumber.minorAlleleCopyNumber() < THRESHOLD_DELETION)
             {
                 int length = copyNumber.end() < centromere1 ? copyNumber.length() : centromere1 - copyNumber.start() + 1;
                 lengthDeletion1p += length;
             }
-            if(CHR_19.equals(copyNumber.chromosome()) && isQArm(copyNumber, centromere19)
+            if(chromosome.equals(CHR_19) && overlapsWithQArm(copyNumber, centromere19)
                     && copyNumber.minorAlleleCopyNumber() < THRESHOLD_DELETION)
             {
                 int length = copyNumber.start() > centromere19 ? copyNumber.length() : copyNumber.end() - centromere19 + 1;
@@ -86,7 +89,7 @@ final class ChromosomalRearrangementsDeterminer
         return refGenomeVersion == OrangeRefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
 
-    private static boolean isQArm(@NotNull PurpleCopyNumber copyNumber, int centromere)
+    private static boolean overlapsWithQArm(@NotNull PurpleCopyNumber copyNumber, int centromere)
     {
         return copyNumber.start() > centromere || (copyNumber.start() < centromere && centromere < copyNumber.end());
     }

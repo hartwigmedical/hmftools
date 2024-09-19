@@ -23,11 +23,11 @@ public final class ChromosomalRearrangementsTable
                         cells.createHeader(Strings.EMPTY) });
 
         table.addCell(cells.createContent("1q trisomy"));
-        table.addCell(cells.createContent(chromosomalRearrangements.trisomy1q() ? "Yes" : "No"));
+        table.addCell(cells.createContent(chromosomalRearrangements.hasTrisomy1q() ? "Yes" : "No"));
         table.addCell(cells.createContent(Strings.EMPTY));
 
         table.addCell(cells.createContent("1p19q co-deletion"));
-        table.addCell(cells.createContent(chromosomalRearrangements.codeletion1p19q() ? "Yes" : "No"));
+        table.addCell(cells.createContent(chromosomalRearrangements.hasCodeletion1p19q() ? "Yes" : "No"));
         table.addCell(cells.createContent(Strings.EMPTY));
 
         return new Tables(reportResources).createWrapping(table, title);
