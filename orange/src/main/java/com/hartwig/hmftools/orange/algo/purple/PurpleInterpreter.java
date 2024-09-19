@@ -193,7 +193,7 @@ public class PurpleInterpreter
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
                 .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
-                .chromosomalRearrangements(createChromosomalRearrangments(purple, chromosomalRearrangementsDeterminer))
+                .chromosomalRearrangements(createChromosomalRearrangements(purple, chromosomalRearrangementsDeterminer))
                 .build();
     }
 
@@ -454,7 +454,7 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static ChromosomalRearrangements createChromosomalRearrangments(@NotNull PurpleData purple,
+    private static ChromosomalRearrangements createChromosomalRearrangements(@NotNull PurpleData purple,
             @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
     {
         return ImmutableChromosomalRearrangements.builder()

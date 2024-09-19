@@ -367,7 +367,7 @@ public class PurpleInterpreterTest
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
         ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
-                new ChromosomalRearrangementsDeterminer(OrangeRefGenomeVersion.V37);
+                ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(OrangeRefGenomeVersion.V37);
 
         return new PurpleInterpreter(
                 purpleVariantFactory,

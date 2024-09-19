@@ -2,9 +2,10 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +15,16 @@ public final class ChromosomalRearrangementsDeterminer
     @NotNull
     private final RefGenomeCoordinates refGenomeCoordinates;
 
-    public ChromosomalRearrangementsDeterminer(@NotNull final OrangeRefGenomeVersion refGenomeVersion)
+    @NotNull
+    public static ChromosomalRearrangementsDeterminer createForRefGenomeVersion(@NotNull final OrangeRefGenomeVersion refGenomeVersion)
     {
-        refGenomeCoordinates = getRefGenomeCoordinates(refGenomeVersion);
+        return new ChromosomalRearrangementsDeterminer(resolveRefGenomeCoordinates(refGenomeVersion));
+    }
+
+    @VisibleForTesting
+    ChromosomalRearrangementsDeterminer(@NotNull final RefGenomeCoordinates refGenomeCoordinates)
+    {
+        this.refGenomeCoordinates = refGenomeCoordinates;
     }
 
     private static final double LOWER_THRESHOLD_TRISOMY = 2.8;
@@ -87,7 +95,7 @@ public final class ChromosomalRearrangementsDeterminer
     }
 
     @NotNull
-    private static RefGenomeCoordinates getRefGenomeCoordinates(@NotNull OrangeRefGenomeVersion refGenomeVersion)
+    private static RefGenomeCoordinates resolveRefGenomeCoordinates(@NotNull OrangeRefGenomeVersion refGenomeVersion)
     {
         return refGenomeVersion == OrangeRefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
