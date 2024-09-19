@@ -10,51 +10,51 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ChromosomalRearrangementsDeterminerTest
 {
+    private static final RefGenomeCoordinates REF_COORDINATES_V37 = RefGenomeCoordinates.COORDS_37;
     private static final ChromosomalRearrangementsDeterminer CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V37 =
-            new ChromosomalRearrangementsDeterminer(OrangeRefGenomeVersion.V37);
-    private final RefGenomeCoordinates refCoordinatesV37 = RefGenomeCoordinates.COORDS_37;
+            new ChromosomalRearrangementsDeterminer(REF_COORDINATES_V37);
+
+    private static final RefGenomeCoordinates REF_COORDINATES_38 = RefGenomeCoordinates.COORDS_38;
     private static final ChromosomalRearrangementsDeterminer CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V38 =
-            new ChromosomalRearrangementsDeterminer(OrangeRefGenomeVersion.V38);
-    private final RefGenomeCoordinates refCoordinatesV38 = RefGenomeCoordinates.COORDS_38;
+            new ChromosomalRearrangementsDeterminer(REF_COORDINATES_38);
 
     @Test
     public void canDetermine1qTrisomyV37()
     {
-        int centromere1 = refCoordinatesV37.centromere("1");
-        int endChromosome1 = refCoordinatesV37.length("1");
+        int centromere1 = REF_COORDINATES_V37.centromere("1");
+        int endChromosome1 = REF_COORDINATES_V37.length("1");
         canDetermine1qTrisomy(centromere1, endChromosome1, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V37);
     }
 
     @Test
     public void canDetermine1qTrisomyV38()
     {
-        int centromere1 = refCoordinatesV38.centromere("1");
-        int endChromosome1 = refCoordinatesV38.length("1");
+        int centromere1 = REF_COORDINATES_38.centromere("1");
+        int endChromosome1 = REF_COORDINATES_38.length("1");
         canDetermine1qTrisomy(centromere1, endChromosome1, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V38);
     }
 
     @Test
     public void canDetermine1p19qCoDeletionV37()
     {
-        int centromere1 = refCoordinatesV37.centromere("1");
-        int centromere19 = refCoordinatesV37.centromere("19");
-        int endChromosome19 = refCoordinatesV37.length("19");
+        int centromere1 = REF_COORDINATES_V37.centromere("1");
+        int centromere19 = REF_COORDINATES_V37.centromere("19");
+        int endChromosome19 = REF_COORDINATES_V37.length("19");
         canDetermine1p19qCoDeletion(centromere1, centromere19, endChromosome19, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V37);
     }
 
     @Test
     public void canDetermine1p19qCoDeletionV38()
     {
-        int centromere1 = refCoordinatesV38.centromere("1");
-        int centromere19 = refCoordinatesV38.centromere("19");
-        int endChromosome19 = refCoordinatesV38.length("19");
+        int centromere1 = REF_COORDINATES_38.centromere("1");
+        int centromere19 = REF_COORDINATES_38.centromere("19");
+        int endChromosome19 = REF_COORDINATES_38.length("19");
         canDetermine1p19qCoDeletion(centromere1, centromere19, endChromosome19, CHROMOSOMAL_REARRANGEMENTS_DETERMINER_V38);
     }
 
