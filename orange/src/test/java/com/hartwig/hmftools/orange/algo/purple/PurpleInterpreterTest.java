@@ -366,6 +366,8 @@ public class PurpleInterpreterTest
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
+        ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
+                new ChromosomalRearrangementsDeterminer(OrangeRefGenomeVersion.V37);
 
         return new PurpleInterpreter(
                 purpleVariantFactory,
@@ -373,7 +375,7 @@ public class PurpleInterpreterTest
                 germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
-                OrangeRefGenomeVersion.V37,
+                chromosomalRearrangementsDeterminer,
                 null,
                 false
         );

@@ -145,6 +145,9 @@ interesting and added to the report:
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
         - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
+- Potentially interesting chromosomal rearrangements:
+    1. 1q trisomy: In case 98% of 1q has copy number > 2.8 AND 90% of 1q has copy number < 3.5
+    2. 1p19q co-deletion: In case 98% of 1p and 98% of 19q have MACN < 0.2
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
     2. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
