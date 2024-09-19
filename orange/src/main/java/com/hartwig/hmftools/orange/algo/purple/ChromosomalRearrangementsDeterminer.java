@@ -22,8 +22,9 @@ public final class ChromosomalRearrangementsDeterminer
     private static final double LOWER_THRESHOLD_TRISOMY = 2.8;
     private static final double UPPER_THRESHOLD_TRISOMY = 3.5;
     private static final double THRESHOLD_DELETION = 0.2;
-    private static final double PCT_98 = 0.98;
-    private static final double PCT_90 = 0.90;
+    private static final double LOWER_LIMIT_PERCENTAGE_TRISOMY = 0.98;
+    private static final double UPPER_LIMIT_PERCENTAGE_TRISOMY = 0.90;
+    private static final double UPPER_LIMIT_PERCENTAGE_DELETION = 0.98;
 
     private static final String CHR_1 = "1";
     private static final String CHR_19 = "19";
@@ -53,7 +54,8 @@ public final class ChromosomalRearrangementsDeterminer
             }
         }
 
-        return (double) lengthAboveLowerThreshold / length1QArm > PCT_98 && (double) lengthBelowUpperThreshold / length1QArm > PCT_90;
+        return (double) lengthAboveLowerThreshold / length1QArm > LOWER_LIMIT_PERCENTAGE_TRISOMY
+                && (double) lengthBelowUpperThreshold / length1QArm > UPPER_LIMIT_PERCENTAGE_TRISOMY;
     }
 
     public boolean determine1p19qCodeletion(@NotNull List<PurpleCopyNumber> allSomaticCopyNumbers)
@@ -80,7 +82,8 @@ public final class ChromosomalRearrangementsDeterminer
             }
         }
 
-        return (double) lengthDeletion1p / centromere1 > PCT_98 && (double) lengthDeletionChr19 / length19QArm > PCT_98;
+        return (double) lengthDeletion1p / centromere1 > UPPER_LIMIT_PERCENTAGE_DELETION
+                && (double) lengthDeletionChr19 / length19QArm > UPPER_LIMIT_PERCENTAGE_DELETION;
     }
 
     @NotNull
