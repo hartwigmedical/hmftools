@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.TQP_QUAL_LOG_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
@@ -77,9 +79,10 @@ public final class VariantContextFactory
     {
         VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
 
-        double tqp = variant.tumorReadCounters().get(0).tumorQualProbability();
-        double logTqp = log10(max(tqp, 1e-20));
+        double tqp = min(max(variant.tumorReadCounters().get(0).tumorQualProbability(), 0), 1);
+        double logTqp = log10(max(tqp, TQP_QUAL_LOG_MIN));
         builder.log10PError((double)round(logTqp * 10d) / 10d);
+
         builder.genotypes(genotypes);
         builder.filters(variant.filtersStringSet());
 

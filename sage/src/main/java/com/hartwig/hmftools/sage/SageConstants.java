@@ -68,7 +68,6 @@ public class SageConstants
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
     public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
-
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
@@ -118,10 +117,8 @@ public class SageConstants
 
     public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
 
-
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
-
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -138,6 +135,7 @@ public class SageConstants
     public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
     public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
 
+    public static final double TQP_QUAL_LOG_MIN = 1e-20;
 
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
