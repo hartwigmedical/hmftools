@@ -115,6 +115,9 @@ public class PhaseGroup
         {
             phaseSet.setId(phaseSetId++);
 
+            if(phaseSet.isShortLocalRefLink())
+                continue;
+
             AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
             phaseSet.setAssemblyAlignment(assemblyAlignment);
         }

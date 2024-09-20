@@ -331,7 +331,8 @@ public class AssemblyApplication
                 // add link assemblies into the same assembly alignment
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())
                 {
-                    assemblyAlignments.add(phaseSet.assemblyAlignment());
+                    if(phaseSet.hasValidAssemblyAlignment())
+                        assemblyAlignments.add(phaseSet.assemblyAlignment());
                 }
 
                 // and then add any assemblies not in a phase set into their own for alignment

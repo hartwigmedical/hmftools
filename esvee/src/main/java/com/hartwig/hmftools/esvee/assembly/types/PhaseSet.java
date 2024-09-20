@@ -2,7 +2,9 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,8 +73,7 @@ public class PhaseSet
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
     public List<AssemblyLink> secondaryLinks() { return mSecondaryLinks; }
 
-    public boolean isSecondaryLineLink() { return mAssemblyLinks.size() == 1 && mAssemblies.stream().anyMatch(x -> x.outcome() == SECONDARY); }
-
+    public boolean hasValidAssemblyAlignment() { return mAssemblyAlignment != null && mAssemblyAlignment.isValid(); }
     public AssemblyAlignment assemblyAlignment() { return mAssemblyAlignment; }
     public void setAssemblyAlignment(final AssemblyAlignment assemblyAlignment) { mAssemblyAlignment = assemblyAlignment; }
 
@@ -93,6 +94,19 @@ public class PhaseSet
     public AssemblyLink findSplitLink(final JunctionAssembly assembly)
     {
         return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+    }
+
+    public boolean isSecondaryLineLink()
+    {
+        return mAssemblyLinks.size() == 1 && mAssemblies.stream().anyMatch(x -> x.outcome() == SECONDARY);
+    }
+
+    public boolean isShortLocalRefLink()
+    {
+        if(mAssemblyLinks.size() != 1 || mAssemblies.get(0).outcome() != LOCAL_INDEL)
+            return false;
+
+        return mAssemblyLinks.get(0).length() < MIN_VARIANT_LENGTH;
     }
 
     public boolean hasFacingLinks() { return mAssemblyLinks.stream().anyMatch(x -> x.type() == LinkType.FACING); }
