@@ -1,0 +1,5 @@
+chr - chr1 chr1 0 30427617 black
+chr - chr2 chr2 0 19698289 black
+chr - chr3 chr3 0 23459830 black
+chr - chr4 chr4 0 18585056 black
+chr - chr5 chr5 0 26975502 black

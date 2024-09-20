@@ -1,0 +1,14 @@
+# Zea mays B73 RefGen v2
+# http://www.plantgdb.org/ZmGDB/
+chr - zm1 1 0 301354135 black
+chr - zm2 2 0 237068873 black
+chr - zm3 3 0 232140174 black
+chr - zm4 4 0 241473504 black
+chr - zm5 5 0 217872852 black
+chr - zm6 6 0 169174353 black
+chr - zm7 7 0 176764762 black
+chr - zm8 8 0 175793759 black
+chr - zm9 9 0 156750706 black
+chr - zm10 10 0 150189435 black
+# chromosome 11 is ChrUnkown - unanchored contigs with 100 n spacer
+chr - zm11 11 0 7140151 black

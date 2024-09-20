@@ -1,0 +1,14 @@
+The karyotype file defines the length and, if available, banding
+pattern for all ideograms.
+
+http://circos.ca/documentation/tutorials/ideograms/karyotypes/
+
+For non-genomics applications, this file will contain a list of
+segments (e.g. database tables, people, records, etc). The 'karyotype'
+and 'chromosome' terminology should be interpreted as 'segment set'
+and 'segment'.
+
+################################################################
+
+To create Circos karyotype files from UCSC Genome Browser tables (either
+Assembly or Chromosome Band), use the parse.karyotype or assembly/parse.assembly scripts.

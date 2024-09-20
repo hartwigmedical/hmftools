@@ -1,0 +1,17 @@
+chr - chrI I 0 230218 black
+chr - chrII II 0 813184 black
+chr - chrIII III 0 316620 black
+chr - chrIV IV 0 1531933 black
+chr - chrV V 0 576874 black
+chr - chrVI VI 0 270161 black
+chr - chrVII VII 0 1090940 black
+chr - chrVIII VIII 0 562643 black
+chr - chrIX IX 0 439888 black
+chr - chrX X 0 745751 black
+chr - chrXI XI 0 666816 black
+chr - chrXII XII 0 1078177 black
+chr - chrXIII XIII 0 924431 black
+chr - chrXIV XIV 0 784333 black
+chr - chrXV XV 0 1091291 black
+chr - chrXVI XVI 0 948066 black
+chr - chrM M 0 85779 black

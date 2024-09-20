@@ -1,0 +1,125 @@
+
+Circos understands TTF (TrueType) and OTF (OpenType) fonts.
+
+Several fonts are included in Circos for labels and glyphs. This file
+describes these fonts and covers how you can add your own.
+
+GD TTF COMPATIBILITY
+
+Your GD Perl module (interface to libgd) must be compiled with TTF font support. If it is not, fonts will not be rendered - Circos will create an error:
+
+  There was a problem with True Type font support. Circos could not render text from the font
+  file _FONTFILE_. Please check that gd (system graphics library) and GD (Perl's interface to gd) 
+  are compiled with True Type support
+
+
+FONT DEFINITIONS
+
+Circos font definitions are found in the <fonts> block, where a unique
+name is assigned to each font file. A font can be defined by multiple
+names (e.g. default, plain, normal), but a given name can only be used
+once (e.g. you cannot have two fonts named 'default').
+
+Fonts that are already included are defined in etc/fonts.conf
+
+# etc/fonts.conf
+
+serif_roman    = fonts/modern/cmunrm.otf
+serif_default  = fonts/modern/cmunrm.otf
+serif_normal   = fonts/modern/cmunrm.otf
+serif_bold     = fonts/modern/cmunbx.otf
+serif_italic   = fonts/modern/cmunui.otf
+
+light          = fonts/modern/cmunss.otf
+normal         = fonts/modern/cmunss.otf
+default        = fonts/modern/cmunss.otf
+condensed      = fonts/modern/cmunss.otf
+semibold       = fonts/modern/cmunbsr.otf
+condensedbold  = fonts/modern/cmunbsr.otf
+bold           = fonts/modern/cmunsx.otf
+...
+
+Relative file paths are relative to the circos distribution. 
+
+
+INCLUDED FONTS
+
+
+Computer Modern (fonts/modern)
+
+The family of faces composing the standard for typesetting in computer
+science and, in general, TeX. Created by David Knuth. See
+http://en.wikipedia.org/wiki/Computer_Modern. Serif, sans-serif and
+monospaced versions are included. The fonts/modern directory contains
+more faces than defined in etc/fonts.conf - add others if you wish.
+
+
+Symbols (fonts/symbols)
+
+Circle and polygon glyphs of various spacings by Martin Krzywinski.
+
+
+
+SUGGESTED FONTS
+
+The following fonts are not included, but can be downloaded. Once
+you've downloaded the font, see below (ADDING FONTS) to learn how to
+add the font to Circos.
+
+Circlethings (fonts/circles)
+http://www.dafont.com/circle-things.font
+
+Two fonts containing various circular glyphs from Fonts &
+Things. Useful for glyph tracks and champagne plots. These tracks are
+described at
+
+http://mkweb.bcgsc.ca/dev/circos/tutorials/lessons/2d_tracks/glyphs/
+
+
+Pointers (fonts/pointers)
+http://www.dafont.com/pointers.font
+
+Font of arrows and pointers by Russ Rowlett. Useful for arrow ends and callouts. To create arrow ends, see
+
+http://mkweb.bcgsc.ca/dev/circos/tutorials/lessons/recipes/directed_links/
+ 
+
+BasicShapes1 (fonts/shapes)
+http://www.dafont.com/fnt-basicshapes1.font
+
+A variety of shapes and glyphs, similar to the Windows' wingding font, by Fonts & Things.
+
+
+ADDING FONTS
+
+To add a font, it must be either TTF or OTF format. Add its definition
+to the etc/fonts file, or directly to the <fonts> block. For example,
+either
+
+# etc/fonts.conf
+...
+# font definition
+mynewfont = /path/to/myfont.ttf
+# now use font using 'mynewfont' as the font name
+# e.g. label_font = mynewfont
+
+or, in circos.conf
+
+<fonts>
+# included fonts
+<<include etc/fonts.conf>>
+# your font definitions
+mynewfont = /path/to/myfont.ttf
+</fonts>
+
+If you have a large number of new fonts, consider bundling them in
+your own font file and including this file from etc/fonts.conf
+
+# etc/fonts.conf
+...
+<<include /path/to/myfonts.conf>>
+
+
+
+
+

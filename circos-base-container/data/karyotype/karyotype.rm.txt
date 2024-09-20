@@ -1,0 +1,23 @@
+chr - rm1 1 0 229590362 chr1
+chr - rm2 2 0 192599291 chr2
+chr - rm3 3 0 198365852 chr3
+chr - rm4 4 0 169853907 chr4
+chr - rm5 5 0 184069350 chr5
+chr - rm6 6 0 180491593 chr6
+chr - rm7 7 0 170124641 chr7
+chr - rm8 8 0 150158102 chr8
+chr - rm9 9 0 130959383 chr9
+chr - rm10 10 0 95678458 chr10
+chr - rm11 11 0 134985053 chr11
+chr - rm12 12 0 106825570 chr12
+chr - rm13 13 0 137160470 chr13
+chr - rm14 14 0 135538710 chr14
+chr - rm15 15 0 112192347 chr15
+chr - rm16 16 0 80904711 chr16
+chr - rm17 17 0 94676912 chr17
+chr - rm18 18 0 74429130 chr18
+chr - rm19 19 0 64156825 chr19
+chr - rm20 20 0 88476065 chr20
+chr - rmX X 0 155416530 chrX
+chr - rmm m 0 16564 chrm
+

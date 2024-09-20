@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Parses UCSC Assembly table into a Circos karyotype file. 
+#
+# See README
+
+file=$1
+prefix=$2
+
+if [ ! -n "$file" ]
+then
+echo "Plese specify the UCSC assembly table file"
+exit
+fi
+
+if [ ! -n "$prefix" ]
+then
+prefix="chr"
+fi
+
+# chromosomes
+#cat $file | grep -v ^\# | tr A-Z a-z | sed 's/\t/ /g' | tr -s " " | cut -d " " -f 2,3,4 | sort +0 -1 +2rn -3 | sort -u -k 1,1 | sed 's/chr//' | awk '{print $1,$0}' | awk -v prefix=$2 '{print "chr -",prefix$2,$1,0,$4,"chr"$1}' | sort -n +3 -4 
+cat $file | grep -v ^\# | tr A-Z a-z | perl -pe 's/\t/ /g' | tr -s " " | cut -d " " -f 2,3,4 | sort -k 1,1 -k 3,3rn | sort -u -k 1,1 | sed 's/chr//' | awk '{print $1,$0}' | awk -v prefix=$2 '{print "chr -",prefix$2,$1,0,$4,"chr"$1}' | sort -k 4,4n

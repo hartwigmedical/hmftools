@@ -1,0 +1,14 @@
+# Sorghum bicolor Sbi1/Sbi1.4/SbGDB v181 23 Dec 2010
+# http://www.plantgdb.org/SbGDB/
+chr - sb1 1 0 73840631 black
+chr - sb2 2 0 77932606 black
+chr - sb3 3 0 74441160 black
+chr - sb4 4 0 68034345 black
+chr - sb5 5 0 62352331 black
+chr - sb6 6 0 62208784 black
+chr - sb7 7 0 64342021 black
+chr - sb8 8 0 55460251 black
+chr - sb9 9 0 59635592 black
+chr - sb10 10 0 60981646 black
+# chromosome 11 is composed of 88 unanchored scaffolds with 200 N spacing
+chr - sb11 11 0 40203219 black

@@ -1,0 +1,206 @@
+----------------------------------------------------------------------
+For more details, see the configuration file tutorial
+
+  http://circos.ca/tutorials/lessons/configuration/configuration_files/
+----------------------------------------------------------------------
+
+
+CIRCOS CONFIGURATION SYSTEM
+
+Circos expects majority of its settings (image size and format, track
+format and data, rules that adjust data format, etc) to be provided
+using a configuration file (typically .conf extension). In a typical
+use of Circos, the user invokes the application by providing the name
+of the configuration file with -conf
+
+  bin/circos -conf etc/circos.conf
+
+Many settings in configuration files are fixed (e.g. color and font
+definitions) and some change rarely (e.g. Bezier curve precision). To
+make the configuration system more modular, files are parsed into the
+main configuration file using the <<include>> directive.
+
+Thus, circos.conf might contain
+
+--- circos.conf ---
+<colors>
+<<include etc/colors.conf>>
+</colors>
+
+<fonts>
+<<include etc/fonts.conf>>
+</fonts>
+
+<patterns>
+<<include etc/patterns.conf>>
+</patterns>
+
+<<include ideogram.conf>>
+<<include ticks.conf>>
+
+...
+<<include etc/housekeeping.conf>>
+---
+
+Included configuration files can iteratively include other files. The
+UCSC chromosome color scheme (colors.ucsc.conf) and brewer palettes
+(colors.brewer.conf) are both imported by the color.conf file
+
+--- colors.conf ---
+...
+<<include colors.brewer.conf>>
+<<include colors.ucsc.conf>>
+---
+
+
+CIRCOS CONFIGURATION PATHS
+
+Circos will look for the configuration file specified with -conf, such
+as in the command
+
+  bin/circos -conf etc/circos.conf
+
+in the following paths, in addition to the current working directory
+
+  CIRCOS_PATH/..
+  CIRCOS_PATH/etc
+  CIRCOS_PATH/../etc
+
+When a configuration file includes another, the path of the included
+file must be relative to the configuration file that includes it.
+
+
+CIRCOS CONFIGURATION FILES
+
+> COLORS
+
+1. colors.conf
+
+Circos color definitions. These, together with the UCSC color
+scheme (below) and Brewer palettes (below) are used throughout the
+tutorials.
+
+The syntax for Circos colors is
+
+(v* + prefix)? + color
+
+where v* is optionally one or more "v" to indicate "very" (e.g. more
+extreme light or dark color), prefix is an optional letter designation
+"l" (light) or "d" dark, and color is the name of the color. Examples
+of colors are
+
+  vlred - very light red
+  lred  -      light red
+  red   -            red
+  dred  -       dark red
+  vdred - very  dark red
+
+http://circos.ca/tutorials/lessons/configuration/png_output/images
+
+2. colors.ucsc.conf
+
+Color scheme for chromosomes used by UCSC genome browser. I have
+provided luminance-corrected versions of this palette for luminance
+70, 80 and 90.
+
+3. colors.brewer.conf
+
+Brewer palette colors, as created by Cynthia A. Brewer (Geography,
+Pennsylvania State University). See www.colorbrewer.org for details.
+
+4. colors.brewer.lists.conf
+
+Brewer lists defined by regular expressions that match Brewer
+colors. Lists are supported in Circos for heatmap tracks and described
+here
+
+http://circos.ca/tutorials/lessons/configuration/configuration_files/
+
+5. colors.unix.conf
+
+UNIX X11 colors. 
+
+
+> OUTPUT IMAGE SETTINGS
+
+1. image.conf
+
+Most of the time you will be using the same output image settings
+(e.g. size, format, etc). These parameters are expected to be in an
+<image> block and are collected in this file for use by the tutorials.
+
+The tutorials include this file 
+
+--- tutorials/X/Y/circos.conf 
+
+<image>
+<<include etc/image.conf>>
+</image>
+
+---
+
+This file is constructed by importing settings from image.generic.conf
+and the background color from background.white.conf.
+
+2. image.black.conf
+
+The same configuration as in image.conf, but with a black background. 
+
+
+> FILL PATTERNS
+
+Tiles used for solid fill patterns, which are described here.
+
+http://circos.ca/tutorials/lessons/recipes/pattern_fills/
+
+
+> FONTS
+
+1. fonts.conf
+
+Font designations and corresponding True Type files. CMU Modern is
+used by default and associated with the following designations. 
+
+CMU Serif and CMU Bright are used for serif and sans-serif fonts. See
+etc/fonts.conf for definitions.
+
+
+> SYSTEM PARAMETERS
+
+1. housekeeping.conf
+
+These parameters must be included in each Circos configuration and are
+typically imported at the bottom of each circos.conf. 
+
+Most of these parameters should not be altered, except for
+
+- file_delim
+
+By default this is \s, which is any white space. 
+
+If you are using tabs (required if you wish to have spaces in your
+fields, such as text labels) set the delimiter to \t.
+
+- svg_font_scale
+
+Fonts in SVG files appear smaller than in PNG files. This
+magnification factor is used to adjust this.
+
+- beziersamples
+
+If you are drawing a *very large* number of links (e.g. > 10,000),
+which are drawn as Bezier curves, or are creating very small images
+(e.g. 800 x 800 px), you may wish to reduce this to speed up image
+creation.
+
+
+HISTORY
+
+2012 Jan 26 - centralized Brewer palette import
+                 - colors.conf now imports colors.brewer.conf
+                 - brewer.lists.conf is now colors.brewer.lists.conf
+
+2011 Jul 25 - Added hsv() colors and lists.
+
+2011 Jun 04 - first version, to provide explanation of etc/ contents,
+              which I suspect are somewhat arcane

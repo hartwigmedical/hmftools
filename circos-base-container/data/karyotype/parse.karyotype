@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Parses UCSC Chromosome Band table into a Circos karyotype file. 
+#
+# This script will only work on the Chromosome Band table - it will not 
+# work on an 'Assembly' or 'Scaffold' table. Many organisms do not have
+# a Chromosome Band table, and for these you will need to 
+#
+# parse.karyotype chromosome.band.hg19.txt hs > karyotype.hg19.txt
+#
+# The prefix, e.g. hs, will be used to label the chromosomes (e.g. hs1, hs2 ... )
+# By default, "chr" is used.
+#
+# To download data tables, see http://genome.ucsc.edu/cgi-bin/hgTables
+
+file=$1
+prefix=$2
+
+if [ ! -n "$file" ]
+then
+echo "Plese specify the UCSC karyotype table file"
+exit
+fi
+
+if [ ! -n "$prefix" ]
+then
+prefix="chr"
+fi
+
+# chromosomes
+cat $file | grep -v ^\# | tr A-Z a-z | sort +0 -1 +2rn -3 | sort -u -k 1,1 | sed 's/\t/ /g' | tr -s " " | sed 's/chr//' | awk '{print $1,$0}' | awk -v prefix=$2 '{print "chr -",prefix$2,$1,0,$4,"chr"$1}' | sort -n +3 -4 | sed 's/x/X/g' | sed 's/y/Y/g'
+
+# bands
+cat $file  | grep -v ^\# | tr A-Z a-z | sed 's/\t/ /g' | tr -s " " | sed "s/chr/$prefix/" | awk '{print $1,$0}' | sed 's/chr//' | awk '{print "band",$2,$5,$5,$3,$4,$6}' | sort +1 -2 +4n -5 | sed 's/x/X/g' | sed 's/y/Y/g'
+
+
+

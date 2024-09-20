@@ -1,0 +1,64 @@
+Generating karyotype files from UCSC assembly tables
+----------------------------------------------------
+
+The parse.assembly script parses an Assembly table to create a
+karyotype file for Circos. The script will not work on a Chromosome
+Band file (use ../parse.karyotype for this).
+
+  parse.assembly bostau7.txt bt > karyotype.cow.txt
+
+The prefix, e.g. bt, will be used to label the chromosomes (e.g. bt1,
+bt2 ... ) By default, "chr" is used. It is customary for Circos to use
+the species acronym for chromosome prefixes, instead of the generic
+'chr'. Using a different prefix for each species avoids chromosome
+name collisions (e.g. human and mouse chromosomes 1 are distinguished
+as hs1 and mm1).
+
+To download data tables, see http://genome.ucsc.edu/cgi-bin/hgTables
+
+
+Unanchored segments
+-------------------
+
+It's likely that your assembly will contain many unanchored
+chromosomes (chrUn_*). You probably want to remove these from the
+karytoype file. To do this, use grep -v to remove lines with PREFIX+un in them
+
+  parse.assembly bostau7.txt bt | grep -v btun > karyotype.cow.txt
+
+
+Chromosome colors
+-------------------
+
+The last field in each line of the karyotype file is the chromosome
+color. If you set 'fill' in the <ideogram> block, this is the color
+that will be used to tint the ideogram in the figure.
+
+The default human chromosome color scheme defines colors
+
+  chr1 ... chr22, chrx, chry, chrm, chrun
+
+and is used by the UCSC genome browser. These colors are defined in
+
+  etc/colors.ucsc.conf
+
+along with colors for cytogenetic bands, named after the stain
+properties (e.g. gpos100, gpos75, gneg, gvar, acen, stalk, etc).
+
+Depending on the name and number of your chromosome, your karyotype
+file could include colors that are not defined (e.g. chr29). It is up
+to you to define these.
+
+You can add new colors to circos by including another <colors> block
+with your color definitions
+
+  # default color definitions
+  <<include etc/colors_fonts_patterns.conf>>
+
+  # add more colors
+  <colors>
+  ...
+  chr28 = 110,110,110
+  chr29 = 100,100,100
+  ...
+  </colors>

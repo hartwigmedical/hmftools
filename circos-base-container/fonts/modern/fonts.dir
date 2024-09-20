@@ -1,0 +1,531 @@
+530
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-koi8-e
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-koi8-r
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-koi8-u
+cmunbbx.otf -misc-cmu bright-bold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso10646-1
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso8859-1
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso8859-15
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso8859-2
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso8859-5
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-iso8859-9
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-koi8-e
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-koi8-r
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-koi8-ru
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-koi8-uni
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-koi8-u
+cmunbi.otf -misc-cmu serif-bold-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso10646-1
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso8859-1
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso8859-15
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso8859-2
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso8859-5
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-iso8859-9
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-koi8-e
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-koi8-ru
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-koi8-r
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-koi8-u
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-koi8-uni
+cmunbl.otf -misc-cmu serif extra-bold-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso10646-1
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso8859-1
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso8859-15
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso8859-2
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso8859-5
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-iso8859-9
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-koi8-e
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-koi8-ru
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-koi8-r
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-koi8-uni
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-koi8-u
+cmunbmo.otf -misc-cmu bright-medium-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso10646-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso8859-15
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso8859-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso8859-2
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso8859-5
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-iso8859-9
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-koi8-e
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-koi8-r
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-koi8-ru
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-koi8-u
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-koi8-uni
+cmunbmr.otf -misc-cmu bright-medium-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso10646-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso8859-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso8859-15
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso8859-2
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso8859-5
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-iso8859-9
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-koi8-e
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-koi8-r
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-koi8-ru
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-koi8-u
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-koi8-uni
+cmunbmr.otf -misc-cmu bright-medium-r-normal--12-68-75-128-p-60-microsoft-cp1252
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso10646-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso8859-1
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso8859-15
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso8859-2
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso8859-5
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-iso8859-9
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-koi8-e
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-koi8-r
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-koi8-ru
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-koi8-u
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-koi8-uni
+cmunbmr.otf -misc-cmu bright-medium-r-normal--13-78-75-121-p-60-microsoft-cp1252
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso10646-1
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso8859-1
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso8859-15
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso8859-2
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso8859-5
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-iso8859-9
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-koi8-e
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-koi8-r
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-koi8-ru
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-koi8-u
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-koi8-uni
+cmunbso.otf -misc-cmu bright-semibold-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-koi8-e
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-koi8-r
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-koi8-u
+cmunbsr.otf -misc-cmu bright-semibold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso10646-1
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso8859-1
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso8859-15
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso8859-2
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso8859-5
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-iso8859-9
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-koi8-e
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-koi8-ru
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-koi8-r
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-koi8-uni
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-koi8-u
+cmunbtl.otf -misc-cmu typewriter text-extralight-r-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso10646-1
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso8859-1
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso8859-15
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso8859-2
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso8859-5
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-iso8859-9
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-koi8-e
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-koi8-r
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-koi8-ru
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-koi8-u
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-koi8-uni
+cmunbto.otf -misc-cmu typewriter text-extralight-o-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-koi8-e
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-koi8-r
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-koi8-u
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunbx.otf -misc-cmu serif-bold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso10646-1
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso8859-15
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso8859-1
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso8859-2
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso8859-5
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-iso8859-9
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-koi8-e
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-koi8-r
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-koi8-ru
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-koi8-u
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-koi8-uni
+cmunbxo.otf -misc-cmu bright-bold-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso10646-1
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso8859-15
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso8859-1
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso8859-2
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso8859-5
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-iso8859-9
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-koi8-e
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-koi8-r
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-koi8-ru
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-koi8-uni
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-koi8-u
+cmunci.otf -misc-cmu classical serif-medium-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso10646-1
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso8859-15
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso8859-1
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso8859-2
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso8859-5
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-iso8859-9
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-koi8-e
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-koi8-ru
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-koi8-r
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-koi8-uni
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-koi8-u
+cmunit.otf -misc-cmu typewriter text-medium-i-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso10646-1
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso8859-15
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso8859-1
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso8859-2
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso8859-5
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-iso8859-9
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-koi8-e
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-koi8-r
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-koi8-ru
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-koi8-uni
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-koi8-u
+cmunobi.otf -misc-cmu concrete-bold-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-koi8-e
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-koi8-r
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-koi8-u
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunobx.otf -misc-cmu concrete-bold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso10646-1
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso8859-15
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso8859-1
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso8859-2
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso8859-5
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-iso8859-9
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-koi8-e
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-koi8-ru
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-koi8-r
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-koi8-u
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-koi8-uni
+cmunorm.otf -misc-cmu concrete-medium-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso10646-1
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso8859-1
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso8859-15
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso8859-2
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso8859-5
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-iso8859-9
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-koi8-e
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-koi8-ru
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-koi8-r
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-koi8-uni
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-koi8-u
+cmunoti.otf -misc-cmu concrete-medium-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-koi8-e
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-koi8-r
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-koi8-u
+cmunrb.otf -misc-cmu serif extra-bold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso10646-1
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso8859-15
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso8859-1
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso8859-2
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso8859-5
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-iso8859-9
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-koi8-e
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-koi8-r
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-koi8-ru
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-koi8-u
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-koi8-uni
+cmunrm.otf -misc-cmu serif-medium-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso10646-1
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso8859-1
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso8859-15
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso8859-2
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso8859-5
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-iso8859-9
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-koi8-e
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-koi8-ru
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-koi8-r
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-koi8-uni
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-koi8-u
+cmunsi.otf -misc-cmu sans serif-medium-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso10646-1
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso8859-1
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso8859-15
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso8859-2
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso8859-5
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-iso8859-9
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-koi8-e
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-koi8-ru
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-koi8-r
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-koi8-uni
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-koi8-u
+cmunsl.otf -misc-cmu serif extra-medium-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso10646-1
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso8859-15
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso8859-1
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso8859-2
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso8859-5
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-iso8859-9
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-koi8-e
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-koi8-ru
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-koi8-r
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-koi8-u
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-koi8-uni
+cmunso.otf -misc-cmu sans serif-bold-o-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso10646-1
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso8859-15
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso8859-1
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso8859-2
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso8859-5
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-iso8859-9
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-koi8-e
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-koi8-r
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-koi8-ru
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-koi8-uni
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-koi8-u
+cmunss.otf -misc-cmu sans serif-medium-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso10646-1
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso8859-15
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso8859-1
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso8859-2
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso8859-5
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-iso8859-9
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-koi8-e
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-koi8-ru
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-koi8-r
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-koi8-uni
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-koi8-u
+cmunssdc.otf -misc-cmu sans serif demi condensed-semibold-r-condensed--0-0-0-0-p-0-microsoft-cp1252
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso10646-1
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso8859-1
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso8859-15
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso8859-2
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso8859-5
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-iso8859-9
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-koi8-e
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-koi8-r
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-koi8-ru
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-koi8-u
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-koi8-uni
+cmunst.otf -misc-cmu typewriter text-medium-o-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso10646-1
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso8859-1
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso8859-15
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso8859-2
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso8859-5
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-iso8859-9
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-koi8-e
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-koi8-r
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-koi8-ru
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-koi8-uni
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-koi8-u
+cmunsx.otf -misc-cmu sans serif-bold-r-normal--0-0-0-0-p-0-microsoft-cp1252
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso10646-1
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso8859-1
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso8859-15
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso8859-2
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso8859-5
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-iso8859-9
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-koi8-e
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-koi8-ru
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-koi8-r
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-koi8-u
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-koi8-uni
+cmuntb.otf -misc-cmu typewriter text-bold-r-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso10646-1
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso8859-1
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso8859-15
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso8859-2
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso8859-5
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-iso8859-9
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-koi8-e
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-koi8-ru
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-koi8-r
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-koi8-uni
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-koi8-u
+cmunti.otf -misc-cmu serif-medium-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-16
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--0-0-0-0-m-0-suneu-greek
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--12-58-75-150-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--13-68-75-139-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--14-67-75-150-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--15-77-75-140-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--16-77-75-150-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--17-87-75-141-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--18-87-75-150-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--19-97-75-142-m-60-microsoft-cp1252
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso10646-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso8859-15
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso8859-1
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso8859-2
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso8859-5
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-iso8859-9
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-koi8-e
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-koi8-ru
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-koi8-r
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-koi8-uni
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-koi8-u
+cmuntt.otf -misc-cmu typewriter text-medium-r-normal--20-106-75-136-m-60-microsoft-cp1252
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso10646-1
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso8859-1
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso8859-15
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso8859-2
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso8859-5
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-iso8859-9
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-koi8-e
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-koi8-r
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-koi8-ru
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-koi8-u
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-koi8-uni
+cmuntx.otf -misc-cmu typewriter text-bold-i-normal--0-0-0-0-m-0-microsoft-cp1252
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso10646-1
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso8859-1
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso8859-15
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso8859-2
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso8859-5
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-iso8859-9
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-koi8-e
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-koi8-ru
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-koi8-r
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-koi8-uni
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-koi8-u
+cmunui.otf -misc-cmu serif upright italic-medium-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso10646-1
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso8859-1
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso8859-15
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso8859-2
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso8859-5
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-iso8859-9
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-koi8-e
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-koi8-r
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-koi8-ru
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-koi8-u
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-koi8-uni
+cmunvi.otf -misc-cmu typewriter text variable width-medium-i-normal--0-0-0-0-p-0-microsoft-cp1252
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso10646-1
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso8859-1
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso8859-15
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso8859-2
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso8859-5
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-iso8859-9
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-koi8-e
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-koi8-r
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-koi8-ru
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-koi8-uni
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-koi8-u
+cmunvt.otf -misc-cmu typewriter text variable width-medium-r-normal--0-0-0-0-p-0-microsoft-cp1252
