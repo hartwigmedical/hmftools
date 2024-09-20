@@ -49,7 +49,7 @@ public final class ChromosomalRearrangementsDeterminer
             String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
             if(chromosome.equals(CHR_1) && overlapsWithQArm(copyNumber, centromere1))
             {
-                int length = copyNumber.start() > centromere1 ? copyNumber.length() : copyNumber.end() - centromere1 + 1;
+                int length = copyNumber.start() > centromere1 ? copyNumber.length() : copyNumber.end() - centromere1;
 
                 if(copyNumber.averageTumorCopyNumber() > LOWER_THRESHOLD_TRISOMY)
                 {
@@ -85,7 +85,7 @@ public final class ChromosomalRearrangementsDeterminer
             if(chromosome.equals(CHR_19) && overlapsWithQArm(copyNumber, centromere19)
                     && copyNumber.minorAlleleCopyNumber() < THRESHOLD_DELETION)
             {
-                int length = copyNumber.start() > centromere19 ? copyNumber.length() : copyNumber.end() - centromere19 + 1;
+                int length = copyNumber.start() > centromere19 ? copyNumber.length() : copyNumber.end() - centromere19;
                 lengthDeletionChr19 += length;
             }
         }
@@ -102,6 +102,6 @@ public final class ChromosomalRearrangementsDeterminer
 
     private static boolean overlapsWithQArm(@NotNull PurpleCopyNumber copyNumber, int centromere)
     {
-        return copyNumber.start() > centromere || (copyNumber.start() < centromere && centromere < copyNumber.end());
+        return copyNumber.start() > centromere || (copyNumber.start() <= centromere && centromere < copyNumber.end());
     }
 }
