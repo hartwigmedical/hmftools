@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.util.CigarUtil;
 
 public class JunctionAssembly
 {
@@ -159,6 +161,7 @@ public class JunctionAssembly
     public int extensionLength() { return mJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
 
     public int refBasePosition() { return mRefBasePosition; }
+    public String refBaseCigar() { return CigarUtils.cigarElementsToStr(mRefBaseCigarElements); }
     public int baseLength() { return mBases.length; }
 
     public byte[] bases() { return mBases; }

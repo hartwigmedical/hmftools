@@ -11,13 +11,13 @@ import com.google.common.collect.Lists;
 public enum WriteType
 {
     ASSEMBLY_BAM("assembly.bam"),
-    JUNC_ASSEMBLY("assemblies.tsv"),
+    JUNC_ASSEMBLY("assembly.tsv"),
     ASSEMBLY_READ("assembly_read.tsv"),
     BREAKEND("breakend.tsv"),
     VCF(RAW_VCF_SUFFIX),
     PHASED_ASSEMBLY("phased_assembly.tsv"),
-    ALIGNMENTS("alignments.tsv"),
-    DECOY_MATCHES("decoy_matches.tsv"),
+    ALIGNMENT("alignment.tsv"),
+    DECOY_MATCHES("decoy_match.tsv"),
     PHASE_GROUP_BUILDING("phase_group_building.tsv");
 
     private final String mFileId;
@@ -36,7 +36,7 @@ public enum WriteType
             switch(writeType)
             {
                 case BREAKEND:
-                case ALIGNMENTS:
+                case ALIGNMENT:
                 case VCF:
                     return true;
 
@@ -66,7 +66,11 @@ public enum WriteType
 
                 for(String writeType : writeTypeValues)
                 {
-                    writeTypes.add(WriteType.valueOf(writeType));
+                    // backwards compatibility
+                    if(writeType.equals("ALIGNMENTS"))
+                        writeTypes.add(ALIGNMENT);
+                    else
+                        writeTypes.add(WriteType.valueOf(writeType));
                 }
             }
         }
