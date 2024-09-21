@@ -118,8 +118,7 @@ public class PurpleApplication
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
-
-        mSegmentation = !mConfig.DriversOnly ? new Segmentation(mReferenceData) : null;
+        mSegmentation = new Segmentation(mReferenceData);
     }
 
     public void run()
@@ -128,22 +127,15 @@ public class PurpleApplication
 
         try
         {
-            if(mConfig.DriversOnly)
-            {
-                runDriversRoutine(mConfig.TumorId);
-            }
-            else
-            {
-                if(!mConfig.SampleFiles.hasValidSampleNames(mConfig))
-                    System.exit(1);
+            if(!mConfig.SampleFiles.hasValidSampleNames(mConfig))
+                System.exit(1);
 
-                final SampleData sampleData = loadSampleData();
+            final SampleData sampleData = loadSampleData();
 
-                if(sampleData == null)
-                    System.exit(1);
+            if(sampleData == null)
+                System.exit(1);
 
-                performFit(sampleData);
-            }
+            performFit(sampleData);
         }
         catch(Throwable t)
         {
@@ -165,30 +157,23 @@ public class PurpleApplication
 
         final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
 
-        if(!mConfig.DriversOnly)
-        {
-            // load amber and cobalt sample data
-            final AmberData amberData = new AmberData(
-                    mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
-                    mReferenceData.RefGenVersion);
+        // load amber and cobalt sample data
+        final AmberData amberData = new AmberData(
+                mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
+                mReferenceData.RefGenVersion);
 
-            final CobaltData cobaltData = new CobaltData(
-                    referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
-                    mConfig.tumorOnlyMode(), mConfig.germlineMode());
+        final CobaltData cobaltData = new CobaltData(
+                referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
+                mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
-            // load structural and somatic variants
-            final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
+        // load structural and somatic variants
+        final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
-            final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
-                    new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData, mConfig)
-                    : new SomaticSvCache();
+        final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
+                new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData, mConfig)
+                : new SomaticSvCache();
 
-            sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
-        }
-        else
-        {
-            sampleData = new SampleData(referenceId, tumorId, null, null, null, somaticVariantCache);
-        }
+        sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
 
         if(mConfig.runTumor())
             somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
@@ -370,67 +355,6 @@ public class PurpleApplication
         {
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
         }
-    }
-
-    private void runDriversRoutine(final String tumorId) throws Exception
-    {
-        final String purpleDataPath = mConfig.OutputDir;
-        SomaticStream somaticStream = null;
-        GermlineDeletions germlineDeletions = null;
-
-        final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorId);
-
-        final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
-                PurpleCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorId));
-
-        final List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorId));
-
-        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
-                GeneCopyNumberFile.generateFilename(purpleDataPath, tumorId));
-
-        if(mConfig.runTumor())
-        {
-            String somaticVcf = purpleSomaticVcfFile(purpleDataPath, tumorId);
-
-            SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
-            ListMultimap<Chromosome, VariantHotspot> emptyHotspots = ArrayListMultimap.create(); // already annotated in VCF
-            somaticVariantCache.loadSomatics(somaticVcf, emptyHotspots);
-
-            // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache);
-            somaticStream.registerReportedVariants();
-        }
-
-        if(mConfig.runGermline())
-        {
-            final String germlineVcf = purpleGermlineVcfFile(purpleDataPath, tumorId);
-
-            if(Files.exists(Paths.get(germlineVcf)))
-            {
-                mGermlineVariants.loadReportableVariants(germlineVcf);
-                PPL_LOGGER.info("loaded {} reportable germline variants", mGermlineVariants.reportableVariants().size());
-            }
-
-            // find germline deletions since these contribute to drivers
-            germlineDeletions = new GermlineDeletions(
-                    mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
-
-            final String germlineSvVcf = purpleGermlineSvFile(purpleDataPath, tumorId);
-            final List<StructuralVariant> germlineSVs = Lists.newArrayList();
-
-            if(Files.exists(Paths.get(germlineSvVcf)))
-            {
-                GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), germlineSvVcf, mReferenceData, mConfig,
-                        fittedRegions, copyNumbers, purityContext);
-
-                germlineSVs.addAll(germlineSvCache.variants());
-            }
-
-            germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSVs);
-        }
-
-        findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
     }
 
     private void findDrivers(

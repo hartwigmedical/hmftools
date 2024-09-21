@@ -243,7 +243,6 @@ public class GermlineSvCache
             }
         }
 
-
         double junctionCopyNumber = legCount > 0 ? junctionCopyNumberTotal / legCount : 0;
         builder.junctionCopyNumber(junctionCopyNumber);
 
