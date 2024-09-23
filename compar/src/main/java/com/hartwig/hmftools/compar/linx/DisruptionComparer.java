@@ -2,14 +2,9 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_REGION_TYPE;
 
 import java.io.IOException;
 import java.util.List;
@@ -111,8 +106,7 @@ public class DisruptionComparer implements ItemComparer
     {
         List<ComparableItem> items = Lists.newArrayList();
 
-        Map<String,List<StructuralVariantData>> geneSvMap = Maps.newHashMap();
-        Map<String,List<LinxBreakend>> geneBreakendMap = Maps.newHashMap();
+        Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
 
         MatchLevel matchLevel = mConfig.Categories.getOrDefault(DISRUPTION, MatchLevel.REPORTABLE);
 
@@ -127,41 +121,41 @@ public class DisruptionComparer implements ItemComparer
                 if(matchLevel == MatchLevel.REPORTABLE && !breakend.reportedDisruption())
                     continue;
 
-                List<StructuralVariantData> geneSVs = geneSvMap.get(breakend.gene());
-                List<LinxBreakend> geneBreakends = geneBreakendMap.get(breakend.gene());
+                List<BreakendData> geneBreakends = geneBreakendMap.get(breakend.gene());
 
-                if(geneSVs == null)
+                if(geneBreakends == null)
                 {
-                    geneSVs = Lists.newArrayList();
-                    geneSvMap.put(breakend.gene(), geneSVs);
-
                     geneBreakends = Lists.newArrayList();
                     geneBreakendMap.put(breakend.gene(), geneBreakends);
                 }
 
-                geneSVs.add(var);
-                geneBreakends.add(breakend);
+                boolean usesStart = breakend.isStart();
 
-                /*
-                BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                        var.startChromosome(), var.startPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                        var.endChromosome(), var.endPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                int[] homologyOffsets = usesStart ?
+                        new int[] { var.startIntervalOffsetStart(), var.startIntervalOffsetEnd() } :
+                        new int[] { var.endIntervalOffsetStart(), var.endIntervalOffsetEnd() };
 
-                boolean checkTranscript = !breakend.canonical();
-                */
+                String chromosome = usesStart ? var.startChromosome() : var.endChromosome();
+                int position = usesStart ? var.startPosition() : var.endPosition();
 
+                BasePosition comparisonPosition = determineComparisonGenomePosition(
+                        chromosome, position, sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+                BreakendData breakendData = new BreakendData(
+                        breakend, usesStart ? var.vcfIdStart() : var.vcfIdEnd(), var.type(),
+                        comparisonPosition.Chromosome, comparisonPosition.Position,
+                        usesStart ? var.startOrientation() : var.endOrientation(), homologyOffsets);
+
+                geneBreakends.add(breakendData);
             }
         }
 
-        for(Map.Entry<String,List<StructuralVariantData>> entry : geneSvMap.entrySet())
+        for(Map.Entry<String,List<BreakendData>> entry : geneBreakendMap.entrySet())
         {
             String geneName = entry.getKey();
+            List<BreakendData> geneBreakends = entry.getValue();
 
-            List<StructuralVariantData> geneSVs = entry.getValue();
-            List<LinxBreakend> geneBreakends = geneBreakendMap.get(geneName);
-
-            DisruptionData disruptionData = new DisruptionData(geneName, geneSVs, geneBreakends);
+            DisruptionData disruptionData = new DisruptionData(DISRUPTION, geneName, geneBreakends);
             items.add(disruptionData);
         }
 
