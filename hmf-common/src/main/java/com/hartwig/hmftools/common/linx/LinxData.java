@@ -43,10 +43,10 @@ public interface LinxData
     List<LinxBreakend> reportableGermlineBreakends();
 
     @Nullable
-    List<LinxGermlineSv> allGermlineDisruptions();
+    List<LinxGermlineDisruption> allGermlineDisruptions();
 
     @Nullable
-    List<LinxGermlineSv> reportableGermlineDisruptions();
+    List<LinxGermlineDisruption> reportableGermlineDisruptions();
 
     @Nullable
     List<HomozygousDisruption> germlineHomozygousDisruptions();

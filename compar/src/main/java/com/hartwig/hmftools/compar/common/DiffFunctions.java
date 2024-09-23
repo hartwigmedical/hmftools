@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.common.DiffThresholds.DEFAULT_DECIMAL_THRESHOLD;
 
@@ -19,7 +21,7 @@ public final class DiffFunctions
 
         if(thresholds.hasDifference(name, value1, value2))
         {
-            diffs.add(String.format("%s(%d/%d)", name, value1, value2));
+            diffs.add(format("%s(%d/%d)", name, value1, value2));
             return true;
         }
 
@@ -31,7 +33,7 @@ public final class DiffFunctions
         if((!thresholds.isFieldRegistered(name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
         || thresholds.hasDifference(name, value1, value2))
         {
-            diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
+            diffs.add(format("%s(%.3f/%.3f)", name, value1, value2));
             return true;
         }
 
@@ -42,7 +44,7 @@ public final class DiffFunctions
     {
         if(value1 != value2)
         {
-            diffs.add(String.format("%s(%d/%d)", name, value1, value2));
+            diffs.add(format("%s(%d/%d)", name, value1, value2));
             return true;
         }
 
@@ -54,7 +56,7 @@ public final class DiffFunctions
         if(value1 == value2)
             return false;
 
-        diffs.add(String.format("%s(%s/%s)", name, value1, value2));
+        diffs.add(format("%s(%s/%s)", name, value1, value2));
         return true;
     }
 
@@ -63,7 +65,7 @@ public final class DiffFunctions
         if(value1.equals(value2))
             return false;
 
-        diffs.add(String.format("%s(%s/%s)", name, value1, value2));
+        diffs.add(format("%s(%s/%s)", name, value1, value2));
         return true;
     }
 
@@ -74,7 +76,7 @@ public final class DiffFunctions
 
         if(!newFilterDiffs.isEmpty() || !refFilterDiffs.isEmpty())
         {
-            diffs.add(String.format("%s(%s/%s)", FILTER_DIFF, filtersStr(refFilterDiffs), filtersStr(newFilterDiffs)));
+            diffs.add(format("%s(%s/%s)", FILTER_DIFF, filtersStr(refFilterDiffs), filtersStr(newFilterDiffs)));
         }
     }
 

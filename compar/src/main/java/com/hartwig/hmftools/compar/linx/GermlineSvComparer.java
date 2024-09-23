@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
@@ -10,15 +8,12 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparison
 import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -75,8 +70,8 @@ public class GermlineSvComparer implements ItemComparer
 
         try
         {
-            String germlineSvFile = LinxGermlineSv.generateFilename(fileSources.LinxGermline, sampleId);
-            List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(germlineSvFile);
+            String germlineSvFile = LinxGermlineDisruption.generateFilename(fileSources.LinxGermline, sampleId);
+            List<LinxGermlineDisruption> germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
 
             String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
 
@@ -86,7 +81,7 @@ public class GermlineSvComparer implements ItemComparer
             CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
 
 
-            for(LinxGermlineSv germlineSv : germlineSvs)
+            for(LinxGermlineDisruption germlineSv : germlineSvs)
             {
                 boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
 

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -18,7 +18,7 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineSvData implements ComparableItem
 {
-    public final LinxGermlineSv SvData;
+    public final LinxGermlineDisruption SvData;
     private final boolean mIsReported;
     private final BasePosition mComparisonStartPosition;
     private final BasePosition mComparisonEndPosition;
@@ -26,7 +26,7 @@ public class GermlineSvData implements ComparableItem
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
 
     public GermlineSvData(
-            final LinxGermlineSv svData, boolean isReported, final BasePosition comparisonStartPosition,
+            final LinxGermlineDisruption svData, boolean isReported, final BasePosition comparisonStartPosition,
             final BasePosition comparisonEndPosition)
     {
         SvData = svData;

@@ -93,14 +93,8 @@ public final class LinxTestFactory
                 .nextSpliceExonPhase(0)
                 .nextSpliceDistance(0)
                 .totalExonCount(0)
-                .type(StructuralVariantType.BND)
-                .chromosome(Strings.EMPTY)
-                .orientation(0)
-                .strand(0)
-                .chrBand(Strings.EMPTY)
                 .exonUp(0)
-                .exonDown(0)
-                .junctionCopyNumber(0D);
+                .exonDown(0);
     }
 
     @NotNull

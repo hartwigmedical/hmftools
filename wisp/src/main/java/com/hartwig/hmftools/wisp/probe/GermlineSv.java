@@ -14,15 +14,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 
 public class GermlineSv extends Variant
 {
-    private final LinxGermlineSv mVariant;
+    private final LinxGermlineDisruption mVariant;
 
     private List<String> mRefSequences;
 
-    public GermlineSv(final LinxGermlineSv variant)
+    public GermlineSv(final LinxGermlineDisruption variant)
     {
         mVariant = variant;
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
@@ -109,17 +109,17 @@ public class GermlineSv extends Variant
         if(linxDir == null)
             return variants;
 
-        String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
+        String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, sampleId);
         String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
 
         if(!Files.exists(Paths.get(germlineSvFile)) || !Files.exists(Paths.get(germlineBreakendsFile)))
             return variants;
 
-        List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(germlineSvFile);
+        List<LinxGermlineDisruption> germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
         List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
                 .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
 
-        for(LinxGermlineSv germlineSv : germlineSvs)
+        for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
             if(germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
                 variants.add(new GermlineSv(germlineSv));
