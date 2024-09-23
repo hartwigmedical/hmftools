@@ -3,9 +3,6 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.CommonUtils.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -22,22 +19,21 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class DisruptionData implements ComparableItem
 {
-    public final Category SubCategory;
     public final String GeneName;
-
     public final List<BreakendData> Breakends;
+    private final Category mSubCategory;
 
     protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
 
     public DisruptionData(final Category category, final String geneName, final List<BreakendData> breakends)
     {
-        SubCategory = category;
+        mSubCategory = category;
         GeneName = geneName;
         Breakends = breakends;
     }
 
     @Override
-    public Category category() { return SubCategory; }
+    public Category category() { return mSubCategory; }
 
     @Override
     public String key()
@@ -49,6 +45,8 @@ public class DisruptionData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
+
+        values.add(String.format("%s", reportable()));
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 

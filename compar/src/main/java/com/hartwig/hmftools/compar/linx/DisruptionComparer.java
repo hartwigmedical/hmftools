@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 
@@ -46,9 +47,7 @@ public class DisruptionComparer implements ItemComparer
     public Category category() { return DISRUPTION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-    }
+    public void registerThresholds(final DiffThresholds thresholds) {}
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -59,7 +58,7 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_BREAKEND_INFO);
+        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
     }
 
     @Override

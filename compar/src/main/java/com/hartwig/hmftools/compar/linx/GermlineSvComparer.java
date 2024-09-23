@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,11 +40,7 @@ public class GermlineSvComparer implements ItemComparer
     public Category category() { return GERMLINE_SV; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
-        thresholds.addFieldThreshold(FLD_GERMLINE_FRAGS, 5, 0.1);
-    }
+    public void registerThresholds(final DiffThresholds thresholds) {}
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -56,7 +51,7 @@ public class GermlineSvComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_GERMLINE_FRAGS);
+        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
     }
 
     @Override
