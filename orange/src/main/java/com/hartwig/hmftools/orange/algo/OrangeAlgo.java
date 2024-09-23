@@ -23,8 +23,6 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
@@ -32,6 +30,8 @@ import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
@@ -68,6 +68,7 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
+import com.hartwig.hmftools.orange.algo.purple.ChromosomalRearrangementsDeterminer;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.GermlineLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
@@ -207,8 +208,10 @@ public class OrangeAlgo
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
+        ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
+                ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(config.refGenomeVersion());
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory,
-                germlineLOHFactory, driverGenes, linx, chord, config.convertGermlineToSomatic());
+                germlineLOHFactory, driverGenes, linx, chromosomalRearrangementsDeterminer, chord, config.convertGermlineToSomatic());
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
