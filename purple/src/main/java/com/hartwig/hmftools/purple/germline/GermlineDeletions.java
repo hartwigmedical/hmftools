@@ -130,16 +130,8 @@ public class GermlineDeletions
             }
             else
             {
-                if(nextRegion != null)
-                {
-                    regionStart = nextRegion.minStart() - 1;
-                    regionEnd = nextRegion.maxStart() - 1;
-                }
-                else
-                {
-                    regionStart = region.end();
-                    regionEnd = region.end();
-                }
+                regionEnd = nextRegion != null ? nextRegion.maxStart() - 1 : region.end();
+                regionStart = region.end();
             }
 
             regionStart -= WINDOW_SIZE;
