@@ -74,6 +74,9 @@ public class VcfWriter
 
     private void checkLaterVariants(final CompleteVariants completeVariants, final CompleteVariants nextCompleteVariants)
     {
+        if(completeVariants.Variants.isEmpty() || nextCompleteVariants.Variants.isEmpty())
+            return;
+
         // some variants at the start of a region could have their position adjusted to fall into any earlier region
         while(!nextCompleteVariants.Variants.isEmpty())
         {
@@ -103,6 +106,11 @@ public class VcfWriter
 
     public void flushChromosome()
     {
+        for(int i = 0; i < mCompletedVariants.size() - 1; ++i)
+        {
+            checkLaterVariants(mCompletedVariants.get(i), mCompletedVariants.get(i + 1));
+        }
+
         mCompletedVariants.forEach(x -> writeVariants(x.Variants));
         mCompletedVariants.clear();
         mLastWrittenIndex = -1;
