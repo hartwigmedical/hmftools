@@ -49,9 +49,10 @@ class Maven:
 
 
 class Docker:
-    def __init__(self, module, version):
+    def __init__(self, module, version, is_external_release):
         self.module = module
         self.version = version
+        self.is_external_release = is_external_release
         self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
         self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
@@ -62,8 +63,11 @@ class Docker:
             output.write('docker buildx create --name builder --driver docker-container --driver-opt network=cloudbuild --use\n')
             output.write(f'docker buildx build --add-host metadata.google.internal:169.254.169.254 {self.module} --load -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
             output.write(f'docker push {self.internal_image}\n')
-            output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
-            output.write(f'docker push {self.external_image}\n')
+            if self.is_external_release:
+                output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
+                output.write(f'docker push {self.external_image}\n')
+            else:
+                output.write(f'echo Not pushing to external Docker registry as {version} is an internal-only version')
 
 
 class GithubRelease:
@@ -177,6 +181,8 @@ def build_and_release(raw_tag: str, github_key: str, github_client_id: str, gith
         exit(1)
     module = match.group(1)
     version = match.group(2)
+    is_external_release = re.compile(r'^[0-9\.]+$').match(version) != None
+
     # Clean the raw_tag such that it only includes the groups captured by the regex
     # For example: raw_tag = orange-v1.0.0 then tag = orange-1.1.0
     tag = f'{module}-{version}'
@@ -199,9 +205,13 @@ def build_and_release(raw_tag: str, github_key: str, github_client_id: str, gith
 
     Maven.deploy_all(module_pom, *dependencies_pom)
 
-    Docker(module, version).build()
-    GithubRelease(raw_tag, module, version, open(f"/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar", "rb"), 
+    Docker(module, version, is_external_release).build()
+    if is_external_release:
+        GithubRelease(raw_tag, module, version, open(f'/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar', 'rb'), 
             open(github_key, "r").read(), github_client_id, github_installation_id).create()
+    else:
+        print(f'Skipping Github release creation as {version} is an internal-only version')
+
 
 if __name__ == '__main__':
     main()
