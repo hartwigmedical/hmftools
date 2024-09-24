@@ -71,6 +71,10 @@ public class JunctionAssembler
             findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
             hasMinLengthSoftClipRead = !extensionReads.isEmpty();
         }
+        else if(mJunction.DiscordantOnly)
+        {
+            // look for a common soft-clip position, otherwise take the min variant length back from the inner most read as the junction
+        }
         else
         {
             Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();
