@@ -25,6 +25,7 @@ public class DiscordantGroup
         Region = region;
         Orient = orient;
         mReadGroups = Lists.newArrayList(readGroup);
+        mInnermostRead = initialRead;
         mRemoteRegions = Lists.newArrayList();
     }
 

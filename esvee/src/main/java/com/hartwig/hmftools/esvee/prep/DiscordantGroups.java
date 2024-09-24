@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_ALIGN_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
 
 import java.util.List;
@@ -92,6 +96,24 @@ public final class DiscordantGroups
         List<ChrBaseRegion> remoteRegions = discordantGroup.validRemoteRegions(DISCORDANT_GROUP_MIN_FRAGMENTS);
 
         if(remoteRegions.isEmpty())
+            return false;
+
+        boolean aboveMinMapQual = false;
+        boolean aboveMinAlignScore = false;
+
+        for(ReadGroup readGroup : discordantGroup.readGroups())
+        {
+            PrepRead read = firstPrimaryRead(readGroup);
+
+            aboveMinMapQual |= read.mapQuality() >= DISCORDANT_GROUP_MIN_MAP_QUAL;
+
+            aboveMinAlignScore |= aboveRepeatTrimmedAlignmentThreshold(read, DISCORDANT_GROUP_MIN_ALIGN_SCORE, false);
+
+            if(aboveMinAlignScore && aboveMinMapQual)
+                break;
+        }
+
+        if(!aboveMinAlignScore || !aboveMinMapQual)
             return false;
 
         for(ChrBaseRegion remoteRegion : remoteRegions)

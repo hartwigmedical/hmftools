@@ -192,7 +192,7 @@ public class ReadSupportTest
         PrepRead read = PrepRead.from(createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 10, readBases, "10S30M10D20M10I30M"));
 
-        assertTrue(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES));
+        assertTrue(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES, true));
 
         String repeat1 = "ACGTT";
         String repeat2 = "AAGG";
@@ -201,7 +201,7 @@ public class ReadSupportTest
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 10, readBases, makeCigarString(readBases, 0, 0)));
 
-        assertFalse(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES));
+        assertFalse(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES, true));
     }
 
     @Test

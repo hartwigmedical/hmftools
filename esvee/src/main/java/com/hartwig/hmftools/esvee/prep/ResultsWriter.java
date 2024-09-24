@@ -118,7 +118,7 @@ public class ResultsWriter
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
             sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
             sj.add("MaxQual").add("MaxSoftClip");
-            sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("SoftClipBases").add("InitialReadId");
+            sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("InitialReadId");
 
             if(mConfig.TrackRemotes)
                 sj.add("RemoteJunctionCount").add("RemoteJunctions");
@@ -148,15 +148,14 @@ public class ResultsWriter
                 int maxMapQual = 0;
                 int lowMapQualFrags = 0;
                 int maxSoftClip = 0;
-                PrepRead maxSoftClipRead = null;
                 boolean expectLeftClipped = junctionData.Orient.isReverse();
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
                 {
-                    // check the read supports this junction (it can only support another junction)
+                    // check the read supports this junction (it can also support another junction)
                     boolean supportsJunction =
-                            (expectLeftClipped && read.start() == junctionData.Position && CigarUtils.leftSoftClipped(read.cigar()))
-                            || (!expectLeftClipped && read.end() == junctionData.Position && CigarUtils.rightSoftClipped(read.cigar()));
+                            (expectLeftClipped && read.start() == junctionData.Position && read.isLeftClipped())
+                            || (!expectLeftClipped && read.end() == junctionData.Position && read.isRightClipped());
 
                     if(!supportsJunction)
                         continue;
@@ -173,14 +172,12 @@ public class ResultsWriter
                         if(scLength > maxSoftClip)
                         {
                             maxSoftClip = scLength;
-                            maxSoftClipRead = read;
                         }
                     }
                 }
 
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
                 int otherSupportFrags = junctionData.SupportingGroups.size();
-                String softClipBases = maxSoftClipRead != null ? getSoftClippedBases(maxSoftClipRead, expectLeftClipped) : "";
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
                 {
@@ -194,9 +191,9 @@ public class ResultsWriter
                         chromosome, junctionData.Position, junctionData.Orient.asByte(), junctionData.junctionFragmentCount(),
                         exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
-                mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s\t%s",
+                mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s",
                         maxSoftClip, junctionData.internalIndel(), junctionData.hotspot(),
-                        softClipBases, junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
+                        junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
                 if(mConfig.TrackRemotes)
                 {
