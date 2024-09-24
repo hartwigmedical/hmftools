@@ -10,10 +10,10 @@ RUN apt update && \
     libreadonly-perl libset-intspan-perl libsvg-perl libregexp-common-perl \
     libtext-format-perl libstatistics-basic-perl circos && \
   apt clean && rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /usr/bin/data /usr/bin/etc /usr/bin/fonts
-ADD data/* /usr/bin/data/
+RUN mkdir -p /usr/bin/etc
 ADD etc/* /usr/bin/etc/
-ADD fonts/* /usr/bin/fonts/
+ADD data.tar.gz /usr/bin/
+ADD fonts.tar.gz /usr/bin/
 
 USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && \
