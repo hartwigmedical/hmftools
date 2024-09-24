@@ -32,7 +32,6 @@ public class PurpleConfig
     public final String OutputDir;
 
     public final boolean RunDrivers;
-    public final boolean DriversOnly;
 
     public final SampleDataFiles SampleFiles;
     public final FittingConfig Fitting;
@@ -52,7 +51,6 @@ public class PurpleConfig
 
     public static final String SAMPLE_DIR = "sample_dir";
 
-    public static String DRIVERS_ONLY = "drivers_only";
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
     public static final String TIER_FILTERS = "tier_filters";
     public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
@@ -107,7 +105,6 @@ public class PurpleConfig
         Threads = parseThreads(configBuilder);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
-        DriversOnly = configBuilder.hasFlag(DRIVERS_ONLY);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
         UseGridssSVs = SampleFiles.usesGridssSVs();
@@ -165,7 +162,6 @@ public class PurpleConfig
                 "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/. Default 'purple'",
                 PURPLE_DIR);
 
-        configBuilder.addFlag(DRIVERS_ONLY, "Only run the driver routine");
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
         configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");

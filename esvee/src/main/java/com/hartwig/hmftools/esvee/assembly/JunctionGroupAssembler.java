@@ -94,8 +94,6 @@ public class JunctionGroupAssembler extends ThreadTask
         return primaryAssemblyTasks;
     }
 
-    private static final int TASK_LOG_COUNT = 10000;
-
     @Override
     public void run()
     {
@@ -170,7 +168,7 @@ public class JunctionGroupAssembler extends ThreadTask
             if(candidateReads.isEmpty())
                 continue;
 
-            if(junction.DiscordantOnly) // ignored for now, requires new functionality to handle without split reads
+            if(junction.DiscordantOnly && mConfig.DiscordantOnlyMinFrags == 0)
                 continue;
 
             List<JunctionAssembly> candidateAssemblies = null;

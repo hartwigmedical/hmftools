@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.teal.TelomereLength;
@@ -27,7 +28,6 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -495,7 +495,7 @@ public class DatabaseAccess implements AutoCloseable
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeGermlineSVs(final String sample, final List<LinxGermlineSv> germlineSvs)
+    public void writeGermlineSVs(final String sample, final List<LinxGermlineDisruption> germlineSvs)
     {
         germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
     }

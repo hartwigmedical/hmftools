@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_READ_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -144,6 +145,8 @@ public class RefBaseSeqBuilder
 
         List<ReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
+        // boolean isIndelJunction = mAssembly.junction().indelBased();
+
         while(!activeReads.isEmpty())
         {
             if(currentElementType == M || currentElementType == I)
@@ -278,6 +281,30 @@ public class RefBaseSeqBuilder
 
         mRefBasePosition = refPosition;
 
+        // correct ref position where M bases have been skipped over from an insert
+        if(mCigarElements.stream().anyMatch(x -> x.getOperator() == I && x.getLength() >= MIN_INDEL_SUPPORT_LENGTH))
+        {
+            int outerRefPosition = -1;
+
+            for(ReadParseState read : mReads)
+            {
+                if(!read.isValid())
+                    continue;
+
+                if(mIsForward)
+                {
+                    if(outerRefPosition < 0 || read.refPosition() < outerRefPosition)
+                        outerRefPosition = read.refPosition();
+                }
+                else
+                {
+                    outerRefPosition = max(outerRefPosition, read.refPosition());
+                }
+            }
+
+            mRefBasePosition = outerRefPosition;
+        }
+
         if(mIsForward)
             Collections.reverse(mCigarElements);
     }
@@ -307,23 +334,49 @@ public class RefBaseSeqBuilder
     private static void progressReadState(final List<ReadParseState> reads, final CigarOperator currentElementType)
     {
         // move to the next position or index if during an insert
-        int index = 0;
+        boolean allowNonIndelMatch = false;
 
+        if(currentElementType == I)
+        {
+            int indelCount = 0;
+
+            for(ReadParseState read : reads)
+            {
+                if(read.operator() == I && read.elementLength() >= MIN_INDEL_SUPPORT_LENGTH)
+                {
+                    ++indelCount;
+
+                    if(indelCount > reads.size() / 2)
+                    {
+                        allowNonIndelMatch = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        int index = 0;
         while(index < reads.size())
         {
             ReadParseState read = reads.get(index);
 
             if(currentElementType == M || currentElementType == D)
             {
-                if(read.operator() == I)
+                if(read.operator() == I && read.elementLength() < MIN_INDEL_SUPPORT_LENGTH)
+                {
                     read.skipInsert();
+                }
                 else
+                {
                     read.moveNext();
+                }
             }
             else // insert
             {
-                if(read.operator() == I)
+                if(read.operator() == I || (read.operator() == M && allowNonIndelMatch))
+                {
                     read.moveNext();
+                }
             }
 
             if(read.exhausted() || read.exceedsMaxMismatches())
@@ -348,16 +401,23 @@ public class RefBaseSeqBuilder
 
             boolean aboveMinQual = aboveMinQual(read.currentQual());
             boolean consensusAboveMinQual = aboveMinQual(consensusQual);
+            boolean operatorMismatch = read.operator() != currentElementType;
 
-            if(read.operator() != currentElementType)
+            if(operatorMismatch && read.operator() == D)
             {
-                if(read.operator() == D || aboveMinQual)
-                    read.addIndelMismatch();
+                read.addIndelMismatch();
+                continue;
             }
-            else if(read.currentBase() != consensusBase)
+
+            if(read.currentBase() != consensusBase)
             {
                 if(aboveMinQual && consensusAboveMinQual)
-                    read.addMismatch();
+                {
+                    if(operatorMismatch)
+                        read.addIndelMismatch();
+                    else
+                        read.addMismatch();
+                }
             }
             else
             {

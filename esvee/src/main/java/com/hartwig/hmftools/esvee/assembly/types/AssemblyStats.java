@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.types;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -133,7 +134,7 @@ public class AssemblyStats
         {
             SoftClipMatchTotal += supportRead.junctionMatches();
             SoftClipMismatchTotal += supportRead.junctionMismatches();
-            RefBaseMismatchTotal += supportRead.referenceMismatches();
+            RefBaseMismatchTotal += max(supportRead.referenceMismatches(), 0);
 
             if(supportRead.junctionMatches() > MaxExtBaseMatchCount)
             {

@@ -38,7 +38,6 @@
         <module>redux</module>
         <module>sage</module>
         <module>sigs</module>
-        <module>stat-calcs</module>
         <module>sv-tools</module>
         <module>teal</module>
         <module>virus-interpreter</module>

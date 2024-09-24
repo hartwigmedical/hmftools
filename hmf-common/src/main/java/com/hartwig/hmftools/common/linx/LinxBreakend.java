@@ -41,16 +41,6 @@ public abstract class LinxBreakend
     public abstract int nextSpliceDistance();
     public abstract int totalExonCount();
 
-    // TODO Property can be removed (see also ACTIN-353)
-    public abstract int strand();
-
-    // TODO Derive properties from other sources (see also ACTIN-346)
-    public abstract StructuralVariantType type();
-    public abstract String chromosome();
-    public abstract int orientation();
-    public abstract String chrBand();
-    public abstract double junctionCopyNumber();
-
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
     private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.breakend.tsv";
 
@@ -120,14 +110,8 @@ public abstract class LinxBreakend
                     .nextSpliceExonPhase(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonPhase")]))
                     .nextSpliceDistance(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceDistance")]))
                     .totalExonCount(Integer.parseInt(values[fieldsIndexMap.get("totalExonCount")]))
-                    .type(StructuralVariantType.valueOf(values[fieldsIndexMap.get("type")]))
-                    .chromosome(values[fieldsIndexMap.get("chromosome")])
-                    .orientation(Integer.parseInt(values[fieldsIndexMap.get("orientation")]))
-                    .strand(Integer.parseInt(values[fieldsIndexMap.get("strand")]))
-                    .chrBand(values[fieldsIndexMap.get("chrBand")])
                     .exonUp(Integer.parseInt(values[fieldsIndexMap.get("exonUp")]))
                     .exonDown(Integer.parseInt(values[fieldsIndexMap.get("exonDown")]))
-                    .junctionCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]))
                     .build());
         }
 
@@ -155,14 +139,8 @@ public abstract class LinxBreakend
                 .add("nextSpliceExonPhase")
                 .add("nextSpliceDistance")
                 .add("totalExonCount")
-                .add("type")
-                .add("chromosome")
-                .add("orientation")
-                .add("strand")
-                .add("chrBand")
                 .add("exonUp")
                 .add("exonDown")
-                .add("junctionCopyNumber")
                 .toString();
     }
 
@@ -187,14 +165,8 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.nextSpliceExonPhase()))
                 .add(String.valueOf(breakend.nextSpliceDistance()))
                 .add(String.valueOf(breakend.totalExonCount()))
-                .add(String.valueOf(breakend.type()))
-                .add(String.valueOf(breakend.chromosome()))
-                .add(String.valueOf(breakend.orientation()))
-                .add(String.valueOf(breakend.strand()))
-                .add(String.valueOf(breakend.chrBand()))
                 .add(String.valueOf(breakend.exonUp()))
                 .add(String.valueOf(breakend.exonDown()))
-                .add(String.format("%.4f", breakend.junctionCopyNumber()))
                 .toString();
     }
 }

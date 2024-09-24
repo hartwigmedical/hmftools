@@ -103,7 +103,12 @@ public class ReferenceData
                 if(mConfig.Common.SpecificChrRegions.excludeRegion(geneData.GeneStart, geneData.GeneEnd))
                     continue;
 
-                transDataList.add(GeneDataCache.getCanonicalTranscriptData(geneData.GeneId));
+                TranscriptData transData = GeneDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+                if(transData == null)
+                    continue;
+
+                transDataList.add(transData);
             }
         }
     }

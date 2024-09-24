@@ -284,7 +284,7 @@ public class Alignment
         if(mConfig.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
             AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment);
 
-        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENTS))
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
         {
             List<AlignData> alignmentsToWrite;
 

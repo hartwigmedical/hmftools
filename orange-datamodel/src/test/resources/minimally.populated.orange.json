@@ -328,7 +328,11 @@
         "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
       }
-    ]
+    ],
+    "chromosomalRearrangements": {
+      "hasTrisomy1q": false,
+      "hasCodeletion1p19q": false
+    }
   },
   "linx": {
     "allSomaticStructuralVariants": [

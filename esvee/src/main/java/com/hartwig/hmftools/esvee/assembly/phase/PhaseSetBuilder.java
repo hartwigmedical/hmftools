@@ -186,6 +186,7 @@ public class PhaseSetBuilder
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
     {
+        // look for a local sequence match for the extension bases, thereby forming a short DEL or DUP
         AssemblyLink localRefLink = mLocalSequenceMatcher.tryLocalAssemblyLink(assembly);
 
         if(localRefLink == null)
@@ -194,9 +195,6 @@ public class PhaseSetBuilder
         assembly.setOutcome(LOCAL_INDEL);
 
         mLocallyLinkedAssemblies.add(assembly);
-
-        // no need to register this against the phase group, but keep the link since it will be used to create the ref breakend if the aligner doesn't
-        // mPhaseGroup.addDerivedAssembly(localRefAssembly);
 
         mSplitLinks.add(localRefLink);
         JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
@@ -866,9 +864,15 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
+            if(assembly1.outcome() == LOCAL_INDEL) // observed very few of these so excluded
+                continue;
+
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
+
+                if(assembly2.outcome() == LOCAL_INDEL)
+                    continue;
 
                 if(facingAssemblies.contains(assembly1) || facingAssemblies.contains(assembly2))
                     continue;
@@ -936,6 +940,10 @@ public class PhaseSetBuilder
 
             PhaseSet phaseSet = new PhaseSet(assemblyLink);
             mPhaseSets.add(phaseSet);
+
+            // keep local ref links separate from other assemblies, and these won't be aligned if short
+            if(assemblyLink.type() == LinkType.SPLIT && assemblyLink.first().outcome() == LOCAL_INDEL)
+                continue;
 
             // look for facing and then splits links for this phase set
             for(int se = SE_START; se <= SE_END; ++se)

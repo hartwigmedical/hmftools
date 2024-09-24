@@ -61,7 +61,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final Map<Category, MatchLevel> Categories;
+    public final Map<Category,MatchLevel> Categories;
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 

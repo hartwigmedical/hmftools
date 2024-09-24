@@ -341,23 +341,9 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(!mHotspotRegions.isEmpty()
-            && DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
-                // require one end of this candidate group to be in a hotspot read
-                boolean hasHotspotMatch = false;
-
-                for(PrepRead read : readGroup.reads())
-                {
-                    if(mHotspotRegions.stream().anyMatch(x -> x.overlaps(read.Chromosome, read.start(), read.end())))
-                    {
-                        hasHotspotMatch = true;
-                        break;
-                    }
-                }
-
-                if(hasHotspotMatch)
-                    mCandidateDiscordantGroups.add(readGroup);
+                mCandidateDiscordantGroups.add(readGroup);
             }
         }
 
@@ -371,19 +357,16 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.DiscordantGroups);
 
-        if(mCandidateDiscordantGroups.size() > 1000)
-        {
-            SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
-        }
-
         List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(
                 mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
 
-        if(!discordantJunctions.isEmpty())
+        if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
         {
-            SV_LOGGER.debug("region({}) found {} discordant group junctions", mRegion, discordantJunctions.size());
-            discordantJunctions.forEach(x -> addJunction(x));
+            SV_LOGGER.debug("region({}) found {} discordant group junctions from {} read groups",
+                    mRegion, discordantJunctions.size(), mCandidateDiscordantGroups.size());
         }
+
+        discordantJunctions.forEach(x -> addJunction(x));
 
         // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
         // and allocated to these groups

@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -147,7 +147,7 @@ public class LoadLinxData
     {
         LOGGER.info("sample({}) loading Linx germline data", sampleId);
 
-        final String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
+        final String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, sampleId);
         final String germlineBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
         final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, false);
 
@@ -166,7 +166,7 @@ public class LoadLinxData
         LOGGER.info("sample({}) loading {} germline driver catalog records", sampleId, driverCatalog.size());
         dbAccess.writeLinxDriverCatalog(sampleId, driverCatalog, DRIVERS_LINX_GERMLINE);
 
-        List<LinxGermlineSv> germlineSVs = LinxGermlineSv.read(germlineSvFile);
+        List<LinxGermlineDisruption> germlineSVs = LinxGermlineDisruption.read(germlineSvFile);
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
         dbAccess.writeGermlineSVs(sampleId, germlineSVs);
 
