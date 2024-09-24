@@ -27,9 +27,9 @@ public final class SomaticVariantTable
 
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
-                new float[] { 3, 0.9f, 0.9f, 0.9f, 1.1f, 1, 1, 1, 1, 1, 2 },
+                new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 2 },
                 new Cell[] { cells.createHeader("Variant"), cells.createHeader("VCN"), cells.createHeader("CN"), cells.createHeader("MACN"),
-                        cells.createHeader("Biallelic"), cells.createHeader("BL"), cells.createHeader("Hotspot"), cells.createHeader("DL"), cells.createHeader("CL"),
+                        cells.createHeader("Biallelic"), cells.createHeader("Hotspot"), cells.createHeader("DL"), cells.createHeader("CL"),
                         cells.createHeader("Phase ID"), cells.createHeader("RNA Depth") });
 
         for(VariantEntry variant : Variants.sort(variants))
@@ -38,7 +38,6 @@ public final class SomaticVariantTable
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(cells.createContent(Variants.biallelicLikelihoodField(variant)));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));
             table.addCell(cells.createContent(Variants.driverLikelihoodField(variant)));
