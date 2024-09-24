@@ -67,7 +67,7 @@ class Docker:
                 output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
                 output.write(f'docker push {self.external_image}\n')
             else:
-                output.write(f'echo Not pushing to external Docker registry as {version} is an internal-only version')
+                output.write(f'echo Not pushing to external Docker registry as {self.version} is an internal-only version')
 
 
 class GithubRelease:
