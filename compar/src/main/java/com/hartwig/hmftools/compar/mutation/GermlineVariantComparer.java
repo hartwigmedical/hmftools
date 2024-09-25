@@ -55,10 +55,10 @@ public class GermlineVariantComparer implements ItemComparer
     {
         // same as somatic
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
-        thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.5, 0.2);
+        thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.15);
         thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
-        thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 0, 0.2);
-        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 0, 0.2);
+        thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 1, 0.2);
+        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 1, 0.2);
     }
 
     @Override
