@@ -341,7 +341,7 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }

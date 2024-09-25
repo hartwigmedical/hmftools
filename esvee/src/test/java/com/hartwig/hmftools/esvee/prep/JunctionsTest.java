@@ -364,10 +364,13 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 441, CHR_1, 5050);
 
         junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
-        assertEquals(1, junctions.size());
+        assertEquals(2, junctions.size());
         assertTrue(junctions.get(0).JunctionGroups.isEmpty());
         assertEquals(540, junctions.get(0).Position);
         assertEquals(FORWARD, junctions.get(0).Orient);
+
+        assertEquals(5050, junctions.get(1).Position);
+        assertEquals(REVERSE, junctions.get(1).Orient);
 
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 540, CHR_1, 105000); // unrelated
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 550, CHR_1, 5300);
@@ -380,7 +383,7 @@ public class JunctionsTest
 
         discordantCandidates.forEach(x -> x.clearJunctionPositions());
         junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
-        assertEquals(1, junctions.size());
+        assertEquals(2, junctions.size());
         assertEquals(8, junctions.get(0).SupportingGroups.size());
 
         // a local DEL needs more support
@@ -394,7 +397,7 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
-        assertEquals(1, junctions.size());
+        assertEquals(2, junctions.size());
     }
 
 }
