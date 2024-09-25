@@ -1,23 +1,34 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
+
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.IntPair;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
 
 public class UltimaCoreExtender
 {
-    private static final byte MISSING_BASE = -1;
+    @VisibleForTesting
+    public static final byte MISSING_BASE = -1;
+    @VisibleForTesting
+    public static final int INVALID_INDEX = -1;
 
     public static class UltimaCoreInfo
     {
@@ -33,7 +44,8 @@ public class UltimaCoreExtender
         }
     }
 
-    private static class AlignedBase
+    @VisibleForTesting
+    public static class AlignedBase
     {
         public final int RefPos;
         public final int ReadIndex;
@@ -50,25 +62,159 @@ public class UltimaCoreExtender
             CigarOp = cigarOp;
         }
 
-        // TODO: Improve this.
         @Override
         public String toString()
         {
-            return "(" + RefPos + ", " + (char) RefBase + ", " + ReadIndex + ", " + (char) ReadBase + "," + CigarOp.toString() + ")";
+            char refBase = RefBase == MISSING_BASE ? '_' : (char) RefBase;
+            char readBase = ReadBase == MISSING_BASE ? '_' : (char) ReadBase;
+            return format("ref(pos=%d base=%s) read(idx=%d base=%s) cigarOp(%s)", RefPos, refBase, ReadIndex, readBase, CigarOp.toString());
+        }
+
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(this == o)
+                return true;
+
+            if(!(o instanceof AlignedBase))
+                return false;
+
+            final AlignedBase that = (AlignedBase) o;
+            return RefPos == that.RefPos && ReadIndex == that.ReadIndex && RefBase == that.RefBase && ReadBase == that.ReadBase
+                    && CigarOp == that.CigarOp;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = RefPos;
+            hash = 31 * hash + ReadIndex;
+            hash = 31 * hash + RefBase;
+            hash = 31 * hash + ReadBase;
+            hash = 31 * hash + CigarOp.ordinal();
+            return hash;
+        }
+
+        public boolean isExactMatch()
+        {
+            return RefBase != MISSING_BASE && RefBase == ReadBase && CigarOp == M;
+        }
+
+        public boolean isIndel()
+        {
+            return RefBase == MISSING_BASE || ReadBase == MISSING_BASE;
         }
     }
 
-    public static UltimaCoreInfo extendCore(final SAMRecord read, final RefSequence refSequence, final int readAlignmentStart,
-            final List<CigarElement> cigarElements, final int readCoreStart, final int readCoreEnd, final ReadCigarInfo readCigarInfo,
-            final int flankSize)
+    @Nullable
+    public static UltimaCoreInfo extendUltimaCore(final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
+            final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize)
     {
-        final byte[] readBases = read.getReadBases();
-        final int refStartIndex = readAlignmentStart - refSequence.Start;
-        final byte[] refBases = refSequence.Bases;
+        final List<AlignedBase> alignedBases = alignReadBases(readBases, refSequence, readAlignmentStart, cigarElements);
+        if(alignedBases == null)
+            return null;
 
-        // align read bases against ref
+        Map<Integer, Integer> lookupFromRefPos = Maps.newHashMap();
+        Map<Integer, Integer> lookupFromReadIndex = Maps.newHashMap();
+        populateAlignedBaseLookupMaps(alignedBases, lookupFromRefPos, lookupFromReadIndex);
+
+        Integer coreStart = lookupFromRefPos.get(readCigarInfo.CorePositionStart);
+        Integer coreEnd = lookupFromRefPos.get(readCigarInfo.CorePositionEnd);
+        if(coreStart == null || coreEnd == null)
+            return null;  // can't check if expansion is needed
+
+        IntPair extendedReadCoreIndices = extendCore(alignedBases, coreStart, coreEnd, lookupFromRefPos, lookupFromReadIndex);
+        if(extendedReadCoreIndices == null)
+            return null;
+
+        int newCoreStart = extendedReadCoreIndices.getLeft();
+        int newCoreEnd = extendedReadCoreIndices.getRight();
+        boolean addLeftPadding = newCoreStart < coreStart || !alignedBases.get(coreStart).isExactMatch();
+        boolean addRightPadding = newCoreEnd > coreEnd || !alignedBases.get(coreEnd).isExactMatch();
+        coreStart = newCoreStart;
+        coreEnd = newCoreEnd;
+        if(alignedBases.get(coreStart).CigarOp.isClipping() || alignedBases.get(coreEnd).CigarOp.isClipping())
+            return null;
+
+        if(addLeftPadding)
+        {
+            coreStart = addPadding(alignedBases, coreStart, true);
+            if(coreStart == INVALID_INDEX)
+                return null;
+
+            if(alignedBases.get(coreStart).CigarOp.isClipping())
+                return null;
+        }
+
+        if(addRightPadding)
+        {
+            coreEnd = addPadding(alignedBases, coreEnd, false);
+            if(coreEnd == INVALID_INDEX)
+                return null;
+
+            if(alignedBases.get(coreEnd).CigarOp.isClipping())
+                return null;
+        }
+
+        int flankStart = findFlankBoundary(alignedBases, coreStart, true, flankSize);
+        if(flankStart == INVALID_INDEX)
+            return null;
+
+        int flankEnd = findFlankBoundary(alignedBases, coreEnd, false, flankSize);
+        if(flankEnd == INVALID_INDEX)
+            return null;
+
+        // get cigar of the flanks and core
+        List<CigarOperator> readCigarOps = IntStream.range(flankStart, flankEnd + 1)
+                .mapToObj(i -> alignedBases.get(i).CigarOp)
+                .collect(Collectors.toList());
+        List<CigarElement> readCigarElements = collapseCigarOps(readCigarOps);
+
+        int newReadCoreStart = alignedBases.get(coreStart).ReadIndex;
+        int newReadCoreEnd = alignedBases.get(coreEnd).ReadIndex;
+        int corePosStart = alignedBases.get(coreStart).RefPos;
+        int corePosEnd = alignedBases.get(coreEnd).RefPos;
+        return new UltimaCoreInfo(
+                newReadCoreStart,
+                newReadCoreEnd,
+                new ReadCigarInfo(
+                        readAlignmentStart,
+                        readCigarElements,
+                        max(alignedBases.get(flankStart).RefPos, readAlignmentStart),
+                        alignedBases.get(flankEnd).RefPos,
+                        corePosStart,
+                        corePosEnd,
+                        alignedBases.get(flankStart).ReadIndex,
+                        alignedBases.get(flankEnd).ReadIndex));
+    }
+
+    @VisibleForTesting
+    public static void populateAlignedBaseLookupMaps(final List<AlignedBase> alignedBases, final Map<Integer, Integer> lookupFromRefPosOut,
+            final Map<Integer, Integer> lookupFromReadIndexOut)
+    {
+        for(int i = 0; i < alignedBases.size(); i++)
+        {
+            AlignedBase alignedBase = alignedBases.get(i);
+            if(alignedBase.RefBase != MISSING_BASE)
+            {
+                lookupFromRefPosOut.put(alignedBase.RefPos, i);
+            }
+
+            if(alignedBase.ReadBase != MISSING_BASE)
+            {
+                lookupFromReadIndexOut.put(alignedBase.ReadIndex, i);
+            }
+        }
+    }
+
+    @VisibleForTesting
+    @Nullable
+    public static List<AlignedBase> alignReadBases(final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
+            final List<CigarElement> cigarElements)
+    {
+        final byte[] refBases = refSequence.Bases;
         int readIndex = 0;
-        int refIndex = refStartIndex;
+        int refIndex = readAlignmentStart - refSequence.Start;
         int pos = readAlignmentStart;
         boolean nonClippingOpSeen = false;
         final List<AlignedBase> alignedBases = Lists.newArrayList();
@@ -80,9 +226,7 @@ public class UltimaCoreExtender
             if(nonClippingOpSeen)
             {
                 if(cigarElement.getOperator().isClipping())
-                {
                     break;
-                }
             }
             else if(!cigarElement.getOperator().isClipping())
             {
@@ -93,18 +237,14 @@ public class UltimaCoreExtender
                 // move ref indices back
                 refIndex -= cigarElement.getLength();
                 if(refIndex < 0)
-                {
                     return null;
-                }
 
                 pos -= cigarElement.getLength();
                 isRef = true;
             }
 
             if(!isRef && !isRead)
-            {
                 continue;
-            }
 
             if(isRef && isRead)
             {
@@ -147,59 +287,39 @@ public class UltimaCoreExtender
             }
         }
 
-        // create dictionaries of refPos and readIndex to aligned base index
-        Map<Integer, Integer> lookupFromRefPos = Maps.newHashMap();
-        Map<Integer, Integer> lookupFromReadIndex = Maps.newHashMap();
-        for(int i = 0; i < alignedBases.size(); i++)
-        {
-            AlignedBase alignedBase = alignedBases.get(i);
-            if(alignedBase.RefBase != MISSING_BASE)
-            {
-                lookupFromRefPos.put(alignedBase.RefPos, i);
-            }
+        return alignedBases;
+    }
 
-            if(alignedBase.ReadBase != MISSING_BASE)
-            {
-                lookupFromReadIndex.put(alignedBase.ReadIndex, i);
-            }
-        }
-
-        // get start and end index for the core
-        Integer coreStart = lookupFromRefPos.get(readCigarInfo.CorePositionStart);
-        Integer coreEnd = lookupFromRefPos.get(readCigarInfo.CorePositionEnd);
-        if(coreStart == null || coreEnd == null)
-        {
-            // can't check if expansion is needed
+    @VisibleForTesting
+    @Nullable
+    public static IntPair extendCore(final List<AlignedBase> alignedBases, final int initCoreStart, final int initCoreEnd,
+            final Map<Integer, Integer> lookupFromRefPos, final Map<Integer, Integer> lookupFromReadIndex)
+    {
+        if(initCoreStart < 0 || initCoreEnd >= alignedBases.size())
             return null;
-        }
 
-        // extend so we are not cutting off homopolymers and that the first and last base are an M
-        boolean addLeftPadding = false;
-        boolean addRightPadding = false;
+        int coreStart = initCoreStart;
+        int coreEnd = initCoreEnd;
         while(true)
         {
             AlignedBase coreStartBase = alignedBases.get(coreStart);
             AlignedBase coreEndBase = alignedBases.get(coreEnd);
 
-            if(coreStartBase.RefBase == MISSING_BASE || coreStartBase.ReadBase == MISSING_BASE)
+            if(coreStartBase.isIndel())
             {
-                addLeftPadding = true;
                 coreStart--;
                 if(coreStart < 0)
-                {
                     return null;
-                }
+
                 continue;
             }
 
-            if(coreEndBase.RefBase == MISSING_BASE || coreEndBase.ReadBase == MISSING_BASE)
+            if(coreEndBase.isIndel())
             {
-                addRightPadding = true;
                 coreEnd++;
                 if(coreEnd >= alignedBases.size())
-                {
                     return null;
-                }
+
                 continue;
             }
 
@@ -210,9 +330,7 @@ public class UltimaCoreExtender
             Integer nextReadBaseIndex = lookupFromReadIndex.get(coreEndBase.ReadIndex + 1);
 
             if(prevRefBaseIndex == null || nextRefBaseIndex == null || prevReadBaseIndex == null || nextReadBaseIndex == null)
-            {
                 return null;
-            }
 
             boolean expandLeft = coreStartBase.RefBase == alignedBases.get(prevRefBaseIndex).RefBase
                     || coreStartBase.ReadBase == alignedBases.get(prevReadBaseIndex).ReadBase;
@@ -221,219 +339,52 @@ public class UltimaCoreExtender
                     || coreEndBase.ReadBase == alignedBases.get(nextReadBaseIndex).ReadBase;
 
             if(!expandLeft && !expandRight)
-            {
-                break;
-            }
+                return new IntPair(coreStart, coreEnd);
 
             if(expandLeft)
-            {
-                addLeftPadding = true;
                 coreStart--;
-                if(coreStart < 0)
-                {
-                    return null;
-                }
-            }
 
             if(expandRight)
-            {
-                addRightPadding = true;
                 coreEnd++;
-                if(coreEnd >= alignedBases.size())
-                {
-                    return null;
-                }
-            }
         }
+    }
 
-        if(!addLeftPadding && alignedBases.get(coreStart).RefBase != alignedBases.get(coreStart).ReadBase)
+    public static int addPadding(final List<AlignedBase> alignedBases, int startIndex, boolean padLeft)
+    {
+        int inc = padLeft ? -1 : 1;
+        for(int i = startIndex + inc; i >= 0 && i < alignedBases.size(); i += inc)
         {
-            addLeftPadding = true;
+            if(alignedBases.get(i).isExactMatch())
+                return i;
         }
 
-        if(!addRightPadding && alignedBases.get(coreEnd).RefBase != alignedBases.get(coreEnd).ReadBase)
-        {
-            addRightPadding = true;
-        }
+        return INVALID_INDEX;
+    }
 
-        // go left until we have one ref and read base padding and that they match exactly
-        if(addLeftPadding)
-        {
-            boolean paddingAdded = false;
-            while(coreStart >= 1)
-            {
-                coreStart--;
-                if(alignedBases.get(coreStart).RefBase == MISSING_BASE)
-                {
-                    continue;
-                }
-
-                if(alignedBases.get(coreStart).ReadBase == MISSING_BASE)
-                {
-                    continue;
-                }
-
-                if(alignedBases.get(coreStart).RefBase != alignedBases.get(coreStart).ReadBase)
-                {
-                    continue;
-                }
-
-                paddingAdded = true;
-                break;
-            }
-
-            if(!paddingAdded)
-            {
-                return null;
-            }
-        }
-
-        if(addRightPadding)
-        {
-            boolean paddingAdded = false;
-            while(coreEnd < alignedBases.size() - 1)
-            {
-                coreEnd++;
-                if(alignedBases.get(coreEnd).RefBase == MISSING_BASE)
-                {
-                    continue;
-                }
-
-                if(alignedBases.get(coreEnd).ReadBase == MISSING_BASE)
-                {
-                    continue;
-                }
-
-                if(alignedBases.get(coreEnd).RefBase != alignedBases.get(coreEnd).ReadBase)
-                {
-                    continue;
-                }
-
-                paddingAdded = true;
-                break;
-            }
-
-            if(!paddingAdded)
-            {
-                return null;
-            }
-        }
-
-        // find beginning of left flank
-        int flankStart = coreStart - 1;
+    public static int findFlankBoundary(final List<AlignedBase> alignedBases, int coreBoundaryIndex, boolean leftFlank, int flankSize)
+    {
+        int inc = leftFlank ? -1 : 1;
         int readBasesSeen = 0;
-        while(flankStart >= 0)
+        int flankBoundary;
+        for(flankBoundary = coreBoundaryIndex + inc; flankBoundary >= 0 && flankBoundary < alignedBases.size(); flankBoundary += inc)
         {
-            if(alignedBases.get(flankStart).ReadBase != MISSING_BASE)
-            {
+            if(alignedBases.get(flankBoundary).ReadBase != MISSING_BASE)
                 readBasesSeen++;
-            }
 
             if(readBasesSeen == flankSize)
-            {
                 break;
-            }
-
-            flankStart--;
         }
 
-        if(readBasesSeen < flankSize)
-        {
-            return null;
-        }
+        if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
+            return INVALID_INDEX;
 
-        // push alignment of left flank out if the first flank base is in an indel
-        while(flankStart >= 0 && (alignedBases.get(flankStart).RefBase == MISSING_BASE
-                || alignedBases.get(flankStart).ReadBase == MISSING_BASE))
-        {
-            flankStart--;
-        }
+        // push alignment out if the flank boundary is in an indel
+        while(flankBoundary >= 0 && flankBoundary < alignedBases.size() && alignedBases.get(flankBoundary).isIndel())
+            flankBoundary += inc;
 
-        if(flankStart < 0)
-        {
-            return null;
-        }
+        if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
+            return INVALID_INDEX;
 
-        // find ending of right flank
-        int flankEnd = coreEnd + 1;
-        readBasesSeen = 0;
-        while(flankEnd < alignedBases.size())
-        {
-            if(alignedBases.get(flankEnd).ReadBase != MISSING_BASE)
-            {
-                readBasesSeen++;
-            }
-
-            if(readBasesSeen == flankSize)
-            {
-                break;
-            }
-
-            flankEnd++;
-        }
-
-        if(readBasesSeen < flankSize)
-        {
-            return null;
-        }
-
-        // push alignment of right flank out if the last flank base is in an indel
-        while(flankEnd < alignedBases.size() && (alignedBases.get(flankEnd).RefBase == MISSING_BASE
-                || alignedBases.get(flankEnd).ReadBase == MISSING_BASE))
-        {
-            flankEnd++;
-        }
-
-        if(flankEnd >= alignedBases.size())
-        {
-            return null;
-        }
-
-        // get cigar of the flanks and core
-        List<CigarElement> readCigarElements = Lists.newArrayList();
-        CigarOperator currentOp = null;
-        int currentLength = 0;
-        for(int i = flankStart; i <= flankEnd; i++)
-        {
-            CigarOperator op = alignedBases.get(i).CigarOp;
-            if(currentOp == null)
-            {
-                currentOp = op;
-                currentLength = 1;
-                continue;
-            }
-
-            if(op == currentOp)
-            {
-                currentLength++;
-                continue;
-            }
-
-            readCigarElements.add(new CigarElement(currentLength, currentOp));
-            currentOp = op;
-            currentLength = 1;
-        }
-
-        if(currentLength >= 1)
-        {
-            readCigarElements.add(new CigarElement(currentLength, currentOp));
-        }
-
-        int newReadCoreStart = alignedBases.get(coreStart).ReadIndex;
-        int newReadCoreEnd = alignedBases.get(coreEnd).ReadIndex;
-        int corePosStart = alignedBases.get(coreStart).RefPos;
-        int corePosEnd = alignedBases.get(coreEnd).RefPos;
-        return new UltimaCoreInfo(
-                newReadCoreStart,
-                newReadCoreEnd,
-                new ReadCigarInfo(
-                        readAlignmentStart,
-                        readCigarElements,
-                        max(alignedBases.get(flankStart).RefPos, readAlignmentStart),
-                        alignedBases.get(flankEnd).RefPos,
-                        corePosStart,
-                        corePosEnd,
-                        alignedBases.get(flankStart).ReadIndex,
-                        alignedBases.get(flankEnd).ReadIndex));
+        return flankBoundary;
     }
 }

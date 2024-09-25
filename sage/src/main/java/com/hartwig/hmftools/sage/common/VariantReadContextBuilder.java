@@ -1,17 +1,17 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
+import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.extendUltimaCore;
+import static com.hartwig.hmftools.sage.common.UltimaVariantReadContextBuilderUtils.ultimaLongRepeatFilter;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -47,48 +47,6 @@ public class VariantReadContextBuilder
     public VariantReadContextBuilder(int flankSize)
     {
         this(null, flankSize);
-    }
-
-    public boolean isMsiIndelOfType(final SimpleVariant variant, final List<String> units)
-    {
-        if(!variant.isIndel())
-            return false;
-
-        String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
-        for(String unit : units)
-        {
-            int numRepeats = indelBases.length() / unit.length();
-            String expectedIndelBases = unit.repeat(numRepeats);
-            if(indelBases.equals(expectedIndelBases))
-                return true;
-        }
-        return false;
-    }
-
-    public boolean isAdjacentToLongHomopolymer(final SimpleVariant variant, final SAMRecord read, final int varIndexInRead,
-            final int longLength)
-    {
-        boolean roomOnRight = varIndexInRead + longLength < read.getReadBases().length;
-        boolean roomOnLeft = varIndexInRead >= longLength;
-        for(byte base : DNA_BASE_BYTES)
-        {
-            byte[] longHomopolymer = new byte[longLength];
-            Arrays.initialise(longHomopolymer, base);
-            if(roomOnRight &&
-                    Arrays.subsetArray(read.getReadBases(), varIndexInRead + 1, varIndexInRead + longLength).equals(longHomopolymer))
-            {
-                return true;
-            }
-
-            if(roomOnLeft &&
-                    Arrays.equalArray(longHomopolymer,
-                            Arrays.subsetArray(read.getReadBases(), varIndexInRead - longLength, varIndexInRead - 1)))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public VariantReadContext createContext(
@@ -185,17 +143,10 @@ public class VariantReadContextBuilder
             readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
         }
 
-        int longLength = 20;
-        if(isMsiIndelOfType(variant, List.of("A", "C", "G", "T")) && homology != null && homology.Length >= longLength - 5)
-            return null; // Ultima cannot call variants of this type
-
-        if(isMsiIndelOfType(variant, List.of("TA", "AT")) && homology != null && homology.Length >= longLength)
-            return null; // Ultima cannot call variants of this type
-
-        if(isAdjacentToLongHomopolymer(variant, read, varIndexInRead, longLength))
-            return null;  // Ultima gets confused near variants of this type
-
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
+            return null;
+
+        if(mConfig != null && mConfig.Sequencing.Type == ULTIMA && ultimaLongRepeatFilter(variant, read, varIndexInRead, homology))
             return null;
 
         final byte[] readBases = read.getReadBases();
@@ -220,14 +171,13 @@ public class VariantReadContextBuilder
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
 
-        // TODO: Better place for this?
-        // for ultima data we expand core so that homopolymers are not cut off in the read or the ref
+        // for ultima we expand core so that homopolymers are not cut off in the read or the ref
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
-            UltimaCoreInfo ultimaCoreInfo = UltimaCoreExtender.extendCore(read, refSequence,
+            UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(read.getReadBases(), refSequence,
                     softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
-                    readCoreStart, readCoreEnd, readCigarInfo, mFlankSize);
+                    readCigarInfo, mFlankSize);
 
             if(ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid())
                 return null;

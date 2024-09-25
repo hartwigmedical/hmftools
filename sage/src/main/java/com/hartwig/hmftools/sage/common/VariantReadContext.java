@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.max;
@@ -142,10 +141,7 @@ public class VariantReadContext
     public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
 
     public UltimaRealignedQualModels realignedUltimaQualModels() { return mUltimaRealignedQualModels; }
-    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels model)
-    {
-        mUltimaRealignedQualModels = model;
-    }
+    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels model) { mUltimaRealignedQualModels = model; }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }
@@ -161,16 +157,13 @@ public class VariantReadContext
         for(CigarElement el : cigar)
         {
             if(readIndex > CoreIndexEnd)
-            {
                 break;
-            }
 
             if(!el.getOperator().consumesReadBases())
             {
                 if(readIndex > CoreIndexStart)
-                {
                     coreCigar.add(el);
-                }
+
                 continue;
             }
 

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
@@ -16,11 +18,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.AltRead;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextTest
@@ -411,5 +423,147 @@ public class VariantReadContextTest
         assertEquals(80, readContext.CorePositionStart);
         assertEquals(14, readContext.VarIndex);
         assertEquals(116, readContext.CorePositionEnd);
+    }
+
+    private static void checkCoreCigarElements(int coreLength, final List<CigarElement> readCigar,
+            final List<CigarElement> expectedCoreCigar)
+    {
+        int coreIndexStart = TEST_FLANK_LENGTH;
+        int coreIndexEnd = coreIndexStart + coreLength - 1;
+        VariantReadContext readContext =
+                new VariantReadContext(null, -1, -1, null, null, readCigar, coreIndexStart, -1, coreIndexEnd, null, null, null, -1, -1);
+
+        List<CigarElement> actualCoreCigar = readContext.coreCigarElements();
+        assertEquals(expectedCoreCigar, actualCoreCigar);
+    }
+
+    @Test
+    public void testCoreCigarElements()
+    {
+        int coreLength = 10;
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(new CigarElement(2 * TEST_FLANK_LENGTH + coreLength, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength, M),
+                        new CigarElement(1, D),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, I),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, I), new CigarElement(coreLength - 1, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength - 1, M),
+                        new CigarElement(1, I),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength - 1, M), new CigarElement(1, I)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + 1, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, M), new CigarElement(1, D), new CigarElement(coreLength - 1, M)));
+    }
+
+    @Test
+    public void testBuildContextUltimaNoCoreExtension()
+    {
+        String middleRefBases = "CTCGGCCTCCCGGAGGTGCCGG";
+        String middleReadBases = "CTCGGCCTCCCTGAGGTGCCGG";
+        int variantMiddleIndex = 11;
+        int refPaddingSize = 1000;
+        int readPaddingSize = 100;
+        String refPadding = "A".repeat(refPaddingSize);
+        String readPadding = "A".repeat(readPaddingSize);
+        String refBases = refPadding + middleRefBases + refPadding;
+        String readBases = readPadding + middleReadBases + readPadding;
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1 + refPaddingSize + variantMiddleIndex, "G", "T");
+
+        int alignmentStart = 1 + refPaddingSize - readPaddingSize;
+        String cigar = readBases.length() + "M";
+        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
+
+        int varIndexInRead = readPaddingSize + variantMiddleIndex;
+
+        RefSequence refSequence = new RefSequence(1, refBases.getBytes());
+
+        SageConfig config = new SageConfig(false, SequencingType.ULTIMA);
+        VariantReadContextBuilder readContextBuilder = new VariantReadContextBuilder(config, DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = readContextBuilder.buildContext(variant, read, varIndexInRead, refSequence);
+        int expectedCoreLength = 7;
+
+        assertNotNull(readContext);
+        assertEquals(DEFAULT_FLANK_LENGTH, readContext.CoreIndexStart);
+        assertEquals(DEFAULT_FLANK_LENGTH + expectedCoreLength - 1, readContext.CoreIndexEnd);
+        assertEquals(variant.Position - 4, readContext.CorePositionStart);
+        assertEquals(variant.Position + 2, readContext.CorePositionEnd);
+        assertEquals("TCCCGGA", readContext.refBases());
+        assertEquals("TCCCTGA", readContext.coreStr());
+        assertEquals(
+                readBases.substring(varIndexInRead - 4 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH),
+                readContext.readBases());
+    }
+
+    @Test
+    public void testBuildContextUltimaWithExtension()
+    {
+        String middleRefBases = "CTTTTTTTTTTAATTGCAA";
+        String middleReadBases = "CTTTTTTTTTAATTGGCAA";
+        int variantMiddleIndex = 14;
+        int refPaddingSize = 1000;
+        int readPaddingSize = 100;
+        String refBases = "A".repeat(refPaddingSize) + middleRefBases + "T".repeat(refPaddingSize);
+        String readBases = "A".repeat(readPaddingSize) + middleReadBases + "T".repeat(readPaddingSize);
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 1 + refPaddingSize + variantMiddleIndex, "T", "G");
+
+        int alignmentStart = 1 + refPaddingSize - readPaddingSize;
+        String cigar = readBases.length() + "M";
+        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
+
+        int varIndexInRead = readPaddingSize + variantMiddleIndex;
+
+        RefSequence refSequence = new RefSequence(1, refBases.getBytes());
+
+        SageConfig config = new SageConfig(false, SequencingType.ULTIMA);
+        VariantReadContextBuilder readContextBuilder = new VariantReadContextBuilder(config, DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = readContextBuilder.buildContext(variant, read, varIndexInRead, refSequence);
+        int expectedCoreLength = 17;
+
+        assertNotNull(readContext);
+        assertEquals(DEFAULT_FLANK_LENGTH, readContext.CoreIndexStart);
+        assertEquals(DEFAULT_FLANK_LENGTH + expectedCoreLength - 1, readContext.CoreIndexEnd);
+        assertEquals(variant.Position - 14, readContext.CorePositionStart);
+        assertEquals(variant.Position + 2, readContext.CorePositionEnd);
+        assertEquals("CTTTTTTTTTTAATTGC", readContext.refBases());
+        assertEquals("CTTTTTTTTTAATTGGC", readContext.coreStr());
+        assertEquals(
+                readBases.substring(varIndexInRead - 14 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH),
+                readContext.readBases());
     }
 }
