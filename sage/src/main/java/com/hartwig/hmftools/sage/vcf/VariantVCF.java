@@ -1,5 +1,7 @@
+// TODO: REVIEW
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
@@ -17,10 +19,10 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEA
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
@@ -32,10 +34,10 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
@@ -59,6 +61,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_HOMOPOLYMER_INFO;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_HOMOPOLYMER_INFO_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
@@ -116,7 +120,7 @@ public class VariantVCF implements AutoCloseable
         samples.addAll(referenceIds);
         samples.addAll(tumorIds);
 
-        VCFHeader vcfHeader = createHeader(config.Version, samples, config.Sequencing.Type == SequencingType.ULTIMA);
+        VCFHeader vcfHeader = createHeader(config.Version, samples, config.Sequencing.Type);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -152,7 +156,7 @@ public class VariantVCF implements AutoCloseable
         mWriter.add(context);
     }
 
-    public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean includeModelData)
+    public static VCFHeader createHeader(final String version, final List<String> allSamples, final SequencingType sequencingType)
     {
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
 
@@ -194,9 +198,10 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
 
-        if(includeModelData)
+        if(sequencingType == ULTIMA)
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(READ_CORE_HOMOPOLYMER_INFO, 1, VCFHeaderLineType.String, READ_CORE_HOMOPOLYMER_INFO_DESC));
         }
 
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));

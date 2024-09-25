@@ -9,6 +9,8 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -48,6 +50,7 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair
 import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -121,6 +124,11 @@ public class ReadContextCounter
     private FragmentCoords mFragmentCoords;
     private final FragmentLengths mFragmentLengths;
 
+    // TODO: Move into own class.
+    private final List<Integer> mHomopolymerLengths;
+    private final List<Double> mHomopolymerAvgQuals;
+    private int mHomopolymerAvgQualsCount;
+
     // info only for VCF
     private double mTumorQualProbability;
     private double mMapQualFactor;
@@ -175,6 +183,22 @@ public class ReadContextCounter
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
+
+        if(mReadContext.variant().isIndel())
+        {
+            mHomopolymerLengths = mReadContext.coreHomopolymerLengths();
+            mHomopolymerAvgQuals = Lists.newArrayList();
+            while(mHomopolymerAvgQuals.size() < mHomopolymerLengths.size())
+            {
+                mHomopolymerAvgQuals.add(0.0);
+            }
+        }
+        else
+        {
+            mHomopolymerLengths = null;
+            mHomopolymerAvgQuals = null;
+        }
+        mHomopolymerAvgQualsCount = 0;
 
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
@@ -565,6 +589,58 @@ public class ReadContextCounter
             if(isImproperPair(record) || record.getSupplementaryAlignmentFlag())
                 mImproperPairCount++;
         }
+
+        if(mHomopolymerLengths != null && support != null && support == FULL)
+        {
+            // TODO: Do this in a better way?
+            String recordCore = record.getReadString()
+                    .substring(readVarIndex - mReadContext.leftCoreLength(), readVarIndex + mReadContext.rightCoreLength() + 1);
+            if(recordCore.equals(mReadContext.coreStr()))
+            {
+                registerHomopolymerQuals(record, readVarIndex);
+            }
+        }
+    }
+
+    private void registerHomopolymerQuals(final SAMRecord record, int readVarIndex)
+    {
+        byte[] baseQuals = record.getBaseQualities();
+        byte[] tpValues = extractTpValues(record);
+        int readIndex = readVarIndex - mReadContext.leftCoreLength();
+        boolean firstHomopolymer = true;
+        List<Integer> homopolyerQuals = Lists.newArrayList();
+        for(int len : mHomopolymerLengths)
+        {
+            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
+            int tpValue = tpValues[lookupIndex];
+
+            int homopolymerQual;
+            if(tpValue == 0)
+            {
+                homopolymerQual = ULTIMA_MAX_QUAL;
+            }
+            else if(len == 1)
+            {
+                homopolymerQual = baseQuals[lookupIndex];
+            }
+            else
+            {
+                homopolymerQual = baseQuals[lookupIndex] - 3;
+            }
+
+            homopolyerQuals.add(homopolymerQual);
+
+            firstHomopolymer = false;
+            readIndex += len;
+        }
+
+        for(int i = 0; i < homopolyerQuals.size(); i++)
+        {
+            mHomopolymerAvgQuals.set(i,
+                    (mHomopolymerAvgQuals.get(i) * mHomopolymerAvgQualsCount + homopolyerQuals.get(i)) / (mHomopolymerAvgQualsCount + 1));
+        }
+
+        mHomopolymerAvgQualsCount++;
     }
 
     private void countUmiType(final SAMRecord record, final boolean supportsVariant)
@@ -676,4 +752,23 @@ public class ReadContextCounter
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
 
     public QualityCalculator qualityCalculator() { return mQualityCalculator; }
+
+    @Nullable
+    public String coreHomopolymerInfo()
+    {
+        if(mHomopolymerLengths == null)
+        {
+            return null;
+        }
+
+        String lengthsStr = mHomopolymerLengths.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String qualsStr = mHomopolymerAvgQuals.stream()
+                .map(x -> format("%.3f", x))
+                .collect(Collectors.joining(","));
+
+        return lengthsStr + '-' + qualsStr;
+    }
 }

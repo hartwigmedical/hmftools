@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -41,12 +42,12 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -211,7 +212,7 @@ public class SyntheticVcfWriter
                 .build();
 
         VersionInfo version = fromAppName(APP_NAME);
-        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
+        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), ILLUMINA);
 
         // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
         // mRefContextEnrichment.appendHeader(header);

@@ -21,6 +21,8 @@ import htsjdk.samtools.TextCigarCodec;
 
 public class VariantReadContext
 {
+    private static final byte INVALID_BASE = -1;
+
     public final int AlignmentStart; // alignments of the flanks using read bases
     public final int AlignmentEnd;
 
@@ -209,5 +211,37 @@ public class VariantReadContext
         return VarIndex == other.VarIndex && AlignmentStart == other.AlignmentStart && AlignmentEnd == other.AlignmentEnd
                 && refBases().equals(other.refBases()) && readBases().equals(other.readBases()) && readCigar().equals(other.readCigar())
                 && CorePositionStart == other.CorePositionStart && CorePositionEnd == other.CorePositionEnd;
+    }
+
+    public List<Integer> coreHomopolymerLengths()
+    {
+        List<Integer> homopolymerLengths = Lists.newArrayList();
+        byte currentBase = INVALID_BASE;
+        int currentLength = 0;
+        for(int i = CoreIndexStart; i <= CoreIndexEnd; i++)
+        {
+            byte base = ReadBases[i];
+            if(currentBase == INVALID_BASE)
+            {
+                currentBase = base;
+                currentLength = 1;
+                continue;
+            }
+
+            if(currentBase == base)
+            {
+                currentLength++;
+                continue;
+            }
+
+            homopolymerLengths.add(currentLength);
+            currentBase = base;
+            currentLength = 1;
+        }
+
+        if(currentLength > 0)
+            homopolymerLengths.add(currentLength);
+
+        return homopolymerLengths;
     }
 }

@@ -67,4 +67,7 @@ public final class VcfTags
 
     public static final String SIMPLE_ALT_COUNT = "SAC";
     public static final String SIMPLE_ALT_COUNT_DESC = "Simple alt match count";
+
+    public static final String READ_CORE_HOMOPOLYMER_INFO = "RC_HP_INFO";
+    public static final String READ_CORE_HOMOPOLYMER_INFO_DESC = "Lengths and average qual of homopolymers in the read core [lengths-avg_quals]";
 }
