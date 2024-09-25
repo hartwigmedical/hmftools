@@ -18,10 +18,13 @@ public class BreakendData
     public final int Position;
     public final int[] HomologyOffset;
     public final byte Orientation;
+    public final String ComparisonChromosome;
+    public final int ComparisonPosition;
 
     public BreakendData(
             final LinxBreakend breakend, final String svId, final StructuralVariantType svType, final String chromosome,
-            final int position, final byte orientation, final int[] homologyOffset)
+            final int position, final byte orientation, final int[] homologyOffset, final String comparisonChromosome,
+            final int comparisonPosition)
     {
         Breakend = breakend;
         SvId = svId;
@@ -30,37 +33,46 @@ public class BreakendData
         Position = position;
         Orientation = orientation;
         HomologyOffset = homologyOffset;
+        ComparisonChromosome = comparisonChromosome;
+        ComparisonPosition = comparisonPosition;
     }
 
     public boolean matches(final BreakendData other)
     {
         // check SV info
-        if(SvType != other.SvType || !Chromosome.equals(other.Chromosome) || Orientation != other.Orientation)
+        if(SvType != other.SvType || !ComparisonChromosome.equals(other.Chromosome) || Orientation != other.Orientation)
             return false;
 
         // check breakend info
         if(!positionsOverlap(
-                Position + HomologyOffset[0], Position + HomologyOffset[1],
+                ComparisonPosition + HomologyOffset[0], ComparisonPosition + HomologyOffset[1],
                 other.Position + other.HomologyOffset[0], other.Position + other.HomologyOffset[1]))
         {
             return false;
         }
 
-        return Breakend.transcriptId().equals(other.Breakend.transcriptId());
+        return true;
     }
 
     public String svInfoStr()
     {
-        return format("%s:%s %s:%d:%d", SvId, SvType, Chromosome, Position, Orientation);
+        if(!ComparisonChromosome.equals(Chromosome) || ComparisonPosition != Position)
+        {
+            return format("%s:%s %s:%d:%d (%s:%d)", SvId, SvType, Chromosome, Position, Orientation, ComparisonChromosome, ComparisonPosition);
+        }
+        else
+        {
+            return format("%s:%s %s:%d:%d", SvId, SvType, Chromosome, Position, Orientation);
+        }
     }
 
     public String transcriptStr()
     {
-        return format("%s:%s:%d", Breakend.codingType(), Breakend.regionType(), Breakend.exonUp());
+        return format("%s:%s:%s:%d", Breakend.transcriptId(), Breakend.codingType(), Breakend.regionType(), Breakend.exonUp());
     }
 
     public String fullStr()
     {
-        return format("%s reported(%d) transcript(%s)", svInfoStr(), Breakend.reportedDisruption(), transcriptStr());
+        return format("%s reported(%s) transcript(%s)", svInfoStr(), Breakend.reportedDisruption(), transcriptStr());
     }
 }
