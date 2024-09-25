@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
@@ -86,7 +85,7 @@ public class DisruptionData implements ComparableItem
         {
             BreakendData breakendData = breakends.get(index);
 
-            BreakendData otherBreakendData = findMatchingBreakend(breakendData);
+            BreakendData otherBreakendData = findMatchingBreakend(breakendData, otherBreakends);
 
             if(otherBreakendData != null)
             {
@@ -104,7 +103,7 @@ public class DisruptionData implements ComparableItem
                 if(breakend.reportedDisruption() != otherBreakend.reportedDisruption())
                 {
                     diffs.add(format("breakend(%s reported %s/%s)",
-                            breakendData.svInfoStr(), breakend.reportedDisruption() != otherBreakend.reportedDisruption()));
+                            breakendData.svInfoStr(), breakend.reportedDisruption(), otherBreakend.reportedDisruption()));
                 }
 
                 breakends.remove(index);
@@ -113,17 +112,23 @@ public class DisruptionData implements ComparableItem
             else
             {
                 // record an unmatched breakend or SV
-                diffs.add(format("unmatchedSv(%s)", breakendData.svInfoStr()));
+                diffs.add(format("unmatchedSv(%s/)", breakendData.svInfoStr()));
 
                 ++index;
             }
         }
 
+        for(BreakendData otherBreakendData : otherBreakends)
+        {
+            // record an unmatched breakend or SV on the other side
+            diffs.add(format("unmatchedSv(/%s)", otherBreakendData.svInfoStr()));
+        }
+
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 
-    public BreakendData findMatchingBreakend(final BreakendData otherBreakend)
+    public BreakendData findMatchingBreakend(final BreakendData breakend, final List<BreakendData> otherBreakends)
     {
-        return Breakends.stream().filter(x -> x.matches(otherBreakend)).findFirst().orElse(null);
+        return otherBreakends.stream().filter(x -> x.matches(breakend)).findFirst().orElse(null);
     }
 }

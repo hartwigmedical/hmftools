@@ -80,7 +80,7 @@ public class GermlineSvComparer implements ItemComparer
             List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
                     .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
 
-            boolean reportedOnly = mConfig.Categories.get(GERMLINE_SV) == MatchLevel.REPORTABLE;
+            boolean reportedOnly = matchLevel == MatchLevel.REPORTABLE;
 
             for(LinxBreakend breakend : germlineBreakends)
             {
@@ -117,9 +117,9 @@ public class GermlineSvComparer implements ItemComparer
                         chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
                 BreakendData breakendData = new BreakendData(
-                        breakend, var.VcfId, var.Type,
-                        comparisonPosition.Chromosome, comparisonPosition.Position,
-                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets);
+                        breakend, var.VcfId, var.Type, chromosome, position,
+                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets,
+                        comparisonPosition.Chromosome, comparisonPosition.Position);
 
                 geneBreakends.add(breakendData);
             }
