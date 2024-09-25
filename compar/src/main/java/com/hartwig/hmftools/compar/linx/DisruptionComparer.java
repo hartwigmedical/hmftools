@@ -141,9 +141,9 @@ public class DisruptionComparer implements ItemComparer
                         chromosome, position, sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
                 BreakendData breakendData = new BreakendData(
-                        breakend, usesStart ? var.vcfIdStart() : var.vcfIdEnd(), var.type(),
-                        comparisonPosition.Chromosome, comparisonPosition.Position,
-                        usesStart ? var.startOrientation() : var.endOrientation(), homologyOffsets);
+                        breakend, usesStart ? var.vcfIdStart() : var.vcfIdEnd(), var.type(), chromosome, position,
+                        usesStart ? var.startOrientation() : var.endOrientation(), homologyOffsets,
+                        comparisonPosition.Chromosome, comparisonPosition.Position);
 
                 geneBreakends.add(breakendData);
             }
