@@ -80,9 +80,6 @@ public class CandidateBamWriter
 
         if(writer == null)
         {
-            SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.bamFile()));
-
             String bamFile = String.format("%s_%s.bam", mConfig.formFilename(CACHE_BAM), read.Chromosome);
             mCandidatesWriterBamFiles.put(read.Chromosome, bamFile);
 

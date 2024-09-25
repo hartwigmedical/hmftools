@@ -13,7 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
@@ -197,7 +197,7 @@ public class GermlineVariantDAO
         return trimmedStr + "...";
     }
 
-    public void writeGermlineSVs(final String sample, final List<LinxGermlineSv> germlineSVs)
+    public void writeGermlineSVs(final String sample, final List<LinxGermlineDisruption> germlineSVs)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -244,7 +244,7 @@ public class GermlineVariantDAO
                 STRUCTURALVARIANTGERMLINE.LINKEDBYEND,
                 STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY);
 
-        for(LinxGermlineSv germlineSV : germlineSVs)
+        for(LinxGermlineDisruption germlineSV : germlineSVs)
         {
             addRecord(timestamp, inserter, sample, germlineSV);
         }
@@ -253,7 +253,7 @@ public class GermlineVariantDAO
     }
 
     private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final LinxGermlineSv germlineSV)
+            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final LinxGermlineDisruption germlineSV)
     {
         inserter.values(sample,
                 timestamp,

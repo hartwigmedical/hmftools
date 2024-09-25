@@ -42,6 +42,9 @@ public final class SageVcfTags
     public static final String UMI_TYPE_COUNTS_DESC =
             "UMI type counts [TotalNone,TotalSingle,TotalDualStrand,AltNone,AltSingle,AltDualStrand]";
 
+    public static final String MAP_QUAL_FACTOR = "MQF";
+    public static final String MAP_QUAL_FACTOR_DESC = "Map qual heuristic as used in min tumor quality filter";
+
     public static final int UMI_TYPE_COUNT = 6;
 
     public static final String LIST_SEPARATOR = ",";

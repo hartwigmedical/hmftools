@@ -49,20 +49,16 @@ public class FusionWriter implements CohortFileInterface
         {
             transIdMap.put(transcript, breakendId);
 
-            final BreakendGeneData gene = transcript.gene();
-
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
                     .svId(transcript.gene().id())
                     .isStart(transcript.gene().isStart())
-                    .type(gene.type())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
                     .reportedDisruption(transcript.reportableDisruption())
-                    .junctionCopyNumber(gene.jcn())
                     .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .regionType(transcript.regionType())
                     .codingType(transcript.codingType())
@@ -74,10 +70,6 @@ public class FusionWriter implements CohortFileInterface
                             ? transcript.prevSpliceAcceptorDistance()
                             : transcript.nextSpliceAcceptorDistance())
                     .totalExonCount(transcript.TransData.exons().size())
-                    .chromosome(gene.chromosome())
-                    .orientation(gene.orientation())
-                    .strand(gene.strand())
-                    .chrBand(gene.GeneData.KaryotypeBand)
                     .exonUp(transcript.ExonUpstream)
                     .exonDown(transcript.ExonDownstream)
                     .build());

@@ -191,18 +191,16 @@ public class BreakendBuilder
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
-        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), indelSeqStart, FORWARD, 1, alignment);
+        int[] indelSequenceIndices = new int[] { indelSeqStart, indelSeqEnd };
+        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), 0, alignment, indelSequenceIndices);
 
         lowerBreakend.addSegment(segment);
 
-        Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, alignment.chromosome(), indelPosEnd, REVERSE, insertedBases, homology);
+        Breakend upperBreakend = new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, REVERSE, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
-        BreakendSegment nextSegment = new BreakendSegment(mAssemblyAlignment.id(), indelSeqEnd, REVERSE, 1, alignment);
-
-        upperBreakend.addSegment(nextSegment);
+        upperBreakend.addSegment(segment);
 
         lowerBreakend.setOtherBreakend(upperBreakend);
         upperBreakend.setOtherBreakend(lowerBreakend);
@@ -250,7 +248,7 @@ public class BreakendBuilder
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.chromosome(), breakendPosition, orientation, insertedBases, null);
 
-        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), orientation, 0, alignment);
+        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), 0, alignment);
 
         breakend.addSegment(segment);
 
@@ -313,8 +311,7 @@ public class BreakendBuilder
             breakendAlignment.setFullSequenceData(mAssemblyAlignment.fullSequence(), mAssemblyAlignment.fullSequenceLength());
             breakendAlignment.setAdjustedAlignment(mAssemblyAlignment.fullSequence(), 0, 0);
 
-            BreakendSegment segment = new BreakendSegment(
-                    mAssemblyAlignment.id(), sequenceStart, assembly.junction().Orient, sequenceIndex++, breakendAlignment);
+            BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), sequenceStart, sequenceIndex++, breakendAlignment);
 
             breakend.addSegment(segment);
 
@@ -365,8 +362,7 @@ public class BreakendBuilder
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.chromosome(), sglPosition, sglOrientation, insertSequence, null);
 
-        BreakendSegment segment = new BreakendSegment(
-                mAssemblyAlignment.id(), alignment.sequenceStart(), sglOrientation, nextSegmentIndex, alignment);
+        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), nextSegmentIndex, alignment);
 
         breakend.addSegment(segment);
 
@@ -493,8 +489,7 @@ public class BreakendBuilder
 
             mAssemblyAlignment.addBreakend(breakend);
 
-            BreakendSegment segment = new BreakendSegment(
-                    mAssemblyAlignment.id(), alignment.sequenceEnd(), breakendOrientation, nextSegmentIndex++, alignment);
+            BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), nextSegmentIndex++, alignment);
 
             breakend.addSegment(segment);
 
@@ -506,7 +501,7 @@ public class BreakendBuilder
             mAssemblyAlignment.addBreakend(nextBreakend);
 
             BreakendSegment nextSegment = new BreakendSegment(
-                    mAssemblyAlignment.id(), nextAlignment.sequenceStart(), nextOrientation, nextSegmentIndex++, nextAlignment);
+                    mAssemblyAlignment.id(), nextAlignment.sequenceStart(), nextSegmentIndex++, nextAlignment);
 
             nextBreakend.addSegment(nextSegment);
 

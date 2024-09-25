@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
@@ -19,7 +21,6 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
-import static com.hartwig.hmftools.esvee.common.FilterType.values;
 
 import java.util.List;
 import java.util.Set;
@@ -123,8 +124,9 @@ public class VcfWriter
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
 
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
 
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
@@ -176,6 +178,10 @@ public class VcfWriter
         // Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
         double qual = breakend.Context.getPhredScaledQual();
         builder.log10PError(qual / -10);
+
+        Genotype tumorGenotype = genotypes.get(0);
+
+        builder.attribute(ALLELE_FRACTION, breakend.calcAllelicFrequency(tumorGenotype));
 
         if(var.isHotspot())
             builder.attribute(HOTSPOT, true);

@@ -56,7 +56,7 @@ public class AssemblyWriter
             sj.add("Id");
             sj.add("Chromosome").add("JunctionPosition").add("JunctionOrientation");
 
-            sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
+            sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength").add("RefBaseCigar");
 
             addSupportHeader(sj);
 
@@ -117,6 +117,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));
             sj.add(String.valueOf(assembly.refBaseLength()));
+            sj.add(String.valueOf(assembly.refBaseCigar()));
 
             addSupportCounts(assembly, sj);
 

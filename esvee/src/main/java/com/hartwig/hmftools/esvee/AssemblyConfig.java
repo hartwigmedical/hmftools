@@ -31,9 +31,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.PHASED_ASSEMBLY;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENTS;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
@@ -103,6 +100,7 @@ public class AssemblyConfig
     public final int AssemblyRefBaseWriteMax;
     public final int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
+    public final int DiscordantOnlyMinFrags;
 
     public final int Threads;
 
@@ -110,6 +108,8 @@ public class AssemblyConfig
     public final String AlignmentFile;
 
     public static boolean AssemblyBuildDebug = false;
+    public static boolean RunRemoteRefLinking = false;
+    public static boolean DevDebug = false;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
@@ -121,14 +121,15 @@ public class AssemblyConfig
     private static final String WRITE_TYPES = "write_types";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
-    private static final String RUN_ALIGNMENT = "run_alignment";
-
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
+    private static final String DISC_ONLY_MIN_FRAGS = "disc_only_min_frags";
+
+    private static final String RUN_REMOTE_REF_LINKING = "run_remote_ref_linking";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
@@ -197,8 +198,7 @@ public class AssemblyConfig
         WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
-        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null
-                || WriteTypes.contains(BREAKEND) || WriteTypes.contains(ALIGNMENTS) || WriteTypes.contains(PHASED_ASSEMBLY);
+        RunAlignment = AlignmentFile != null || WriteType.requiresAlignment(WriteTypes);
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
@@ -235,9 +235,12 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
+        DiscordantOnlyMinFrags = configBuilder.getInteger(DISC_ONLY_MIN_FRAGS);
+
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
+        RunRemoteRefLinking = configBuilder.hasFlag(RUN_REMOTE_REF_LINKING);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
@@ -302,7 +305,6 @@ public class AssemblyConfig
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
-        configBuilder.addFlag(RUN_ALIGNMENT, "Run assembly alignment");
         configBuilder.addPath(BWA_LIB_PATH, false, "Path to BWA library");
 
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
@@ -324,6 +326,8 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
+        configBuilder.addInteger(DISC_ONLY_MIN_FRAGS, "Discordant only junction min fragments", 0);
+
         configBuilder.addInteger(
                 ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",
                 DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD);
@@ -331,6 +335,7 @@ public class AssemblyConfig
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
+        configBuilder.addFlag(RUN_REMOTE_REF_LINKING, "Use unmapped & remote read extension instead of remote ref linking");
 
         TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
@@ -380,12 +385,14 @@ public class AssemblyConfig
         AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;
         PhaseProcessingLimit = 0;
+        DiscordantOnlyMinFrags = 0;
         Threads = 0;
         TruthsetFile = null;
         AlignmentFile = null;
 
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
+        RunRemoteRefLinking = true;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }

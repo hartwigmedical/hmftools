@@ -40,7 +40,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
@@ -315,7 +314,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ASM_SEG_INDEX, segments.stream().map(x -> String.valueOf(x.Index)).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(BE_ASM_POS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(BE_ORIENT, breakend.Orient.asByte());
-        builder.attribute(BE_ASM_ORIENT, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BE_ASM_ORIENT, segments.stream().map(x -> String.valueOf(x.Alignment.orientation().asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
 
         builder.attribute(SEG_ID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
 

@@ -734,7 +734,7 @@ public class DisruptionFinder implements CohortFileInterface
     {
         mDisruptions.clear();
 
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             for(int be = SE_START; be <= SE_END; ++be)
             {
@@ -910,6 +910,9 @@ public class DisruptionFinder implements CohortFileInterface
     @Override
     public BufferedWriter createWriter(final String outputDir)
     {
+        if(mIsGermline)
+            return null;
+
         try
         {
             String outputFilename = outputDir + "LNX_DISRUPTIONS.csv";
@@ -919,15 +922,7 @@ public class DisruptionFinder implements CohortFileInterface
             writer.write("SampleId,Reportable,SvId,IsStart,Type,Chromosome,Position,Orientation");
             writer.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
             writer.write(",ClusterId,ResolvedType,ClusterCount");
-
-            if(!mIsGermline)
-            {
-                writer.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
-            }
-            else
-            {
-                writer.write(GermlineDisruptions.csvHeader());
-            }
+            writer.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
 
             writer.newLine();
             return writer;
@@ -942,11 +937,7 @@ public class DisruptionFinder implements CohortFileInterface
     public void writeCohortData(final String sampleId, final List<SvVarData> svList)
     {
         if(mIsGermline)
-        {
-            List<String> outputLines = mGermlineDisruptions.formCohortData(sampleId, mDisruptions);
-            mCohortDataWriter.write(this, outputLines);
             return;
-        }
 
         List<String> outputLines = Lists.newArrayList();
 

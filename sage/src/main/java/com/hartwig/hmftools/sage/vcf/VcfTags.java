@@ -65,9 +65,6 @@ public final class VcfTags
     public static final String TUMOR_QUALITY_PROB = "TQP";
     public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";
 
-    public static final String MAP_QUAL_FACTOR = "MQF";
-    public static final String MAP_QUAL_FACTOR_DESC = "Map qual heuristic as used in min tumor quality filter";
-
     public static final String SIMPLE_ALT_COUNT = "SAC";
     public static final String SIMPLE_ALT_COUNT_DESC = "Simple alt match count";
 }

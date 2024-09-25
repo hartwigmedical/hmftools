@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder.readRefBaseLength;
@@ -24,7 +25,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -382,13 +385,13 @@ public class RefBaseSequenceTest
         // refBases1: AAACCCGGGT       TAACC TTTTT GGTTACGTAA"
         // refBases2: AAACCCGGGT TTACG TAACC TTTTT GGTTACGTAA"
         // refBases3: AAACCCGGGT       TAACC       GGTTACGTAA"
-        String insert = "TTTTT";
+        String insert = "TTTT";
         String refBases1 = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
-        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M5I10M40S");
+        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M4I10M40S");
 
         // has the insert but not the delete
         String refBases2 = readRefBases.substring(0, 20) + insert + readRefBases.substring(20, 30);
-        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M5I10M40S");
+        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M4I10M40S");
 
         // has the delete but not the insert
         String refBases3 = readRefBases.substring(0, 10) + readRefBases.substring(15, 30);
@@ -407,12 +410,12 @@ public class RefBaseSequenceTest
         refSeqBases = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
         assertEquals(refSeqBases, refBaseSeqBuilder.refBaseSequence());
         assertEquals(71, refBaseSeqBuilder.refBasePosition());
-        assertEquals(30, refBaseSeqBuilder.refBaseLength());
-        assertEquals("10M5D5M5I10M", refBaseSeqBuilder.cigarStr());
+        assertEquals(29, refBaseSeqBuilder.refBaseLength());
+        assertEquals("10M5D5M4I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(4, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
     }
 
     @Test
@@ -493,7 +496,54 @@ public class RefBaseSequenceTest
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(3, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
+    }
+
+    @Test
+    public void testSupportingIndelTolerances()
+    {
+        String extBases = REF_BASES_200.substring(100, 140);
+        byte[] extBaseQuals = buildDefaultBaseQuals(extBases.length());
+
+        Junction junction = new Junction(CHR_1, 100, FORWARD);
+
+        // each read has the same ref bases but a different cigar representation
+        String refBases = REF_BASES_200.substring(71, 101);
+        String readBases = refBases + extBases;
+
+        List<SupportRead> supportReads = Lists.newArrayList();
+
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 71, readBases, makeCigarString(readBases, 0, extBases.length()));
+        Read read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        supportReads.add(new SupportRead(read1, SupportType.JUNCTION, 30, 0, 0));
+        supportReads.add(new SupportRead(read2, SupportType.JUNCTION, 30, 0, 0));
+
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 71, readBases, "20M10I40M");
+        Read read4 = cloneRead(read3, READ_ID_GENERATOR.nextId());
+        Read read5 = cloneRead(read3, READ_ID_GENERATOR.nextId());
+
+        List<Read> reads = List.of(read1, read2, read3, read4, read5);
+
+        ReadAdjustments.convertEdgeIndelsToSoftClip(read3);
+        ReadAdjustments.convertEdgeIndelsToSoftClip(read4);
+        ReadAdjustments.convertEdgeIndelsToSoftClip(read5);
+
+        supportReads.add(new SupportRead(read3, SupportType.JUNCTION, 30, 0, 0));
+        supportReads.add(new SupportRead(read4, SupportType.JUNCTION, 30, 0, 0));
+        supportReads.add(new SupportRead(read5, SupportType.JUNCTION, 30, 0, 0));
+
+        JunctionAssembly assembly =
+                new JunctionAssembly(junction, extBases.getBytes(), extBaseQuals, supportReads, Collections.emptyList());
+
+        RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
+
+        assertEquals(refBases, refBaseSeqBuilder.refBaseSequence());
+        assertEquals(71, refBaseSeqBuilder.refBasePosition());
+        assertEquals(30, refBaseSeqBuilder.refBaseLength());
+        assertEquals("20M9I1M", refBaseSeqBuilder.cigarStr());
+
+        assertTrue(refBaseSeqBuilder.reads().stream().allMatch(x -> x.mismatches() == 0));
     }
 
     private static int getReadMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)

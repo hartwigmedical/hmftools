@@ -197,7 +197,10 @@ public class AlignData
         int trimmedAlignmentLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
         mAdjustedAlignment = max(trimmedAlignmentLength - scoreAdjustment, 0);
 
-        if((mScore + ALIGNMENT_CALC_SCORE_FACTOR) / (double)sequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
+        int inexactHomologyLength = inexactHomologyStart + inexactHomologyEnd;
+        double adjustedSequenceLength = max(sequenceLength - inexactHomologyLength, 0);
+
+        if((mScore + ALIGNMENT_CALC_SCORE_FACTOR) / adjustedSequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
         {
             mModifiedMapQual = 0;
         }

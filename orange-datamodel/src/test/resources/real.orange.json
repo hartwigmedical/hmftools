@@ -2,8 +2,8 @@
   "sampleId": "Test",
   "samplingDate": {
     "year": 2024,
-    "month": 8,
-    "day": 1
+    "month": 9,
+    "day": 12
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -736,7 +736,11 @@
     ],
     "reportableGermlineFullLosses": [],
     "allGermlineLossOfHeterozygosities": [],
-    "reportableGermlineLossOfHeterozygosities": []
+    "reportableGermlineLossOfHeterozygosities": [],
+    "chromosomalRearrangements": {
+      "hasTrisomy1q": false,
+      "hasCodeletion1p19q": false
+    }
   },
   "linx": {
     "somaticDrivers": [

@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
+
 import java.util.Comparator;
 
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -73,7 +75,13 @@ public class ExtensionCandidate
         return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
     }
 
-    public boolean isValid() { return mIsValid && totalSupport() > 0; }
+    public boolean isValid()
+    {
+        if(!mIsValid)
+            return false;
+
+        return totalSupport() > 0 || Type == LOCAL_DEL_DUP;
+    }
 
     protected static class StandardComparator implements Comparator<ExtensionCandidate>
     {

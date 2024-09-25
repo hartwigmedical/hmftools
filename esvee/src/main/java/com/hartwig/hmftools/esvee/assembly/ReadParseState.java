@@ -79,6 +79,7 @@ public class ReadParseState
     public int readIndex() { return mReadIndex; }
 
     public CigarOperator operator() { return mElement.getOperator(); }
+    public int elementLength() { return mElement.getLength(); }
     public byte currentBase() { return mRead.getBases()[mReadIndex]; }
     public byte currentQual() { return mRead.getBaseQuality()[mReadIndex]; }
 

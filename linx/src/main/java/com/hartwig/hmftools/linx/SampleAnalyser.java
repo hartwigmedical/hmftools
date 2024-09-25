@@ -22,8 +22,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
@@ -424,7 +424,7 @@ public class SampleAnalyser implements Callable
 
             if(mConfig.IsGermline)
             {
-                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
+                LinxGermlineDisruption.write(LinxGermlineDisruption.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
             }
             else
             {

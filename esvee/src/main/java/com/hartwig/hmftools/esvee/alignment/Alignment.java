@@ -50,7 +50,8 @@ public class Alignment
         // apply filters on what to run alignment on
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
         || assembly.outcome() == AssemblyOutcome.SECONDARY
-        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY)
+        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY
+        || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
         {
             // since identical to or associated with other links
             return true;
@@ -283,7 +284,7 @@ public class Alignment
         if(mConfig.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
             AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment);
 
-        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENTS))
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
         {
             List<AlignData> alignmentsToWrite;
 

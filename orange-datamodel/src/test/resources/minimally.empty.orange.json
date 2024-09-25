@@ -86,7 +86,11 @@
     "allSomaticGeneCopyNumbers": [],
     "allSomaticGainsLosses": [],
     "reportableSomaticGainsLosses": [],
-    "suspectGeneCopyNumbersWithLOH": []
+    "suspectGeneCopyNumbersWithLOH": [],
+    "chromosomalRearrangements": {
+      "hasTrisomy1q": false,
+      "hasCodeletion1p19q": false
+    }
   },
   "linx": {
     "allSomaticStructuralVariants": [],

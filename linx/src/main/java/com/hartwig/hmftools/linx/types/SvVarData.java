@@ -546,30 +546,6 @@ public class SvVarData
         }
     }
 
-    public List<String> getAnnotationList() { return mAnnotationList; }
-
-    public void addAnnotation(final String annotation)
-    {
-        if(mAnnotationList == null)
-            mAnnotationList = Lists.newArrayList();
-
-        if(mAnnotationList.contains(annotation))
-            return;
-
-        mAnnotationList.add(annotation);
-    }
-
-    public boolean hasAnnotation(final String annotation) { return mAnnotationList != null && mAnnotationList.contains(annotation); }
-
-    public String getAnnotations()
-    {
-        if(mAnnotationList == null)
-            return "";
-
-        return mAnnotationList.stream().collect (Collectors.joining (ITEM_DELIM));
-    }
-
-
     public static boolean haveSameChrArms(final SvVarData var1, final SvVarData var2)
     {
         // tests if 2 variants (including BNDs) link the same 2 chromosomal arms

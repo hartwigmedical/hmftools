@@ -155,7 +155,7 @@ public class CohortDataWriter
             writer.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
 
             // gene info
-            writer.write(",GeneStart,GeneEnd,Annotations");
+            writer.write(",GeneStart,GeneEnd");
 
             if(mConfig.Output.WriteSvData)
             {
@@ -295,9 +295,8 @@ public class CohortDataWriter
                         writer.write(",-1,,0");
                 }
 
-                writer.write(String.format(",%s,%s,%s",
-                        var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                        var.getAnnotations()));
+                writer.write(String.format(",%s,%s",
+                        var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true)));
 
                 if(mConfig.Output.WriteSvData)
                 {

@@ -50,10 +50,10 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
@@ -78,7 +78,7 @@ public class GermlineDisruptions
     private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
     private static final List<ResolvedType> REPORTED_RESOLVED_TYPES = Lists.newArrayList(
-            ResolvedType.DEL, ResolvedType.DUP, RECIP_INV, RECIP_TRANS);
+            ResolvedType.DEL, ResolvedType.DUP, ResolvedType.INS, RECIP_INV, RECIP_TRANS);
 
     public GermlineDisruptions(final LinxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -151,43 +151,43 @@ public class GermlineDisruptions
                 boolean isSimpleDel = !isDB && var.type() == DEL
                         && breakend.orientation() == 1 && nextBreakend.getSV() == var;
 
-                if(isDB || isSimpleDel)
+                if(!isDB && !isSimpleDel)
+                    return;
+
+                int delStart = breakend.position();
+                int delEnd = nextBreakend.position();
+
+                if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
+                    return;
+
+                for(GeneData geneData : mDriverGeneDataList)
                 {
-                    int delStart = breakend.position();
-                    int delEnd = nextBreakend.position();
+                    if(!geneData.Chromosome.equals(chromosome))
+                        continue;
 
-                    if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
-                        return;
-
-                    for(GeneData geneData : mDriverGeneDataList)
+                    if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
                     {
-                        if(!geneData.Chromosome.equals(chromosome))
-                            continue;
+                        TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
 
-                        if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
+                        if(canonicalTrans == null)
                         {
-                            TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
-
-                            if(canonicalTrans == null)
-                            {
-                                LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
-                                continue;
-                            }
-
-                            SvDisruptionData upDisruptionData = new SvDisruptionData(
-                                    breakend.getSV(), breakend.usesStart(), geneData, canonicalTrans,
-                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM,
-                                    breakend.copyNumberLowSide(), breakend.copyNumber());
-
-                            mDisruptions.add(upDisruptionData);
-
-                            SvDisruptionData downDisruptionData = new SvDisruptionData(
-                                    nextBreakend.getSV(), nextBreakend.usesStart(), geneData, canonicalTrans,
-                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM,
-                                    breakend.copyNumberLowSide(), breakend.copyNumber());
-
-                            mDisruptions.add(downDisruptionData);
+                            LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
+                            continue;
                         }
+
+                        SvDisruptionData upDisruptionData = new SvDisruptionData(
+                                breakend.getSV(), breakend.usesStart(), geneData, canonicalTrans,
+                                new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM,
+                                breakend.copyNumberLowSide(), breakend.copyNumber());
+
+                        mDisruptions.add(upDisruptionData);
+
+                        SvDisruptionData downDisruptionData = new SvDisruptionData(
+                                nextBreakend.getSV(), nextBreakend.usesStart(), geneData, canonicalTrans,
+                                new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM,
+                                breakend.copyNumberLowSide(), breakend.copyNumber());
+
+                        mDisruptions.add(downDisruptionData);
                     }
                 }
             }
@@ -317,10 +317,9 @@ public class GermlineDisruptions
         }
     }
 
-    public void writeGermlineSVs(
-            final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir)
+    public void writeGermlineSVs(final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir)
     {
-        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<LinxGermlineDisruption> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
 
@@ -331,7 +330,7 @@ public class GermlineDisruptions
             try
             {
                 // write flat files for database loading
-                LinxGermlineSv.write(LinxGermlineSv.generateFilename(outputDir, sampleId), germlineSVs);
+                LinxGermlineDisruption.write(LinxGermlineDisruption.generateFilename(outputDir, sampleId), germlineSVs);
 
                 LinxBreakend.write(LinxBreakend.generateFilename(outputDir, sampleId, true), breakends);
 
@@ -361,7 +360,7 @@ public class GermlineDisruptions
     }
 
     public void populateGermlineSVs(
-            final List<SvDisruptionData> standardDisruptions, final List<LinxGermlineSv> germlineSVs,
+            final List<SvDisruptionData> standardDisruptions, final List<LinxGermlineDisruption> germlineSVs,
             final List<LinxBreakend> breakends, final List<DriverCatalog> drivers)
     {
         // each SV may have 1 or more disruptions
@@ -404,27 +403,20 @@ public class GermlineDisruptions
                     allFilters.add(FILTER_PSEUDOGENE);
                 }
 
-                byte orientation = var.orientation(disruptionData.IsStart);
                 boolean isUpstream = (var.orientation(disruptionData.IsStart) == POS_ORIENT) == (gene.forwardStrand());
 
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
                         .id(breakendId++)
                         .svId(var.id())
                         .isStart(disruptionData.IsStart)
-                        .type(var.type())
-                        .chromosome(gene.Chromosome)
-                        .orientation(orientation)
                         .gene(gene.GeneName)
                         .geneOrientation(isUpstream ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
-                        .strand(gene.Strand)
-                        .chrBand(gene.KaryotypeBand)
                         .transcriptId(transcript.TransName)
                         .canonical(transcript.IsCanonical)
                         .biotype(transcript.BioType)
                         .disruptive(false)
                         .reportedDisruption(reportable)
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
-                        .junctionCopyNumber(svData.junctionCopyNumber())
                         .totalExonCount(transcript.exons().size());
 
                 final BreakendGeneData breakendGene = var.getGenesList(disruptionData.IsStart).stream()
@@ -492,13 +484,14 @@ public class GermlineDisruptions
             StringJoiner filters = new StringJoiner(";");
             allFilters.forEach(x -> filters.add(x));
 
-            germlineSVs.add(new LinxGermlineSv(
+            germlineSVs.add(new LinxGermlineDisruption(
                     var.id(), svData.vcfIdStart(),
                     var.chromosome(true), var.chromosome(false),
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),
                     var.type(), filters.toString(), svData.event(), svData.qualityScore(),
                     svData.startHomologySequence(), svData.endHomologySequence(),
+                    svData.inexactHomologyOffsetStart(), svData.inexactHomologyOffsetEnd(),
                     svData.junctionCopyNumber(), svData.adjustedStartAF(), svData.adjustedEndAF(),
                     svData.adjustedStartCopyNumber(), svData.adjustedEndCopyNumber(),
                     svData.adjustedStartCopyNumberChange(), svData.adjustedEndCopyNumberChange(),
@@ -529,7 +522,7 @@ public class GermlineDisruptions
 
     private boolean isReportable(final SvDisruptionData disruptionData)
     {
-        final SvVarData var = disruptionData.Var;
+        SvVarData var = disruptionData.Var;
 
         if(!var.getSvData().filter().equals(PASS))
             return false;
@@ -568,50 +561,4 @@ public class GermlineDisruptions
     {
         return var.getSvData().filter().equals(PON_FILTER_PON) ? var.getSvData().ponCount() : 0;
     }
-
-    public static String csvHeader()
-    {
-        return (",Filter,QualScore,PonCount,IsPseudogene,NormRefFragsStart,NormRefFragsEnd,NormVarFrags");
-    }
-
-    public List<String> formCohortData(final String sampleId, final List<SvDisruptionData> standardDisruptions)
-    {
-        List<String> outputLines = Lists.newArrayList();
-
-        final List<SvDisruptionData> allDisruptions = Lists.newArrayList(mDisruptions);
-        allDisruptions.addAll(standardDisruptions);
-
-        Set<SvVarData> processedSgls = Sets.newHashSet();
-
-        for(final SvDisruptionData disruptionData : allDisruptions)
-        {
-            final SvVarData var = disruptionData.Var;
-
-            if(var.isSglBreakend())
-            {
-                if(processedSgls.contains(var))
-                    continue;
-
-                processedSgls.add(var);
-            }
-
-            // reassessed with specific germline rules
-            disruptionData.setReportable(isReportable(disruptionData));
-
-            StringBuilder sb = new StringBuilder();
-
-            sb.append(String.format("%s,%s,%s,%.2f,%d,%s",
-                    sampleId, disruptionData.asCsv(), var.getSvData().filter(), var.getSvData().qualityScore(), getPonCount(var),
-                    disruptionData.isPseudogeneDeletion()));
-
-            sb.append(String.format(",%d,%d,%d",
-                    var.getSvData().startTumorReferenceFragmentCount(), var.getSvData().endTumorReferenceFragmentCount(),
-                    var.getSvData().startTumorVariantFragmentCount()));
-
-            outputLines.add(sb.toString());
-        }
-
-        return outputLines;
-    }
-
 }

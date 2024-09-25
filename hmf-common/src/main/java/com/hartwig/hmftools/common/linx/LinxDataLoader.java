@@ -45,7 +45,7 @@ public final class LinxDataLoader
         {
             germlineSvAnnotationFile = LinxSvAnnotation.generateFilename(linxGermlineDir, tumorSample, true);
             germlineBreakendFile = LinxBreakend.generateFilename(linxGermlineDir, tumorSample, true);
-            germlineDisruptionFile = LinxGermlineSv.generateFilename(linxGermlineDir, tumorSample);
+            germlineDisruptionFile = LinxGermlineDisruption.generateFilename(linxGermlineDir, tumorSample);
             germlineDriverCatalogFile = LinxDriver.generateCatalogFilename(linxGermlineDir, tumorSample, false);
         }
 
@@ -102,11 +102,11 @@ public final class LinxDataLoader
             reportableGermlineBreakends = selectReportableBreakends(allGermlineBreakends);
         }
 
-        List<LinxGermlineSv> allGermlineDisruptions = null;
-        List<LinxGermlineSv> reportableGermlineDisruptions = null;
+        List<LinxGermlineDisruption> allGermlineDisruptions = null;
+        List<LinxGermlineDisruption> reportableGermlineDisruptions = null;
         if(germlineDisruptionTsv != null)
         {
-            allGermlineDisruptions = LinxGermlineSv.read(germlineDisruptionTsv);
+            allGermlineDisruptions = LinxGermlineDisruption.read(germlineDisruptionTsv);
             reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
         }
 
@@ -166,17 +166,17 @@ public final class LinxDataLoader
     }
 
     @NotNull
-    private static List<LinxGermlineSv> selectReportableGermlineSvs(
-            @NotNull List<LinxGermlineSv> germlineSvs, @NotNull List<LinxBreakend> reportableGermlineBreakends)
+    private static List<LinxGermlineDisruption> selectReportableGermlineSvs(
+            @NotNull List<LinxGermlineDisruption> germlineSvs, @NotNull List<LinxBreakend> reportableGermlineBreakends)
     {
-        List<LinxGermlineSv> reportableGermlineSvs = new ArrayList<>();
+        List<LinxGermlineDisruption> reportableGermlineSvs = new ArrayList<>();
 
         if(reportableGermlineBreakends == null)
         {
             return reportableGermlineSvs;
         }
 
-        for(LinxGermlineSv germlineSv : germlineSvs)
+        for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
 
             if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
