@@ -58,7 +58,9 @@ public class DiscordantGroup
         Orientation remoteOrientation = read.mateOrientation();
 
         DiscordantRemoteRegion remoteRegion = mRemoteRegions.stream()
-                .filter(x -> x.overlaps(remoteChromosome, remotePosStart, remotePosEnd)).findFirst().orElse(null);
+                .filter(x -> x.overlaps(remoteChromosome, remotePosStart, remotePosEnd))
+                .filter(x -> x.Orient == remoteOrientation)
+                .findFirst().orElse(null);
 
         if(remoteRegion != null)
         {

@@ -357,8 +357,8 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.DiscordantGroups);
 
-        List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(
-                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
+        DiscordantGroups discordantGroups = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mConfig.TrackRemotes);
+        List<JunctionData> discordantJunctions = discordantGroups.formDiscordantJunctions(mCandidateDiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
         {
