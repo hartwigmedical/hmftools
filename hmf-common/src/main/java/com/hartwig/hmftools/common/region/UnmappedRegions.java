@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
@@ -20,9 +21,17 @@ import org.apache.logging.log4j.Logger;
 
 public class UnmappedRegions
 {
+    public static final String UNMAP_REGIONS_FILE = "unmap_regions";
+    public static final String UNMAP_REGIONS_FILE_DESC = "Genome regions to unmap reads";
+
+    public static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(UNMAP_REGIONS_FILE, false, UNMAP_REGIONS_FILE_DESC);
+    }
+
     private static final Logger LOGGER = LogManager.getLogger(UnmappedRegions.class);
 
-    public static Map<String, List<HighDepthRegion>> loadUnmapRegions(final String filename)
+    public static Map<String,List<HighDepthRegion>> loadUnmapRegions(final String filename)
     {
         try
         {
