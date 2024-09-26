@@ -134,7 +134,14 @@ public class VariantReadContext
     public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
 
     public List<UltimaQualModel> realignedUltimaQualModels() { return mRealignedUltimaQualModels; }
-    public void setRealignedUltimaQualModels(final List<UltimaQualModel> models) { mRealignedUltimaQualModels = models; }
+    public void setRealignedUltimaQualModels(final List<UltimaQualModel> models, UltimaQualModel qualModel)
+    {
+        mRealignedUltimaQualModels = models;
+        if(qualModel != null && models != null)
+            mRealignedUltimaQualModels.add(qualModel);
+        else if(qualModel != null)
+            mRealignedUltimaQualModels = List.of(qualModel);
+    }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }

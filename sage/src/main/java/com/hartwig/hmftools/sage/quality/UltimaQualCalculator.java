@@ -29,7 +29,7 @@ public class UltimaQualCalculator
         mRefGenome = refGenome;
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant) // pass in MH or repeat info
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases) // pass in MH or repeat info
     {
         int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
@@ -42,7 +42,7 @@ public class UltimaQualCalculator
         {
             if(variant.isDelete() && isHomopolymerDeletion(variant, refBases))
             {
-                return new HomopolymerDeletion(variant, refBases);
+                return new HomopolymerDeletion(variant, refBases[2], coreBases[1], coreBases[2]);
             }
 
             int homopolymerTransitionIndex = findHomopolymerTransitionCandidate(variant);
@@ -98,7 +98,7 @@ public class UltimaQualCalculator
         }
         else if(variant.isSNV())
         {
-            return new SnvMnv(variant, refBases, refVarIndex, mRefGenome);
+            return new SnvMnv(variant, refBases, refVarIndex, coreBases[0], coreBases[2]);
         }
 
         return null;
@@ -208,7 +208,7 @@ public class UltimaQualCalculator
         private final boolean mInCyclePosStrand;
         private final boolean mInCycleNegStrand;
 
-        public HomopolymerDeletion(final SimpleVariant variant, final byte[] refBases)
+        public HomopolymerDeletion(final SimpleVariant variant, final byte deletedHpBase, final byte straddleBaseStart, final byte straddleBaseEnd)
         {
             super(UltimaModelType.HOMOPOLYMER_DELETION);
 
@@ -218,22 +218,22 @@ public class UltimaQualCalculator
             {
                 mStraddleIndexStart = 0;
                 mStraddleIndexEnd = 1;
-                mStraddleBaseStart = refBases[1]; // the variant position ref base
-                mStraddleBaseEnd = refBases[1 + variant.Ref.length()]; // the first ref base after the deleted bases
+                mStraddleBaseStart = straddleBaseStart; // the variant position ref base
+                mStraddleBaseEnd = straddleBaseEnd; // the first ref base after the deleted bases
 
-                deletedBase = refBases[2];
+                deletedBase = deletedHpBase;
             }
             else
             {
                 // used for SNVs where the variant's ref base is considered deleted
-                mStraddleIndexStart = -1;
+                mStraddleIndexStart = 0;
                 mStraddleIndexEnd = 0;
 
                 // the 2 bases surrounding the SNV
-                mStraddleBaseStart = refBases[0];
-                mStraddleBaseEnd = refBases[2];
+                mStraddleBaseStart = straddleBaseStart;
+                mStraddleBaseEnd = straddleBaseEnd;
 
-                deletedBase = refBases[1];
+                deletedBase = deletedHpBase;
             }
 
             mInCyclePosStrand = isBaseInCycle(mStraddleBaseStart, mStraddleBaseEnd, deletedBase);
@@ -268,7 +268,7 @@ public class UltimaQualCalculator
                 return ULTIMA_INVALID_QUAL;
             }
 
-            return max(qual1, qual2);
+            return (byte) (max(qual1, qual2) - 33);
         }
 
         public String toString()
@@ -350,7 +350,7 @@ public class UltimaQualCalculator
         private final HomopolymerDeletion mRightDeletion;
 
         public SnvMnv(
-                final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final RefGenomeInterface refGenome)
+                final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final byte leftReadBase, final byte rightReadBase)
         {
             super(UltimaModelType.SNV);
 
@@ -413,7 +413,7 @@ public class UltimaQualCalculator
             else
             {
                 // HP deletion
-                leftDeletion = new HomopolymerDeletion(variant, refBases);
+                leftDeletion = new HomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
             }
 
             int upperHpLength = 0;
@@ -444,7 +444,7 @@ public class UltimaQualCalculator
             }
             else
             {
-                rightDeletion = new HomopolymerDeletion(variant, refBases);
+                rightDeletion = new HomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
             }
 
             mLeftAdjust = leftAdjust;

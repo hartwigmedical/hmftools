@@ -148,9 +148,7 @@ public class UltimaRealignedQualModelBuilderTest
 
         assertEquals(expectedQualVariants.size(), actualQualVariants.size());
         for(int i = 0; i < expectedQualVariants.size(); i++)
-        {
             assertTrue(expectedQualVariants.get(i).matches(actualQualVariants.get(i)));
-        }
     }
 
     @Test
@@ -169,7 +167,7 @@ public class UltimaRealignedQualModelBuilderTest
         int corePositionStart = 100;
         int position = 104;
         SimpleVariant variant = new SimpleVariant(CHR_1, position,"ATTT", "A");
-        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, null, Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
 
         assertEquals(1, realignedVariants.size());
@@ -192,7 +190,7 @@ public class UltimaRealignedQualModelBuilderTest
         int corePositionStart = 100;
         int position = 104;
         SimpleVariant variant = new SimpleVariant(CHR_1, position,"A", "ATTT");
-        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, null, Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
+        VariantReadContext readContext = new VariantReadContext(variant, -1, -1, null, "AAAAATTTTTAAAAA".getBytes(), Lists.newArrayList(), coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(readContext, null, refHomopolymers, readHomopolymers);
 
         assertEquals(1, realignedVariants.size());

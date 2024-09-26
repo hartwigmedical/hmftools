@@ -291,7 +291,7 @@ public class ReadContextMatchingTest
         read = buildSamRecord(40, readCigar, readBases);
         read.getBaseQualities()[26] = 11;
 
-        assertEquals(FULL, matcher.determineReadMatch(read, 24));
+        assertEquals(NONE, matcher.determineReadMatch(read, 24));
 
         readBases = REF_BASES_200.substring(40, position + 1) + "AAAC" + REF_BASES_200.substring(position + 1, 90);
         readCigar = "25M4I25M";

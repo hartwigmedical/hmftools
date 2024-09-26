@@ -111,9 +111,15 @@ public class ReadContextMatcher
 
         if(allowMismatches)
         {
+            Set<Integer> excludedBases = Sets.newHashSet();
+            List<RepeatInfo> longHomopolymerRepeats = readContext.AllRepeats.stream().filter(x->(x.Bases.length() == 1) && (x.Count >= 5)).collect(Collectors.toList());
+            for(RepeatInfo repeat : longHomopolymerRepeats)
+            {
+                for(int i = -1; i <= repeat.Count; ++i)
+                    excludedBases.add(repeat.Index + i);
+            }
             if(mContext.variant().isIndel())
             {
-                Set<Integer> excludedBases = Sets.newHashSet();
                 int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
                 int lowQualIndexUpper = determineIndelLowQualRefReadDiffIndex(readContext);
                 excludedBases.add(lowQualIndexLower);
@@ -136,7 +142,9 @@ public class ReadContextMatcher
             {
                 // just the alt bases themselves - for both ref and read
                 int altRange = mContext.variant().altLength() - 1;
-                mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
+                for(int i = 0; i <= altRange; ++i)
+                    excludedBases.add(mContext.VarIndex + i);
+                mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
 
                 int refIndex = mContext.leftCoreLength();
                 mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);

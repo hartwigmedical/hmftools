@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -11,14 +9,13 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
+import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -148,16 +145,21 @@ public class UltimaRealignedQualModelBuilder
         {
             if(realignedVariants.get(i).variant().Position < realignedVariants.get(i - 1).variant().Position)
             {
-                throw new IllegalStateException(format("Realigned variants are out of order: readContext(%s)", readContext.toString()));
+                throw new IllegalStateException(format("Realigned variants are out of order: readContext(%s)", readContext));
             }
         }
 
         // TODO: This has been duct taped.
-        List<UltimaQualModel> realignedQualModels =
-                getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext.variant(), realignedVariants)
-                        .stream()
-                        .map(x -> (UltimaQualModel) x)
-                        .collect(Collectors.toList());
+        List<UltimaQualModel> realignedQualModels = realignedVariants
+                .stream()
+                .map(x -> (UltimaQualModel) x)
+                .collect(Collectors.toList());
+
+        // TODO: Use indel variants?
+        //                getQualVariants(mergedHomopolymers.variantInMergedHomopolymers(), readContext.variant(), realignedVariants)
+        //                        .stream()
+        //                        .map(x -> (UltimaQualModel) x)
+        //                        .collect(Collectors.toList());
 
         if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwiched)
         {
@@ -476,7 +478,8 @@ public class UltimaRealignedQualModelBuilder
             String alt = String.valueOf((char) firstAltBase);
 
             SimpleVariant variant = new SimpleVariant(chromosome, varPosition, ref, alt);
-            UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant);
+            byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset-1, readContext.VarIndex+varReadIndexOffset+1);
+            UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant, coreBases);
             UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset);
             realignedVariants.add(realignedQualModel);
         }
@@ -507,7 +510,8 @@ public class UltimaRealignedQualModelBuilder
             String alt = String.valueOf((char) firstAltBase) + insBasesString;
 
             SimpleVariant variant = new SimpleVariant(chromosome, varPosition, ref, alt);
-            UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant);
+            byte[] coreBases = Arrays.subsetArray(readContext.ReadBases,readContext.VarIndex+varReadIndexOffset-1, readContext.VarIndex+varReadIndexOffset+1);
+            UltimaQualModel baseQualModel = ultimaQualCalculator == null ? null : ultimaQualCalculator.buildContext(variant, coreBases);
             UltimaRealignedQualModel realignedQualModel = baseQualModel == null ? new UltimaRealignedQualModel(variant, varReadIndexOffset) : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset);
             realignedVariants.add(realignedQualModel);
         }
@@ -652,7 +656,6 @@ public class UltimaRealignedQualModelBuilder
         return realignedVariants;
     }
 
-    // TODO: Simplify and remove repetition.
     @VisibleForTesting
     public static List<UltimaRealignedQualModel> getQualVariants(boolean variantInMergedHomopolymers, final SimpleVariant variant, final List<UltimaRealignedQualModel> realignedVariants)
     {
