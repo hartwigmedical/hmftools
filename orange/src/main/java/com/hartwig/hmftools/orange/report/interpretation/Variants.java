@@ -85,18 +85,7 @@ public final class Variants
     @NotNull
     public static String biallelicLikelihoodField(@NotNull VariantEntry variant)
     {
-        if(variant.biallelicProbability() != null)
-        {
-            return PERCENTAGE_FORMAT.format(variant.biallelicProbability() * 100);
-        }
-        else if(variant.biallelic())
-        {
-            return "Yes";
-        }
-        else
-        {
-            return "No";
-        }
+        return variant.biallelicProbability() != null ? PERCENTAGE_FORMAT.format(variant.biallelicProbability() * 100) : Strings.EMPTY;
     }
 
     @NotNull
