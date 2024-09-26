@@ -21,8 +21,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class UltimaQualCalculator
 {
-    private static final int MAX_HOMOPOLYMER = 8;
-
+    private static final int MAX_HOMOPOLYMER = 15; // temporarily since we don't fall back to MSI model properly
     private final RefGenomeInterface mRefGenome;
 
     public UltimaQualCalculator(final RefGenomeInterface refGenome)
