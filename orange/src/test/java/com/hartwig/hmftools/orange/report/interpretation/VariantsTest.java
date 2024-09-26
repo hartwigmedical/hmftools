@@ -61,11 +61,11 @@ public class VariantsTest
     @Test
     public void canRenderBiallelicStatus()
     {
-        VariantEntry withProbability = TestVariantEntryFactory.builder().biallelicProbability(0.3).build();
-        assertEquals("30%", Variants.biallelicLikelihoodField(withProbability));
+        VariantEntry biallelic = TestVariantEntryFactory.builder().biallelicProbability(1.).build();
+        assertEquals("100%", Variants.biallelicLikelihoodField(biallelic));
 
-        VariantEntry withoutProbabilityBiallelic = TestVariantEntryFactory.builder().biallelicProbability(null).build();
-        assertEquals("", Variants.biallelicLikelihoodField(withoutProbabilityBiallelic));
+        VariantEntry nonBiallelic = TestVariantEntryFactory.builder().biallelicProbability(0.2).build();
+        assertEquals("20%", Variants.biallelicLikelihoodField(nonBiallelic));
     }
 
     @Test
