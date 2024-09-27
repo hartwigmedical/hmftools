@@ -38,7 +38,7 @@ public final class SomaticVariantTable
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
+            table.addCell(cells.createContent(Variants.biallelicLikelihoodField(variant)));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));
             table.addCell(cells.createContent(Variants.driverLikelihoodField(variant)));
             table.addCell(cells.createContent(Variants.clonalLikelihoodField(variant)));

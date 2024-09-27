@@ -59,6 +59,16 @@ public class VariantsTest
     }
 
     @Test
+    public void canRenderBiallelicStatus()
+    {
+        VariantEntry biallelic = TestVariantEntryFactory.builder().biallelicProbability(1.).build();
+        assertEquals("100%", Variants.biallelicLikelihoodField(biallelic));
+
+        VariantEntry nonBiallelic = TestVariantEntryFactory.builder().biallelicProbability(0.2).build();
+        assertEquals("20%", Variants.biallelicLikelihoodField(nonBiallelic));
+    }
+
+    @Test
     public void canRenderDriverLikelihood()
     {
         VariantEntry driver = TestVariantEntryFactory.builder().driverLikelihood(0.4).build();
