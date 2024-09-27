@@ -21,8 +21,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -88,12 +88,14 @@ public final class LinxConversion
                 .build();
     }
 
-
     @NotNull
-    private static List<LinxUnreportableReason> unreportableReasonStringToList(@NotNull String input) {
+    private static List<LinxUnreportableReason> unreportableReasonStringToList(@NotNull String input)
+    {
         return Arrays.stream(input.split(FileDelimiters.ITEM_DELIM))
-                .map(item -> {
-                    switch (item) {
+                .map(item ->
+                {
+                    switch(item)
+                    {
                         case "OK":
                             return LinxUnreportableReason.NONE;
                         case "PROTEIN_DOMAINS":

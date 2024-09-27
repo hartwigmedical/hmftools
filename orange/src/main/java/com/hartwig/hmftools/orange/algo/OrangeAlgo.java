@@ -200,7 +200,14 @@ public class OrangeAlgo
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
-        LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
+        LinxInterpreter linxInterpreter = new LinxInterpreter(
+                driverGenes,
+                knownFusionCache,
+                purpleData.allSomaticStructuralVariants(),
+                purpleData.allGermlineStructuralVariants(),
+                config.refGenomeVersion()
+        );
+
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);

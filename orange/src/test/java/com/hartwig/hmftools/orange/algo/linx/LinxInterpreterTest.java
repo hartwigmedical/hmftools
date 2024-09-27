@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static java.util.Collections.emptyList;
+
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,6 +24,6 @@ public class LinxInterpreterTest
     @NotNull
     private static LinxInterpreter createTestInterpreter()
     {
-        return new LinxInterpreter(Lists.newArrayList(), new KnownFusionCache());
+        return new LinxInterpreter(Lists.newArrayList(), new KnownFusionCache(), emptyList(), emptyList(), OrangeRefGenomeVersion.V37);
     }
 }
