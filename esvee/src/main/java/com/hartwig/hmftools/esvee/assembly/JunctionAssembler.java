@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_L
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -177,32 +178,31 @@ public class JunctionAssembler
 
     private void assessDiscordantJunction(final List<Read> rawReads, final List<Read> extensionReads, final List<Read> junctionReads)
     {
+        if(rawReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
+            return;
+
         // first identify the junction position either from soft-clips or the inner most read
-        int adjustedJuncPosition = 0;
-        int maxSoftClip = 0;
+        List<Integer> extensionLengths = Lists.newArrayListWithCapacity(rawReads.size());
 
         for(Read read : rawReads)
         {
             if(mJunction.isForward())
-            {
-                adjustedJuncPosition = max(read.alignmentEnd(), adjustedJuncPosition);
-                maxSoftClip = max(maxSoftClip, read.rightClipLength());
-            }
+                extensionLengths.add(read.unclippedEnd());
             else
-            {
-                adjustedJuncPosition = adjustedJuncPosition == 0 ? read.alignmentStart() : min(read.alignmentStart(), adjustedJuncPosition);
-                maxSoftClip = max(maxSoftClip, read.leftClipLength());
-            }
+                extensionLengths.add(read.unclippedStart());
         }
 
-        // ensure a soft-clip length of the minimum to call a variant
-        if(maxSoftClip < MIN_VARIANT_LENGTH)
-        {
-            if(mJunction.isForward())
-                adjustedJuncPosition -= MIN_VARIANT_LENGTH - maxSoftClip;
-            else
-                adjustedJuncPosition += MIN_VARIANT_LENGTH - maxSoftClip;
-        }
+        if(mJunction.isForward())
+            Collections.reverse(extensionLengths);
+        else
+            Collections.sort(extensionLengths);
+
+        int adjustedJuncPosition = extensionLengths.get(ASSEMBLY_MIN_READ_SUPPORT - 1);
+
+        if(mJunction.isForward())
+            adjustedJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        else
+            adjustedJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         mJunction = new Junction(
                 mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
@@ -213,11 +213,11 @@ public class JunctionAssembler
 
             if(mJunction.isForward())
             {
-                extensionLength = read.alignmentEnd() > adjustedJuncPosition ? read.unclippedEnd() - adjustedJuncPosition : -1;
+                extensionLength = read.alignmentEnd() >= adjustedJuncPosition ? read.unclippedEnd() - adjustedJuncPosition : -1;
             }
             else
             {
-                extensionLength = read.alignmentStart() < adjustedJuncPosition ? adjustedJuncPosition - read.unclippedStart() : -1;
+                extensionLength = read.alignmentStart() <= adjustedJuncPosition ? adjustedJuncPosition - read.unclippedStart() : -1;
             }
 
             if(extensionLength >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
