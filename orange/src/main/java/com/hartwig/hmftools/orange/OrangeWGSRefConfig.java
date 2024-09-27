@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.FLAGSTAT_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PEACH_DIR;
@@ -149,7 +148,7 @@ public interface OrangeWGSRefConfig
             String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
             if (peachGenotypeTsv == null)
             {
-                peachGenotypeTsv = mandatoryPath(peachDir + File.separator + tumorSampleId + ".peach.genotype.tsv");
+                peachGenotypeTsv = mandatoryPath(PeachGenotypeFile.generateFileName(peachDir, tumorSampleId));
             }
             builder.peachGenotypeTsv(peachGenotypeTsv);
 
