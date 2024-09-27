@@ -45,6 +45,7 @@ public class VirusComparer implements ItemComparer
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_MEAN_COVERAGE, 0, 0.15);
+        thresholds.addFieldThreshold(FLD_INTEGRATIONS, 0, 0.20);
     }
 
     @Override
