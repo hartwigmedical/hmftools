@@ -255,7 +255,7 @@ public class OrangeAlgo
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null))
+                .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
                 .immuneEscape(immuneEscape)
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
@@ -535,9 +535,15 @@ public class OrangeAlgo
                 rna.isofoxAltSpliceJunctionCsv());
     }
 
-    @NotNull
+    @Nullable
     private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.lilacResultTsv() == null || config.lilacQcTsv() == null)
+        {
+            LOGGER.info("Skipping loading LILAC results since LILAC input dir or tsvs were not provided");
+            return null;
+        }
+
         return LilacSummaryData.load(config.lilacQcTsv(), config.lilacResultTsv());
     }
 
