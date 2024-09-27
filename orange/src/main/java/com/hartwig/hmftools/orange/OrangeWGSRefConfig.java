@@ -144,13 +144,16 @@ public interface OrangeWGSRefConfig
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
-            String peachDir = pathResolver.resolveMandatoryToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
-            String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
-            if (peachGenotypeTsv == null)
+            String peachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
+            if(peachDir != null)
             {
-                peachGenotypeTsv = mandatoryPath(PeachGenotypeFile.generateFileName(peachDir, tumorSampleId));
+                String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
+                if (peachGenotypeTsv == null)
+                {
+                    peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, tumorSampleId));
+                }
+                builder.peachGenotypeTsv(peachGenotypeTsv);
             }
-            builder.peachGenotypeTsv(peachGenotypeTsv);
 
             String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, METRICS_DIR);
             builder.refSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(refMetricsDir, refSampleId)));
