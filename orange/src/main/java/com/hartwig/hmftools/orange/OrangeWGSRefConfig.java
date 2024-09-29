@@ -144,14 +144,11 @@ public interface OrangeWGSRefConfig
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
+            // PEACH optional so that skipping it in oncoanalyser still generates an ORANGE report
             String peachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
             if(peachDir != null)
             {
-                String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
-                if (peachGenotypeTsv == null)
-                {
-                    peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, tumorSampleId));
-                }
+                String peachGenotypeTsv = mandatoryPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
                 builder.peachGenotypeTsv(peachGenotypeTsv);
             }
 
