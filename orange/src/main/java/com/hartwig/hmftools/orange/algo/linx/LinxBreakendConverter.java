@@ -3,8 +3,8 @@ package com.hartwig.hmftools.orange.algo.linx;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -23,18 +23,17 @@ public class LinxBreakendConverter
     List<StructuralVariant> structuralVariants;
     @NotNull
     List<LinxSvAnnotation> linxSvAnnotations;
-    @NotNull
-    CytoBands cytoBands;
+    @NotNull EnsemblDataCache ensemblDataCache;
 
     public LinxBreakendConverter(
             @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<LinxSvAnnotation> linxSvAnnotations,
-            @NotNull RefGenomeVersion refGenomeVersion
+            @NotNull final EnsemblDataCache ensemblDataCache
     )
     {
         this.structuralVariants = structuralVariants;
         this.linxSvAnnotations = linxSvAnnotations;
-        this.cytoBands = new CytoBands(refGenomeVersion);
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     public LinxBreakend convert(@NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
@@ -56,14 +55,14 @@ public class LinxBreakendConverter
                 .orElseThrow(() -> new RuntimeException("No structural variant found for breakend " + linxBreakend.id()));
 
         String chrom = sv.chromosome(linxBreakend.isStart());
-        int position = Objects.requireNonNull(sv.position(linxBreakend.isStart()), "Position is null for breakend " + linxBreakend.id());
         byte orientation =
                 Objects.requireNonNull(sv.orientation(linxBreakend.isStart()), "Orientation is null for breakend " + linxBreakend.id());
 
         StructuralVariantType type = sv.type();
 
         double junctionCopyNumber = 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
-        String chrBand = cytoBands.getCytoBandName("chr" + chrom, position);
+        GeneData geneData = ensemblDataCache.getGeneDataByName(linxBreakend.gene());
+        String chrBand = geneData != null ? geneData.KaryotypeBand : "";
 
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())

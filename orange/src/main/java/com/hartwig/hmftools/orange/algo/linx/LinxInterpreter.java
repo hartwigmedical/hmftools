@@ -6,15 +6,14 @@ import java.util.List;
 import java.util.Objects;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
@@ -32,18 +31,21 @@ public class LinxInterpreter
     @Nullable
     List<StructuralVariant> allGermlineStructuralVariants;
     @NotNull
-    RefGenomeVersion refGenomeVersion;
+    EnsemblDataCache ensemblDataCache;
 
-    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
+    public LinxInterpreter(
+            @NotNull final List<DriverGene> driverGenes,
+            @NotNull final KnownFusionCache knownFusionCache,
             @NotNull final List<StructuralVariant> allSomaticStructuralVariants,
             @Nullable final List<StructuralVariant> allGermlineStructuralVariants,
-            @NotNull final OrangeRefGenomeVersion refGenomeVersion)
+            @NotNull final EnsemblDataCache ensemblDataCache
+    )
     {
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
         this.allSomaticStructuralVariants = allSomaticStructuralVariants;
         this.allGermlineStructuralVariants = allGermlineStructuralVariants;
-        this.refGenomeVersion = RefGenomeVersion.valueOf(refGenomeVersion.name());
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     @NotNull
@@ -69,13 +71,13 @@ public class LinxInterpreter
         final LinxBreakendConverter somaticBreakendConverter = new LinxBreakendConverter(
                 allSomaticStructuralVariants,
                 linx.allSomaticStructuralVariants(),
-                refGenomeVersion
+                ensemblDataCache
         );
 
         final LinxBreakendConverter germlineBreakendConverter = new LinxBreakendConverter(
                 Objects.requireNonNullElse(allGermlineStructuralVariants, List.of()),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
-                refGenomeVersion
+                ensemblDataCache
         );
 
         return ImmutableLinxRecord.builder()

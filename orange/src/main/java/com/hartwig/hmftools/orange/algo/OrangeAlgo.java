@@ -205,8 +205,7 @@ public class OrangeAlgo
                 knownFusionCache,
                 purpleData.allSomaticStructuralVariants(),
                 purpleData.allGermlineStructuralVariants(),
-                config.refGenomeVersion()
-        );
+                ensemblDataCache);
 
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
