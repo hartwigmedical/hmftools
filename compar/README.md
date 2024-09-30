@@ -34,23 +34,25 @@ The key configuration values to set are:
 | db_source_ref & db_source_new     | DB connection details for ref and new sample data - see format below                                                                       |
 | output_dir                        | Path for output file                                                                                                                       |
 
-** set of tools are: linx, linx_germline, purple, chord, cuppa, lilac, peach, virus (i.e. virus-interpreter)
+** set of tools are: linx, linx_germline, purple, chord, cuppa, lilac, peach, virus (i.e. virus-interpreter), snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
 The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, 
-CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_METRICS, GERMLINE_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER.
+CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER.
 
 The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE.
 
 
 ### Optional configuration
 
-| Filter              | Description                                                                                                   |
-|---------------------|---------------------------------------------------------------------------------------------------------------|
-| germline_sample     | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                          |
-| output_id           | Outfile file suffix                                                                                           |
-| driver_gene_panel   | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons |
-| restrict_to_drivers | Limit analysis to genes within the panel                                                                      |
-| write_detailed      | Write a file per compared category                                                                            |
+| Filter                                                  | Description                                                                                                   |
+|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                          |
+| output_id                                               | Outfile file suffix                                                                                           |
+| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons |
+| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                      |
+| write_detailed                                          | Write a file per compared category                                                                            |
+| somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                 |
+| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)      |
 
 ### Sample ID Mappings
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:
@@ -347,7 +349,7 @@ Data key: SampleId
 | Percentage10X       | Threshold [0.03]        |
 | Percentage20X       | Threshold [0.03]        |
 
-### SNP Check
+### SNP Genotype
 Data key: SampleId, Chromosome, Position, Ref
 
 | Field    | Match Type & Thresholds |
