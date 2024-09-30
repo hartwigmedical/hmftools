@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.CYCLE_BASE_INDEX;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.INVALID_BASE;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
 
 import static htsjdk.samtools.CigarOperator.I;
 
@@ -322,35 +323,6 @@ public class UltimaRealignedQualModelsBuilder_0
         }
 
         return new UltimaRealignedQualModels(readContext, ultimaQualCalculator, realignedQualModels);
-    }
-
-    @VisibleForTesting
-    public static List<Homopolymer> getHomopolymers(final byte[] bases, int startIndex, int endIndex)
-    {
-        List<Homopolymer> homopolymers = Lists.newArrayList();
-        if(endIndex < startIndex)
-        {
-            return homopolymers;
-        }
-
-        byte currentBase = bases[startIndex];
-        int currentLength = 1;
-        for(int i = startIndex + 1; i <= endIndex; i++)
-        {
-            byte base = bases[i];
-            if(base == currentBase)
-            {
-                currentLength++;
-                continue;
-            }
-
-            homopolymers.add(new Homopolymer(currentBase, currentLength));
-            currentBase = base;
-            currentLength = 1;
-        }
-
-        homopolymers.add(new Homopolymer(currentBase, currentLength));
-        return homopolymers;
     }
 
     private static class HomopolymerVariant

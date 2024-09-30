@@ -28,7 +28,6 @@ public class UltimaRealignedQualModelsBuilder
         }
     }
 
-    @VisibleForTesting
     public static class Homopolymer
     {
         public final byte Base;
@@ -73,6 +72,34 @@ public class UltimaRealignedQualModelsBuilder
         {
             return (int) Base + 31 * Length;
         }
+    }
+
+    public static List<Homopolymer> getHomopolymers(final byte[] bases, int startIndex, int endIndex)
+    {
+        List<Homopolymer> homopolymers = Lists.newArrayList();
+        if(startIndex < 0 || endIndex >= bases.length || endIndex < startIndex)
+        {
+            return homopolymers;
+        }
+
+        byte currentBase = bases[startIndex];
+        int currentLength = 1;
+        for(int i = startIndex + 1; i <= endIndex; i++)
+        {
+            byte base = bases[i];
+            if(base == currentBase)
+            {
+                currentLength++;
+                continue;
+            }
+
+            homopolymers.add(new Homopolymer(currentBase, currentLength));
+            currentBase = base;
+            currentLength = 1;
+        }
+
+        homopolymers.add(new Homopolymer(currentBase, currentLength));
+        return homopolymers;
     }
 
     public static class RefMask

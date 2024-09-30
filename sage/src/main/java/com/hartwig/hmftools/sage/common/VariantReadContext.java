@@ -5,14 +5,18 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -225,33 +229,7 @@ public class VariantReadContext
 
     public List<Integer> coreHomopolymerLengths()
     {
-        List<Integer> homopolymerLengths = Lists.newArrayList();
-        byte currentBase = INVALID_BASE;
-        int currentLength = 0;
-        for(int i = CoreIndexStart; i <= CoreIndexEnd; i++)
-        {
-            byte base = ReadBases[i];
-            if(currentBase == INVALID_BASE)
-            {
-                currentBase = base;
-                currentLength = 1;
-                continue;
-            }
-
-            if(currentBase == base)
-            {
-                currentLength++;
-                continue;
-            }
-
-            homopolymerLengths.add(currentLength);
-            currentBase = base;
-            currentLength = 1;
-        }
-
-        if(currentLength > 0)
-            homopolymerLengths.add(currentLength);
-
-        return homopolymerLengths;
+        List<Homopolymer> homopolymers = getHomopolymers(ReadBases, CoreIndexStart, CoreIndexEnd);
+        return homopolymers.stream().map(x -> x.Length).collect(Collectors.toList());
     }
 }

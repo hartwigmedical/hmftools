@@ -5,10 +5,10 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getHomopolymers;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getQualVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getRealignedVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,6 +32,21 @@ import org.junit.Test;
 
 public class UltimaRealignedQualModelsBuilderTest
 {
+    @Test
+    public void testGetHomopolymersInvalidIndices()
+    {
+        byte[] bases = new byte[] { (byte) 'A', (byte) 'A' };
+
+        List<Homopolymer> homopolymers = getHomopolymers(bases, -1, 1);
+        assertEquals(0, homopolymers.size());
+
+        homopolymers = getHomopolymers(bases, 0, 2);
+        assertEquals(0, homopolymers.size());
+
+        homopolymers = getHomopolymers(bases, 1, 0);
+        assertEquals(0, homopolymers.size());
+    }
+
     @Test
     public void testMergeSandwichedHomopolymersMultiHomopolymerSkip()
     {
