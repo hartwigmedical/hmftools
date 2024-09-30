@@ -59,8 +59,11 @@ public class LinxBreakendConverter
                 Objects.requireNonNull(sv.orientation(linxBreakend.isStart()), "Orientation is null for breakend " + linxBreakend.id());
 
         StructuralVariantType type = sv.type();
+        
+        double junctionCopyNumber = svAnnotation.junctionCopyNumberMin() != 0D
+                ? 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax())
+                : svAnnotation.junctionCopyNumberMax();
 
-        double junctionCopyNumber = 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
         GeneData geneData = ensemblDataCache.getGeneDataByName(linxBreakend.gene());
         String chrBand = geneData != null ? geneData.KaryotypeBand : "";
 
