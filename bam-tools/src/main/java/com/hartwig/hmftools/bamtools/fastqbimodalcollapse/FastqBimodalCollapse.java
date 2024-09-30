@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.fastq.FastqRecord;
 
+// TODO: Bimodal -> Biomodal
 // TODO: Multithread
 // TODO: Break out into separate classes
 // TODO: Reduce reimplementation of common classes.
@@ -37,6 +38,11 @@ public class FastqBimodalCollapse
     private static final int ROLLING_WINDOW_SIZE = 20;
     private static final int MIN_GOOD_ROLLING_COUNT = 18;
     private static final int NO_HAIRPIN = Integer.MAX_VALUE;
+
+    private static final float HAIRPIN_MATCH_TARGET = 0.9f;
+    private static final int MIN_HAIRPIN_MATCH_LENGTH = 3;
+    private static final String FORWARD_HAIRPIN = "AATGACGATGCGTTCGAGCATCGTTATT";
+    private static final String REVERSE_HAIRPIN = "AATACCGATGCTCGAACGCATCGTCATT";
 
     private final FastqBimodalCollapseConfig mConfig;
 
@@ -190,116 +196,82 @@ public class FastqBimodalCollapse
         return consensusRead.toString();
     }
 
-    private static int findHairpinStart(final FastqRecord fastq1, final FastqRecord fastq2, final String consensusRead)
+    public static class HairpinInfo
     {
-        int[] isConcordant = new int[consensusRead.length()];
-        int[] isConcordantGG = new int[consensusRead.length()];
-        for(int i = 0; i < consensusRead.length(); i++)
+        public final int StartPos;
+        public final int Length;
+        public final int MatchCount;
+
+        public HairpinInfo(final int startPos, final int length, final int matchCount)
         {
-            isConcordant[i] = 0;
-            isConcordantGG[i] = 0;
-
-            char consensusBase = consensusRead.charAt(i);
-            char base1 = fastq1.getReadString().charAt(i);
-            char base2 = fastq2.getReadString().charAt(i);
-
-            if(!(base1 == MISSING_BASE || base2 == MISSING_BASE || consensusBase == MISMATCH_BASE))
-            {
-                isConcordant[i] = 1;
-            }
-
-            if(!(base1 == MISSING_BASE || base2 == MISSING_BASE || consensusBase == MISMATCH_BASE) || (base1 == 'G' && base2 == 'G'))
-            {
-                isConcordantGG[i] = 1;
-            }
+            StartPos = startPos;
+            Length = length;
+            MatchCount = matchCount;
         }
+    }
 
-        int[] rollingCount = new int[consensusRead.length() - ROLLING_WINDOW_SIZE + 1];
-        int[] rollingCountGG = new int[consensusRead.length() - ROLLING_WINDOW_SIZE + 1];
-        rollingCount[0] = 0;
-        rollingCountGG[0] = 0;
-        for(int i = 0; i < ROLLING_WINDOW_SIZE; i++)
+    private static HairpinInfo findHairpin(final String read, final String hairpinSequence)
+    {
+        // full hairpin match
+        int minRequiredMatches = (int) Math.round(Math.ceil(hairpinSequence.length() * HAIRPIN_MATCH_TARGET));
+        int maxMismatches = hairpinSequence.length() - minRequiredMatches;
+        for(int i = 0; i <= read.length() - hairpinSequence.length(); i++)
         {
-            rollingCount[0] += isConcordant[i];
-            rollingCountGG[0] += isConcordantGG[i];
-        }
-
-        for(int i = 1; i < rollingCount.length; i++)
-        {
-            rollingCount[i] = rollingCount[i - 1] - isConcordant[i - 1] + isConcordant[i + ROLLING_WINDOW_SIZE - 1];
-            rollingCountGG[i] = rollingCountGG[i - 1] - isConcordantGG[i - 1] + isConcordantGG[i + ROLLING_WINDOW_SIZE - 1];
-        }
-
-        for(int i = 0; i < rollingCount.length; i++)
-        {
-            if(rollingCount[i] >= MIN_GOOD_ROLLING_COUNT)
+            int mismatchCount = 0;
+            for(int j = 0; j < hairpinSequence.length(); j++)
             {
-                continue;
-            }
+                char readBase = read.charAt(i + j);
+                char hairpinBase = hairpinSequence.charAt(j);
+                if(readBase != hairpinBase)
+                {
+                    mismatchCount++;
+                }
 
-            int j = i + 1;
-            for(; j < rollingCount.length; j++)
-            {
-                if(rollingCount[j] >= MIN_GOOD_ROLLING_COUNT)
+                if(mismatchCount > maxMismatches)
                 {
                     break;
                 }
             }
 
-            if(j == rollingCount.length)
+            if(mismatchCount > maxMismatches)
             {
                 continue;
             }
 
-            boolean found = false;
-            for(int k = 0; k < i; k++)
-            {
-                if(rollingCount[k] < MIN_GOOD_ROLLING_COUNT - 1)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if(found)
-            {
-                continue;
-            }
-
-            found = false;
-            for(int k = j + 1; k < rollingCount.length; k++)
-            {
-                if(rollingCountGG[k] < MIN_GOOD_ROLLING_COUNT - 1)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if(found)
-            {
-                continue;
-            }
-
-            found = false;
-            for(int k = i + 1; k < j; k++)
-            {
-                if(rollingCount[k] < 14)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-            {
-                continue;
-            }
-
-            return i + 5;
+            return new HairpinInfo(i + 1, hairpinSequence.length(), hairpinSequence.length() - mismatchCount);
         }
 
-        return NO_HAIRPIN;
+        // partial hairpin match at the end
+        for(int hairpinPrefixLength = min(hairpinSequence.length() - 1, read.length()); hairpinPrefixLength >= MIN_HAIRPIN_MATCH_LENGTH; hairpinPrefixLength--)
+        {
+            minRequiredMatches = (int) Math.round(Math.ceil(hairpinPrefixLength * HAIRPIN_MATCH_TARGET));
+            maxMismatches = hairpinPrefixLength - minRequiredMatches;
+
+            int mismatchCount = 0;
+            for(int j = 0; j < hairpinPrefixLength; j++)
+            {
+                char readBase = read.charAt(read.length() - hairpinPrefixLength + j);
+                char hairpinBase = hairpinSequence.charAt(j);
+                if(readBase != hairpinBase)
+                {
+                    mismatchCount++;
+                }
+
+                if(mismatchCount > maxMismatches)
+                {
+                    break;
+                }
+            }
+
+            if(mismatchCount > maxMismatches)
+            {
+                continue;
+            }
+
+            return new HairpinInfo(read.length() - hairpinPrefixLength + 1, hairpinPrefixLength, hairpinPrefixLength - mismatchCount);
+        }
+
+        return new HairpinInfo(-1, 0, 0);
     }
 
     private static final String STAT_DELIMITER = "\t";
@@ -307,128 +279,169 @@ public class FastqBimodalCollapse
             "read_name",
             "read1_length",
             "read2_length",
-            "consensus_count",
-            "missing_count",
-            "mismatch_count",
-            "modc_with_g_count",
-            "modc_without_g_count",
-            "exact_matches",
-            "exact_mismatches",
-            "hairpin_start",
             "read1",
             "qual1",
             "read2",
             "qual2",
-            "consensus_read"
+            "hairpin1_start_pos",
+            "hairpin1_length",
+            "hairpin1_match_count",
+            "hairpin2_start_pos",
+            "hairpin2_length",
+            "hairpin2_match_count"
     };
 
     private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
     {
-        String consensusRead = getConsensusRead(fastq1, fastq2);
-        int hairpinStart = findHairpinStart(fastq1, fastq2, consensusRead);
-
-        int missingCount = 0;
-        int consensusCount = 0;
-        int mismatchCount = 0;
-        int modCWithG = 0;
-        int modCWithoutG = 0;
-        int exactMatches = 0;
-        int exactMismatches = 0;
-        for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
-        {
-            char consensusBase = consensusRead.charAt(i);
-            char base1 = fastq1.getReadString().charAt(i);
-            char base2 = fastq2.getReadString().charAt(i);
-
-            if(base1 == MISSING_BASE || base2 == MISSING_BASE)
-            {
-                missingCount++;
-            }
-            else if(baseIndex(consensusBase) != -1)
-            {
-                consensusCount++;
-            }
-            else if(consensusBase == MISMATCH_BASE)
-            {
-                mismatchCount++;
-            }
-            else if(consensusBase == MODC_BASE)
-            {
-                Character nextBase1 = i < fastq1.getReadString().length() - 1 ? fastq1.getReadString().charAt(i + 1) : null;
-                if(nextBase1 != null && nextBase1.equals('G'))
-                {
-                    modCWithG++;
-                }
-                else
-                {
-                    modCWithoutG++;
-                }
-            }
-            else
-            {
-                throw new RuntimeException("Unreachable");
-            }
-
-
-            if(base1 == MISSING_BASE || base2 == MISSING_BASE)
-            {
-                continue;
-            }
-
-            if(base1 == base2)
-            {
-                exactMatches++;
-                continue;
-            }
-
-            exactMismatches++;
-        }
+        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
+        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
 
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
         statLine.add(fastq1.getReadName());
         statLine.add(String.valueOf(fastq1.getReadLength()));
         statLine.add(String.valueOf(fastq2.getReadLength()));
-        statLine.add(String.valueOf(consensusCount));
-        statLine.add(String.valueOf(missingCount));
-        statLine.add(String.valueOf(mismatchCount));
-        statLine.add(String.valueOf(modCWithG));
-        statLine.add(String.valueOf(modCWithoutG));
-        statLine.add(String.valueOf(exactMatches));
-        statLine.add(String.valueOf(exactMismatches));
-        statLine.add(String.valueOf(hairpinStart == NO_HAIRPIN ? -1 : hairpinStart + 1));
         statLine.add(fastq1.getReadString());
         statLine.add(fastq1.getBaseQualityString());
         statLine.add(fastq2.getReadString());
         statLine.add(fastq2.getBaseQualityString());
-        statLine.add(consensusReadForOutput(consensusRead));
+        statLine.add(String.valueOf(hairpin1.StartPos));
+        statLine.add(String.valueOf(hairpin1.Length));
+        statLine.add(String.valueOf(hairpin1.MatchCount));
+        statLine.add(String.valueOf(hairpin2.StartPos));
+        statLine.add(String.valueOf(hairpin2.Length));
+        statLine.add(String.valueOf(hairpin2.MatchCount));
 
         writer.write(statLine.toString());
         writer.newLine();
     }
 
-    private static String consensusReadForOutput(final String consensusRead)
-    {
-        StringBuilder output = new StringBuilder();
-        for(int i = 0; i < consensusRead.length(); i++)
-        {
-            char c = consensusRead.charAt(i);
-            if(c == 'X')
-            {
-                output.append('N');
-                continue;
-            }
+//    private static final String STAT_DELIMITER = "\t";
+//    private static final String[] STAT_HEADERS = {
+//            "read_name",
+//            "read1_length",
+//            "read2_length",
+//            "consensus_count",
+//            "missing_count",
+//            "mismatch_count",
+//            "modc_with_g_count",
+//            "modc_without_g_count",
+//            "exact_matches",
+//            "exact_mismatches",
+//            "hairpin_start",
+//            "read1",
+//            "qual1",
+//            "read2",
+//            "qual2",
+//            "consensus_read"
+//    };
+//
+//    private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
+//    {
+//        String consensusRead = getConsensusRead(fastq1, fastq2);
+//        int hairpinStart = findHairpinStart(fastq1, fastq2, consensusRead);
+//
+//        int missingCount = 0;
+//        int consensusCount = 0;
+//        int mismatchCount = 0;
+//        int modCWithG = 0;
+//        int modCWithoutG = 0;
+//        int exactMatches = 0;
+//        int exactMismatches = 0;
+//        for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
+//        {
+//            char consensusBase = consensusRead.charAt(i);
+//            char base1 = fastq1.getReadString().charAt(i);
+//            char base2 = fastq2.getReadString().charAt(i);
+//
+//            if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+//            {
+//                missingCount++;
+//            }
+//            else if(baseIndex(consensusBase) != -1)
+//            {
+//                consensusCount++;
+//            }
+//            else if(consensusBase == MISMATCH_BASE)
+//            {
+//                mismatchCount++;
+//            }
+//            else if(consensusBase == MODC_BASE)
+//            {
+//                Character nextBase1 = i < fastq1.getReadString().length() - 1 ? fastq1.getReadString().charAt(i + 1) : null;
+//                if(nextBase1 != null && nextBase1.equals('G'))
+//                {
+//                    modCWithG++;
+//                }
+//                else
+//                {
+//                    modCWithoutG++;
+//                }
+//            }
+//            else
+//            {
+//                throw new RuntimeException("Unreachable");
+//            }
+//
+//
+//            if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+//            {
+//                continue;
+//            }
+//
+//            if(base1 == base2)
+//            {
+//                exactMatches++;
+//                continue;
+//            }
+//
+//            exactMismatches++;
+//        }
+//
+//        StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
+//        statLine.add(fastq1.getReadName());
+//        statLine.add(String.valueOf(fastq1.getReadLength()));
+//        statLine.add(String.valueOf(fastq2.getReadLength()));
+//        statLine.add(String.valueOf(consensusCount));
+//        statLine.add(String.valueOf(missingCount));
+//        statLine.add(String.valueOf(mismatchCount));
+//        statLine.add(String.valueOf(modCWithG));
+//        statLine.add(String.valueOf(modCWithoutG));
+//        statLine.add(String.valueOf(exactMatches));
+//        statLine.add(String.valueOf(exactMismatches));
+//        statLine.add(String.valueOf(hairpinStart == NO_HAIRPIN ? -1 : hairpinStart + 1));
+//        statLine.add(fastq1.getReadString());
+//        statLine.add(fastq1.getBaseQualityString());
+//        statLine.add(fastq2.getReadString());
+//        statLine.add(fastq2.getBaseQualityString());
+//        statLine.add(consensusReadForOutput(consensusRead));
+//
+//        writer.write(statLine.toString());
+//        writer.newLine();
+//    }
 
-            if(c == MODC_BASE)
-            {
-                output.append('X');
-                continue;
-            }
-
-            output.append(c);
-        }
-
-        return output.toString();
-    }
+//    private static String consensusReadForOutput(final String consensusRead)
+//    {
+//        StringBuilder output = new StringBuilder();
+//        for(int i = 0; i < consensusRead.length(); i++)
+//        {
+//            char c = consensusRead.charAt(i);
+//            if(c == 'X')
+//            {
+//                output.append('N');
+//                continue;
+//            }
+//
+//            if(c == MODC_BASE)
+//            {
+//                output.append('X');
+//                continue;
+//            }
+//
+//            output.append(c);
+//        }
+//
+//        return output.toString();
+//    }
 
     public static void main(final String[] args)
     {
