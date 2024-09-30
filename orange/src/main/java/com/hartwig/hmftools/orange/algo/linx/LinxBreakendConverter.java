@@ -67,9 +67,19 @@ public class LinxBreakendConverter
 
         StructuralVariantType type = sv.type();
 
-        double junctionCopyNumber = svAnnotation.junctionCopyNumberMin() != 0D
-                ? 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax())
-                : svAnnotation.junctionCopyNumberMax();
+        double junctionCopyNumber;
+        if(type == StructuralVariantType.SGL && linxBreakend.regionType() == com.hartwig.hmftools.common.gene.TranscriptRegionType.IG)
+        {
+            junctionCopyNumber = 0D;
+        }
+        else if(svAnnotation.junctionCopyNumberMin() == 0D)
+        {
+            junctionCopyNumber = svAnnotation.junctionCopyNumberMax();
+        }
+        else
+        {
+            junctionCopyNumber = 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
+        }
 
         GeneData geneData = ensemblDataCache.getGeneDataByName(linxBreakend.gene());
         String chrBand = geneData != null ? geneData.KaryotypeBand : "";
