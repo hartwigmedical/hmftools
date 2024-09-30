@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -55,11 +54,19 @@ public class LinxBreakendConverter
                 .orElseThrow(() -> new RuntimeException("No structural variant found for breakend " + linxBreakend.id()));
 
         String chrom = sv.chromosome(linxBreakend.isStart());
-        byte orientation =
-                Objects.requireNonNull(sv.orientation(linxBreakend.isStart()), "Orientation is null for breakend " + linxBreakend.id());
+        if(chrom == null)
+        {
+            chrom = sv.chromosome(true);
+        }
+
+        Byte orientation = sv.orientation(linxBreakend.isStart());
+        if(orientation == null)
+        {
+            orientation = sv.orientation(true);
+        }
 
         StructuralVariantType type = sv.type();
-        
+
         double junctionCopyNumber = svAnnotation.junctionCopyNumberMin() != 0D
                 ? 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax())
                 : svAnnotation.junctionCopyNumberMax();
