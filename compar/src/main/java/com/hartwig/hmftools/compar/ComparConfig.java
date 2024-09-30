@@ -269,6 +269,14 @@ public class ComparConfig
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
+        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasFlag(SAMPLE) || configBuilder.hasFlag(GERMLINE_SAMPLE)))
+        {
+            CMP_LOGGER.error("when the argument '{}' is set, the arguments '{}' and '{}' should not be set",
+                    SAMPLE_ID_FILE, SAMPLE, GERMLINE_SAMPLE);
+            mIsValid = false;
+            return;
+        }
+
         if(configBuilder.hasValue(SAMPLE))
         {
             registerSampleIds(configBuilder.getValue(SAMPLE), configBuilder.getValue(GERMLINE_SAMPLE, null));
