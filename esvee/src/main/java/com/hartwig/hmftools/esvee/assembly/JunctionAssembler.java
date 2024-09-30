@@ -145,28 +145,16 @@ public class JunctionAssembler
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
+        addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
         // test for a second well-supported, alternative assembly at the same junction
-        JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly);
+        JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
 
         if(secondAssembly != null)
             assemblies.add(secondAssembly);
 
         for(JunctionAssembly assembly : assemblies)
         {
-            int mismatchReadCount = 0;
-
-            // test other junction-spanning reads against this new assembly
-            for(Read read : junctionReads)
-            {
-                if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
-                    continue;
-
-                if(!canAddJunctionRead(assembly, read))
-                    ++mismatchReadCount;
-            }
-
-            assembly.addMismatchReadCount(mismatchReadCount);
-
             RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
             assembly.setRefBases(refBaseSeqBuilder);
 
@@ -229,7 +217,8 @@ public class JunctionAssembler
         }
     }
 
-    private JunctionAssembly checkSecondAssembly(final List<Read> extensionReads, final JunctionAssembly firstAssembly)
+    private JunctionAssembly checkSecondAssembly(
+            final List<Read> extensionReads, final JunctionAssembly firstAssembly, final List<Read> junctionReads)
     {
         if(extensionReads.isEmpty() || mJunction.DiscordantOnly)
             return null;
@@ -259,7 +248,48 @@ public class JunctionAssembler
 
         // perform a final sequence comparison check with more liberal comparison tests
         boolean closeMatch = SequenceCompare.matchedAssemblySequences(firstAssembly, newAssembly);
-        return !closeMatch ? newAssembly : null;
+
+        if(closeMatch)
+            return null;
+
+        addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
+
+        return newAssembly;
+    }
+
+    private void addJunctionReads(
+            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
+    {
+        int mismatchReadCount = 0;
+
+        // test other junction-spanning reads against this new assembly
+        for(Read read : junctionReads)
+        {
+            if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
+                continue;
+
+            if(!canAddJunctionRead(assembly, extensionSeqBuilder, read))
+                ++mismatchReadCount;
+
+            // if(!canAddJunctionRead(assembly, read))
+            //    ++mismatchReadCount;
+        }
+
+        assembly.addMismatchReadCount(mismatchReadCount);
+    }
+
+    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
+    {
+        ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
+
+        if(readParseState == null)
+            return false;
+
+        if(readParseState.exceedsMaxMismatches() || readParseState.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            return false;
+
+        assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
+        return true;
     }
 
     private boolean canAddJunctionRead(final JunctionAssembly assembly, final Read read)
