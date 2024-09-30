@@ -46,7 +46,8 @@ public final class PrepConstants
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT = 5;
-    public static final int DISCORDANT_GROUP_MAX_DISTANCE = 500;
+    public static final int DISCORDANT_GROUP_MIN_MAP_QUAL = 40;
+    public static final int DISCORDANT_GROUP_MIN_ALIGN_SCORE = 75;
 
     // final junction filtering
     public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 1;

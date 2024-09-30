@@ -341,7 +341,7 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -357,8 +357,8 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.DiscordantGroups);
 
-        List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(
-                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
+        DiscordantGroups discordantGroups = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mConfig.TrackRemotes);
+        List<JunctionData> discordantJunctions = discordantGroups.formDiscordantJunctions(mCandidateDiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
         {
@@ -1118,7 +1118,7 @@ public class JunctionTracker
 
             for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
             {
-                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore))
+                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore, true))
                 {
                     hasPassingAlignedRead = true;
                     break;

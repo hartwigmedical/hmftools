@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -18,13 +17,14 @@ public class DiscordantGroup
 
     private PrepRead mInnermostRead;
     private final List<ReadGroup> mReadGroups;
-    private final List<RemoteRegionReads> mRemoteRegions;
+    private final List<DiscordantRemoteRegion> mRemoteRegions;
 
     public DiscordantGroup(final ChrBaseRegion region, final Orientation orient, final ReadGroup readGroup, final PrepRead initialRead)
     {
         Region = region;
         Orient = orient;
         mReadGroups = Lists.newArrayList(readGroup);
+        mInnermostRead = initialRead;
         mRemoteRegions = Lists.newArrayList();
     }
 
@@ -42,51 +42,42 @@ public class DiscordantGroup
 
         mReadGroups.add(readGroup);
 
-        if(Orient.isForward())
-            Region.setEnd(max(Region.end(), read.end()));
-        else
-            Region.setStart(min(Region.start(), read.start()));
+        Region.setEnd(max(Region.end(), read.end()));
+        Region.setStart(min(Region.start(), read.start()));
 
-        addRemoteRegionRead(read.MateChromosome, read.MatePosStart, read.MatePosStart + read.record().getReadBases().length);
+        addRemoteRegionRead(readGroup, read);
 
         return true;
     }
 
-    public void addRemoteRegionRead(final String chromosome, final int positionStart, final int positionEnd)
+    public void addRemoteRegionRead(final ReadGroup readGroup, final PrepRead read)
     {
-        RemoteRegionReads existingRemote = mRemoteRegions.stream()
-                .filter(x -> x.overlaps(chromosome, positionStart, positionEnd)).findFirst().orElse(null);
+        String remoteChromosome = read.MateChromosome;
+        int remotePosStart = read.MatePosStart;
+        int remotePosEnd = remotePosStart + read.record().getReadBases().length;
+        Orientation remoteOrientation = read.mateOrientation();
 
-        if(existingRemote != null)
+        DiscordantRemoteRegion remoteRegion = mRemoteRegions.stream()
+                .filter(x -> x.overlaps(remoteChromosome, remotePosStart, remotePosEnd))
+                .filter(x -> x.Orient == remoteOrientation)
+                .findFirst().orElse(null);
+
+        if(remoteRegion != null)
         {
-            existingRemote.setStart(min(existingRemote.start(), positionStart));
-            existingRemote.setEnd(max(existingRemote.end(), positionEnd));
-            ++existingRemote.ReadCount;
+            remoteRegion.setStart(min(remoteRegion.start(), remotePosStart));
+            remoteRegion.setEnd(max(remoteRegion.end(), remotePosEnd));
         }
         else
         {
-            mRemoteRegions.add(new RemoteRegionReads(new ChrBaseRegion(chromosome, positionStart, positionEnd)));
-        }
-    }
-
-    public List<ChrBaseRegion> validRemoteRegions(int minReadCount)
-    {
-        return mRemoteRegions.stream().filter(x -> x.ReadCount >= minReadCount).collect(Collectors.toList());
-    }
-
-    private class RemoteRegionReads extends ChrBaseRegion
-    {
-        public int ReadCount;
-
-        public RemoteRegionReads(final ChrBaseRegion region)
-        {
-            super(region.Chromosome, region.start(), region.end());
-            ReadCount = 1;
+            remoteRegion = new DiscordantRemoteRegion(
+                    new ChrBaseRegion(remoteChromosome, remotePosStart, remotePosEnd), remoteOrientation);
+            mRemoteRegions.add(remoteRegion);
         }
 
-        public String toString() { return format("%s reads(%d)", super.toString(), ReadCount); }
-
+        remoteRegion.ReadGroups.add(readGroup);
     }
+
+    public List<DiscordantRemoteRegion> remoteRegions() { return mRemoteRegions; }
 
     public static PrepRead firstPrimaryRead(final ReadGroup readGroup)
     {
@@ -100,14 +91,13 @@ public class DiscordantGroup
         ChrBaseRegion region = new ChrBaseRegion(firstRead.Chromosome, firstRead.start(), firstRead.end());
         DiscordantGroup discordantGroup = new DiscordantGroup(region, firstRead.orientation(), readGroup, firstRead);
 
-        discordantGroup.addRemoteRegionRead(
-                firstRead.MateChromosome, firstRead.MatePosStart, firstRead.MatePosStart + firstRead.record().getReadBases().length);
+        discordantGroup.addRemoteRegionRead(readGroup, firstRead);
 
         return discordantGroup;
     }
 
     public String toString()
     {
-        return format("region(%s) reads(%d) remoteRegions(%d)", Region, mReadGroups.size(), mRemoteRegions.size());
+        return format("region(%s) orient(%d) reads(%d) remoteRegions(%d)", Region, Orient.asByte(), mReadGroups.size(), mRemoteRegions.size());
     }
 }

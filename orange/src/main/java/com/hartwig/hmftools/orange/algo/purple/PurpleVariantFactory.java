@@ -69,6 +69,7 @@ public class PurpleVariantFactory
                 .minorAlleleCopyNumber(context.minorAlleleCopyNumber())
                 .variantCopyNumber(context.variantCopyNumber())
                 .biallelic(context.biallelic())
+                .biallelicProbability(context.biallelicProbability())
                 .genotypeStatus(PurpleGenotypeStatus.valueOf(context.genotypeStatus().name()))
                 .repeatCount(context.repeatCount())
                 .subclonalLikelihood(context.subclonalLikelihood())

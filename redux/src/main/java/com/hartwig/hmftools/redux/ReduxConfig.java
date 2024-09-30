@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -48,11 +49,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
-import com.hartwig.hmftools.redux.common.HighDepthRegion;
 import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.write.ReadOutput;
@@ -126,7 +128,6 @@ public class ReduxConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String USE_SUPP_BAM = "use_supp_bam";
@@ -206,9 +207,9 @@ public class ReduxConfig
         UMIs = UmiConfig.from(configBuilder);
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
 
-        if(configBuilder.hasValue(UNMAP_REGIONS))
+        if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
-            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS));
+            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
         }
         else
         {
@@ -297,7 +298,7 @@ public class ReduxConfig
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
-        configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
+        UnmappedRegions.registerConfig(configBuilder);
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");

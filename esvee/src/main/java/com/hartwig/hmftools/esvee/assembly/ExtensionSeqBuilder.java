@@ -443,7 +443,17 @@ public class ExtensionSeqBuilder
             if(read.exceedsMaxMismatches())
                 continue;
 
-            int scLength = mJunction.isForward() ? read.read().rightClipLength() : read.read().leftClipLength();
+            int scLength;
+
+            if(mJunction.DiscordantOnly)
+            {
+                scLength = mJunction.isForward() ?
+                        read.read().unclippedEnd() - mJunction.Position : mJunction.Position - read.read().unclippedStart();
+            }
+            else
+            {
+                scLength = mJunction.isForward() ? read.read().rightClipLength() : read.read().leftClipLength();
+            }
 
             if(scLength >= reqSecondaryExtensionLength)
             {

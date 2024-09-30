@@ -47,6 +47,8 @@ public interface PurpleVariantContext extends Variant
 
     boolean biallelic();
 
+    double biallelicProbability();
+
     @NotNull
     GenotypeStatus genotypeStatus();
 

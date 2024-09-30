@@ -33,6 +33,9 @@ public abstract class VariantEntry
 
     public abstract boolean biallelic();
 
+    @Nullable
+    public abstract Double biallelicProbability();
+
     @NotNull
     public abstract HotspotType hotspot();
 

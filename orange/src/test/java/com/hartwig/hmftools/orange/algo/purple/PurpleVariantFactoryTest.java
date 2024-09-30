@@ -72,6 +72,7 @@ public class PurpleVariantFactoryTest
                 .minorAlleleCopyNumber(1.84)
                 .variantCopyNumber(2.02)
                 .biallelic(false)
+                .biallelicProbability(0.1)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .repeatCount(2)
                 .subclonalLikelihood(1)
@@ -122,6 +123,7 @@ public class PurpleVariantFactoryTest
         assertEquals(1.84, purpleVariant.minorAlleleCopyNumber(), 0);
         assertEquals(2.02, purpleVariant.variantCopyNumber(), 0);
         assertFalse(purpleVariant.biallelic());
+        assertEquals(0.1, purpleVariant.biallelicProbability(), 0);
         assertEquals(PurpleGenotypeStatus.UNKNOWN, purpleVariant.genotypeStatus());
         assertEquals(2, purpleVariant.repeatCount());
         assertEquals(1, purpleVariant.subclonalLikelihood(), 0);
