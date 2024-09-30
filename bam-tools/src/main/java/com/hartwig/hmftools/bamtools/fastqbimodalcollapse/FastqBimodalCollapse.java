@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.BufferedReader;
@@ -40,9 +41,9 @@ public class FastqBimodalCollapse
     private static final int NO_HAIRPIN = Integer.MAX_VALUE;
 
     private static final float HAIRPIN_MATCH_TARGET = 0.9f;
-    private static final int MIN_HAIRPIN_MATCH_LENGTH = 3;
+    private static final int MIN_HAIRPIN_MATCH_LENGTH = 7;
     private static final String FORWARD_HAIRPIN = "AATGACGATGCGTTCGAGCATCGTTATT";
-    private static final String REVERSE_HAIRPIN = "AATACCGATGCTCGAACGCATCGTCATT";
+    private static final String REVERSE_HAIRPIN = "AATAACGATGCTCGAACGCATCGTCATT";
 
     private final FastqBimodalCollapseConfig mConfig;
 
@@ -288,13 +289,37 @@ public class FastqBimodalCollapse
             "hairpin1_match_count",
             "hairpin2_start_pos",
             "hairpin2_length",
-            "hairpin2_match_count"
+            "hairpin2_match_count",
+            "rev_comp_mismatch_count"
     };
+
+    private static int countRevCompMismatches(final String read1, final String read2)
+    {
+        int mismatchCount = 0;
+
+        int i1 = 0;
+        int i2 = read2.length() - 1;
+        while(i1 < read1.length() && i2 >= 0)
+        {
+            char base1 = read1.charAt(i1);
+            char base2 = swapDnaBase(read2.charAt(i2));
+            if(base1 != base2)
+            {
+                mismatchCount++;
+            }
+
+            i1++;
+            i2--;
+        }
+
+        return mismatchCount;
+    }
 
     private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
     {
         HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+        int revCompMismatchCount = countRevCompMismatches(fastq1.getReadString(), fastq2.getReadString());
 
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
         statLine.add(fastq1.getReadName());
@@ -310,6 +335,7 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(hairpin2.StartPos));
         statLine.add(String.valueOf(hairpin2.Length));
         statLine.add(String.valueOf(hairpin2.MatchCount));
+        statLine.add(String.valueOf(revCompMismatchCount));
 
         writer.write(statLine.toString());
         writer.newLine();
