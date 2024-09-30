@@ -4,12 +4,14 @@ package com.hartwig.hmftools.sage.quality;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getQualVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getRealignedVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getQualVariants;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getRealignedVariants;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.mergeSandwichedHomopolymers;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -1119,5 +1121,96 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(-1, adjQualModel.refAdjustCount());
         assertEquals(1, adjQualModel.hpStartIndex() + adjRealignedVariant.varReadIndexOffset());
         assertEquals(1, adjQualModel.hpEndIndex() + adjRealignedVariant.varReadIndexOffset());
+    }
+
+    @Test
+    public void testIsCleanSnvIndel()
+    {
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isSNV()).thenReturn(false);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+
+        assertFalse(isCleanSnv(mockReadContext));
+    }
+
+    @Test
+    public void testIsCleanSnvRefCoreLengthMismatch()
+    {
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isSNV()).thenReturn(true);
+
+        byte[] mockRefBases = "A".repeat(6).getBytes();
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.coreLength()).thenReturn(5);
+        when(mockReadContext.refBasesBytes()).thenReturn(mockRefBases);
+
+        assertFalse(isCleanSnv(mockReadContext));
+    }
+
+    @Test
+    public void testIsCleanSnvClean()
+    {
+        int coreLength = 5;
+        int flankLength = 5;
+        int coreIndexStart = flankLength;
+        int varIndex = flankLength + 1;
+        int coreIndexEnd = coreIndexStart + coreLength - 1;
+        String readBases = "A".repeat(coreLength + 2 * flankLength);
+
+        StringBuilder refBasesBuilder = new StringBuilder(readBases);
+        refBasesBuilder.setCharAt(varIndex, 'T');
+        refBasesBuilder.delete(coreIndexEnd + 1, refBasesBuilder.length());
+        refBasesBuilder.delete(0, coreIndexStart);
+        String refBases = refBasesBuilder.toString();
+
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isSNV()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.coreLength()).thenReturn(coreLength);
+        when(mockReadContext.coreIndexStart()).thenReturn(coreIndexStart);
+        when(mockReadContext.coreIndexEnd()).thenReturn(coreIndexEnd);
+        when(mockReadContext.varIndex()).thenReturn(varIndex);
+        when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        when(mockReadContext.refBasesBytes()).thenReturn(refBases.getBytes());
+
+        assertTrue(isCleanSnv(mockReadContext));
+    }
+
+    @Test
+    public void testIsCleanSnvNotClean()
+    {
+        int coreLength = 5;
+        int flankLength = 5;
+        int coreIndexStart = flankLength;
+        int varIndex = flankLength + 1;
+        int coreIndexEnd = coreIndexStart + coreLength - 1;
+        String readBases = "A".repeat(coreLength + 2 * flankLength);
+
+        StringBuilder refBasesBuilder = new StringBuilder(readBases);
+        refBasesBuilder.setCharAt(varIndex, 'T');
+        refBasesBuilder.setCharAt(varIndex + 1, 'T');
+        refBasesBuilder.delete(coreIndexEnd + 1, refBasesBuilder.length());
+        refBasesBuilder.delete(0, coreIndexStart);
+        String refBases = refBasesBuilder.toString();
+
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.isSNV()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.coreLength()).thenReturn(coreLength);
+        when(mockReadContext.coreIndexStart()).thenReturn(coreIndexStart);
+        when(mockReadContext.coreIndexEnd()).thenReturn(coreIndexEnd);
+        when(mockReadContext.varIndex()).thenReturn(varIndex);
+        when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        when(mockReadContext.refBasesBytes()).thenReturn(refBases.getBytes());
+
+        assertFalse(isCleanSnv(mockReadContext));
     }
 }

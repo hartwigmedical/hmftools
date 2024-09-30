@@ -9,6 +9,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
@@ -184,7 +185,7 @@ public class ReadContextCounter
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
 
-        if(mReadContext.variant().isIndel())
+        if(mConfig.Sequencing.Type == ULTIMA && mReadContext.variant().isIndel())
         {
             mHomopolymerLengths = mReadContext.coreHomopolymerLengths();
             mHomopolymerAvgQuals = Lists.newArrayList();
@@ -198,6 +199,7 @@ public class ReadContextCounter
             mHomopolymerLengths = null;
             mHomopolymerAvgQuals = null;
         }
+
         mHomopolymerAvgQualsCount = 0;
 
         mTumorQualProbability = 0;

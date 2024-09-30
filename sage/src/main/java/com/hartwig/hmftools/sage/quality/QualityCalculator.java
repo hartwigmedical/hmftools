@@ -56,7 +56,7 @@ public class QualityCalculator
     public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
         return mUltimaQualCalculator != null
-                ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
+                ? UltimaRealignedQualModelsBuilder_0.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
                 : null;
     }
 
