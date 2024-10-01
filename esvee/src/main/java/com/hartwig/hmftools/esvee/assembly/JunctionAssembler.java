@@ -270,9 +270,6 @@ public class JunctionAssembler
 
             if(!canAddJunctionRead(assembly, extensionSeqBuilder, read))
                 ++mismatchReadCount;
-
-            // if(!canAddJunctionRead(assembly, read))
-            //    ++mismatchReadCount;
         }
 
         assembly.addMismatchReadCount(mismatchReadCount);
@@ -289,94 +286,6 @@ public class JunctionAssembler
             return false;
 
         assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
-        return true;
-    }
-
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final Read read)
-    {
-        int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
-
-        if(readJunctionIndex == INVALID_INDEX)
-            return false;
-
-        ReadAssemblyIndices readAssemblyIndices = getJunctionReadExtensionIndices(
-                assembly.junction(), assembly.junctionIndex(), read, readJunctionIndex);
-
-        int assemblyIndexStart = readAssemblyIndices.AssemblyIndexStart;
-        int readIndexStart = readAssemblyIndices.ReadIndexStart;
-        int readIndexEnd = readAssemblyIndices.ReadIndexEnd;
-
-        if(assemblyIndexStart < 0)
-        {
-            // allow for indel-adjusted reads
-            if(read.indelImpliedAlignmentStart() != mJunction.Position)
-                return false;
-
-            readIndexStart -= assemblyIndexStart;
-            assemblyIndexStart = 0;
-        }
-
-        // first attempt a straight string match for simplicity
-        int matchLength = readIndexEnd - readIndexStart + 1;
-
-        if(matchLength < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-            return false;
-
-        int highQualMatchCount = 0;
-        int mismatchCount = 0;
-        int checkedBaseCount = 0;
-
-        final byte[] assemblyBases = assembly.bases();
-        final byte[] assemblyBaseQuals = assembly.baseQuals();
-
-        int assemblyIndex = assemblyIndexStart;
-        int assemblyBaseLength = assembly.baseLength();
-
-        for(int i = readIndexStart; i <= readIndexEnd; ++i, ++assemblyIndex)
-        {
-            if(assemblyIndex < 0)
-                continue;
-
-            if(assemblyIndex >= assemblyBaseLength)
-                break;
-
-            byte qual = read.getBaseQuality()[i];
-            ++checkedBaseCount;
-
-            if(basesMatch(read.getBases()[i], assemblyBases[assemblyIndex], qual, assemblyBaseQuals[assemblyIndex]))
-            {
-                if(aboveMinQual(qual) && assemblyIndex != assembly.junctionIndex())
-                    ++highQualMatchCount;
-            }
-            else
-            {
-                ++mismatchCount;
-
-                if(mismatchCount > PRIMARY_ASSEMBLY_READ_MAX_MISMATCH)
-                    break;
-            }
-        }
-
-        int permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
-
-        if(mismatchCount > permittedMismatches)
-        {
-            checkedBaseCount = readIndexEnd - readIndexStart + 1;
-
-            if(assemblyIndex < 0)
-                checkedBaseCount = max(checkedBaseCount + assemblyIndex, 0);
-
-            permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
-
-            // test again taking repeats into consideration
-            mismatchCount = calcReadSequenceMismatches(
-                    mJunction.isForward(), assemblyBases, assemblyBaseQuals, assembly.repeatInfo(), read, readJunctionIndex, permittedMismatches);
-        }
-
-        if(mismatchCount > permittedMismatches || highQualMatchCount < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-            return false;
-
-        assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount);
         return true;
     }
 }

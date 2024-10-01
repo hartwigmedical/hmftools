@@ -236,11 +236,11 @@ public class ExtensionSeqBuilder
                     else if(readRepeatSkipCounts[readIndex] > 0)
                     {
                         // skip ahead of this read's extra repeats
-                        while(readRepeatSkipCounts[readIndex] > 0)
-                        {
-                            read.moveNext();
-                            --readRepeatSkipCounts[readIndex];
-                        }
+                        read.skipBases(readRepeatSkipCounts[readIndex]);
+                        readRepeatSkipCounts[readIndex] = 0;
+
+                        if(read.exhausted())
+                            break;
 
                         base = read.currentBase();
                         qual = read.currentQual();
@@ -508,7 +508,7 @@ public class ExtensionSeqBuilder
         mBases = subsetArray(mBases, startIndex, endIndex);
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
 
-        if(!mIsForward)
+        if(!mIsForward && mMaxRepeat != null)
             mMaxRepeat = new RepeatInfo(mMaxRepeat.Index - reduction, mMaxRepeat.Bases, mMaxRepeat.Count);
     }
 
@@ -621,11 +621,11 @@ public class ExtensionSeqBuilder
                 else if(remainingRepeatSkipCount > 0)
                 {
                     // skip ahead of this read's extra repeats
-                    while(remainingRepeatSkipCount > 0)
-                    {
-                        read.moveNext();
-                        --remainingRepeatSkipCount;
-                    }
+                    read.skipBases(remainingRepeatSkipCount);
+                    remainingRepeatSkipCount = 0;
+
+                    if(read.exhausted())
+                        break;
 
                     base = read.currentBase();
                     qual = read.currentQual();

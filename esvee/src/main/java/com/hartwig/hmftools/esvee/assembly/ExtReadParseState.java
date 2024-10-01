@@ -68,10 +68,7 @@ public class ExtReadParseState
         return mExtensionLength;
     }
 
-    public boolean exhausted()
-    {
-        return mExhausted;
-    }
+    public boolean exhausted() { return mExhausted; }
 
     public void resetMatches()
     {
@@ -101,6 +98,18 @@ public class ExtReadParseState
     {
         mCurrentIndex = mJunctionIndex;
         mExhausted = false;
+    }
+
+    public void skipBases(int skipBaseCount)
+    {
+        // skip ahead of this read's extra repeats
+        for(int i = 0; i < skipBaseCount; ++i)
+        {
+            moveNext();
+
+            if(exhausted())
+                break;
+        }
     }
 
     public int matchedBases() { return mExtensionLength - mMismatches; }
