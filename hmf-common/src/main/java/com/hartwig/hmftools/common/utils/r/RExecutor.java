@@ -64,7 +64,7 @@ public final class RExecutor
 
         final File outputFile = File.createTempFile(rScriptName, ".out");
 
-        LOGGER.debug(format("executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
+        LOGGER.info(format("executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         Process process = new ProcessBuilder(command).redirectOutput(outputFile).start();
 
         int result = process.waitFor();

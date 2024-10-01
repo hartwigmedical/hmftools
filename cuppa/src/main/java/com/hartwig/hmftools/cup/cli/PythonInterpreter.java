@@ -32,7 +32,7 @@ public class PythonInterpreter
     {
         public PythonCommand(final String command)
         {
-            super(new ProcessBuilder("bash", "-c", mBinaryPath + " " + command));
+            super(new ProcessBuilder("/bin/bash", "-c", mBinaryPath + " " + command));
         }
     }
 
@@ -44,67 +44,5 @@ public class PythonInterpreter
     public PythonCommand command(final String... args)
     {
         return new PythonCommand(String.join(" ", args));
-    }
-
-    public String getVersion()
-    {
-        return command("-c 'import platform; print(platform.python_version())'")
-            .logLevel(null).timeout(10).run()
-            .getStdout().get(0);
-    }
-
-    private List<String> getInstalledPackages(boolean editableOnly)
-    {
-        List<String> installedPackages = new ArrayList<>();
-
-        try
-        {
-            String commandString = "-m pip list --format=freeze --disable-pip-version-check";
-            commandString += (editableOnly) ? " --editable" : " --exclude-editable";
-
-            List<String> stdout = command(commandString)
-                    .logLevel(null).timeout(10)
-                    .run().getStdout(false);
-
-            for(String line : stdout)
-            {
-                String packageName = line.split("==")[0];
-                installedPackages.add(packageName);
-            }
-        }
-        catch(Exception e)
-        {
-            CUP_LOGGER.error("Failed to get installed python packages: ", e);
-        }
-
-        return installedPackages;
-    }
-
-    public PythonInterpreter requirePackages(String... packageNames)
-    {
-        List<String> nonEditablePackages = getInstalledPackages(false);
-        List<String> editablePackages = getInstalledPackages(true);
-
-        int missingNonEditiblePackages = 0;
-        for(String packageName : packageNames)
-        {
-            if(editablePackages.contains(packageName))
-            {
-                CUP_LOGGER.error("Python package({}) is installed in editable mode and does not work when called with PythonInterpreter", packageName);
-                missingNonEditiblePackages++;
-                continue;
-            }
-
-            if(!nonEditablePackages.contains(packageName))
-            {
-                CUP_LOGGER.error("Python package({}) missing", packageName);
-                missingNonEditiblePackages++;
-            }
-        }
-
-        if(missingNonEditiblePackages > 0)
-            System.exit(1);
-
-        return this;
     }
 }

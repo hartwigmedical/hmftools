@@ -81,8 +81,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.cup.CupAnalyser
-                            </mainClass>
+                            <mainClass>com.hartwig.hmftools.cup.cli.PredictionRunner</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

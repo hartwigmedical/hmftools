@@ -1,0 +1,21 @@
+#!/bin/env perl 
+
+use strict;
+use Math::Round qw(round);
+
+# in steps
+for my $steps (1..360) {
+    next unless 360/$steps == int(360/$steps);
+    my @hue = map { sprintf("%03d", 360/$steps*($_-1)) } (1..$steps);
+    printf("hue-s%d = hue(%s)\n",360/$steps,join("|",@hue));
+}
+
+# in divisions
+
+for my $divisions (3..30) {
+    my @hue;
+    for my $step ( 0 .. $divisions-1 ) {
+	push @hue, 360 * $step / $divisions;
+    }   
+    printf("hue-%d = hue(%s)\n",$divisions,join("|",map { sprintf("%03d",round $_) } @hue));
+}
