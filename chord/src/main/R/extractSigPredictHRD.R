@@ -16,7 +16,6 @@ refGenomeVsn <- args[6] # HG37 or HG38
 cat("[INFO] START CHORD signature extraction and HRD prediction", "\n")
 setwd(workingDir)
 
-suppressPackageStartupMessages(library('devtools'))
 suppressPackageStartupMessages(library('randomForest'))
 suppressPackageStartupMessages(load_all(paste0(chordToolDir, '/mutSigExtractor')))
 suppressPackageStartupMessages(load_all(paste0(chordToolDir, '/CHORD')))
@@ -55,7 +54,7 @@ signatures <- extractSigsChord(
   vcf.indel = snvIndVcf,
   vcf.sv = svVcf,
   sample.name = sampleName,
-  sv.caller = "gridss",
+  sv.caller = "esvee",
   vcf.filters=list(snv="PASS", indel="PASS", sv="PASS"),
   ref.genome=refGenome
 )
