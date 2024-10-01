@@ -3,7 +3,7 @@
   "samplingDate": {
     "year": 2024,
     "month": 9,
-    "day": 12
+    "day": 24
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -16,18 +16,18 @@
   "platinumVersion": "5.34",
   "refSample": {
     "metrics": {
-      "meanCoverage": 31.423,
-      "sdCoverage": 10.118,
-      "medianCoverage": 32,
-      "madCoverage": 5,
+      "meanCoverage": 108.05,
+      "sdCoverage": 35.036,
+      "medianCoverage": 109,
+      "madCoverage": 24,
       "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.04985,
-      "pctExcDupe": 0.10868,
-      "pctExcUnpaired": 0.00071,
+      "pctExcMapQ": 0.04574,
+      "pctExcDupe": 0.15016,
+      "pctExcUnpaired": 0.00055,
       "pctExcBaseQ": 0.000040,
-      "pctExcOverlap": 0.00534,
-      "pctExcCapped": 0.01236,
-      "pctExcTotal": 0.17698
+      "pctExcOverlap": 0.00751,
+      "pctExcCapped": 0.01275,
+      "pctExcTotal": 0.21675
     },
     "flagstat": {
       "uniqueReadCount": 740406212,
@@ -43,13 +43,13 @@
       "medianCoverage": 109,
       "madCoverage": 24,
       "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.04736,
-      "pctExcDupe": 0.14999,
+      "pctExcMapQ": 0.04574,
+      "pctExcDupe": 0.15016,
       "pctExcUnpaired": 0.00055,
       "pctExcBaseQ": 0.000040,
-      "pctExcOverlap": 0.00749,
-      "pctExcCapped": 0.01277,
-      "pctExcTotal": 0.2182
+      "pctExcOverlap": 0.00751,
+      "pctExcCapped": 0.01275,
+      "pctExcTotal": 0.21675
     },
     "flagstat": {
       "uniqueReadCount": 2671674230,
@@ -100,6 +100,10 @@
       "tumorMutationalLoadStatus": "HIGH",
       "svTumorMutationalBurden": 75
     },
+    "chromosomalRearrangements": {
+      "hasTrisomy1q": false,
+      "hasCodeletion1p19q": false
+    },
     "somaticDrivers": [
       {
         "gene": "TERT",
@@ -145,6 +149,7 @@
         "minorAlleleCopyNumber": 0.811,
         "variantCopyNumber": 2.25,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HOM_REF",
         "repeatCount": 3,
         "subclonalLikelihood": 0.0,
@@ -213,6 +218,7 @@
         "minorAlleleCopyNumber": 1.0,
         "variantCopyNumber": 2.01,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HOM_REF",
         "repeatCount": 2,
         "subclonalLikelihood": 0.0,
@@ -372,6 +378,7 @@
         "minorAlleleCopyNumber": 1.85,
         "variantCopyNumber": 1.83,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HOM_REF",
         "repeatCount": 6,
         "subclonalLikelihood": 0.0,
@@ -583,6 +590,7 @@
         "minorAlleleCopyNumber": 0.811,
         "variantCopyNumber": 2.81,
         "biallelic": true,
+        "biallelicProbability": 1.0,
         "genotypeStatus": "HOM_ALT",
         "repeatCount": 4,
         "subclonalLikelihood": 0.0,
@@ -639,6 +647,7 @@
         "minorAlleleCopyNumber": 1.97,
         "variantCopyNumber": 2.42,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HET",
         "repeatCount": 0,
         "subclonalLikelihood": 0.0,
@@ -725,22 +734,18 @@
     "allGermlineFullLosses": [
       {
         "interpretation": "PARTIAL_LOSS",
-        "gene": "NBPF17P",
-        "chromosome": "1",
-        "chromosomeBand": "q21.2",
+        "gene": "BTNL3",
+        "chromosome": "5",
+        "chromosomeBand": "q35.3",
         "transcript": "trans",
         "isCanonical": true,
         "minCopies": 0.0,
-        "maxCopies": 3.9283
+        "maxCopies": 1.9906
       }
     ],
     "reportableGermlineFullLosses": [],
     "allGermlineLossOfHeterozygosities": [],
-    "reportableGermlineLossOfHeterozygosities": [],
-    "chromosomalRearrangements": {
-      "hasTrisomy1q": false,
-      "hasCodeletion1p19q": false
-    }
+    "reportableGermlineLossOfHeterozygosities": []
   },
   "linx": {
     "somaticDrivers": [
@@ -871,22 +876,22 @@
         "id": 0,
         "svId": 2,
         "gene": "GDAP2",
-        "chromosome": "1",
-        "chromosomeBand": "p12",
+        "chromosome": "",
+        "chromosomeBand": "",
         "transcript": "ENST00000369443",
         "isCanonical": true,
         "geneOrientation": "Downstream",
         "disruptive": false,
         "reported": false,
         "undisruptedCopyNumber": 1.191,
-        "type": "DEL",
+        "type": "BND",
         "regionType": "UPSTREAM",
         "codingType": "UTR_5P",
         "nextSpliceExonRank": 2,
-        "orientation": 1,
+        "orientation": 0,
         "exonUp": 0,
         "exonDown": 2,
-        "junctionCopyNumber": 0.8309
+        "junctionCopyNumber": 0.0
       }
     ],
     "allGermlineBreakends": [
@@ -894,22 +899,22 @@
         "id": 0,
         "svId": 17,
         "gene": "CASP8",
-        "chromosome": "2",
-        "chromosomeBand": "q33.1",
+        "chromosome": "",
+        "chromosomeBand": "",
         "transcript": "ENST00000358485",
         "isCanonical": true,
         "geneOrientation": "Upstream",
         "disruptive": true,
         "reported": false,
         "undisruptedCopyNumber": 3.03,
-        "type": "INV",
+        "type": "BND",
         "regionType": "INTRONIC",
         "codingType": "CODING",
         "nextSpliceExonRank": 7,
-        "orientation": 1,
+        "orientation": 0,
         "exonUp": 7,
         "exonDown": 8,
-        "junctionCopyNumber": 0.786
+        "junctionCopyNumber": 0.0
       }
     ],
     "reportableSomaticBreakends": [
@@ -917,22 +922,22 @@
         "id": 154,
         "svId": 105,
         "gene": "PTEN",
-        "chromosome": "10",
-        "chromosomeBand": "q23.31",
+        "chromosome": "",
+        "chromosomeBand": "",
         "transcript": "ENST00000371953",
         "isCanonical": true,
         "geneOrientation": "Upstream",
         "disruptive": true,
         "reported": true,
         "undisruptedCopyNumber": 0.0,
-        "type": "DEL",
+        "type": "BND",
         "regionType": "INTRONIC",
         "codingType": "CODING",
         "nextSpliceExonRank": 5,
-        "orientation": 1,
+        "orientation": 0,
         "exonUp": 5,
         "exonDown": 6,
-        "junctionCopyNumber": 2.0098
+        "junctionCopyNumber": 0.0
       }
     ],
     "reportableGermlineBreakends": [],

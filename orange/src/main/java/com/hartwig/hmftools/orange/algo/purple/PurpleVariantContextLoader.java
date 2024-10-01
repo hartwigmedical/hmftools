@@ -162,6 +162,7 @@ public class PurpleVariantContextLoader
                 .minorAlleleCopyNumber(contextDecorator.minorAlleleCopyNumber())
                 .variantCopyNumber(contextDecorator.variantCopyNumber())
                 .biallelic(contextDecorator.biallelic())
+                .biallelicProbability(contextDecorator.biallelicProbability())
                 .genotypeStatus(contextDecorator.genotypeStatus(reference))
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))

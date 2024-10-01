@@ -140,6 +140,7 @@
         "minorAlleleCopyNumber": 0.4,
         "variantCopyNumber": 2.03,
         "biallelic": false,
+        "biallelicProbability": 0.1,
         "genotypeStatus": "UNKNOWN",
         "subclonalLikelihood": 0.0,
         "localPhaseSets": null
@@ -180,6 +181,7 @@
         "minorAlleleCopyNumber": 0.4,
         "variantCopyNumber": 2.03,
         "biallelic": false,
+        "biallelicProbability": 0.1,
         "genotypeStatus": "UNKNOWN",
         "subclonalLikelihood": 0.0,
         "localPhaseSets": null
@@ -221,6 +223,7 @@
         "minorAlleleCopyNumber": 0.8,
         "variantCopyNumber": 1.0,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HET",
         "subclonalLikelihood": 0.2,
         "localPhaseSets": [
@@ -265,6 +268,7 @@
         "minorAlleleCopyNumber": 0.8,
         "variantCopyNumber": 1.0,
         "biallelic": false,
+        "biallelicProbability": 0.0,
         "genotypeStatus": "HET",
         "subclonalLikelihood": 0.2,
         "localPhaseSets": [

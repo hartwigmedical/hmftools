@@ -83,6 +83,12 @@ public final class Variants
     }
 
     @NotNull
+    public static String biallelicLikelihoodField(@NotNull VariantEntry variant)
+    {
+        return PERCENTAGE_FORMAT.format(variant.biallelicProbability() * 100);
+    }
+
+    @NotNull
     public static String driverLikelihoodField(@NotNull VariantEntry variant)
     {
         return variant.driverLikelihood() != null ? PERCENTAGE_FORMAT.format(variant.driverLikelihood() * 100) : Strings.EMPTY;

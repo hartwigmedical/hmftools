@@ -69,6 +69,7 @@ public final class VariantEntryFactory
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .biallelic(variant.biallelic())
+                .biallelicProbability(variant.biallelicProbability())
                 .hotspot(variant.hotspot())
                 .driverLikelihood(driver != null ? driver.driverLikelihood() : null)
                 .clonalLikelihood(1 - variant.subclonalLikelihood())

@@ -203,10 +203,10 @@ public interface OrangeConfig
     @Nullable
     String linxPlotDirectory();
 
-    @NotNull
+    @Nullable
     String lilacResultTsv();
 
-    @NotNull
+    @Nullable
     String lilacQcTsv();
 
     boolean convertGermlineToSomatic();
@@ -291,9 +291,12 @@ public interface OrangeConfig
         String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
         builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId)));
 
-        String lilacDir = pathResolver.resolveMandatoryToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
-        builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
-        builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
+        String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
+        if(lilacDir != null)
+        {
+            builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
+            builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
+        }
 
         String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, METRICS_DIR);
         builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(metricsDir, tumorSampleId)));
