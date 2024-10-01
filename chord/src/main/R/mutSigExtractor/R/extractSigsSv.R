@@ -9,12 +9,12 @@
 #' @return A dataframe in the same structure as a bed file with an extra column stating the context
 #' of each variant
 #' @export
-getContextsSv <- function(df, sv.caller='gridss', verbose=F){
+getContextsSv <- function(df, sv.caller='esvee', verbose=F){
 
    if(nrow(df)==0){
       return(data.frame())
    }
-
+   
    #========= Callers that report SVs =========#
    if(sv.caller=='manta'){
 
@@ -29,14 +29,16 @@ getContextsSv <- function(df, sv.caller='gridss', verbose=F){
    }
 
    #========= Callers that report breakends =========#
-   df$info <- NULL
-
    #--------- Determine breakend pairs ---------#
    if(verbose){ message('Identifying breakend pairs...') }
    ## Pair codes:
-   ## 0: unpaired
+   ## 0: unpaired / SGL
    ## 1: 5' breakend
    ## 2: 3' breakend
+   
+   ## Only keep the 5' breakend. Because the VCF is sorted by position, the 5' breakend always comes
+   ## first
+   
    if(sv.caller=='gridss'){
       id_nchars <- nchar(df$id)
 
@@ -48,27 +50,42 @@ getContextsSv <- function(df, sv.caller='gridss', verbose=F){
          v[grepl('h$',df$id)] <- 2
          return(v)
       })()
-
+      df_ss <- df[df$pair_id %in% c(1,0),]
+      
+      if(nrow(df_ss)==0){
+         return(data.frame())
+      }
+      
    } else if(sv.caller=='pcawg'){
       split_ids <- strsplit(df$id,'_')
-      #df$group_id <- sapply(split_ids,`[[`,1)
       df$pair_id <- as.integer(sapply(split_ids,`[[`,2))
-   }
+      df_ss <- df[df$pair_id %in% c(1,0),]
+      
+      if(nrow(df_ss)==0){
+         return(data.frame())
+      }
+      
+   } else if(sv.caller=='esvee'){
+      
+      if(nrow(df)==0){
+         return(data.frame())
+      }
+      
+      ids <- df$id
+      mate_ids <- getInfoValues(df$info, "MATEID")
 
-   ## Sort by group id and pair id while (mostly) maintaining original vcf order
-   ## 5' breakend is forced to be 1st row
-   #df$group_id <- factor(df$group_id, unique(df$group_id))
-   #df <- df[order(df$group_id, df$pair_id),]
+      df$sv_id <- sapply(1:length(ids), function(i){
+         sorted_ids <- sort(c(ids[i], mate_ids[i]))
+         paste(sorted_ids, collapse=";")
+      })
+      
+      df$pair_id <- ifelse(grepl(";", df$sv_id), 1, 0) ## sv_ids with 2 IDs have ";" , SGLs only have 1 ID 
+      
+      df_ss <- df[!duplicated(df$sv_id),]
+   }
 
    #--------- SV type and length ---------#
    if(verbose){ message('Determining SV length and type...') }
-   ## Select 5prime pairs
-   df_ss <- df[df$pair_id %in% c(1,0),]
-
-   if(nrow(df_ss)==0){
-      # return(data.frame(sv_type=character(), sv_len=integer()))
-      return(data.frame())
-   }
 
    ## Get ALT coordinates
    alt_coord <- regmatches(df_ss$alt, gregexpr('\\d|\\w+:\\d+', df_ss$alt))
@@ -84,6 +101,8 @@ getContextsSv <- function(df, sv.caller='gridss', verbose=F){
    df_ss$pos_alt <- as.numeric(as.character(df_ss$pos_alt))
    df_ss$sv_len <- df_ss$pos_alt - df_ss$pos
 
+   subset(df_ss, is.na(chrom_alt))
+   
    ## Decision tree
    df_ss$sv_type <- with(df_ss,{
       do.call(rbind,Map(function(pair_id, chrom, chrom_alt, alt, sv_len){
@@ -141,7 +160,7 @@ getContextsSv <- function(df, sv.caller='gridss', verbose=F){
 #' @export
 extractSigsSv <- function(
    vcf.file=NULL, df=NULL, output='signatures', sample.name=NULL,
-   sv.caller='gridss', half.tra.counts=F,
+   sv.caller='esvee', half.tra.counts=F,
    sv.len.cutoffs=if(output=='signatures'){ c(10^c(3:7), Inf) } else { c(0, 10^c(3:7), Inf) },
    signature.profiles=SV_SIGNATURE_PROFILES,
    verbose=F, ...
