@@ -290,7 +290,12 @@ public class FastqBimodalCollapse
             "hairpin2_start_pos",
             "hairpin2_length",
             "hairpin2_match_count",
-            "rev_comp_mismatch_count"
+            "rev_comp_mismatch_count",
+            "consensus_read",
+            "missing_count",
+            "mismatch_count",
+            "high_qual_mismatch_count",
+            "methC_count"
     };
 
     private static int countRevCompMismatches(final String read1, final String read2)
@@ -321,6 +326,46 @@ public class FastqBimodalCollapse
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
         int revCompMismatchCount = countRevCompMismatches(fastq1.getReadString(), fastq2.getReadString());
 
+        String consensusRead = getConsensusRead(fastq1, fastq2);
+        int hairpinStart = min(hairpin1.StartPos == -1 ? NO_HAIRPIN : hairpin1.StartPos, hairpin2.StartPos == -1 ? NO_HAIRPIN : hairpin2.StartPos);
+
+        int missingCount = 0;
+        int mismatchCount = 0;
+        int highQualMismatchCount = 0;
+        int modCCount = 0;
+        for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
+        {
+            char consensusBase = consensusRead.charAt(i);
+            char base1 = fastq1.getReadString().charAt(i);
+            int qual1 = fastq1.getBaseQualities()[i];
+            char base2 = fastq2.getReadString().charAt(i);
+            int qual2 = fastq2.getBaseQualities()[i];
+
+            if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+            {
+                missingCount++;
+            }
+            else if(baseIndex(consensusBase) != -1)
+            {
+            }
+            else if(consensusBase == MISMATCH_BASE)
+            {
+                mismatchCount++;
+                if(min(qual1, qual2) > 30)
+                {
+                    highQualMismatchCount++;
+                }
+            }
+            else if(consensusBase == MODC_BASE)
+            {
+                modCCount++;
+            }
+            else
+            {
+                throw new RuntimeException("Unreachable");
+            }
+        }
+
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
         statLine.add(fastq1.getReadName());
         statLine.add(String.valueOf(fastq1.getReadLength()));
@@ -336,6 +381,11 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(hairpin2.Length));
         statLine.add(String.valueOf(hairpin2.MatchCount));
         statLine.add(String.valueOf(revCompMismatchCount));
+        statLine.add(consensusReadForOutput(consensusRead));
+        statLine.add(String.valueOf(missingCount));
+        statLine.add(String.valueOf(mismatchCount));
+        statLine.add(String.valueOf(highQualMismatchCount));
+        statLine.add(String.valueOf(modCCount));
 
         writer.write(statLine.toString());
         writer.newLine();
@@ -445,29 +495,29 @@ public class FastqBimodalCollapse
 //        writer.newLine();
 //    }
 
-//    private static String consensusReadForOutput(final String consensusRead)
-//    {
-//        StringBuilder output = new StringBuilder();
-//        for(int i = 0; i < consensusRead.length(); i++)
-//        {
-//            char c = consensusRead.charAt(i);
-//            if(c == 'X')
-//            {
-//                output.append('N');
-//                continue;
-//            }
-//
-//            if(c == MODC_BASE)
-//            {
-//                output.append('X');
-//                continue;
-//            }
-//
-//            output.append(c);
-//        }
-//
-//        return output.toString();
-//    }
+    private static String consensusReadForOutput(final String consensusRead)
+    {
+        StringBuilder output = new StringBuilder();
+        for(int i = 0; i < consensusRead.length(); i++)
+        {
+            char c = consensusRead.charAt(i);
+            if(c == 'X')
+            {
+                output.append('N');
+                continue;
+            }
+
+            if(c == MODC_BASE)
+            {
+                output.append('X');
+                continue;
+            }
+
+            output.append(c);
+        }
+
+        return output.toString();
+    }
 
     public static void main(final String[] args)
     {
