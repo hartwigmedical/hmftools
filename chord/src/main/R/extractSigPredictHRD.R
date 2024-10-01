@@ -4,51 +4,52 @@ options(stringsAsFactors=F) # to avoid invalid factor level warning
 
 args <- commandArgs(TRUE)
 
-chordToolDir <- args[1]
-  workingDir <- args[2]
-  sampleName <- args[3]
-   snvIndVcf <- args[4]
-       svVcf <- args[5]
-refGenomeVsn <- args[6] # HG37 or HG38
-   sigOutTxt <- paste0( workingDir, '/', sampleName, '_chord_signatures.txt')
-   prdOutTxt <- paste0( workingDir, '/', sampleName, '_chord_prediction.txt')
+outDir <- args[1]
+sampleName <- args[2]
+snvIndVcf <- args[3]
+svVcf <- args[4]
+refGenomeVsn <- args[5] # V37 or V38
 
-cat("[INFO] START CHORD signature extraction and HRD prediction", "\n")
-setwd(workingDir)
+sigOutTxt <- paste0(outDir, '/', sampleName, '_chord_signatures.txt')
+prdOutTxt <- paste0(outDir, '/', sampleName, '_chord_prediction.txt')
 
-suppressPackageStartupMessages(library('randomForest'))
-suppressPackageStartupMessages(load_all(paste0(chordToolDir, '/mutSigExtractor')))
-suppressPackageStartupMessages(load_all(paste0(chordToolDir, '/CHORD')))
-
-cat("[INFO] Package NamespaceVersions after loading:\n")
-for (pkgName in c("mutSigExtractor", "CHORD")){
-  pkgVsn=getNamespaceVersion(pkgName)[["version"]]
-  cat("[INFO]   Package", pkgName, "has version", pkgVsn, "\n")
+logMessage <- function(..., log.level = "INFO"){
+  current_time <- format(Sys.time(), "%H:%H:%OS3")
+  message(current_time, " [", log.level, "] ", ...)
 }
 
+logMessage("START CHORD signature extraction and HRD prediction")
+setwd(outDir)
+
+suppressPackageStartupMessages(library('randomForest'))
+
+## CHORD and mutSigExtractor can be installed like so:
+## Rscript -e "install.packages('hmftools/chord/src/main/R/mutSigExtractor', repos = NULL, type='source')"
+suppressPackageStartupMessages(library('mutSigExtractor'))
+suppressPackageStartupMessages(library('CHORD'))
+
 ## Convert genome name to BSGenome name
-if (refGenomeVsn == "HG37") {
+if (refGenomeVsn == "V37") {
   suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
   refGenome <- BSgenome.Hsapiens.UCSC.hg19
-} else if (refGenomeVsn == "HG38") {
+} else if (refGenomeVsn == "V38") {
   suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg38))
   refGenome <- BSgenome.Hsapiens.UCSC.hg38
 } else {
-  stop("Unsupported ref genome version: ", refGenomeVsn," (should be HG37 or HG38)\n")
+  stop("Unsupported ref genome version: ", refGenomeVsn," (should be V37 or V38)\n")
 }
 
-cat("[INFO] CHORD Settings:\n")
-cat("[INFO]   Chord dir:", chordToolDir, "\n")
-cat("[INFO]   Working dir:", workingDir, "\n")
-cat("[INFO]   Sample name:", sampleName, "\n")
-cat("[INFO]   Somatic SNV/IND vcf:", snvIndVcf, "\n")
-cat("[INFO]   Somatic SV vcf:", svVcf, "\n")
-cat("[INFO]   Ref Genome Version:", refGenomeVsn, "\n")
-cat("[INFO]   Signature out file:", sigOutTxt, "\n")
-cat("[INFO]   Prediction out file:", prdOutTxt, "\n")
+logMessage("CHORD Settings: ")
+logMessage("  Output dir: ", outDir)
+logMessage("  Sample name: ", sampleName)
+logMessage("  Somatic SNV/IND vcf: ", snvIndVcf)
+logMessage("  Somatic SV vcf: ", svVcf)
+logMessage("  Ref Genome Version: ", refGenomeVsn)
+logMessage("  Signature out file: ", sigOutTxt)
+logMessage("  Prediction out file: ", prdOutTxt)
 
 ## Extract signature counts and predict HRD
-cat("[INFO] Performing chord signature extraction\n")
+logMessage("Performing chord signature extraction")
 signatures <- extractSigsChord(
   vcf.snv = snvIndVcf,
   vcf.indel = snvIndVcf,
@@ -58,7 +59,7 @@ signatures <- extractSigsChord(
   vcf.filters=list(snv="PASS", indel="PASS", sv="PASS"),
   ref.genome=refGenome
 )
-cat("[INFO] Performing chord HRD prediction\n")
+logMessage("Performing chord HRD prediction")
 prediction <- chordPredict(
   signatures,
   rf.model = CHORD,
@@ -66,10 +67,10 @@ prediction <- chordPredict(
 )
 
 ## Output
-cat("[INFO] Writing output file:", sigOutTxt,"\n")
+logMessage("Writing output file: ", sigOutTxt)
 write.table(signatures, file=sigOutTxt, sep="\t")
 
-cat("[INFO] Writing output file:", prdOutTxt,"\n")
+logMessage("Writing output file: ", prdOutTxt)
 write.table(prediction, file=prdOutTxt, sep="\t", quote=FALSE, row.names=FALSE)
 
-cat("[INFO] FINISHED CHORD signature extraction and HRD prediction\n")
+logMessage("FINISHED CHORD signature extraction and HRD prediction")
