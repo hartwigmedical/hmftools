@@ -12,7 +12,7 @@ public class ChordRunner
 {
     ChordConfig mConfig;
 
-    private static final String SCRIPT_RESOURCE_PATH = "./extractSigPredictHRD.R";
+    private static final String SCRIPT_RESOURCE_PATH = "extractSigPredictHRD.R";
 
     public ChordRunner(ChordConfig config)
     {
