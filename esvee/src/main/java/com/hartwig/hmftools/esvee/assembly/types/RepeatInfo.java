@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class RepeatInfo
 {
@@ -32,16 +33,6 @@ public class RepeatInfo
     public static final int MIN_SINGLE_REPEAT = 4;
     public static final int MIN_DUAL_REPEAT = 3;
     public static final int MIN_OTHER_REPEAT = 2;
-
-    public static int minRequiredRepeatCount(int baseLength)
-    {
-        if(baseLength == 1)
-            return MIN_SINGLE_REPEAT;
-        if(baseLength == 1)
-            return MIN_DUAL_REPEAT;
-        else
-            return MIN_OTHER_REPEAT;
-    }
 
     public static List<RepeatInfo> findRepeats(final byte[] bases)
     {
@@ -217,6 +208,112 @@ public class RepeatInfo
 
         String repeat = String.valueOf((char)bases[index]) + (char)bases[index + 1] + (char)bases[index + 2] + (char)bases[index + 3];
         return new RepeatInfo(index, repeat, repeatLength);
+    }
+
+    // unused except in unit tests
+    public static RepeatInfo findSingleOrDualRepeat(final byte[] bases, int indexStart, boolean searchForwards)
+    {
+        int i = indexStart;
+        byte repeatBase = bases[i];
+
+        i += searchForwards ? 1 : -1;
+        int repeatCount = 1;
+
+        while(i >= 0 && i < bases.length - 1)
+        {
+            if(bases[i] != repeatBase)
+                break;
+
+            ++repeatCount;
+            i += searchForwards ? 1 : -1;
+        }
+
+        if(repeatCount >= MIN_SINGLE_REPEAT)
+            return new RepeatInfo(indexStart, String.valueOf((char)repeatBase), repeatCount);
+
+        // search for dual repeats at the current base or one onwards
+        return findDualRepeat(bases, indexStart, searchForwards);
+    }
+
+    public static RepeatInfo findDualRepeat(final byte[] bases, int indexStart, boolean searchForwards)
+    {
+        // search for dual repeats
+        byte repeatBase, repeatBase2;
+
+        if(searchForwards)
+        {
+            if(indexStart >= bases.length - 2)
+                return null;
+
+            repeatBase = bases[indexStart];
+            repeatBase2 = bases[indexStart + 1];
+
+        }
+        else
+        {
+            if(indexStart == 0)
+                return null;
+
+            repeatBase = bases[indexStart - 1];
+            repeatBase2 = bases[indexStart];
+        }
+
+        int repeatCount = 1;
+        int i = searchForwards ? indexStart + 2 : indexStart - 2;
+
+        while(i >= 1 && i < bases.length - 2)
+        {
+            if(searchForwards)
+            {
+                if(bases[i] != repeatBase || bases[i + 1] != repeatBase2)
+                    break;
+
+                i += 2;
+            }
+            else
+            {
+                if(bases[i - 1] != repeatBase || bases[i] != repeatBase2)
+                    break;
+
+                i += -2;
+            }
+
+            ++repeatCount;
+        }
+
+        if(repeatCount >= MIN_DUAL_REPEAT)
+        {
+            return new RepeatInfo(indexStart, String.valueOf((char)repeatBase) + (char)repeatBase2, repeatCount);
+        }
+
+        return null;
+    }
+
+    public static int getRepeatCount(final Read read, final RepeatInfo repeatInfo, int readIndexStart, boolean searchForward)
+    {
+        // count how many instance of the repeat are in this read
+        int repeatCount = 0;
+        int repeatLength = repeatInfo.baseLength();
+        int readIndex = readIndexStart;
+
+        if(!searchForward)
+            readIndex -= repeatLength - 1; // move to start of repeat
+
+        byte[] repeatBases = repeatInfo.Bases.getBytes();
+
+        while(readIndex >= 0 && readIndex < read.basesLength() - repeatLength + 1)
+        {
+            for(int j = 0; j < repeatLength; ++j)
+            {
+                if(read.getBases()[readIndex + j] != repeatBases[j])
+                    return repeatCount;
+            }
+
+            ++repeatCount;
+            readIndex += searchForward ? repeatLength : -repeatLength;
+        }
+
+        return repeatCount;
     }
 
     public static String buildTrimmedRefBaseSequence(final JunctionAssembly assembly, final int maxSequenceLength)

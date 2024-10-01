@@ -42,8 +42,21 @@ public class DiscordantGroup
 
         mReadGroups.add(readGroup);
 
-        Region.setEnd(max(Region.end(), read.end()));
-        Region.setStart(min(Region.start(), read.start()));
+        if(read.end() > Region.end())
+        {
+            Region.setEnd(read.end());
+
+            if(Orient.isForward())
+                mInnermostRead = read;
+        }
+
+        if(read.start() < Region.start())
+        {
+            Region.setStart(read.start());
+
+            if(Orient.isReverse())
+                mInnermostRead = read;
+        }
 
         addRemoteRegionRead(readGroup, read);
 

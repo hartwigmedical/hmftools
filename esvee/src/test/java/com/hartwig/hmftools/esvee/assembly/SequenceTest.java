@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualDualR
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findSingleBaseRepeat;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findSingleOrDualRepeat;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findTripleBaseRepeat;
 
 import static org.junit.Assert.assertEquals;
@@ -21,8 +22,6 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -142,6 +141,52 @@ public class SequenceTest
         assertEquals(28, repeats.get(3).Index);
     }
 
+    @Test
+    public void testSingleRepeatSequence()
+    {
+        //              012345678901234567890123
+        String bases = "ATTTTTACTGTGTGTGTCAAAAAT";
+
+        RepeatInfo repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 1, true);
+
+        assertNotNull(repeatInfo);
+        assertEquals(5, repeatInfo.Count);
+        assertEquals("T", repeatInfo.Bases);
+
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 5, false);
+
+        assertNotNull(repeatInfo);
+        assertEquals(5, repeatInfo.Count);
+        assertEquals("T", repeatInfo.Bases);
+
+        // too few
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 4, true);
+        assertNull(repeatInfo);
+
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 20, false);
+        assertNull(repeatInfo);
+
+        // at the ends
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 21, true);
+        assertNull(repeatInfo);
+
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 2, false);
+        assertNull(repeatInfo);
+
+        // dual repeats
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 8, true);
+
+        assertNotNull(repeatInfo);
+        assertEquals("TG", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+
+        repeatInfo = findSingleOrDualRepeat(bases.getBytes(), 15, false);
+
+        assertNotNull(repeatInfo);
+        assertEquals("TG", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+    }
+
     private static final int NO_MISMATCH_LIMIT = -1;
 
     @Test
@@ -180,7 +225,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false);
+                NO_MISMATCH_LIMIT, false, true);
 
         assertEquals(2, mismatches);
     }
@@ -221,7 +266,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false);
+                NO_MISMATCH_LIMIT, false, true);
 
         assertEquals(4, mismatches);
 
@@ -246,7 +291,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false);
+                NO_MISMATCH_LIMIT, false, true);
 
         assertEquals(1, mismatches);
     }
@@ -286,7 +331,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false);
+                NO_MISMATCH_LIMIT, false, true);
 
         assertEquals(8, mismatches);
     }
