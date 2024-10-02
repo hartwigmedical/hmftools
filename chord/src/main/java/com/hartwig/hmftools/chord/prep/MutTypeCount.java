@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.chord.prep;
 
+import java.util.Objects;
+
 public class MutTypeCount
 {
     String mType;
@@ -15,5 +17,28 @@ public class MutTypeCount
     public String toString()
     {
         return mType + "\t" + mCount;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(mType, mCount);
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(this == o)
+        {
+            return true;
+        }
+
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+
+        final MutTypeCount other = (MutTypeCount) o;
+        return mCount == other.mCount && mType.equals(other.mType);
     }
 }

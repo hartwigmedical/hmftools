@@ -27,7 +27,6 @@ public class StructuralVariantPrep
 {
     private final ChordConfig mConfig;
 
-    //private static final List<StructuralVariantType> SV_TYPES = List.of(DEL, DUP, INV, BND);
     private static final int[] SV_LENGTH_INTERVALS = { 0, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, Integer.MAX_VALUE};
     private static final DecimalFormat SV_LENGTH_FORMAT = new DecimalFormat("0E00");
 
