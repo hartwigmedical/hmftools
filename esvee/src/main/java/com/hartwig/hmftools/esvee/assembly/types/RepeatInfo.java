@@ -299,6 +299,9 @@ public class RepeatInfo
         if(!searchForward)
             readIndex -= repeatLength - 1; // move to start of repeat
 
+        if(readIndex < 0 || readIndex >= read.basesLength() - repeatLength + 1)
+            return -1;
+
         byte[] repeatBases = repeatInfo.Bases.getBytes();
 
         while(readIndex >= 0 && readIndex < read.basesLength() - repeatLength + 1)

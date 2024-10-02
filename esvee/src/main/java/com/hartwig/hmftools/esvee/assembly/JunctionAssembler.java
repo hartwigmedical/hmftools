@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -170,41 +171,77 @@ public class JunctionAssembler
             return;
 
         // first identify the junction position either from soft-clips or the inner most read
-        List<Integer> extensionLengths = Lists.newArrayListWithCapacity(rawReads.size());
+        List<Integer> extensionJuncPositions = Lists.newArrayListWithCapacity(rawReads.size());
 
         for(Read read : rawReads)
         {
+            if(read.mappingQuality() < MIN_MAP_QUALITY)
+                continue;
+
             if(mJunction.isForward())
-                extensionLengths.add(read.unclippedEnd());
+            {
+                if(read.alignmentEnd() > mJunction.Position)
+                    continue;
+
+                extensionJuncPositions.add(read.unclippedEnd());
+            }
             else
-                extensionLengths.add(read.unclippedStart());
+            {
+                if(read.alignmentStart() < mJunction.Position)
+                    continue;
+
+                extensionJuncPositions.add(read.unclippedStart());
+            }
         }
 
         if(mJunction.isForward())
-            Collections.reverse(extensionLengths);
+            Collections.sort(extensionJuncPositions, Comparator.reverseOrder());
         else
-            Collections.sort(extensionLengths);
+            Collections.sort(extensionJuncPositions);
 
-        int adjustedJuncPosition = extensionLengths.get(ASSEMBLY_MIN_READ_SUPPORT - 1);
+        int outerJuncPosition = extensionJuncPositions.get(0);
+        int secondJuncPosition = extensionJuncPositions.get(ASSEMBLY_MIN_READ_SUPPORT - 1);
+        int adjustedJuncPosition;
+        int originalJuncPosition = mJunction.Position;
 
         if(mJunction.isForward())
-            adjustedJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        {
+            outerJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+            secondJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+            adjustedJuncPosition = min(outerJuncPosition, secondJuncPosition);
+        }
         else
-            adjustedJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        {
+            outerJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+            secondJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+            adjustedJuncPosition = max(outerJuncPosition, secondJuncPosition);
+        }
 
         mJunction = new Junction(
                 mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
 
         for(Read read : rawReads)
         {
+            if(read.mappingQuality() < MIN_MAP_QUALITY)
+            {
+                mNonJunctionReads.add(read);
+                continue;
+            }
+
             int extensionLength;
 
             if(mJunction.isForward())
             {
+                if(read.alignmentEnd() > originalJuncPosition)
+                    continue;
+
                 extensionLength = read.alignmentEnd() >= adjustedJuncPosition ? read.unclippedEnd() - adjustedJuncPosition : -1;
             }
             else
             {
+                if(read.alignmentStart() < originalJuncPosition)
+                    continue;
+
                 extensionLength = read.alignmentStart() <= adjustedJuncPosition ? adjustedJuncPosition - read.unclippedStart() : -1;
             }
 

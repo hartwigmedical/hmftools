@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
@@ -449,7 +450,7 @@ public class UnmappedBaseExtender
 
             int totalOverlap = lowerOverlap + upperOverlap;
 
-            if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
+            if(totalOverlap < ASSEMBLY_READ_OVERLAP_BASES)
                 continue;
 
             int readIndexStart = readIndex - lowerOverlap;

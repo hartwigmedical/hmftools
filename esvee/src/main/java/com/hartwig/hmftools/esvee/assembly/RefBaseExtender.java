@@ -7,7 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
@@ -461,7 +461,7 @@ public class RefBaseExtender
 
     public static boolean checkAddRefBaseRead(final JunctionAssembly assembly, final Read read, final SupportType supportType)
     {
-        return checkAddRefBaseRead(assembly, read, supportType, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
+        return checkAddRefBaseRead(assembly, read, supportType, ASSEMBLY_READ_OVERLAP_BASES);
     }
 
     private static boolean checkAddRefBaseRead(

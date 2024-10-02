@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -34,6 +35,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -59,6 +61,7 @@ public class ExtensionSeqBuilder
     private boolean mIsValid;
 
     private static final double MISMATCH_READ_REBUILD_PERC = 0.1;
+    private static final int READ_REPEAT_COUNT_INVALID = -1;
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
@@ -116,7 +119,17 @@ public class ExtensionSeqBuilder
 
         buildSequence();
 
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("junc({}) initial extension bases sequence {}", mJunction.coords(), new String(mBases));
+        }
+
         formConsensusSequence();
+
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("junc({}) final extension bases sequence {}", mJunction.coords(), new String(mBases));
+        }
 
         finaliseBases();
 
@@ -176,7 +189,10 @@ public class ExtensionSeqBuilder
             int repeatLength = mMaxRepeat.baseLength();
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
-                readRepeatSkipCounts[readIndex] = (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength;
+                if(mReadRepeatCounts[readIndex] != READ_REPEAT_COUNT_INVALID)
+                    readRepeatSkipCounts[readIndex] = (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength;
+                else
+                    readRepeatSkipCounts[readIndex] = 0;
             }
         }
 
@@ -250,7 +266,7 @@ public class ExtensionSeqBuilder
                 // progress the read index
                 read.moveNext();
 
-                boolean hasMismatch = false;
+                boolean hasMismatch = totalQuals != null;
 
                 if(totalQuals == null)
                 {
@@ -393,10 +409,16 @@ public class ExtensionSeqBuilder
 
             int readRepeatCount = getRepeatCount(read.read(), maxRepeat, readRepeatIndexStart, mIsForward);
 
-            mReadRepeatCounts[readIndex] = readRepeatCount;
-
-            Integer freq = skipFrequencies.get(readRepeatCount);
-            skipFrequencies.put(readRepeatCount, freq != null ? freq + 1 : 1);
+            if(readRepeatCount >= 0) // -1 means the repeat section is outside the bounds of this read, so ignore it for frequencies
+            {
+                mReadRepeatCounts[readIndex] = readRepeatCount;
+                Integer freq = skipFrequencies.get(readRepeatCount);
+                skipFrequencies.put(readRepeatCount, freq != null ? freq + 1 : 1);
+            }
+            else
+            {
+                mReadRepeatCounts[readIndex] = READ_REPEAT_COUNT_INVALID;
+            }
         }
 
         if(skipFrequencies.size() == 1)
@@ -546,7 +568,8 @@ public class ExtensionSeqBuilder
             read.resetIndex();
             read.resetMatches();
 
-            int readRepeatSkipCount = mMaxRepeat != null ? (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength : 0;
+            int readRepeatSkipCount = mMaxRepeat != null && mReadRepeatCounts[readIndex] != READ_REPEAT_COUNT_INVALID ?
+                    (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength : 0;
 
             checkReadMismatches(read, extensionIndex, repeatIndexStart, readRepeatSkipCount);
         }
