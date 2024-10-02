@@ -50,8 +50,7 @@ public class SnpGenotypeData implements ComparableItem
     {
         if(mComparisonPosition.Position != Position)
         {
-            return String.format("%s:%d %s liftover(%s)",
-                    Chromosome, Position, Ref, mComparisonPosition);
+            return String.format("%s:%d %s liftover(%s)", Chromosome, Position, Ref, mComparisonPosition);
         }
         else
         {

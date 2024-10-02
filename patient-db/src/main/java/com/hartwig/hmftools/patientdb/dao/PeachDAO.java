@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SI
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PEACHGENOTYPE;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 

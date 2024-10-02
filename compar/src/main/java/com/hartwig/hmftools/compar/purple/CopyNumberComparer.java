@@ -24,8 +24,6 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.jetbrains.annotations.NotNull;
-
 public class CopyNumberComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -90,7 +88,6 @@ public class CopyNumberComparer implements ItemComparer
         return comparableItems;
     }
 
-    @NotNull
     private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber, final String fileSource)
     {
         BasePosition comparisonPositionStart = determineComparisonGenomePosition(

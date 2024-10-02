@@ -150,5 +150,4 @@ public class GermlineVariantData implements ComparableItem
         values.add(String.format("%d", variant.allelicDepth().AlleleReadCount));
         values.add(String.format("%d", variant.allelicDepth().TotalReadCount));
     }
-
 }

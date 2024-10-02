@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange;
 
-import static com.hartwig.hmftools.common.peach.PeachGenotypeFile.generateOldPythonFileName;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_GERMLINE_DIR;
@@ -30,9 +29,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DE
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
-import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
-
-import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
