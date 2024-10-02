@@ -22,15 +22,15 @@ public class FusionData implements ComparableItem
 
     protected static final String FLD_REPORTED_TYPE = "ReportedType";
     protected static final String FLD_PHASED = "Phased";
-    protected static final String FLD_LIKELIHOOD = "likelihood";
-    protected static final String FLD_TRANSCRIPT_UP = "fusedTranscriptUp";
-    protected static final String FLD_EXON_UP = "fusedExonUp";
-    protected static final String FLD_TRANSCRIPT_DOWN = "fusedTranscriptDown";
-    protected static final String FLD_EXON_DOWN = "fusedExonDown";
-    protected static final String FLD_CHAIN_LINKS = "chainLinks";
-    protected static final String FLD_CHAIN_TERM = "chainTerminated";
-    protected static final String FLD_DOMAINS_KEPT = "domainsKept";
-    protected static final String FLD_DOMAINS_LOST = "domainsLost";
+    protected static final String FLD_LIKELIHOOD = "Likelihood";
+    protected static final String FLD_TRANSCRIPT_UP = "FusedTranscriptUp";
+    protected static final String FLD_EXON_UP = "FusedExonUp";
+    protected static final String FLD_TRANSCRIPT_DOWN = "FusedTranscriptDown";
+    protected static final String FLD_EXON_DOWN = "FusedExonDown";
+    protected static final String FLD_CHAIN_LINKS = "ChainLinks";
+    protected static final String FLD_CHAIN_TERM = "ChainTerminated";
+    protected static final String FLD_DOMAINS_KEPT = "DomainsKept";
+    protected static final String FLD_DOMAINS_LOST = "DomainsLost";
     protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
 
     public FusionData(final LinxFusion fusion, final String geneMappedName)
