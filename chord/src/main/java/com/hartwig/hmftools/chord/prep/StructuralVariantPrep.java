@@ -76,6 +76,8 @@ public class StructuralVariantPrep
     {
         try
         {
+            CHORD_LOGGER.info("Counting SVs by type and length");
+
             List<StructuralVariant> variants = loadVariants(sampleId);
 
             for(StructuralVariant variant : variants)
@@ -107,7 +109,7 @@ public class StructuralVariantPrep
         }
         catch(Exception e)
         {
-            CHORD_LOGGER.error("sample({}) failed to extract SV contexts:", sampleId);
+            CHORD_LOGGER.error("sample({}) failed to count SVs by type and length:", sampleId);
             e.printStackTrace();
             System.exit(1);
             return null;

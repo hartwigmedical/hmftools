@@ -41,11 +41,15 @@ public class VcfFile
             variants.add(variantContext);
         }
 
+        String filterType = (mIncludeNonPass) ? "" : "PASS ";
         if(variants.size()==0)
-            CHORD_LOGGER.warn("No {}variants found in vcf file: {}",
-                    (mIncludeNonPass) ? "" : "PASS ",
-                    mPath
-            );
+        {
+            CHORD_LOGGER.warn("No {}variants found in vcf file: {}", filterType, mPath);
+        }
+        else
+        {
+            CHORD_LOGGER.info("Loaded {} {}variants from vcf file: {}", variants.size(), filterType, mPath);
+        }
 
         return variants;
     }
