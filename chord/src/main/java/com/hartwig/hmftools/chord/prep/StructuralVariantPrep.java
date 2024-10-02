@@ -42,7 +42,7 @@ public class StructuralVariantPrep
 
     public List<StructuralVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.purpleSvVcfFile(sampleId), true);
+        VcfFile vcfFile = new VcfFile(mConfig.purpleSvVcfFile(sampleId), mConfig.IncludeNonPass);
         List<VariantContext> variantContexts = vcfFile.loadVariants();
 
         // Only keep the first mate of breakend pairs

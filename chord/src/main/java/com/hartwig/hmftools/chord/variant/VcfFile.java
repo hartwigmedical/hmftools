@@ -14,12 +14,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VcfFile
 {
     public final String mPath;
-    private final boolean mPassOnly;
+    private final boolean mIncludeNonPass;
 
-    public VcfFile(String path, boolean passOnly)
+    public VcfFile(String path, boolean includeNonPass)
     {
         mPath = path;
-        mPassOnly = passOnly;
+        mIncludeNonPass = includeNonPass;
     }
 
     public List<VariantContext> loadVariants() throws NoSuchFileException
@@ -35,7 +35,7 @@ public class VcfFile
         {
             boolean isPassVariant = variantContext.getFilters().isEmpty();
 
-            if(mPassOnly && !isPassVariant)
+            if(!mIncludeNonPass && !isPassVariant)
                 continue;
 
             variants.add(variantContext);
@@ -43,7 +43,7 @@ public class VcfFile
 
         if(variants.size()==0)
             CHORD_LOGGER.warn("No {}variants found in vcf file: {}",
-                    (mPassOnly) ? "PASS " : "",
+                    (mIncludeNonPass) ? "" : "PASS ",
                     mPath
             );
 
