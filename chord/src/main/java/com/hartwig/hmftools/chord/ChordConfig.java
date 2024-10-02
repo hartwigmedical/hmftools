@@ -30,6 +30,11 @@ public class ChordConfig
     public final String OutputDir;
     public final String OutputId;
 
+    public final String ChordToolDir;
+
+    private static final String CHORD_TOOL_DIR = "chord_tool_dir";
+    private static final String CHORD_TOOL_DIR_DESC = "Dir containing the CHORD and mutSigExtractor R packages";
+
     private static final String SAMPLE_IDS_DELIM = ",";
 
     public ChordConfig(final ConfigBuilder configBuilder)
@@ -42,6 +47,8 @@ public class ChordConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        ChordToolDir = configBuilder.getValue(CHORD_TOOL_DIR);
     }
 
     private List<String> parseSampleIds(String sampleIdsString)
@@ -68,17 +75,22 @@ public class ChordConfig
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
+        configBuilder.addPath(CHORD_TOOL_DIR, false, CHORD_TOOL_DIR_DESC);
+
         FileWriterUtils.addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
-    public ChordConfig(List<String> sampleIds, String purpleDir, RefGenomeVersion refGenomeVersion, String outputDir, String outputId)
+    public ChordConfig(
+            List<String> sampleIds, String purpleDir, RefGenomeVersion refGenomeVersion, String outputDir, String outputId,
+            String chordToolDir)
     {
         SampleIds = sampleIds;
         PurpleDir = purpleDir;
         RefGenVersion = refGenomeVersion;
         OutputDir = outputDir;
         OutputId = outputId;
+        ChordToolDir = chordToolDir;
     }
 
     public static class Builder
@@ -88,6 +100,7 @@ public class ChordConfig
         private RefGenomeVersion RefGenVersion = V37;
         private String OutputDir;
         private String OutputId = "";
+        private String ChordToolDir = "";
 
         public Builder sampleIds(List<String> sampleIds)
         {
@@ -119,6 +132,12 @@ public class ChordConfig
             return this;
         }
 
-        public ChordConfig build(){ return new ChordConfig(SampleIds, PurpleDir, RefGenVersion, OutputDir, OutputId); }
+        public Builder chordToolDir(String chordToolDir)
+        {
+            ChordToolDir = chordToolDir;
+            return this;
+        }
+
+        public ChordConfig build(){ return new ChordConfig(SampleIds, PurpleDir, RefGenVersion, OutputDir, OutputId, ChordToolDir); }
     }
 }

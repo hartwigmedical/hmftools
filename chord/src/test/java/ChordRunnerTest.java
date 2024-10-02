@@ -27,6 +27,7 @@ public class ChordRunnerTest
     {
         String sampleId = "EMPTY_SAMPLE";
         String inputDir = Resources.getResource("vcf/").getPath();
+        String chordToolDir = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/chord/src/main/R/";
 
         new File(OUTPUT_DIR).mkdirs();
 
@@ -34,6 +35,7 @@ public class ChordRunnerTest
                 .sampleIds(List.of(sampleId))
                 .purpleDir(inputDir)
                 .outputDir(OUTPUT_DIR)
+                .chordToolDir(chordToolDir)
                 .build();
 
         ChordRunner runner = new ChordRunner(config);

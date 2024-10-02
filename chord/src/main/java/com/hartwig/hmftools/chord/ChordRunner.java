@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.chord.ChordConstants.APP_NAME;
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
@@ -30,14 +32,23 @@ public class ChordRunner
         {
             String sampleId = mConfig.SampleIds.get(0);
 
-            int result = RExecutor.executeFromClasspath(
-                    SCRIPT_RESOURCE_PATH,
-                    true,
+            List<String> scriptArgs = new ArrayList<>(List.of(
                     mConfig.OutputDir,
                     sampleId,
                     mConfig.purpleSomaticVcfFile(sampleId),
                     mConfig.purpleSvVcfFile(sampleId),
                     mConfig.RefGenVersion.toString()
+            ));
+
+            if(!(mConfig.ChordToolDir == null || mConfig.ChordToolDir.isEmpty()))
+            {
+                scriptArgs.add(mConfig.ChordToolDir);
+            }
+
+            int result = RExecutor.executeFromClasspath(
+                    SCRIPT_RESOURCE_PATH,
+                    true,
+                    scriptArgs.toArray(new String[0])
             );
 
             if(result != 0)
@@ -48,6 +59,7 @@ public class ChordRunner
         catch(Exception e)
         {
             CHORD_LOGGER.error("Failed to run CHORD: " + e);
+            e.printStackTrace();
             System.exit(1);
         }
     }
