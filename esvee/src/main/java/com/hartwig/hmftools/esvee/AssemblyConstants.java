@@ -33,9 +33,6 @@ public final class AssemblyConstants
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
-    // primary assembly deduplication
-    public static final int PRIMARY_ASSEMBLY_READ_MAX_MISMATCH = mismatchesPerComparisonLength(500);
-
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
     public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
 
@@ -72,7 +69,7 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
     public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
     public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.85;
-    public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = 50;
+    public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 50000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;

@@ -4,19 +4,16 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withinLineProximity;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
 
@@ -27,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -40,29 +36,29 @@ public class LineSiteTest
     @Test
     public void testLineInsertionProximity()
     {
-        assertFalse(withLineProximity(100, 100, FORWARD, FORWARD));
+        assertFalse(withinLineProximity(100, 100, FORWARD, FORWARD));
 
-        assertTrue(withLineProximity(100, 100, FORWARD, REVERSE));
-        assertTrue(withLineProximity(100, 100, REVERSE, FORWARD));
+        assertTrue(withinLineProximity(100, 100, FORWARD, REVERSE));
+        assertTrue(withinLineProximity(100, 100, REVERSE, FORWARD));
 
         // DEL within range
         int lowerPosition = 100;
         int upperPosition = lowerPosition + LINE_INDEL_MAX_GAP - 1;
-        assertTrue(withLineProximity(lowerPosition, upperPosition, FORWARD, REVERSE));
-        assertTrue(withLineProximity(upperPosition, lowerPosition, REVERSE, FORWARD));
+        assertTrue(withinLineProximity(lowerPosition, upperPosition, FORWARD, REVERSE));
+        assertTrue(withinLineProximity(upperPosition, lowerPosition, REVERSE, FORWARD));
 
         // too far for a DEL
-        assertTrue(withLineProximity(lowerPosition, upperPosition + 1, FORWARD, REVERSE));
-        assertTrue(withLineProximity(upperPosition + 1, lowerPosition, REVERSE, FORWARD));
+        assertTrue(withinLineProximity(lowerPosition, upperPosition + 1, FORWARD, REVERSE));
+        assertTrue(withinLineProximity(upperPosition + 1, lowerPosition, REVERSE, FORWARD));
 
         // DUP within range
         upperPosition = lowerPosition + LINE_INDEL_MAX_OVERLAP - 1;
-        assertTrue(withLineProximity(lowerPosition, upperPosition, REVERSE, FORWARD));
-        assertTrue(withLineProximity(upperPosition, lowerPosition, FORWARD, REVERSE));
+        assertTrue(withinLineProximity(lowerPosition, upperPosition, REVERSE, FORWARD));
+        assertTrue(withinLineProximity(upperPosition, lowerPosition, FORWARD, REVERSE));
 
         // too far for a DUP
-        assertTrue(withLineProximity(lowerPosition, upperPosition + 1, REVERSE, FORWARD));
-        assertTrue(withLineProximity(upperPosition + 1, lowerPosition, FORWARD, REVERSE));
+        assertTrue(withinLineProximity(lowerPosition, upperPosition + 1, REVERSE, FORWARD));
+        assertTrue(withinLineProximity(upperPosition + 1, lowerPosition, FORWARD, REVERSE));
     }
 
     @Test

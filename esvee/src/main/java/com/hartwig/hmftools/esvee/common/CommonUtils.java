@@ -60,11 +60,11 @@ public final class CommonUtils
         if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
             return false;
 
-        return withLineProximity(
+        return withinLineProximity(
                 assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
     }
 
-    public static boolean withLineProximity(final int pos1, final int pos2, final Orientation orient1, final Orientation orient2)
+    public static boolean withinLineProximity(final int pos1, final int pos2, final Orientation orient1, final Orientation orient2)
     {
         if(orient1 == orient2)
             return false;
