@@ -44,17 +44,23 @@ public final class RExecutor
     private static final String R_EXE = "Rscript";
     private static final Logger LOGGER = LogManager.getLogger(RExecutor.class);
 
-    public static int executeFromClasspath(final String rScriptName, final String... arguments)
+    public static int executeFromClasspath(final String rScriptName, final boolean inheritIO, final String... arguments)
             throws IOException, InterruptedException
     {
         final File scriptFile = writeScriptFile(rScriptName);
 
-        final int returnCode = executeFromFile(rScriptName, scriptFile, arguments);
+        final int returnCode = executeFromFile(rScriptName, scriptFile, inheritIO, arguments);
         htsjdk.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
 
-    private static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments)
+    public static int executeFromClasspath(final String rScriptName, final String... arguments)
+            throws IOException, InterruptedException
+    {
+        return executeFromClasspath(rScriptName, false, arguments);
+    }
+
+    private static int executeFromFile(final String rScriptName, final File scriptFile, final boolean inheritIO, final String... arguments)
             throws IOException, InterruptedException
     {
         final String[] command = new String[arguments.length + 2];
@@ -62,10 +68,20 @@ public final class RExecutor
         command[1] = scriptFile.getAbsolutePath();
         System.arraycopy(arguments, 0, command, 2, arguments.length);
 
-        final File outputFile = File.createTempFile(rScriptName, ".out");
-
         LOGGER.debug(format("executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
-        Process process = new ProcessBuilder(command).redirectOutput(outputFile).start();
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+
+        if(inheritIO)
+        {
+            processBuilder.inheritIO();
+        }
+        else
+        {
+            final File outputFile = File.createTempFile(rScriptName, ".out");
+            processBuilder.redirectOutput(outputFile);
+        }
+        Process process = processBuilder.start();
 
         int result = process.waitFor();
 
