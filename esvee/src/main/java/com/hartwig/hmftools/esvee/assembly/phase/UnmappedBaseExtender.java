@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
@@ -44,6 +44,7 @@ public class UnmappedBaseExtender
     private final List<SupportRead> mSupportReads;
 
     private String mExtensionBases;
+    private final int mRefBaseCount;
 
     public UnmappedBaseExtender(final JunctionAssembly assembly)
     {
@@ -53,16 +54,18 @@ public class UnmappedBaseExtender
 
         int extensionIndexStart, extensionIndexEnd;
 
-        // do not include the junction (ref) bases from the assembly, only the unmapped extension bases
+        // include a subset of the junction ref bases from the assembly plus all extension bases
+        mRefBaseCount = min(ASSEMBLY_LINK_OVERLAP_BASES, assembly.refBaseLength());
+
         if(mIsForwardJunction)
         {
-            extensionIndexStart = assembly.junctionIndex() + 1;
+            extensionIndexStart = assembly.junctionIndex() - mRefBaseCount + 1;
             extensionIndexEnd = assembly.baseLength() - 1;
         }
         else
         {
             extensionIndexStart = 0;
-            extensionIndexEnd = assembly.junctionIndex() - 1;
+            extensionIndexEnd = assembly.junctionIndex() + mRefBaseCount - 1;
         }
 
         mBases = subsetArray(assembly.bases(), extensionIndexStart, extensionIndexEnd);
@@ -73,9 +76,30 @@ public class UnmappedBaseExtender
         mRepeats = Lists.newArrayList();
     }
 
-    public byte[] extensionBases() { return mBases; }
-    public int extensionBaseLength() { return mBases.length; }
-    public byte[] baseQualities() { return mBaseQuals; }
+    public byte[] extensionBases()
+    {
+        if(mIsForwardJunction)
+        {
+            // 0-9 ref, 10-19 ext, ref count = 10, total = 20
+            return subsetArray(mBases, mRefBaseCount, mBases.length - 1);
+        }
+        else
+        {
+            // 0-9 ext, 10-19 ref, ref count = 10, total = 20
+            return subsetArray(mBases, 0, mBases.length - mRefBaseCount - 1);
+        }
+    }
+
+    public int extensionBaseLength() { return mBases.length - mRefBaseCount; }
+
+    public byte[] baseQualities()
+    {
+        if(mIsForwardJunction)
+            return subsetArray(mBaseQuals, mRefBaseCount, mBaseQuals.length - 1);
+        else
+            return subsetArray(mBaseQuals, 0, mBaseQuals.length - mRefBaseCount - 1);
+    }
+
     public List<SupportRead> supportReads() { return mSupportReads; }
 
     public void processReads(final List<Read> reads)
@@ -242,6 +266,8 @@ public class UnmappedBaseExtender
             readIndexEnd = read.basesLength() - 1;
             extBaseIndexStart = readSequenceMatch.ExtensionBaseSeqStart;
             junctionReadStartDistance = -readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
+
+            junctionReadStartDistance += mRefBaseCount;
         }
         else
         {
@@ -261,6 +287,8 @@ public class UnmappedBaseExtender
 
             // add the extension length since the read sequence match was prior to extension
             junctionReadStartDistance += baseOffset;
+
+            junctionReadStartDistance -= mRefBaseCount;
         }
 
         boolean reverseBases = reverseReadBases(read);
@@ -450,7 +478,7 @@ public class UnmappedBaseExtender
 
             int totalOverlap = lowerOverlap + upperOverlap;
 
-            if(totalOverlap < ASSEMBLY_READ_OVERLAP_BASES)
+            if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
                 continue;
 
             int readIndexStart = readIndex - lowerOverlap;
@@ -486,6 +514,7 @@ public class UnmappedBaseExtender
 
     public String toString()
     {
-        return format("junc(%s) extLen(%d) support(%d)", mJunctionAssembly.junction().coords(), mBases.length, mSupportReads.size());
+        return format("junc(%s) extLen(%d) support(%d)",
+                mJunctionAssembly.junction().coords(), mBases.length - mRefBaseCount, mSupportReads.size());
     }
 }
