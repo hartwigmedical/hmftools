@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
+import static com.hartwig.hmftools.common.utils.Arrays.initialise;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
@@ -221,6 +222,8 @@ public class ExtensionSeqBuilder
                 }
             }
 
+            boolean hasActiveReads = false;
+
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
                 ExtReadParseState read = mReads.get(readIndex);
@@ -230,6 +233,8 @@ public class ExtensionSeqBuilder
 
                 if(read.exceedsMaxMismatches()) // be relevant when building the final consensus
                     continue;
+
+                hasActiveReads = true;
 
                 byte base = read.currentBase();
                 int qual = read.currentQual();
@@ -308,6 +313,9 @@ public class ExtensionSeqBuilder
                     maxQuals[baseIndex] = max(maxQuals[baseIndex], qual);
                 }
             }
+
+            if(!hasActiveReads)
+                break;
 
             if(totalQuals != null)
             {
@@ -457,10 +465,15 @@ public class ExtensionSeqBuilder
             moveReadsPastLineExtension();
         }
 
+        int[] readMismatchExceededIndex = new int[mReads.size()];
+        initialise(readMismatchExceededIndex, -1);
+
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
-            for(ExtReadParseState read : mReads)
+            for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
+                ExtReadParseState read = mReads.get(readIndex);
+
                 if(read.exhausted())
                     continue;
 
@@ -470,9 +483,19 @@ public class ExtensionSeqBuilder
                 if(aboveMinQual(qual) && aboveMinQual(mBaseQuals[extensionIndex]))
                 {
                     if(base != mBases[extensionIndex])
+                    {
                         read.addMismatch();
+
+                        // record the first base where the read exceeds its permitted mismatch count
+                        if(read.exceedsMaxMismatches() && readMismatchExceededIndex[readIndex] < 0)
+                        {
+                            readMismatchExceededIndex[readIndex] = extensionIndex;
+                        }
+                    }
                     else
+                    {
                         read.addHighQualMatch();
+                    }
                 }
 
                 read.moveNext();
@@ -483,16 +506,39 @@ public class ExtensionSeqBuilder
 
         int mismatchReadCount = (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count();
 
-        // if only a few reads have been excluded then keep the initial sequence
-        if(mismatchReadCount <= MISMATCH_READ_REBUILD_PERC * mReads.size())
+        // if no reads have been excluded then keep the initial sequence
+        if(mismatchReadCount == 0)
             return;
 
-        // look for a variable repeat as an explanation for the mismatches
+        // otherwise look for a variable repeat as an explanation for the mismatches
         findConsensusRepeats();
 
+        // and if one is found, reset any read whose mismatches might be explained by the repeat
         if(mMaxRepeat != null)
         {
-            mReads.forEach(x -> x.resetMatches());
+            for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
+            {
+                ExtReadParseState read = mReads.get(readIndex);
+
+                if(read.exceedsMaxMismatches())
+                {
+                    // read must differ vs the consensus repeat
+                    if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID || mReadRepeatCounts[readIndex] == mMaxRepeat.Count)
+                        continue;
+
+                    int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
+
+                    // and have only exceed max mismatches during or after the consensus repeat
+                    if(mIsForward && mismatchExceededIndex >= mMaxRepeat.Index)
+                        read.resetMatches();
+                    else if(!mIsForward && mismatchExceededIndex <= mMaxRepeat.postRepeatIndex() - 1)
+                        read.resetMatches();
+                }
+                else
+                {
+                    read.resetMatches();
+                }
+            }
         }
 
         // otherwise filter out the mismatch reads and build the sequence again
