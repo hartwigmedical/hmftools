@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -18,13 +17,10 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerCom
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
-import static org.apache.commons.lang3.StringUtils.lowerCase;
-
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
