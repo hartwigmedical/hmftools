@@ -4,6 +4,8 @@ public final class Nucleotides
 {
     public static final char[] DNA_BASES = {'A', 'C', 'G', 'T'};
     public static final byte[] DNA_BASE_BYTES = { 65, 67, 71, 84 };
+    public static final char DNA_N_BASE = 'N';
+    public static final byte DNA_N_BYTE = 78;
 
     public static char swapDnaBase(final char base)
     {
@@ -22,6 +24,7 @@ public final class Nucleotides
         if(base == DNA_BASE_BYTES[1]) return 1;
         if(base == DNA_BASE_BYTES[2]) return 2;
         if(base == DNA_BASE_BYTES[3]) return 3;
+        if(base == DNA_N_BYTE) return 4;
 
         return -1;
     }
@@ -32,6 +35,7 @@ public final class Nucleotides
         if(base == DNA_BASES[1]) return 1;
         if(base == DNA_BASES[2]) return 2;
         if(base == DNA_BASES[3]) return 3;
+        if(base == DNA_N_BASE) return 4;
 
         return -1;
     }
