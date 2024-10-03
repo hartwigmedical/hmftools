@@ -334,6 +334,79 @@ public class FastqBimodalCollapse
         return new Hairpin8merInfo(bestIndex + 1, bestCount);
     }
 
+    public static class RevCompMatchInfo
+    {
+        public final int Read1Shift;
+        public final int MismatchCount;
+
+        public RevCompMatchInfo(int read1Shift, int mismatchCount)
+        {
+            Read1Shift = read1Shift;
+            MismatchCount = mismatchCount;
+        }
+    }
+
+    private static RevCompMatchInfo findBestRevCompMatch(final String read1, final String read2)
+    {
+        StringBuilder read2RevCompBuilder = new StringBuilder();
+        for(int i = read2.length() - 1; i >= 0; i--)
+        {
+            read2RevCompBuilder.append(swapDnaBase(read2.charAt(i)));
+        }
+        String read2RevComp = read2RevCompBuilder.toString();
+
+        int bestMismatchCount = Integer.MAX_VALUE;
+        int bestRead1Shift = 0;
+        for(int read1Shift = -50; read1Shift <= 50; read1Shift++)
+        {
+            int i1 = 0;
+            int i2 = 0;
+            if(read1Shift < 0)
+            {
+                i1 = -read1Shift;
+            }
+
+            if(read1Shift > 0)
+            {
+                i2 = read1Shift;
+            }
+
+            int totalCount = 0;
+            int mismatchCount = 0;
+            while(i1 < read1.length() && i2 < read2RevComp.length())
+            {
+                char base1 = read1.charAt(i1);
+                char base2 = read2RevComp.charAt(i2);
+                if(base1 != base2)
+                {
+                    mismatchCount++;
+                }
+
+                totalCount++;
+                i1++;
+                i2++;
+            }
+
+            if(mismatchCount >= 0.2*totalCount)
+            {
+                continue;
+            }
+
+            if(mismatchCount < bestMismatchCount)
+            {
+                bestMismatchCount = mismatchCount;
+                bestRead1Shift = read1Shift;
+            }
+        }
+
+        if(bestMismatchCount == Integer.MAX_VALUE)
+        {
+            return new RevCompMatchInfo(0, -1);
+        }
+
+        return new RevCompMatchInfo(bestRead1Shift, bestMismatchCount);
+    }
+
     private static final String STAT_DELIMITER = "\t";
     private static final String[] STAT_HEADERS = {
             "read_name",
@@ -353,6 +426,7 @@ public class FastqBimodalCollapse
             "hairpin2_match_count",
             "hairpin2_8mer_start_pos",
             "hairpin2_8mer_count",
+            "rev_comp_read1_shift",
             "rev_comp_mismatch_count",
             "consensus_read",
             "missing_count",
@@ -361,35 +435,13 @@ public class FastqBimodalCollapse
             "methC_count"
     };
 
-    private static int countRevCompMismatches(final String read1, final String read2)
-    {
-        int mismatchCount = 0;
-
-        int i1 = 0;
-        int i2 = read2.length() - 1;
-        while(i1 < read1.length() && i2 >= 0)
-        {
-            char base1 = read1.charAt(i1);
-            char base2 = swapDnaBase(read2.charAt(i2));
-            if(base1 != base2)
-            {
-                mismatchCount++;
-            }
-
-            i1++;
-            i2--;
-        }
-
-        return mismatchCount;
-    }
-
     private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
     {
         HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
         Hairpin8merInfo hairpin8mer1 = findHairpin8mer(fastq1.getReadString(), FORWARD_HAIRPIN);
         Hairpin8merInfo hairpin8mer2 = findHairpin8mer(fastq2.getReadString(), REVERSE_HAIRPIN);
-        int revCompMismatchCount = countRevCompMismatches(fastq1.getReadString(), fastq2.getReadString());
+        RevCompMatchInfo revCompMatchInfo = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
 
         String consensusRead = getConsensusRead(fastq1, fastq2);
         int hairpinStart = min(hairpin1.StartPos == -1 ? NO_HAIRPIN : hairpin1.StartPos, hairpin2.StartPos == -1 ? NO_HAIRPIN : hairpin2.StartPos);
@@ -449,7 +501,8 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(hairpin2.MatchCount));
         statLine.add(String.valueOf(hairpin8mer2.StartPos));
         statLine.add(String.valueOf(hairpin8mer2.MatchCount));
-        statLine.add(String.valueOf(revCompMismatchCount));
+        statLine.add(String.valueOf(revCompMatchInfo.Read1Shift));
+        statLine.add(String.valueOf(revCompMatchInfo.MismatchCount));
         statLine.add(consensusReadForOutput(consensusRead));
         statLine.add(String.valueOf(missingCount));
         statLine.add(String.valueOf(mismatchCount));
