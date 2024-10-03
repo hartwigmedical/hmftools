@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
@@ -12,11 +13,9 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSIO
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -235,12 +234,6 @@ public class ExtensionSeqBuilder
                 byte base = read.currentBase();
                 int qual = read.currentQual();
 
-                if(base == N_BASE)
-                {
-                    base = DNA_BASE_BYTES[0];
-                    qual = 0;
-                }
-
                 if(checkReadRepeats && readRepeatSkipCounts[readIndex] != 0)
                 {
                     if(readRepeatSkipCounts[readIndex] < 0)
@@ -261,6 +254,12 @@ public class ExtensionSeqBuilder
                         base = read.currentBase();
                         qual = read.currentQual();
                     }
+                }
+
+                if(base == DNA_N_BYTE)
+                {
+                    base = DNA_BASE_BYTES[0];
+                    qual = 0;
                 }
 
                 // progress the read index

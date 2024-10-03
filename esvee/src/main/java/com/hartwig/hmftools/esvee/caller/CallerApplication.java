@@ -130,7 +130,7 @@ public class CallerApplication
             SV_LOGGER.info("germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
         }
-        else if(mConfig.ReferenceId.isEmpty())
+        else if(!mConfig.hasReference())
         {
             SV_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
@@ -231,7 +231,7 @@ public class CallerApplication
         {
             double af = breakend.calcAllelicFrequency(genotype);
 
-            if(mConfig.ReferenceId.contains(genotype.getSampleName()))
+            if(mConfig.hasReference() && mConfig.ReferenceId.contains(genotype.getSampleName()))
                 maxGermlineAf = max(maxGermlineAf, af);
             else
                 maxTumorAf = max(maxTumorAf, af);

@@ -4,9 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -201,7 +201,7 @@ public class RefBaseSeqBuilder
                 byte base = read.currentBase();
                 int qual = read.currentQual();
 
-                if(base == N_BASE)
+                if(base == DNA_N_BYTE)
                 {
                     base = DNA_BASE_BYTES[0];
                     qual = 0;
