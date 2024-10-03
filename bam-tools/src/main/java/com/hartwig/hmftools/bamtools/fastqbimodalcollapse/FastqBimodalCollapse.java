@@ -16,9 +16,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;
@@ -275,6 +277,63 @@ public class FastqBimodalCollapse
         return new HairpinInfo(-1, 0, 0);
     }
 
+    public static class Hairpin8merInfo
+    {
+        public final int StartPos;
+        public final int MatchCount;
+
+        public Hairpin8merInfo(int startPos, int matchCount)
+        {
+            StartPos = startPos;
+            MatchCount = matchCount;
+        }
+    }
+
+    private static Hairpin8merInfo findHairpin8mer(final String read, final String hairpinSequence)
+    {
+        Map<Integer, Integer> counts = Maps.newHashMap();
+        int start = 0;
+        int end = start + 7;
+        while(end < hairpinSequence.length())
+        {
+            String hairpinSubSeq = hairpinSequence.substring(start, end + 1);
+            int index = read.indexOf(hairpinSubSeq);
+            if(index < 0)
+            {
+                start++;
+                end++;
+                continue;
+            }
+
+            index -= start;
+            int newCount = counts.getOrDefault(index, 0) + 1;
+            counts.put(index, newCount);
+
+            start++;
+            end++;
+        }
+
+        if(counts.isEmpty())
+        {
+            return new Hairpin8merInfo(-1, 0);
+        }
+
+        int bestIndex = -1;
+        int bestCount = -1;
+        for(Map.Entry<Integer, Integer> indexCountPair : counts.entrySet())
+        {
+            int index = indexCountPair.getKey();
+            int count = indexCountPair.getValue();
+            if(count > bestCount)
+            {
+                bestIndex = index;
+                bestCount = count;
+            }
+        }
+
+        return new Hairpin8merInfo(bestIndex + 1, bestCount);
+    }
+
     private static final String STAT_DELIMITER = "\t";
     private static final String[] STAT_HEADERS = {
             "read_name",
@@ -287,9 +346,13 @@ public class FastqBimodalCollapse
             "hairpin1_start_pos",
             "hairpin1_length",
             "hairpin1_match_count",
+            "hairpin1_8mer_start_pos",
+            "hairpin1_8mer_count",
             "hairpin2_start_pos",
             "hairpin2_length",
             "hairpin2_match_count",
+            "hairpin2_8mer_start_pos",
+            "hairpin2_8mer_count",
             "rev_comp_mismatch_count",
             "consensus_read",
             "missing_count",
@@ -324,6 +387,8 @@ public class FastqBimodalCollapse
     {
         HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+        Hairpin8merInfo hairpin8mer1 = findHairpin8mer(fastq1.getReadString(), FORWARD_HAIRPIN);
+        Hairpin8merInfo hairpin8mer2 = findHairpin8mer(fastq2.getReadString(), REVERSE_HAIRPIN);
         int revCompMismatchCount = countRevCompMismatches(fastq1.getReadString(), fastq2.getReadString());
 
         String consensusRead = getConsensusRead(fastq1, fastq2);
@@ -377,9 +442,13 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(hairpin1.StartPos));
         statLine.add(String.valueOf(hairpin1.Length));
         statLine.add(String.valueOf(hairpin1.MatchCount));
+        statLine.add(String.valueOf(hairpin8mer1.StartPos));
+        statLine.add(String.valueOf(hairpin8mer1.MatchCount));
         statLine.add(String.valueOf(hairpin2.StartPos));
         statLine.add(String.valueOf(hairpin2.Length));
         statLine.add(String.valueOf(hairpin2.MatchCount));
+        statLine.add(String.valueOf(hairpin8mer2.StartPos));
+        statLine.add(String.valueOf(hairpin8mer2.MatchCount));
         statLine.add(String.valueOf(revCompMismatchCount));
         statLine.add(consensusReadForOutput(consensusRead));
         statLine.add(String.valueOf(missingCount));
