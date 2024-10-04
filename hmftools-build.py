@@ -60,7 +60,7 @@ class Docker:
         with open("/workspace/entrypoint_template.sh", "r") as template, \
            open(f"/workspace/{self.module}/target/entrypoint.sh", "w") as output:
                for line in template:
-                   output.write(line.rstrip().replace("__JAR_PATH__", f"/usr/share/java/{self.module}_v{self.version}.jar"))
+                   output.write(line.rstrip().replace("__JAR_PATH__", f"/usr/share/java/{self.module}_v{self.version}.jar") + '\n')
 
         with open("/workspace/docker.sh", "w") as output:
             output.write('set -e\n')

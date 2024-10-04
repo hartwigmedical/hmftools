@@ -16,7 +16,7 @@ USER root
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
 RUN apt update && apt install -y python3 python3-pip && apt clean && rm -rf /var/lib/apt/lists/*
 ADD target/cuppa-$VERSION-jar-with-dependencies.jar ${JAR}
-ADD target/entrypoint.sh /usr/local/bin/cuppa
+ADD target/entrypoint.sh /usr/local/bin/cuppa && chmod +x /usr/local/bin/cuppa
 #RUN cd /opt/cuppa && jar xvf ${JAR} pycuppa
 #RUN pip3 install --upgrade pip && pip3 install /opt/cuppa/pycuppa
 
