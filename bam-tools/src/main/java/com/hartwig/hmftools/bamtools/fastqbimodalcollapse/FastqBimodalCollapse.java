@@ -386,8 +386,10 @@ public class FastqBimodalCollapse
             "consensus_read",
             "missing_count",
             "mismatch_count",
-            "GG_high_qual_mismatch_count",
-            "other_high_qual_mismatch_count",
+            "high_qual_GG_mismatch_count",
+            "high_qual_other_mismatch_count",
+            "low_qual_unambiguous_count",
+            "low_qual_ambiguous_count",
             "methC_G_count",
             "methC_other_count"
     };
@@ -405,6 +407,8 @@ public class FastqBimodalCollapse
         int mismatchCount = 0;
         int highQualMismatchCountGG = 0;
         int highQualMismatchCountOther = 0;
+        int lowQualUnambiguousCount = 0;
+        int lowQualAmbiguousCount = 0;
         int modCGCount = 0;
         int modCOtherCount = 0;
         for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
@@ -435,6 +439,18 @@ public class FastqBimodalCollapse
                     {
                         highQualMismatchCountOther++;
                     }
+                }
+                else if(qual1 > 30 && base1 != 'T')
+                {
+                    lowQualUnambiguousCount++;
+                }
+                else if(qual2 > 30 && base2 != 'A')
+                {
+                    lowQualUnambiguousCount++;
+                }
+                else
+                {
+                    lowQualAmbiguousCount++;
                 }
             }
             else if(consensusBase == MODC_BASE)
@@ -475,6 +491,8 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(mismatchCount));
         statLine.add(String.valueOf(highQualMismatchCountGG));
         statLine.add(String.valueOf(highQualMismatchCountOther));
+        statLine.add(String.valueOf(lowQualUnambiguousCount));
+        statLine.add(String.valueOf(lowQualAmbiguousCount));
         statLine.add(String.valueOf(modCGCount));
         statLine.add(String.valueOf(modCOtherCount));
 
