@@ -57,6 +57,11 @@ class Docker:
         self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
     def build(self):
+        with open("/workspace/entrypoint_template.sh", "r") as template, \
+           open("/workspace/{self.module}/target/entrypoint.sh", "w") as output:
+               for line in template:
+                   output.write(line.rstrip().replace("__JAR_PATH__", f"/usr/share/java/${module}_v${version}.jar"))
+
         with open("/workspace/docker.sh", "w") as output:
             output.write('set -e\n')
             output.write(f'[ ! -f {self.module}/Dockerfile ] && echo "No Dockerfile for {self.module}" && exit 0\n')
