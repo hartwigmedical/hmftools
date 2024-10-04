@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.chord;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -12,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -25,6 +28,7 @@ public class ChordConfig
 
     public final String PurpleDir;
 
+    public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
 
     public final String OutputDir;
@@ -48,6 +52,7 @@ public class ChordConfig
 
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
 
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -80,6 +85,7 @@ public class ChordConfig
 
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
 
+        configBuilder.addConfigItem(REF_GENOME, false, REF_GENOME_CFG_DESC);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
         configBuilder.addFlag(INCLUDE_NON_PASS, INCLUDE_NON_PASS_DESC);
@@ -91,11 +97,14 @@ public class ChordConfig
     }
 
     public ChordConfig(
-            List<String> sampleIds, String purpleDir, RefGenomeVersion refGenomeVersion, String outputDir, String outputId,
+            List<String> sampleIds, String purpleDir,
+            String refGenomeFile, RefGenomeVersion refGenomeVersion,
+            String outputDir, String outputId,
             boolean includeNonPass, String chordToolDir)
     {
         SampleIds = sampleIds;
         PurpleDir = purpleDir;
+        RefGenomeFile = refGenomeFile;
         RefGenVersion = refGenomeVersion;
         OutputDir = outputDir;
         OutputId = outputId;
@@ -107,6 +116,7 @@ public class ChordConfig
     {
         private List<String> SampleIds;
         private String PurpleDir;
+        private String RefGenomeFile;
         private RefGenomeVersion RefGenVersion = V37;
         private String OutputDir;
         private String OutputId = "";
@@ -122,6 +132,12 @@ public class ChordConfig
         public Builder purpleDir(String purpleDir)
         {
             PurpleDir = purpleDir;
+            return this;
+        }
+
+        public Builder refGenomeFile(String refGenomeFile)
+        {
+            RefGenomeFile = refGenomeFile;
             return this;
         }
 
@@ -155,6 +171,9 @@ public class ChordConfig
             return this;
         }
 
-        public ChordConfig build(){ return new ChordConfig(SampleIds, PurpleDir, RefGenVersion, OutputDir, OutputId, IncludeNonPass, ChordToolDir); }
+        public ChordConfig build()
+        {
+            return new ChordConfig(SampleIds, PurpleDir, RefGenomeFile, RefGenVersion, OutputDir, OutputId, IncludeNonPass, ChordToolDir);
+        }
     }
 }
