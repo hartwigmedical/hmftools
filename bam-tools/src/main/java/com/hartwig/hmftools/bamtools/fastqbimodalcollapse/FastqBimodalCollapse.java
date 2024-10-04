@@ -388,7 +388,8 @@ public class FastqBimodalCollapse
             "mismatch_count",
             "GG_high_qual_mismatch_count",
             "other_high_qual_mismatch_count",
-            "methC_count"
+            "methC_G_count",
+            "methC_other_count"
     };
 
     private static void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
@@ -404,7 +405,8 @@ public class FastqBimodalCollapse
         int mismatchCount = 0;
         int highQualMismatchCountGG = 0;
         int highQualMismatchCountOther = 0;
-        int modCCount = 0;
+        int modCGCount = 0;
+        int modCOtherCount = 0;
         for(int i = 0; i < min(consensusRead.length(), hairpinStart); i++)
         {
             char consensusBase = consensusRead.charAt(i);
@@ -437,7 +439,14 @@ public class FastqBimodalCollapse
             }
             else if(consensusBase == MODC_BASE)
             {
-                modCCount++;
+                if(i < min(consensusRead.length(), hairpinStart) - 1 && consensusRead.charAt(i + 1) == 'G')
+                {
+                    modCGCount++;
+                }
+                else
+                {
+                    modCOtherCount++;
+                }
             }
             else
             {
@@ -466,7 +475,8 @@ public class FastqBimodalCollapse
         statLine.add(String.valueOf(mismatchCount));
         statLine.add(String.valueOf(highQualMismatchCountGG));
         statLine.add(String.valueOf(highQualMismatchCountOther));
-        statLine.add(String.valueOf(modCCount));
+        statLine.add(String.valueOf(modCGCount));
+        statLine.add(String.valueOf(modCOtherCount));
 
         writer.write(statLine.toString());
         writer.newLine();
