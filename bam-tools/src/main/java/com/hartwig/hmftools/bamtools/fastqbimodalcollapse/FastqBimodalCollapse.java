@@ -202,94 +202,18 @@ public class FastqBimodalCollapse
     public static class HairpinInfo
     {
         public final int StartPos;
-        public final int Length;
         public final int MatchCount;
+        public final int PrefixMatchLength;
 
-        public HairpinInfo(final int startPos, final int length, final int matchCount)
+        public HairpinInfo(final int startPos, int matchCount, int prefixMatchLength)
         {
             StartPos = startPos;
-            Length = length;
             MatchCount = matchCount;
+            PrefixMatchLength = prefixMatchLength;
         }
     }
 
     private static HairpinInfo findHairpin(final String read, final String hairpinSequence)
-    {
-        // full hairpin match
-        int minRequiredMatches = (int) Math.round(Math.ceil(hairpinSequence.length() * HAIRPIN_MATCH_TARGET));
-        int maxMismatches = hairpinSequence.length() - minRequiredMatches;
-        for(int i = 0; i <= read.length() - hairpinSequence.length(); i++)
-        {
-            int mismatchCount = 0;
-            for(int j = 0; j < hairpinSequence.length(); j++)
-            {
-                char readBase = read.charAt(i + j);
-                char hairpinBase = hairpinSequence.charAt(j);
-                if(readBase != hairpinBase)
-                {
-                    mismatchCount++;
-                }
-
-                if(mismatchCount > maxMismatches)
-                {
-                    break;
-                }
-            }
-
-            if(mismatchCount > maxMismatches)
-            {
-                continue;
-            }
-
-            return new HairpinInfo(i + 1, hairpinSequence.length(), hairpinSequence.length() - mismatchCount);
-        }
-
-        // partial hairpin match at the end
-        for(int hairpinPrefixLength = min(hairpinSequence.length() - 1, read.length()); hairpinPrefixLength >= MIN_HAIRPIN_MATCH_LENGTH; hairpinPrefixLength--)
-        {
-            minRequiredMatches = (int) Math.round(Math.ceil(hairpinPrefixLength * HAIRPIN_MATCH_TARGET));
-            maxMismatches = hairpinPrefixLength - minRequiredMatches;
-
-            int mismatchCount = 0;
-            for(int j = 0; j < hairpinPrefixLength; j++)
-            {
-                char readBase = read.charAt(read.length() - hairpinPrefixLength + j);
-                char hairpinBase = hairpinSequence.charAt(j);
-                if(readBase != hairpinBase)
-                {
-                    mismatchCount++;
-                }
-
-                if(mismatchCount > maxMismatches)
-                {
-                    break;
-                }
-            }
-
-            if(mismatchCount > maxMismatches)
-            {
-                continue;
-            }
-
-            return new HairpinInfo(read.length() - hairpinPrefixLength + 1, hairpinPrefixLength, hairpinPrefixLength - mismatchCount);
-        }
-
-        return new HairpinInfo(-1, 0, 0);
-    }
-
-    public static class Hairpin8merInfo
-    {
-        public final int StartPos;
-        public final int MatchCount;
-
-        public Hairpin8merInfo(int startPos, int matchCount)
-        {
-            StartPos = startPos;
-            MatchCount = matchCount;
-        }
-    }
-
-    private static Hairpin8merInfo findHairpin8mer(final String read, final String hairpinSequence)
     {
         Map<Integer, Integer> counts = Maps.newHashMap();
         int start = 0;
@@ -313,25 +237,55 @@ public class FastqBimodalCollapse
             end++;
         }
 
-        if(counts.isEmpty())
+        if(!counts.isEmpty())
         {
-            return new Hairpin8merInfo(-1, 0);
-        }
-
-        int bestIndex = -1;
-        int bestCount = -1;
-        for(Map.Entry<Integer, Integer> indexCountPair : counts.entrySet())
-        {
-            int index = indexCountPair.getKey();
-            int count = indexCountPair.getValue();
-            if(count > bestCount)
+            int bestIndex = -1;
+            int bestCount = -1;
+            for(Map.Entry<Integer, Integer> indexCountPair : counts.entrySet())
             {
-                bestIndex = index;
-                bestCount = count;
+                int index = indexCountPair.getKey();
+                int count = indexCountPair.getValue();
+                if(count > bestCount)
+                {
+                    bestIndex = index;
+                    bestCount = count;
+                }
+            }
+
+            if(bestCount >= 3)
+            {
+                return new HairpinInfo(bestIndex + 1, bestCount, -1);
             }
         }
 
-        return new Hairpin8merInfo(bestIndex + 1, bestCount);
+        // look for matches at the end
+        for(int hairpinPrefixLength = 7; hairpinPrefixLength >= 5; hairpinPrefixLength--)
+        {
+            start = read.length() - hairpinPrefixLength;
+            if(start < 0)
+            {
+                continue;
+            }
+
+            boolean all_matches = true;
+            for(int i = 0; i < hairpinPrefixLength; i++)
+            {
+                char readBase = read.charAt(start + i);
+                char hairpinBase = hairpinSequence.charAt(i);
+                if(readBase != hairpinBase)
+                {
+                    all_matches = false;
+                    break;
+                }
+            }
+
+            if(all_matches)
+            {
+                return new HairpinInfo(start + 1, -1, hairpinPrefixLength);
+            }
+        }
+
+        return new HairpinInfo(-1, -1, -1);
     }
 
     public static class RevCompMatchInfo
@@ -357,7 +311,7 @@ public class FastqBimodalCollapse
 
         int bestMismatchCount = Integer.MAX_VALUE;
         int bestRead1Shift = 0;
-        for(int read1Shift = -50; read1Shift <= 50; read1Shift++)
+        for(int read1Shift = -120; read1Shift <= 120; read1Shift++)
         {
             int i1 = 0;
             int i2 = 0;
@@ -385,6 +339,11 @@ public class FastqBimodalCollapse
                 totalCount++;
                 i1++;
                 i2++;
+            }
+
+            if(totalCount == 0)
+            {
+                continue;
             }
 
             if(mismatchCount >= 0.2*totalCount)
@@ -417,15 +376,11 @@ public class FastqBimodalCollapse
             "read2",
             "qual2",
             "hairpin1_start_pos",
-            "hairpin1_length",
-            "hairpin1_match_count",
-            "hairpin1_8mer_start_pos",
             "hairpin1_8mer_count",
+            "hairpin1_end_match_length",
             "hairpin2_start_pos",
-            "hairpin2_length",
-            "hairpin2_match_count",
-            "hairpin2_8mer_start_pos",
             "hairpin2_8mer_count",
+            "hairpin2_end_match_length",
             "rev_comp_read1_shift",
             "rev_comp_mismatch_count",
             "consensus_read",
@@ -439,8 +394,6 @@ public class FastqBimodalCollapse
     {
         HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
-        Hairpin8merInfo hairpin8mer1 = findHairpin8mer(fastq1.getReadString(), FORWARD_HAIRPIN);
-        Hairpin8merInfo hairpin8mer2 = findHairpin8mer(fastq2.getReadString(), REVERSE_HAIRPIN);
         RevCompMatchInfo revCompMatchInfo = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
 
         String consensusRead = getConsensusRead(fastq1, fastq2);
@@ -492,15 +445,11 @@ public class FastqBimodalCollapse
         statLine.add(fastq2.getReadString());
         statLine.add(fastq2.getBaseQualityString());
         statLine.add(String.valueOf(hairpin1.StartPos));
-        statLine.add(String.valueOf(hairpin1.Length));
         statLine.add(String.valueOf(hairpin1.MatchCount));
-        statLine.add(String.valueOf(hairpin8mer1.StartPos));
-        statLine.add(String.valueOf(hairpin8mer1.MatchCount));
+        statLine.add(String.valueOf(hairpin1.PrefixMatchLength));
         statLine.add(String.valueOf(hairpin2.StartPos));
-        statLine.add(String.valueOf(hairpin2.Length));
         statLine.add(String.valueOf(hairpin2.MatchCount));
-        statLine.add(String.valueOf(hairpin8mer2.StartPos));
-        statLine.add(String.valueOf(hairpin8mer2.MatchCount));
+        statLine.add(String.valueOf(hairpin2.PrefixMatchLength));
         statLine.add(String.valueOf(revCompMatchInfo.Read1Shift));
         statLine.add(String.valueOf(revCompMatchInfo.MismatchCount));
         statLine.add(consensusReadForOutput(consensusRead));
