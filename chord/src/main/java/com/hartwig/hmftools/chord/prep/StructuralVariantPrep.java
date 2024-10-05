@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 
 import java.nio.file.NoSuchFileException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,7 +30,8 @@ public class StructuralVariantPrep
     private final ChordConfig mConfig;
 
     private static final int[] SV_LENGTH_INTERVALS = { 0, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, Integer.MAX_VALUE};
-    private static final DecimalFormat SV_LENGTH_FORMAT = new DecimalFormat("0E00");
+
+    private static final DecimalFormat SV_LENGTH_FORMAT = new DecimalFormat("0E00", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private final Map<SvTypeLengthBin, Integer> mTypeLengthCounts = initializeSizeBins();
 
@@ -137,6 +140,10 @@ public class StructuralVariantPrep
 
             String lowerIntervalString = SV_LENGTH_FORMAT.format(LowerInterval);
             String upperIntervalString = (UpperInterval != Integer.MAX_VALUE) ? SV_LENGTH_FORMAT.format(UpperInterval) : "Inf";
+
+            // Use lower case 'e' for exponent
+            lowerIntervalString = lowerIntervalString.replace('E', 'e');
+            upperIntervalString = upperIntervalString.replace('E', 'e');
 
             return String.join("_", Type.toString(), lowerIntervalString, upperIntervalString, "bp");
         }
