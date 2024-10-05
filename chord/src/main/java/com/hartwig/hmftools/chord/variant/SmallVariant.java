@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.chord.variant;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -16,17 +17,43 @@ public class SmallVariant
     public final String RefBases;
     public final String AltBases;
 
-    public SmallVariant(VariantContext context)
+    public SmallVariant(VariantContext context, String id, String chromosome, int position, String refBases, String altBases)
     {
         Context = context;
 
-        Id = context.getID();
+        Id = id;
 
-        Chromosome = HumanChromosome.fromString(context.getContig());
-        Position = context.getStart();
+        Chromosome = HumanChromosome.fromString(chromosome);
+        Position = position;
 
-        RefBases = context.getReference().getBaseString();
-        AltBases = context.getAlternateAllele(0).getDisplayString();
+        RefBases = refBases;
+        AltBases = altBases;
+    }
+
+    public SmallVariant(VariantContext context)
+    {
+        this(
+                context,
+                context.getID(),
+                context.getContig(),
+                context.getStart(),
+                context.getReference().getBaseString(),
+                context.getAlternateAllele(0).getDisplayString()
+        );
+    }
+
+    @VisibleForTesting
+    public SmallVariant(String chromosome, int position, String refBases, String altBases)
+    {
+        Context = null;
+
+        Id = null;
+
+        Chromosome = HumanChromosome.fromString(chromosome);
+        Position = position;
+
+        RefBases = refBases;
+        AltBases = altBases;
     }
 
     public boolean isIndel()
