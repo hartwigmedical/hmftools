@@ -414,8 +414,24 @@ public class RefBaseExtender
         // set references between them - for now just for TSV output
         for(JunctionAssembly junctionAssembly : branchedAssemblies)
         {
+            purgeUnrelatedRefSideSoftClips(junctionAssembly);
+
             if(junctionAssembly != originalAssembly)
                 originalAssembly.phaseGroup().addDerivedAssembly(junctionAssembly);
+        }
+    }
+
+    private static void purgeUnrelatedRefSideSoftClips(final JunctionAssembly assembly)
+    {
+        int index = 0;
+        while(index < assembly.refSideSoftClips().size())
+        {
+            RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(index);
+
+            if(refSideSoftClip.hasProximateMatch(assembly.refBasePosition()))
+                ++index;
+            else
+                assembly.refSideSoftClips().remove(index);
         }
     }
 

@@ -88,12 +88,16 @@ public final class AssemblyLinker
                 return null;
         }
 
+        // ensure the ref base positions of each assembly now match
+        lower.trimRefBasePosition(upper.junction().Position);
+        upper.trimRefBasePosition(lower.junction().Position);
+
         return new AssemblyLink(lower, upper, LinkType.FACING, "", "");
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)
     {
-        if(assembly.refSideSoftClips().stream().noneMatch(x -> abs(x.Position - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS))
+        if(assembly.refSideSoftClips().stream().noneMatch(x -> x.hasProximateMatch(otherJunctionPosition)))
             return false;
 
         return abs(assembly.refBasePosition() - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
