@@ -590,7 +590,7 @@ public class OrangeAlgo
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws Exception
     {
         OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        if(orangeWGSRefConfig == null)
+        if(orangeWGSRefConfig == null || orangeWGSRefConfig.cuppaVisDataTsv() == null)
         {
             return null;
         }
