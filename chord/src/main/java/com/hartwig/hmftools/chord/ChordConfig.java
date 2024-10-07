@@ -35,11 +35,15 @@ public class ChordConfig
     public final String OutputId;
 
     public final boolean IncludeNonPass;
+    public final boolean WriteDetailedFiles;
 
     public final String ChordToolDir;
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
     private static final String INCLUDE_NON_PASS_DESC = "Include non pass variants when counting mutation types";
+
+    private static final String WRITE_DETAILED_FILES = "write_detailed_files";
+    private static final String WRITE_DETAILED_FILES_DESC = "Write mutation context attributes per variant";
 
     private static final String CHORD_TOOL_DIR = "chord_tool_dir";
     private static final String CHORD_TOOL_DIR_DESC = "Dir containing the CHORD and mutSigExtractor R packages";
@@ -59,6 +63,7 @@ public class ChordConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         IncludeNonPass = configBuilder.hasFlag(INCLUDE_NON_PASS);
+        WriteDetailedFiles = configBuilder.hasFlag(WRITE_DETAILED_FILES);
 
         ChordToolDir = configBuilder.getValue(CHORD_TOOL_DIR);
     }
@@ -89,6 +94,7 @@ public class ChordConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
         configBuilder.addFlag(INCLUDE_NON_PASS, INCLUDE_NON_PASS_DESC);
+        configBuilder.addFlag(WRITE_DETAILED_FILES, WRITE_DETAILED_FILES_DESC);
 
         configBuilder.addPath(CHORD_TOOL_DIR, false, CHORD_TOOL_DIR_DESC);
 
@@ -100,7 +106,9 @@ public class ChordConfig
             List<String> sampleIds, String purpleDir,
             String refGenomeFile, RefGenomeVersion refGenomeVersion,
             String outputDir, String outputId,
-            boolean includeNonPass, String chordToolDir)
+            boolean includeNonPass, boolean writeDetailedFiles,
+            String chordToolDir
+    )
     {
         SampleIds = sampleIds;
         PurpleDir = purpleDir;
@@ -109,6 +117,7 @@ public class ChordConfig
         OutputDir = outputDir;
         OutputId = outputId;
         IncludeNonPass = includeNonPass;
+        WriteDetailedFiles = writeDetailedFiles;
         ChordToolDir = chordToolDir;
     }
 
@@ -121,6 +130,7 @@ public class ChordConfig
         private String OutputDir;
         private String OutputId = "";
         private boolean IncludeNonPass = false;
+        private boolean WriteDetailedFiles = false;
         private String ChordToolDir = "";
 
         public Builder sampleIds(List<String> sampleIds)
@@ -165,6 +175,12 @@ public class ChordConfig
             return this;
         }
 
+        public Builder writeDetailedFiles(boolean writeDetailedFiles)
+        {
+            WriteDetailedFiles = writeDetailedFiles;
+            return this;
+        }
+
         public Builder chordToolDir(String chordToolDir)
         {
             ChordToolDir = chordToolDir;
@@ -173,7 +189,10 @@ public class ChordConfig
 
         public ChordConfig build()
         {
-            return new ChordConfig(SampleIds, PurpleDir, RefGenomeFile, RefGenVersion, OutputDir, OutputId, IncludeNonPass, ChordToolDir);
+            return new ChordConfig(
+                    SampleIds, PurpleDir, RefGenomeFile, RefGenVersion, OutputDir, OutputId,
+                    IncludeNonPass, WriteDetailedFiles, ChordToolDir
+            );
         }
     }
 }
