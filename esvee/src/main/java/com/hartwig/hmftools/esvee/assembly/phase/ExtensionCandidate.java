@@ -26,7 +26,8 @@ public class ExtensionCandidate
     public String ExtraInfo;
     public final Object Extender;
 
-    public final boolean mIsValid;
+    private final boolean mIsValid;
+    private boolean mSelected;
 
     public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
@@ -52,6 +53,7 @@ public class ExtensionCandidate
         SecondAssemblyCandidateReads = 0;
         ExtraInfo = "";
         Extender = null;
+        mSelected = false;
     }
 
     public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly, final Object extender, final int candidates)
@@ -68,7 +70,11 @@ public class ExtensionCandidate
         SecondAssembly = null;
         SecondAssemblyMatchedSupport = 0;
         SecondAssemblyCandidateReads = 0;
+        mSelected = false;
     }
+
+    public boolean selected() { return mSelected; }
+    public void markSelected() { mSelected = true; }
 
     public int totalSupport()
     {
@@ -124,14 +130,16 @@ public class ExtensionCandidate
     {
         if(Link != null)
         {
-            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
-                    Type, Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
+            return format("%s %s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
+                    mSelected ? "selected" : "candidate", Type,
+                    Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
                     SecondAssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
         else
         {
-            return format("%s assembly(%s) support(s=%d c=%d) total(%d) %s",
-                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
+            return format("%s %s assembly(%s) support(s=%d c=%d) total(%d) %s",
+                    mSelected ? "selected" : "candidate", Type,
+                    Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
     }
 }

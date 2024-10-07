@@ -86,7 +86,7 @@ public final class PhaseSetMerger
             String otherSequence = otherOrientation == FORWARD ?
                     otherFullSequence : Nucleotides.reverseComplementBases(otherFullSequence);
 
-            int[] matchIndices = findMergeIndices(primaryAssembly, primarySequence, otherAssembly, otherSequence, otherOrientation);
+            int[] matchIndices = findMergeIndices(primaryAssembly, primarySequence, otherAssembly, otherSequence);
 
             if(matchIndices != null)
             {
@@ -104,7 +104,7 @@ public final class PhaseSetMerger
 
     private static int[] findMergeIndices(
             final AssemblyAlignment firstAssembly, final String firstSequence,
-            final AssemblyAlignment secondAssembly, final String secondSequence, final Orientation secondOrientation)
+            final AssemblyAlignment secondAssembly, final String secondSequence)
     {
         // if a match is found, returns the first and seconds' match start indices
         // one or the other will have a value of zero, meaning the start of its sequence matches within the other

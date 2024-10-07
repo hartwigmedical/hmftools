@@ -164,6 +164,7 @@ public class PhaseSetBuilder
 
             boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH) && mAssemblies.size() > 2;
 
+            extensionCandidate.markSelected();
             applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching);
 
             extensionCandidate.Assembly.setOutcome(LINKED);
@@ -310,8 +311,8 @@ public class PhaseSetBuilder
 
         // prioritise and select from all remaining candidates
         List<ExtensionCandidate> remainingCandidates = mExtensionCandidates.stream()
+                .filter(x -> !x.selected()) // skip those already registered
                 .filter(x -> x.isValid())
-                .filter(x -> !mLocallyLinkedAssemblies.contains(x.Assembly) && !mLocallyLinkedAssemblies.contains(x.SecondAssembly))
                 .collect(Collectors.toList());
 
         if(remainingCandidates.isEmpty())
@@ -328,6 +329,7 @@ public class PhaseSetBuilder
                 boolean eitherInPrimary = primaryLinkedAssemblies.contains(extensionCandidate.Assembly)
                         || primaryLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
 
+                extensionCandidate.markSelected();
                 applySplitLink(extensionCandidate.Link, !eitherInPrimary);
 
                 if(!eitherInPrimary)
@@ -345,6 +347,7 @@ public class PhaseSetBuilder
 
                 boolean inPrimary = primaryLinkedAssemblies.contains(initialAssembly);
 
+                extensionCandidate.markSelected();
                 applyRemoteRefLink(extensionCandidate.Link, initialAssembly, !inPrimary);
 
                 if(!inPrimary)
@@ -352,8 +355,12 @@ public class PhaseSetBuilder
             }
             else if(extensionCandidate.Type == UNMAPPED)
             {
-                if(!primaryLinkedAssemblies.contains(extensionCandidate.Assembly))
+                // extend the assembly if not already linked in any way - this facilitates further links and/or a better SGL for alignment
+                if(extensionCandidate.Assembly.outcome() == UNSET)
+                {
+                    extensionCandidate.markSelected();
                     applyUnmappedReadExtension(extensionCandidate);
+                }
             }
         }
     }
@@ -739,6 +746,7 @@ public class PhaseSetBuilder
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
 
+        // register any newly branched assemblies
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.outcome() == DUP_BRANCHED && !mBranchedAssemblies.contains(assembly))
