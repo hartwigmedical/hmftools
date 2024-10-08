@@ -1,26 +1,21 @@
 package com.hartwig.hmftools.chord.sv;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.chord.sv.SvContext.SV_TYPES;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.NoSuchFileException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.MutTypeCount;
 import com.hartwig.hmftools.chord.common.VcfFile;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -29,14 +24,7 @@ public class SvPrep
 {
     private final ChordConfig mConfig;
 
-    private static final int[] SV_LENGTH_INTERVALS = { 0, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, Integer.MAX_VALUE};
-
-    private static final DecimalFormat SV_LENGTH_FORMAT = new DecimalFormat("0E00", new DecimalFormatSymbols(Locale.ENGLISH));
-
-    private final Map<SvTypeLengthBin, Integer> mTypeLengthCounts = initializeSizeBins();
-
-    private static final SvTypeLengthBin TRANSLOCATION_BIN = new SvTypeLengthBin(BND, Integer.MIN_VALUE, Integer.MIN_VALUE);
-    private static final String TRANSLOCATION = "TRA";
+    private static final String SV_DETAILS_FILE_SUFFIX = ".chord.sv.details.tsv";
 
     public SvPrep(ChordConfig config)
     {
@@ -70,42 +58,50 @@ public class SvPrep
             idSet.add(mateId);
         }
 
-        CHORD_LOGGER.debug("Loaded {} structural variants", variants.size());
-
-        return variants;
+        return variants
+                .stream()
+                .filter(v -> SV_TYPES.contains(v.Type))
+                .collect(Collectors.toList());
     }
 
     public List<MutTypeCount> extractSampleData(String sampleId)
     {
         try
         {
-            CHORD_LOGGER.info("Counting SVs by type and length");
+            CHORD_LOGGER.info("Extract SV type/length contexts");
 
-            List<StructuralVariant> variants = loadVariants(sampleId);
+            List<StructuralVariant> svList = loadVariants(sampleId);
+            CHORD_LOGGER.debug("Loaded {} SVs", svList.size());
 
-            for(StructuralVariant variant : variants)
+            CHORD_LOGGER.debug("Initializing counts");
+            Map<String, Integer> contextCountsMap = SvContext.initializeCounts();
+
+            CHORD_LOGGER.debug("Populating counts");
+            for(StructuralVariant sv : svList)
             {
-                StructuralVariantType type = variant.Type;
+                SvContext svContext = SvContext.from(sv);
+                String svContextName = svContext.getContextName();
 
-                if(type == DEL || type == DUP || type == INV || type == BND)
-                {
-                    SvTypeLengthBin bin = getSvTypeLengthBin(type, variant.RefPosition, variant.AltPosition);
-
-                    CHORD_LOGGER.trace("{} bin({})", variant, bin);
-
-                    mTypeLengthCounts.compute(bin, (k,v) -> v + 1);
-                }
+                contextCountsMap.compute(svContextName, (k,v) -> v + 1);
             }
 
             List<MutTypeCount> counts = new ArrayList<>();
 
-            for (SvTypeLengthBin bin: mTypeLengthCounts.keySet()) {
-                String binString = bin.toString();
-                int count = mTypeLengthCounts.get(bin);
+            if(mConfig.WriteDetailedFiles)
+            {
+                String svDetailsPath = mConfig.OutputDir + "/" + sampleId + SV_DETAILS_FILE_SUFFIX;
+                CHORD_LOGGER.info("Writing SV details to: {}", svDetailsPath);
+                writeDetails(svDetailsPath, svList);
+            }
 
-                counts.add(new MutTypeCount(binString, count));
+            for (String indelContextName: contextCountsMap.keySet()) {
+                int count = contextCountsMap.get(indelContextName);
 
-                CHORD_LOGGER.trace("{} {}", binString, String.valueOf(count));
+                MutTypeCount mutTypeCount = new MutTypeCount(indelContextName, count);
+
+                CHORD_LOGGER.trace(mutTypeCount);
+
+                counts.add(mutTypeCount);
             }
 
             return counts;
@@ -119,71 +115,15 @@ public class SvPrep
         }
     }
 
-    private static class SvTypeLengthBin
+    private static void writeDetails(String path, List<StructuralVariant> svList) throws IOException
     {
-        StructuralVariantType Type;
-        int LowerInterval;
-        int UpperInterval;
+        BufferedWriter writer = SvDetails.initializeWriter(path);
 
-        SvTypeLengthBin(StructuralVariantType type, int lowerInterval, int upperInterval)
-        {
-            Type = type;
-            LowerInterval = lowerInterval;
-            UpperInterval = upperInterval;
-        }
+        for(StructuralVariant sv : svList)
+            SvDetails.writeLine(writer, sv);
 
-        @Override
-        public String toString()
-        {
-            if(Type == BND)
-                return TRANSLOCATION;
-
-            String lowerIntervalString = SV_LENGTH_FORMAT.format(LowerInterval);
-            String upperIntervalString = (UpperInterval != Integer.MAX_VALUE) ? SV_LENGTH_FORMAT.format(UpperInterval) : "Inf";
-
-            // Use lower case 'e' for exponent
-            lowerIntervalString = lowerIntervalString.replace('E', 'e');
-            upperIntervalString = upperIntervalString.replace('E', 'e');
-
-            return String.join("_", Type.toString(), lowerIntervalString, upperIntervalString, "bp");
-        }
+        writer.close();
     }
 
-    public static Map<SvTypeLengthBin, Integer> initializeSizeBins()
-    {
-        Map<SvTypeLengthBin, Integer> bins = new LinkedHashMap<>();
 
-        for(StructuralVariantType type : List.of(DEL, DUP, INV))
-        {
-            for(int i = 0; i < SV_LENGTH_INTERVALS.length-1; i++)
-            {
-                int lowerInterval = SV_LENGTH_INTERVALS[i];
-                int upperInterval = SV_LENGTH_INTERVALS[i + 1];
-
-                SvTypeLengthBin bin = new SvTypeLengthBin(type, lowerInterval, upperInterval);
-
-                bins.put(bin, 0);
-            }
-        }
-
-        bins.put(TRANSLOCATION_BIN, 0);
-
-        return bins;
-    }
-
-    public SvTypeLengthBin getSvTypeLengthBin(StructuralVariantType svType, int startPos, int endPos)
-    {
-        if(svType == BND)
-            return TRANSLOCATION_BIN;
-
-        int svLength = Math.abs(startPos - endPos);
-
-        for(SvTypeLengthBin bin : mTypeLengthCounts.keySet())
-        {
-            if(svType == bin.Type && svLength > bin.LowerInterval && svLength <= bin.UpperInterval)
-                return bin;
-        }
-
-        throw new IllegalArgumentException(String.format("Failed to get SV type/length bin for svType(%s) svLength(%s)", svType, svLength));
-    }
 }
