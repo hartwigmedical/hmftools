@@ -62,13 +62,17 @@ public class IndelPrep
             CHORD_LOGGER.info("Counting indel contexts from sample: {}", sampleId);
 
             List<SmallVariant> variants = loadVariants(sampleId);
+            CHORD_LOGGER.debug("Loaded {} indels", variants.size());
 
+            CHORD_LOGGER.debug("Initializing counts");
             Map<String, Integer> contextCountsMap = IndelContext.initializeCounts();
+
+            CHORD_LOGGER.debug("Populating counts");
             for(SmallVariant variant : variants)
             {
                 IndelVariant indel = new IndelVariant(variant);
 
-                IndelDetails indelDetails = IndelDetails.from(indel, mRefGenome);
+                IndelDetails indelDetails = IndelDetails.from(sampleId, indel, mRefGenome);
                 if(mConfig.WriteDetailedFiles)
                 {
                     mIndelDetailsList.add(indelDetails);
@@ -93,7 +97,7 @@ public class IndelPrep
                 int count = contextCountsMap.get(indelContextName);
                 MutTypeCount mutTypeCount = new MutTypeCount(indelContextName, count);
 
-                CHORD_LOGGER.debug(mutTypeCount);
+                CHORD_LOGGER.trace(mutTypeCount);
 
                 contextCountsList.add(mutTypeCount);
             }
@@ -102,7 +106,7 @@ public class IndelPrep
         }
         catch(Exception e)
         {
-            CHORD_LOGGER.error("sample({}) failed to count indel contexts:", sampleId);
+            CHORD_LOGGER.error("sample({}) failed to count indel contexts", sampleId);
             e.printStackTrace();
             System.exit(1);
             return null;
