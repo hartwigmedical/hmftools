@@ -12,6 +12,7 @@ import java.util.Map;
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.MutTypeCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
+import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
@@ -19,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class IndelPrep
+public class IndelPrep implements VariantTypePrep<IndelVariant>
 {
     private final ChordConfig mConfig;
 
@@ -36,12 +37,13 @@ public class IndelPrep
         mRefGenome = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
     }
 
-    private List<SmallVariant> loadVariants(String sampleId) throws NoSuchFileException
+    @Override
+    public List<IndelVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
         VcfFile vcfFile = new VcfFile(mConfig.purpleSomaticVcfFile(sampleId), mConfig.IncludeNonPass);
         List<VariantContext> variantContexts = vcfFile.loadVariants();
 
-        List<SmallVariant> variants = new ArrayList<>();
+        List<IndelVariant> indels = new ArrayList<>();
         for(VariantContext variantContext : variantContexts)
         {
             SmallVariant smallVariant = new SmallVariant(variantContext);
@@ -49,29 +51,30 @@ public class IndelPrep
             if(!smallVariant.isIndel())
                 continue;
 
-            variants.add(smallVariant);
+            IndelVariant indel = new IndelVariant(smallVariant);
+
+            indels.add(indel);
         }
 
-        return variants;
+        return indels;
     }
 
-    public List<MutTypeCount> extractSampleData(String sampleId)
+    @Override
+    public List<MutTypeCount> countMutationContexts(String sampleId)
     {
         try
         {
             CHORD_LOGGER.info("Counting indel contexts from sample: {}", sampleId);
 
-            List<SmallVariant> variants = loadVariants(sampleId);
-            CHORD_LOGGER.debug("Loaded {} indels", variants.size());
+            List<IndelVariant> indels = loadVariants(sampleId);
+            CHORD_LOGGER.debug("Loaded {} indels", indels.size());
 
             CHORD_LOGGER.debug("Initializing counts");
             Map<String, Integer> contextCountsMap = IndelContext.initializeCounts();
 
             CHORD_LOGGER.debug("Populating counts");
-            for(SmallVariant variant : variants)
+            for(IndelVariant indel : indels)
             {
-                IndelVariant indel = new IndelVariant(variant);
-
                 IndelDetails indelDetails = IndelDetails.from(sampleId, indel, mRefGenome);
                 if(mConfig.WriteDetailedFiles)
                 {

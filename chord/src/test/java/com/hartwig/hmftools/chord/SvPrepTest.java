@@ -44,7 +44,7 @@ public class SvPrepTest
 
         SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.extractSampleData(MINIMAL_SAMPLE);
+        List<MutTypeCount> actualCounts = prep.countMutationContexts(MINIMAL_SAMPLE);
         //actualCounts.forEach(System.out::println);
 
         List<MutTypeCount> expectedCounts = List.of(
@@ -83,6 +83,6 @@ public class SvPrepTest
 
         SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.extractSampleData(EMPTY_SAMPLE);
+        List<MutTypeCount> actualCounts = prep.countMutationContexts(EMPTY_SAMPLE);
     }
 }

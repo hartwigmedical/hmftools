@@ -15,12 +15,13 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SvPrep
+public class SvPrep implements VariantTypePrep<StructuralVariant>
 {
     private final ChordConfig mConfig;
 
@@ -31,6 +32,7 @@ public class SvPrep
         mConfig = config;
     }
 
+    @Override
     public List<StructuralVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
         VcfFile vcfFile = new VcfFile(mConfig.purpleSvVcfFile(sampleId), mConfig.IncludeNonPass);
@@ -64,7 +66,8 @@ public class SvPrep
                 .collect(Collectors.toList());
     }
 
-    public List<MutTypeCount> extractSampleData(String sampleId)
+    @Override
+    public List<MutTypeCount> countMutationContexts(String sampleId)
     {
         try
         {
@@ -124,6 +127,4 @@ public class SvPrep
 
         writer.close();
     }
-
-
 }

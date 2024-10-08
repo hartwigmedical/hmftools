@@ -13,12 +13,13 @@ import java.util.Map;
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.MutTypeCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
+import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SnvPrep
+public class SnvPrep implements VariantTypePrep<SmallVariant>
 {
     private final ChordConfig mConfig;
 
@@ -31,7 +32,8 @@ public class SnvPrep
         mConfig = config;
     }
 
-    private List<SmallVariant> loadVariants(String sampleId) throws NoSuchFileException
+    @Override
+    public List<SmallVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
         VcfFile vcfFile = new VcfFile(mConfig.purpleSomaticVcfFile(sampleId), mConfig.IncludeNonPass);
 
@@ -65,7 +67,8 @@ public class SnvPrep
         return triNucNameCountsMap;
     }
 
-    public List<MutTypeCount> extractSampleData(String sampleId)
+    @Override
+    public List<MutTypeCount> countMutationContexts(String sampleId)
     {
         try
         {
