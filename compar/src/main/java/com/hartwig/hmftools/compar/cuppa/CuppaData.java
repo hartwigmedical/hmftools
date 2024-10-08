@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.compar.common.Category.CUPPA;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -21,7 +20,6 @@ public class CuppaData implements ComparableItem
 {
     public final CuppaPredictionEntry PredictionEntry;
 
-    protected static final String FLD_CLASSIFIER_NAME = "classifier_name";
     protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
     protected static final String FLD_PROBABILITY = "probability";
 

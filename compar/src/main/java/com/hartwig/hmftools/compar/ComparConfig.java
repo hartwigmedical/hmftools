@@ -87,6 +87,7 @@ public class ComparConfig
     private boolean mIsValid;
 
     // config strings
+    public static final String GERMLINE_SAMPLE = "germline_sample";
     public static final String CATEGORIES = "categories";
     public static final String MATCH_LEVEL = "match_level";
 
@@ -215,38 +216,70 @@ public class ComparConfig
 
         if(mapping == null || !mapping.SourceMapping.containsKey(source))
         {
-            CMP_LOGGER.warn("sample({}) source({}) missed mapping", sampleId, source);
             return sampleId;
         }
 
         return mapping.SourceMapping.get(source);
     }
 
+    public String sourceGermlineSampleId(final String source, final String sampleId)
+    {
+        if(!mSampleIdMappings.isEmpty())
+        {
+            SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
+
+            if(mapping != null && mapping.GermlineSourceMapping.containsKey(source))
+            {
+                return mapping.GermlineSourceMapping.get(source);
+            }
+            else if(mapping != null && mapping.GermlineSampleId != null)
+            {
+                return mapping.GermlineSampleId;
+            }
+        }
+        return sourceSampleId(source, sampleId) + "-ref";
+    }
+
     public boolean isValid() { return mIsValid; }
     public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
 
-    private class SampleIdMapping
+    private static class SampleIdMapping
     {
         public final String SampleId;
+        public final String GermlineSampleId;
         public Map<String,String> SourceMapping;
+        public Map<String,String> GermlineSourceMapping;
 
-        public SampleIdMapping(final String sampleId)
+        public SampleIdMapping(final String sampleId, final String germlineSampleId)
         {
             SampleId = sampleId;
+            GermlineSampleId = germlineSampleId;
             SourceMapping = Maps.newHashMap();
+            GermlineSourceMapping = Maps.newHashMap();
         }
     }
 
     private static final String COL_SAMPLE_ID = "SampleId";
+    private static final String COL_GERMLINE_SAMPLE_ID = "GermlineSampleId";
     private static final String COL_REF_SAMPLE_ID = "RefSampleId";
+    private static final String COL_REF_GERMLINE_SAMPLE_ID = "RefGermlineSampleId";
     private static final String COL_NEW_SAMPLE_ID = "NewSampleId";
+    private static final String COL_NEW_GERMLINE_SAMPLE_ID = "NewGermlineSampleId";
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
+        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasFlag(SAMPLE) || configBuilder.hasFlag(GERMLINE_SAMPLE)))
+        {
+            CMP_LOGGER.error("when the argument '{}' is set, the arguments '{}' and '{}' should not be set",
+                    SAMPLE_ID_FILE, SAMPLE, GERMLINE_SAMPLE);
+            mIsValid = false;
+            return;
+        }
+
         if(configBuilder.hasValue(SAMPLE))
         {
-            SampleIds.add(configBuilder.getValue(SAMPLE));
+            registerSampleIds(configBuilder.getValue(SAMPLE), configBuilder.getValue(GERMLINE_SAMPLE, null));
             return;
         }
 
@@ -266,8 +299,11 @@ public class ComparConfig
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int sampleIndex = fieldsIndexMap.get(COL_SAMPLE_ID);
+            Integer germlineSampleIndex = fieldsIndexMap.get(COL_GERMLINE_SAMPLE_ID);
             Integer refSampleIndex = fieldsIndexMap.get(COL_REF_SAMPLE_ID);
+            Integer refGermlineSampleIndex = fieldsIndexMap.get(COL_REF_GERMLINE_SAMPLE_ID);
             Integer newSampleIndex = fieldsIndexMap.get(COL_NEW_SAMPLE_ID);
+            Integer newGermlineSampleIndex = fieldsIndexMap.get(COL_NEW_GERMLINE_SAMPLE_ID);
 
             for(String line : lines)
             {
@@ -277,23 +313,13 @@ public class ComparConfig
                 String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
-
-                SampleIds.add(sampleId);
-
+                String germlineSampleId = germlineSampleIndex != null ? values[germlineSampleIndex] : null;
                 String refSampleId = refSampleIndex != null ? values[refSampleIndex] : null;
+                String refGermlineSampleId = refGermlineSampleIndex != null ? values[refGermlineSampleIndex] : null;
                 String newSampleId = newSampleIndex != null ? values[newSampleIndex] : null;
+                String newGermlineSampleId = newGermlineSampleIndex != null ? values[newGermlineSampleIndex] : null;
 
-                if(refSampleId != null || newSampleId != null)
-                {
-                    SampleIdMapping mapping = new SampleIdMapping(sampleId);
-                    mSampleIdMappings.put(sampleId, mapping);
-
-                    if(refSampleId != null && SourceNames.size() >= 1);
-                        mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
-
-                    if(newSampleId != null && SourceNames.size() >= 2)
-                        mapping.SourceMapping.put(SourceNames.get(1), newSampleId);
-                }
+                registerSampleIds(sampleId, germlineSampleId, refSampleId, refGermlineSampleId, newSampleId, newGermlineSampleId);
             }
 
             CMP_LOGGER.info("loaded {} samples from file", SampleIds.size());
@@ -302,6 +328,30 @@ public class ComparConfig
         {
             CMP_LOGGER.error("failed to load sample IDs: {}", e.toString());
         }
+    }
+
+    private void registerSampleIds(final String sampleId, final String germlineSampleId)
+    {
+        registerSampleIds(sampleId, germlineSampleId, null, null, null, null);
+    }
+    
+    private void registerSampleIds(final String sampleId, final String germlineSampleId, final String refSampleId,
+            final String refGermlineSampleId, final String newSampleId, final String newGermlineSampleId)
+    {
+        SampleIds.add(sampleId);
+
+        SampleIdMapping mapping = new SampleIdMapping(sampleId, germlineSampleId);
+        mSampleIdMappings.put(sampleId, mapping);
+
+        if(refSampleId != null && SourceNames.size() >= 1)
+            mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
+        if(newSampleId != null && SourceNames.size() >= 2)
+            mapping.SourceMapping.put(SourceNames.get(1), newSampleId);
+
+        if(refGermlineSampleId != null && SourceNames.size() >= 1)
+            mapping.GermlineSourceMapping.put(SourceNames.get(0), refGermlineSampleId);
+        if(newGermlineSampleId != null && SourceNames.size() >= 2)
+            mapping.GermlineSourceMapping.put(SourceNames.get(1), newGermlineSampleId);
     }
 
     private static String formConfigSourceStr(final String sourceType, final String sourceName)
@@ -373,6 +423,7 @@ public class ComparConfig
                 MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(GERMLINE_SAMPLE, false, "Sample ID of germline sample if tumor-normal run");
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");

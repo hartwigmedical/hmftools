@@ -18,7 +18,14 @@ public enum Category
     GERMLINE_SV,
     CUPPA,
     LILAC,
-    CHORD;
+    CHORD,
+    PEACH,
+    VIRUS,
+    TUMOR_FLAGSTAT,
+    GERMLINE_FLAGSTAT,
+    TUMOR_BAM_METRICS,
+    GERMLINE_BAM_METRICS,
+    SNP_GENOTYPE;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";
@@ -32,5 +39,8 @@ public enum Category
 
     public static List<Category> linxCategories() { return Lists.newArrayList(DRIVER, FUSION, DISRUPTION, GERMLINE_SV); }
 
-    public static List<Category> panelCategories() { return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION); }
+    public static List<Category> panelCategories()
+    {
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS, SNP_GENOTYPE);
+    }
 }

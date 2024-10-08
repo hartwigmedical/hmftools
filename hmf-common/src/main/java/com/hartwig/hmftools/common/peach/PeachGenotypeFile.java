@@ -41,11 +41,18 @@ public final class PeachGenotypeFile
             .toString();
 
     private static final String FILE_EXTENSION = ".peach.haplotypes.best.tsv";
+    private static final String OLD_PYTHON_FILE_EXTENSION = ".peach.genotype.tsv";
 
     @NotNull
     public static String generateFileName(@NotNull String outputDir, @NotNull String sampleId)
     {
         return checkAddDirSeparator(outputDir) + sampleId + FILE_EXTENSION;
+    }
+
+    @NotNull
+    public static String generateOldPythonFileName(@NotNull String outputDir, @NotNull String sampleId)
+    {
+        return checkAddDirSeparator(outputDir) + sampleId + OLD_PYTHON_FILE_EXTENSION;
     }
 
     @NotNull
