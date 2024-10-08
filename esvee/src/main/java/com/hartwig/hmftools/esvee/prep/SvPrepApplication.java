@@ -90,7 +90,7 @@ public class SvPrepApplication
                 combinedStats.PerfCounters.forEach(x -> x.logStats());
         }
 
-        SV_LOGGER.info("Esvee Prep complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee prep complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void calcFragmentDistribution()
