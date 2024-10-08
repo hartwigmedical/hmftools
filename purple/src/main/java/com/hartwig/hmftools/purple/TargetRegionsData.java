@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.IOException;
@@ -14,11 +17,15 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class TargetRegionsData
 {
-    private final Map<String,List<NamedBed>> mTargetRegions;
+    private final Map<String,List<BaseRegion>> mTargetRegions;
     private final Map<String,List<Integer>> mTargetRegionsMsiIndels;
 
     private int mTotalBases;
@@ -44,7 +51,7 @@ public class TargetRegionsData
     public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
     public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.05;
 
-    public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
+    public TargetRegionsData(final String ratiosFile, final String msiIndelsFile)
     {
         mTotalBases = 0;
         mCodingBases = 0;
@@ -59,7 +66,6 @@ public class TargetRegionsData
         mTargetRegionsMsiIndels = Maps.newHashMap();
         mIsValid = true;
 
-        loadTargetRegionsBed(bedFile);
         loadTargetRegionsMsiIndels(msiIndelsFile);
         loadTargetRegionsRatios(ratiosFile);
     }
@@ -69,12 +75,12 @@ public class TargetRegionsData
 
     public boolean inTargetRegions(final String chromsome, int position)
     {
-        final List<NamedBed> chrRegions = mTargetRegions.get(chromsome);
+        final List<BaseRegion> chrRegions = mTargetRegions.get(chromsome);
 
         if(chrRegions == null)
             return false;
 
-        return chrRegions.stream().anyMatch(x -> positionWithin(position, x.start(), x.end()));
+        return chrRegions.stream().anyMatch(x -> x.containsPosition(position));
     }
 
     public boolean isTargetRegionsMsiIndel(final String chromsome, int position)
@@ -96,40 +102,74 @@ public class TargetRegionsData
     public double msi4BaseAF() { return mMsi4BaseAF; }
     public int codingBaseFactor() { return mCodingBaseFactor; }
 
-    private void loadTargetRegionsBed(final String bedFile)
+    public void loadTargetRegionsBed(final String targetRegionsBed, final EnsemblDataCache ensemblDataCache)
     {
-        if(bedFile == null)
+        if(targetRegionsBed == null)
             return;
 
-        try
+        Map<Chromosome,List<BaseRegion>> chrRegionsMap = loadBedFileChrMap(targetRegionsBed);
+
+        if(chrRegionsMap == null)
         {
-            List<NamedBed> namedBedRecords = readBedFile(bedFile);
+            System.exit(1);
+        }
 
-            for(NamedBed namedBed : namedBedRecords)
+        for(Map.Entry<Chromosome,List<BaseRegion>> entry : chrRegionsMap.entrySet())
+        {
+            String chromosome = ensemblDataCache.refGenomeVersion().versionedChromosome(entry.getKey().toString());
+
+            List<BaseRegion> chrRegions = entry.getValue();
+
+            mTargetRegions.put(chromosome, chrRegions);
+
+            List<GeneData> geneList = ensemblDataCache.getChrGeneDataMap().get(chromosome);
+            List<TranscriptData> overlappedTranscripts = Lists.newArrayList();
+
+            // find the genes and then coding transcripts which overlap with these entries
+            for(GeneData geneData : geneList)
             {
-                List<NamedBed> chrRegions = mTargetRegions.get(namedBed.chromosome());
+                if(TMB_GENE_EXCLUSIONS.contains(geneData.GeneName))
+                    continue;
 
-                if(chrRegions == null)
+                if(chrRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))
                 {
-                    chrRegions = Lists.newArrayList();
-                    mTargetRegions.put(namedBed.chromosome(), chrRegions);
+                    TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+                    if(transcriptData != null && !transcriptData.nonCoding())
+                        overlappedTranscripts.add(transcriptData);
                 }
-
-                chrRegions.add(namedBed);
-                mTotalBases += namedBed.bases();
-
-                if(namedBed.name().contains(CODING_REGION_ID))
-                    mCodingBases += namedBed.bases();
             }
 
-            PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) from file({})",
-                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), mTotalBases, mCodingBases, bedFile);
+            // now compute the coding bases
+            for(BaseRegion region : chrRegions)
+            {
+                mTotalBases += region.baseLength();
+
+                int codingMinStart = -1;
+                int codingMaxEnd = -1;
+
+                for(TranscriptData transcriptData : overlappedTranscripts)
+                {
+                    if(positionsOverlap(transcriptData.CodingStart, transcriptData.CodingEnd, region.start(), region.end()))
+                    {
+                        int maxStart = max(transcriptData.CodingStart, region.start());
+                        codingMinStart = codingMinStart > 0 ? min(codingMinStart, maxStart) : maxStart;
+
+                        int minEnd = min(transcriptData.CodingEnd, region.end());
+                        codingMaxEnd = codingMaxEnd > 0 ? max(codingMaxEnd, minEnd) : minEnd;
+
+                        if(codingMinStart == region.start() && codingMaxEnd == region.end())
+                            break;
+                    }
+                }
+
+                if(codingMinStart > 0 && codingMaxEnd > 0)
+                    mCodingBases += codingMaxEnd - codingMinStart + 1;
+            }
         }
-        catch (IOException e)
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("failed to load target regions BED file: {}", e.toString());
-        }
+
+        PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) from file({})",
+                mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), mTotalBases, mCodingBases, targetRegionsBed);
     }
 
     private void loadTargetRegionsMsiIndels(final String filename)
