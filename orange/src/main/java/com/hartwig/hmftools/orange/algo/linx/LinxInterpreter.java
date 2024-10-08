@@ -68,13 +68,13 @@ public class LinxInterpreter
         LOGGER.info(" Found an additional {} suspect somatic breakends that are potentially interesting",
                 additionalSuspectSomaticBreakends.size());
 
-        final LinxBreakendConverter somaticBreakendConverter = new LinxBreakendConverter(
+        final LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
                 allSomaticStructuralVariants,
                 linx.allSomaticStructuralVariants(),
                 ensemblDataCache
         );
 
-        final LinxBreakendConverter germlineBreakendConverter = new LinxBreakendConverter(
+        final LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
                 Objects.requireNonNullElse(allGermlineStructuralVariants, List.of()),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
                 ensemblDataCache
@@ -87,13 +87,13 @@ public class LinxInterpreter
                 .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
                 .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
                 .additionalViableSomaticFusions(ConversionUtil.mapToIterable(additionalViableSomaticFusions, LinxConversion::convert))
-                .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), somaticBreakendConverter::convert))
-                .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), somaticBreakendConverter::convert))
-                .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, somaticBreakendConverter::convert))
+                .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), somaticBreakendInterpreter::convert))
+                .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), somaticBreakendInterpreter::convert))
+                .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, somaticBreakendInterpreter::convert))
                 .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
                 .allGermlineStructuralVariants(ConversionUtil.mapToIterable(linx.allGermlineStructuralVariants(), LinxConversion::convert))
-                .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), germlineBreakendConverter::convert))
-                .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), germlineBreakendConverter::convert))
+                .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), germlineBreakendInterpreter::convert))
+                .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), germlineBreakendInterpreter::convert))
                 .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }

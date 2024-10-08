@@ -16,7 +16,7 @@ import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinxBreakendConverter
+public class LinxBreakendInterpreter
 {
     @NotNull
     List<StructuralVariant> structuralVariants;
@@ -24,7 +24,7 @@ public class LinxBreakendConverter
     List<LinxSvAnnotation> linxSvAnnotations;
     @NotNull EnsemblDataCache ensemblDataCache;
 
-    public LinxBreakendConverter(
+    public LinxBreakendInterpreter(
             @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<LinxSvAnnotation> linxSvAnnotations,
             @NotNull final EnsemblDataCache ensemblDataCache
