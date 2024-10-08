@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.variant;
+package com.hartwig.hmftools.chord.common;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 

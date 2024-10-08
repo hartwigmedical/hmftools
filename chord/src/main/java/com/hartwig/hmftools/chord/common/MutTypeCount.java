@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.prep;
+package com.hartwig.hmftools.chord.common;
 
 import java.util.Objects;
 

@@ -11,8 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.chord.prep.MutTypeCount;
-import com.hartwig.hmftools.chord.prep.StructuralVariantPrep;
+import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.sv.StructuralVariantPrep;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;

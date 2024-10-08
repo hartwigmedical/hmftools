@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.prep;
+package com.hartwig.hmftools.chord.sv;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.variant.StructuralVariant;
-import com.hartwig.hmftools.chord.variant.VcfFile;
+import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.variant;
+package com.hartwig.hmftools.chord.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
