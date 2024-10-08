@@ -12,14 +12,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.chord.common.MutTypeCount;
-import com.hartwig.hmftools.chord.sv.StructuralVariantPrep;
+import com.hartwig.hmftools.chord.sv.SvPrep;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class StructuralVariantPrepTest
+public class SvPrepTest
 {
     @Before
     public void setup()
@@ -42,7 +42,7 @@ public class StructuralVariantPrepTest
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
-        StructuralVariantPrep prep = new StructuralVariantPrep(config);
+        SvPrep prep = new SvPrep(config);
 
         List<MutTypeCount> actualCounts = prep.extractSampleData(MINIMAL_SAMPLE);
         //actualCounts.forEach(System.out::println);
@@ -81,7 +81,7 @@ public class StructuralVariantPrepTest
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
-        StructuralVariantPrep prep = new StructuralVariantPrep(config);
+        SvPrep prep = new SvPrep(config);
 
         List<MutTypeCount> actualCounts = prep.extractSampleData(EMPTY_SAMPLE);
     }

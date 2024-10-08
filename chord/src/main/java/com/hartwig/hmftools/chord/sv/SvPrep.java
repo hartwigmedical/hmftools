@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.sv.SvVcfTags;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class StructuralVariantPrep
+public class SvPrep
 {
     private final ChordConfig mConfig;
 
@@ -38,7 +38,7 @@ public class StructuralVariantPrep
     private static final SvTypeLengthBin TRANSLOCATION_BIN = new SvTypeLengthBin(BND, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private static final String TRANSLOCATION = "TRA";
 
-    public StructuralVariantPrep(ChordConfig config)
+    public SvPrep(ChordConfig config)
     {
         mConfig = config;
     }
