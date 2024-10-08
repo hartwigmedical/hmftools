@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxBreakendInterpreter
 {
+
     @NotNull
     List<StructuralVariant> structuralVariants;
     @NotNull
@@ -35,7 +36,7 @@ public class LinxBreakendInterpreter
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    public LinxBreakend convert(@NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
+    public LinxBreakend interpret(@NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = linxSvAnnotations.stream()
                 .filter(s -> s.svId() == linxBreakend.svId())
