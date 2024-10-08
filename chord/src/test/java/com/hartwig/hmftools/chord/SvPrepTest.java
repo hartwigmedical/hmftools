@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.chord;
 
 import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
@@ -38,16 +38,16 @@ public class SvPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(List.of(MINIMAL_SAMPLE))
-                .purpleDir(INPUT_DIR)
+                .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
         SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.countMutationContexts(MINIMAL_SAMPLE);
-        //actualCounts.forEach(System.out::println);
+        List<MutTypeCount> actualContextCounts = prep.countMutationContexts(MINIMAL_SAMPLE);
+        //actualContextCounts.forEach(System.out::println);
 
-        List<MutTypeCount> expectedCounts = List.of(
+        List<MutTypeCount> expectedContextCounts = List.of(
                 new MutTypeCount("DEL_0e00_1e03_bp", 1),
                 new MutTypeCount("DEL_1e03_1e04_bp", 0),
                 new MutTypeCount("DEL_1e04_1e05_bp", 1),
@@ -69,7 +69,7 @@ public class SvPrepTest
                 new MutTypeCount("TRA",              1)
         );
 
-        assertEquals(expectedCounts, actualCounts);
+        assertEquals(expectedContextCounts, actualContextCounts);
     }
 
     @Test
@@ -77,12 +77,20 @@ public class SvPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(List.of(EMPTY_SAMPLE))
-                .purpleDir(INPUT_DIR)
+                .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
         SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.countMutationContexts(EMPTY_SAMPLE);
+        List<MutTypeCount> contextCounts = prep.countMutationContexts(EMPTY_SAMPLE);
+
+        int contextCountTotal = 0;
+        for(MutTypeCount contextCount : contextCounts)
+        {
+            contextCountTotal += contextCount.mCount;
+        }
+
+        assertEquals(0, contextCountTotal);
     }
 }

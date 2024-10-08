@@ -4,8 +4,8 @@ import java.util.Objects;
 
 public class MutTypeCount
 {
-    String mType;
-    int mCount;
+    public final String mType;
+    public final int mCount;
 
     public MutTypeCount(String mutType, int count)
     {
