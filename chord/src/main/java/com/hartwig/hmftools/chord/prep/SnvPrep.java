@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
+import com.hartwig.hmftools.chord.variant.SmallVariant;
 import com.hartwig.hmftools.chord.variant.VcfFile;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
@@ -45,15 +46,13 @@ public class SnvPrep
         int snvCount = 0;
         for(VariantContext variantContext : variantContexts)
         {
-            String refSeq = variantContext.getReference().getBaseString();
-            String altSeq = variantContext.getAlternateAllele(0).getDisplayString();
+            SmallVariant smallVariant = new SmallVariant(variantContext);
 
-            boolean isSnv = refSeq.length()==1 && altSeq.length()==1;
-            if(!isSnv)
+            if(!smallVariant.isSnv())
                 continue;
 
-            String triNucSequence = variantContext.getAttributeAsString(SageVcfTags.TRINUCLEOTIDE_CONTEXT, null);
-            String triNucContext = SnvSigUtils.variantContext(refSeq, altSeq, triNucSequence);
+            String triNucSequence = smallVariant.Context.getAttributeAsString(SageVcfTags.TRINUCLEOTIDE_CONTEXT, null);
+            String triNucContext = SnvSigUtils.variantContext(smallVariant.RefBases, smallVariant.AltBases, triNucSequence);
 
             // CHORD_LOGGER.trace("{}:{}:{}:{} {}",
             //       variantContext.getContig(), variantContext.getStart(), refSeq, altSeq, renameTriNucBin(triNucContext));
