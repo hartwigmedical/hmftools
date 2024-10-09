@@ -164,7 +164,7 @@ public class LinxBreakendInterpreterTest
     }
 
     @NotNull
-    private LinxBreakend createBreakend(int id, int svId, boolean isStart, TranscriptRegionType regionType)
+    private LinxBreakend createBreakend(int id, int svId, boolean isStart, @NotNull TranscriptRegionType regionType)
     {
         return LinxTestFactory.breakendBuilder()
                 .id(id)

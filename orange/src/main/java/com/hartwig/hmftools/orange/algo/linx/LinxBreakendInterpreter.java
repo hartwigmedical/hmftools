@@ -25,7 +25,8 @@ public class LinxBreakendInterpreter
     List<StructuralVariant> structuralVariants;
     @NotNull
     List<LinxSvAnnotation> linxSvAnnotations;
-    @NotNull EnsemblDataCache ensemblDataCache;
+    @NotNull
+    EnsemblDataCache ensemblDataCache;
 
     public LinxBreakendInterpreter(
             @NotNull final List<StructuralVariant> structuralVariants,

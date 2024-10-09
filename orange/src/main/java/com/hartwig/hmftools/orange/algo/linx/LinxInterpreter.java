@@ -68,13 +68,13 @@ public class LinxInterpreter
         LOGGER.info(" Found an additional {} suspect somatic breakends that are potentially interesting",
                 additionalSuspectSomaticBreakends.size());
 
-        final LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
+        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
                 allSomaticStructuralVariants,
                 linx.allSomaticStructuralVariants(),
                 ensemblDataCache
         );
 
-        final LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
+        LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
                 Objects.requireNonNullElse(allGermlineStructuralVariants, List.of()),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
                 ensemblDataCache
