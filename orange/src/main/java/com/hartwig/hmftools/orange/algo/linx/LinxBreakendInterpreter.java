@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
@@ -88,7 +89,8 @@ public class LinxBreakendInterpreter
                 .build();
     }
 
-    private static double junctionCopyNumber(
+    @VisibleForTesting
+    static double junctionCopyNumber(
             @NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend,
             @NotNull StructuralVariant sv,
             @NotNull LinxSvAnnotation svAnnotation

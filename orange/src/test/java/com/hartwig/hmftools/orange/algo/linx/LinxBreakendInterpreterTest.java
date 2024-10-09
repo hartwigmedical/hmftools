@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -22,6 +22,8 @@ import org.junit.Test;
 public class LinxBreakendInterpreterTest
 {
 
+    private static final String GENE = "gene";
+    private static final String VCF_ID = "vcfId";
     private static final double EPSILON = 0.000001D;
 
     @Test
@@ -31,7 +33,7 @@ public class LinxBreakendInterpreterTest
                 createStructuralVariant(StructuralVariantType.DUP)
         );
 
-        List<LinxSvAnnotation> linxSvAnnotations = List.of(svAnnotation());
+        List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation(1.0D, 2.0D));
         List<LinxBreakend> breakends = createBreakends();
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
@@ -53,7 +55,7 @@ public class LinxBreakendInterpreterTest
     }
 
     @Test
-    public void fallbackWhenNoSvAnnotation()
+    public void canFallbackWhenNoSvAnnotation()
     {
         List<StructuralVariant> structuralVariants = List.of(
                 createStructuralVariant(StructuralVariantType.DUP)
@@ -71,11 +73,11 @@ public class LinxBreakendInterpreterTest
     }
 
     @Test
-    public void fallbackWhenNoStructuralVariant()
+    public void canFallbackWhenNoStructuralVariant()
     {
         List<StructuralVariant> structuralVariants = List.of();
 
-        List<LinxSvAnnotation> linxSvAnnotations = List.of(svAnnotation());
+        List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation(1.0, 2.0));
         List<LinxBreakend> breakends = createBreakends();
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
@@ -87,15 +89,15 @@ public class LinxBreakendInterpreterTest
     }
 
     @Test
-    public void fallbackWhenNoEndLeg()
+    public void canFallbackWhenNoEndLeg()
     {
         List<StructuralVariant> structuralVariants = List.of(
                 PurpleTestUtils.createStructuralVariantSingleBreakend("7", 50, 1.0)
-                        .id("vcfId")
+                        .id(VCF_ID)
                         .build()
         );
 
-        List<LinxSvAnnotation> linxSvAnnotations = List.of(svAnnotation());
+        List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation(1.0, 2.0));
         List<LinxBreakend> breakends = createBreakends();
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
@@ -111,44 +113,77 @@ public class LinxBreakendInterpreterTest
         assertFallbackBreakendAttributes(right);
     }
 
+    @Test
+    public void canComputeJunctionCopyNumber()
+    {
+        LinxBreakend linxBreakend = createBreakend(1, 1, true, TranscriptRegionType.INTRONIC);
+        StructuralVariant sv = createStructuralVariant(StructuralVariantType.DUP);
+        LinxSvAnnotation svAnnotation = createSvAnnotation(1.0, 2.0);
+
+        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
+        assertEquals(1.5, result, EPSILON);
+    }
+
+    @Test
+    public void canComputeJunctionCopyNumberForSGLAndIGRegionType()
+    {
+        LinxBreakend linxBreakend = createBreakend(1, 1, true, TranscriptRegionType.IG);
+        StructuralVariant sv = createStructuralVariant(StructuralVariantType.SGL);
+        LinxSvAnnotation svAnnotation = createSvAnnotation(1.0, 2.0);
+
+        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
+        assertEquals(0.0, result, EPSILON);
+    }
+
+    @Test
+    public void canComputeJunctionCopyNumberForZeroMinCopyNumber()
+    {
+        LinxBreakend linxBreakend = createBreakend(1, 1, true, TranscriptRegionType.INTRONIC);
+        StructuralVariant sv = createStructuralVariant(StructuralVariantType.DUP);
+        LinxSvAnnotation svAnnotation = createSvAnnotation(0.0, 2.0);
+
+        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
+        assertEquals(2.0, result, EPSILON);
+    }
+
     @NotNull
     private StructuralVariant createStructuralVariant(@NotNull StructuralVariantType type)
     {
         return PurpleTestUtils.createStructuralVariant("7", 50, "7", 200, type, 1.0, 1.0)
-                .id("vcfId")
+                .id(VCF_ID)
                 .build();
     }
 
     @NotNull
     private List<LinxBreakend> createBreakends()
     {
-        final LinxBreakend left = LinxTestFactory.breakendBuilder()
-                .id(1)
-                .reportedDisruption(true)
-                .gene("gene")
-                .isStart(true)
-                .svId(1)
-                .build();
-
-        LinxBreakend right = LinxTestFactory.breakendBuilder()
-                .id(2)
-                .reportedDisruption(true)
-                .gene("gene")
-                .isStart(false)
-                .svId(1)
-                .build();
-
-        return Lists.newArrayList(left, right);
+        return List.of(
+                createBreakend(1, 1, true, TranscriptRegionType.INTRONIC),
+                createBreakend(2, 1, false, TranscriptRegionType.INTRONIC)
+        );
     }
 
     @NotNull
-    public static LinxSvAnnotation svAnnotation()
+    private LinxBreakend createBreakend(int id, int svId, boolean isStart, TranscriptRegionType regionType)
+    {
+        return LinxTestFactory.breakendBuilder()
+                .id(id)
+                .reportedDisruption(true)
+                .gene(GENE)
+                .isStart(isStart)
+                .svId(svId)
+                .regionType(regionType)
+                .build();
+    }
+
+    @NotNull
+    private static LinxSvAnnotation createSvAnnotation(double junctionCopyNumberMin, double junctionCopyNumberMax)
     {
         return LinxTestFactory.svAnnotationBuilder()
                 .svId(1)
-                .vcfId("vcfId")
-                .junctionCopyNumberMin(1.0D)
-                .junctionCopyNumberMax(2.0D)
+                .vcfId(VCF_ID)
+                .junctionCopyNumberMin(junctionCopyNumberMin)
+                .junctionCopyNumberMax(junctionCopyNumberMax)
                 .build();
     }
 
