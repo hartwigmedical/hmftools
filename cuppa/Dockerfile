@@ -7,6 +7,7 @@ USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
+    unzip \
     r-ggplot2 \
     r-patchwork \
     r-reshape2 && \
@@ -18,8 +19,10 @@ RUN apt update && apt install -y python3 python3-pip && apt clean && rm -rf /var
 ADD target/cuppa-$VERSION-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh /usr/local/bin/cuppa 
 RUN chmod +x /usr/local/bin/cuppa
-#RUN cd /opt/cuppa && jar xvf ${JAR} pycuppa
-#RUN pip3 install --upgrade pip && pip3 install /opt/cuppa/pycuppa
+
+RUN unzip -n ${JAR} -d /tmp/cuppa_jar
+RUN pip3 install --upgrade pip && pip3 install /tmp/cuppa_jar/pycuppa/
+RUN rm -r /tmp/cuppa_jar
 
 ENTRYPOINT ["bash"]
 
