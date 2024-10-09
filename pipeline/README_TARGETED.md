@@ -46,7 +46,7 @@ The following files are the output of the training process described below:
 |----------------------------------|--------|-----------------------------------------------------------|
 | Target Regions Normalisation TSV | Cobalt | Normalise copy number regions and mask off-target regions |
 | Panel Artefact PON | Pave   | Panel-specific PON to apply in addition to standard WGS PON |
-| TPM Normalisation | Isofox | Normalise TPM for genes in panel (only required for panels with RNA content)|
+| TPM Normalisation | Isofox | Normalise TPM for genes in panel (only required for panels with targeted RNA content;Not required for PANEL+WTS)|
 
 These files are then used by the pipeline in panel mode to produce well-calibrated, accurate results ideally without panel-specific biases.
 
@@ -87,7 +87,7 @@ SAGE
 ```
 <TO DO>
 ```
-ISOFOX (RNA panels only)
+ISOFOX (panels with targetd RNA only)
 ```
 <TO DO>
 ```
@@ -148,14 +148,11 @@ java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
 
 #### TPM normalisation
 
-The TPM normalisation is only required for panels with RNA coverage (eg. TSO500).  This can be generated using the Isofox Normalisation Builder
+The TPM normalisation is only required for panels with RNA coverage (eg. TSO500) in order to normalise the TPM so that it is equivalent to WTS.  This can be generated using the Isofox Normalisation Builder
 
 <TO DO - link to this code>
 
-In order to adjust for the degree of amplification in panel sequencing relative to WGS,
-1. calculate the median adjusted TPM for each gene across the panel samples.
-2. Repeat step 1 for the same list of genes in WGS samples. In instances where the whole genome median is zero, a replacement value of 0.01 is used instead.
-3. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
+The median adjusted TPM for each gene across the panel samples.  If the median is zero, a replacement value of 0.01 is used instead. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
 
 Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
 
