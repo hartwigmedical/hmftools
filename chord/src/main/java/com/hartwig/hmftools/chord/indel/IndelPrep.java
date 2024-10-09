@@ -34,13 +34,16 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
     {
         mConfig = config;
 
+        if(config.RefGenomeFile == null)
+            throw new IllegalArgumentException(this.getClass().getSimpleName() + " requires ref genome to be provided");
+
         mRefGenome = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
     }
 
     @Override
     public List<IndelVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.purpleSomaticVcfFile(sampleId), mConfig.IncludeNonPass);
+        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass);
         List<VariantContext> variantContexts = vcfFile.loadVariants();
 
         List<IndelVariant> indels = new ArrayList<>();

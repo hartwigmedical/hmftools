@@ -35,8 +35,8 @@ public class ChordRunner
             List<String> scriptArgs = new ArrayList<>(List.of(
                     mConfig.OutputDir,
                     sampleId,
-                    mConfig.purpleSomaticVcfFile(sampleId),
-                    mConfig.purpleSvVcfFile(sampleId),
+                    mConfig.snvIndelVcfFile(sampleId),
+                    mConfig.svVcfFile(sampleId),
                     mConfig.RefGenVersion.toString()
             ));
 

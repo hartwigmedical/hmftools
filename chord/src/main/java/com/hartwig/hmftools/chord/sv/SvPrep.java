@@ -35,7 +35,7 @@ public class SvPrep implements VariantTypePrep<StructuralVariant>
     @Override
     public List<StructuralVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.purpleSvVcfFile(sampleId), mConfig.IncludeNonPass);
+        VcfFile vcfFile = new VcfFile(mConfig.svVcfFile(sampleId), mConfig.IncludeNonPass);
         List<VariantContext> variantContexts = vcfFile.loadVariants();
 
         // Only keep the first mate of breakend pairs

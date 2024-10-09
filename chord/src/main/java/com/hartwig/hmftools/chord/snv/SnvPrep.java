@@ -35,7 +35,7 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
     @Override
     public List<SmallVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.purpleSomaticVcfFile(sampleId), mConfig.IncludeNonPass);
+        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass);
 
         List<VariantContext> variants = vcfFile.loadVariants();
 
