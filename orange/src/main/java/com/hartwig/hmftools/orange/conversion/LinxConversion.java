@@ -5,17 +5,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
-import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
-import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -107,33 +102,6 @@ public final class LinxConversion
                     }
                 })
                 .collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static LinxBreakend convert(@NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
-    {
-        return ImmutableLinxBreakend.builder()
-                .id(linxBreakend.id())
-                .svId(linxBreakend.svId())
-                .gene(linxBreakend.gene())
-                .transcript(linxBreakend.transcriptId())
-                .isCanonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
-                .isCanonical(linxBreakend.canonical())
-                .disruptive(linxBreakend.disruptive())
-                .reported(linxBreakend.reportedDisruption())
-                .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
-                .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
-                .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
-                .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
-                .exonUp(linxBreakend.exonUp())
-                .exonDown(linxBreakend.exonDown())
-                .chromosome("") // TODO: remaining fields, Derive properties from other sources (see also ACTIN-346)
-                .chromosomeBand("")
-                .type(LinxBreakendType.BND)
-                .orientation(0)
-                .junctionCopyNumber(0)
-                .build();
     }
 
     @NotNull
