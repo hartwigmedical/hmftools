@@ -49,7 +49,7 @@ public class PurityConstants
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
 
     public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45);
-    public static final int DEFAULT_BQR_MIN_QUAL = 36;
+    public static final int DEFAULT_BQR_MIN_QUAL = 30;
     public static final double BQR_MIN_ERROR_RATE = 1e-5;
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
