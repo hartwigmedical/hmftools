@@ -48,7 +48,7 @@ public class LinxBreakendInterpreter
 
         if(svAnnotation == null)
         {
-            LOGGER.warn("No linx sv annotation found for breakend {}", linxBreakend.id());
+            LOGGER.warn("No linx sv annotation found for breakend {}, using fallbacks for derived attributes", linxBreakend.id());
             return builder.build();
         }
 
@@ -59,21 +59,21 @@ public class LinxBreakendInterpreter
 
         if(sv == null)
         {
-            LOGGER.warn("No structural variant found for breakend {}", linxBreakend.id());
+            LOGGER.warn("No structural variant found for breakend {}, using fallbacks for derived attributes", linxBreakend.id());
             return builder.build();
         }
 
         String chrom = sv.chromosome(linxBreakend.isStart());
         if(chrom == null)
         {
-            LOGGER.warn("No chromosome found for breakend {}", linxBreakend.id());
+            LOGGER.warn("No chromosome found for breakend {}, using fallbacks for derived attributes", linxBreakend.id());
             return builder.build();
         }
 
         Byte orientation = sv.orientation(linxBreakend.isStart());
         if(orientation == null)
         {
-            LOGGER.warn("No orientation found for breakend {}", linxBreakend.id());
+            LOGGER.warn("No orientation found for breakend {}, using fallbacks for derived attributes", linxBreakend.id());
             return builder.build();
         }
 
