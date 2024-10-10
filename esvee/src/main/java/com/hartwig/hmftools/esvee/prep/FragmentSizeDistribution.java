@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FragmentLengthBounds.INVALID;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_UPPER_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_1_STD_DEV_PERCENTILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MIN_QUAL;
@@ -156,6 +157,8 @@ public class FragmentSizeDistribution
         }
 
         double stdDeviation = median - stdDevLength;
+
+        upperBound = max(upperBound, MIN_UPPER_FRAGMENT_LENGTH);
 
         return new FragmentLengthBounds(lowerBound, upperBound, median, stdDeviation);
     }

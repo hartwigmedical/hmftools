@@ -23,9 +23,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -113,7 +115,7 @@ public class JunctionAssembler
             extensionReads.addAll(dominantIndelReads);
         }
 
-        if(!hasMinLengthSoftClipRead || extensionReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
+        if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
             return Collections.emptyList();
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
@@ -125,7 +127,7 @@ public class JunctionAssembler
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        if(assemblySupport.size() < ASSEMBLY_MIN_READ_SUPPORT)
+        if(!aboveMinSupportThreshold(assemblySupport))
             return Collections.emptyList();
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
@@ -315,5 +317,28 @@ public class JunctionAssembler
 
         assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
         return true;
+    }
+
+    private static boolean aboveMinSupportThreshold(final List<SupportRead> assemblySupport)
+    {
+        // account for overlapping fragments
+        if(assemblySupport.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+            return true;
+
+        Set<String> uniqueReadIds = Sets.newHashSet();
+        assemblySupport.forEach(x -> uniqueReadIds.add(x.id()));
+
+        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
+    }
+
+    private static boolean aboveMinReadThreshold(final List<Read> reads)
+    {
+        if(reads.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+            return true;
+
+        Set<String> uniqueReadIds = Sets.newHashSet();
+        reads.forEach(x -> uniqueReadIds.add(x.id()));
+
+        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
     }
 }
