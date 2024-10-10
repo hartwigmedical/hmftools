@@ -10,26 +10,29 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 public class IndelDetails
 {
-    String mChromosome;
-    int mPosition;
-    String mRefBases;
-    String mAltBases;
-    String mIndelSequence;
-    int mIndelLength;
-    String mRightFlankBases;
-    String mLeftFlankBases;
-    int mRightHomBasesCount;
-    int mLeftHomBasesCount;
-    int mMaxHomBasesCount;
-    int mRepeatUnitsCount;
+    public final String mSampleId;
 
-    MutationType mMutationType;
-    ContextType mContextType;
+    public final String mChromosome;
+    public final int mPosition;
+    public final String mRefBases;
+    public final String mAltBases;
+    public final String mIndelSequence;
+    public final int mIndelLength;
+    public final String mRightFlankBases;
+    public final String mLeftFlankBases;
+    public final int mRightHomBasesCount;
+    public final int mLeftHomBasesCount;
+    public final int mMaxHomBasesCount;
+    public final int mRepeatUnitsCount;
+
+    public final MutationType mMutationType;
+    public final ContextType mContextType;
 
     public static final int RIGHT_FLANK_INDEL_LENGTH_UNITS = 3;
     public static final int LEFT_FLANK_INDEL_LENGTH_UNITS = 1;
 
     private IndelDetails(
+            String sampleId,
             String chromosome, int position, String refBases, String altBases,
             String indelSequence, int indelLength,
             String rightFlankBases, String leftFlankBases,
@@ -37,6 +40,7 @@ public class IndelDetails
             MutationType mutationType, ContextType contextType
     )
     {
+        mSampleId = sampleId;
         mChromosome = chromosome;
         mPosition = position;
         mRefBases = refBases;
@@ -54,7 +58,7 @@ public class IndelDetails
         mContextType = contextType;
     }
 
-    public static IndelDetails from(IndelVariant indel, RefGenomeSource refGenome)
+    public static IndelDetails from(String sampleId, IndelVariant indel, RefGenomeSource refGenome)
     {
         int indelLength = indel.mIndelLength;
         MutationType mutationType = indel.mIsDeletion ? MutationType.DELETION : MutationType.INSERTION;
@@ -92,6 +96,7 @@ public class IndelDetails
         }
 
         return new IndelDetails(
+                sampleId,
                 indel.mVariant.Chromosome.toString(),
                 indel.mVariant.Position,
                 indel.mVariant.RefBases,
@@ -111,6 +116,7 @@ public class IndelDetails
 
         String header = String.join(
                 TSV_DELIM,
+                "SampleId",
                 "Chromosome",
                 "Position",
                 "RefBases",
@@ -137,6 +143,7 @@ public class IndelDetails
     {
         String line = String.join(
                 TSV_DELIM,
+                mSampleId,
                 mChromosome,
                 String.valueOf(mPosition),
                 mRefBases,

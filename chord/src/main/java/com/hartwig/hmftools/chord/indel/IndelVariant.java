@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.chord.indel;
 
-import com.hartwig.hmftools.chord.variant.SmallVariant;
+import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.jetbrains.annotations.NotNull;
@@ -91,8 +91,6 @@ public class IndelVariant
 
     public static int countRepeatUnits(String indelSequence, String rightFlankSequence)
     {
-        // TODO: Replace indel sequence in flank sequence with Zs. Then count number of left aligned Zs
-
         // The indel sequence itself counts as one repeat
         String sequence = indelSequence + rightFlankSequence;
 

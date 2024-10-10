@@ -1,22 +1,26 @@
 package com.hartwig.hmftools.chord;
 
+import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -27,6 +31,8 @@ public class ChordConfig
     public final List<String> SampleIds;
 
     public final String PurpleDir;
+    public final String SnvIndelVcfFile;
+    public final String SvVcfFile;
 
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
@@ -38,6 +44,12 @@ public class ChordConfig
     public final boolean WriteDetailedFiles;
 
     public final String ChordToolDir;
+
+    private static final String SNV_INDEL_VCF_FILE = "snv_indel_vcf_file";
+    private static final String SNV_INDEL_VCF_FILE_DESC = "Path to the VCF containing SNVs and indels";
+
+    private static final String SV_VCF_FILE = "sv_vcf_file";
+    private static final String SV_VCF_FILE_DESC = "Path to the VCF containing structural variants";
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
     private static final String INCLUDE_NON_PASS_DESC = "Include non pass variants when counting mutation types";
@@ -52,9 +64,12 @@ public class ChordConfig
 
     public ChordConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = parseSampleIds(configBuilder.getValue(SAMPLE));
+        SampleIds = getSampleIds(configBuilder);
 
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        SnvIndelVcfFile = configBuilder.getValue(SNV_INDEL_VCF_FILE);
+        SvVcfFile = configBuilder.getValue(SV_VCF_FILE);
+        checkRequiredInputPaths(PurpleDir, SnvIndelVcfFile, SvVcfFile);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -68,29 +83,60 @@ public class ChordConfig
         ChordToolDir = configBuilder.getValue(CHORD_TOOL_DIR);
     }
 
-    private List<String> parseSampleIds(String sampleIdsString)
+    private List<String> getSampleIds(ConfigBuilder configBuilder)
     {
-        List<String> sampleIds = List.of(sampleIdsString.split(SAMPLE_IDS_DELIM));
-
-        if(sampleIds.size() > 1)
+        if(configBuilder.hasValue(SAMPLE))
         {
-            throw new UnsupportedOperationException("Running CHORD in multi-sample mode is not yet implemented");
+            String sampleIdsString = configBuilder.getValue(SAMPLE);
+            return List.of(sampleIdsString.split(SAMPLE_IDS_DELIM));
         }
 
-        return sampleIds;
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
+        {
+            return ConfigUtils.loadSampleIdsFile(configBuilder);
+        }
+
+        CHORD_LOGGER.error("Either -{} or -{} must be provided to config", SAMPLE, SAMPLE_ID_FILE);
+        System.exit(1);
+        return null;
     }
 
-    public String purpleSomaticVcfFile(String sampleId) { return PurpleCommon.purpleSomaticVcfFile(PurpleDir, sampleId); }
+    public String snvIndelVcfFile(final String sampleId)
+    {
+        return (SnvIndelVcfFile != null) ?
+                ConfigUtils.convertWildcardSamplePath(SnvIndelVcfFile, sampleId) :
+                ConfigUtils.convertWildcardSamplePath(PurpleDir + "/*" + PURPLE_SOMATIC_VCF_SUFFIX, sampleId);
+    }
 
-    public String purpleSvVcfFile(String sampleId) { return PurpleCommon.purpleSomaticSvFile(PurpleDir, sampleId); }
+    public String svVcfFile(final String sampleId)
+    {
+        return (SvVcfFile != null) ?
+                ConfigUtils.convertWildcardSamplePath(SnvIndelVcfFile, sampleId) :
+                ConfigUtils.convertWildcardSamplePath(PurpleDir + "/*" + PURPLE_SV_VCF_SUFFIX, sampleId);
+    }
+
+    public static void checkRequiredInputPaths(String purpleDir, String snvIndelVcfFile, String svVcfFile)
+    {
+        if(purpleDir != null)
+            return;
+
+        if(snvIndelVcfFile != null && svVcfFile != null)
+            return;
+
+        CHORD_LOGGER.error("Please provide either 1) {}, or 2) {} and {}", PURPLE_DIR_CFG, SNV_INDEL_VCF_FILE, SV_VCF_FILE);
+        System.exit(1);
+    }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(SNV_INDEL_VCF_FILE, false, SNV_INDEL_VCF_FILE_DESC);
+        configBuilder.addPath(SV_VCF_FILE, false, SV_VCF_FILE_DESC);
 
-        configBuilder.addConfigItem(REF_GENOME, false, REF_GENOME_CFG_DESC);
+        configBuilder.addConfigItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
         configBuilder.addFlag(INCLUDE_NON_PASS, INCLUDE_NON_PASS_DESC);
@@ -102,8 +148,9 @@ public class ChordConfig
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
+    @VisibleForTesting
     public ChordConfig(
-            List<String> sampleIds, String purpleDir,
+            List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile,
             String refGenomeFile, RefGenomeVersion refGenomeVersion,
             String outputDir, String outputId,
             boolean includeNonPass, boolean writeDetailedFiles,
@@ -112,6 +159,8 @@ public class ChordConfig
     {
         SampleIds = sampleIds;
         PurpleDir = purpleDir;
+        SnvIndelVcfFile = snvIndelVcfFile;
+        SvVcfFile = svFileFile;
         RefGenomeFile = refGenomeFile;
         RefGenVersion = refGenomeVersion;
         OutputDir = outputDir;
@@ -121,10 +170,13 @@ public class ChordConfig
         ChordToolDir = chordToolDir;
     }
 
+    @VisibleForTesting
     public static class Builder
     {
         private List<String> SampleIds;
         private String PurpleDir;
+        private String SnvIndelVcfFile;
+        private String SvVcfFile;
         private String RefGenomeFile;
         private RefGenomeVersion RefGenVersion = V37;
         private String OutputDir;
@@ -142,6 +194,18 @@ public class ChordConfig
         public Builder purpleDir(String purpleDir)
         {
             PurpleDir = purpleDir;
+            return this;
+        }
+
+        public Builder snvIndelVcfFile(String snvIndelVcfFile)
+        {
+            SnvIndelVcfFile = snvIndelVcfFile;
+            return this;
+        }
+
+        public Builder svVcfFile(String svVcfFile)
+        {
+            SvVcfFile = svVcfFile;
             return this;
         }
 
@@ -190,7 +254,9 @@ public class ChordConfig
         public ChordConfig build()
         {
             return new ChordConfig(
-                    SampleIds, PurpleDir, RefGenomeFile, RefGenVersion, OutputDir, OutputId,
+                    SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile,
+                    RefGenomeFile, RefGenVersion,
+                    OutputDir, OutputId,
                     IncludeNonPass, WriteDetailedFiles, ChordToolDir
             );
         }

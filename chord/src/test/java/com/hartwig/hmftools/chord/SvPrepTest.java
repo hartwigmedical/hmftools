@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.chord;
 
 import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
@@ -11,15 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.chord.prep.MutTypeCount;
-import com.hartwig.hmftools.chord.prep.StructuralVariantPrep;
+import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.sv.SvPrep;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class StructuralVariantPrepTest
+public class SvPrepTest
 {
     @Before
     public void setup()
@@ -38,16 +38,16 @@ public class StructuralVariantPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(List.of(MINIMAL_SAMPLE))
-                .purpleDir(INPUT_DIR)
+                .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
-        StructuralVariantPrep prep = new StructuralVariantPrep(config);
+        SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.extractSampleData(MINIMAL_SAMPLE);
-        //actualCounts.forEach(System.out::println);
+        List<MutTypeCount> actualContextCounts = prep.countMutationContexts(MINIMAL_SAMPLE);
+        //actualContextCounts.forEach(System.out::println);
 
-        List<MutTypeCount> expectedCounts = List.of(
+        List<MutTypeCount> expectedContextCounts = List.of(
                 new MutTypeCount("DEL_0e00_1e03_bp", 1),
                 new MutTypeCount("DEL_1e03_1e04_bp", 0),
                 new MutTypeCount("DEL_1e04_1e05_bp", 1),
@@ -69,7 +69,7 @@ public class StructuralVariantPrepTest
                 new MutTypeCount("TRA",              1)
         );
 
-        assertEquals(expectedCounts, actualCounts);
+        assertEquals(expectedContextCounts, actualContextCounts);
     }
 
     @Test
@@ -77,12 +77,20 @@ public class StructuralVariantPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(List.of(EMPTY_SAMPLE))
-                .purpleDir(INPUT_DIR)
+                .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
-        StructuralVariantPrep prep = new StructuralVariantPrep(config);
+        SvPrep prep = new SvPrep(config);
 
-        List<MutTypeCount> actualCounts = prep.extractSampleData(EMPTY_SAMPLE);
+        List<MutTypeCount> contextCounts = prep.countMutationContexts(EMPTY_SAMPLE);
+
+        int contextCountTotal = 0;
+        for(MutTypeCount contextCount : contextCounts)
+        {
+            contextCountTotal += contextCount.mCount;
+        }
+
+        assertEquals(0, contextCountTotal);
     }
 }

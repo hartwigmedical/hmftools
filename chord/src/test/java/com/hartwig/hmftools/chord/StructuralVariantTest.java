@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.chord.variant.StructuralVariant;
+import com.hartwig.hmftools.chord.sv.StructuralVariant;
 
 import org.junit.Test;
 
