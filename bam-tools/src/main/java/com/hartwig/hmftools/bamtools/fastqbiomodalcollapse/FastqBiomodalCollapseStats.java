@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.fastqbimodalcollapse;
+package com.hartwig.hmftools.bamtools.fastqbiomodalcollapse;
 
 import static java.lang.Math.min;
 
@@ -32,7 +32,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 // TODO: Break out into separate classes
 // TODO: Reduce reimplementation of common classes.
 // TODO: Cleanup
-public class FastqBimodalCollapse
+public class FastqBiomodalCollapseStats
 {
     private static final char MISSING_BASE = 'N';
     private static final char MISMATCH_BASE = 'X';
@@ -47,11 +47,11 @@ public class FastqBimodalCollapse
     private static final String FORWARD_HAIRPIN = "AATGACGATGCGTTCGAGCATCGTTATT";
     private static final String REVERSE_HAIRPIN = "AATAACGATGCTCGAACGCATCGTCATT";
 
-    private final FastqBimodalCollapseConfig mConfig;
+    private final FastqBiomodalCollapseStatsConfig mConfig;
 
     private int mFastqPairCount;
 
-    public FastqBimodalCollapse(final FastqBimodalCollapseConfig config)
+    public FastqBiomodalCollapseStats(final FastqBiomodalCollapseStatsConfig config)
     {
         mConfig = config;
 
@@ -631,11 +631,11 @@ public class FastqBimodalCollapse
     public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        FastqBimodalCollapseConfig.registerConfig(configBuilder);
+        FastqBiomodalCollapseStatsConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        FastqBimodalCollapseConfig config = new FastqBimodalCollapseConfig(configBuilder);
-        FastqBimodalCollapse fastqBimodalCollapse = new FastqBimodalCollapse(config);
+        FastqBiomodalCollapseStatsConfig config = new FastqBiomodalCollapseStatsConfig(configBuilder);
+        FastqBiomodalCollapseStats fastqBimodalCollapse = new FastqBiomodalCollapseStats(config);
         fastqBimodalCollapse.run();
     }
 }
