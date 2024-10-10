@@ -4,6 +4,9 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -31,6 +34,10 @@ public class LinxInterpreter
     @Nullable
     List<StructuralVariant> allGermlineStructuralVariants;
     @NotNull
+    List<StructuralVariant> allInferredSomaticStructuralVariants;
+    @Nullable
+    List<StructuralVariant> allInferredGermlineStructuralVariants;
+    @NotNull
     EnsemblDataCache ensemblDataCache;
 
     public LinxInterpreter(
@@ -38,6 +45,8 @@ public class LinxInterpreter
             @NotNull final KnownFusionCache knownFusionCache,
             @NotNull final List<StructuralVariant> allSomaticStructuralVariants,
             @Nullable final List<StructuralVariant> allGermlineStructuralVariants,
+            @NotNull final List<StructuralVariant> allInferredSomaticStructuralVariants,
+            @Nullable final List<StructuralVariant> allInferredGermlineStructuralVariants,
             @NotNull final EnsemblDataCache ensemblDataCache
     )
     {
@@ -45,6 +54,8 @@ public class LinxInterpreter
         this.knownFusionCache = knownFusionCache;
         this.allSomaticStructuralVariants = allSomaticStructuralVariants;
         this.allGermlineStructuralVariants = allGermlineStructuralVariants;
+        this.allInferredSomaticStructuralVariants = allInferredSomaticStructuralVariants;
+        this.allInferredGermlineStructuralVariants = allInferredGermlineStructuralVariants;
         this.ensemblDataCache = ensemblDataCache;
     }
 
@@ -69,13 +80,13 @@ public class LinxInterpreter
                 additionalSuspectSomaticBreakends.size());
 
         LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
-                allSomaticStructuralVariants,
+                combine(allSomaticStructuralVariants, allInferredSomaticStructuralVariants),
                 linx.allSomaticStructuralVariants(),
                 ensemblDataCache
         );
 
         LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
-                Objects.requireNonNullElse(allGermlineStructuralVariants, List.of()),
+                combine(allGermlineStructuralVariants, allInferredGermlineStructuralVariants),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
                 ensemblDataCache
         );
@@ -96,5 +107,14 @@ public class LinxInterpreter
                 .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), germlineBreakendInterpreter::interpret))
                 .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
+    }
+
+    @NotNull
+    private List<StructuralVariant> combine(@Nullable List<StructuralVariant> svList1, @Nullable List<StructuralVariant> svList2)
+    {
+        return Stream.concat(
+                Optional.ofNullable(svList1).orElse(List.of()).stream(),
+                Optional.ofNullable(svList2).orElse(List.of()).stream())
+                .collect(Collectors.toList());
     }
 }

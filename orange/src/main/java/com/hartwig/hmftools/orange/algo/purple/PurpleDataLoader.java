@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -17,6 +20,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,6 +94,8 @@ public final class PurpleDataLoader
         List<StructuralVariant> allSomaticStructuralVariants =
                 StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
 
+        List<StructuralVariant> allInferredSomaticStruturalVariants = loadInferredStructuralVariants(somaticStructuralVariantVcf);
+
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
         List<Segment> segments = SegmentFile.read(segmentTsv);
@@ -100,6 +106,7 @@ public final class PurpleDataLoader
         List<PurpleVariantContext> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
+        List<StructuralVariant> allInferredGermlineStructuralVariants = null;
         if(referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
@@ -111,6 +118,8 @@ public final class PurpleDataLoader
 
             allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
+
+            allInferredGermlineStructuralVariants = loadInferredStructuralVariants(germlineStructuralVariantVcf);
         }
 
         return ImmutablePurpleData.builder()
@@ -123,6 +132,8 @@ public final class PurpleDataLoader
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .allSomaticStructuralVariants(allSomaticStructuralVariants)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
+                .allInferredSomaticStructuralVariants(allInferredSomaticStruturalVariants)
+                .allInferredGermlineStructuralVariants(allInferredGermlineStructuralVariants)
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
@@ -172,5 +183,13 @@ public final class PurpleDataLoader
             }
         }
         return reported;
+    }
+
+    @NotNull
+    private static List<StructuralVariant> loadInferredStructuralVariants(@NotNull String structuralVariantVcf) throws IOException
+    {
+        return StructuralVariantFileLoader.fromFile(structuralVariantVcf, new AlwaysPassFilter()).stream()
+                .filter(x -> x.filter().equals(INFERRED))
+                .collect(Collectors.toList());
     }
 }

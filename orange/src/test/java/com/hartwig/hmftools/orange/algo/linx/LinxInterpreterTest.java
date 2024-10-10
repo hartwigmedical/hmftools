@@ -29,6 +29,8 @@ public class LinxInterpreterTest
                 new KnownFusionCache(),
                 emptyList(),
                 emptyList(),
+                emptyList(),
+                emptyList(),
                 TestEnsemblDataCacheFactory.loadTestCache()
         );
     }

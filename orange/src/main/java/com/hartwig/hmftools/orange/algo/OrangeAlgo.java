@@ -205,6 +205,8 @@ public class OrangeAlgo
                 knownFusionCache,
                 purpleData.allSomaticStructuralVariants(),
                 purpleData.allGermlineStructuralVariants(),
+                purpleData.allInferredSomaticStructuralVariants(),
+                purpleData.allInferredGermlineStructuralVariants(),
                 ensemblDataCache
         );
 
