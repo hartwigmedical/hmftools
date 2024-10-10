@@ -55,6 +55,8 @@ public class CytoBands
         int posEndIndex = 2;
         int nameIndex = 3;
 
+        lines.remove(0); // remove header
+
         for(String line : lines)
         {
             final String[] values = line.split(delim, -1);
