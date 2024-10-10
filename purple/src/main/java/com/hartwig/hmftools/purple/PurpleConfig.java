@@ -40,6 +40,7 @@ public class PurpleConfig
     public final boolean TargetRegionsMode;
     public final Map<VariantTier,Integer> TierQualFilters;
     public final int Threads;
+    public final boolean RunHrdCalcs;
 
     // debug only
     public final boolean FilterSomaticsOnGene;
@@ -54,6 +55,7 @@ public class PurpleConfig
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
     public static final String TIER_FILTERS = "tier_filters";
     public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
+    public static final String RUN_HRD_CALCS = "run_hrd_calcs";
 
     public PurpleConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -107,6 +109,7 @@ public class PurpleConfig
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
+        RunHrdCalcs = configBuilder.hasFlag(RUN_HRD_CALCS);
         UseGridssSVs = SampleFiles.usesGridssSVs();
 
         if(UseGridssSVs)
@@ -162,6 +165,7 @@ public class PurpleConfig
                 "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/. Default 'purple'",
                 PURPLE_DIR);
 
+        configBuilder.addFlag(RUN_HRD_CALCS, "Run HRD calculations");
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
         configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");

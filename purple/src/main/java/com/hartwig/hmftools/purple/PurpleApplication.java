@@ -274,7 +274,7 @@ public class PurpleApplication
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
 
-            if(mReferenceData.TargetRegions.hasTargetRegions())
+            if(mConfig.RunHrdCalcs)
             {
                 HrdData hrdData = new HrdDetection().calculateHrdData(copyNumbers);
                 HrdDataFile.write(mConfig.OutputDir, tumorId, hrdData);
