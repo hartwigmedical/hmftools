@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.bamtools.fastqbiomodalcollapse;
 
 import static java.lang.Math.max;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.fastqbiomodalcollapse.NeedlemanWunschAligner.GapTrace.OPEN_GAP;
 
@@ -42,29 +41,49 @@ public class NeedlemanWunschAligner<T>
     {
         M,
         X,
-        Y;
+        Y,
+        SUFFIX_X,
+        SUFFIX_Y;
     }
 
-    public List<Pair<T, T>> align(final List<T> seq1, final List<T> seq2)
+    public List<Pair<T, T>> align(final List<T> seq1, final List<T> seq2, boolean noPenaltySeq1Suffix, boolean noPenaltySeq2Suffix)
     {
         // initialize scoring matrices
         long[] M = new long[(seq1.size() + 1) * (seq2.size() + 1)];
         long[] X = new long[(seq1.size() + 1) * (seq2.size() + 1)];
         long[] Y = new long[(seq1.size() + 1) * (seq2.size() + 1)];
+        long[] suffX = noPenaltySeq1Suffix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        long[] suffY = noPenaltySeq2Suffix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
         MatchTrace[] MTrace = new MatchTrace[(seq1.size() + 1) * (seq2.size() + 1)];
         GapTrace[] XTrace = new GapTrace[(seq1.size() + 1) * (seq2.size() + 1)];
         GapTrace[] YTrace = new GapTrace[(seq1.size() + 1) * (seq2.size() + 1)];
+        GapTrace[] suffXTrace = noPenaltySeq1Suffix ? new GapTrace[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        GapTrace[] suffYTrace = noPenaltySeq2Suffix ? new GapTrace[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
         for(int r = 1; r <= seq1.size(); r++)
         {
-            M[(seq2.size() + 1) * r] = Integer.MIN_VALUE;
-            X[(seq2.size() + 1) * r] = -mOpenGapPenalty - (r - 1) * mExtendGapPenalty;
-            Y[(seq2.size() + 1) * r] = Integer.MIN_VALUE;
+            int index = (seq2.size() + 1) * r;
 
-            MTrace[(seq2.size() + 1) * r] = null;
-            XTrace[(seq2.size() + 1) * r] = (r == 1) ? OPEN_GAP : GapTrace.EXTEND_GAP;
-            YTrace[(seq2.size() + 1) * r] = null;
+            M[index] = Integer.MIN_VALUE;
+            X[index] = -mOpenGapPenalty - (r - 1) * mExtendGapPenalty;
+            Y[index] = Integer.MIN_VALUE;
+
+            MTrace[index] = null;
+            XTrace[index] = (r == 1) ? OPEN_GAP : GapTrace.EXTEND_GAP;
+            YTrace[index] = null;
+
+            if(noPenaltySeq1Suffix)
+            {
+                suffX[index] = 0;
+                suffXTrace[index] = (r == 1) ? OPEN_GAP : GapTrace.EXTEND_GAP;
+            }
+
+            if(noPenaltySeq2Suffix)
+            {
+                suffY[index] = Integer.MIN_VALUE;
+                suffYTrace[index] = null;
+            }
         }
 
         for(int c = 1; c <= seq2.size(); c++)
@@ -76,6 +95,18 @@ public class NeedlemanWunschAligner<T>
             MTrace[c] = null;
             XTrace[c] = null;
             YTrace[c] = (c == 1) ? OPEN_GAP : GapTrace.EXTEND_GAP;
+
+            if(noPenaltySeq1Suffix)
+            {
+                suffX[c] = Integer.MIN_VALUE;
+                suffXTrace[c] = null;
+            }
+
+            if(noPenaltySeq2Suffix)
+            {
+                suffY[c] = 0;
+                suffYTrace[c] = (c == 1) ? OPEN_GAP : GapTrace.EXTEND_GAP;
+            }
         }
 
         M[0] = 0;
@@ -85,6 +116,18 @@ public class NeedlemanWunschAligner<T>
         MTrace[0] = null;
         XTrace[0] = null;
         YTrace[0] = null;
+
+        if(noPenaltySeq1Suffix)
+        {
+            suffX[0] = Integer.MIN_VALUE;
+            suffXTrace[0] = null;
+        }
+
+        if(noPenaltySeq2Suffix)
+        {
+            suffY[0] = Integer.MIN_VALUE;
+            suffYTrace[0] = null;
+        }
 
         // fill out
         for(int r = 1; r <= seq1.size(); r++)
@@ -146,6 +189,40 @@ public class NeedlemanWunschAligner<T>
                     Y[index] = openGap;
                     YTrace[index] = OPEN_GAP;
                 }
+
+                // suffX
+                if(noPenaltySeq1Suffix)
+                {
+                    openGap = M[upIndex];
+                    extendGap = suffX[upIndex];
+                    if(extendGap >= openGap)
+                    {
+                        suffX[index] = extendGap;
+                        suffXTrace[index] = GapTrace.EXTEND_GAP;
+                    }
+                    else
+                    {
+                        suffX[index] = openGap;
+                        suffXTrace[index] = OPEN_GAP;
+                    }
+                }
+
+                // suffY
+                if(noPenaltySeq2Suffix)
+                {
+                    openGap = M[leftIndex];
+                    extendGap = suffY[leftIndex];
+                    if(extendGap >= openGap)
+                    {
+                        suffY[index] = extendGap;
+                        suffYTrace[index] = GapTrace.EXTEND_GAP;
+                    }
+                    else
+                    {
+                        suffY[index] = openGap;
+                        suffYTrace[index] = OPEN_GAP;
+                    }
+                }
             }
         }
 
@@ -154,7 +231,15 @@ public class NeedlemanWunschAligner<T>
         int r = seq1.size();
         int c = seq2.size();
         int index = (seq2.size() + 1) * r + c;
-        long bestFinal = max(M[index], max(X[index], Y[index]));
+
+        List<Long> finalScores = Lists.newArrayList();
+        finalScores.add(M[index]);
+        finalScores.add(X[index]);
+        finalScores.add(Y[index]);
+        finalScores.add(noPenaltySeq1Suffix ? suffX[index] : Integer.MIN_VALUE);
+        finalScores.add(noPenaltySeq2Suffix ? suffY[index] : Integer.MIN_VALUE);
+
+        long bestFinal = Collections.max(finalScores);
         TraceBackState state = null;
         if(bestFinal == M[index])
         {
@@ -164,9 +249,21 @@ public class NeedlemanWunschAligner<T>
         {
             state = TraceBackState.X;
         }
-        else
+        else if(bestFinal == Y[index])
         {
             state = TraceBackState.Y;
+        }
+        else if(bestFinal == (noPenaltySeq1Suffix ? suffX[index] : Integer.MIN_VALUE))
+        {
+            state = TraceBackState.SUFFIX_X;
+        }
+        else if(bestFinal == (noPenaltySeq2Suffix ? suffY[index] : Integer.MIN_VALUE))
+        {
+            state = TraceBackState.SUFFIX_Y;
+        }
+        else
+        {
+            throw new RuntimeException("Unreachable");
         }
 
         while(r != 0 || c != 0)
@@ -214,6 +311,48 @@ public class NeedlemanWunschAligner<T>
             {
                 alignment.add(Pair.of(null, seq2.get(c - 1)));
                 GapTrace nextStep = YTrace[index];
+                if(nextStep == null)
+                {
+                    throw new RuntimeException("Invalid next step");
+                }
+
+                if(nextStep == OPEN_GAP)
+                {
+                    state = TraceBackState.M;
+                }
+
+                c--;
+            }
+            else if(state == TraceBackState.SUFFIX_X)
+            {
+                if(!noPenaltySeq1Suffix)
+                {
+                    throw new RuntimeException("SUFFIX_X is an invalid traceback state");
+                }
+
+                alignment.add(Pair.of(seq1.get(r - 1), null));
+                GapTrace nextStep = suffXTrace[index];
+                if(nextStep == null)
+                {
+                    throw new RuntimeException("Invalid next step");
+                }
+
+                if(nextStep == OPEN_GAP)
+                {
+                    state = TraceBackState.M;
+                }
+
+                r--;
+            }
+            else if(state == TraceBackState.SUFFIX_Y)
+            {
+                if(!noPenaltySeq2Suffix)
+                {
+                    throw new RuntimeException("SUFFIX_Y is an invalid traceback state");
+                }
+
+                alignment.add(Pair.of(null, seq2.get(c - 1)));
+                GapTrace nextStep = suffYTrace[index];
                 if(nextStep == null)
                 {
                     throw new RuntimeException("Invalid next step");
