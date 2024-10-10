@@ -299,12 +299,24 @@ public final class AlignmentFilters
             }
         }
 
-        // take the default alignment for non-zero map-qual or those with alt locations
-        if(firstSelectedAlt == null && (exceedsNoAltsModMapQualThreshold(first) || !first.rawAltAlignments().isEmpty()))
-            firstSelectedAlt = firstInitialAlignment;
+        // take the default alignment for map-qual above a threshold or those with alt locations and non-zero map qual
+        if(firstSelectedAlt == null)
+        {
+            if(exceedsNoAltsModMapQualThreshold(first)
+            || (first.hasAltAlignments() && exceedsMapQualThreshold(first, true, 1)))
+            {
+                firstSelectedAlt = firstInitialAlignment;
+            }
+        }
 
-        if(secondSelectedAlt == null && (exceedsNoAltsModMapQualThreshold(second) || !second.rawAltAlignments().isEmpty()))
-            secondSelectedAlt = secondInitialAlignment;
+        if(secondSelectedAlt == null)
+        {
+            if(exceedsNoAltsModMapQualThreshold(second)
+            || (second.hasAltAlignments() && exceedsMapQualThreshold(second, true, 1)))
+            {
+                secondSelectedAlt = secondInitialAlignment;
+            }
+        }
 
         boolean hasShortSvLink = shortestLength >= 0;
         markAltAlignment(first, firstInitialAlignment, firstSelectedAlt, firstAlignments, hasShortSvLink);
