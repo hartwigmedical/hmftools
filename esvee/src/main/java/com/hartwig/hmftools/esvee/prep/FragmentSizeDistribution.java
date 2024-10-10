@@ -92,16 +92,18 @@ public class FragmentSizeDistribution
 
         SV_LOGGER.info("maxReadLength({})", mMaxReadLength);
 
-        if(mLengthFrequencies.isEmpty())
+        if(!mLengthFrequencies.isEmpty())
+        {
+            int minLength = mLengthFrequencies.get(0).Length;
+            int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
+
+            SV_LOGGER.debug("fragment size distribution complete: min({}) max({})", minLength, maxLength);
+        }
+        else
         {
             SV_LOGGER.debug("no fragment lengths recorded");
-            return;
+
         }
-
-        int minLength = mLengthFrequencies.get(0).Length;
-        int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
-
-        SV_LOGGER.debug("fragment size distribution complete: min({}) max({})", minLength, maxLength);
 
         if(mConfig.WriteTypes.contains(FRAGMENT_LENGTH_DIST))
             writeDistribution();
