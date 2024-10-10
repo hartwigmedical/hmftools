@@ -15,6 +15,7 @@ public final class AssemblyConstants
     public static final int INDEL_TO_SC_MAX_SIZE_SOFTCLIP = MIN_VARIANT_LENGTH - 1;
     public static final int POLY_G_TRIM_LENGTH = 4;
     public static final double LOW_BASE_TRIM_PERC = 0.35;
+    public static final int UNMAPPED_TRIM_THRESHOLD = 40;
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;

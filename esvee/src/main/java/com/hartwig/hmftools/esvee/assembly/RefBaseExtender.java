@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUP
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.UNMAPPED_TRIM_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -66,14 +68,13 @@ public class RefBaseExtender
         else
         {
             discordantReads = unfilteredNonJunctionReads.stream()
-                    .filter(x -> isValidSupportCoordsVsJunction(x, isForwardJunction, junctionPosition))
-                    .filter(x -> isDiscordantFragment(x) || x.isMateUnmapped())
-                    .filter(x -> !assembly.hasReadSupport(x.mateRead()))
+                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition, assembly))
                     .collect(Collectors.toList());
 
             discordantReads.forEach(x -> candidateReads.add(new NonJunctionRead(x, DISCORDANT)));
 
-            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null).forEach(x -> assembly.addUnmappedRead(x.mateRead()));
+            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null && !filterUnmapped(x.mateRead()))
+                    .forEach(x -> assembly.addUnmappedRead(x.mateRead()));
         }
 
         List<Read> remoteJunctionMates = Lists.newArrayList();
@@ -121,6 +122,9 @@ public class RefBaseExtender
             }
             else
             {
+                if(filterUnmapped(mateRead))
+                    continue;
+
                 assembly.addUnmappedRead(mateRead);
             }
         }
@@ -170,6 +174,36 @@ public class RefBaseExtender
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
         purgeRefSideSoftClips(assembly.refSideSoftClips(), ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
+    }
+
+    private static boolean isDiscordantCandidate(
+            final Read read, boolean isForwardJunction, int junctionPosition, final JunctionAssembly assembly)
+    {
+        if(!isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition))
+            return false;
+
+        if(!isDiscordantFragment(read))
+        {
+            if(!read.isMateUnmapped())
+                return false;
+
+            // test the mate read's base quals
+            if(read.mateRead() != null && filterUnmapped(read.mateRead()))
+                return false;
+        }
+
+        // lastly check the read isn't already counted as junction support
+        return !assembly.hasReadSupport(read.mateRead());
+    }
+
+    private static boolean filterUnmapped(final Read read)
+    {
+        if(!read.isUnmapped())
+            return false;
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        return read.basesLength() - read.baseTrimCount() < UNMAPPED_TRIM_THRESHOLD;
     }
 
     private class NonJunctionRead

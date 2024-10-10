@@ -1148,7 +1148,8 @@ public class PhaseSetBuilder
 
         for(JunctionAssembly assembly : mAssemblies)
         {
-            assembly.clearCandidateSupport(); // no further use for candidate reads
+            if(!AssemblyConfig.WriteCandidateReads)
+                assembly.clearCandidateSupport(); // no further use for candidate reads
 
             assembly.clearSupportCachedReads(); // remove references to actual SAMRecords, keeping only summary info
 

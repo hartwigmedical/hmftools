@@ -107,6 +107,7 @@ public class AssemblyConfig
     public final String TruthsetFile;
     public final String AlignmentFile;
 
+    public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
     public static boolean RunRemoteRefLinking = false;
     public static boolean DevDebug = false;
@@ -128,6 +129,7 @@ public class AssemblyConfig
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
     private static final String DISC_ONLY_MIN_FRAGS = "disc_only_min_frags";
+    private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
 
     private static final String RUN_REMOTE_REF_LINKING = "run_remote_ref_linking";
 
@@ -241,6 +243,7 @@ public class AssemblyConfig
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         RunRemoteRefLinking = configBuilder.hasFlag(RUN_REMOTE_REF_LINKING);
+        WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
@@ -333,6 +336,7 @@ public class AssemblyConfig
                 DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD);
 
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
+        configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
         configBuilder.addFlag(RUN_REMOTE_REF_LINKING, "Use unmapped & remote read extension instead of remote ref linking");
@@ -393,6 +397,7 @@ public class AssemblyConfig
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
         RunRemoteRefLinking = true;
+        WriteCandidateReads = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }
