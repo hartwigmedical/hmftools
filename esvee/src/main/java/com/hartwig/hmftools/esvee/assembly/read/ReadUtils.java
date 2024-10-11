@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
-import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.esvee.common.CommonUtils;

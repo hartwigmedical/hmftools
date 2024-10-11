@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
 import java.util.Collections;
@@ -336,19 +338,6 @@ public class AlignmentFragments
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
             }
         }
-    }
-
-    public static boolean isIndel(final StructuralVariantType type)
-    {
-        return type == DEL || type == DUP || type == INS;
-    }
-
-    public static boolean isShortLocalDelDupIns(final StructuralVariantType svType, final int svLength)
-    {
-        if(isIndel(svType))
-            return svLength <= SHORT_DEL_DUP_INS_LENGTH;
-        else
-            return false;
     }
 
     private boolean isLocalIndel()

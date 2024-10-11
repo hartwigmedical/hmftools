@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
@@ -67,8 +69,11 @@ public class RefBaseExtender
         }
         else
         {
+            Set<String> concordantReadIds = unfilteredNonJunctionReads.stream().filter(x -> isConcordantRead(x))
+                    .map(x -> x.id()).collect(Collectors.toSet());
+
             discordantReads = unfilteredNonJunctionReads.stream()
-                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition, assembly))
+                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition, assembly, concordantReadIds))
                     .collect(Collectors.toList());
 
             discordantReads.forEach(x -> candidateReads.add(new NonJunctionRead(x, DISCORDANT)));
@@ -176,8 +181,16 @@ public class RefBaseExtender
         purgeRefSideSoftClips(assembly.refSideSoftClips(), ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
     }
 
+    private static boolean isConcordantRead(final Read read)
+    {
+        return read.isPairedRead() && read.isMateMapped() && read.isMateMapped()
+                && read.chromosome().equals(read.mateChromosome())
+                && read.orientation() != read.mateOrientation()
+                && abs(read.bamRecord().getInferredInsertSize()) <= DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+    }
+
     private static boolean isDiscordantCandidate(
-            final Read read, boolean isForwardJunction, int junctionPosition, final JunctionAssembly assembly)
+            final Read read, boolean isForwardJunction, int junctionPosition, final JunctionAssembly assembly, final Set<String> concordantReadIds)
     {
         if(!isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition))
             return false;
@@ -189,6 +202,12 @@ public class RefBaseExtender
 
             // test the mate read's base quals
             if(read.mateRead() != null && filterUnmapped(read.mateRead()))
+                return false;
+        }
+        else
+        {
+            // must not match a concordant fragment as determined by a local supplementary or vice-versa
+            if(concordantReadIds.contains(read.id()))
                 return false;
         }
 

@@ -163,9 +163,10 @@ public class PhaseSetBuilder
             AssemblyLink assemblyLink = extensionCandidate.Link;
 
             boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH) && mAssemblies.size() > 2;
+            boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
 
             extensionCandidate.markSelected();
-            applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching);
+            applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching, allowDiscordantReads);
 
             extensionCandidate.Assembly.setOutcome(LINKED);
             extensionCandidate.SecondAssembly.setOutcome(LINKED);
@@ -557,8 +558,9 @@ public class PhaseSetBuilder
     private void applySplitLink(final AssemblyLink assemblyLink, boolean isPrimaryLink)
     {
         boolean allowBranching = isPrimaryLink && !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
+        boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
 
-        applySplitLinkSupport(assemblyLink.first(), assemblyLink.second(), allowBranching);
+        applySplitLinkSupport(assemblyLink.first(), assemblyLink.second(), allowBranching, allowDiscordantReads);
 
         if(isPrimaryLink)
         {
@@ -602,13 +604,13 @@ public class PhaseSetBuilder
         if(isPrimaryLink)
         {
             // only form one remote link for each assembly
-            applySplitLinkSupport(initialAssembly, remoteAssembly, true);
+            applySplitLinkSupport(initialAssembly, remoteAssembly, true, true);
             initialAssembly.setOutcome(REMOTE_LINK);
             mSplitLinks.add(remoteLink);
         }
         else
         {
-            applySplitLinkSupport(initialAssembly, remoteAssembly, false);
+            applySplitLinkSupport(initialAssembly, remoteAssembly, false, true);
             mSecondarySplitLinks.add(remoteLink);
         }
     }
@@ -697,7 +699,8 @@ public class PhaseSetBuilder
         }
     }
 
-    private boolean applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
+    private boolean applySplitLinkSupport(
+            final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching, boolean allowDiscordantReads)
     {
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
@@ -705,8 +708,11 @@ public class PhaseSetBuilder
 
         addLocalMateSupport(assembly1, assembly2);
 
-        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
-        checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+        checkMatchingCandidateSupport(
+                assembly2, allowDiscordantReads, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
+
+        checkMatchingCandidateSupport(
+                assembly1, allowDiscordantReads, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
         addMatchingExtensionCandidates(assembly1, matchedCandidates1);
         addMatchingExtensionCandidates(assembly2, matchedCandidates2);
@@ -757,7 +763,7 @@ public class PhaseSetBuilder
     }
 
     private static void checkMatchingCandidateSupport(
-            final JunctionAssembly otherAssembly,
+            final JunctionAssembly otherAssembly, boolean allowDiscordantReads,
             final List<Read> candidateSupport, final List<Read> otherCandidateSupport,
             final List<Read> matchedCandidates, final List<Read> otherMatchedCandidates)
     {
@@ -771,6 +777,12 @@ public class PhaseSetBuilder
             {
                 candidateSupport.remove(index);
                 matchedCandidates.add(candidateRead);
+                continue;
+            }
+
+            if(!allowDiscordantReads)
+            {
+                ++index;
                 continue;
             }
 
@@ -833,7 +845,7 @@ public class PhaseSetBuilder
         if(!isLocalAssemblyCandidate(assembly1, assembly2, false))
             return;
 
-        // look for concordant mate reads which are on the otherr side of the junction and so were initially excluded
+        // look for concordant mate reads which are on the other side of the junction and so were initially excluded
         for(int i = 0; i <= 1; ++i)
         {
             JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
