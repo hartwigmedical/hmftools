@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,11 @@ public class FastqBiomodalCollapse
             Base = base;
             Qual = qual;
         }
+
+        public BaseQualPair complementBase()
+        {
+            return new BaseQualPair(swapDnaBase(Base), Qual);
+        }
     }
 
     private static final char MISSING_BASE = 'N';
@@ -53,6 +59,7 @@ public class FastqBiomodalCollapse
     private static final char MODC_BASE = 'c';
     private static final char INS_BASE = '_';
     private static final char ZERO_QUAL = (char) 33;
+    private static final char MAX_QUAL = (char) (33 + 38);
 
     private static final int ROLLING_WINDOW_SIZE = 20;
     private static final int MIN_GOOD_ROLLING_COUNT = 18;
@@ -465,43 +472,325 @@ public class FastqBiomodalCollapse
         return ALIGNER.align(seq1, seq2, noPenaltySeq1Suffix, noPenaltySeq2Suffix);
     }
 
+    private List<BaseQualPair> getSeq(final FastqRecord fastq, int startIndex, int endIndex)
+    {
+        return getSeq(fastq, startIndex, endIndex, false);
+    }
+
+    private List<BaseQualPair> getSeq(final FastqRecord fastq, int startIndex, int endIndex, boolean complementBase)
+    {
+        List<BaseQualPair> seq = Lists.newArrayList();
+        for(int i = startIndex; i <= endIndex; i++)
+        {
+            char base = fastq.getReadString().charAt(i);
+            if(complementBase)
+            {
+                base = swapDnaBase(base);
+            }
+
+            seq.add(new BaseQualPair(base, fastq.getBaseQualityString().charAt(i)));
+        }
+
+        return seq;
+    }
+
+    private static class FragmentAlignment
+    {
+        public final List<Pair<BaseQualPair, BaseQualPair>> PreHairpinAlignment;
+        public final List<Pair<BaseQualPair, BaseQualPair>> HairpinAlignment;
+        public final List<Pair<BaseQualPair, BaseQualPair>> PostHairpinAlignment;
+        public final List<Pair<BaseQualPair, BaseQualPair>> PostHairpinAlignmentSuffix;
+
+        public FragmentAlignment(final List<Pair<BaseQualPair, BaseQualPair>> preHairpinAlignment,
+                final List<Pair<BaseQualPair, BaseQualPair>> hairpinAlignment,
+                final List<Pair<BaseQualPair, BaseQualPair>> postHairpinAlignment,
+                final List<Pair<BaseQualPair, BaseQualPair>> postHairpinAlignmentSuffix)
+        {
+            PreHairpinAlignment = preHairpinAlignment;
+            HairpinAlignment = hairpinAlignment;
+            PostHairpinAlignment = postHairpinAlignment;
+            PostHairpinAlignmentSuffix = postHairpinAlignmentSuffix;
+        }
+    }
+
+    private FragmentAlignment alignFragment(final FastqRecord fastq1, final FastqRecord fastq2)
+    {
+        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
+        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+
+        if(hairpin1 != null && hairpin2 != null)
+        {
+            List<BaseQualPair> preHairpinSeq1 = getSeq(fastq1, 0, hairpin1.StartIndex - 1);
+            List<BaseQualPair> preHairpinSeq2 = getSeq(fastq2, 0, hairpin2.StartIndex - 1);
+
+            List<Pair<BaseQualPair, BaseQualPair>> preHairpinAlignment = ALIGNER.align(preHairpinSeq1, preHairpinSeq2, false, false);
+
+            int hairpin1EndIndex = hairpin1.StartIndex + FORWARD_HAIRPIN.length() - 1;
+            int hairpin2EndIndex = hairpin2.StartIndex + REVERSE_HAIRPIN.length() - 1;
+            if(fastq1.getReadLength() - 1 > hairpin1EndIndex && fastq2.getReadLength() - 1 > hairpin2EndIndex)
+            {
+                // TODO: Assuming that there is no indel in hairpin.
+                List<Pair<BaseQualPair, BaseQualPair>> hairpinAlignment = Lists.newArrayList();
+                for(int i = 0; i < FORWARD_HAIRPIN.length(); i++)
+                {
+                    hairpinAlignment.add(Pair.of(new BaseQualPair(FORWARD_HAIRPIN.charAt(i), MAX_QUAL), new BaseQualPair(REVERSE_HAIRPIN.charAt(i), MAX_QUAL)));
+                }
+
+                List<BaseQualPair> postHairpinSeq1Complement = getSeq(fastq1, hairpin1EndIndex + 1, fastq1.getReadLength() - 1, true);
+                List<BaseQualPair> postHairpinSeq2Complement = getSeq(fastq2, hairpin2EndIndex + 1, fastq2.getReadLength() - 1, true);
+                List<Pair<BaseQualPair, BaseQualPair>> postHairpinAlignmentSwapComplement = ALIGNER.align(postHairpinSeq2Complement, postHairpinSeq1Complement, true, true);
+
+                List<Pair<BaseQualPair, BaseQualPair>> postHairpinAlignment = Lists.newArrayList();
+                for(Pair<BaseQualPair, BaseQualPair> alignedBase : postHairpinAlignmentSwapComplement)
+                {
+                    BaseQualPair pair1 = alignedBase.getLeft();
+                    BaseQualPair pair2 = alignedBase.getRight();
+
+                    if(pair1 != null)
+                    {
+                        pair1 = pair1.complementBase();
+                    }
+
+                    if(pair2 != null)
+                    {
+                        pair2 = pair2.complementBase();
+                    }
+
+                    postHairpinAlignment.add(Pair.of(pair2, pair1));
+                }
+
+                // find suffix of alignment
+                List<Pair<BaseQualPair, BaseQualPair>> suffix = Lists.newArrayList();
+                Pair<BaseQualPair, BaseQualPair> lastPair = postHairpinAlignment.get(postHairpinAlignment.size() - 1);
+                if(lastPair.getLeft() != null && lastPair.getRight() != null)
+                {
+                    return new FragmentAlignment(preHairpinAlignment, hairpinAlignment, postHairpinAlignment, suffix);
+                }
+
+                boolean suffixIsSeq1 = lastPair.getLeft() != null;
+                while(!postHairpinAlignment.isEmpty())
+                {
+                    lastPair = postHairpinAlignment.get(postHairpinAlignment.size() - 1);
+                    if(suffixIsSeq1 && lastPair.getRight() != null || !suffixIsSeq1 && lastPair.getLeft() != null)
+                    {
+                        break;
+                    }
+
+                    suffix.add(lastPair);
+                    postHairpinAlignment.remove(postHairpinAlignment.size() - 1);
+                }
+
+                Collections.reverse(suffix);
+                return new FragmentAlignment(preHairpinAlignment, hairpinAlignment, postHairpinAlignment, suffix);
+            }
+
+            // TODO: Assuming that there is no indel in hairpin.
+            List<Pair<BaseQualPair, BaseQualPair>> hairpinAlignment = Lists.newArrayList();
+            int i = hairpin1.StartIndex;
+            int j = hairpin2.StartIndex;
+            while(i < min(fastq1.getReadLength(), hairpin1EndIndex + 1) || j < min(fastq2.getReadLength(), hairpin2EndIndex + 1))
+            {
+                Character base1 = i < fastq1.getReadLength() ? FORWARD_HAIRPIN.charAt(i - hairpin1.StartIndex) : null;
+                Character base2 = j < fastq2.getReadLength() ? REVERSE_HAIRPIN.charAt(j - hairpin2.StartIndex) : null;
+                BaseQualPair pair1 = base1 == null ? null : new BaseQualPair(base1, MAX_QUAL);
+                BaseQualPair pair2 = base2 == null ? null : new BaseQualPair(base2, MAX_QUAL);
+
+                hairpinAlignment.add(Pair.of(pair1, pair2));
+
+                i++;
+                j++;
+            }
+
+            List<Pair<BaseQualPair, BaseQualPair>> suffix = Lists.newArrayList();
+            if(fastq1.getReadLength() - 1 > hairpin1EndIndex)
+            {
+                for(i = hairpin1EndIndex + 1; i < fastq1.getReadLength(); i++)
+                {
+                    suffix.add(Pair.of(new BaseQualPair(fastq1.getReadString().charAt(i), fastq1.getBaseQualityString().charAt(i)), null));
+                }
+            }
+
+            if(fastq2.getReadLength() - 1 > hairpin2EndIndex)
+            {
+                for(i = hairpin2EndIndex + 1; i < fastq2.getReadLength(); i++)
+                {
+                    suffix.add(Pair.of(null, new BaseQualPair(fastq2.getReadString().charAt(i), fastq2.getBaseQualityString().charAt(i))));
+                }
+            }
+
+            return new FragmentAlignment(preHairpinAlignment, hairpinAlignment, Collections.emptyList(), suffix);
+        }
+        else if(hairpin1 != null)
+        {
+            List<BaseQualPair> preHairpinSeq1 = getSeq(fastq1, 0, hairpin1.StartIndex - 1);
+            List<BaseQualPair> preHairpinSeq2 = getSeq(fastq2, 0, fastq2.getReadLength() - 1);
+
+            List<Pair<BaseQualPair, BaseQualPair>> preHairpinAlignment = ALIGNER.align(preHairpinSeq1, preHairpinSeq2, true, false);
+
+            int hairpin1EndIndex = hairpin1.StartIndex + FORWARD_HAIRPIN.length() - 1;
+            List<Pair<BaseQualPair, BaseQualPair>> suffix = Lists.newArrayList();
+            if(fastq1.getReadLength() - 1 > hairpin1EndIndex)
+            {
+                for(int i = hairpin1EndIndex + 1; i < fastq1.getReadLength(); i++)
+                {
+                    suffix.add(Pair.of(new BaseQualPair(fastq1.getReadString().charAt(i), fastq1.getBaseQualityString().charAt(i)), null));
+                }
+            }
+
+            // TODO: Assuming that there is no indel in hairpin.
+            List<Pair<BaseQualPair, BaseQualPair>> hairpinAlignment = Lists.newArrayList();
+            for(int i = hairpin1.StartIndex; i <= min(hairpin1EndIndex, fastq1.getReadLength() - 1); i++)
+            {
+                hairpinAlignment.add(Pair.of(new BaseQualPair(FORWARD_HAIRPIN.charAt(i - hairpin1.StartIndex), MAX_QUAL), null));
+            }
+
+            return new FragmentAlignment(preHairpinAlignment, hairpinAlignment, Collections.emptyList(), suffix);
+        }
+        else if(hairpin2 != null)
+        {
+            List<BaseQualPair> preHairpinSeq1 = getSeq(fastq1, 0, fastq1.getReadLength() - 1);
+            List<BaseQualPair> preHairpinSeq2 = getSeq(fastq2, 0, hairpin2.StartIndex - 1);
+
+            List<Pair<BaseQualPair, BaseQualPair>> preHairpinAlignment = ALIGNER.align(preHairpinSeq1, preHairpinSeq2, false, true);
+
+            int hairpin2EndIndex = hairpin2.StartIndex + REVERSE_HAIRPIN.length() - 1;
+            List<Pair<BaseQualPair, BaseQualPair>> suffix = Lists.newArrayList();
+            if(fastq2.getReadLength() - 1 > hairpin2EndIndex)
+            {
+                for(int i = hairpin2EndIndex + 1; i < fastq2.getReadLength(); i++)
+                {
+                    suffix.add(Pair.of(null, new BaseQualPair(fastq2.getReadString().charAt(i), fastq2.getBaseQualityString().charAt(i))));
+                }
+            }
+
+            // TODO: Assuming that there is no indel in hairpin.
+            List<Pair<BaseQualPair, BaseQualPair>> hairpinAlignment = Lists.newArrayList();
+            for(int i = hairpin2.StartIndex; i <= min(hairpin2EndIndex, fastq2.getReadLength() - 1); i++)
+            {
+                hairpinAlignment.add(Pair.of(null, new BaseQualPair(REVERSE_HAIRPIN.charAt(i - hairpin2.StartIndex), MAX_QUAL)));
+            }
+
+            return new FragmentAlignment(preHairpinAlignment, hairpinAlignment, Collections.emptyList(), suffix);
+        }
+        else
+        {
+            List<BaseQualPair> preHairpinSeq1 = getSeq(fastq1, 0, fastq1.getReadLength() - 1);
+            List<BaseQualPair> preHairpinSeq2 = getSeq(fastq2, 0, fastq2.getReadLength() - 1);
+
+            List<Pair<BaseQualPair, BaseQualPair>> preHairpinAlignment = ALIGNER.align(preHairpinSeq1, preHairpinSeq2, true, true);
+            return new FragmentAlignment(preHairpinAlignment, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        }
+    }
+
+    @Nullable
+    private static RevCompMatchInfo findRevCompFragmentMatch(final FragmentAlignment alignment)
+    {
+        List<Pair<BaseQualPair, BaseQualPair>> subAlignment = Lists.newArrayList();
+        subAlignment.addAll(alignment.PreHairpinAlignment);
+        subAlignment.addAll(alignment.HairpinAlignment);
+        subAlignment.addAll(alignment.PostHairpinAlignment);
+
+        List<Pair<BaseQualPair, BaseQualPair>> subRevCompSwapAlignment = Lists.newArrayList();
+        for(int i = subAlignment.size() - 1; i >= 0; i--)
+        {
+            Pair<BaseQualPair, BaseQualPair> alignedBase = subAlignment.get(i);
+            BaseQualPair pair1 = alignedBase.getLeft();
+            BaseQualPair pair2 = alignedBase.getRight();
+
+            if(pair1 != null)
+            {
+                pair1 = pair1.complementBase();
+            }
+
+            if(pair2 != null)
+            {
+                pair2 = pair2.complementBase();
+            }
+
+            subRevCompSwapAlignment.add(Pair.of(pair2, pair1));
+        }
+
+        // TODO: Be more rigorous with this shift.
+        int bestShift = 0;
+        int bestMismatchCount = Integer.MAX_VALUE;
+        for(int shift = -120; shift <= 120; shift++)
+        {
+            int i = 0;
+            int j = 0;
+            if(shift < 0)
+            {
+                i = -shift;
+            }
+
+            if(shift > 0)
+            {
+                j = shift;
+            }
+
+            int totalBases = 0;
+            int mismatchCount = 0;
+            while(i < subAlignment.size() && j < subRevCompSwapAlignment.size())
+            {
+                totalBases++;
+
+                Pair<BaseQualPair, BaseQualPair> alignedBase1 = subAlignment.get(i);
+                Pair<BaseQualPair, BaseQualPair> alignedBase2 = subRevCompSwapAlignment.get(j);
+
+                if(alignedBase1.getLeft() != null && alignedBase2.getLeft() != null && alignedBase1.getLeft().Base != alignedBase2.getLeft().Base)
+                {
+                    mismatchCount++;
+                }
+                else if(alignedBase1.getRight() != null && alignedBase2.getRight() != null && alignedBase1.getRight().Base != alignedBase2.getRight().Base)
+                {
+                    mismatchCount++;
+                }
+
+                i++;
+                j++;
+            }
+
+            if(totalBases == 0)
+            {
+                continue;
+            }
+
+            if(mismatchCount >= 0.2*totalBases)
+            {
+                continue;
+            }
+
+            if(mismatchCount < bestMismatchCount)
+            {
+                bestMismatchCount = mismatchCount;
+                bestShift = shift;
+            }
+        }
+
+        if(bestMismatchCount == Integer.MAX_VALUE)
+        {
+            return null;
+        }
+
+        return new RevCompMatchInfo(bestShift, bestMismatchCount);
+    }
+
     private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
     {
         mFastqPairProcessedCount++;
 
-        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
-        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+        FragmentAlignment alignment = alignFragment(fastq1, fastq2);
+        RevCompMatchInfo alignmentRevCompMatch = findRevCompFragmentMatch(alignment);
 
-        RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
-        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
+        List<Pair<BaseQualPair, BaseQualPair>> alignedBases = Lists.newArrayList();
+        alignedBases.addAll(alignment.PreHairpinAlignment);
+        alignedBases.addAll(alignment.HairpinAlignment);
+        alignedBases.addAll(alignment.PostHairpinAlignment);
+        alignedBases.addAll(alignment.PostHairpinAlignmentSuffix);
 
-        List<Pair<BaseQualPair, BaseQualPair>> alignedSeq = alignUpToHairpin(fastq1, fastq2, hairpin1, hairpin2);
-
-        String alignedRead1 =
-                alignedSeq.stream().map(x -> x.getLeft() == null ? "_" : String.valueOf(x.getLeft().Base)).collect(Collectors.joining());
-        String alignedQual1 = alignedSeq.stream()
-                .map(x -> x.getLeft() == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.getLeft().Qual))
-                .collect(Collectors.joining());
-
-        String alignedRead2 =
-                alignedSeq.stream().map(x -> x.getRight() == null ? "_" : String.valueOf(x.getRight().Base)).collect(Collectors.joining());
-        String alignedQual2 = alignedSeq.stream()
-                .map(x -> x.getRight() == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.getRight().Qual))
-                .collect(Collectors.joining());
-
-        String cigar = getCigar(alignedSeq);
-
-        FastqRecord alignedFastq1 = new FastqRecord(fastq1.getReadName(), alignedRead1, fastq1.getBaseQualityHeader(), alignedQual1);
-        FastqRecord alignedFastq2 = new FastqRecord(fastq1.getReadName(), alignedRead2, fastq1.getBaseQualityHeader(), alignedQual2);
-
-        // Get stats
-        int trimmedEnd1 = hairpin1 == null ? fastq1.getReadLength() - 1 : hairpin1.StartIndex - 1;
-        int trimmedEnd2 = hairpin2 == null ? fastq2.getReadLength() - 1 : hairpin2.StartIndex - 1;
-        FastqRecord trimmedFastq1 = new FastqRecord(fastq1.getReadName(), fastq1.getReadString().substring(0, trimmedEnd1 + 1), fastq1.getBaseQualityHeader(), fastq1.getBaseQualityString().substring(0, trimmedEnd1 + 1));
-        FastqRecord trimmedFastq2 = new FastqRecord(fastq1.getReadName(), fastq2.getReadString().substring(0, trimmedEnd2 + 1), fastq1.getBaseQualityHeader(), fastq2.getBaseQualityString().substring(0, trimmedEnd2 + 1));
-
-        ReadPairStats stats = getReadPairStats(trimmedFastq1, trimmedFastq2);
-        ReadPairStats alignedStats = getReadPairStats(alignedFastq1, alignedFastq2);
+        String alignedRead1 = alignedBases.stream().map(x -> x.getLeft()).map(x -> x == null ? "_" : String.valueOf(x.Base)).collect(Collectors.joining());
+        String alignedQual1 = alignedBases.stream().map(x -> x.getLeft()).map(x -> x == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.Qual)).collect(Collectors.joining());
+        String alignedRead2 = alignedBases.stream().map(x -> x.getRight()).map(x -> x == null ? "_" : String.valueOf(x.Base)).collect(Collectors.joining());
+        String alignedQual2 = alignedBases.stream().map(x -> x.getRight()).map(x -> x == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.Qual)).collect(Collectors.joining());
 
         // write output
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
@@ -513,20 +802,32 @@ public class FastqBiomodalCollapse
         statLine.add(fastq2.getReadString());
         statLine.add(fastq2.getBaseQualityString());
 
+        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         hairpin1 = hairpin1 != null ? hairpin1 : new HairpinInfo(-2, -1, -1);
         statLine.add(String.valueOf(hairpin1.StartIndex + 1));
         statLine.add(String.valueOf(hairpin1.MatchCount));
         statLine.add(String.valueOf(hairpin1.PrefixMatchLength));
 
+        HairpinInfo hairpin2 =  findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
         hairpin2 = hairpin2 != null ? hairpin2 : new HairpinInfo(-2, -1, -1);
         statLine.add(String.valueOf(hairpin2.StartIndex + 1));
         statLine.add(String.valueOf(hairpin2.MatchCount));
         statLine.add(String.valueOf(hairpin2.PrefixMatchLength));
 
+        RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
+        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
         statLine.add(String.valueOf(rcMatch1.Read1Shift));
         statLine.add(String.valueOf(rcMatch1.MismatchCount));
         statLine.add(String.valueOf(rcMatch2.Read1Shift));
         statLine.add(String.valueOf(rcMatch2.MismatchCount));
+
+        hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
+        hairpin2 =  findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+        int trimmedEnd1 = hairpin1 == null ? fastq1.getReadLength() - 1 : hairpin1.StartIndex - 1;
+        int trimmedEnd2 = hairpin2 == null ? fastq2.getReadLength() - 1 : hairpin2.StartIndex - 1;
+        FastqRecord trimmedFastq1 = new FastqRecord(fastq1.getReadName(), fastq1.getReadString().substring(0, trimmedEnd1 + 1), fastq1.getBaseQualityHeader(), fastq1.getBaseQualityString().substring(0, trimmedEnd1 + 1));
+        FastqRecord trimmedFastq2 = new FastqRecord(fastq1.getReadName(), fastq2.getReadString().substring(0, trimmedEnd2 + 1), fastq1.getBaseQualityHeader(), fastq2.getBaseQualityString().substring(0, trimmedEnd2 + 1));
+        ReadPairStats stats = getReadPairStats(trimmedFastq1, trimmedFastq2);
 
         statLine.add(consensusReadForOutput(getConsensusRead(trimmedFastq1, trimmedFastq2)));
         statLine.add(String.valueOf(stats.MissingCount));
@@ -542,19 +843,11 @@ public class FastqBiomodalCollapse
         statLine.add(alignedQual1);
         statLine.add(alignedRead2);
         statLine.add(alignedQual2);
-        statLine.add(cigar);
+        statLine.add(getCigar(alignedBases));
 
-        statLine.add(consensusReadForOutput(getConsensusRead(alignedFastq1, alignedFastq2)));
-
-        statLine.add(String.valueOf(alignedStats.MissingCount));
-        statLine.add(String.valueOf(alignedStats.MismatchCount));
-        statLine.add(String.valueOf(alignedStats.HighQualMismatchCountGG));
-        statLine.add(String.valueOf(alignedStats.HighQualMismatchCountOther));
-        statLine.add(String.valueOf(alignedStats.LowQualUnambiguousCount));
-        statLine.add(String.valueOf(alignedStats.LowQualAmbiguousCount));
-        statLine.add(String.valueOf(alignedStats.ModCGCount));
-        statLine.add(String.valueOf(alignedStats.ModCOtherCount));
-        statLine.add(String.valueOf(alignedStats.IndelCount));
+        alignmentRevCompMatch = alignmentRevCompMatch != null ? alignmentRevCompMatch : new RevCompMatchInfo(0, -1);
+        statLine.add(String.valueOf(alignmentRevCompMatch.Read1Shift));
+        statLine.add(String.valueOf(alignmentRevCompMatch.MismatchCount));
 
         writer.write(statLine.toString());
         writer.newLine();
@@ -594,17 +887,113 @@ public class FastqBiomodalCollapse
             "aligned_read2",
             "aligned_qual2",
             "cigar",
-            "aligned_consensus_read",
-            "aligned_missing_count",
-            "aligned_mismatch_count",
-            "aligned_high_qual_GG_mismatch_count",
-            "aligned_high_qual_other_mismatch_count",
-            "aligned_low_qual_unambiguous_count",
-            "aligned_low_qual_ambiguous_count",
-            "aligned_methC_G_count",
-            "aligned_methC_other_count",
-            "aligned_indel_count"
+            "rev_comp_read_shift1",
+            "rev_comp_mismatch_count"
+//            ,
+//            "aligned_consensus_read",
+//            "aligned_missing_count",
+//            "aligned_mismatch_count",
+//            "aligned_high_qual_GG_mismatch_count",
+//            "aligned_high_qual_other_mismatch_count",
+//            "aligned_low_qual_unambiguous_count",
+//            "aligned_low_qual_ambiguous_count",
+//            "aligned_methC_G_count",
+//            "aligned_methC_other_count",
+//            "aligned_indel_count"
     };
+
+//    private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
+//    {
+//        mFastqPairProcessedCount++;
+//
+//        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
+//        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+//
+//        RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
+//        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
+//
+//        List<Pair<BaseQualPair, BaseQualPair>> alignedSeq = alignUpToHairpin(fastq1, fastq2, hairpin1, hairpin2);
+//
+//        String alignedRead1 =
+//                alignedSeq.stream().map(x -> x.getLeft() == null ? "_" : String.valueOf(x.getLeft().Base)).collect(Collectors.joining());
+//        String alignedQual1 = alignedSeq.stream()
+//                .map(x -> x.getLeft() == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.getLeft().Qual))
+//                .collect(Collectors.joining());
+//
+//        String alignedRead2 =
+//                alignedSeq.stream().map(x -> x.getRight() == null ? "_" : String.valueOf(x.getRight().Base)).collect(Collectors.joining());
+//        String alignedQual2 = alignedSeq.stream()
+//                .map(x -> x.getRight() == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.getRight().Qual))
+//                .collect(Collectors.joining());
+//
+//        String cigar = getCigar(alignedSeq);
+//
+//        FastqRecord alignedFastq1 = new FastqRecord(fastq1.getReadName(), alignedRead1, fastq1.getBaseQualityHeader(), alignedQual1);
+//        FastqRecord alignedFastq2 = new FastqRecord(fastq1.getReadName(), alignedRead2, fastq1.getBaseQualityHeader(), alignedQual2);
+//
+//        // Get stats
+//        int trimmedEnd1 = hairpin1 == null ? fastq1.getReadLength() - 1 : hairpin1.StartIndex - 1;
+//        int trimmedEnd2 = hairpin2 == null ? fastq2.getReadLength() - 1 : hairpin2.StartIndex - 1;
+//        FastqRecord trimmedFastq1 = new FastqRecord(fastq1.getReadName(), fastq1.getReadString().substring(0, trimmedEnd1 + 1), fastq1.getBaseQualityHeader(), fastq1.getBaseQualityString().substring(0, trimmedEnd1 + 1));
+//        FastqRecord trimmedFastq2 = new FastqRecord(fastq1.getReadName(), fastq2.getReadString().substring(0, trimmedEnd2 + 1), fastq1.getBaseQualityHeader(), fastq2.getBaseQualityString().substring(0, trimmedEnd2 + 1));
+//
+//        ReadPairStats stats = getReadPairStats(trimmedFastq1, trimmedFastq2);
+//        ReadPairStats alignedStats = getReadPairStats(alignedFastq1, alignedFastq2);
+//
+//        // write output
+//        StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
+//        statLine.add(fastq1.getReadName());
+//        statLine.add(String.valueOf(fastq1.getReadLength()));
+//        statLine.add(String.valueOf(fastq2.getReadLength()));
+//        statLine.add(fastq1.getReadString());
+//        statLine.add(fastq1.getBaseQualityString());
+//        statLine.add(fastq2.getReadString());
+//        statLine.add(fastq2.getBaseQualityString());
+//
+//        hairpin1 = hairpin1 != null ? hairpin1 : new HairpinInfo(-2, -1, -1);
+//        statLine.add(String.valueOf(hairpin1.StartIndex + 1));
+//        statLine.add(String.valueOf(hairpin1.MatchCount));
+//        statLine.add(String.valueOf(hairpin1.PrefixMatchLength));
+//
+//        hairpin2 = hairpin2 != null ? hairpin2 : new HairpinInfo(-2, -1, -1);
+//        statLine.add(String.valueOf(hairpin2.StartIndex + 1));
+//        statLine.add(String.valueOf(hairpin2.MatchCount));
+//        statLine.add(String.valueOf(hairpin2.PrefixMatchLength));
+//
+//        statLine.add(String.valueOf(rcMatch1.Read1Shift));
+//        statLine.add(String.valueOf(rcMatch1.MismatchCount));
+//        statLine.add(String.valueOf(rcMatch2.Read1Shift));
+//        statLine.add(String.valueOf(rcMatch2.MismatchCount));
+//
+//        statLine.add(consensusReadForOutput(getConsensusRead(trimmedFastq1, trimmedFastq2)));
+//        statLine.add(String.valueOf(stats.MissingCount));
+//        statLine.add(String.valueOf(stats.MismatchCount));
+//        statLine.add(String.valueOf(stats.HighQualMismatchCountGG));
+//        statLine.add(String.valueOf(stats.HighQualMismatchCountOther));
+//        statLine.add(String.valueOf(stats.LowQualUnambiguousCount));
+//        statLine.add(String.valueOf(stats.LowQualAmbiguousCount));
+//        statLine.add(String.valueOf(stats.ModCGCount));
+//        statLine.add(String.valueOf(stats.ModCOtherCount));
+//
+//        statLine.add(alignedRead1);
+//        statLine.add(alignedQual1);
+//        statLine.add(alignedRead2);
+//        statLine.add(alignedQual2);
+//        statLine.add(cigar);
+//
+//        statLine.add(consensusReadForOutput(getConsensusRead(alignedFastq1, alignedFastq2)));
+//
+//        statLine.add(String.valueOf(alignedStats.MissingCount));
+//        statLine.add(String.valueOf(alignedStats.MismatchCount));
+//        statLine.add(String.valueOf(alignedStats.HighQualMismatchCountGG));
+//        statLine.add(String.valueOf(alignedStats.HighQualMismatchCountOther));
+//        statLine.add(String.valueOf(alignedStats.LowQualUnambiguousCount));
+//        statLine.add(String.valueOf(alignedStats.LowQualAmbiguousCount));
+//        statLine.add(String.valueOf(alignedStats.ModCGCount));
+//        statLine.add(String.valueOf(alignedStats.ModCOtherCount));
+//        statLine.add(String.valueOf(alignedStats.IndelCount));
+//
+//    }
 
     public static class ReadPairStats
     {
