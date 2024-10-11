@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
@@ -63,7 +63,7 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
     }
 
     @Override
-    public List<MutTypeCount> countMutationContexts(String sampleId)
+    public List<MutContextCount> countMutationContexts(String sampleId)
     {
         try
         {
@@ -97,11 +97,11 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
                 writeDetails(indelDetailsPath, mIndelDetailsList);
             }
 
-            List<MutTypeCount> contextCountsList = new ArrayList<>();
+            List<MutContextCount> contextCountsList = new ArrayList<>();
             for(String indelContextName : contextCountsMap.keySet())
             {
                 int count = contextCountsMap.get(indelContextName);
-                MutTypeCount mutTypeCount = new MutTypeCount(indelContextName, count);
+                MutContextCount mutTypeCount = new MutContextCount(indelContextName, count);
 
                 CHORD_LOGGER.trace(mutTypeCount);
 

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
@@ -68,7 +68,7 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
     }
 
     @Override
-    public List<MutTypeCount> countMutationContexts(String sampleId)
+    public List<MutContextCount> countMutationContexts(String sampleId)
     {
         try
         {
@@ -98,14 +98,14 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
                 writeDetails(snvDetailsPath, mSnvDetailsList);
             }
 
-            List<MutTypeCount> triNucCountsList = new ArrayList<>();
+            List<MutContextCount> triNucCountsList = new ArrayList<>();
 
             for(String binName : triNucNameCountsMap.keySet())
             {
                 String newBinName = SnvDetails.renameTriNucBin(binName);
                 int count = triNucNameCountsMap.get(binName);
 
-                MutTypeCount mutTypeCount = new MutTypeCount(newBinName, count);
+                MutContextCount mutTypeCount = new MutContextCount(newBinName, count);
 
                 CHORD_LOGGER.trace(mutTypeCount);
 

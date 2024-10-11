@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
@@ -67,7 +67,7 @@ public class SvPrep implements VariantTypePrep<StructuralVariant>
     }
 
     @Override
-    public List<MutTypeCount> countMutationContexts(String sampleId)
+    public List<MutContextCount> countMutationContexts(String sampleId)
     {
         try
         {
@@ -88,7 +88,7 @@ public class SvPrep implements VariantTypePrep<StructuralVariant>
                 contextCountsMap.compute(svContextName, (k,v) -> v + 1);
             }
 
-            List<MutTypeCount> counts = new ArrayList<>();
+            List<MutContextCount> counts = new ArrayList<>();
 
             if(mConfig.WriteDetailedFiles)
             {
@@ -100,7 +100,7 @@ public class SvPrep implements VariantTypePrep<StructuralVariant>
             for (String indelContextName: contextCountsMap.keySet()) {
                 int count = contextCountsMap.get(indelContextName);
 
-                MutTypeCount mutTypeCount = new MutTypeCount(indelContextName, count);
+                MutContextCount mutTypeCount = new MutContextCount(indelContextName, count);
 
                 CHORD_LOGGER.trace(mutTypeCount);
 

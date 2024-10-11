@@ -7,5 +7,5 @@ public interface VariantTypePrep<T>
 {
     List<T> loadVariants(String sampleId) throws NoSuchFileException;
 
-    List<MutTypeCount> countMutationContexts(String sampleId);
+    List<MutContextCount> countMutationContexts(String sampleId);
 }
