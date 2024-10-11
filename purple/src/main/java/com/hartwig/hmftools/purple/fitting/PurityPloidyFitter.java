@@ -216,7 +216,7 @@ public class PurityPloidyFitter
 
         if(!hasTumor)
         {
-            mFinalPurityFit = mCopyNumberPurityFit;
+            mFinalPurityFit = lowestPurityFit;
             mFitMethod = FittedPurityMethod.NO_TUMOR;
             return;
         }
