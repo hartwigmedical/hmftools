@@ -47,18 +47,20 @@ public class SamplePrepTask implements Callable<Long>
 
     public void processSample()
     {
+        String logPrefix = mConfig.isSingleSample() ? "" : String.format("sample(%s): ", mSampleId);
+
         List<VariantTypePrep<?>> variantTypePreps = List.of(
-                new SnvPrep(mConfig),
-                new IndelPrep(mConfig),
-                new SvPrep(mConfig)
+                new SnvPrep(mConfig).logPrefix(logPrefix),
+                new IndelPrep(mConfig).logPrefix(logPrefix),
+                new SvPrep(mConfig).logPrefix(logPrefix)
         );
 
-        if(mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0)
+        if(mConfig.isMultiSample() && (mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0))
         {
             CHORD_LOGGER.info("{}/{}: sample({})", mSampleIndex+1, mConfig.SampleIds.size(), mSampleId);
         }
 
-        for(VariantTypePrep<?> variantTypePrep : variantTypePreps)
+        for(VariantTypePrep variantTypePrep : variantTypePreps)
         {
             List<MutContextCount> variantTypeContextCounts = variantTypePrep.countMutationContexts(mSampleId);
 

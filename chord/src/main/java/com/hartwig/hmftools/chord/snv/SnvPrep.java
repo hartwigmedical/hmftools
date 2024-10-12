@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
+import com.hartwig.hmftools.chord.common.LoggingOptions;
 import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.chord.common.VariantTypePrep;
@@ -19,9 +20,10 @@ import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SnvPrep implements VariantTypePrep<SmallVariant>
+public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
 {
     private final ChordConfig mConfig;
+    private String mLogPrefix = "";
 
     List<SnvDetails> mSnvDetailsList = new ArrayList<>();
 
@@ -33,9 +35,16 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
     }
 
     @Override
+    public SnvPrep logPrefix(String logPrefix)
+    {
+        mLogPrefix = logPrefix;
+        return this;
+    }
+
+    @Override
     public List<SmallVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass);
+        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass).logPrefix(mLogPrefix);
 
         List<VariantContext> variants = vcfFile.loadVariants();
 
@@ -72,15 +81,13 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
     {
         try
         {
-            CHORD_LOGGER.info("Extracting SNV 96 trinucleotide contexts");
+            CHORD_LOGGER.debug("{}Running {} - counting trinucleotide contexts", mLogPrefix, this.getClass().getSimpleName());
 
             List<SmallVariant> snvs = loadVariants(sampleId);
-            CHORD_LOGGER.debug("Loaded {} SNVs", snvs.size());
+            CHORD_LOGGER.debug("{}Found {} SNVs", mLogPrefix, snvs.size());
 
-            CHORD_LOGGER.debug("Initializing counts");
             Map<String,Integer> triNucNameCountsMap = initializeCounts();
 
-            CHORD_LOGGER.debug("Populating counts");
             for(SmallVariant snv : snvs)
             {
                 SnvDetails snvDetails = SnvDetails.from(sampleId, snv);
@@ -94,7 +101,7 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
             if(mConfig.WriteDetailedFiles)
             {
                 String snvDetailsPath = mConfig.OutputDir + "/" + sampleId + SNV_DETAILS_FILE_SUFFIX;
-                CHORD_LOGGER.info("Writing SNV details to: {}", snvDetailsPath);
+                CHORD_LOGGER.debug("{}Writing SNV details to: {}", mLogPrefix, snvDetailsPath);
                 writeDetails(snvDetailsPath, mSnvDetailsList);
             }
 
@@ -111,14 +118,14 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>
 
                 triNucCountsList.add(mutTypeCount);
             }
+            CHORD_LOGGER.debug("{}Completed {}", mLogPrefix, this.getClass().getSimpleName());
 
             return triNucCountsList;
         }
         catch(Exception e)
         {
-            CHORD_LOGGER.error("sample({}) failed to count SNV trinucleotide contexts", sampleId);
+            CHORD_LOGGER.error("{}{} failed: {}", mLogPrefix, this.getClass().getSimpleName(), e.toString());
             e.printStackTrace();
-            System.exit(1);
             return null;
         }
     }
