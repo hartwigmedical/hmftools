@@ -58,7 +58,7 @@ public class ChordRunnerTest
         ChordDataPrep prep = new ChordDataPrep(config);
         prep.run();
 
-        File outputFile = new File(ChordDataWriter.formOutputFile(config, COHORT_FILE_PREFIX));
+        File outputFile = new File(ChordDataWriter.formOutputFile(TMP_OUTPUT_DIR, COHORT_FILE_PREFIX, ""));
         assertTrue(outputFile.exists());
     }
 

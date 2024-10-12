@@ -8,11 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-
-import org.jetbrains.annotations.Nullable;
 
 public class ChordDataWriter
 {
@@ -31,22 +28,16 @@ public class ChordDataWriter
         mWriter = initializeWriter();
     }
 
-    public static String formOutputFile(String outputDir, String sampleId, @Nullable String outputId)
+    public static String formOutputFile(String outputDir, String sampleId, String outputId)
     {
         String outputFile = outputDir + "/" + sampleId;
 
-        if(outputId != null)
+        if(!outputId.isEmpty())
             outputFile += "." + outputId;
 
         outputFile += MUTATION_CONTEXTS_FILE_SUFFIX;
 
         return outputFile;
-    }
-
-    @VisibleForTesting
-    public static String formOutputFile(ChordConfig config, String sampleId)
-    {
-        return formOutputFile(config.OutputDir, sampleId, config.OutputId);
     }
 
     private BufferedWriter initializeWriter() throws IOException
