@@ -15,10 +15,9 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.LoggingOptions;
-import com.hartwig.hmftools.chord.common.MutContextCount;
-import com.hartwig.hmftools.chord.common.VariantTypePrep;
+import com.hartwig.hmftools.chord.prep.MutContextCount;
+import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
-import com.hartwig.hmftools.chord.indel.IndelPrep;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 
 import htsjdk.variant.variantcontext.VariantContext;

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.chord.common.MutContextCount;
+import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.snv.SnvPrep;
 
 import org.apache.commons.io.FileUtils;

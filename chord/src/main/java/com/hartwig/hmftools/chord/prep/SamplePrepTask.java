@@ -8,8 +8,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutContextCount;
-import com.hartwig.hmftools.chord.common.VariantTypePrep;
 import com.hartwig.hmftools.chord.indel.IndelPrep;
 import com.hartwig.hmftools.chord.snv.SnvPrep;
 import com.hartwig.hmftools.chord.sv.SvPrep;

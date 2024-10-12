@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 import org.jetbrains.annotations.Nullable;

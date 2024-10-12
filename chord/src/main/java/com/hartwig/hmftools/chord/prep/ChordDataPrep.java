@@ -11,7 +11,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

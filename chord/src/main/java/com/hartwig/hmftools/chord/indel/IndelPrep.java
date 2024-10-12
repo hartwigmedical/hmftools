@@ -11,11 +11,10 @@ import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.LoggingOptions;
-import com.hartwig.hmftools.chord.common.MutContextCount;
+import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
-import com.hartwig.hmftools.chord.common.VariantTypePrep;
+import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
-import com.hartwig.hmftools.chord.snv.SnvPrep;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.jetbrains.annotations.NotNull;
