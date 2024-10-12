@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.common.MutContextCount;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -20,8 +21,8 @@ public class ChordDataWriter
 
     private final BufferedWriter mWriter;
 
-    private static final String MUTATION_CONTEXTS_FILE_SUFFIX = ".chord.mutation_contexts.tsv";
-    private static final String COHORT_FILE_PREFIX = "cohort";
+    public static final String MUTATION_CONTEXTS_FILE_SUFFIX = ".chord.mutation_contexts.tsv";
+    public static final String COHORT_FILE_PREFIX = "cohort";
     private static final String FLD_SAMPLE_ID = "sample_id";
 
     public ChordDataWriter(ChordConfig config) throws IOException
@@ -41,6 +42,12 @@ public class ChordDataWriter
         outputFile += MUTATION_CONTEXTS_FILE_SUFFIX;
 
         return outputFile;
+    }
+
+    @VisibleForTesting
+    public static String formOutputFile(ChordConfig config, String sampleId)
+    {
+        return formOutputFile(config.OutputDir, sampleId, config.OutputId);
     }
 
     private BufferedWriter initializeWriter() throws IOException

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.chord;
 
+import static com.hartwig.hmftools.chord.ChordTestUtils.HUMAN_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
@@ -23,8 +24,6 @@ import org.junit.Test;
 
 public class IndelPrepTest
 {
-    private static final String HUMAN_GENOME_FASTA = "/Users/lnguyen/Hartwig/hartwigmedical/resources/ref_genomes/GRCh37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-
     @Before
     public void setup()
     {
