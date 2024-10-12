@@ -997,6 +997,7 @@ public class PhaseSetBuilder
             boolean firstIsLineSite = link.first().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.first());
             boolean secondIsLineSite = link.second().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.second());
 
+            // put LINE links not already associated with a phase set into their own
             if(firstIsLineSite || secondIsLineSite)
             {
                 boolean processed = (firstIsLineSite && processedSecondaries.contains(link.first()))

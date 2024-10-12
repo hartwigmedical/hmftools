@@ -153,7 +153,6 @@ public final class AssemblyLinker
         if(lineLink != null)
             return lineLink;
 
-
         firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
         secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
 

@@ -107,27 +107,49 @@ public class LineSiteTest
         String polyA = "AAAAAAAAAAAAAAAA";
         String polyT = Nucleotides.reverseComplementBases(polyA);
 
-        // first a DEL
+        // first a DEL with poly A at -ve junction
         Junction firstJunction = new Junction(CHR_1, 100, FORWARD);
         Junction secondJunction = new Junction(CHR_1, 110, REVERSE);
 
         String extraBases = "GTAGTGCTGTCGA";
+
         String firstExtBases = extraBases + polyA;
         String firstAssemblyBases = firstRefBases + firstExtBases;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
 
-        JunctionAssembly firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
+        JunctionAssembly firstAssembly =
+                new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
 
         String secondExtBases = polyA;
         String secondAssemblyBases = secondExtBases + secondRefBases;
 
-        JunctionAssembly secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
+        JunctionAssembly secondAssembly =
+                new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
         secondAssembly.markLineSequence();
 
-        // order passed in doesn't matter
         AssemblyLink link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, false, false);
         assertNotNull(link);
         assertEquals(firstExtBases, link.insertedBases());
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(DEL, link.svType());
+
+        // then a DEL with poly T at +ve junction
+        firstExtBases = polyT;
+        firstAssemblyBases = firstRefBases + firstExtBases;
+        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
+
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
+        firstAssembly.markLineSequence();
+
+        secondExtBases = polyT + extraBases;
+        secondAssemblyBases = secondExtBases + secondRefBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
+
+        link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, false, false);
+        assertNotNull(link);
+        assertEquals(secondExtBases, link.insertedBases());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(DEL, link.svType());
@@ -138,6 +160,12 @@ public class LineSiteTest
 
         firstJunction = new Junction(CHR_1, 100, REVERSE);
         firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstExtBases.length());
+
+        secondExtBases = polyA;
+        secondAssemblyBases = secondExtBases + secondRefBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
+        secondAssembly.markLineSequence();
 
         link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, true, false);
         assertNotNull(link);
@@ -162,7 +190,5 @@ public class LineSiteTest
         assertNotNull(link);
         assertEquals(firstExtBases + extraBases, link.insertedBases());
         assertEquals(DUP, link.svType());
-
-
     }
 }
