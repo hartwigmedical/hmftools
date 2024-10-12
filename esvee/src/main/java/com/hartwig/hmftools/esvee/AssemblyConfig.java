@@ -396,7 +396,7 @@ public class AssemblyConfig
 
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
-        RunRemoteRefLinking = true;
+        RunRemoteRefLinking = false;
         WriteCandidateReads = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);

@@ -282,7 +282,7 @@ public class AssemblyAlignment
                         addFinalFacingExtensionBases(
                                 nextAssembly, fullSequence, sequenceCigar, currentSeqLength, lastAddedReversed, assemblyLinks);
 
-                        currentSeqLength = nextAssembly.extensionLength();
+                        currentSeqLength += nextAssembly.extensionLength();
                     }
 
                     continue;
