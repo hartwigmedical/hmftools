@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
 
@@ -148,6 +150,24 @@ public class FiltersTest
         mVariantFilters.applyFilters(var);
 
         assertFalse(var.filters().contains(FilterType.SHORT_FRAG_LENGTH));
+    }
+
+    @Test
+    public void testShortLowVafInversion()
+    {
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+        commonAttributes.put(HOMSEQ, "AGGCT");
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 200, POS_ORIENT, POS_ORIENT, "",
+                commonAttributes, null, null);
+
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 1);
+        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 1);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
     }
 
     /*
