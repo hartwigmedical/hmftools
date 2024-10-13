@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
@@ -38,7 +37,6 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantFilters
 {
@@ -137,10 +135,10 @@ public class VariantFilters
             afThreshold = mFilterConstants.MinAfJunction;
         }
 
-        return !hasSampleAboveAfThreshold(var, afThreshold);
+        return !allSamplesAboveAfThreshold(var, afThreshold);
     }
 
-    private static boolean hasSampleAboveAfThreshold(final Variant var, final double afThreshold)
+    private static boolean allSamplesAboveAfThreshold(final Variant var, final double afThreshold)
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -153,12 +151,12 @@ public class VariantFilters
             {
                 double af = breakend.calcAllelicFrequency(genotype);
 
-                if(af >= afThreshold)
-                    return true;
+                if(af < afThreshold)
+                    return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     private boolean belowMinQuality(final Variant var)
@@ -255,7 +253,7 @@ public class VariantFilters
         if(var.adjustedLength() > SHORT_CALLING_SIZE)
             return false;
 
-        if(hasSampleAboveAfThreshold(var, INV_SHORT_MIN_AF))
+        if(allSamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
             return false;
 
         String homologySequence = var.contextStart().getAttributeAsString(HOMSEQ, "");

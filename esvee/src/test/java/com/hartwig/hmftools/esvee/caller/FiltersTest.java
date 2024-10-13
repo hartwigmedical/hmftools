@@ -63,9 +63,15 @@ public class FiltersTest
         tumorAttributes.put(TOTAL_FRAGS, 1);
         tumorAttributes.put(REF_DEPTH, 100);
 
+        Map<String,Object> referenceAttributes = Maps.newHashMap();
+
+        referenceAttributes.put(SPLIT_FRAGS, 10); // above the threshold in the ref sample
+        referenceAttributes.put(TOTAL_FRAGS, 10);
+        referenceAttributes.put(REF_DEPTH, 100);
+
         Variant var = createSv(
                 "01", CHR_1, CHR_2, 100, 200, POS_ORIENT, NEG_ORIENT, "",
-                null, null, tumorAttributes);
+                null, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -75,7 +81,7 @@ public class FiltersTest
 
         var = createSv(
                 "01", CHR_1, CHR_2, 100, 200, POS_ORIENT, NEG_ORIENT, "",
-                null, null, tumorAttributes);
+                null, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -86,7 +92,7 @@ public class FiltersTest
 
         var = createSv(
                 "01", CHR_1, null, 100, 0, POS_ORIENT, NEG_ORIENT, "",
-                null, null, tumorAttributes);
+                null, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -97,7 +103,7 @@ public class FiltersTest
 
         var = createSv(
                 "01", CHR_1, null, 100, 0, POS_ORIENT, NEG_ORIENT, "",
-                commonAttributes, null, tumorAttributes);
+                commonAttributes, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 

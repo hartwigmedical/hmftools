@@ -78,7 +78,7 @@ public class RefBaseExtender
 
             discordantReads.forEach(x -> candidateReads.add(new NonJunctionRead(x, DISCORDANT)));
 
-            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null && !filterUnmapped(x.mateRead()))
+            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null && !filterUnmapped(x.mateRead(), true))
                     .forEach(x -> assembly.addUnmappedRead(x.mateRead()));
         }
 
@@ -127,7 +127,7 @@ public class RefBaseExtender
             }
             else
             {
-                if(filterUnmapped(mateRead))
+                if(filterUnmapped(mateRead,false))
                     continue;
 
                 assembly.addUnmappedRead(mateRead);
@@ -200,8 +200,8 @@ public class RefBaseExtender
             if(!read.isMateUnmapped())
                 return false;
 
-            // test the mate read's base quals
-            if(read.mateRead() != null && filterUnmapped(read.mateRead()))
+            // test the mate read's base quals and
+            if(read.mateRead() != null && filterUnmapped(read.mateRead(), true))
                 return false;
         }
         else
@@ -215,12 +215,15 @@ public class RefBaseExtender
         return !assembly.hasReadSupport(read.mateRead());
     }
 
-    private static boolean filterUnmapped(final Read read)
+    private static boolean filterUnmapped(final Read read, boolean isDiscordant)
     {
         if(!read.isUnmapped())
             return false;
 
         ReadAdjustments.trimLowQualBases(read);
+
+        if(isDiscordant && read.mateRead() != null && read.mateRead().mappingQuality() == 0)
+            return true;
 
         return read.basesLength() - read.baseTrimCount() < UNMAPPED_TRIM_THRESHOLD;
     }
