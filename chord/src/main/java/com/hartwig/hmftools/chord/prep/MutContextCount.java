@@ -1,28 +1,28 @@
-package com.hartwig.hmftools.chord.common;
+package com.hartwig.hmftools.chord.prep;
 
 import java.util.Objects;
 
-public class MutTypeCount
+public class MutContextCount
 {
-    public final String mType;
+    public final String mName;
     public final int mCount;
 
-    public MutTypeCount(String mutType, int count)
+    public MutContextCount(String contextName, int count)
     {
-        mType = mutType;
+        mName = contextName;
         mCount = count;
     }
 
     @Override
     public String toString()
     {
-        return mType + "\t" + mCount;
+        return mName + "\t" + mCount;
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mType, mCount);
+        return Objects.hash(mName, mCount);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class MutTypeCount
             return false;
         }
 
-        final MutTypeCount other = (MutTypeCount) o;
-        return mCount == other.mCount && mType.equals(other.mType);
+        final MutContextCount other = (MutContextCount) o;
+        return mCount == other.mCount && mName.equals(other.mName);
     }
 }

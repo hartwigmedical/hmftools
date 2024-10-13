@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -21,6 +23,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -39,6 +42,8 @@ public class ChordConfig
 
     public final String OutputDir;
     public final String OutputId;
+
+    public final int Threads;
 
     public final boolean IncludeNonPass;
     public final boolean WriteDetailedFiles;
@@ -77,6 +82,8 @@ public class ChordConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
+        Threads = TaskExecutor.parseThreads(configBuilder);
+
         IncludeNonPass = configBuilder.hasFlag(INCLUDE_NON_PASS);
         WriteDetailedFiles = configBuilder.hasFlag(WRITE_DETAILED_FILES);
 
@@ -100,6 +107,10 @@ public class ChordConfig
         System.exit(1);
         return null;
     }
+
+    public boolean isMultiSample(){ return SampleIds.size() > 1; }
+
+    public boolean isSingleSample(){ return !isMultiSample(); }
 
     public String snvIndelVcfFile(final String sampleId)
     {
@@ -139,12 +150,15 @@ public class ChordConfig
         configBuilder.addConfigItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
+        FileWriterUtils.addOutputOptions(configBuilder);
+
+        configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
+
         configBuilder.addFlag(INCLUDE_NON_PASS, INCLUDE_NON_PASS_DESC);
         configBuilder.addFlag(WRITE_DETAILED_FILES, WRITE_DETAILED_FILES_DESC);
 
         configBuilder.addPath(CHORD_TOOL_DIR, false, CHORD_TOOL_DIR_DESC);
 
-        FileWriterUtils.addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
@@ -153,7 +167,7 @@ public class ChordConfig
             List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile,
             String refGenomeFile, RefGenomeVersion refGenomeVersion,
             String outputDir, String outputId,
-            boolean includeNonPass, boolean writeDetailedFiles,
+            int threads, boolean includeNonPass, boolean writeDetailedFiles,
             String chordToolDir
     )
     {
@@ -165,6 +179,7 @@ public class ChordConfig
         RefGenVersion = refGenomeVersion;
         OutputDir = outputDir;
         OutputId = outputId;
+        Threads = threads;
         IncludeNonPass = includeNonPass;
         WriteDetailedFiles = writeDetailedFiles;
         ChordToolDir = chordToolDir;
@@ -181,6 +196,7 @@ public class ChordConfig
         private RefGenomeVersion RefGenVersion = V37;
         private String OutputDir;
         private String OutputId = "";
+        private int Threads = 1;
         private boolean IncludeNonPass = false;
         private boolean WriteDetailedFiles = false;
         private String ChordToolDir = "";
@@ -233,6 +249,12 @@ public class ChordConfig
             return this;
         }
 
+        public Builder threads(int threads)
+        {
+            Threads = threads;
+            return this;
+        }
+
         public Builder includeNonPass(boolean includeNonPass)
         {
             IncludeNonPass = includeNonPass;
@@ -257,7 +279,7 @@ public class ChordConfig
                     SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile,
                     RefGenomeFile, RefGenVersion,
                     OutputDir, OutputId,
-                    IncludeNonPass, WriteDetailedFiles, ChordToolDir
+                    Threads, IncludeNonPass, WriteDetailedFiles, ChordToolDir
             );
         }
     }

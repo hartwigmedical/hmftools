@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.chord.ChordConfig;
-import com.hartwig.hmftools.chord.common.MutTypeCount;
+import com.hartwig.hmftools.chord.common.LoggingOptions;
+import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
-import com.hartwig.hmftools.chord.common.VariantTypePrep;
+import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
@@ -20,9 +21,10 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class IndelPrep implements VariantTypePrep<IndelVariant>
+public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
 {
     private final ChordConfig mConfig;
+    private String mLogPrefix = "";
 
     @NotNull private final RefGenomeSource mRefGenome;
 
@@ -41,9 +43,16 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
     }
 
     @Override
+    public IndelPrep logPrefix(String logPrefix)
+    {
+        mLogPrefix = logPrefix;
+        return this;
+    }
+
+    @Override
     public List<IndelVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
-        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass);
+        VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass).logPrefix(mLogPrefix);
         List<VariantContext> variantContexts = vcfFile.loadVariants();
 
         List<IndelVariant> indels = new ArrayList<>();
@@ -63,19 +72,17 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
     }
 
     @Override
-    public List<MutTypeCount> countMutationContexts(String sampleId)
+    public List<MutContextCount> countMutationContexts(String sampleId)
     {
         try
         {
-            CHORD_LOGGER.info("Counting indel contexts from sample: {}", sampleId);
+            CHORD_LOGGER.debug("{}Running {} - counting microhomology and repeat contexts", mLogPrefix, this.getClass().getSimpleName());
 
             List<IndelVariant> indels = loadVariants(sampleId);
-            CHORD_LOGGER.debug("Loaded {} indels", indels.size());
+            CHORD_LOGGER.debug("{}Found {} indels", mLogPrefix, indels.size());
 
-            CHORD_LOGGER.debug("Initializing counts");
             Map<String, Integer> contextCountsMap = IndelContext.initializeCounts();
 
-            CHORD_LOGGER.debug("Populating counts");
             for(IndelVariant indel : indels)
             {
                 IndelDetails indelDetails = IndelDetails.from(sampleId, indel, mRefGenome);
@@ -93,28 +100,29 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>
             if(mConfig.WriteDetailedFiles)
             {
                 String indelDetailsPath = mConfig.OutputDir + "/" + sampleId + INDEL_DETAILS_FILE_SUFFIX;
-                CHORD_LOGGER.info("Writing indel details to: {}", indelDetailsPath);
+                CHORD_LOGGER.debug("{}Writing indel details to: {}", mLogPrefix, indelDetailsPath);
                 writeDetails(indelDetailsPath, mIndelDetailsList);
             }
 
-            List<MutTypeCount> contextCountsList = new ArrayList<>();
+            List<MutContextCount> contextCountsList = new ArrayList<>();
             for(String indelContextName : contextCountsMap.keySet())
             {
                 int count = contextCountsMap.get(indelContextName);
-                MutTypeCount mutTypeCount = new MutTypeCount(indelContextName, count);
+                MutContextCount mutTypeCount = new MutContextCount(indelContextName, count);
 
                 CHORD_LOGGER.trace(mutTypeCount);
 
                 contextCountsList.add(mutTypeCount);
             }
 
+            CHORD_LOGGER.debug("{}Completed {}", mLogPrefix, this.getClass().getSimpleName());
+
             return contextCountsList;
         }
         catch(Exception e)
         {
-            CHORD_LOGGER.error("sample({}) failed to count indel contexts", sampleId);
+            CHORD_LOGGER.error("{}{} failed: {}", mLogPrefix, this.getClass().getSimpleName(), e.toString());
             e.printStackTrace();
-            System.exit(1);
             return null;
         }
     }

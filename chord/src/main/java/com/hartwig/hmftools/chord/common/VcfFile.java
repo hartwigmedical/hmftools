@@ -11,15 +11,23 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class VcfFile
+public class VcfFile implements LoggingOptions
 {
     public final String mPath;
-    private final boolean mIncludeNonPass;
+    public final boolean mIncludeNonPass;
+    public String mLogPrefix = "";
 
     public VcfFile(String path, boolean includeNonPass)
     {
         mPath = path;
         mIncludeNonPass = includeNonPass;
+    }
+
+    @Override
+    public VcfFile logPrefix(String logPrefix)
+    {
+        mLogPrefix = logPrefix;
+        return this;
     }
 
     public List<VariantContext> loadVariants() throws NoSuchFileException
@@ -42,14 +50,7 @@ public class VcfFile
         }
 
         String filterType = (mIncludeNonPass) ? "" : "PASS ";
-        if(variants.size()==0)
-        {
-            CHORD_LOGGER.warn("No {}variants found in vcf file: {}", filterType, mPath);
-        }
-        else
-        {
-            CHORD_LOGGER.info("Loaded {} {}variants from vcf file: {}", variants.size(), filterType, mPath);
-        }
+        CHORD_LOGGER.debug("{}Loaded {} {}variants from: {}", mLogPrefix, variants.size(), filterType, mPath);
 
         return variants;
     }
