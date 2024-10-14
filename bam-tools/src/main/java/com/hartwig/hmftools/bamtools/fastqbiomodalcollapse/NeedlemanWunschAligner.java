@@ -7,20 +7,13 @@ import java.util.function.ToIntBiFunction;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 public class NeedlemanWunschAligner<T>
 {
-    private final ToIntBiFunction<T, T> mScoringFn;
-    private final ToIntBiFunction<T, T> mScoringFn2;
-    private final int mOpenGapPenalty;
-    private final int mExtendGapPenalty;
 
-    public NeedlemanWunschAligner(final ToIntBiFunction<T, T> scoringFn, final ToIntBiFunction<T, T> scoringFn2, int openGapPenalty, int extendGapPenalty)
+    public NeedlemanWunschAligner()
     {
-        mScoringFn = scoringFn;
-        mScoringFn2 = scoringFn2;
-        mOpenGapPenalty = openGapPenalty;
-        mExtendGapPenalty = extendGapPenalty;
     }
 
     public enum TraceBackState
@@ -36,7 +29,8 @@ public class NeedlemanWunschAligner<T>
     }
 
 
-    public List<Pair<T, T>> align(final List<T> seq1, final List<T> seq2, boolean noPenaltySeq1Suffix, boolean noPenaltySeq2Suffix)
+    public List<Pair<T, T>> align(final List<T> seq1, final List<T> seq2, final ToIntBiFunction<T, T> scoringFn,
+            @Nullable final ToIntBiFunction<T, T> scoringFn2, int openGapPenalty, int extendGapPenalty, boolean noPenaltySuffux)
     {
         // initialize scoring matrices
         long[] M = new long[(seq1.size() + 1) * (seq2.size() + 1)];
@@ -45,8 +39,8 @@ public class NeedlemanWunschAligner<T>
         long[] M2 = new long[(seq1.size() + 1) * (seq2.size() + 1)];
         long[] X2 = new long[(seq1.size() + 1) * (seq2.size() + 1)];
         long[] Y2 = new long[(seq1.size() + 1) * (seq2.size() + 1)];
-        long[] suffX = noPenaltySeq1Suffix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
-        long[] suffY = noPenaltySeq2Suffix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        long[] suffX = noPenaltySuffux ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        long[] suffY = noPenaltySuffux ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
         TraceBackState[] MTrace = new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)];
         TraceBackState[] XTrace = new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)];
@@ -54,15 +48,15 @@ public class NeedlemanWunschAligner<T>
         TraceBackState[] M2Trace = new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)];
         TraceBackState[] X2Trace = new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)];
         TraceBackState[] Y2Trace = new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)];
-        TraceBackState[] suffXTrace = noPenaltySeq1Suffix ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
-        TraceBackState[] suffYTrace = noPenaltySeq2Suffix ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        TraceBackState[] suffXTrace = noPenaltySuffux ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        TraceBackState[] suffYTrace = noPenaltySuffux ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
         for(int r = 1; r <= seq1.size(); r++)
         {
             int index = (seq2.size() + 1) * r;
 
             M[index] = Integer.MIN_VALUE;
-            X[index] = -mOpenGapPenalty - (r - 1) * mExtendGapPenalty;
+            X[index] = -openGapPenalty - (r - 1) * extendGapPenalty;
             Y[index] = Integer.MIN_VALUE;
             M2[index] = Integer.MIN_VALUE;
             X2[index] = Integer.MIN_VALUE;
@@ -75,13 +69,13 @@ public class NeedlemanWunschAligner<T>
             X2Trace[index] = null;
             Y2Trace[index] = null;
 
-            if(noPenaltySeq1Suffix)
+            if(noPenaltySuffux)
             {
                 suffX[index] = 0;
                 suffXTrace[index] = (r == 1) ? TraceBackState.M : TraceBackState.SUFFIX_X;
             }
 
-            if(noPenaltySeq2Suffix)
+            if(noPenaltySuffux)
             {
                 suffY[index] = Integer.MIN_VALUE;
                 suffYTrace[index] = null;
@@ -92,7 +86,7 @@ public class NeedlemanWunschAligner<T>
         {
             M[c] = Integer.MIN_VALUE;
             X[c] = Integer.MIN_VALUE;
-            Y[c] = -mOpenGapPenalty - (c - 1) * mExtendGapPenalty;
+            Y[c] = -openGapPenalty - (c - 1) * extendGapPenalty;
             M2[c] = Integer.MIN_VALUE;
             X2[c] = Integer.MIN_VALUE;
             Y2[c] = Integer.MIN_VALUE;
@@ -104,13 +98,13 @@ public class NeedlemanWunschAligner<T>
             X2Trace[c] = null;
             Y2Trace[c] = null;
 
-            if(noPenaltySeq1Suffix)
+            if(noPenaltySuffux)
             {
                 suffX[c] = Integer.MIN_VALUE;
                 suffXTrace[c] = null;
             }
 
-            if(noPenaltySeq2Suffix)
+            if(noPenaltySuffux)
             {
                 suffY[c] = 0;
                 suffYTrace[c] = (c == 1) ? TraceBackState.M : TraceBackState.SUFFIX_Y;
@@ -131,19 +125,20 @@ public class NeedlemanWunschAligner<T>
         X2Trace[0] = null;
         Y2Trace[0] = null;
 
-        if(noPenaltySeq1Suffix)
+        if(noPenaltySuffux)
         {
             suffX[0] = Integer.MIN_VALUE;
             suffXTrace[0] = null;
         }
 
-        if(noPenaltySeq2Suffix)
+        if(noPenaltySuffux)
         {
             suffY[0] = Integer.MIN_VALUE;
             suffYTrace[0] = null;
         }
 
         // fill out
+        List<Pair<TraceBackState, Long>> edgeScores = Lists.newArrayList();
         for(int r = 1; r <= seq1.size(); r++)
         {
             T base1 = seq1.get(r - 1);
@@ -154,12 +149,10 @@ public class NeedlemanWunschAligner<T>
                 int upIndex = (seq2.size() + 1) * (r - 1) + c;
                 int leftIndex = (seq2.size() + 1) * r + c - 1;
                 int diagIndex = (seq2.size() + 1) * (r - 1) + c - 1;
-                int matchScore = mScoringFn.applyAsInt(base1, base2);
-                int matchScore2 = mScoringFn2.applyAsInt(base1, base2);
-
-                List<Pair<TraceBackState, Long>> edgeScores = Lists.newArrayList();
 
                 // M
+                int matchScore = scoringFn.applyAsInt(base1, base2);
+                edgeScores.clear();
                 edgeScores.add(Pair.of(TraceBackState.M, M[diagIndex] + matchScore));
                 edgeScores.add(Pair.of(TraceBackState.X, X[diagIndex] + matchScore));
                 edgeScores.add(Pair.of(TraceBackState.Y, Y[diagIndex] + matchScore));
@@ -169,21 +162,22 @@ public class NeedlemanWunschAligner<T>
 
                 // X
                 edgeScores.clear();
-                edgeScores.add(Pair.of(TraceBackState.M, M[upIndex] - mOpenGapPenalty));
-                edgeScores.add(Pair.of(TraceBackState.X, X[upIndex] - mExtendGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.M, M[upIndex] - openGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.X, X[upIndex] - extendGapPenalty));
                 bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                 X[index] = bestTransition.getRight();
                 XTrace[index] = bestTransition.getLeft();
 
                 // Y
                 edgeScores.clear();
-                edgeScores.add(Pair.of(TraceBackState.M, M[leftIndex] - mOpenGapPenalty));
-                edgeScores.add(Pair.of(TraceBackState.Y, Y[leftIndex] - mExtendGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.M, M[leftIndex] - openGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.Y, Y[leftIndex] - extendGapPenalty));
                 bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                 Y[index] = bestTransition.getRight();
                 YTrace[index] = bestTransition.getLeft();
 
                 // M2
+                int matchScore2 = scoringFn2.applyAsInt(base1, base2);
                 edgeScores.clear();
                 edgeScores.add(Pair.of(TraceBackState.M, M[diagIndex] + matchScore2));
                 edgeScores.add(Pair.of(TraceBackState.X, X[diagIndex] + matchScore2));
@@ -197,22 +191,22 @@ public class NeedlemanWunschAligner<T>
 
                 // X2
                 edgeScores.clear();
-                edgeScores.add(Pair.of(TraceBackState.M2, M2[upIndex] - mOpenGapPenalty));
-                edgeScores.add(Pair.of(TraceBackState.X2, X2[upIndex] - mExtendGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.M2, M2[upIndex] - openGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.X2, X2[upIndex] - extendGapPenalty));
                 bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                 X2[index] = bestTransition.getRight();
                 X2Trace[index] = bestTransition.getLeft();
 
                 // Y2
                 edgeScores.clear();
-                edgeScores.add(Pair.of(TraceBackState.M2, M2[leftIndex] - mOpenGapPenalty));
-                edgeScores.add(Pair.of(TraceBackState.Y2, Y2[leftIndex] - mExtendGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.M2, M2[leftIndex] - openGapPenalty));
+                edgeScores.add(Pair.of(TraceBackState.Y2, Y2[leftIndex] - extendGapPenalty));
                 bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                 Y2[index] = bestTransition.getRight();
                 Y2Trace[index] = bestTransition.getLeft();
 
                 // suffX
-                if(noPenaltySeq1Suffix)
+                if(noPenaltySuffux)
                 {
                     edgeScores.clear();
                     edgeScores.add(Pair.of(TraceBackState.M, M[upIndex]));
@@ -224,7 +218,7 @@ public class NeedlemanWunschAligner<T>
                 }
 
                 // suffY
-                if(noPenaltySeq2Suffix)
+                if(noPenaltySuffux)
                 {
                     edgeScores.clear();
                     edgeScores.add(Pair.of(TraceBackState.M, M[leftIndex]));
@@ -250,8 +244,8 @@ public class NeedlemanWunschAligner<T>
         finalScores.add(Pair.of(TraceBackState.M2, M2[index]));
         finalScores.add(Pair.of(TraceBackState.X2, X2[index]));
         finalScores.add(Pair.of(TraceBackState.Y2, Y2[index]));
-        finalScores.add(Pair.of(TraceBackState.SUFFIX_X, noPenaltySeq1Suffix ? suffX[index] : Integer.MIN_VALUE));
-        finalScores.add(Pair.of(TraceBackState.SUFFIX_Y, noPenaltySeq2Suffix ? suffY[index] : Integer.MIN_VALUE));
+        finalScores.add(Pair.of(TraceBackState.SUFFIX_X, noPenaltySuffux ? suffX[index] : Integer.MIN_VALUE));
+        finalScores.add(Pair.of(TraceBackState.SUFFIX_Y, noPenaltySuffux ? suffY[index] : Integer.MIN_VALUE));
 
         Pair<TraceBackState, Long> bestFinal = Collections.max(finalScores, Comparator.comparingLong(x -> x.getRight()));
         TraceBackState state = bestFinal.getLeft();
@@ -328,7 +322,7 @@ public class NeedlemanWunschAligner<T>
             }
             else if(state == TraceBackState.SUFFIX_X)
             {
-                if(!noPenaltySeq1Suffix)
+                if(!noPenaltySuffux)
                 {
                     throw new RuntimeException("SUFFIX_X is an invalid traceback state");
                 }
@@ -344,7 +338,7 @@ public class NeedlemanWunschAligner<T>
             }
             else if(state == TraceBackState.SUFFIX_Y)
             {
-                if(!noPenaltySeq2Suffix)
+                if(!noPenaltySuffux)
                 {
                     throw new RuntimeException("SUFFIX_Y is an invalid traceback state");
                 }

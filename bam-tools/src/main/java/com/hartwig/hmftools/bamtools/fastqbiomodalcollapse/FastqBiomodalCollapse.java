@@ -68,7 +68,9 @@ public class FastqBiomodalCollapse
     private static final String FORWARD_HAIRPIN = "AATGACGATGCGTTCGAGCATCGTTATT";
     private static final String REVERSE_HAIRPIN = "AATAACGATGCTCGAACGCATCGTCATT";
 
-    private static final NeedlemanWunschAligner<BaseQualPair> ALIGNER = new NeedlemanWunschAligner<>(FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, 6, 1);
+    private static final int OPEN_GAP_PENALTY = 6;
+    private static final int EXTEND_GAP_PENALTY = 1;
+    private static final NeedlemanWunschAligner<BaseQualPair> ALIGNER = new NeedlemanWunschAligner<>();
 
     private final FastqBiomodalCollapseConfig mConfig;
 
@@ -580,7 +582,7 @@ public class FastqBiomodalCollapse
     {
         List<BaseQualPair> seq1 = fastqToSeq(fastq1);
         List<BaseQualPair> seq2 = fastqToSeq(fastq2);
-        return ALIGNER.align(seq1, seq2, true, true);
+        return ALIGNER.align(seq1, seq2, FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true);
     }
 
     private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
