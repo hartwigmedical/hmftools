@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.bamtools.fastqbiomodalcollapse;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.fastqbiomodalcollapse.NeedlemanWunschAligner.SuffixPenaltyOption.NO_PENALTY_SINGLE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -19,16 +19,13 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -583,8 +580,8 @@ public class FastqBiomodalCollapse
         List<BaseQualPair> seq1 = fastqToSeq(fastq1);
         List<BaseQualPair> seq2 = fastqToSeq(fastq2);
         // TODO:
-//        ALIGNER.align2(seq1, seq2, FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true);
-        return ALIGNER.align(seq1, seq2, FastqBiomodalCollapse::getScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true);
+        ALIGNER.align2(seq1, seq2, FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, NO_PENALTY_SINGLE);
+        return ALIGNER.align(seq1, seq2, FastqBiomodalCollapse::getScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, NO_PENALTY_SINGLE);
     }
 
     private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
