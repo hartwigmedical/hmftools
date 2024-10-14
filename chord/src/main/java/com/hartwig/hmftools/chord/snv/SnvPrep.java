@@ -16,6 +16,7 @@ import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -25,6 +26,8 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
     private final ChordConfig mConfig;
     private String mLogPrefix = "";
 
+    private final RefGenomeSource mRefGenome;
+
     List<SnvDetails> mSnvDetailsList = new ArrayList<>();
 
     private static final String SNV_DETAILS_FILE_SUFFIX = ".chord.snv.details.tsv";
@@ -32,6 +35,8 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
     public SnvPrep(ChordConfig config)
     {
         mConfig = config;
+
+        mRefGenome = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
     }
 
     @Override
@@ -90,7 +95,7 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
 
             for(SmallVariant snv : snvs)
             {
-                SnvDetails snvDetails = SnvDetails.from(sampleId, snv);
+                SnvDetails snvDetails = SnvDetails.from(sampleId, snv, mRefGenome);
 
                 if(mConfig.WriteDetailedFiles)
                     mSnvDetailsList.add(snvDetails);

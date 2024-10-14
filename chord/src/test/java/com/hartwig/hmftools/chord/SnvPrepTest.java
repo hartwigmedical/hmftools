@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.chord;
 
 import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestUtils.HUMAN_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
@@ -38,9 +39,9 @@ public class SnvPrepTest
     public void canPrepSnvs()
     {
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(EMPTY_SAMPLE))
                 .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
+                .refGenomeFile(HUMAN_GENOME_FASTA)
                 .build();
 
         SnvPrep prep = new SnvPrep(config);

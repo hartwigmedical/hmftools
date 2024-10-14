@@ -6,14 +6,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import com.hartwig.hmftools.chord.common.SmallVariant;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.common.variant.SageVcfTags;
 
 public class SnvDetails
 {
     public final String mSampleId;
-
 
     public final String mChromosome;
     public final int mPosition;
@@ -42,9 +41,9 @@ public class SnvDetails
         mTriNucContextRenamed = triNucContextRenamed;
     }
 
-    public static SnvDetails from(String sampleId, SmallVariant snv)
+    public static SnvDetails from(String sampleId, SmallVariant snv, RefGenomeSource refGenome)
     {
-        String triNucSequence = snv.Context.getAttributeAsString(SageVcfTags.TRINUCLEOTIDE_CONTEXT, null);
+        String triNucSequence = new String(refGenome.getBases(snv.Chromosome.toString(), snv.Position-1,  snv.Position+1));
         String triNucContext = SnvSigUtils.variantContext(snv.RefBases, snv.AltBases, triNucSequence);
 
         return new SnvDetails(

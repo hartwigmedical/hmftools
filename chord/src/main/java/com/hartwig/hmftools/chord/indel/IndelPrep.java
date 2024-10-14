@@ -17,8 +17,6 @@ import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
@@ -26,7 +24,7 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
     private final ChordConfig mConfig;
     private String mLogPrefix = "";
 
-    @NotNull private final RefGenomeSource mRefGenome;
+    private final RefGenomeSource mRefGenome;
 
     List<IndelDetails> mIndelDetailsList = new ArrayList<>();
 
@@ -35,9 +33,6 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
     public IndelPrep(ChordConfig config)
     {
         mConfig = config;
-
-        if(config.RefGenomeFile == null)
-            throw new IllegalArgumentException(this.getClass().getSimpleName() + " requires ref genome to be provided");
 
         mRefGenome = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
     }
