@@ -580,8 +580,8 @@ public class FastqBiomodalCollapse
         List<BaseQualPair> seq1 = fastqToSeq(fastq1);
         List<BaseQualPair> seq2 = fastqToSeq(fastq2);
         // TODO:
-        ALIGNER.align2(seq1, seq2, FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, NO_PENALTY_SINGLE);
-        return ALIGNER.align(seq1, seq2, FastqBiomodalCollapse::getScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, NO_PENALTY_SINGLE);
+        ALIGNER.align2(seq1, seq2, FastqBiomodalCollapse::getScore, FastqBiomodalCollapse::getScoreSwapComp, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, NO_PENALTY_SINGLE);
+        return ALIGNER.align(seq1, seq2, FastqBiomodalCollapse::getScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, NO_PENALTY_SINGLE);
     }
 
     private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException

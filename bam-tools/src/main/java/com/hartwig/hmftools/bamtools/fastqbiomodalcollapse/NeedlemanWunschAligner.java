@@ -34,18 +34,20 @@ public class NeedlemanWunschAligner<T>
         M2,
         X2,
         Y2,
+        PREFIX_X,
+        PREFIX_Y,
         SUFFIX_X,
         SUFFIX_Y;
     }
 
     public List<Pair<T, T>> align(final List<T> seq1, final List<T> seq2, final ToIntBiFunction<T, T> scoringFn, int openGapPenalty,
-            int extendGapPenalty, final SuffixPenaltyOption suffixPenaltyOption)
+            int extendGapPenalty, boolean noPenaltyPrefix, final SuffixPenaltyOption suffixPenaltyOption)
     {
-        return align2(seq1, seq2, scoringFn, null, openGapPenalty, extendGapPenalty, suffixPenaltyOption);
+        return align2(seq1, seq2, scoringFn, null, openGapPenalty, extendGapPenalty, noPenaltyPrefix, suffixPenaltyOption);
     }
 
     public List<Pair<T, T>> align2(final List<T> seq1, final List<T> seq2, final ToIntBiFunction<T, T> scoringFn,
-            @Nullable final ToIntBiFunction<T, T> scoringFn2, int openGapPenalty, int extendGapPenalty,
+            @Nullable final ToIntBiFunction<T, T> scoringFn2, int openGapPenalty, int extendGapPenalty, boolean noPenaltyPrefix,
             final SuffixPenaltyOption suffixPenaltyOption)
     {
         // initialize scoring matrices
@@ -55,6 +57,8 @@ public class NeedlemanWunschAligner<T>
         long[] M2 = scoringFn2 != null ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         long[] X2 = scoringFn2 != null ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         long[] Y2 = scoringFn2 != null ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        long[] preX = noPenaltyPrefix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        long[] preY = noPenaltyPrefix ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         long[] suffX = suffixPenaltyOption != PENALIZE ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         long[] suffY = suffixPenaltyOption != PENALIZE ? new long[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
@@ -64,6 +68,8 @@ public class NeedlemanWunschAligner<T>
         TraceBackState[] M2Trace = scoringFn2 != null ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         TraceBackState[] X2Trace = scoringFn2 != null ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         TraceBackState[] Y2Trace = scoringFn2 != null ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        TraceBackState[] preXTrace = noPenaltyPrefix ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
+        TraceBackState[] preYTrace = noPenaltyPrefix ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         TraceBackState[] suffXTrace = suffixPenaltyOption != PENALIZE ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
         TraceBackState[] suffYTrace = suffixPenaltyOption != PENALIZE ? new TraceBackState[(seq1.size() + 1) * (seq2.size() + 1)] : null;
 
@@ -88,6 +94,15 @@ public class NeedlemanWunschAligner<T>
                 M2Trace[index] = null;
                 X2Trace[index] = null;
                 Y2Trace[index] = null;
+            }
+
+            if(noPenaltyPrefix)
+            {
+                preX[index] = 0;
+                preXTrace[index] = (r == 1) ? TraceBackState.M : TraceBackState.PREFIX_X;
+
+                preY[index] = Integer.MIN_VALUE;
+                preYTrace[index] = null;
             }
 
             if(suffixPenaltyOption != PENALIZE)
@@ -121,6 +136,15 @@ public class NeedlemanWunschAligner<T>
                 Y2Trace[c] = null;
             }
 
+            if(noPenaltyPrefix)
+            {
+                preX[c] = Integer.MIN_VALUE;
+                preXTrace[c] = null;
+
+                preY[c] = 0;
+                preYTrace[c] = (c == 1) ? TraceBackState.M : TraceBackState.PREFIX_Y;
+            }
+
             if(suffixPenaltyOption != PENALIZE)
             {
                 suffX[c] = Integer.MIN_VALUE;
@@ -148,6 +172,15 @@ public class NeedlemanWunschAligner<T>
             M2Trace[0] = null;
             X2Trace[0] = null;
             Y2Trace[0] = null;
+        }
+
+        if(noPenaltyPrefix)
+        {
+            preX[0] = Integer.MIN_VALUE;
+            preXTrace[0] = null;
+
+            preY[0] = Integer.MIN_VALUE;
+            preYTrace[0] = null;
         }
 
         if(suffixPenaltyOption != PENALIZE)
@@ -178,6 +211,8 @@ public class NeedlemanWunschAligner<T>
                 edgeScores.add(Pair.of(TraceBackState.M, M[diagIndex] + matchScore));
                 edgeScores.add(Pair.of(TraceBackState.X, X[diagIndex] + matchScore));
                 edgeScores.add(Pair.of(TraceBackState.Y, Y[diagIndex] + matchScore));
+                edgeScores.add(Pair.of(TraceBackState.PREFIX_X, noPenaltyPrefix ? preX[diagIndex] + matchScore : Integer.MIN_VALUE));
+                edgeScores.add(Pair.of(TraceBackState.PREFIX_Y, noPenaltyPrefix ? preY[diagIndex] + matchScore : Integer.MIN_VALUE));
                 Pair<TraceBackState, Long> bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                 M[index] = bestTransition.getRight();
                 MTrace[index] = bestTransition.getLeft();
@@ -209,6 +244,8 @@ public class NeedlemanWunschAligner<T>
                     edgeScores.add(Pair.of(TraceBackState.M2, M2[diagIndex] + matchScore2));
                     edgeScores.add(Pair.of(TraceBackState.X2, X2[diagIndex] + matchScore2));
                     edgeScores.add(Pair.of(TraceBackState.Y2, Y2[diagIndex] + matchScore2));
+                    edgeScores.add(Pair.of(TraceBackState.PREFIX_X, noPenaltyPrefix ? preX[diagIndex] + matchScore2 : Integer.MIN_VALUE));
+                    edgeScores.add(Pair.of(TraceBackState.PREFIX_Y, noPenaltyPrefix ? preY[diagIndex] + matchScore2 : Integer.MIN_VALUE));
                     bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                     M2[index] = bestTransition.getRight();
                     M2Trace[index] = bestTransition.getLeft();
@@ -230,6 +267,17 @@ public class NeedlemanWunschAligner<T>
                     Y2Trace[index] = bestTransition.getLeft();
                 }
 
+                if(noPenaltyPrefix)
+                {
+                    // preX
+                    preX[index] = preX[upIndex];
+                    preXTrace[index] = TraceBackState.PREFIX_X;
+
+                    // preX
+                    preY[index] = preY[leftIndex];
+                    preYTrace[index] = TraceBackState.PREFIX_Y;
+                }
+
                 if(suffixPenaltyOption != PENALIZE)
                 {
                     // suffX
@@ -239,6 +287,7 @@ public class NeedlemanWunschAligner<T>
                     edgeScores.add(Pair.of(TraceBackState.SUFFIX_X, suffX[upIndex]));
                     edgeScores.add(Pair.of(TraceBackState.SUFFIX_Y,
                             suffixPenaltyOption == NO_PENALTY_DUAL ? suffY[upIndex] : Integer.MIN_VALUE));
+                    edgeScores.add(Pair.of(TraceBackState.PREFIX_Y, noPenaltyPrefix ? preY[upIndex] : Integer.MIN_VALUE));
                     bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                     suffX[index] = bestTransition.getRight();
                     suffXTrace[index] = bestTransition.getLeft();
@@ -250,6 +299,7 @@ public class NeedlemanWunschAligner<T>
                     edgeScores.add(Pair.of(TraceBackState.SUFFIX_Y, suffY[leftIndex]));
                     edgeScores.add(Pair.of(TraceBackState.SUFFIX_X,
                             suffixPenaltyOption == NO_PENALTY_DUAL ? suffX[leftIndex] : Integer.MIN_VALUE));
+                    edgeScores.add(Pair.of(TraceBackState.PREFIX_X, noPenaltyPrefix ? preX[leftIndex] : Integer.MIN_VALUE));
                     bestTransition = Collections.max(edgeScores, Comparator.comparingLong(x -> x.getRight()));
                     suffY[index] = bestTransition.getRight();
                     suffYTrace[index] = bestTransition.getLeft();
@@ -270,6 +320,8 @@ public class NeedlemanWunschAligner<T>
         finalScores.add(Pair.of(TraceBackState.M2, scoringFn2 != null ? M2[index] : Integer.MIN_VALUE));
         finalScores.add(Pair.of(TraceBackState.X2, scoringFn2 != null ? X2[index] : Integer.MIN_VALUE));
         finalScores.add(Pair.of(TraceBackState.Y2, scoringFn2 != null ? Y2[index] : Integer.MIN_VALUE));
+        finalScores.add(Pair.of(TraceBackState.PREFIX_X, noPenaltyPrefix ? preX[index] : Integer.MIN_VALUE));
+        finalScores.add(Pair.of(TraceBackState.PREFIX_Y, noPenaltyPrefix ? preY[index] : Integer.MIN_VALUE));
         finalScores.add(Pair.of(TraceBackState.SUFFIX_X, suffixPenaltyOption != PENALIZE ? suffX[index] : Integer.MIN_VALUE));
         finalScores.add(Pair.of(TraceBackState.SUFFIX_Y, suffixPenaltyOption != PENALIZE ? suffY[index] : Integer.MIN_VALUE));
 
@@ -354,6 +406,38 @@ public class NeedlemanWunschAligner<T>
 
                 alignment.add(Pair.of(null, seq2.get(c - 1)));
                 state = Y2Trace[index];
+                if(state == null)
+                {
+                    throw new RuntimeException("Invalid traceback transition");
+                }
+
+                c--;
+            }
+            else if(state == TraceBackState.PREFIX_X)
+            {
+                if(!noPenaltyPrefix)
+                {
+                    throw new RuntimeException("PREFIX_X is an invalid traceback state");
+                }
+
+                alignment.add(Pair.of(seq1.get(r - 1), null));
+                state = preXTrace[index];
+                if(state == null)
+                {
+                    throw new RuntimeException("Invalid traceback transition");
+                }
+
+                r--;
+            }
+            else if(state == TraceBackState.PREFIX_Y)
+            {
+                if(!noPenaltyPrefix)
+                {
+                    throw new RuntimeException("PREFIX_Y is an invalid traceback state");
+                }
+
+                alignment.add(Pair.of(null, seq2.get(c - 1)));
+                state = preYTrace[index];
                 if(state == null)
                 {
                     throw new RuntimeException("Invalid traceback transition");
