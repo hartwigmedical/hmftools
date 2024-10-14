@@ -211,7 +211,7 @@ public class RefBaseExtender
                 return false;
         }
 
-        // lastly check the read isn't already counted as junction support
+        // skip if the read's mate is a junction read
         return !assembly.hasReadSupport(read.mateRead());
     }
 

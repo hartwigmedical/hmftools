@@ -255,10 +255,16 @@ public class Read
     public void makeReadLinks(final Read other)
     {
         if(mRecord.getSupplementaryAlignmentFlag() == other.bamRecord().getSupplementaryAlignmentFlag()
-            && firstInPair() != other.firstInPair())
+        && firstInPair() != other.firstInPair())
         {
             mMateRead = other;
             other.setMateRead(this);
+
+            // correct unmapped flags if applicable - due to the lack of mate cigar impacting Redux
+            if(isUnmapped() && !other.bamRecord().getMateUnmappedFlag())
+                other.bamRecord().setMateUnmappedFlag(true);
+            else if(other.isUnmapped() && !bamRecord().getMateUnmappedFlag())
+                bamRecord().setMateUnmappedFlag(true);
         }
     }
 
