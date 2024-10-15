@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -605,7 +606,7 @@ public class BreakendBuilder
         if(alignmentStart != null && alignmentEnd != null)
         {
             relatedAlignments = zeroQualAlignments.stream()
-                    .filter(x -> x.sequenceStart() > alignmentStart.sequenceStart() && x.sequenceStart() < alignmentEnd.sequenceStart())
+                    .filter(x -> positionsOverlap(x.sequenceStart(), x.sequenceEnd(), alignmentStart.sequenceStart(), alignmentEnd.sequenceStart()))
                     .collect(Collectors.toList());
         }
         else if(alignmentStart != null)

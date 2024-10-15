@@ -260,6 +260,12 @@ public class Read
             mMateRead = other;
             other.setMateRead(this);
 
+            if(!bamRecord().getReadPairedFlag()) // deficiency in Redux, solved in v1.0
+                bamRecord().setReadPairedFlag(true);
+
+            if(!other.bamRecord().getReadPairedFlag())
+                other.bamRecord().setReadPairedFlag(true);
+
             // correct unmapped flags if applicable - due to the lack of mate cigar impacting Redux
             if(isUnmapped() && !other.bamRecord().getMateUnmappedFlag())
                 other.bamRecord().setMateUnmappedFlag(true);

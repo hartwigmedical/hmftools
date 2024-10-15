@@ -5,6 +5,10 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 public final class AssemblyConstants
 {
     // BAM reading
@@ -75,4 +79,12 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
+
+    public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37 = List.of(
+            new ChrBaseRegion("4", 190930000, 191030000),
+            new ChrBaseRegion("10", 135420000, 135520000 ));
+
+    public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38 = List.of(
+            new ChrBaseRegion("chr4", 190060000, 190190000),
+            new ChrBaseRegion("chr10", 133660000, 133770000));
 }
