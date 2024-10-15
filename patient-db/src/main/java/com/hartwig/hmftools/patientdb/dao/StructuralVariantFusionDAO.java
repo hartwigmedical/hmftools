@@ -20,11 +20,9 @@ import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
@@ -264,14 +262,8 @@ public class StructuralVariantFusionDAO
                     .nextSpliceExonPhase(record.getValue(SVBREAKEND.NEXTSPLICEEXONPHASE))
                     .nextSpliceDistance(record.getValue(SVBREAKEND.NEXTSPLICEDISTANCE))
                     .totalExonCount(record.getValue(SVBREAKEND.TOTALEXONCOUNT))
-                    .type(StructuralVariantType.BND)
-                    .chromosome("")
-                    .orientation(0)
-                    .strand(0)
-                    .chrBand("")
-                    .exonUp(-1)
-                    .exonDown(-1)
-                    .junctionCopyNumber(0)
+                    .exonUp(record.getValue(SVBREAKEND.EXONDOWN))
+                    .exonDown(record.getValue(SVBREAKEND.EXONUP))
                     .build();
 
             breakendList.add(breakend);

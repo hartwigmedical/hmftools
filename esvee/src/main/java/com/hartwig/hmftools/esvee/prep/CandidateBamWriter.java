@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bamops.BamMerger;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
@@ -79,35 +80,12 @@ public class CandidateBamWriter
 
         if(writer == null)
         {
-            SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.bamFile()));
-
             String bamFile = String.format("%s_%s.bam", mConfig.formFilename(CACHE_BAM), read.Chromosome);
             mCandidatesWriterBamFiles.put(read.Chromosome, bamFile);
 
-            SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+            SAMFileHeader fileHeader = BamMerger.buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
+
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-
-            // add read group info if reads are from multiple input BAMs
-            if(mConfig.BamFiles.size() > 1)
-            {
-                for(int i = 1; i < mConfig.BamFiles.size(); ++i)
-                {
-                    SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                            .open(new File(mConfig.BamFiles.get(i)));
-
-                    for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
-                    {
-                        if(!fileHeader.getReadGroups().contains(readGroupRecord))
-                            fileHeader.addReadGroup(readGroupRecord);
-                    }
-
-                    final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
-                    String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
-
-                    fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
-                }
-            }
 
             writer = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(bamFile));
             mCandidatesWriters.put(read.Chromosome, writer);

@@ -33,6 +33,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.ChromosomalRearrangements;
+import com.hartwig.hmftools.datamodel.purple.ImmutableChromosomalRearrangements;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
@@ -68,6 +70,8 @@ public class PurpleInterpreter
     private final List<DriverGene> driverGenes;
     @NotNull
     private final LinxRecord linx;
+    @NotNull
+    private final ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer;
     @Nullable
     private final ChordData chord;
     boolean convertGermlineToSomatic;
@@ -75,7 +79,9 @@ public class PurpleInterpreter
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory,
             @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord,
+            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx,
+            @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer,
+            @Nullable final ChordData chord,
             boolean convertGermlineToSomatic)
     {
         this.purpleVariantFactory = purpleVariantFactory;
@@ -83,6 +89,7 @@ public class PurpleInterpreter
         this.germlineLossOfHeterozygosityFactory = germlineLossOfHeterozygosityFactory;
         this.driverGenes = driverGenes;
         this.linx = linx;
+        this.chromosomalRearrangementsDeterminer = chromosomalRearrangementsDeterminer;
         this.chord = chord;
         this.convertGermlineToSomatic = convertGermlineToSomatic;
     }
@@ -186,6 +193,7 @@ public class PurpleInterpreter
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
                 .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
+                .chromosomalRearrangements(createChromosomalRearrangements(purple, chromosomalRearrangementsDeterminer))
                 .build();
     }
 
@@ -442,6 +450,16 @@ public class PurpleInterpreter
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
+                .build();
+    }
+
+    @NotNull
+    private static ChromosomalRearrangements createChromosomalRearrangements(@NotNull PurpleData purple,
+            @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
+    {
+        return ImmutableChromosomalRearrangements.builder()
+                .hasTrisomy1q(chromosomalRearrangementsDeterminer.determine1qTrisomy(purple.allSomaticCopyNumbers()))
+                .hasCodeletion1p19q(chromosomalRearrangementsDeterminer.determine1p19qCodeletion(purple.allSomaticCopyNumbers()))
                 .build();
     }
 }

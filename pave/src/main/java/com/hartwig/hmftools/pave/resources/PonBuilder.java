@@ -12,11 +12,13 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
+
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -43,6 +45,7 @@ public class PonBuilder
     private final String mOutputDir;
 
     private final int mQualCutoff;
+    private final int mMqfCutoff;
     private final int mMinSamples;
     private final RefGenomeVersion mRefGenomeVersion;
     private final Map<String,List<VariantData>> mChrVariantsMap;
@@ -54,6 +57,7 @@ public class PonBuilder
 
     private static final String VCF_PATH = "vcf_path";
     private static final String QUAL_CUTOFF = "qual_cutoff";
+    private static final String MQF_CUTOFF = "mqf_cutoff";
     private static final String MIN_SAMPLES = "min_samples";
     private static final String MANUAL_ENTRIES = "manual_entries";
 
@@ -64,6 +68,7 @@ public class PonBuilder
         mOutputDir = parseOutputDir(configBuilder);
 
         mQualCutoff = configBuilder.getInteger(QUAL_CUTOFF);
+        mMqfCutoff = configBuilder.getInteger(MQF_CUTOFF);
         mMinSamples = configBuilder.getInteger(MIN_SAMPLES);
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
@@ -119,12 +124,13 @@ public class PonBuilder
         String lastRef = "";
         String lastAlt = "";
 
-        for(VariantContext variantContext : vcfReader.iterator())
-        {
-            double qual = variantContext.getPhredScaledQual();
+            for(VariantContext variantContext : vcfReader.iterator())
+            {
+                double qual = variantContext.getPhredScaledQual();
+                double mqf = variantContext.getAttributeAsDouble(MAP_QUAL_FACTOR, 0);
 
-            if(qual < mQualCutoff)
-                continue;
+                if(qual < mQualCutoff || mqf < mMqfCutoff)
+                    continue;
 
             String tier = variantContext.getAttributeAsString(TIER, "");
             if(tier.equals(HOTSPOT.toString()))
@@ -284,7 +290,8 @@ public class PonBuilder
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
         configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", 3);
-        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", 100);
+        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", 50);
+        configBuilder.addInteger(MQF_CUTOFF, "MQF cut-off for variant inclusion", -10);
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
         configBuilder.addPath(PON_FILE, false, "PON entries");

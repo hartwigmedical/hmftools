@@ -230,7 +230,6 @@ public class LineElementAnnotator {
                         continue;
 
                     proxBreakend.getSV().addLineElement(SUSPECT, proxBreakend.usesStart());
-                    proxBreakend.getSV().addAnnotation(format("SLR=%s", lineState.suspectReason()));
                 }
 
                 hasSuspected = true;

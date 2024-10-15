@@ -44,7 +44,7 @@ public class PredictionRunnerTest
         String[] args = new String[] {
                 "-sample","COLO829v003T",
                 "-classifier_path", CLASSIFIER_PATH,
-                "-features_path", CUPPA_DIR + "/src/main/python/pycuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz",
+                "-features_path", CUPPA_DIR + "/src/main/python/pycuppa/resources/mock_data/input_data/COLO829v003T.cuppa_data.tsv.gz",
                 "-output_dir", OUTPUT_DIR,
                 "-python_path", PYTHON_PATH
         };

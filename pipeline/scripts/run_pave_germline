@@ -42,7 +42,6 @@ args="-sample ${sample_id} \
   -clinvar_vcf ${clinvar_vcf} \
   -blacklist_bed ${blacklist_bed} \
   -blacklist_vcf ${blacklist_vcf} \
-  -gnomad_pon_filter -1 \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
   -output_vcf_file ${pave_germline_vcf} \

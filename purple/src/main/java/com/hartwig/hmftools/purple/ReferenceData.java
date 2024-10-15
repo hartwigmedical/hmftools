@@ -78,7 +78,7 @@ public class ReferenceData
     {
         mIsValid = true;
 
-        if(!configBuilder.hasValue(REF_GENOME) && !config.DriversOnly)
+        if(!configBuilder.hasValue(REF_GENOME))
         {
             mIsValid = false;
             PPL_LOGGER.error(REF_GENOME + " is a mandatory argument");
@@ -89,17 +89,14 @@ public class ReferenceData
 
         IndexedFastaSequenceFile refGenome = null;
 
-        if(!config.DriversOnly)
+        try
         {
-            try
-            {
-                refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
-            }
-            catch(Exception e)
-            {
-                mIsValid = false;
-                PPL_LOGGER.error("failed to load ref genome: {}", e.toString());
-            }
+            refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
+        }
+        catch(Exception e)
+        {
+            mIsValid = false;
+            PPL_LOGGER.error("failed to load ref genome: {}", e.toString());
         }
 
         RefGenome = refGenome;
@@ -116,7 +113,7 @@ public class ReferenceData
         String somaticHotspotVcf = configBuilder.getValue(SOMATIC_HOTSPOT);
         String germlineHotspotVcf = configBuilder.getValue(GERMLINE_HOTSPOT);
 
-        if(config.RunDrivers || config.DriversOnly)
+        if(config.RunDrivers)
         {
             if(!config.germlineMode())
             {
@@ -194,9 +191,9 @@ public class ReferenceData
         CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
 
         TargetRegions = new TargetRegionsData(
-                configBuilder.getValue(TARGET_REGIONS_BED),
-                configBuilder.getValue(TARGET_REGIONS_RATIOS),
-                configBuilder.getValue(TARGET_REGION_MSI_INDELS));
+                configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));
+
+        TargetRegions.loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED), GeneTransCache);
     }
 
     private void loadGeneTransCache()
@@ -275,6 +272,6 @@ public class ReferenceData
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
         CohortGermlineDeletions = new GermlineDeletionFrequency(null);
-        TargetRegions = new TargetRegionsData(null, null, null);
+        TargetRegions = new TargetRegionsData(null, null);
     }
 }

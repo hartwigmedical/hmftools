@@ -7,18 +7,14 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedExtensionBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createLowBaseQuals;
-import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -85,9 +81,6 @@ public class RemoteRegionAssembler
         if(assembly.stats().SoftClipSecondMaxLength < MIN_VARIANT_LENGTH)
             return false;
 
-        if(assembly.stats().JuncMateDiscordantRemote < ASSEMBLY_MIN_READ_SUPPORT)
-            return false;
-
         // check for sufficient diversity in the extension bases
         int trimmedExtBaseLength = calcTrimmedExtensionBaseLength(assembly);
 
@@ -95,17 +88,6 @@ public class RemoteRegionAssembler
             return false;
 
         return true;
-    }
-
-    public static boolean assemblyOverlapsRemoteRegion(final JunctionAssembly assembly, final RemoteRegion remoteRegion)
-    {
-        if(!assembly.junction().Chromosome.equals(remoteRegion.Chromosome))
-            return false;
-
-        if(assembly.isForwardJunction())
-            return positionsOverlap(assembly.refBasePosition(), assembly.junction().Position, remoteRegion.start(), remoteRegion.end());
-        else
-            return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
     }
 
     public List<Read> extractRemoteReads(final RemoteRegion remoteRegion)
@@ -216,9 +198,6 @@ public class RemoteRegionAssembler
         String remoteRefBases = new String(refGenomeBases);
 
         String assemblyExtensionBases = assembly.formJunctionSequence();
-
-        // test in orientation in turn
-        // JunctionSequence assemblySeq = JunctionSequence.formFullExtensionMatchSequence(assembly, false);
 
         AssemblyLink assemblyLink = tryAssemblyRemoteRefOverlap(
                 assembly, assemblyExtensionBases, false, remoteRegionStart, remoteRegionEnd, remoteRefBases);

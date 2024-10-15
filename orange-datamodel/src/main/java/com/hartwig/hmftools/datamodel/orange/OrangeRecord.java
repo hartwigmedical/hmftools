@@ -67,7 +67,7 @@ public interface OrangeRecord
     @Nullable
     IsofoxRecord isofox();
 
-    @NotNull
+    @Nullable
     LilacRecord lilac();
 
     @NotNull

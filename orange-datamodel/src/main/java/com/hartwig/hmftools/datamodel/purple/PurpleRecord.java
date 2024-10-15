@@ -22,6 +22,9 @@ public interface PurpleRecord
     PurpleCharacteristics characteristics();
 
     @NotNull
+    ChromosomalRearrangements chromosomalRearrangements();
+
+    @NotNull
     List<PurpleDriver> somaticDrivers();
 
     @Nullable

@@ -24,7 +24,6 @@ public class LinkedPair
     private String mLocationType;
     private int mOverlapCount;
     private boolean mHasCopyNumberGain;
-    private int mIndelCount;
 
     private String mExonMatchData;
 
@@ -47,7 +46,6 @@ public class LinkedPair
         mLocationType = LOCATION_TYPE_UNCLEAR;
         mOverlapCount = 0;
         mHasCopyNumberGain = false;
-        mIndelCount = 0;
         mExonMatchData = "";
 
         int length = first.position() - second.position();

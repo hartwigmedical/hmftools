@@ -8,8 +8,12 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
+import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
 import java.util.List;
@@ -17,7 +21,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
@@ -46,7 +49,7 @@ public final class AssemblyLinker
 
         int linkDistance = upper.junction().Position - lower.junction().Position + 1;
 
-        if(linkDistance < 0 || linkDistance > PHASED_ASSEMBLY_MAX_TI)
+        if(linkDistance < PHASED_ASSEMBLY_MIN_TI || linkDistance > PHASED_ASSEMBLY_MAX_TI)
             return null;
 
         if(!first.refSideSoftClips().isEmpty() && !second.refSideSoftClips().isEmpty())
@@ -85,12 +88,16 @@ public final class AssemblyLinker
                 return null;
         }
 
+        // ensure the ref base positions of each assembly now match
+        lower.trimRefBasePosition(upper.junction().Position);
+        upper.trimRefBasePosition(lower.junction().Position);
+
         return new AssemblyLink(lower, upper, LinkType.FACING, "", "");
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)
     {
-        if(assembly.refSideSoftClips().stream().noneMatch(x -> abs(x.Position - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS))
+        if(assembly.refSideSoftClips().stream().noneMatch(x -> x.hasProximateMatch(otherJunctionPosition)))
             return false;
 
         return abs(assembly.refBasePosition() - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
@@ -141,6 +148,11 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
+        AssemblyLink lineLink = tryLineSequenceLink(first, second, firstReversed, secondReversed);
+
+        if(lineLink != null)
+            return lineLink;
+
         firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
         secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
 
@@ -158,6 +170,14 @@ public final class AssemblyLinker
 
         if(!allowMismatches)
             return null;
+
+        // extend to use full extension sequence from the first assembly for subsequence testing
+        if(first.extensionLength() > 2 * PHASED_ASSEMBLY_MATCH_SEQ_LENGTH)
+        {
+            firstSeq = JunctionSequence.formFullExtensionMatchSequence(first, firstReversed);
+            firstMatchSequence = firstSeq.matchSequence();
+            firstMatchSeqLength = firstMatchSequence.length();
+        }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int matchSeqStartIndex = 0;
@@ -184,10 +204,18 @@ public final class AssemblyLinker
             if(secondSubSeqIndex < 0)
                 continue;
 
-            // also must allow for the first match sequence (ie including all extension bases) to fit/match within the second
+            // check if the first match sequence (ie including all extension bases) to fits/matches within the second
+            // and if not if there is sufficient overlap
             int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-            if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
-                continue; // still possible that a later subsequence will match earlier
+            int impliedSequenceMatchSeqEnd = impliedSequenceMatchSeqStart + firstMatchSeqLength - 1;
+
+            if(impliedSequenceMatchSeqEnd >= secondSeq.BaseLength)
+            {
+                int secondMatchLength = secondSeq.BaseLength - impliedSequenceMatchSeqStart - 1;
+
+                if(secondMatchLength < ASSEMBLY_LINK_OVERLAP_BASES)
+                    continue; // still possible that a later subsequence will match earlier
+            }
 
             alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
 
@@ -236,7 +264,7 @@ public final class AssemblyLinker
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int firstJunctionSeqLength = firstSeq.matchSequence().length();
+        int firstJunctionSeqLength = min(firstSeq.matchSequence().length(), PHASED_ASSEMBLY_MATCH_SEQ_LENGTH);
 
         // take each of the subsequence match locations, build out a longer sequence around it and check for a match
         // then return the longest of these
@@ -263,6 +291,8 @@ public final class AssemblyLinker
             if(secondIndexStart < 0)
             {
                 firstMatchIndexStart += -(secondIndexStart);
+                firstMatchIndexEnd += -(secondIndexStart);
+                secondIndexEnd += -(secondIndexStart);
                 secondIndexStart = 0;
             }
 
@@ -298,6 +328,7 @@ public final class AssemblyLinker
             }
         }
 
+        /* disabled until seen it is required
         // if there were mismatches, check for a need to factor this into the distance between the first start index and its junction
         if(topMatchMismatches > 0)
         {
@@ -326,6 +357,7 @@ public final class AssemblyLinker
 
             topMatchIndices[2] = firstJunctionRepeatDiff;
         }
+        */
 
         return topMatchIndices;
     }
@@ -359,27 +391,28 @@ public final class AssemblyLinker
             junctionOffsetDiff = second.junctionIndex() - firstJunctionIndexInSecond - 1;
         }
 
-        String extraBases = "";
+        String insertedBases = "";
+        String overlapBases = "";
 
-        if(junctionOffsetDiff != 0)
+        if(junctionOffsetDiff > 0)
         {
-            extraBases = extractExtraBases(first, junctionOffsetDiff);
+            boolean secondReversed = first.isForwardJunction() == second.isForwardJunction();
+            insertedBases = extractInsertSequence(first, false, second, secondReversed, junctionOffsetDiff);
+        }
+        else if(junctionOffsetDiff < 0)
+        {
+            int overlapLength = abs(junctionOffsetDiff);
 
-            if(junctionOffsetDiff > 0 && junctionOffsetDiff > first.extensionLength())
+            if(overlapLength >= first.refBaseLength() || overlapLength >= second.refBaseLength())
+                return null;
+
+            overlapBases = extractOverlapBases(first, overlapLength);
+
+            if(overlapBases == null)
             {
-                // take the extra bases from the second assembly
-                String secondExtraBases = extractExtraBases(second, junctionOffsetDiff - first.extensionLength());
-                if(first.isForwardJunction() != second.isForwardJunction())
-                    extraBases += secondExtraBases;
-                else
-                    extraBases += Nucleotides.reverseComplementBases(secondExtraBases);
-            }
+                overlapBases = extractOverlapBases(second, junctionOffsetDiff);
 
-            if(extraBases == null)
-            {
-                extraBases = extractExtraBases(second, junctionOffsetDiff);
-
-                if(extraBases == null)
+                if(overlapBases == null)
                 {
                     SV_LOGGER.debug("asm({} & {}) invalid insert/overlap junctOffsetDiff({} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
                             first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
@@ -391,20 +424,10 @@ public final class AssemblyLinker
             }
         }
 
-        // if the first assembly's bases have matched further into the second's ref bases than its own length then the link is uninformative
-        if(junctionOffsetDiff < 0)
-        {
-            if(abs(junctionOffsetDiff) >= first.refBaseLength() || abs(junctionOffsetDiff) >= second.refBaseLength())
-                return null;
-        }
-
-        String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
-        String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
-
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
-    private static String extractExtraBases(final JunctionAssembly assembly, int junctionOffsetDiff)
+    private static String extractOverlapBases(final JunctionAssembly assembly, int overlapLength)
     {
         int extraBasesStartIndex, extraBasesEndIndex;
 
@@ -415,33 +438,14 @@ public final class AssemblyLinker
         // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
         if(assembly.isForwardJunction())
         {
-            if(junctionOffsetDiff > 0)
-            {
-                // an insert, so take bases from after the junction
-                extraBasesStartIndex = assembly.junctionIndex() + 1;
-
-
-                extraBasesEndIndex = min(assembly.junctionIndex() + junctionOffsetDiff, assembly.baseLength() - 1);
-            }
-            else
-            {
-                // an overlap, so go back from the junction
-                extraBasesStartIndex = assembly.junctionIndex() + junctionOffsetDiff + 1;
-                extraBasesEndIndex = assembly.junctionIndex();
-            }
+            // an overlap, so go back from the junction
+            extraBasesStartIndex = assembly.junctionIndex() - overlapLength + 1;
+            extraBasesEndIndex = assembly.junctionIndex();
         }
         else
         {
-            if(junctionOffsetDiff > 0)
-            {
-                extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;
-                extraBasesEndIndex = min(assembly.junctionIndex() - 1, assembly.baseLength() - 1);
-            }
-            else
-            {
-                extraBasesStartIndex = assembly.junctionIndex();
-                extraBasesEndIndex = assembly.junctionIndex() - junctionOffsetDiff - 1;
-            }
+            extraBasesStartIndex = assembly.junctionIndex();
+            extraBasesEndIndex = assembly.junctionIndex() + overlapLength - 1;
         }
 
         if(extraBasesStartIndex >= 0 && extraBasesEndIndex >= extraBasesStartIndex && extraBasesEndIndex < assembly.baseLength())

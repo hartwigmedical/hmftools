@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.utils;
 import static java.lang.Math.pow;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -68,6 +69,18 @@ public final class Doubles
 
     private static double medianOfSortedDoubles(final List<Double> values)
     {
+        int count = values.size();
+
+        if (count == 0)
+            return 0;
+
+        return count % 2 == 0 ? (values.get(count / 2) + values.get(count / 2 - 1)) / 2 : values.get(count / 2);
+    }
+
+    public static int medianInteger(final List<Integer> values)
+    {
+        Collections.sort(values);
+
         int count = values.size();
 
         if (count == 0)

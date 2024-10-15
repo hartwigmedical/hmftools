@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 
@@ -105,7 +106,28 @@ public class ReadAdjustmentsTest
     }
 
     @Test
-    public void testLowBaseQualTrimming()
+    public void testLowBaseFiltering()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        byte lowQualBase = 10;
+        for(int i = 0; i < 50; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertFalse(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+
+        baseQualities[50] = lowQualBase;
+        assertTrue(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+    }
+
+    @Test
+    public void testSoftClipLowBaseQualTrimming()
     {
         // wrong end
         String readBases = REF_BASES_RANDOM_100;
@@ -163,6 +185,43 @@ public class ReadAdjustmentsTest
     }
 
     @Test
+    public void testLowBaseQualTrimming()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        // low qual will be 70% of outer bases
+        byte lowQualBase = 10;
+        for(int i = 3; i < 10; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+            baseQualities[baseQualities.length - i - 1] = lowQualBase;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        assertTrue(read.lowQualTrimmed());
+        assertEquals("90M", read.cigarString());
+        assertEquals(10, read.baseTrimCount());
+        assertEquals(189, read.alignmentEnd());
+
+        read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        assertTrue(read.lowQualTrimmed());
+        assertEquals("90M", read.cigarString());
+        assertEquals(10, read.baseTrimCount());
+        assertEquals(110, read.alignmentStart());
+    }
+
+    @Test
     public void testLineLowQualTrimming()
     {
         String lineSequence = "AAAAAAAAAAAAAAAA";
@@ -182,6 +241,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(84, read.unclippedStart());
         assertEquals("16S100M", read.cigarString());
@@ -194,12 +254,24 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(82, read.unclippedStart());
         assertEquals("18S100M", read.cigarString());
 
+        // test no LINE trimming if an extension of a matching repeat
+        readBases = softClipBases + lineSequence + REF_BASES_RANDOM_100;
+
+        read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, softClipBases.length(), 0));
+        read.bamRecord().setBaseQualities(baseQualities);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
+
 
         // test the other orientation
+        lineSequence = Nucleotides.reverseComplementBases(lineSequence);
         softClipBases = "CC" + lineSequence + "GCTGCTGTCGTGTCC";
         readBases = REF_BASES_RANDOM_100 + softClipBases;
 
@@ -213,10 +285,20 @@ public class ReadAdjustmentsTest
         read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
         read.bamRecord().setBaseQualities(baseQualities);
 
+        ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(200, read.alignmentEnd());
         assertEquals(218, read.unclippedEnd());
         assertEquals("100M18S", read.cigarString());
+
+
+        // expansion of local repeat
+        readBases = REF_BASES_RANDOM_100 + lineSequence + softClipBases;
+        read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        ReadAdjustments.markLineSoftClips(read);
+        assertFalse(read.hasLineTail());
     }
 
     private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)

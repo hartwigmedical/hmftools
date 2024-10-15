@@ -165,11 +165,8 @@ public class Junction implements Comparable<Junction>
 
                 int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
                 int otherSupportFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherSupportFragsIndex]) : 0;
+
                 boolean discordantOnly = junctionFrags == 0 && otherSupportFrags > 0;
-
-                if(discordantOnly)
-                    continue;
-
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 

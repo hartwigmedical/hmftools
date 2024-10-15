@@ -354,20 +354,23 @@ public class JunctionsTest
         // 5 fragments are required to support a discordant junction, unassigned to other junctions
         List<ReadGroup> discordantCandidates = Lists.newArrayList();
 
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 5200);
+        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 5100);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 421, CHR_2, 5000); // unrelated
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 431, CHR_1, 5100);
+        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 431, CHR_1, 5150);
 
-        List<JunctionData> junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        DiscordantGroups discordantGroups = new DiscordantGroups(REGION_1, DEFAULT_MAX_FRAGMENT_LENGTH, false);
+
+        List<JunctionData> junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(0, junctions.size());
 
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 441, CHR_1, 5050);
 
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
         assertTrue(junctions.get(0).JunctionGroups.isEmpty());
         assertEquals(540, junctions.get(0).Position);
         assertEquals(FORWARD, junctions.get(0).Orient);
+
         assertEquals(5050, junctions.get(1).Position);
         assertEquals(REVERSE, junctions.get(1).Orient);
 
@@ -376,26 +379,21 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 560, CHR_1, 6000); // too far
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 570, CHR_1, 5000);
 
-        // initially none because they are assigned to existing junctions
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
-        assertEquals(0, junctions.size());
-
-        discordantCandidates.forEach(x -> x.clearJunctionPositions());
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
-        assertEquals(5, junctions.get(0).SupportingGroups.size());
+        assertEquals(8, junctions.get(0).SupportingGroups.size());
 
         // a local DEL needs more support
         discordantCandidates.clear();
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(0, junctions.size());
 
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
     }
 

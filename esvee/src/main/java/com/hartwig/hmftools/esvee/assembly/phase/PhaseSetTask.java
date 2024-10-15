@@ -82,6 +82,7 @@ public class PhaseSetTask extends ThreadTask
                 try
                 {
                     phaseSetBuilder.buildPhaseSets();
+                    phaseGroup.finalisePhaseSetAlignments();
                 }
                 catch(Exception e)
                 {
@@ -94,13 +95,6 @@ public class PhaseSetTask extends ThreadTask
 
                     e.printStackTrace();
                     System.exit(1);
-                }
-
-                // also set phase set IDs
-                int phaseSetId = 0;
-                for(PhaseSet phaseSet : phaseGroup.phaseSets())
-                {
-                    phaseSet.setId(phaseSetId++);
                 }
 
                 stopCheckLog(format("phaseGroupId(%d) assemblies(%d)", phaseGroup.id(), phaseGroup.assemblyCount()), mConfig.PerfLogTime);

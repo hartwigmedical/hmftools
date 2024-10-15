@@ -12,8 +12,8 @@ public final class GermlineLowTumorVCNFilter
     public static final String LOW_TUMOR_VCN_FILTER = "LOW_TUMOR_VCN";
 
     public static final double MIN_TUMOR_VCN = 0.5;
-    public static final double MIN_QUAL_HOTSPOT = 120;
-    public static final double MIN_QUAL_OTHER = 200;
+    public static final double MIN_QUAL_HOTSPOT = 45;
+    public static final double MIN_QUAL_OTHER = 110;
 
     public static void processVariant(final GermlineVariant variant)
     {

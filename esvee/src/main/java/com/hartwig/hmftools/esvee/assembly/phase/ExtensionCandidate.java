@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
+
 import java.util.Comparator;
 
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -24,7 +26,8 @@ public class ExtensionCandidate
     public String ExtraInfo;
     public final Object Extender;
 
-    public final boolean mIsValid;
+    private final boolean mIsValid;
+    private boolean mSelected;
 
     public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
@@ -50,6 +53,7 @@ public class ExtensionCandidate
         SecondAssemblyCandidateReads = 0;
         ExtraInfo = "";
         Extender = null;
+        mSelected = false;
     }
 
     public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly, final Object extender, final int candidates)
@@ -66,35 +70,48 @@ public class ExtensionCandidate
         SecondAssembly = null;
         SecondAssemblyMatchedSupport = 0;
         SecondAssemblyCandidateReads = 0;
+        mSelected = false;
     }
+
+    public boolean selected() { return mSelected; }
+    public void markSelected() { mSelected = true; }
 
     public int totalSupport()
     {
         return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
     }
 
-    public boolean isValid() { return mIsValid && totalSupport() > 0; }
+    public boolean isValid()
+    {
+        if(!mIsValid)
+            return false;
+
+        return totalSupport() > 0 || Type == LOCAL_DEL_DUP;
+    }
 
     protected static class StandardComparator implements Comparator<ExtensionCandidate>
     {
         @Override
         public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
         {
-            return Integer.compare(-first.adjustedSupportScore(), -second.adjustedSupportScore());
+            int firstSupport = first.totalSupport();
+            int secondSupport = second.totalSupport();
+
+            if(firstSupport != secondSupport)
+                return firstSupport > secondSupport ? -1 : 1;
+
+            if(first.Type == ExtensionType.SPLIT_LINK && second.Type == ExtensionType.SPLIT_LINK)
+            {
+                int firstJuncOffset = max(first.Link.insertedBases().length(), first.Link.overlapBases().length());
+                int secondJuncOffset = max(first.Link.insertedBases().length(), first.Link.overlapBases().length());
+
+                if(firstJuncOffset != secondJuncOffset)
+                    return firstJuncOffset < secondJuncOffset ? -1 : 1; // favour a more precise link
+            }
+
+            // revert to type of link
+            return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
         }
-    }
-
-    private int adjustedSupportScore()
-    {
-        int support = totalSupport();
-
-        if(Type == ExtensionType.SPLIT_LINK)
-        {
-            int junctionDiff = max(Link.insertedBases().length(), Link.overlapBases().length());
-            support = max(support - junctionDiff, 0);
-        }
-
-        return support;
     }
 
     protected static class LocalLinkComparator implements Comparator<ExtensionCandidate>
@@ -113,14 +130,16 @@ public class ExtensionCandidate
     {
         if(Link != null)
         {
-            return format("%s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
-                    Type, Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
+            return format("%s %s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
+                    mSelected ? "selected" : "candidate", Type,
+                    Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
                     SecondAssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
         else
         {
-            return format("%s assembly(%s) support(s=%d c=%d) total(%d) %s",
-                    Type, Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
+            return format("%s %s assembly(%s) support(s=%d c=%d) total(%d) %s",
+                    mSelected ? "selected" : "candidate", Type,
+                    Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
         }
     }
 }

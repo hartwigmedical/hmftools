@@ -18,6 +18,7 @@ public enum FilterType
     SHORT_FRAG_LENGTH("shortFrags", "Average variant fragment length is too short", false),
     DUPLICATE("dedup", "Event is duplicate of another", false),
     SGL("sgl", "SGLs filtered entirely", false),
+    SHORT_LOW_VAF_INV("shortLowVafInv", "INVs low VAF < 1K", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;

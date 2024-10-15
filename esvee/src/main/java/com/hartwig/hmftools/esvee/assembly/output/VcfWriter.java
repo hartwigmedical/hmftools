@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.assembly.output;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH;
@@ -75,6 +77,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
@@ -171,6 +174,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(IHOMPOS, 2, VCFHeaderLineType.Integer, IHOMPOS_DESC));
 
         metaData.add(new VCFInfoHeaderLine(INSALN, 1, VCFHeaderLineType.String, INSALN_DESC));
+        metaData.add(new VCFInfoHeaderLine(ALTALN, 1, VCFHeaderLineType.String, ALTALN_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
 
         metaData.add(new VCFInfoHeaderLine(SPLIT_FRAGS, 1, VCFHeaderLineType.Integer, SPLIT_FRAGS_DESC));
@@ -242,8 +246,6 @@ public class VcfWriter implements AutoCloseable
             totalDiscFrags += breakendSupport.DiscordantFragments;
         }
 
-        Set<String> filters = breakend.filters().stream().map(x -> x.vcfTag()).collect(Collectors.toSet());
-
         int qual = breakend.calcSvQual();
 
         List<Allele> alleles = buildAlleleInfo(breakend);
@@ -254,7 +256,7 @@ public class VcfWriter implements AutoCloseable
                 .start(breakend.Position)
                 .alleles(alleles)
                 .log10PError(qual / -10.0)
-                .filters(filters)
+                // .filters(PASS)
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())
@@ -262,7 +264,11 @@ public class VcfWriter implements AutoCloseable
             int otherBreakendId = breakend.otherBreakend().id();
             builder.attribute(MATE_ID, String.valueOf(otherBreakendId));
 
-            String svId = format("%d_%d", breakend.id(), otherBreakendId);
+            // always write lower first
+            int lowerBreakendId = otherBreakendId > breakend.id() ? breakend.id() : otherBreakendId;
+            int upperBreakendId = lowerBreakendId == breakend.id() ? otherBreakendId : breakend.id();
+            String svId = format("%d_%d", lowerBreakendId, upperBreakendId);
+
             builder.attribute(SV_ID, String.valueOf(svId));
         }
 
@@ -272,7 +278,9 @@ public class VcfWriter implements AutoCloseable
         {
             builder.attribute(CIPOS, new int[] { breakend.Homology.ExactStart, breakend.Homology.ExactEnd });
             builder.attribute(IHOMPOS, new int[] { breakend.Homology.InexactStart, breakend.Homology.InexactEnd });
-            builder.attribute(HOMSEQ, breakend.Homology.Homology);
+
+            if(!breakend.Homology.Homology.isEmpty())
+                builder.attribute(HOMSEQ, breakend.Homology.Homology);
         }
         else
         {
@@ -286,8 +294,13 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
         builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
-        if(breakend.alternativeAlignments() != null && !breakend.alternativeAlignments().isEmpty())
-            builder.attribute(INSALN, toVcfTag(breakend.alternativeAlignments()));
+        List<AlternativeAlignment> altAlignments = breakend.alternativeAlignments();
+        if(!altAlignments.isEmpty())
+            builder.attribute(INSALN, toVcfTag(altAlignments));
+
+        List<AlternativeAlignment> lowQualAltAlignments = breakend.lowQualAltAlignments();
+        if(!lowQualAltAlignments.isEmpty())
+            builder.attribute(ALTALN, toVcfTag(lowQualAltAlignments));
 
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 
@@ -305,7 +318,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ASM_SEG_INDEX, segments.stream().map(x -> String.valueOf(x.Index)).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(BE_ASM_POS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(BE_ORIENT, breakend.Orient.asByte());
-        builder.attribute(BE_ASM_ORIENT, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BE_ASM_ORIENT, segments.stream().map(x -> String.valueOf(x.Alignment.orientation().asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
 
         builder.attribute(SEG_ID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
 
@@ -318,8 +331,8 @@ public class VcfWriter implements AutoCloseable
         }
 
         builder.attribute(SEG_ALIGN_LENGTH, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
-        builder.attribute(SEG_MAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
-        builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
+        builder.attribute(SEG_MAPQ, segments.stream().mapToInt(x -> x.Alignment.mapQual()).max().orElse(0));
+        builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.score()).max().orElse(0));
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
         VariantContext variantContext = builder.make();

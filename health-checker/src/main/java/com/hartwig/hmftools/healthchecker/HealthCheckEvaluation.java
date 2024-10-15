@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.healthchecker;
 
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.MIN_MAPPED_PROPORTION;
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.hasSufficientMappedProportion;
 import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.HC_LOGGER;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.flagstat.FlagstatQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 final class HealthCheckEvaluation
 {
@@ -113,14 +113,15 @@ final class HealthCheckEvaluation
     private static boolean checkFlagstatMappingProportion(final String value, final String name)
     {
         double proportion = Double.parseDouble(value);
-        if(FlagstatQC.pass(proportion))
+
+        if(hasSufficientMappedProportion(proportion))
         {
-            HC_LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
+            HC_LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return true;
         }
         else
         {
-            HC_LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
+            HC_LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return false;
         }
     }

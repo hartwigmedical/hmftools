@@ -1,24 +1,20 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -27,6 +23,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -43,11 +40,7 @@ public class GermlineSvComparer implements ItemComparer
     public Category category() { return GERMLINE_SV; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
-        thresholds.addFieldThreshold(FLD_GERMLINE_FRAGS, 5, 0.1);
-    }
+    public void registerThresholds(final DiffThresholds thresholds) {}
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -58,13 +51,12 @@ public class GermlineSvComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_GERMLINE_FRAGS);
+        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
     }
 
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        // final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantGe(sampleId);
         // currently unsupported
         return Lists.newArrayList();
     }
@@ -74,60 +66,71 @@ public class GermlineSvComparer implements ItemComparer
     {
         List<ComparableItem> items = Lists.newArrayList();
 
+        Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
+
+        MatchLevel matchLevel = mConfig.Categories.getOrDefault(GERMLINE_SV, MatchLevel.REPORTABLE);
+
         try
         {
-            String germlineSvFile = LinxGermlineSv.generateFilename(fileSources.LinxGermline, sampleId);
-            List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(germlineSvFile);
+            String germlineSvFile = LinxGermlineDisruption.generateFilename(fileSources.LinxGermline, sampleId);
+            List<LinxGermlineDisruption> germlineSvs = null; // loads on demand
 
             String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
 
-            // germline breakend file was introduced in v5.32, for old versions extract reported from the SV file
-            if(Files.exists(Paths.get(germlineBreakendFile)))
+            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
+                    .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+
+            boolean reportedOnly = matchLevel == MatchLevel.REPORTABLE;
+
+            for(LinxBreakend breakend : germlineBreakends)
             {
-                List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
-                        .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+                if(reportedOnly && !breakend.reportedDisruption())
+                    continue;
 
-                CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
-
-
-                for(LinxGermlineSv germlineSv : germlineSvs)
+                if(germlineSvs == null)
                 {
-                    boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
-
-                    BasePosition comparisonStartPosition = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    BasePosition comparisonEndPosition = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartPosition, comparisonEndPosition));
+                    germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
+                    CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
                 }
+
+                LinxGermlineDisruption var = germlineSvs.stream().filter(x -> x.SvId == breakend.svId()).findFirst().orElse(null);
+
+                if(var == null)
+                    continue; // implies an inconsistency
+
+                List<BreakendData> geneBreakends = geneBreakendMap.get(breakend.gene());
+
+                if(geneBreakends == null)
+                {
+                    geneBreakends = Lists.newArrayList();
+                    geneBreakendMap.put(breakend.gene(), geneBreakends);
+                }
+
+                boolean usesStart = breakend.isStart();
+
+                int[] homologyOffsets = {0, 0}; // not available at the moment unless VCF is read
+
+                String chromosome = usesStart ? var.ChromosomeStart : var.ChromosomeEnd;
+                int position = usesStart ? var.PositionStart : var.PositionEnd;
+
+                BasePosition comparisonPosition = determineComparisonGenomePosition(
+                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+                BreakendData breakendData = new BreakendData(
+                        breakend, var.VcfId, var.Type, chromosome, position,
+                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets,
+                        comparisonPosition.Chromosome, comparisonPosition.Position);
+
+                geneBreakends.add(breakendData);
             }
-            else
+
+            for(Map.Entry<String,List<BreakendData>> entry : geneBreakendMap.entrySet())
             {
-                List<String> rawGermlineSvs = Files.readAllLines(Paths.get(germlineSvFile));
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(rawGermlineSvs.get(0), TSV_DELIM);
-                Integer reportedIndex = fieldsIndexMap.get("reported");
+                String geneName = entry.getKey();
+                List<BreakendData> geneBreakends = entry.getValue();
 
-                if(reportedIndex == null)
-                    return null;
-
-                rawGermlineSvs.remove(0);
-
-                for(int i = 0; i < germlineSvs.size(); ++i)
-                {
-                    LinxGermlineSv germlineSv = germlineSvs.get(i);
-                    String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
-                    boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
-
-                    BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonPositionStart, comparisonPositionEnd));
-                }
+                DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends);
+                items.add(disruptionData);
             }
 
         }

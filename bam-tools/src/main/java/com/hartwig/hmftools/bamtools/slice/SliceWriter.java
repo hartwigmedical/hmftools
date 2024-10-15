@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.slice;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -16,8 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.BamOperations;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;

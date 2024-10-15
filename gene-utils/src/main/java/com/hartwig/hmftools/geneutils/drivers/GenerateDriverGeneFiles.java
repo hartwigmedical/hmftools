@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.createOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
 
 import java.io.File;
@@ -361,18 +362,6 @@ public class GenerateDriverGeneFiles
         {
             GU_LOGGER.error("failed to write germline hotspots file: {}", e.toString());
         }
-    }
-
-    private boolean createOutputDir(final String outputDir)
-    {
-        final File dir = new File(outputDir);
-        if(!dir.exists() && !dir.mkdirs())
-        {
-            GU_LOGGER.error("unable to write directory " + outputDir);
-            return false;
-        }
-
-        return true;
     }
 
     public static void main(String[] args) throws IOException

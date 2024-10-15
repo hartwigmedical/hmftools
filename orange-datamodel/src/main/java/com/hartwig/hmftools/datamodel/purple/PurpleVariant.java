@@ -57,6 +57,10 @@ public interface PurpleVariant
 
     boolean biallelic();
 
+    // make regular double in the future
+    @Nullable
+    Double biallelicProbability();
+
     @NotNull
     PurpleGenotypeStatus genotypeStatus();
 

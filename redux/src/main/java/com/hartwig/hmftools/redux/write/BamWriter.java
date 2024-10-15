@@ -30,18 +30,21 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
     private final JitterAnalyser mJitterAnalyser;
+    private final SuppBamWriter mSuppBamReadWriter;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
 
-    public BamWriter(final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
-            final SAMFileWriter samFileWriter, @Nullable final JitterAnalyser jitterAnalyser)
+    public BamWriter(
+            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,final SAMFileWriter samFileWriter,
+            @Nullable final JitterAnalyser jitterAnalyser, @Nullable final SuppBamWriter suppBamReadWriter)
     {
         mFilename = filename;
         mConfig = config;
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
+        mSuppBamReadWriter = suppBamReadWriter;
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -84,7 +87,8 @@ public abstract class BamWriter
                 processRecord(read);
                 mConsensusReadCount.incrementAndGet();
 
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
+                if(mReadDataWriter.enabled())
+                    mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
 
                 continue;
             }
@@ -111,6 +115,14 @@ public abstract class BamWriter
             mJitterAnalyser.processRead(read);
         }
     }
+
+    public void writeSupplementary(final SAMRecord read)
+    {
+        if(mSuppBamReadWriter != null)
+            mSuppBamReadWriter.writeRecord(read);
+    }
+
+    public SuppBamWriter suppBamReadWriter() { return mSuppBamReadWriter; }
 
     public abstract void close();
 
@@ -144,7 +156,8 @@ public abstract class BamWriter
     {
         mNonConsensusReadCount.incrementAndGet();
 
-        mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
+        if(mReadDataWriter.enabled())
+            mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
 
         if(fragmentStatus == DUPLICATE)
         {

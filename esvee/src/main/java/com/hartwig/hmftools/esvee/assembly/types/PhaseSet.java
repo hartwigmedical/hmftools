@@ -2,11 +2,16 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 
 public class PhaseSet
 {
@@ -15,6 +20,10 @@ public class PhaseSet
     private final List<AssemblyLink> mSecondaryLinks;
     private final List<JunctionAssembly> mAssemblies;
 
+    private AssemblyAlignment mAssemblyAlignment;
+    private final List<PhaseSet> mMergedPhaseSets;
+    private Integer mMergedPhaseSetId;
+
     public PhaseSet(final AssemblyLink link)
     {
         mId = -1;
@@ -22,6 +31,10 @@ public class PhaseSet
         mAssemblies = Lists.newArrayList();
         mSecondaryLinks = Lists.newArrayList();
         addAssemblyLink(link, 0);
+
+        mAssemblyAlignment = null;
+        mMergedPhaseSets = Lists.newArrayList();
+        mMergedPhaseSetId = null;
     }
 
     public void setId(int id) { mId = id; }
@@ -29,7 +42,7 @@ public class PhaseSet
 
     public void addAssemblyLinkStart(final AssemblyLink link) { addAssemblyLink(link, 0); }
     public void addAssemblyLinkEnd(final AssemblyLink link) { addAssemblyLink(link, mAssemblyLinks.size()); }
-    public void addSecondaryLinkEnd(final AssemblyLink link) { mSecondaryLinks.add(link); }
+    public void addSecondaryLink(final AssemblyLink link) { mSecondaryLinks.add(link); }
 
     private void addAssemblyLink(final AssemblyLink link, int index)
     {
@@ -57,13 +70,40 @@ public class PhaseSet
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
+    public List<JunctionAssembly> allAssemblies()
+    {
+        if(mSecondaryLinks.isEmpty())
+            return mAssemblies;
+
+        List<JunctionAssembly> assemblies = Lists.newArrayList(mAssemblies);
+
+        for(AssemblyLink secondaryLink : mSecondaryLinks)
+        {
+            if(!assemblies.contains(secondaryLink.first()))
+                assemblies.add(secondaryLink.first());
+
+            if(!assemblies.contains(secondaryLink.second()))
+                assemblies.add(secondaryLink.second());
+        }
+
+        return assemblies;
+    }
+
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
     public List<AssemblyLink> secondaryLinks() { return mSecondaryLinks; }
 
-    public boolean hasAssembly(final JunctionAssembly assembly)
-    {
-        return mAssemblies.contains(assembly);
-    }
+    public boolean hasValidAssemblyAlignment() { return mAssemblyAlignment != null && mAssemblyAlignment.isValid(); }
+    public AssemblyAlignment assemblyAlignment() { return mAssemblyAlignment; }
+    public void setAssemblyAlignment(final AssemblyAlignment assemblyAlignment) { mAssemblyAlignment = assemblyAlignment; }
+
+    public List<PhaseSet> mergedPhaseSets() { return mMergedPhaseSets; }
+    public void mergePhaseSet(final PhaseSet phaseSet) { mMergedPhaseSets.add(phaseSet); }
+
+    public boolean merged() { return mMergedPhaseSetId != null; }
+    public int mergedPhaseSetId() { return mMergedPhaseSetId != null ? mMergedPhaseSetId : -1; }
+    public void setMergedPhaseSetId(int phaseSetId) { mMergedPhaseSetId = phaseSetId; }
+
+    public boolean hasAssembly(final JunctionAssembly assembly) { return mAssemblies.contains(assembly); }
 
     public List<AssemblyLink> findAssemblyLinks(final JunctionAssembly assembly)
     {
@@ -73,6 +113,19 @@ public class PhaseSet
     public AssemblyLink findSplitLink(final JunctionAssembly assembly)
     {
         return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+    }
+
+    public boolean isSecondaryLineLink()
+    {
+        return mAssemblyLinks.size() == 1 && mAssemblies.stream().anyMatch(x -> x.outcome() == SECONDARY);
+    }
+
+    public boolean isShortLocalRefLink()
+    {
+        if(mAssemblyLinks.size() != 1 || mAssemblies.get(0).outcome() != LOCAL_INDEL)
+            return false;
+
+        return mAssemblyLinks.get(0).length() < MIN_VARIANT_LENGTH;
     }
 
     public boolean hasFacingLinks() { return mAssemblyLinks.stream().anyMatch(x -> x.type() == LinkType.FACING); }

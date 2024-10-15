@@ -56,7 +56,7 @@ public class AssemblyWriter
             sj.add("Id");
             sj.add("Chromosome").add("JunctionPosition").add("JunctionOrientation");
 
-            sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
+            sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength").add("RefBaseCigar");
 
             addSupportHeader(sj);
 
@@ -78,11 +78,7 @@ public class AssemblyWriter
             AssemblyStats.addReadTypeHeader(sj);
             addRemoteRegionHeader(sj);
 
-            if(mConfig.RunAlignment)
-            {
-                sj.add("AlignResult");
-                sj.add("AssemblyInfo");
-            }
+            sj.add("AssemblyInfo");
 
             // extra detailed fields
             sj.add("InitialReadId");
@@ -121,6 +117,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));
             sj.add(String.valueOf(assembly.refBaseLength()));
+            sj.add(String.valueOf(assembly.refBaseCigar()));
 
             addSupportCounts(assembly, sj);
 
@@ -154,11 +151,7 @@ public class AssemblyWriter
 
             addRemoteRegionInfo(assembly, sj);
 
-            if(mConfig.RunAlignment)
-            {
-                sj.add(String.valueOf(assembly.alignmentOutcome()));
-                sj.add(assembly.assemblyAlignmentInfo());
-            }
+            sj.add(assembly.assemblyAlignmentInfo());
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
 

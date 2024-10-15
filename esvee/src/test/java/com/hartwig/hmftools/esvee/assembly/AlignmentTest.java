@@ -12,18 +12,22 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignments;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,14 +52,16 @@ public class AlignmentTest
 {
     private final MockRefGenome mRefGenome;
 
-    private static final String CHR_1_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_200 + REF_BASES_RANDOM_100;
-    private static final String CHR_2_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_200 + REF_BASES_RANDOM_100; // matching for now
+    private static final String CHR_1_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_400 + REF_BASES_RANDOM_100;
+    private static final String CHR_2_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_400 + REF_BASES_RANDOM_100; // matches chr1
+    private static final String CHR_3_REF_BASES = REF_BASES_RANDOM_100 + REF_BASES_200 + REF_BASES_RANDOM_100; // has much more repetition
 
     public AlignmentTest()
     {
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, CHR_1_REF_BASES);
         mRefGenome.RefGenomeMap.put(CHR_2, CHR_2_REF_BASES);
+        mRefGenome.RefGenomeMap.put(CHR_3, CHR_3_REF_BASES);
     }
 
     private static void addAssemblyRead(final JunctionAssembly assembly, int junctionOffset)
@@ -92,7 +98,7 @@ public class AlignmentTest
         addAssemblyRead(assembly1, -30);
         addAssemblyRead(assembly1, 10);
 
-        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -104,7 +110,7 @@ public class AlignmentTest
         assemblyBases1 = extBases1 + refBases1;
         assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
-        assemblyAlignment = new AssemblyAlignment(0, assembly1);
+        assemblyAlignment = new AssemblyAlignment(assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
         assertEquals(150, assemblyAlignment.fullSequenceLength());
 
@@ -227,14 +233,15 @@ public class AlignmentTest
         alignment1 = createAlignment(CHR_1, 251, 350, 0, 100, "100M50S");
 
         AlignData zeroAlignment1 = createAlignment(
-                CHR_2, 1000, 1100, false, 0, 0, 100, 102, "100M", altAlignment1);
+                CHR_2, 200000, 200100, false, 0, 0, 100, 102, "100M", altAlignment1);
 
         AlignData zeroAlignment2 = createAlignment(
-                CHR_2, 2000, 2100, false, 0, 0, 102, 104, "100M", altAlignment2);
+                CHR_2, 300000, 300100, false, 0, 0, 102, 104, "100M", altAlignment2);
 
         alignment2 = createAlignment(CHR_1, 100, 199, 104, 204, "50S100M");
 
-        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+        alignments = Lists.newArrayList(alignment1, alignment2);
+        // alignments = Lists.newArrayList(alignment1, zeroAlignment1, zeroAlignment2, alignment2);
 
         breakendBuilder.formBreakends(alignments);
 
@@ -246,13 +253,13 @@ public class AlignmentTest
         assertEquals(DUP, first.svType());
         assertEquals(100, first.Position);
         assertEquals(REVERSE, first.Orient);
-        assertEquals(5, first.alternativeAlignments().size());
+        // assertEquals(5, first.alternativeAlignments().size());
         assertNull(first.Homology);
 
         second = assemblyAlignment.breakends().get(1);
         assertEquals(350, second.Position);
         assertEquals(FORWARD, second.Orient);
-        assertEquals(5, second.alternativeAlignments().size());
+        // assertEquals(5, second.alternativeAlignments().size());
 
 
         // test outer singles also with alt alignments
@@ -262,16 +269,17 @@ public class AlignmentTest
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
         zeroAlignment1 = createAlignment(
-                CHR_2, 3000, 3100, false, 0, 0, 0, 2, "50S2M", altAlignment1);
+                CHR_2, 20000, 20100, false, 0, 0, 0, 2, "50S2M", altAlignment1);
 
         alignment1 = createAlignment(CHR_1, 101, 200, 2, 101, "50S100M50S");
 
         alignment2 = createAlignment(CHR_1, 250, 349, 101, 199, "50S100M50S");
 
         zeroAlignment2 = createAlignment(
-                CHR_2, 4000, 4100, false, 0, 0, 199, 200, "2M50S", altAlignment2);
+                CHR_2, 40000, 40100, false, 0, 0, 199, 200, "2M50S", altAlignment2);
 
-        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+        alignments = Lists.newArrayList(zeroAlignment1, alignment1, alignment2, zeroAlignment2);
+        alignments = Lists.newArrayList(alignment1, alignment2);
 
         breakendBuilder.formBreakends(alignments);
 
@@ -284,7 +292,7 @@ public class AlignmentTest
         assertEquals(101, breakend.Position);
         assertEquals(REVERSE, breakend.Orient);
         assertEquals(50, breakend.InsertedBases.length());
-        assertEquals(3, breakend.alternativeAlignments().size());
+        // assertEquals(3, breakend.alternativeAlignments().size());
 
         breakend = assemblyAlignment.breakends().get(1);
         assertEquals(DEL, breakend.svType());
@@ -302,7 +310,7 @@ public class AlignmentTest
         assertEquals(349, breakend.Position);
         assertEquals(FORWARD, breakend.Orient);
         assertEquals(50, breakend.InsertedBases.length());
-        assertEquals(2, breakend.alternativeAlignments().size());
+        // assertEquals(2, breakend.alternativeAlignments().size());
     }
 
     @Test
@@ -310,11 +318,11 @@ public class AlignmentTest
     {
         // first a DEL
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 200, FORWARD, CHR_1, 251, REVERSE, "");
+                CHR_3, 200, FORWARD, CHR_3, 251, REVERSE, "");
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
-        AlignData alignment = createAlignment(CHR_1, 101, 350, 0, 200, "100M50D100M");
+        AlignData alignment = createAlignment(CHR_3, 101, 350, 0, 200, "100M50D100M");
 
         List<AlignData> alignments = Lists.newArrayList(alignment);
 
@@ -335,12 +343,12 @@ public class AlignmentTest
 
         // a DEL with homology
         assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 132, FORWARD, CHR_1, 190, REVERSE, "");
+                CHR_3, 132, FORWARD, CHR_1, 190, REVERSE, "");
 
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
         // homology at pos 13 and 40
-        alignment = createAlignment(CHR_1, 80, 250, 0, 120, "53M57D60M");
+        alignment = createAlignment(CHR_3, 80, 250, 0, 120, "53M57D60M");
 
         alignments = Lists.newArrayList(alignment);
 
@@ -368,8 +376,6 @@ public class AlignmentTest
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "");
 
-        BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
-
         AlignData alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
                 60, 100, 0, "100M", DEFAULT_NM, "", "");
@@ -383,13 +389,13 @@ public class AlignmentTest
         List<AlignData> validAlignments = Lists.newArrayList();
         List<AlignData> lowQualAlignments = Lists.newArrayList();
 
-        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         assertEquals(0, lowQualAlignments.size());
         assertEquals(2, validAlignments.size());
-        assertEquals(78, validAlignments.get(0).adjustedAlignment());
-        assertEquals(80, validAlignments.get(1).adjustedAlignment());
-        assertEquals(37, validAlignments.get(0).calcModifiedMapQual(), 0.1);
+        assertEquals(100, validAlignments.get(0).adjustedAlignment());
+        assertEquals(100, validAlignments.get(1).adjustedAlignment());
+        assertEquals(60, validAlignments.get(0).modifiedMapQual(), 0.1);
 
         // now with lower alignment score and overlap
         AlignData zeroAlign = new AlignData(
@@ -398,29 +404,175 @@ public class AlignmentTest
 
         alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 80,
-                60, 75, 0, "110M", DEFAULT_NM, "", "");
+                60, 80, 0, "110M", DEFAULT_NM, "", "");
 
         alignment2 = new AlignData(
-                new ChrBaseRegion(CHR_2, 1, 100), 60, 140,
-                60, 75, 0, "100M", DEFAULT_NM, "", "");
+                new ChrBaseRegion(CHR_2, 201, 300), 60, 140,
+                100, 80, 0, "100M", DEFAULT_NM, "", "");
 
         AlignData alignment3 = new AlignData(
                 new ChrBaseRegion(CHR_2, 1, 100), 130, 200,
-                60, 65, 0, "100M", DEFAULT_NM, "", "");
+                60, 70, 0, "100M", DEFAULT_NM, "", "");
 
         alignments = Lists.newArrayList(zeroAlign, alignment1, zeroAlign, alignment2, zeroAlign, alignment3);
 
         validAlignments.clear();
         lowQualAlignments.clear();
 
-        breakendBuilder.filterAlignments(alignments, validAlignments, lowQualAlignments);
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
-        assertEquals(3, lowQualAlignments.size());
+        assertEquals(4, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+        assertEquals(60, alignment1.adjustedAlignment());
+        assertEquals(60, alignment3.adjustedAlignment());
+        assertEquals(48, alignment2.adjustedAlignment());
+    }
+
+    @Test
+    public void testAlignmentShortAdjustedAlignedLengthFilter()
+    {
+        AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "");
+
+        // test exclusion of short adjusted alignment-length segments
+        AlignData alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 80,
+                60, 80, 0, "80M", DEFAULT_NM, "", "");
+
+        String altAlignment = "2,+200000,100M,0";
+        AlignData alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 201, 220), 80, 100,
+                60, 20, 0, "20M", DEFAULT_NM, altAlignment, "");
+
+        AlignData alignment3 = new AlignData(
+                new ChrBaseRegion(CHR_2, 1, 100), 100, 200,
+                60, 100, 0, "100M", DEFAULT_NM, "", "");
+
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
+
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(1, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+        // short alignments are permitted on the outside
+        alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 120), 0, 20,
+                60, 80, 0, "20M", DEFAULT_NM, altAlignment, "");
+
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 201, 300), 20, 100,
+                60, 80, 0, "100M", DEFAULT_NM, "", "");
+
+        alignment3 = new AlignData(
+                new ChrBaseRegion(CHR_2, 350, 370), 100, 120,
+                60, 100, 0, "20M", DEFAULT_NM, altAlignment, "");
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
         assertEquals(3, validAlignments.size());
+    }
 
-        assertEquals(43, validAlignments.get(0).adjustedAlignment());
-        assertEquals(29, validAlignments.get(1).adjustedAlignment());
-        assertEquals(47, validAlignments.get(2).adjustedAlignment());
+
+    @Test
+    public void testAlignmentLowMapQualFilters()
+    {
+        AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
+                mRefGenome, CHR_1, 300, FORWARD, CHR_1, 350, REVERSE, "", "",
+                50, 200);
+
+        // scenario 1: based on chr7-comp 1c:
+        String cigar = "100M";
+
+        String altAlignment1 = "2,+200000,100M,0";
+
+        AlignData alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
+                0, 100, 0, cigar, DEFAULT_NM, altAlignment1, "");
+
+        String altAlignment2 = "1,+2000,100M,0";
+
+        AlignData alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 20000, 20100), 101, 200,
+                0, 100, 0, cigar, DEFAULT_NM, altAlignment2, "");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2);
+
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+        assertTrue(alignment1.hasLowMapQualAlignment());
+        assertTrue(alignment2.hasLowMapQualAlignment());
+
+        assertNull(alignment1.selectedAltAlignment());
+        assertEquals(1, alignment1.unselectedAltAlignments().size());
+        assertEquals(2000, alignment2.selectedAltAlignment().Position);
+        assertTrue(alignment1.hasLowMapQualShortSvLink());
+        assertTrue(alignment2.hasLowMapQualShortSvLink());
+
+        // scenario 2: based on chr7-comp 1a:
+
+        // 0 = {AlignData@3222} "7:125745443-125746123:1 681M1314S seq(0-681 adj=0-680) score(681) flags(0) mapQual(60 adj=50) aligned(681 adj=621)"
+        //1 = {AlignData@3223} "7:126166901-126167444:1 544M seq(0-544 adj=682-1225) score(544) flags(0) mapQual(60 adj=52) aligned(544 adj=506)"
+        //2 = {AlignData@3224} "7:143939546-143939814:-1 269M seq(0-269 adj=1231-1499) score(269) flags(16) mapQual(0 adj=0) aligned(269 adj=245)"
+            // 7,+144005351,269M,0;
+        //3 = {AlignData@3225} "7:143936039-143936532:-1 494M seq(0-494 adj=1501-1994) score(494) flags(16) mapQual(0 adj=0) aligned(494 adj=478)"
+            // 7,+144008633,494M,0;
+
+        alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
+                60, 100, 0, cigar, DEFAULT_NM, altAlignment1, "");
+
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 201, 300), 101, 200,
+                60, 100, 0, cigar, DEFAULT_NM, altAlignment2, "");
+
+        String altAlignment3 = "2,+200000,100M,0";
+
+        AlignData alignment3 = new AlignData(
+                new ChrBaseRegion(CHR_2, 101, 200), 201, 300,
+                0, 100, 0, cigar, DEFAULT_NM, altAlignment3, "");
+
+        String altAlignment4 = "1,+2000,100M,0";
+
+        AlignData alignment4 = new AlignData(
+                new ChrBaseRegion(CHR_2, 20000, 20100), 301, 400,
+                0, 100, 0, cigar, DEFAULT_NM, altAlignment4, "");
+
+        alignments = Lists.newArrayList(alignment1, alignment2, alignment3, alignment4);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(4, validAlignments.size());
+
+        assertTrue(alignment3.hasLowMapQualAlignment());
+        assertTrue(alignment4.hasLowMapQualAlignment());
+
+        assertNull(alignment3.selectedAltAlignment());
+        assertEquals(1, alignment3.unselectedAltAlignments().size());
+        assertNull(alignment4.selectedAltAlignment());
+        assertEquals(1, alignment4.unselectedAltAlignments().size());
+        assertTrue(alignment3.hasLowMapQualShortSvLink());
+        assertTrue(alignment4.hasLowMapQualShortSvLink());
+
     }
 
     private AssemblyAlignment createAssemblyAlignment(

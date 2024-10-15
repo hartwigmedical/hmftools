@@ -42,18 +42,11 @@ public final class SequenceCompare
         byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
         List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
 
-        int mismatches = compareSequences(
-                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
-                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches);
-
-        if(mismatches <= maxMismatches)
-            return mismatches;
-
+        // run the comparison heading out from the junction
         return compareSequences(
                 extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
                 readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, false);
+                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, isForward, false);
     }
 
     public static boolean matchedAssemblySequences(final JunctionAssembly first, final JunctionAssembly second)
@@ -125,13 +118,13 @@ public final class SequenceCompare
     {
         return compareSequences(
                 firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
-                secondIndexEnd, secondRepeats, maxMismatches, true);
+                secondIndexEnd, secondRepeats, maxMismatches, true, true);
     }
 
     public static int compareSequences(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
-            int maxMismatches, boolean checkForwards)
+            int maxMismatches, boolean checkForwards, boolean repeatsAreMismatches)
     {
         if(firstIndexStart < 0 || firstIndexEnd >= firstBases.length || firstIndexEnd >= firstBaseQuals.length
         || secondIndexStart < 0 || secondIndexEnd >= secondBases.length || secondIndexEnd >= secondBaseQuals.length)
@@ -199,7 +192,9 @@ public final class SequenceCompare
                 else
                     secondIndex += checkForwards ? -expectedRepeatBaseDiff : expectedRepeatBaseDiff;
 
-                ++mismatchCount;
+                if(repeatsAreMismatches)
+                    ++mismatchCount;
+
                 continue; // check the next base again
             }
 
@@ -213,49 +208,6 @@ public final class SequenceCompare
         }
 
         return mismatchCount;
-    }
-
-    private static boolean hasCompatibleRepeats(
-            int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
-            int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
-    {
-        List<RepeatInfo> firstRepeatsInRange = firstRepeats.stream()
-                .filter(x -> x.Index >= firstIndexStart && x.postRepeatIndex() <= firstIndexEnd).collect(Collectors.toList());
-
-        List<RepeatInfo> secondRepeatsInRange = secondRepeats.stream()
-                .filter(x -> x.Index >= secondIndexStart && x.postRepeatIndex() <= secondIndexEnd).collect(Collectors.toList());
-
-        int minRepeatCount = min(firstRepeatsInRange.size(), secondRepeatsInRange.size());
-
-        int firstIndex = 0;
-        int matchedCount = 0;
-
-        while(firstIndex < firstRepeatsInRange.size())
-        {
-            RepeatInfo firstRepeat = firstRepeatsInRange.get(firstIndex);
-
-            RepeatInfo matchedRepeat = secondRepeatsInRange.stream()
-                    .filter(x -> x.Bases.equals(firstRepeat.Bases) && x.Count == firstRepeat.Count).findFirst().orElse(null);
-
-            if(matchedRepeat == null)
-            {
-                matchedRepeat = secondRepeatsInRange.stream()
-                        .filter(x -> x.Bases.equals(firstRepeat.Bases) && abs(x.Count - firstRepeat.Count) <= 2).findFirst().orElse(null);
-            }
-
-            if(matchedRepeat != null)
-            {
-                ++matchedCount;
-                firstRepeatsInRange.remove(firstIndex);
-                secondRepeatsInRange.remove(matchedRepeat);
-            }
-            else
-            {
-                ++firstIndex;
-            }
-        }
-
-        return minRepeatCount - matchedCount <= 2;
     }
 
     private static int checkRepeatDifference(
@@ -422,6 +374,50 @@ public final class SequenceCompare
         }
 
         return true;
+    }
+
+    // unused matching routines
+    private static boolean hasCompatibleRepeats(
+            int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
+            int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
+    {
+        List<RepeatInfo> firstRepeatsInRange = firstRepeats.stream()
+                .filter(x -> x.Index >= firstIndexStart && x.postRepeatIndex() <= firstIndexEnd).collect(Collectors.toList());
+
+        List<RepeatInfo> secondRepeatsInRange = secondRepeats.stream()
+                .filter(x -> x.Index >= secondIndexStart && x.postRepeatIndex() <= secondIndexEnd).collect(Collectors.toList());
+
+        int minRepeatCount = min(firstRepeatsInRange.size(), secondRepeatsInRange.size());
+
+        int firstIndex = 0;
+        int matchedCount = 0;
+
+        while(firstIndex < firstRepeatsInRange.size())
+        {
+            RepeatInfo firstRepeat = firstRepeatsInRange.get(firstIndex);
+
+            RepeatInfo matchedRepeat = secondRepeatsInRange.stream()
+                    .filter(x -> x.Bases.equals(firstRepeat.Bases) && x.Count == firstRepeat.Count).findFirst().orElse(null);
+
+            if(matchedRepeat == null)
+            {
+                matchedRepeat = secondRepeatsInRange.stream()
+                        .filter(x -> x.Bases.equals(firstRepeat.Bases) && abs(x.Count - firstRepeat.Count) <= 2).findFirst().orElse(null);
+            }
+
+            if(matchedRepeat != null)
+            {
+                ++matchedCount;
+                firstRepeatsInRange.remove(firstIndex);
+                secondRepeatsInRange.remove(matchedRepeat);
+            }
+            else
+            {
+                ++firstIndex;
+            }
+        }
+
+        return minRepeatCount - matchedCount <= 2;
     }
 
     public static List<SequenceDiffInfo> getSequenceMismatchInfo(

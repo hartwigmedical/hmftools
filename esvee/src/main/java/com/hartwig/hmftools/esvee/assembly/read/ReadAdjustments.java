@@ -2,16 +2,18 @@ package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.findLineSequenceBase;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isLineSequence;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.findBaseRepeatCount;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_TEST_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
 
@@ -19,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
 
 public final class ReadAdjustments
 {
@@ -103,6 +106,79 @@ public final class ReadAdjustments
         return true;
     }
 
+    public static void markLineSoftClips(final Read read)
+    {
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean fromStart = (i == 0);
+            int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
+
+            if(scBaseCount == 0)
+                continue;
+
+            if(scBaseCount >= LINE_POLY_AT_REQ)
+            {
+                int scIndexStart, scIndexEnd;
+                int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
+
+                if(fromStart)
+                {
+                    scIndexEnd = scBaseCount - 1;
+                    scIndexStart = scIndexEnd - lineTestLength + 1;
+                }
+                else
+                {
+                    scIndexStart = read.basesLength() - scBaseCount;
+                    scIndexEnd = scIndexStart + lineTestLength - 1;
+                }
+
+                byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
+                int lineBaseCount = findLineSequenceCount(read.getBases(), scIndexStart, scIndexEnd, lineBase);
+
+                if(lineBaseCount == 0)
+                    continue;
+
+                // test that the LINE sequence doesn't extend a long repeat of the same base
+                int refBaseIndex = fromStart ? scBaseCount : read.basesLength() - scBaseCount - 1;
+
+                int refRepeatLength = findBaseRepeatCount(read.getBases(), refBaseIndex, fromStart, lineBase);
+
+                if(lineBaseCount >= refRepeatLength * LINE_REF_BASE_REPEAT_FACTOR)
+                {
+                    read.markLineTail();
+                    return;
+                }
+            }
+        }
+    }
+
+    public static boolean filterLowQualRead(final SAMRecord read)
+    {
+        int baseLength = read.getReadBases().length;
+        int qualCountThreshold = baseLength / 2 + 1;
+        int lowQualCount = 0;
+
+        for(int i = 0; i < baseLength; ++i)
+        {
+            if(belowMinQual(read.getBaseQualities()[i]))
+            {
+                ++lowQualCount;
+
+                if(lowQualCount >= qualCountThreshold)
+                    return true;
+            }
+            else
+            {
+                // exit early if majority will be high-qual
+                int highQualCount = i + 1 - lowQualCount;
+                if(highQualCount >= qualCountThreshold)
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean trimLowQualSoftClipBases(final Read read)
     {
         boolean fromStart = read.negativeStrand();
@@ -116,39 +192,27 @@ public final class ReadAdjustments
 
         if(scBaseCount >= LINE_POLY_AT_REQ)
         {
-            int scIndexStart, scIndexEnd, refIndexStart, refIndexEnd;
+            int scIndexStart, scIndexEnd;
             int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
 
             if(fromStart)
             {
                 scIndexEnd = scBaseCount - 1;
                 scIndexStart = scIndexEnd - lineTestLength + 1;
-                refIndexStart = scIndexEnd + 1;
-                refIndexEnd = refIndexStart + LINE_REF_BASE_TEST_LENGTH - 1;
             }
             else
             {
                 scIndexStart = read.basesLength() - scBaseCount;
                 scIndexEnd = scIndexStart + lineTestLength - 1;
-                refIndexEnd = scIndexStart - 1;
-                refIndexStart = refIndexEnd - LINE_REF_BASE_TEST_LENGTH + 1;
             }
 
-            Byte lineBase = null;
+            byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
 
-            if(!isLineSequence(read.getBases(), refIndexStart, refIndexEnd))
+            if(read.hasLineTail())
             {
-                lineBase = findLineSequenceBase(read.getBases(), scIndexStart, scIndexEnd);
-            }
-
-            if(lineBase != null)
-            {
-                read.markLineTail();
-
                 lineExclusionLength = lineTestLength;
 
-                // find the most 3' index for the observed line base
-
+                // find the outermost index for the observed line base
                 int baseIndex = fromStart ? scIndexStart : scIndexEnd;
                 int baseCheck = lineTestLength - LINE_POLY_AT_REQ;
 
@@ -178,6 +242,7 @@ public final class ReadAdjustments
             {
                 lowQualCount++;
 
+                // avoid a check on very low counts of bases
                 if(lowQualCount / (double)i >= LOW_BASE_TRIM_PERC)
                     lastLowQualPercIndex = i;
             }
@@ -204,36 +269,32 @@ public final class ReadAdjustments
 
         int baseLength = read.basesLength();
         int baseIndex = fromStart ? 0 : baseLength - 1;
-        int halfLength = baseLength / 2; // at most half the read will be trimmed
 
         int lowQualCount = 0;
+        int lastLowQualPercIndex = 0;
+        int checkedBases = 0;
 
-        while(true)
+        while(baseIndex >= 0 && baseIndex < baseLength)
         {
+            ++checkedBases;
+
             if(belowMinQual(read.getBaseQuality()[baseIndex]))
+            {
                 lowQualCount++;
-            else
-                break;
+
+                if(lowQualCount / (double)checkedBases >= LOW_BASE_TRIM_PERC)
+                    lastLowQualPercIndex = checkedBases;
+            }
 
             if(fromStart)
-            {
                 ++baseIndex;
-
-                if(baseIndex >= halfLength)
-                    break;
-            }
             else
-            {
                 --baseIndex;
-
-                if(baseIndex <= halfLength)
-                    break;
-            }
         }
 
-        if(lowQualCount > 0)
+        if(lastLowQualPercIndex > 0)
         {
-            read.trimBases(lowQualCount, fromStart);
+            read.trimBases(lastLowQualPercIndex, fromStart);
             read.markLowQualTrimmed();
         }
     }

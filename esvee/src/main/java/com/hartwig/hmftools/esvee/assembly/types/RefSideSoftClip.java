@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
@@ -52,7 +53,7 @@ public class RefSideSoftClip
     public static boolean checkAddRefSideSoftClip(final List<RefSideSoftClip> refSideSoftClips, final Junction junction, final Read read)
     {
         // add any which have soft-clips more than the junction buffer on the opposite side to the junction,
-        // and accumulated matching reads
+        // with a minimum aligned length and accumulate matching reads
         int refSideSoftClipPosition;
         int refSideSoftClipLength;
 
@@ -60,7 +61,7 @@ public class RefSideSoftClip
         {
             refSideSoftClipPosition = read.alignmentStart();
 
-            if(refSideSoftClipPosition >= junction.Position)
+            if(refSideSoftClipPosition > junction.Position - PHASED_ASSEMBLY_MIN_TI)
                 return false;
 
             refSideSoftClipLength = read.leftClipLength();
@@ -69,7 +70,7 @@ public class RefSideSoftClip
         {
             refSideSoftClipPosition = read.alignmentEnd();
 
-            if(refSideSoftClipPosition <= junction.Position)
+            if(refSideSoftClipPosition < junction.Position + PHASED_ASSEMBLY_MIN_TI)
                 return false;
 
             refSideSoftClipLength = read.rightClipLength();

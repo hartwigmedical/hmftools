@@ -82,6 +82,8 @@ public class EnsemblDataCache
         mAlternativeGeneData = Lists.newArrayList();
     }
 
+    public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
+
     public static void addEnsemblDir(final ConfigBuilder configBuilder)
     {
         addEnsemblDir(configBuilder, false);

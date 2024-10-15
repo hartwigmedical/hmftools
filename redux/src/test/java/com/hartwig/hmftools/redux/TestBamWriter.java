@@ -18,7 +18,7 @@ public class TestBamWriter extends BamWriter
 
     public TestBamWriter(final ReduxConfig config)
     {
-        super("", config, new ReadDataWriter(config), null, null);
+        super("", config, new ReadDataWriter(config), null, null, null);
 
         WrittenRecords = Lists.newArrayList();
         CurrentPosUpper = 0;

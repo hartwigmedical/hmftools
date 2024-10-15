@@ -1,29 +1,28 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.metrics.WGSMetricQC.hasSufficientMappedProportion;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Flagstat.FLAGSTAT;
 
-import com.hartwig.hmftools.common.flagstat.Flagstat;
-import com.hartwig.hmftools.common.flagstat.FlagstatQC;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 public class FlagstatDAO
 {
+    private final DSLContext mContext;
 
-    private final DSLContext context;
-
-    FlagstatDAO(final DSLContext context)
+    public FlagstatDAO(final DSLContext context)
     {
-        this.context = context;
+        this.mContext = context;
     }
 
-    void writeFlagstats(final String sample, final Flagstat refFlagstat, final Flagstat tumorFlagstat)
+    public void writeFlagstats(final String sample, final BamFlagStats refFlagStats, final BamFlagStats tumorFlagStats)
     {
         deleteFlagstatsForSample(sample);
 
-        boolean passQC = FlagstatQC.pass(refFlagstat) && FlagstatQC.pass(tumorFlagstat);
-        context.insertInto(FLAGSTAT,
+        boolean passQC = hasSufficientMappedProportion(refFlagStats) && hasSufficientMappedProportion(tumorFlagStats);
+        
+        mContext.insertInto(FLAGSTAT,
                         FLAGSTAT.SAMPLEID,
                         FLAGSTAT.REFUNIQUEREADCOUNT,
                         FLAGSTAT.REFSECONDARYCOUNT,
@@ -45,30 +44,30 @@ public class FlagstatDAO
                         FLAGSTAT.TUMORSINGLETONPROPORTION,
                         FLAGSTAT.PASSQC)
                 .values(sample,
-                        refFlagstat.uniqueReadCount(),
-                        refFlagstat.secondaryCount(),
-                        refFlagstat.supplementaryCount(),
-                        DatabaseUtil.decimal(refFlagstat.duplicateProportion()),
-                        DatabaseUtil.decimal(refFlagstat.mappedProportion()),
-                        DatabaseUtil.decimal(refFlagstat.pairedInSequencingProportion()),
-                        DatabaseUtil.decimal(refFlagstat.properlyPairedProportion()),
-                        DatabaseUtil.decimal(refFlagstat.withItselfAndMateMappedProportion()),
-                        DatabaseUtil.decimal(refFlagstat.singletonProportion()),
-                        tumorFlagstat.uniqueReadCount(),
-                        tumorFlagstat.secondaryCount(),
-                        tumorFlagstat.supplementaryCount(),
-                        DatabaseUtil.decimal(tumorFlagstat.duplicateProportion()),
-                        DatabaseUtil.decimal(tumorFlagstat.mappedProportion()),
-                        DatabaseUtil.decimal(tumorFlagstat.pairedInSequencingProportion()),
-                        DatabaseUtil.decimal(tumorFlagstat.properlyPairedProportion()),
-                        DatabaseUtil.decimal(tumorFlagstat.withItselfAndMateMappedProportion()),
-                        DatabaseUtil.decimal(tumorFlagstat.singletonProportion()),
+                        refFlagStats.uniqueReadCount(),
+                        refFlagStats.secondaryCount(),
+                        refFlagStats.supplementaryCount(),
+                        DatabaseUtil.decimal(refFlagStats.duplicateProportion()),
+                        DatabaseUtil.decimal(refFlagStats.mappedProportion()),
+                        DatabaseUtil.decimal(refFlagStats.pairedInSequencingProportion()),
+                        DatabaseUtil.decimal(refFlagStats.properlyPairedProportion()),
+                        DatabaseUtil.decimal(refFlagStats.withItselfAndMateMappedProportion()),
+                        DatabaseUtil.decimal(refFlagStats.singletonProportion()),
+                        tumorFlagStats.uniqueReadCount(),
+                        tumorFlagStats.secondaryCount(),
+                        tumorFlagStats.supplementaryCount(),
+                        DatabaseUtil.decimal(tumorFlagStats.duplicateProportion()),
+                        DatabaseUtil.decimal(tumorFlagStats.mappedProportion()),
+                        DatabaseUtil.decimal(tumorFlagStats.pairedInSequencingProportion()),
+                        DatabaseUtil.decimal(tumorFlagStats.properlyPairedProportion()),
+                        DatabaseUtil.decimal(tumorFlagStats.withItselfAndMateMappedProportion()),
+                        DatabaseUtil.decimal(tumorFlagStats.singletonProportion()),
                         passQC ? (byte) 1 : (byte) 0)
                 .execute();
     }
 
-    void deleteFlagstatsForSample(final String sample)
+    public void deleteFlagstatsForSample(final String sample)
     {
-        context.delete(FLAGSTAT).where(FLAGSTAT.SAMPLEID.eq(sample)).execute();
+        mContext.delete(FLAGSTAT).where(FLAGSTAT.SAMPLEID.eq(sample)).execute();
     }
 }

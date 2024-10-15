@@ -40,6 +40,11 @@ public final class BedFileReader
 
     public static List<ChrBaseRegion> loadBedFile(final String filename) throws Exception
     {
+        return loadBedFile(filename, true);
+    }
+
+    public static List<ChrBaseRegion> loadBedFile(final String filename, boolean checkSortedMerged) throws Exception
+    {
         BufferedReader reader = createBufferedReader(filename);
 
         List<String> lines = Lists.newArrayList();
@@ -50,11 +55,16 @@ public final class BedFileReader
             lines.add(line);
         }
 
-        List<ChrBaseRegion> regions = loadBedFile(lines);
+        List<ChrBaseRegion> regions = loadBedFile(lines, checkSortedMerged);
         return regions;
     }
 
     public static List<ChrBaseRegion> loadBedFile(final List<String> lines) throws Exception
+    {
+        return loadBedFile(lines, true);
+    }
+
+    public static List<ChrBaseRegion> loadBedFile(final List<String> lines, boolean checkSortedMerged) throws Exception
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
@@ -76,7 +86,8 @@ public final class BedFileReader
             regions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
         }
 
-        ChrBaseRegion.checkMergeOverlaps(regions, true);
+        if(checkSortedMerged)
+            ChrBaseRegion.checkMergeOverlaps(regions, true);
 
         return regions;
     }

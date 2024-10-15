@@ -24,13 +24,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.CandidateDuplicates;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.Fragment;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
-import com.hartwig.hmftools.redux.common.HighDepthRegion;
 import com.hartwig.hmftools.redux.common.PartitionData;
 import com.hartwig.hmftools.redux.common.PartitionResults;
 import com.hartwig.hmftools.redux.common.Statistics;
@@ -150,7 +150,10 @@ public class PartitionReader implements Consumer<List<Fragment>>
         RD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
 
         if(mConfig.PerfDebug)
+        {
             mCurrentPartitionData.logCacheCounts();
+            mPartitionDataStore.logTotalCacheSize();
+        }
 
         mPartitionRecordCount = 0;
     }
@@ -271,6 +274,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                     mBamWriter.writeRead(read, partitionResults.fragmentStatus());
                 }
 
+                if(partitionResults.supplementaries() != null)
+                {
+                    partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+                }
+
                 ++mStats.LocalComplete;
             }
             else
@@ -322,6 +330,10 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             if(partitionResults.resolvedFragments() != null)
                 mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
+
+            if(partitionResults.supplementaries() != null)
+                partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
+
         }
 
         mPendingIncompleteReads.clear();

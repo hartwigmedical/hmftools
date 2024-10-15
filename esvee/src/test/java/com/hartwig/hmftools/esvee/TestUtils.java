@@ -355,8 +355,9 @@ public class TestUtils
             final String readId, final String chromosome, int readStart, final String mateChr, int mateStart,
             boolean firstInPair, boolean isSupp, final String suppData)
     {
+        String readBases = REF_BASES_200.substring(0, 100);
         SAMRecord record = createSamRecord(
-                readId, chromosome, readStart, "", "100M",
+                readId, chromosome, readStart, readBases, "100M",
                 buildFlags(firstInPair, false, isSupp),
                 DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL);
 

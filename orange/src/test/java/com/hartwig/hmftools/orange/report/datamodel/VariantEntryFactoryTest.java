@@ -40,6 +40,7 @@ public class VariantEntryFactoryTest
                 .adjustedVAF(1.3)
                 .minorAlleleCopyNumber(1.2)
                 .biallelic(false)
+                .biallelicProbability(0.1)
                 .hotspot(HotspotType.NEAR_HOTSPOT)
                 .subclonalLikelihood(0.3)
                 .localPhaseSets(Lists.newArrayList(1))

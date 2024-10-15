@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.caller;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
@@ -14,15 +13,12 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
+import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -68,7 +64,7 @@ public class CallerApplication
         mHotspotCache = new HotspotCache(configBuilder);
 
         String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
-        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.SampleId);
+        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -117,11 +113,11 @@ public class CallerApplication
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(REF_DEPTH_PAIR, 1, VCFHeaderLineType.Integer, REF_DEPTH_PAIR_DESC));
         }
 
-        SV_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
+        SV_LOGGER.info("sample({}) processing VCF({})", mConfig.fileSampleId(), vcfFile);
 
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
-        if(genotypeIds.TumorOrdinal < 0 || (!mConfig.ReferenceId.isEmpty() && genotypeIds.ReferenceOrdinal < 0))
+        if((mConfig.hasTumor() && genotypeIds.TumorOrdinal < 0) || (mConfig.hasReference() && genotypeIds.ReferenceOrdinal < 0))
         {
             SV_LOGGER.error("missing sample names in VCF: {}", vcfHeader.getGenotypeSamples());
             System.exit(1);
@@ -129,12 +125,12 @@ public class CallerApplication
 
         mSvDataCache.setGenotypeOrdinals(genotypeIds);
 
-        if(mConfig.GermlineOnly)
+        if(mConfig.germlineOnly())
         {
             SV_LOGGER.info("germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
         }
-        else if(mConfig.ReferenceId.isEmpty())
+        else if(!mConfig.hasReference())
         {
             SV_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
@@ -171,7 +167,7 @@ public class CallerApplication
 
         mSvDataCache.buildBreakendMap();
 
-        markLikelyLineSites();
+        LineChecker.markLineSites(mSvDataCache.getBreakendMap());
 
         SV_LOGGER.info("applying filters");
 
@@ -180,9 +176,18 @@ public class CallerApplication
             if(mHotspotCache.isHotspotVariant(var))
                 var.markHotspot();
 
-            markGermline(var);
-
             mVariantFilters.applyFilters(var);
+        }
+
+        // set germline status and final filters based on LINE
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            markGermline(var);
+        }
+
+        for(Variant var : mSvDataCache.getSvList())
+        {
+            adjustLineSites(var);
         }
 
         Deduplication.deduplicateVariants(mSvDataCache.getBreakendMap());
@@ -211,6 +216,12 @@ public class CallerApplication
 
     private void markGermline(final Variant var)
     {
+        if(mConfig.germlineOnly())
+        {
+            var.markGermline();
+            return;
+        }
+
         Breakend breakend = var.breakendStart();
 
         double maxGermlineAf = 0;
@@ -220,7 +231,7 @@ public class CallerApplication
         {
             double af = breakend.calcAllelicFrequency(genotype);
 
-            if(mConfig.ReferenceId.contains(genotype.getSampleName()))
+            if(mConfig.hasReference() && mConfig.ReferenceId.contains(genotype.getSampleName()))
                 maxGermlineAf = max(maxGermlineAf, af);
             else
                 maxTumorAf = max(maxTumorAf, af);
@@ -228,31 +239,6 @@ public class CallerApplication
 
         if(maxGermlineAf >= GERMLINE_AF_THRESHOLD * maxTumorAf)
             var.markGermline();
-    }
-
-    private void markLikelyLineSites()
-    {
-        for(List<Breakend> breakends : mSvDataCache.getBreakendMap().values())
-        {
-            for(int i = 0; i < breakends.size() - 1; ++i)
-            {
-                Breakend breakend = breakends.get(i);
-                Breakend nextBreakend = breakends.get(i + 1);
-
-                if(breakend.otherBreakend() == nextBreakend)
-                    continue;
-
-                if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
-                    continue;
-
-                // mark if either site is line
-                if(breakend.isLine() || nextBreakend.isLine())
-                {
-                    breakend.setLineSiteBreakend(nextBreakend);
-                    nextBreakend.setLineSiteBreakend(breakend);
-                }
-            }
-        }
     }
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)

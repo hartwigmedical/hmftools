@@ -112,9 +112,8 @@ public class StructuralVariantTest
     {
         return ImmutableStructuralVariantData.builder()
                         .id(varId)
-                        // TODO (CS): Use (or remove) vcfId / properly populate start/end
-                        .vcfIdStart("not_known")
-                        .vcfIdEnd("not_known")
+                        .vcfIdStart(vcfId)
+                        .vcfIdEnd(vcfId)
                         .startChromosome(chrStart)
                         .endChromosome(chrEnd)
                         .startPosition(posStart)
@@ -191,14 +190,8 @@ public class StructuralVariantTest
                 .nextSpliceExonPhase(1)
                 .nextSpliceDistance(1000)
                 .totalExonCount(5)
-                .type(StructuralVariantType.DEL)
-                .chromosome("1")
-                .orientation(POS_ORIENT)
-                .strand(1)
-                .chrBand("")
                 .exonUp(1)
                 .exonDown(2)
-                .junctionCopyNumber(1)
                 .build();
 
     }

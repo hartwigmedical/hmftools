@@ -275,7 +275,7 @@ public class ObservedRegionFactory
 
             if(candidateRangeMax - candidateRangeMin >= GERMLINE_DEL_MIN_LENGTH)
             {
-                PPL_LOGGER.info("germline event from region({}:{}-{}) normalRatio({}) range({}-{})",
+                PPL_LOGGER.trace("germline event from region({}:{}-{}) normalRatio({}) range({}-{})",
                         candidateRegion.chromosome(), candidateRegion.start(), candidateRegion.end(),
                         format("%.2f unnorm=%.2f", candidateRegion.observedNormalRatio(),
                                 candidateRegion.unnormalisedObservedNormalRatio()),

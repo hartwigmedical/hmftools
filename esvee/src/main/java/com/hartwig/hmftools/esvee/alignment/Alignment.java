@@ -48,7 +48,10 @@ public class Alignment
     public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
         // apply filters on what to run alignment on
-        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED || assembly.outcome() == AssemblyOutcome.SECONDARY)
+        if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
+        || assembly.outcome() == AssemblyOutcome.SECONDARY
+        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY
+        || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
         {
             // since identical to or associated with other links
             return true;
@@ -152,6 +155,12 @@ public class Alignment
                 return;
             }
 
+            if(assemblyAlignment.isMerged())
+            {
+                writeAssemblyData(assemblyAlignment, Collections.emptyList(), Collections.emptyList());
+                return;
+            }
+
             List<AlignData> alignments;
             List<AlignData> requeriedAlignments;
 
@@ -177,31 +186,13 @@ public class Alignment
             AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
             alignmentFragments.allocateBreakendSupport();
 
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
-                AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
-
-            if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
-            {
-                List<AlignData> alignmentsToWrite;
-
-                if(!requeriedAlignments.isEmpty())
-                {
-                    alignmentsToWrite = Lists.newArrayList(alignments);
-                    alignmentsToWrite.addAll(requeriedAlignments);
-                }
-                else
-                {
-                    alignmentsToWrite = alignments;
-                }
-
-                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
-            }
+            writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
         }
 
         private List<AlignData> requerySupplementaryAlignments(
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
         {
-            // re-alignment supplementaries to get a more reliable map quality
+            // re-align supplementaries to get a more reliable map quality
             if(alignments.stream().noneMatch(x -> x.isSupplementary()))
                 return alignments;
 
@@ -249,11 +240,11 @@ public class Alignment
                 // rqAlignment = {AlignData@3246} "10:2543809-2543878 3S70M fwd seq(3-73 adj=3-72) score(65) flags(0) mapQual(17 align=70 adj=70)"
 
                 AlignData convertedAlignment = new AlignData(
-                        rqAlignment.RefLocation,
+                        rqAlignment.refLocation(),
                         rqAlignment.rawSequenceStart(),
                         rqAlignment.rawSequenceEnd(),
-                        rqAlignment.MapQual, rqAlignment.Score, rqAlignment.Flags, rqAlignment.Cigar, rqAlignment.NMatches,
-                        rqAlignment.XaTag, rqAlignment.MdTag);
+                        rqAlignment.mapQual(), rqAlignment.score(), rqAlignment.flags(), rqAlignment.cigar(), rqAlignment.nMatches(),
+                        rqAlignment.xaTag(), rqAlignment.mdTag());
 
                 // restore values to be in terms of the original sequence
                 int rqSeqOffsetStart = rqAlignment.sequenceStart();
@@ -261,6 +252,10 @@ public class Alignment
                 int rqSeqOffsetEnd = alignmentSequence.length() - 1 - rqAlignment.sequenceEnd();
                 int adjSequenceEnd = alignData.sequenceEnd() - rqSeqOffsetEnd;
                 convertedAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
+
+                convertedAlignment.setSoftClipLengths(
+                        convertedAlignment.leftSoftClipLength() + alignData.leftSoftClipLength(),
+                        convertedAlignment.rightSoftClipLength() + alignData.rightSoftClipLength());
 
                 convertedAlignments.add(convertedAlignment);
 
@@ -272,29 +267,38 @@ public class Alignment
 
         private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
+            if(alignments.isEmpty())
+                return;
+
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
+        }
+    }
 
-            for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+    private void writeAssemblyData(
+            final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+    {
+        if(!assemblyAlignment.isValid())
+            return;
+
+        if(mConfig.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
+            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment);
+
+        if(mConfig.WriteTypes.contains(WriteType.ALIGNMENT))
+        {
+            List<AlignData> alignmentsToWrite;
+
+            if(!requeriedAlignments.isEmpty())
             {
-                boolean matched = false;
-
-                for(Breakend breakend : assemblyAlignment.breakends())
-                {
-                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient))
-                    {
-                        assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if(!matched)
-                    assembly.setAlignmentOutcome(AlignmentOutcome.NO_MATCH);
+                alignmentsToWrite = Lists.newArrayList(alignments);
+                alignmentsToWrite.addAll(requeriedAlignments);
+            }
+            else
+            {
+                alignmentsToWrite = alignments;
             }
 
-            if(assemblyAlignment.breakends().isEmpty())
-                assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
+            AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentsToWrite);
         }
     }
 }

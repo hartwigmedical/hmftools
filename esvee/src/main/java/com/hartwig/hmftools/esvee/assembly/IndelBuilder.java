@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -13,10 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadFilters;
 

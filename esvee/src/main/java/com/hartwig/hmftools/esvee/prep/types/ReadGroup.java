@@ -142,10 +142,13 @@ public class ReadGroup
     {
         if(conditionalOnRemoteReads())
         {
-            if(mReads.size() == 2)
-                mStatus = ReadGroupStatus.PAIRED;
-            else
-                mStatus = ReadGroupStatus.SUPPLEMENTARY;
+            if(mStatus != ReadGroupStatus.EXPECTED)
+            {
+                if(mReads.size() == 2)
+                    mStatus = ReadGroupStatus.PAIRED;
+                else
+                    mStatus = ReadGroupStatus.SUPPLEMENTARY;
+            }
 
             mExpectedReadCount = mReads.size();
             return;

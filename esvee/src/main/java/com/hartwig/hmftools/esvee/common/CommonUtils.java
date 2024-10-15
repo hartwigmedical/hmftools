@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +56,16 @@ public final class CommonUtils
         return fragmentSize == 0 || (fragmentLengthUpperBound > 0 && fragmentSize >= fragmentLengthUpperBound);
     }
 
-    public static boolean withLineProximity(final int pos1, final int pos2, final Orientation orient1, final Orientation orient2)
+    public static boolean isLineInsertPair(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        if(!assembly1.junction().Chromosome.equals(assembly2.junction().Chromosome))
+            return false;
+
+        return withinLineProximity(
+                assembly1.junction().Position, assembly2.junction().Position, assembly1.junction().Orient, assembly2.junction().Orient);
+    }
+
+    public static boolean withinLineProximity(final int pos1, final int pos2, final Orientation orient1, final Orientation orient2)
     {
         if(orient1 == orient2)
             return false;
@@ -114,6 +125,19 @@ public final class CommonUtils
         {
             return INV;
         }
+    }
+
+    public static boolean isIndel(final StructuralVariantType type)
+    {
+        return type == DEL || type == DUP || type == INS;
+    }
+
+    public static boolean isShortLocalDelDupIns(final StructuralVariantType svType, final int svLength)
+    {
+        if(isIndel(svType))
+            return svLength <= SHORT_DEL_DUP_INS_LENGTH;
+        else
+            return false;
     }
 
     public static byte[] createByteArray(final int length, final byte value)

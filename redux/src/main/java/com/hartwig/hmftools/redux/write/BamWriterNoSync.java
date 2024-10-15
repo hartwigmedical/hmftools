@@ -19,9 +19,10 @@ public class BamWriterNoSync extends BamWriter
 
     public BamWriterNoSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, boolean writeSorted, final BamWriter sharedUnsortedWriter)
+            @Nullable final JitterAnalyser jitterAnalyser, boolean writeSorted, final BamWriter sharedUnsortedWriter,
+            @Nullable final SuppBamWriter suppBamReadWriter)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, suppBamReadWriter);
 
         mWriteSorted = writeSorted;
 

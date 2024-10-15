@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.ChromosomalRearrangements;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
+import com.hartwig.hmftools.orange.report.tables.ChromosomalRearrangementsTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainLossTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
@@ -158,6 +160,7 @@ public class SomaticFindingsChapter implements ReportChapter
         String nearDriverGainsTitle = "Potentially interesting near-driver amps";
         String suspectGainsTitle = "Other regions with amps";
         String suspectLossesTitle = "Regions with deletions in genes in other autosomal regions";
+        String chromosomalRearrangementsTitle = "Potentially interesting chromosomal rearrangements";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
         {
@@ -166,6 +169,7 @@ public class SomaticFindingsChapter implements ReportChapter
             document.add(tables.createNotAvailable(nearDriverGainsTitle, contentWidth()));
             document.add(tables.createNotAvailable(suspectGainsTitle, contentWidth()));
             document.add(tables.createNotAvailable(suspectLossesTitle, contentWidth()));
+            document.add(tables.createNotAvailable(chromosomalRearrangementsTitle, contentWidth()));
         }
         else
         {
@@ -190,6 +194,9 @@ public class SomaticFindingsChapter implements ReportChapter
             List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
             String titleSuspectLosses = suspectLossesTitle + " (" + suspectLosses.size() + ")";
             document.add(GainLossTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox(), reportResources));
+
+            ChromosomalRearrangements chromosomalRearrangements = report.purple().chromosomalRearrangements();
+            document.add(ChromosomalRearrangementsTable.build(chromosomalRearrangementsTitle, contentWidth(), chromosomalRearrangements, reportResources));
         }
     }
 

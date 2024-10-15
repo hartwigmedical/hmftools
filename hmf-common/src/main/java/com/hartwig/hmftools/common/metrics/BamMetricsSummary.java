@@ -42,7 +42,7 @@ public abstract class BamMetricsSummary
     public abstract double overlappingReadPercent();
     public abstract double cappedCoveragePercent();
 
-    double totalFilteredPercent()
+    public double totalFilteredPercent()
     {
         return lowMapQualPercent() + duplicatePercent() + unpairedPercent() + lowBaseQualPercent()
                 + overlappingReadPercent() + cappedCoveragePercent();
@@ -50,6 +50,23 @@ public abstract class BamMetricsSummary
 
     public abstract List<Integer> coverageLevels();
     public abstract List<Double> coveragePercents();
+
+    public Double getCoveragePercent(int coverageLevel)
+    {
+        for(int i = 0; i < coverageLevels().size(); ++i)
+        {
+            if(coverageLevels().get(i) == coverageLevel)
+                return coveragePercents().get(i);
+        }
+
+        return null;
+    }
+
+    public double coveragePercent(int coverageLevel)
+    {
+        Double percent = getCoveragePercent(coverageLevel);
+        return percent != null ? percent : 0;
+    }
 
     // load coverage dynamic
     // PCT_1X	PCT_5X	PCT_10X	PCT_15X	PCT_20X	PCT_25X	PCT_30X	PCT_40X	PCT_50X	PCT_60X	PCT_70X	PCT_80X	PCT_90X	PCT_100X
@@ -162,10 +179,10 @@ public abstract class BamMetricsSummary
         }
 
         return ImmutableBamMetricsSummary.builder()
-                .totalRegionBases(Integer.parseInt(values[fieldsIndexMap.get(TOTAL_REGION_COLUMN)]))
-                .totalReads(Integer.parseInt(values[fieldsIndexMap.get(TOTAL_READS_COLUMN)]))
-                .duplicateReads(Integer.parseInt(values[fieldsIndexMap.get(DUPLICATES_COLUMN)]))
-                .dualStrandReads(Integer.parseInt(values[fieldsIndexMap.get(DUAL_STRAND_COLUMN)]))
+                .totalRegionBases(Long.parseLong(values[fieldsIndexMap.get(TOTAL_REGION_COLUMN)]))
+                .totalReads(Long.parseLong(values[fieldsIndexMap.get(TOTAL_READS_COLUMN)]))
+                .duplicateReads(Long.parseLong(values[fieldsIndexMap.get(DUPLICATES_COLUMN)]))
+                .dualStrandReads(Long.parseLong(values[fieldsIndexMap.get(DUAL_STRAND_COLUMN)]))
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
                 .medianCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))

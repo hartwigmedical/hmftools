@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.linx.fusion.DisruptionFinder;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
 import com.hartwig.hmftools.linx.types.SglMapping;
@@ -74,7 +74,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<LinxGermlineDisruption> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
 
@@ -97,7 +97,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<LinxGermlineDisruption> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
 
@@ -192,7 +192,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<LinxGermlineDisruption> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
 
@@ -233,7 +233,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<LinxGermlineDisruption> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
 
@@ -243,7 +243,7 @@ public class GermlineDisruptionTest
     }
 
     private void populateGermlineResults(
-            final List<LinxGermlineSv> germlineSVs, final List<DriverCatalog> drivers, final List<LinxBreakend> breakends)
+            final List<LinxGermlineDisruption> germlineSVs, final List<DriverCatalog> drivers, final List<LinxBreakend> breakends)
     {
         germlineSVs.clear();
         drivers.clear();

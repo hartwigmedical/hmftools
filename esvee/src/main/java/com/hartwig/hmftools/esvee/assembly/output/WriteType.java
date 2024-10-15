@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
 
 import java.util.Arrays;
@@ -12,13 +11,13 @@ import com.google.common.collect.Lists;
 public enum WriteType
 {
     ASSEMBLY_BAM("assembly.bam"),
-    JUNC_ASSEMBLY("assemblies.tsv"),
+    JUNC_ASSEMBLY("assembly.tsv"),
     ASSEMBLY_READ("assembly_read.tsv"),
     BREAKEND("breakend.tsv"),
     VCF(RAW_VCF_SUFFIX),
+    PHASED_ASSEMBLY("phased_assembly.tsv"),
     ALIGNMENT("alignment.tsv"),
-    ALIGNMENT_DATA("align_detailed.tsv"),
-    DECOY_MATCHES("decoy_matches.tsv"),
+    DECOY_MATCHES("decoy_match.tsv"),
     PHASE_GROUP_BUILDING("phase_group_building.tsv");
 
     private final String mFileId;
@@ -30,8 +29,26 @@ public enum WriteType
 
     public String fileId() { return mFileId; }
 
+    public static boolean requiresAlignment(final List<WriteType> writeTypes)
+    {
+        for(WriteType writeType : writeTypes)
+        {
+            switch(writeType)
+            {
+                case BREAKEND:
+                case ALIGNMENT:
+                case VCF:
+                    return true;
+
+                default:
+                    break;
+            }
+        }
+
+        return false;
+    }
+
     private static final String ALL = "ALL";
-    private static final String ASSEMBLIES_STR = "ASSEMBLIES"; // for backwards compatibility
 
     public static List<WriteType> fromConfig(final String configStr)
     {
@@ -49,8 +66,9 @@ public enum WriteType
 
                 for(String writeType : writeTypeValues)
                 {
-                    if(writeType.equals(ASSEMBLIES_STR))
-                        writeTypes.add(JUNC_ASSEMBLY);
+                    // backwards compatibility
+                    if(writeType.equals("ALIGNMENTS"))
+                        writeTypes.add(ALIGNMENT);
                     else
                         writeTypes.add(WriteType.valueOf(writeType));
                 }

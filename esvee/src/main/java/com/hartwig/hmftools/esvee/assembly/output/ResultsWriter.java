@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import java.io.BufferedWriter;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignmentChecker;
+import com.hartwig.hmftools.esvee.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class ResultsWriter
@@ -26,7 +26,7 @@ public class ResultsWriter
         mReadWriter = new AssemblyReadWriter(config);
         mPhaseGroupBuildWriter = new PhaseGroupBuildWriter(config);
         mBamWriter = new BamWriter(config);
-        mDecoyMatchWriter = AssemblyAlignmentChecker.initialiseWriter(config);
+        mDecoyMatchWriter = AlignmentChecker.initialiseWriter(config);
     }
 
     public BufferedWriter decoyMatchWriter() { return mDecoyMatchWriter; }

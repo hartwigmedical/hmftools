@@ -42,7 +42,6 @@ public class Breakend
     public final boolean IsLineInsertion;
 
     private final Variant mVariant;
-    private final List<String> mLinkedAssemblyIds;
     private int mChrLocationIndex;
 
     private Breakend mLineSiteBreakend;
@@ -80,11 +79,6 @@ public class Breakend
             InexactHomology = new Interval();
         }
 
-        if(context.hasAttribute(ASM_LINKS))
-            mLinkedAssemblyIds = context.getAttributeAsStringList(ASM_LINKS, "");
-        else
-            mLinkedAssemblyIds = Collections.emptyList();
-
         mLineSiteBreakend = null;
         mChrLocationIndex = -1;
     }
@@ -93,7 +87,7 @@ public class Breakend
             final Variant variant, final boolean isStart, final StructuralVariantLeg svLeg,
             final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
-        final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
+        final Genotype tumorGenotype = tumorOrdinal >= 0 ? variantContext.getGenotype(tumorOrdinal) : null;
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
         return new Breakend(
@@ -115,8 +109,6 @@ public class Breakend
 
     public double calcAllelicFrequency(final Genotype genotype)
     {
-        // TODO: just use AF (tag: ALLELE_FRACTION) if present??
-
         int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
         int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
 
@@ -139,8 +131,6 @@ public class Breakend
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }
-
-    public List<String> getAssemblies() { return mLinkedAssemblyIds; }
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }

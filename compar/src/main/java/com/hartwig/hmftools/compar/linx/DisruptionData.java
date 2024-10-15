@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -19,104 +18,117 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class DisruptionData implements ComparableItem
 {
-    public final StructuralVariantData SvData;
-    public final LinxBreakend Breakend;
-    private final BasePosition mComparisonPositionStart;
-    private final BasePosition mComparisonPositionEnd;
-    private final boolean mCheckTranscript;
+    public final String GeneName;
+    public final List<BreakendData> Breakends;
+    private final Category mSubCategory;
 
-    protected static final String FLD_REGION_TYPE = "RegionType";
-    protected static final String FLD_CODING_CONTEXT = "CodingContext";
-    protected static final String FLD_GENE_ORIENT = "GeneOrientation";
-    protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
+    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
 
-    public DisruptionData(
-            final StructuralVariantData svData, final LinxBreakend breakend, final BasePosition comparisonPositionStart,
-            final BasePosition comparisonPositionEnd, final boolean checkTranscript)
+    public DisruptionData(final Category category, final String geneName, final List<BreakendData> breakends)
     {
-        SvData = svData;
-        Breakend = breakend;
-        mComparisonPositionStart = comparisonPositionStart;
-        mComparisonPositionEnd = comparisonPositionEnd;
-        mCheckTranscript = checkTranscript;
+        mSubCategory = category;
+        GeneName = geneName;
+        Breakends = breakends;
     }
 
     @Override
-    public Category category() { return DISRUPTION; }
+    public Category category() { return mSubCategory; }
 
     @Override
     public String key()
     {
-        if(mComparisonPositionStart.Position != SvData.startPosition() || mComparisonPositionEnd.Position != SvData.endPosition())
-        {
-            return String.format("%s %d_%s %s:%d-%s:%d liftover(%s-%s)",
-                    Breakend.gene(), SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(),
-                    SvData.endChromosome(), SvData.endPosition(), mComparisonPositionStart, mComparisonPositionEnd);
-        }
-        else
-        {
-            return String.format("%s %d_%s %s:%d-%s:%d",
-                    Breakend.gene(), SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(),
-                    SvData.endChromosome(), SvData.endPosition());
-        }
+        return String.format("%s breakends(%d)", GeneName, Breakends.size());
     }
 
     @Override
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", Breakend.reportedDisruption()));
-        values.add(String.format("%s", Breakend.regionType()));
-        values.add(String.format("%s", Breakend.codingType()));
-        values.add(String.format("%s", Breakend.geneOrientation()));
-        values.add(String.format("%d", Breakend.nextSpliceExonRank()));
+
+        values.add(String.format("%s", reportable()));
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        for(BreakendData breakendData : Breakends)
+        {
+            sj.add(breakendData.fullStr());
+        }
+
+        values.add(sj.toString());
         return values;
     }
 
     @Override
-    public boolean reportable() { return Breakend.reportedDisruption(); }
+    public boolean reportable() { return Breakends.stream().anyMatch(x -> x.Breakend.reportedDisruption()); }
 
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final DisruptionData otherSv = (DisruptionData)other;
+        final DisruptionData otherDisruptionData = (DisruptionData)other;
 
-        if(otherSv.SvData.type() != SvData.type())
-            return false;
-
-        if(!otherSv.SvData.startChromosome().equals(mComparisonPositionStart.Chromosome)
-        || !otherSv.SvData.endChromosome().equals(mComparisonPositionEnd.Chromosome))
-            return false;
-
-        if(otherSv.SvData.startPosition() != mComparisonPositionStart.Position
-        || otherSv.SvData.endPosition() != mComparisonPositionEnd.Position)
-            return false;
-
-        if(otherSv.SvData.startOrientation() != SvData.startOrientation() || otherSv.SvData.endOrientation() != SvData.endOrientation())
-            return false;
-
-        if(!otherSv.Breakend.gene().equals(Breakend.gene()))
-            return false;
-
-        if((otherSv.mCheckTranscript || mCheckTranscript) && !otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
-            return false;
-
-        return true;
+        return GeneName.equals(otherDisruptionData.GeneName);
     }
 
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
-        final DisruptionData otherBreakend = (DisruptionData)other;
+        final DisruptionData otherDisruptionData = (DisruptionData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_REGION_TYPE, Breakend.regionType().toString(), otherBreakend.Breakend.regionType().toString());
-        checkDiff(diffs, FLD_CODING_CONTEXT, Breakend.codingType().toString(), otherBreakend.Breakend.codingType().toString());
-        checkDiff(diffs, FLD_REPORTED, reportable(), otherBreakend.reportable());
-        checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
-        checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
+        // compare each breakend and record differences
+        List<BreakendData> breakends = Lists.newArrayList(Breakends);
+        List<BreakendData> otherBreakends = Lists.newArrayList(otherDisruptionData.Breakends);
+
+        int index = 0;
+        while(index < breakends.size())
+        {
+            BreakendData breakendData = breakends.get(index);
+
+            BreakendData otherBreakendData = findMatchingBreakend(breakendData, otherBreakends);
+
+            if(otherBreakendData != null)
+            {
+                LinxBreakend breakend = breakendData.Breakend;
+                LinxBreakend otherBreakend = otherBreakendData.Breakend;
+
+                if(breakend.regionType() != otherBreakend.regionType()
+                || breakend.codingType() != otherBreakend.codingType()
+                || breakend.nextSpliceExonRank() != otherBreakend.nextSpliceExonRank())
+                {
+                    diffs.add(format("breakend(%s transcript %s/%s)",
+                            breakendData.svInfoStr(), breakendData.transcriptStr(), otherBreakendData.transcriptStr()));
+                }
+
+                if(breakend.reportedDisruption() != otherBreakend.reportedDisruption())
+                {
+                    diffs.add(format("breakend(%s reported %s/%s)",
+                            breakendData.svInfoStr(), breakend.reportedDisruption(), otherBreakend.reportedDisruption()));
+                }
+
+                breakends.remove(index);
+                otherBreakends.remove(otherBreakendData);
+            }
+            else
+            {
+                // record an unmatched breakend or SV
+                diffs.add(format("unmatchedSv(%s/)", breakendData.svInfoStr()));
+
+                ++index;
+            }
+        }
+
+        for(BreakendData otherBreakendData : otherBreakends)
+        {
+            // record an unmatched breakend or SV on the other side
+            diffs.add(format("unmatchedSv(/%s)", otherBreakendData.svInfoStr()));
+        }
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+    }
+
+    public BreakendData findMatchingBreakend(final BreakendData breakend, final List<BreakendData> otherBreakends)
+    {
+        return otherBreakends.stream().filter(x -> x.matches(breakend)).findFirst().orElse(null);
     }
 }

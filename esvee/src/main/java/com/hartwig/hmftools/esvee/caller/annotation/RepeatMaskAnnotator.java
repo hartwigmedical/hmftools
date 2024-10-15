@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.caller.annotation;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
@@ -13,6 +14,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
@@ -98,8 +100,8 @@ public class RepeatMaskAnnotator
 
         for(AlternativeAlignment alignment : alignments)
         {
-            int cigarLength = cigarAlignedLength(alignment.cigar());
-            int alignmentEnd = alignment.Position + cigarLength - 1;
+            int alignedLength = calcCigarAlignedLength(alignment.Cigar);
+            int alignmentEnd = alignment.Position + alignedLength - 1;
             BaseRegion alignmentRegion = new BaseRegion(alignment.Position, alignmentEnd);
             List<RepeatMaskData> rmMatches = mAnnotationCache.findMatches(alignment.Chromosome, alignmentRegion);
 
@@ -132,7 +134,7 @@ public class RepeatMaskAnnotator
 
     private static String extractMatchedBases(final String insertSequence, final AlternativeAlignment alignment)
     {
-        Cigar cigar = alignment.cigar();
+        Cigar cigar = CigarUtils.cigarFromStr(alignment.Cigar);
 
         int matchStartPos = leftSoftClipped(cigar) ? cigar.getFirstCigarElement().getLength() : 0;
         int matchBases = cigar.getCigarElements().stream()

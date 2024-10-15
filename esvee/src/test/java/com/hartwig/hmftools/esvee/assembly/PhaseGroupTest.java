@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
@@ -15,6 +16,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDAN
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,7 +28,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -35,6 +39,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
 import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.TaskQueue;
 
@@ -247,5 +252,100 @@ public class PhaseGroupTest
         assertEquals(3, phaseGroup.assemblyCount());
         assertTrue(phaseGroup.assemblies().contains(assembly2));
         assertTrue(phaseGroup.assemblies().contains(assembly8));
+    }
+
+    @Test
+    public void testPhasetSetMerging()
+    {
+        // 2 pairs of links are merged
+        String assemblyBases1a = REF_BASES_400.substring(121, 201) + REF_BASES_400.substring(250, 300);
+        String assemblyBases1b = REF_BASES_400.substring(151, 201) + REF_BASES_400.substring(250, 350);
+
+        JunctionAssembly assembly1a = createAssembly(CHR_1, 200, FORWARD, assemblyBases1a, 80);
+        JunctionAssembly assembly1b = createAssembly(CHR_1, 250, REVERSE, assemblyBases1b, 50);
+
+        Read juncRead1a = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 121, assemblyBases1a, "80M50S", CHR_1, 200, false);
+        assembly1a.addJunctionRead(juncRead1a);
+
+        Read juncRead1b = createRead(
+                juncRead1a.id(), CHR_1, 250, assemblyBases1b, "50S100M", CHR_1, 200, false);
+        assembly1b.addJunctionRead(juncRead1b);
+
+        String assemblyBases2a = REF_BASES_400.substring(101, 201) + REF_BASES_400.substring(250, 300); // longer at start
+        String assemblyBases2b = REF_BASES_400.substring(151, 201) + REF_BASES_400.substring(250, 330); // shorter at end
+        JunctionAssembly assembly2a = createAssembly(CHR_2, 200, FORWARD, assemblyBases2a, 99);
+        JunctionAssembly assembly2b = createAssembly(CHR_2, 250, REVERSE, assemblyBases2b, 50);
+
+        Read juncRead2a = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_2, 121, assemblyBases1a, "100M50S", CHR_2, 200, false);
+        assembly2a.addJunctionRead(juncRead2a);
+
+        Read juncRead2b = createRead(
+                juncRead2a.id(), CHR_2, 250, assemblyBases1b, "50S80M", CHR_2, 200, false);
+        assembly2b.addJunctionRead(juncRead2b);
+
+        PhaseGroup phaseGroup = new PhaseGroup(assembly1a, assembly1b);
+        phaseGroup.addAssembly(assembly2a);
+        phaseGroup.addAssembly(assembly2b);
+
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(new MockRefGenome(), null, phaseGroup);
+        phaseSetBuilder.buildPhaseSets();
+
+        assertEquals(2, phaseGroup.phaseSets().size());
+        PhaseSet phaseSet1 = phaseGroup.phaseSets().get(0);
+        PhaseSet phaseSet2 = phaseGroup.phaseSets().get(1);
+
+        phaseGroup.finalisePhaseSetAlignments();
+
+        assertFalse(phaseSet1.merged());
+        assertTrue(phaseSet1.mergedPhaseSets().contains(phaseSet2));
+        assertTrue(phaseSet2.merged());
+
+        assertEquals(200, phaseSet1.assemblyAlignment().fullSequenceLength());
+
+        // cannot merge if neither junction is overlapped - ie if just matching on ref bases
+        assemblyBases1a = REF_BASES_400.substring(1, 51) + REF_BASES_400.substring(100, 150);
+        assemblyBases1b = REF_BASES_400.substring(1, 51) + REF_BASES_400.substring(100, 250);
+
+        assembly1a = createAssembly(CHR_1, 50, FORWARD, assemblyBases1a, 49);
+        assembly1b = createAssembly(CHR_1, 100, REVERSE, assemblyBases1b, 50);
+
+        juncRead1a = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1, assemblyBases1a, "51M50S", CHR_1, 200, false);
+        assembly1a.addJunctionRead(juncRead1a);
+
+        juncRead1b = createRead(
+                juncRead1a.id(), CHR_1, 100, assemblyBases1b, "50S151M", CHR_1, 50, false);
+        assembly1b.addJunctionRead(juncRead1b);
+
+        assemblyBases2a = REF_BASES_400.substring(120, 250) + REF_BASES_400.substring(300, 350);
+        assemblyBases2b = REF_BASES_400.substring(200, 250) + REF_BASES_400.substring(300, 400);
+        assembly2a = createAssembly(CHR_2, 250, FORWARD, assemblyBases2a, 149);
+        assembly2b = createAssembly(CHR_2, 300, REVERSE, assemblyBases2b, 50);
+
+        juncRead2a = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_2, 120, assemblyBases1a, "131M50S", CHR_2, 200, false);
+        assembly2a.addJunctionRead(juncRead2a);
+
+        juncRead2b = createRead(
+                juncRead2a.id(), CHR_2, 200, assemblyBases1b, "51S80M", CHR_2, 200, false);
+        assembly2b.addJunctionRead(juncRead2b);
+
+        phaseGroup = new PhaseGroup(assembly1a, assembly1b);
+        phaseGroup.addAssembly(assembly2a);
+        phaseGroup.addAssembly(assembly2b);
+
+        phaseSetBuilder = new PhaseSetBuilder(new MockRefGenome(), null, phaseGroup);
+        phaseSetBuilder.buildPhaseSets();
+
+        assertEquals(2, phaseGroup.phaseSets().size());
+        phaseSet1 = phaseGroup.phaseSets().get(0);
+        phaseSet2 = phaseGroup.phaseSets().get(1);
+
+        phaseGroup.finalisePhaseSetAlignments();
+
+        assertFalse(phaseSet1.merged());
+        assertFalse(phaseSet2.merged());
     }
 }

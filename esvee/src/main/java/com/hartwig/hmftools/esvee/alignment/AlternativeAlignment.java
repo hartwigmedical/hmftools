@@ -2,6 +2,10 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -23,8 +27,6 @@ public class AlternativeAlignment
     public final String Cigar;
     public final int MapQual;
 
-    private Cigar mCigar;
-
     public AlternativeAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar, final int mapQual)
     {
         Chromosome = chromosome;
@@ -32,21 +34,11 @@ public class AlternativeAlignment
         Orient = orientation;
         Cigar = cigar;
         MapQual = mapQual;
-
-        mCigar = null;
     }
 
     private static final String MAPPING_DELIM = ";";
     private static final String ITEM_DELIM = ",";
     private static final String SUB_ITEM_DELIM = "|";
-
-    public Cigar cigar()
-    {
-        if(mCigar == null)
-            mCigar = CigarUtils.cigarFromStr(Cigar);
-
-        return mCigar;
-    }
 
     private static AlternativeAlignment fromBwaString(final String mappingStr)
     {
@@ -95,7 +87,7 @@ public class AlternativeAlignment
 
     public String toString()
     {
-        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient, MapQual);
+        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient.asByte(), MapQual);
     }
 
     public String vcfString()

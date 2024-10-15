@@ -449,7 +449,6 @@ public class AssemblyLinksTest
         assertEquals(2, getSupportTypeCount(secondAssembly, DISCORDANT));
     }
 
-
     @Test
     public void testExtBaseOnlyMatchedLinks()
     {
@@ -471,6 +470,5 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertEquals(130, link.insertedBases().length());
         assertEquals(REF_BASES_200.substring(0, 130), link.insertedBases());
-
     }
 }

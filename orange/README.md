@@ -135,7 +135,7 @@ interesting and added to the report:
 
 - Other potentially relevant variants:
     1. Variants that are hotspots or near hotspots but not part of the reporting gene panel.
-    2. Variants that are not reported but are phased with variants that are reported.
+    2. Exonic variants that are not reported but are phased with variants that are reported.
     3. Variants that are considered relevant for tumor type classification according to Cuppa.
     4. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
     5. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
@@ -145,6 +145,9 @@ interesting and added to the report:
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
         - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
+- Potentially interesting chromosomal rearrangements:
+    1. 1q trisomy: In case 98% of 1q has copy number > 2.8 AND 90% of 1q has copy number < 3.5
+    2. 1p19q co-deletion: In case 98% of 1p and 98% of 19q have MACN < 0.2
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
     2. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
@@ -263,6 +266,8 @@ investigate potential causes for QC failure.
 
 - Upcoming:
     - Add presence of tumor stats to quality control page and to orange-datamodel
+    - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
+    - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation

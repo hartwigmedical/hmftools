@@ -7,5 +7,6 @@ public enum MismatchType
     VALUE,
     INVALID_REF, // from a missing or invalid input source
     INVALID_NEW,
-    INVALID_BOTH;
+    INVALID_BOTH,
+    INVALID_ERROR
 }

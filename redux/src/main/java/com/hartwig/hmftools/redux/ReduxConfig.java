@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -42,17 +43,18 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
-import com.hartwig.hmftools.redux.common.HighDepthRegion;
 import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.write.ReadOutput;
@@ -90,6 +92,7 @@ public class ReduxConfig
 
     public final boolean NoMateCigar;
     public final int Threads;
+    public final boolean UseSupplementaryBam;
 
     public final String BamToolPath;
 
@@ -125,9 +128,9 @@ public class ReduxConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
+    private static final String USE_SUPP_BAM = "use_supp_bam";
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
@@ -204,9 +207,9 @@ public class ReduxConfig
         UMIs = UmiConfig.from(configBuilder);
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
 
-        if(configBuilder.hasValue(UNMAP_REGIONS))
+        if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
-            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS));
+            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
         }
         else
         {
@@ -241,6 +244,7 @@ public class ReduxConfig
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
+        UseSupplementaryBam = MultiBam && configBuilder.hasFlag(USE_SUPP_BAM);
 
         LogReadIds = parseLogReadIds(configBuilder);
 
@@ -294,7 +298,7 @@ public class ReduxConfig
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
-        configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
+        UnmappedRegions.registerConfig(configBuilder);
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
@@ -303,6 +307,7 @@ public class ReduxConfig
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
+        configBuilder.addFlag(USE_SUPP_BAM, "Cache supplementary reads in temporary BAM");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         configBuilder.addFlag(JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
@@ -351,6 +356,7 @@ public class ReduxConfig
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = formConsensus;
         NoMateCigar = false;
+        UseSupplementaryBam = false;
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;

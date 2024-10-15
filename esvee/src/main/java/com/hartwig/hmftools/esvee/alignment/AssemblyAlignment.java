@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.hasUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
@@ -23,7 +22,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -33,27 +35,28 @@ import htsjdk.samtools.CigarOperator;
 
 public class AssemblyAlignment
 {
-    private final int mId;
+    private int mId;
     private final List<JunctionAssembly> mAssemblies;
     private final PhaseSet mPhaseSet;
 
-    private final String mFullSequence;
-    private final int mFullSequenceLength;
+    private String mFullSequence;
+    private int mFullSequenceLength;
 
     private final Map<Integer,String> mSequenceOverlaps;
     private String mSequenceCigar;
 
     private final List<Breakend> mBreakends;
+    private final List<Integer> mLinkIndices; // indices within the full sequence of each break junction
 
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
 
-    public AssemblyAlignment(final int id, final JunctionAssembly assembly) { this(id, assembly, null); }
+    public AssemblyAlignment(final JunctionAssembly assembly) { this(assembly, null); }
 
-    public AssemblyAlignment(final int id, final PhaseSet phaseSet) { this(id, null, phaseSet); }
+    public AssemblyAlignment(final PhaseSet phaseSet) { this(null, phaseSet); }
 
-    private AssemblyAlignment(final int id, final JunctionAssembly assembly, final PhaseSet phaseSet)
+    private AssemblyAlignment(final JunctionAssembly assembly, final PhaseSet phaseSet)
     {
-        mId = id;
+        mId = -1;
 
         if(assembly != null)
         {
@@ -70,6 +73,7 @@ public class AssemblyAlignment
         mSequenceOverlaps = Maps.newHashMap();
         mFragmentReadsMap = Maps.newHashMap();
         mBreakends = Lists.newArrayList();
+        mLinkIndices = Lists.newArrayList();
 
         mAssemblies.forEach(x -> x.setAssemblyAlignmentInfo(info())); // set for output TSV only
 
@@ -86,6 +90,7 @@ public class AssemblyAlignment
         mFullSequenceLength = mFullSequence != null ? mFullSequence.length() : 0;
     }
 
+    public void setId(int id) { mId = id; }
     public int id() { return mId; }
 
     public boolean isValid() { return mFullSequence != null && mFullSequenceLength < 100000; }
@@ -93,12 +98,18 @@ public class AssemblyAlignment
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
     public PhaseSet phaseSet() { return mPhaseSet; }
+    public boolean isMerged() { return mPhaseSet != null && mPhaseSet.merged(); }
 
     public List<Breakend> breakends() { return mBreakends; }
     public void addBreakend(final Breakend breakend) { mBreakends.add(breakend); }
 
     public String fullSequence() { return mFullSequence; }
     public int fullSequenceLength() { return mFullSequenceLength; }
+
+    public String assemblyCigar() { return mSequenceCigar; }
+    public List<Integer> linkIndices() { return mLinkIndices; }
+
+    public Map<Integer,String> sequenceOverlaps() { return mSequenceOverlaps; }
 
     public String overlapBases(int sequenceIndex)
     {
@@ -121,6 +132,13 @@ public class AssemblyAlignment
         return mAssemblies.stream().map(x -> x.junction().coords()).collect(Collectors.joining("_"));
     }
 
+    private enum LinkType
+    {
+        LEFT,
+        RIGHT,
+        NONE;
+    }
+
     private String buildSingleAssemblySequenceData()
     {
         JunctionAssembly assembly = mAssemblies.get(0);
@@ -138,9 +156,15 @@ public class AssemblyAlignment
         }
 
         if(assembly.isForwardJunction())
+        {
             mSequenceCigar = format("%dM%dS", refBaseLength, extensionLength);
+            mLinkIndices.add(refBaseLength);
+        }
         else
+        {
             mSequenceCigar = format("%dS%dM", extensionLength, refBaseLength);
+            mLinkIndices.add(extensionLength);
+        }
 
         return assembly.formFullSequence();
     }
@@ -161,13 +185,23 @@ public class AssemblyAlignment
         int linkCount = assemblyLinks.size();
 
         // for a chain which starts with a facing link, reverse the order in which the sequence is added so as to start with ref bases
-        boolean hasOuterExtensions = mPhaseSet.hasFacingLinks()
-                && assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() == FACING;
+        boolean hasFacingAtStart = false;
+        boolean hasFacingAtEnd = false;
 
-        boolean reverseLinks = assemblyLinks.get(0).type() == FACING && assemblyLinks.get(linkCount - 1).type() != FACING;
+        if(mPhaseSet.hasFacingLinks())
+        {
+            hasFacingAtStart = assemblyLinks.get(0).type() == FACING;
+            hasFacingAtEnd = assemblyLinks.get(linkCount - 1).type() == FACING;
+        }
+
+        boolean hasOuterExtensions = hasFacingAtStart && hasFacingAtEnd;
+
+        boolean reverseLinks = hasFacingAtStart && !hasFacingAtEnd;
 
         if(reverseLinks)
         {
+            hasFacingAtStart = false;
+            hasFacingAtEnd = true;
             assemblies = Lists.newArrayList(assemblies);
             assemblyLinks = Lists.newArrayList(assemblyLinks);
             Collections.reverse(assemblies);
@@ -183,7 +217,6 @@ public class AssemblyAlignment
 
         boolean lastAddedReversed = false;
         int currentSeqLength = 0;
-        boolean nextIsFacing = false;
 
         List<CigarElement> sequenceCigar = Lists.newArrayList();
 
@@ -191,6 +224,7 @@ public class AssemblyAlignment
         {
             AssemblyLink link = assemblyLinks.get(i);
             JunctionAssembly assembly = assemblies.get(i);
+            boolean isFacingLink = link.type() == FACING;
 
             boolean assemblyReversed;
 
@@ -198,48 +232,59 @@ public class AssemblyAlignment
             {
                 assemblyReversed = startReversed;
 
-                if(hasOuterExtensions)
+                if(isFacingLink)
                 {
                     // add on the extension sequence instead of the ref base sequence
                     String assemblyExtensionBases = assembly.formJunctionSequence();
+                    int assemblyExtensionBaseLength = assemblyExtensionBases.length();
 
                     fullSequence.append(assemblyExtensionBases);
 
                     // add the extra base since the junction index itself is not included in these extension bases
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBases.length());
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyExtensionBaseLength);
 
-                    logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
+                    logBuildInfo(assembly, currentSeqLength, assemblyExtensionBaseLength, assemblyReversed, "outer-ext-bases");
 
-                    currentSeqLength = assemblyExtensionBases.length();
+                    currentSeqLength = assemblyExtensionBaseLength;
 
-                    buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
+                    buildSequenceCigar(sequenceCigar, S, assemblyExtensionBaseLength);
+                    mLinkIndices.add(assemblyExtensionBaseLength);
                 }
                 else
                 {
                     String assemblyRefBases = startReversed ?
                             Nucleotides.reverseComplementBases(assembly.formRefBaseSequence()) : assembly.formRefBaseSequence();
+                    int assemblyRefBaseLength = assemblyRefBases.length();
 
                     fullSequence.append(assemblyRefBases);
 
-                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyRefBases.length() - 1);
+                    setAssemblyReadIndices(assembly, assemblyReversed, assemblyRefBaseLength - 1, LinkType.LEFT);
 
-                    currentSeqLength += assemblyRefBases.length();
+                    currentSeqLength += assemblyRefBaseLength;
 
-                    buildSequenceCigar(sequenceCigar, M, assemblyRefBases.length());
+                    buildSequenceCigar(sequenceCigar, M, assemblyRefBaseLength);
 
-                    logBuildInfo(assembly, currentSeqLength, assemblyRefBases.length(), assemblyReversed, "ref-bases");
+                    logBuildInfo(assembly, currentSeqLength, assemblyRefBaseLength, assemblyReversed, "ref-bases");
                 }
             }
             else
             {
-                if(nextIsFacing)
+                if(isFacingLink)
                 {
-                    nextIsFacing = false;
-
                     // ref bases for this segment have already been added so only set assembly indices
                     JunctionAssembly nextAssembly = assemblies.get(i + 1);
 
-                    setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength);
+                    setAssemblyReadIndices(nextAssembly, lastAddedReversed, currentSeqLength, LinkType.LEFT);
+
+                    if(i == assemblyCount - 2)
+                    {
+                        // add on the extension sequence for the last assembly
+                        addFinalFacingExtensionBases(
+                                nextAssembly, fullSequence, sequenceCigar, currentSeqLength, lastAddedReversed, assemblyLinks);
+
+                        currentSeqLength += nextAssembly.extensionLength();
+                    }
+
                     continue;
                 }
 
@@ -249,10 +294,16 @@ public class AssemblyAlignment
             int overlapLength = link.overlapBases().length();
             int insertedBaseLength = link.insertedBases().length();
 
+            JunctionAssembly nextAssembly = assemblies.get(i + 1);
+
+            // typically reverse any assemblies which come in on the +ve side, unless this is a facing link (from outer extensions)
+            boolean nextReversed = nextAssembly.isForwardJunction() && link.type() != FACING;
+
             if(insertedBaseLength > 0)
             {
                 // keep inserted bases in the same direction as the assembly is added
-                String insertedBases = getAssemblyInsertSequence(assembly, assemblyReversed, insertedBaseLength);
+                String insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+
                 fullSequence.append(insertedBases);
 
                 currentSeqLength += insertedBaseLength;
@@ -260,27 +311,22 @@ public class AssemblyAlignment
                 buildSequenceCigar(sequenceCigar, I, insertedBaseLength);
             }
 
-            JunctionAssembly nextAssembly = assemblies.get(i + 1);
-
-            // typically reverse any assemblies which come in on the +ve side, unless this is a facing link (from outer extensions)
-            boolean nextReversed = nextAssembly.isForwardJunction() && link.type() != FACING;
-
             String nextAssemblyRefBases = nextReversed ?
                     Nucleotides.reverseComplementBases(nextAssembly.formRefBaseSequence()) : nextAssembly.formRefBaseSequence();
 
             if(overlapLength >= nextAssemblyRefBases.length())
                 return null;
 
-            fullSequence.append(overlapLength > 0 ? nextAssemblyRefBases.substring(overlapLength) : nextAssemblyRefBases);
+            if(overlapLength > 0) // remove the repeated / overlapping bases from the next ref bases
+                nextAssemblyRefBases = nextAssemblyRefBases.substring(overlapLength);
 
-            currentSeqLength -= overlapLength;
+            fullSequence.append(nextAssemblyRefBases);
+            mLinkIndices.add(currentSeqLength);
 
             int nextAssemblyJunctionIndex = link.type() != FACING ? currentSeqLength : currentSeqLength + nextAssemblyRefBases.length();
-            setAssemblyReadIndices(nextAssembly, nextReversed, nextAssemblyJunctionIndex);
+            setAssemblyReadIndices(nextAssembly, nextReversed, nextAssemblyJunctionIndex, LinkType.RIGHT);
 
             logBuildInfo(nextAssembly, currentSeqLength, nextAssemblyRefBases.length(), assemblyReversed, "ref-bases");
-
-            currentSeqLength += nextAssemblyRefBases.length();
 
             if(overlapLength > 0)
             {
@@ -288,25 +334,18 @@ public class AssemblyAlignment
                 mSequenceOverlaps.put(currentSeqLength - 1, link.overlapBases());
             }
 
+            currentSeqLength += nextAssemblyRefBases.length(); // this will have been reduced by any overlapping bases already
+
             buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
 
-            if(hasOuterExtensions && i == assemblyCount - 2)
+            if(hasFacingAtEnd && i == assemblyCount - 2)
             {
                 // add on the extension sequence for the last assembly
-                String assemblyExtensionBases = nextAssembly.formJunctionSequence();
-
-                fullSequence.append(assemblyExtensionBases);
-
-                logBuildInfo(nextAssembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, "outer-ext-bases");
-
-                currentSeqLength = assemblyExtensionBases.length();
-
-                buildSequenceCigar(sequenceCigar, S, assemblyExtensionBases.length());
+                addFinalFacingExtensionBases(nextAssembly, fullSequence, sequenceCigar, currentSeqLength, assemblyReversed, assemblyLinks);
+                currentSeqLength = nextAssembly.extensionLength();
             }
 
             lastAddedReversed = nextReversed;
-
-            nextIsFacing = true;
         }
 
         mSequenceCigar = cigarElementsToStr(sequenceCigar);
@@ -314,35 +353,27 @@ public class AssemblyAlignment
         return fullSequence.toString();
     }
 
-    private static String getAssemblyInsertSequence(final JunctionAssembly assembly, boolean assemblyReversed, int insertLength)
+    private void addFinalFacingExtensionBases(
+            final JunctionAssembly assembly, final StringBuilder fullSequence, final List<CigarElement> sequenceCigar,
+            int currentSeqLength, boolean assemblyReversed, final List<AssemblyLink> assemblyLinks)
     {
-        int extBaseIndexStart, extBaseIndexEnd;
+        // if the assembly is linked to another assembly at the start then repeat those other ref bases, otherwise take the extension
+        JunctionAssembly matchedAssembly = assemblyLinks.get(0).findMatchedAssembly(assembly);
 
-        if(assembly.isForwardJunction())
-        {
-            extBaseIndexStart = assembly.junctionIndex() + 1;
-            extBaseIndexEnd = min(extBaseIndexStart + insertLength - 1, assembly.baseLength() - 1);
-        }
-        else
-        {
-            extBaseIndexEnd = assembly.junctionIndex() - 1;
-            extBaseIndexStart = max(extBaseIndexEnd - insertLength + 1, 0);
-        }
+        if(matchedAssembly != null)
+            return;
 
-        String insertSequence = assembly.formSequence(extBaseIndexStart, extBaseIndexEnd);
+        String assemblyExtensionBases = assembly.isReverseJunction() ?
+                Nucleotides.reverseComplementBases(assembly.formJunctionSequence()) : assembly.formJunctionSequence();
 
-        return assemblyReversed ? Nucleotides.reverseComplementBases(insertSequence) : insertSequence;
-    }
+        CigarOperator extensionCigarType = S;
+        String extensionInfo = "outer-ext-bases";
 
-    private static void logBuildInfo(
-            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
-    {
-        if(SV_LOGGER.isTraceEnabled())
-        {
-            SV_LOGGER.trace("seqLength({} -> {}) adding assembly({}) {} {}",
-                    currentSeqLength, currentSeqLength + assemblyBaseLength,
-                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
-        }
+        fullSequence.append(assemblyExtensionBases);
+
+        logBuildInfo(assembly, currentSeqLength, assemblyExtensionBases.length(), assemblyReversed, extensionInfo);
+
+        buildSequenceCigar(sequenceCigar, extensionCigarType, assemblyExtensionBases.length());
     }
 
     private static void buildSequenceCigar(final List<CigarElement> elements, final CigarOperator operator, int length)
@@ -369,6 +400,12 @@ public class AssemblyAlignment
     }
 
     private void setAssemblyReadIndices(final JunctionAssembly assembly, boolean isReversed, int assemblyJunctionSeqIndex)
+    {
+        setAssemblyReadIndices(assembly, isReversed, assemblyJunctionSeqIndex, LinkType.NONE);
+    }
+
+    private void setAssemblyReadIndices(
+            final JunctionAssembly assembly, boolean isReversed, int assemblyJunctionSeqIndex, final LinkType linkType)
     {
         // for reads with forward orientation, their full sequence index is just the full sequence start offset + the read's junction distance
         // for reads in reversed assemblies, define their assembly index from the read's end index then going forward to the read start index
@@ -438,8 +475,32 @@ public class AssemblyAlignment
             read.setFullAssemblyInfo(fullSeqIndex, fullSeqOrientation);
         }
 
-        // TODO: any secondaries need their support reads' full sequence assembly indices to be set too
+        if(linkType != LinkType.NONE)
+        {
+            for(AssemblyLink secondaryLink : mPhaseSet.secondaryLinks())
+            {
+                if(!secondaryLink.hasAssembly(assembly))
+                    continue;
 
+                JunctionAssembly secondaryAssembly = secondaryLink.otherAssembly(assembly);
+
+                int linkJunctionOffset = 0;
+
+                if(!secondaryLink.insertedBases().isEmpty())
+                    linkJunctionOffset += secondaryLink.insertedBases().length();
+                else if(!secondaryLink.overlapBases().isEmpty())
+                    linkJunctionOffset -= secondaryLink.overlapBases().length();
+
+                int secondaryAssemblyJunctionSeqIndex = assemblyJunctionSeqIndex;
+
+                if(linkType == LinkType.LEFT)
+                    secondaryAssemblyJunctionSeqIndex += linkJunctionOffset;
+                else
+                    secondaryAssemblyJunctionSeqIndex -= linkJunctionOffset;
+
+                setAssemblyReadIndices(secondaryAssembly, isReversed, secondaryAssemblyJunctionSeqIndex, LinkType.NONE);
+            }
+        }
     }
 
     private SupportRead findMatchingSupportRead(final SupportRead read)
@@ -457,7 +518,29 @@ public class AssemblyAlignment
         return matchedRead;
     }
 
-    public String assemblyCigar() { return mSequenceCigar; }
+    private static void logBuildInfo(
+            final JunctionAssembly assembly, int currentSeqLength, int assemblyBaseLength, boolean isReversed, final String otherInfo)
+    {
+        if(AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("seqLength({} -> {}) adding assembly({}) {} {}",
+                    currentSeqLength, currentSeqLength + assemblyBaseLength,
+                    assembly.junction().coords(), isReversed ? "rev" : "fwd", otherInfo);
+        }
+    }
+
+    public void updateSequenceInfo(final String newSequence, final Map<Integer,String> newSequenceOverlaps, int primaryOffsetAdjust)
+    {
+        mFullSequence = newSequence;
+        mFullSequenceLength = newSequence.length();
+
+        for(Map.Entry<Integer,String> entry : mSequenceOverlaps.entrySet())
+        {
+            entry.setValue(entry.getValue() + primaryOffsetAdjust);
+        }
+
+        mSequenceOverlaps.putAll(newSequenceOverlaps);
+    }
 
     public String toString()
     {

@@ -39,6 +39,8 @@ public class ReadDataWriter
         mWriter = initialiseReadWriter();
     }
 
+    public boolean enabled() { return mWriter != null; }
+
     private BufferedWriter initialiseReadWriter()
     {
         if(mConfig.LogReadType == NONE)

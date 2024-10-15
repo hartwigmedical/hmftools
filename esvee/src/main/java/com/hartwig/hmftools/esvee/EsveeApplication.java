@@ -35,7 +35,7 @@ public class EsveeApplication
         junctionProcessor.run();
         junctionProcessor.close();
 
-        SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee assembly complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(final String[] args)

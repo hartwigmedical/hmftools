@@ -39,6 +39,7 @@ public final class TestPurpleVariantFactory
                 .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
+                .biallelicProbability(0.)
                 .genotypeStatus(PurpleGenotypeStatus.UNKNOWN)
                 .repeatCount(0)
                 .subclonalLikelihood(0D)
@@ -90,6 +91,7 @@ public final class TestPurpleVariantFactory
                 .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
+                .biallelicProbability(0.)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .repeatCount(0)
                 .subclonalLikelihood(0);

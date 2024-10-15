@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
-import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -30,7 +30,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
@@ -51,7 +51,7 @@ public class SliceConfig
     public final boolean UnsortedBam;
     public final boolean WriteReads;
     public final boolean DropExcluded;
-    public final boolean DropRemoteSupplementaries;
+    public final boolean OnlySupplementaries;
     public final boolean WriteReadBases;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
@@ -69,7 +69,7 @@ public class SliceConfig
     private static final String UNSORTED_BAM = "unsorted_bam";
     private static final String WRITE_READS = "write_reads";
     private static final String DROP_EXCLUDED = "drop_excluded";
-    private static final String DROP_REMOTE_SUPPS = "drop_remote_supps";
+    private static final String ONLY_SUPPS = "only_supps";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String MAX_REMOTE_READS = "max_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
@@ -97,11 +97,11 @@ public class SliceConfig
         }
 
         WriteReads = configBuilder.hasFlag(WRITE_READS);
-        WriteBam = configBuilder.hasFlag(WRITE_BAM);
+        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM);
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
-        DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
+        OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
 
@@ -179,7 +179,7 @@ public class SliceConfig
         configBuilder.addFlag(WRITE_READS, "Write reads file for sliced region");
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
-        configBuilder.addFlag(DROP_REMOTE_SUPPS, "Ignore remote supplementary reads");
+        configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
         BamToolName.addConfig(configBuilder);
         addThreadOptions(configBuilder);
@@ -202,7 +202,7 @@ public class SliceConfig
         WriteReadBases = false;
         UnsortedBam = false;
         DropExcluded = false;
-        DropRemoteSupplementaries = false;
+        OnlySupplementaries = false;
         MaxRemoteReads = 0;
         MaxPartitionReads = 0;
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;

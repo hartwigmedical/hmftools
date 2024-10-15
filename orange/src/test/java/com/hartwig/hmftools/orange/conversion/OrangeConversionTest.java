@@ -5,9 +5,9 @@ import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
-import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
-import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
+import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.common.virus.VirusType;
@@ -21,7 +21,7 @@ public class OrangeConversionTest
     public void shouldConvertTestVersionsOfAllDatamodels()
     {
         assertNotNull(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()));
-        assertNotNull(OrangeConversion.convert(WGSMetricsTestFactory.createMinimalTestWGSMetrics()));
+        assertNotNull(OrangeConversion.convert(BamMetricsTestFactory.createMinimalTestWGSMetrics()));
         assertNotNull(OrangeConversion.convert(DoidTestFactory.createTestDoidNode()));
         assertNotNull(OrangeConversion.convert(LilacTestFactory.createEmptyData(), true, true));
         assertNotNull(OrangeConversion.convert(LilacTestFactory.alleleBuilder().build(), true, true));

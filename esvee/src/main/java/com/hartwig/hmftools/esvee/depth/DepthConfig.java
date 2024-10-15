@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -27,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
@@ -43,6 +45,7 @@ public class DepthConfig
     public final List<String> Samples;
     public final List<String> BamFiles;
     public final String RefGenome;
+    public final String UnmapRegionsFile;
     public final RefGenomeVersion RefGenVersion;
     public final double VafCap;
     public final int ProximityDistance;
@@ -85,6 +88,8 @@ public class DepthConfig
         BamStringency = BamUtils.validationStringency(configBuilder);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
 
+        UnmapRegionsFile = configBuilder.getValue(UNMAP_REGIONS_FILE);
+
         Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
@@ -115,6 +120,7 @@ public class DepthConfig
         configBuilder.addConfigItem(BAM_FILES, true, "BAM file(s) to slice for depth");
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
+        UnmappedRegions.registerConfig(configBuilder);
 
         configBuilder.addDecimal(VAF_CAP, "Ref support depth limit as function of variant fragments", DEFAULT_VAF_CAP);
         configBuilder.addInteger(PROXIMITY_DISTANCE, "Proximity distance to group variants", DEFAULT_PROXIMITY_DISTANCE);
@@ -141,6 +147,7 @@ public class DepthConfig
         RefGenVersion = V37;
         VafCap = vcfCap;
         ProximityDistance = proximityDistance;
+        UnmapRegionsFile = null;
         BamStringency = ValidationStringency.STRICT;
         PerfLogTime = 0;
         Threads = 0;

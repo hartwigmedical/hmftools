@@ -47,6 +47,8 @@ public class PartitionData
 
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
 
+    private boolean mCacheSupplementaries;
+
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
@@ -68,6 +70,8 @@ public class PartitionData
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mUpdatedDuplicateGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
+
+        mCacheSupplementaries = !config.UseSupplementaryBam;
 
         mLock = new ReentrantLock();
         mLockAcquireTime = 0;
@@ -209,6 +213,11 @@ public class PartitionData
 
     public PartitionResults processIncompleteFragments(final List<SAMRecord> reads)
     {
+        return processIncompleteFragments(reads, true);
+    }
+
+    public PartitionResults processIncompleteFragments(final List<SAMRecord> reads, boolean checkSupplementaries)
+    {
         try
         {
             acquireLock();
@@ -217,13 +226,17 @@ public class PartitionData
 
             for(SAMRecord read : reads)
             {
-                ReadMatch readMatch = handleIncompleteFragment(read);
+                ReadMatch readMatch = handleIncompleteFragment(read, checkSupplementaries);
 
                 if(readMatch.Status != null && readMatch.Status.isResolved())
                 {
                     Fragment fragment = new Fragment(read);
                     fragment.setStatus(readMatch.Status);
                     partitionResults.addResolvedFragment(fragment);
+                }
+                else if(!readMatch.Matched && checkSupplementaries && isUnhandledSupplementary(read))
+                {
+                    partitionResults.addSupplementary(read);
                 }
             }
 
@@ -242,10 +255,12 @@ public class PartitionData
         try
         {
             acquireLock();
-            ReadMatch readMatch = handleIncompleteFragment(read);
+            ReadMatch readMatch = handleIncompleteFragment(read, true);
 
             if(!readMatch.Matched)
-                return null;
+            {
+                return isUnhandledSupplementary(read) ? new PartitionResults(read) : null;
+            }
 
             // only create results if the fragment is part of a group
             PartitionResults partitionResults = new PartitionResults();
@@ -264,7 +279,12 @@ public class PartitionData
         }
     }
 
-    private ReadMatch handleIncompleteFragment(final SAMRecord read)
+    private boolean isUnhandledSupplementary(final SAMRecord read)
+    {
+        return !mCacheSupplementaries && read.getSupplementaryAlignmentFlag();
+    }
+
+    private ReadMatch handleIncompleteFragment(final SAMRecord read, boolean checkSupplementary)
     {
         // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
 
@@ -311,6 +331,9 @@ public class PartitionData
 
             return NO_READ_MATCH;
         }
+
+        if(checkSupplementary && isUnhandledSupplementary(read))
+            return NO_READ_MATCH;
 
         // store the new fragment
         mIncompleteFragments.put(read.getReadName(), new Fragment(read));
@@ -417,7 +440,7 @@ public class PartitionData
         // a clean-up routine for cached fragments
         Set<DuplicateGroup> processedDuplicateGroups = Sets.newHashSet();
 
-        int cachedReadCount = 0;
+        int totalCachedReadCount = 0;
 
         for(DuplicateGroup duplicateGroup : mDuplicateGroupMap.values())
         {
@@ -437,20 +460,27 @@ public class PartitionData
                 }
             }
 
-            int cachedUmiReads = duplicateGroup.cachedReadCount();
+            int cachedReadCount = duplicateGroup.cachedReadCount();
 
-            if(cachedUmiReads == 0)
+            if(cachedReadCount == 0)
+            {
+                if(logCachedReads)
+                {
+                    RD_LOGGER.debug("dupGroup({}) coords({}) has no cached reads", duplicateGroup, duplicateGroup.coordinatesKey());
+                }
+
                 continue;
+            }
 
-            cachedReadCount += cachedUmiReads;
+            totalCachedReadCount += cachedReadCount;
 
             List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(consensusReads, true);
             recordWriter.writeDuplicateGroup(duplicateGroup, completeReads);
 
             if(logCachedReads)
             {
-                RD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
-                        cachedUmiReads, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
+                RD_LOGGER.debug("writing {} cached reads for dupGroup({}) coords({})",
+                        cachedReadCount, duplicateGroup.toString(), duplicateGroup.coordinatesKey());
 
                 for(SAMRecord read : completeReads)
                 {
@@ -470,10 +500,7 @@ public class PartitionData
             {
                 for(SAMRecord read : fragment.reads())
                 {
-                    if(read.getSupplementaryAlignmentFlag())
-                        continue;
-
-                    ++cachedReadCount;
+                    ++totalCachedReadCount;
                     RD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
                 }
             }
@@ -492,7 +519,7 @@ public class PartitionData
         mCandidateDuplicatesMap.clear();
         mDuplicateGroupMap.clear();
 
-        return cachedReadCount;
+        return totalCachedReadCount;
     }
 
     private void checkCachedCounts()
@@ -535,6 +562,31 @@ public class PartitionData
             acquireLock();
 
             RD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
+    public static final int PARTITION_CACHE_INCOMPLETE_FRAGS = 0;
+    public static final int PARTITION_CACHE_CANDIDATE_DUP_GROUPS = 1;
+    public static final int PARTITION_CACHE_RESOLVED_STATUS = 2;
+    public static final int PARTITION_CACHE_DUP_GROUPS = 3;
+    public static final int PARTITION_CACHE_DUP_GROUP_READS = 4;
+
+    public int[] collectCacheCounts()
+    {
+        try
+        {
+            acquireLock();
+
+            int[] cachedCounts = new int[PARTITION_CACHE_DUP_GROUP_READS+1];
+            cachedCounts[PARTITION_CACHE_INCOMPLETE_FRAGS] = mIncompleteFragments.size();
+            cachedCounts[PARTITION_CACHE_CANDIDATE_DUP_GROUPS] = mCandidateDuplicatesMap.size();
+            cachedCounts[PARTITION_CACHE_RESOLVED_STATUS] = mFragmentStatus.size();
+            cachedCounts[PARTITION_CACHE_DUP_GROUPS] = mDuplicateGroupMap.size();
+            return cachedCounts;
         }
         finally
         {
