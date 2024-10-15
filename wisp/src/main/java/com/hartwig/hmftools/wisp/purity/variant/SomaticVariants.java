@@ -301,25 +301,27 @@ public class SomaticVariants
             sampleTotalAD += sampleFragData.AlleleCount;
         }
 
-        if(filteredVariants.isEmpty())
-            return INVALID_RESULT;
+        SomaticPurityResult purityResult = INVALID_RESULT;
 
-        // check for CHIP variants and remove them from variants used for purity estimates
-        final double sampleAlleleTotal = sampleTotalAD;
-
-        List<SomaticVariant> chipVariants = filteredVariants.stream()
-                .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
-
-        for(SomaticVariant variant : chipVariants)
+        if(!filteredVariants.isEmpty())
         {
-            CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                    sampleId,   variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+            // check for CHIP variants and remove them from variants used for purity estimates
+            final double sampleAlleleTotal = sampleTotalAD;
 
-            filteredVariants.remove(variant);
-            variant.addFilterReason(CHIP);
+            List<SomaticVariant> chipVariants = filteredVariants.stream()
+                    .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
+
+            for(SomaticVariant variant : chipVariants)
+            {
+                CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
+                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+
+                filteredVariants.remove(variant);
+                variant.addFilterReason(CHIP);
+            }
+
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
         }
-
-        SomaticPurityResult purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {

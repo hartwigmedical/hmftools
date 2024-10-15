@@ -72,16 +72,4 @@ public class RemoteJunction
     }
 
     public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orient.asByte(), Fragments); }
-
-    public static class RemoteJunctionSorter implements Comparator<RemoteJunction>
-    {
-        // sorts by support descending
-        public int compare(final RemoteJunction first, final RemoteJunction second)
-        {
-            if(first.Fragments != second.Fragments)
-                return first.Fragments < second.Fragments ? 1 : -1;
-
-            return 0;
-        }
-    }
 }

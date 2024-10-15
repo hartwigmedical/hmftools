@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -7,11 +8,12 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.UNMAPPED_TRIM_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
@@ -23,6 +25,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -65,15 +69,17 @@ public class RefBaseExtender
         }
         else
         {
+            Set<String> concordantReadIds = unfilteredNonJunctionReads.stream().filter(x -> isConcordantRead(x))
+                    .map(x -> x.id()).collect(Collectors.toSet());
+
             discordantReads = unfilteredNonJunctionReads.stream()
-                    .filter(x -> isValidSupportCoordsVsJunction(x, isForwardJunction, junctionPosition))
-                    .filter(x -> isDiscordantFragment(x) || x.isMateUnmapped())
-                    .filter(x -> !assembly.hasReadSupport(x.mateRead()))
+                    .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition, assembly, concordantReadIds))
                     .collect(Collectors.toList());
 
             discordantReads.forEach(x -> candidateReads.add(new NonJunctionRead(x, DISCORDANT)));
 
-            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null).forEach(x -> assembly.addUnmappedRead(x.mateRead()));
+            discordantReads.stream().filter(x -> x.isMateUnmapped() && x.mateRead() != null && !filterUnmapped(x.mateRead(), true))
+                    .forEach(x -> assembly.addUnmappedRead(x.mateRead()));
         }
 
         List<Read> remoteJunctionMates = Lists.newArrayList();
@@ -121,6 +127,9 @@ public class RefBaseExtender
             }
             else
             {
+                if(filterUnmapped(mateRead,false))
+                    continue;
+
                 assembly.addUnmappedRead(mateRead);
             }
         }
@@ -170,6 +179,53 @@ public class RefBaseExtender
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
         purgeRefSideSoftClips(assembly.refSideSoftClips(), ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
+    }
+
+    private static boolean isConcordantRead(final Read read)
+    {
+        return read.isPairedRead() && read.isMateMapped() && read.isMateMapped()
+                && read.chromosome().equals(read.mateChromosome())
+                && read.orientation() != read.mateOrientation()
+                && abs(read.bamRecord().getInferredInsertSize()) <= DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+    }
+
+    private static boolean isDiscordantCandidate(
+            final Read read, boolean isForwardJunction, int junctionPosition, final JunctionAssembly assembly, final Set<String> concordantReadIds)
+    {
+        if(!isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition))
+            return false;
+
+        if(!isDiscordantFragment(read))
+        {
+            if(!read.isMateUnmapped())
+                return false;
+
+            // test the mate read's base quals and
+            if(read.mateRead() != null && filterUnmapped(read.mateRead(), true))
+                return false;
+        }
+        else
+        {
+            // must not match a concordant fragment as determined by a local supplementary or vice-versa
+            if(concordantReadIds.contains(read.id()))
+                return false;
+        }
+
+        // lastly check the read isn't already counted as junction support
+        return !assembly.hasReadSupport(read.mateRead());
+    }
+
+    private static boolean filterUnmapped(final Read read, boolean isDiscordant)
+    {
+        if(!read.isUnmapped())
+            return false;
+
+        ReadAdjustments.trimLowQualBases(read);
+
+        if(isDiscordant && read.mateRead() != null && read.mateRead().mappingQuality() == 0)
+            return true;
+
+        return read.basesLength() - read.baseTrimCount() < UNMAPPED_TRIM_THRESHOLD;
     }
 
     private class NonJunctionRead
@@ -414,8 +470,24 @@ public class RefBaseExtender
         // set references between them - for now just for TSV output
         for(JunctionAssembly junctionAssembly : branchedAssemblies)
         {
+            purgeUnrelatedRefSideSoftClips(junctionAssembly);
+
             if(junctionAssembly != originalAssembly)
                 originalAssembly.phaseGroup().addDerivedAssembly(junctionAssembly);
+        }
+    }
+
+    private static void purgeUnrelatedRefSideSoftClips(final JunctionAssembly assembly)
+    {
+        int index = 0;
+        while(index < assembly.refSideSoftClips().size())
+        {
+            RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(index);
+
+            if(refSideSoftClip.hasProximateMatch(assembly.refBasePosition()))
+                ++index;
+            else
+                assembly.refSideSoftClips().remove(index);
         }
     }
 
@@ -461,7 +533,7 @@ public class RefBaseExtender
 
     public static boolean checkAddRefBaseRead(final JunctionAssembly assembly, final Read read, final SupportType supportType)
     {
-        return checkAddRefBaseRead(assembly, read, supportType, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
+        return checkAddRefBaseRead(assembly, read, supportType, ASSEMBLY_READ_OVERLAP_BASES);
     }
 
     private static boolean checkAddRefBaseRead(

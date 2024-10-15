@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -158,7 +159,7 @@ public class Breakend implements Comparable<Breakend>
         return svType() == DUP ? posLength + 1 : posLength;
     }
 
-    public boolean isShortLocalDelDupIns() { return AlignmentFragments.isShortLocalDelDupIns(svType(), svLength()); }
+    public boolean isShortLocalDelDupIns() { return CommonUtils.isShortLocalDelDupIns(svType(), svLength()); }
 
     public int minPosition() { return Position + (Homology != null ? Homology.ExactStart : 0); }
     public int maxPosition() { return Position + (Homology != null ? Homology.ExactEnd : 0); }

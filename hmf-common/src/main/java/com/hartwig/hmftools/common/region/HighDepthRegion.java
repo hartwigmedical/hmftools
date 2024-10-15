@@ -1,9 +1,6 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.common.region;
 
 import static java.lang.String.format;
-
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class HighDepthRegion extends BaseRegion
 {

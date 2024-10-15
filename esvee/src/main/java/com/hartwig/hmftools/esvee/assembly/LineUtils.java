@@ -216,7 +216,7 @@ public final class LineUtils
         String secondExtensionBases = second.formJunctionSequence();
 
         if(secondReversed)
-            secondExtensionBases = Nucleotides.reverseComplementBases(firstExtensionBases);
+            secondExtensionBases = Nucleotides.reverseComplementBases(secondExtensionBases);
 
         int firstPolyAtLength = calcLineSequenceLength(firstMatchBases, false);
         int secondPolyAtLength = calcLineSequenceLength(secondExtensionBases, true);

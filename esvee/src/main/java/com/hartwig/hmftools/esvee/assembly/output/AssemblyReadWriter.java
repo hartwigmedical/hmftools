@@ -16,11 +16,14 @@ import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 public class AssemblyReadWriter
 {
@@ -104,7 +107,23 @@ public class AssemblyReadWriter
         {
             String assemblyInfo = format("%s", assembly.junction().coords());
 
-            for(SupportRead support : assembly.support())
+            List<SupportRead> supportReads;
+
+            if(AssemblyConfig.WriteCandidateReads)
+            {
+                supportReads = Lists.newArrayList(assembly.support());
+                assembly.candidateSupport().forEach(x -> supportReads.add(
+                        new SupportRead(x, SupportType.DISCORDANT, 0, -1, -1)));
+
+                assembly.unmappedReads().forEach(x -> supportReads.add(
+                        new SupportRead(x, SupportType.DISCORDANT, 0, -1, -1)));
+            }
+            else
+            {
+                supportReads = assembly.support();
+            }
+
+            for(SupportRead support : supportReads)
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
 

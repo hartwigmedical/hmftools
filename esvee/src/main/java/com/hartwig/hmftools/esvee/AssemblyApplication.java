@@ -115,7 +115,7 @@ public class AssemblyApplication
             SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
         }
 
-        return !mChrJunctionsMap.isEmpty();
+        return true;
     }
 
     private void loadFragmentLengthBounds()

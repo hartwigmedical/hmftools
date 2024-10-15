@@ -163,8 +163,10 @@ public class PhaseSetBuilder
             AssemblyLink assemblyLink = extensionCandidate.Link;
 
             boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH) && mAssemblies.size() > 2;
+            boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
 
-            applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching);
+            extensionCandidate.markSelected();
+            applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching, allowDiscordantReads);
 
             extensionCandidate.Assembly.setOutcome(LINKED);
             extensionCandidate.SecondAssembly.setOutcome(LINKED);
@@ -310,8 +312,8 @@ public class PhaseSetBuilder
 
         // prioritise and select from all remaining candidates
         List<ExtensionCandidate> remainingCandidates = mExtensionCandidates.stream()
+                .filter(x -> !x.selected()) // skip those already registered
                 .filter(x -> x.isValid())
-                .filter(x -> !mLocallyLinkedAssemblies.contains(x.Assembly) && !mLocallyLinkedAssemblies.contains(x.SecondAssembly))
                 .collect(Collectors.toList());
 
         if(remainingCandidates.isEmpty())
@@ -328,6 +330,7 @@ public class PhaseSetBuilder
                 boolean eitherInPrimary = primaryLinkedAssemblies.contains(extensionCandidate.Assembly)
                         || primaryLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
 
+                extensionCandidate.markSelected();
                 applySplitLink(extensionCandidate.Link, !eitherInPrimary);
 
                 if(!eitherInPrimary)
@@ -345,6 +348,7 @@ public class PhaseSetBuilder
 
                 boolean inPrimary = primaryLinkedAssemblies.contains(initialAssembly);
 
+                extensionCandidate.markSelected();
                 applyRemoteRefLink(extensionCandidate.Link, initialAssembly, !inPrimary);
 
                 if(!inPrimary)
@@ -352,8 +356,12 @@ public class PhaseSetBuilder
             }
             else if(extensionCandidate.Type == UNMAPPED)
             {
-                if(!primaryLinkedAssemblies.contains(extensionCandidate.Assembly))
+                // extend the assembly if not already linked in any way - this facilitates further links and/or a better SGL for alignment
+                if(extensionCandidate.Assembly.outcome() == UNSET)
+                {
+                    extensionCandidate.markSelected();
                     applyUnmappedReadExtension(extensionCandidate);
+                }
             }
         }
     }
@@ -550,8 +558,9 @@ public class PhaseSetBuilder
     private void applySplitLink(final AssemblyLink assemblyLink, boolean isPrimaryLink)
     {
         boolean allowBranching = isPrimaryLink && !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
+        boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
 
-        applySplitLinkSupport(assemblyLink.first(), assemblyLink.second(), allowBranching);
+        applySplitLinkSupport(assemblyLink.first(), assemblyLink.second(), allowBranching, allowDiscordantReads);
 
         if(isPrimaryLink)
         {
@@ -595,13 +604,13 @@ public class PhaseSetBuilder
         if(isPrimaryLink)
         {
             // only form one remote link for each assembly
-            applySplitLinkSupport(initialAssembly, remoteAssembly, true);
+            applySplitLinkSupport(initialAssembly, remoteAssembly, true, true);
             initialAssembly.setOutcome(REMOTE_LINK);
             mSplitLinks.add(remoteLink);
         }
         else
         {
-            applySplitLinkSupport(initialAssembly, remoteAssembly, false);
+            applySplitLinkSupport(initialAssembly, remoteAssembly, false, true);
             mSecondarySplitLinks.add(remoteLink);
         }
     }
@@ -690,7 +699,8 @@ public class PhaseSetBuilder
         }
     }
 
-    private boolean applySplitLinkSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
+    private boolean applySplitLinkSupport(
+            final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching, boolean allowDiscordantReads)
     {
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
@@ -698,8 +708,11 @@ public class PhaseSetBuilder
 
         addLocalMateSupport(assembly1, assembly2);
 
-        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
-        checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+        checkMatchingCandidateSupport(
+                assembly2, allowDiscordantReads, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
+
+        checkMatchingCandidateSupport(
+                assembly1, allowDiscordantReads, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
         addMatchingExtensionCandidates(assembly1, matchedCandidates1);
         addMatchingExtensionCandidates(assembly2, matchedCandidates2);
@@ -739,6 +752,7 @@ public class PhaseSetBuilder
         extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
 
+        // register any newly branched assemblies
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.outcome() == DUP_BRANCHED && !mBranchedAssemblies.contains(assembly))
@@ -749,7 +763,7 @@ public class PhaseSetBuilder
     }
 
     private static void checkMatchingCandidateSupport(
-            final JunctionAssembly otherAssembly,
+            final JunctionAssembly otherAssembly, boolean allowDiscordantReads,
             final List<Read> candidateSupport, final List<Read> otherCandidateSupport,
             final List<Read> matchedCandidates, final List<Read> otherMatchedCandidates)
     {
@@ -763,6 +777,12 @@ public class PhaseSetBuilder
             {
                 candidateSupport.remove(index);
                 matchedCandidates.add(candidateRead);
+                continue;
+            }
+
+            if(!allowDiscordantReads)
+            {
+                ++index;
                 continue;
             }
 
@@ -825,7 +845,7 @@ public class PhaseSetBuilder
         if(!isLocalAssemblyCandidate(assembly1, assembly2, false))
             return;
 
-        // look for concordant mate reads which are on the otherr side of the junction and so were initially excluded
+        // look for concordant mate reads which are on the other side of the junction and so were initially excluded
         for(int i = 0; i <= 1; ++i)
         {
             JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
@@ -977,6 +997,7 @@ public class PhaseSetBuilder
             boolean firstIsLineSite = link.first().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.first());
             boolean secondIsLineSite = link.second().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.second());
 
+            // put LINE links not already associated with a phase set into their own
             if(firstIsLineSite || secondIsLineSite)
             {
                 boolean processed = (firstIsLineSite && processedSecondaries.contains(link.first()))
@@ -1140,7 +1161,8 @@ public class PhaseSetBuilder
 
         for(JunctionAssembly assembly : mAssemblies)
         {
-            assembly.clearCandidateSupport(); // no further use for candidate reads
+            if(!AssemblyConfig.WriteCandidateReads)
+                assembly.clearCandidateSupport(); // no further use for candidate reads
 
             assembly.clearSupportCachedReads(); // remove references to actual SAMRecords, keeping only summary info
 

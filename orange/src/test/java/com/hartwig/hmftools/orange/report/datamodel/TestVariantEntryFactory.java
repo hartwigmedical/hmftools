@@ -20,6 +20,7 @@ public final class TestVariantEntryFactory
                 .totalCopyNumber(0D)
                 .minorAlleleCopyNumber(0D)
                 .biallelic(false)
+                .biallelicProbability(0.1)
                 .hotspot(HotspotType.NON_HOTSPOT)
                 .driverLikelihood(null)
                 .clonalLikelihood(0D)

@@ -242,6 +242,7 @@ public final class ReadAdjustments
             {
                 lowQualCount++;
 
+                // avoid a check on very low counts of bases
                 if(lowQualCount / (double)i >= LOW_BASE_TRIM_PERC)
                     lastLowQualPercIndex = i;
             }

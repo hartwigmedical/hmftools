@@ -57,7 +57,9 @@ public class CytoBands
         int posEndIndex = 2;
         int nameIndex = 3;
 
-        lines.stream().skip(1).forEach(line ->
+        lines.remove(0); // remove header
+
+        for(String line : lines)
         {
             final String[] values = line.split(delim, -1);
 
@@ -74,7 +76,7 @@ public class CytoBands
             }
 
             bands.add(new CytoBand(posStart, posEnd, values[nameIndex]));
-        });
+        }
     }
 
     private class CytoBand extends BaseRegion

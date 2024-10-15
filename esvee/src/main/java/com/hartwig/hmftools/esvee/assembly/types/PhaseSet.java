@@ -70,6 +70,25 @@ public class PhaseSet
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
+    public List<JunctionAssembly> allAssemblies()
+    {
+        if(mSecondaryLinks.isEmpty())
+            return mAssemblies;
+
+        List<JunctionAssembly> assemblies = Lists.newArrayList(mAssemblies);
+
+        for(AssemblyLink secondaryLink : mSecondaryLinks)
+        {
+            if(!assemblies.contains(secondaryLink.first()))
+                assemblies.add(secondaryLink.first());
+
+            if(!assemblies.contains(secondaryLink.second()))
+                assemblies.add(secondaryLink.second());
+        }
+
+        return assemblies;
+    }
+
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
     public List<AssemblyLink> secondaryLinks() { return mSecondaryLinks; }
 

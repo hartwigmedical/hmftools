@@ -191,9 +191,9 @@ public class ReferenceData
         CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
 
         TargetRegions = new TargetRegionsData(
-                configBuilder.getValue(TARGET_REGIONS_BED),
-                configBuilder.getValue(TARGET_REGIONS_RATIOS),
-                configBuilder.getValue(TARGET_REGION_MSI_INDELS));
+                configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));
+
+        TargetRegions.loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED), GeneTransCache);
     }
 
     private void loadGeneTransCache()
@@ -272,6 +272,6 @@ public class ReferenceData
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
         CohortGermlineDeletions = new GermlineDeletionFrequency(null);
-        TargetRegions = new TargetRegionsData(null, null, null);
+        TargetRegions = new TargetRegionsData(null, null);
     }
 }

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -16,8 +14,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DEL
 import static com.hartwig.hmftools.purple.fitting.FittedPurityFactory.createFittedRegionFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,21 +21,16 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.HrdData;
-import com.hartwig.hmftools.common.purple.HrdDataFile;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
@@ -50,7 +41,6 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
-import com.hartwig.hmftools.purple.hrd.HrdDetection;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -66,8 +56,6 @@ import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.germline.GermlineDeletions;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
@@ -273,12 +261,6 @@ public class PurpleApplication
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
-
-            if(mReferenceData.TargetRegions.hasTargetRegions())
-            {
-                HrdData hrdData = new HrdDetection().calculateHrdData(copyNumbers);
-                HrdDataFile.write(mConfig.OutputDir, tumorId, hrdData);
-            }
         }
         else
         {
@@ -416,11 +398,6 @@ public class PurpleApplication
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), Collections.emptyList());
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), Collections.emptyList());
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
-
-            if(mReferenceData.TargetRegions.hasTargetRegions())
-            {
-                HrdDataFile.write(mConfig.OutputDir, tumorId, HrdData.INVALID);
-            }
 
             FittedPurity fittedPurity = ImmutableFittedPurity.builder()
                     .purity(0).ploidy(0).score(0).diploidProportion(0).normFactor(0).somaticPenalty(0).build();

@@ -5,6 +5,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
@@ -71,12 +72,10 @@ public final class AssemblyUtils
         return baseQualTotal;
     }
 
-    public static final byte N_BASE = 78;
-
     public static boolean basesMatch(
             final byte first, final byte second, final byte firstQual, final byte secondQual)
     {
-        return first == second || first == N_BASE || second == N_BASE || belowMinQual(firstQual) || belowMinQual(secondQual);
+        return first == second || first == DNA_N_BYTE || second == DNA_N_BYTE || belowMinQual(firstQual) || belowMinQual(secondQual);
     }
 
     public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second, boolean checkReads)

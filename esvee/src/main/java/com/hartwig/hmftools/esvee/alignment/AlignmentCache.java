@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_MD_
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_NMATCHES;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_REF_LOCATION;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SCORE;
-import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SEQUENCE_COORDS;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_RAW_SEQ_COORDS;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,7 +73,7 @@ public class AlignmentCache
 
             int assInfoIndex = fieldsIndexMap.get(FLD_ASSEMLY_INFO);
             int refLocationIndex = fieldsIndexMap.get(FLD_REF_LOCATION);
-            int seqCoordsIndex = fieldsIndexMap.get(FLD_SEQUENCE_COORDS);
+            int seqCoordsIndex = fieldsIndexMap.get(FLD_RAW_SEQ_COORDS);
             int scoreIndex = fieldsIndexMap.get(FLD_SCORE);
             int flagIndex = fieldsIndexMap.get(FLD_FLAGS);
             int mqIndex = fieldsIndexMap.get(FLD_MAP_QUAL);

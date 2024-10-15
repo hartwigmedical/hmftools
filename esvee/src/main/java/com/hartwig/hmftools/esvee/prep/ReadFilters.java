@@ -257,7 +257,7 @@ public class ReadFilters
         return allMatch;
     }
 
-    public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength)
+    public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength, boolean applyPowerAdjust)
     {
         // at least one junction supporting read with [AS - Len + TrimmedLen] * (AS/SUM(M))^2 > 50
         int readIndex = 0;
@@ -309,8 +309,11 @@ public class ReadFilters
                 alignmentScore -= read.record().getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue();
         }
 
-        double adjustedAlignmentScore = (alignmentScore - repeatReduction) * pow(alignmentScore / (double)alignedLength, 2);
+        double adjustedAlignScore = (alignmentScore - repeatReduction);
 
-        return adjustedAlignmentScore >= minLength;
+        if(applyPowerAdjust)
+            adjustedAlignScore *= pow(alignmentScore / (double)alignedLength, 2);
+
+        return adjustedAlignScore >= minLength;
     }
 }

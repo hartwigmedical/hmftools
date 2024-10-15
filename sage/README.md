@@ -665,6 +665,7 @@ Performance
 - **High depth regions** - Phasing may be slow in very high depth regions
 
 # Version History and Download Links
+- [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.4.4)
 - [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)

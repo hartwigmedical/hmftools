@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import static com.hartwig.hmftools.common.variant.AllelicDepth.NO_DEPTH;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
@@ -118,6 +119,7 @@ public class VariantContextDecorator implements GenomePosition
     }
 
     @Override
+    @NotNull
     public String chromosome()
     {
         return mContext.getContig();
@@ -177,6 +179,11 @@ public class VariantContextDecorator implements GenomePosition
     public boolean biallelic()
     {
         return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+    }
+
+    public double biallelicProbability()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, biallelic() ? 1 : 0);
     }
 
     public double minorAlleleCopyNumber()

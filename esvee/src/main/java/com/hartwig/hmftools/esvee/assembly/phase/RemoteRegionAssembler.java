@@ -7,7 +7,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;

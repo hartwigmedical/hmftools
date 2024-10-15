@@ -158,6 +158,12 @@ public class DepthAnnotator
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
+        if(mConfig.UnmapRegionsFile != null)
+        {
+            UnmappedRegionDepth unmappedRegionDepth = new UnmappedRegionDepth(mConfig.UnmapRegionsFile);
+            unmappedRegionDepth.setUnmappedRegionsDepth(mConfig.Samples.size(), depthTasks);
+        }
+
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
 

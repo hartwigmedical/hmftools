@@ -41,7 +41,6 @@ public class FilterConstants
     public static final double DEFAULT_MIN_AF_HOTSPOT = 0.001;
     public static final double DEFAULT_MIN_AF_JUNCTION = DEFAULT_MIN_AF_HOTSPOT;
 
-    public final int MinAvgFragFactor;
     public static final int DEFAULT_MIN_AVG_FRAG_FACTOR = 3;
 
     public final boolean FilterSGLs;
@@ -60,6 +59,11 @@ public class FilterConstants
     public static final double MAX_STRAND_BIAS = 0.95;
 
     public static final int MIN_TRIMMED_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
+    public static final int MIN_AVG_FRAG_FACTOR = 3;
+    public static final double MIN_AVG_FRAG_STD_DEV_FACTOR = 0.6;
+
+    public static final double INV_SHORT_MIN_AF = 0.05;
+    public static final int INV_SHORT_MAX_HOMOLOGY = 4;
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
@@ -84,14 +88,14 @@ public class FilterConstants
                 DEFAULT_MIN_TUMOR_QUAL, MIN_VARIANT_LENGTH,
                 DEFAULT_MIN_SUPPORT_JUNCTION, DEFAULT_MIN_SUPPORT_SGL, DEFAULT_MIN_SUPPORT_HOTSPOT,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
-                DEFAULT_MIN_AVG_FRAG_FACTOR, filterSgls,
+                filterSgls,
                 getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38,
                 ponDistance);
     }
 
     public FilterConstants(
             final int minTumorQual, final int minLength, final int minSupportJunction, final int minSupportSgl, final int minSupportHotspot,
-            final double minAfJunction, final double minAfSgl, final double minAfHotspot, final int minAvgFragFactor,
+            final double minAfJunction, final double minAfSgl, final double minAfHotspot,
             final boolean filterSGLs, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, final int ponDistance)
     {
         MinQual = minTumorQual;
@@ -102,7 +106,6 @@ public class FilterConstants
         MinAfJunction = minAfJunction;
         MinAfSgl = minAfSgl;
         MinAfHotspot = minAfHotspot;
-        MinAvgFragFactor = minAvgFragFactor;
         FilterSGLs = filterSGLs;
         PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;

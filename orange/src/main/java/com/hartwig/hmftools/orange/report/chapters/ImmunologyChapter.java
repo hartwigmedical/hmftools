@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
@@ -53,16 +54,21 @@ public class ImmunologyChapter implements ReportChapter
 
     private void addHLAData(@NotNull Document document)
     {
+        LilacRecord lilacData = report.lilac();
+
+        if(lilacData == null)
+            return;
+
         Cells cells = new Cells(reportResources);
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         qc.addCell(cells.createKey("QC Status:"));
-        qc.addCell(cells.createValue(report.lilac().qc()));
+        qc.addCell(cells.createValue(lilacData.qc()));
 
         document.add(new Tables(reportResources).createWrapping(qc, "HLA QC"));
 
-        String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
+        String title = "HLA Alleles (" + lilacData.alleles().size() + ")";
         boolean isTumorFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
-        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources, isTumorFail));
+        document.add(HLAAlleleTable.build(title, contentWidth(), lilacData.alleles(), reportResources, isTumorFail));
     }
 
     private void addImmuneEscapeData(@NotNull Document document)

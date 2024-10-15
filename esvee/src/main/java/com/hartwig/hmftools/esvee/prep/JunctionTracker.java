@@ -341,7 +341,7 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -357,8 +357,9 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.DiscordantGroups);
 
-        List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(
-                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
+        DiscordantGroups discordantGroups = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mConfig.TrackRemotes);
+
+        List<JunctionData> discordantJunctions = discordantGroups.formDiscordantJunctions(mCandidateDiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
         {
@@ -376,8 +377,8 @@ public class JunctionTracker
 
     private void createJunction(final ReadGroup readGroup)
     {
-        List<JunctionData> junctions = Lists.newArrayList();
-        List<RemoteJunction> remoteJunctions = Lists.newArrayList();
+        List<JunctionData> junctions = Lists.newArrayListWithExpectedSize(2);
+        List<RemoteJunction> remoteJunctions = mConfig.TrackRemotes ? Lists.newArrayList() : Collections.emptyList();
 
         for(PrepRead read : readGroup.reads())
         {
@@ -1118,7 +1119,7 @@ public class JunctionTracker
 
             for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
             {
-                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore))
+                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore, true))
                 {
                     hasPassingAlignedRead = true;
                     break;

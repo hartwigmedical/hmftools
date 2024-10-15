@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.esvee.common.CommonUtils.withLineProximity;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withinLineProximity;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ public final class LineChecker
                 if(breakend.otherBreakend() == nextBreakend)
                     continue;
 
-                if(!withLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
+                if(!withinLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
                     continue;
 
                 // mark if either site is line

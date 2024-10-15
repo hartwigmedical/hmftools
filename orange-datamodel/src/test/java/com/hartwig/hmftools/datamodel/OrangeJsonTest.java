@@ -145,6 +145,7 @@ public class OrangeJsonTest
         assertEquals(10, somaticVariant.tumorDepth().alleleReadCount());
         assertEquals(0.0, somaticVariant.subclonalLikelihood(), EPSILON);
         assertFalse(somaticVariant.biallelic());
+        assertEquals(0.1, somaticVariant.biallelicProbability(), EPSILON);
         assertEquals(PurpleGenotypeStatus.UNKNOWN, somaticVariant.genotypeStatus());
         assertNull(somaticVariant.localPhaseSets());
         assertEquals("ENST00000335508", somaticVariant.canonicalImpact().transcript());
@@ -177,6 +178,7 @@ public class OrangeJsonTest
         assertEquals(20, germlineVariant.tumorDepth().alleleReadCount());
         assertEquals(0.2, germlineVariant.subclonalLikelihood(), EPSILON);
         assertFalse(germlineVariant.biallelic());
+        assertEquals(0, germlineVariant.biallelicProbability(), EPSILON);
         assertEquals(PurpleGenotypeStatus.HET, germlineVariant.genotypeStatus());
         assertEquals(2, germlineVariant.localPhaseSets().size());
         assertTrue(germlineVariant.localPhaseSets().contains(1));
