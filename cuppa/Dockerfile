@@ -27,6 +27,3 @@ RUN chmod +x /usr/local/bin/cuppa
 RUN unzip -n ${JAR} -d /tmp/cuppa_jar
 RUN pip3 install --upgrade pip && pip3 install /tmp/cuppa_jar/pycuppa/
 RUN rm -r /tmp/cuppa_jar
-
-ENTRYPOINT ["bash"]
-
