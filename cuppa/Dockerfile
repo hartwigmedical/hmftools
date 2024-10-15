@@ -10,14 +10,18 @@ RUN \
     unzip \
     r-ggplot2 \
     r-patchwork \
-    r-reshape2 && \
+    r-reshape2 \
+    r-ggh4x && \
   micromamba clean --all --yes
 
 USER root
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
+
 RUN apt update && apt install -y python3 python3-pip && apt clean && rm -rf /var/lib/apt/lists/*
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
 ADD target/cuppa-$VERSION-jar-with-dependencies.jar ${JAR}
-ADD target/entrypoint.sh /usr/local/bin/cuppa 
+ADD target/entrypoint.sh /usr/local/bin/cuppa
 RUN chmod +x /usr/local/bin/cuppa
 
 RUN unzip -n ${JAR} -d /tmp/cuppa_jar
