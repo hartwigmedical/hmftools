@@ -199,9 +199,12 @@ public class ConsensusReads
         }
 
         // mark this consensus as unpaired since no duplicates will be formed for the mates
-        consensusRead.setReadPairedFlag(false);
+        consensusRead.setProperPairFlag(false);
+
+        /* no need to alter these
         consensusRead.setFirstOfPairFlag(false);
         consensusRead.setSecondOfPairFlag(false);
+        */
         consensusRead.setMateUnmappedFlag(false);
         consensusRead.setMateNegativeStrandFlag(false);
         consensusRead.setMateAlignmentStart(NO_POSITION);
