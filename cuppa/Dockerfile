@@ -7,6 +7,7 @@ USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
 RUN \
   micromamba install -y -n base -c bioconda -c conda-forge \
+    procps-ng \
     unzip \
     r-ggplot2 \
     r-patchwork \
