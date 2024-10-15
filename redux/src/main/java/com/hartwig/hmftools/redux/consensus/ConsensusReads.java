@@ -198,14 +198,13 @@ public class ConsensusReads
                 return;
         }
 
-        // mark this consensus as unpaired since no duplicates will be formed for the mates
         consensusRead.setProperPairFlag(false);
 
         /* no need to alter these
         consensusRead.setFirstOfPairFlag(false);
         consensusRead.setSecondOfPairFlag(false);
         */
-        consensusRead.setMateUnmappedFlag(false);
+        consensusRead.setMateUnmappedFlag(true);
         consensusRead.setMateNegativeStrandFlag(false);
         consensusRead.setMateAlignmentStart(NO_POSITION);
         consensusRead.setMateReferenceName(NO_CHROMOSOME_NAME);
