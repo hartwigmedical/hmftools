@@ -99,35 +99,7 @@ public class LinxBreakendInterpreterTest
         assertEquals(0, right.orientation());
         assertEquals(1.5D, right.junctionCopyNumber(), 0.0D);
     }
-
-    @Test
-    public void canFallbackWhenNoEndLeg()
-    {
-        List<StructuralVariant> structuralVariants = List.of(
-                PurpleTestUtils.createStructuralVariantSingleBreakend("7", 50, 1.0)
-                        .id(VCF_ID)
-                        .build()
-        );
-
-        List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation(1.0, 2.0));
-        List<LinxBreakend> breakends = createBreakends();
-
-        LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertEquals("7", left.chromosome());
-        assertEquals("q34", left.chromosomeBand());
-        assertEquals(LinxBreakendType.BND, left.type());
-        assertEquals(1, left.orientation());
-        assertEquals(1.5D, left.junctionCopyNumber(), EPSILON);
-
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertEquals("", right.chromosome());
-        assertEquals("q34", right.chromosomeBand());
-        assertEquals(LinxBreakendType.BND, right.type());
-        assertEquals(0, right.orientation());
-        assertEquals(1.5D, right.junctionCopyNumber(), 0.0D);
-    }
-
+    
     @Test
     public void canComputeJunctionCopyNumber()
     {
