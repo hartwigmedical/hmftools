@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -16,7 +15,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class LinxBreakendInterpreterTest
@@ -38,7 +36,6 @@ public class LinxBreakendInterpreterTest
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
         com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertNotNull(left);
         assertEquals("7", left.chromosome());
         assertEquals("q34", left.chromosomeBand());
         assertEquals(LinxBreakendType.DUP, left.type());
@@ -46,7 +43,6 @@ public class LinxBreakendInterpreterTest
         assertEquals(1.5D, left.junctionCopyNumber(), EPSILON);
 
         com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertNotNull(right);
         assertEquals("7", right.chromosome());
         assertEquals("q34", right.chromosomeBand());
         assertEquals(LinxBreakendType.DUP, right.type());
@@ -66,10 +62,18 @@ public class LinxBreakendInterpreterTest
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
         com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertFallbackBreakendAttributes(left);
+        assertEquals("", left.chromosome());
+        assertEquals("q34", left.chromosomeBand());
+        assertEquals(LinxBreakendType.BND, left.type());
+        assertEquals(0, left.orientation());
+        assertEquals(0D, left.junctionCopyNumber(), EPSILON);
 
         com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertFallbackBreakendAttributes(right);
+        assertEquals("", right.chromosome());
+        assertEquals("q34", right.chromosomeBand());
+        assertEquals(LinxBreakendType.BND, right.type());
+        assertEquals(0, right.orientation());
+        assertEquals(0D, right.junctionCopyNumber(), EPSILON);
     }
 
     @Test
@@ -82,10 +86,18 @@ public class LinxBreakendInterpreterTest
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
         com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertFallbackBreakendAttributes(left);
+        assertEquals("", left.chromosome());
+        assertEquals("q34", left.chromosomeBand());
+        assertEquals(LinxBreakendType.BND, left.type());
+        assertEquals(0, left.orientation());
+        assertEquals(1.5D, left.junctionCopyNumber(), 0.0D);
 
         com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertFallbackBreakendAttributes(right);
+        assertEquals("", right.chromosome());
+        assertEquals("q34", right.chromosomeBand());
+        assertEquals(LinxBreakendType.BND, right.type());
+        assertEquals(0, right.orientation());
+        assertEquals(1.5D, right.junctionCopyNumber(), 0.0D);
     }
 
     @Test
@@ -102,7 +114,6 @@ public class LinxBreakendInterpreterTest
 
         LinxBreakendInterpreter interpreter = createInterpreter(structuralVariants, linxSvAnnotations);
         com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertNotNull(left);
         assertEquals("7", left.chromosome());
         assertEquals("q34", left.chromosomeBand());
         assertEquals(LinxBreakendType.BND, left.type());
@@ -110,7 +121,11 @@ public class LinxBreakendInterpreterTest
         assertEquals(1.5D, left.junctionCopyNumber(), EPSILON);
 
         com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertFallbackBreakendAttributes(right);
+        assertEquals("", right.chromosome());
+        assertEquals("q34", right.chromosomeBand());
+        assertEquals(LinxBreakendType.BND, right.type());
+        assertEquals(0, right.orientation());
+        assertEquals(1.5D, right.junctionCopyNumber(), 0.0D);
     }
 
     @Test
@@ -120,30 +135,8 @@ public class LinxBreakendInterpreterTest
         StructuralVariant sv = createStructuralVariant(StructuralVariantType.DUP);
         LinxSvAnnotation svAnnotation = createSvAnnotation(1.0, 2.0);
 
-        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
+        double result = LinxBreakendInterpreter.junctionCopyNumber(svAnnotation);
         assertEquals(1.5, result, EPSILON);
-    }
-
-    @Test
-    public void canComputeJunctionCopyNumberForSGLAndIGRegionType()
-    {
-        LinxBreakend linxBreakend = createBreakend(1, 1, true, TranscriptRegionType.IG);
-        StructuralVariant sv = createStructuralVariant(StructuralVariantType.SGL);
-        LinxSvAnnotation svAnnotation = createSvAnnotation(1.0, 2.0);
-
-        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
-        assertEquals(0.0, result, EPSILON);
-    }
-
-    @Test
-    public void canComputeJunctionCopyNumberForZeroMinCopyNumber()
-    {
-        LinxBreakend linxBreakend = createBreakend(1, 1, true, TranscriptRegionType.INTRONIC);
-        StructuralVariant sv = createStructuralVariant(StructuralVariantType.DUP);
-        LinxSvAnnotation svAnnotation = createSvAnnotation(0.0, 2.0);
-
-        double result = LinxBreakendInterpreter.junctionCopyNumber(linxBreakend, sv, svAnnotation);
-        assertEquals(2.0, result, EPSILON);
     }
 
     @NotNull
@@ -192,15 +185,5 @@ public class LinxBreakendInterpreterTest
             @NotNull final List<LinxSvAnnotation> linxSvAnnotations)
     {
         return new LinxBreakendInterpreter(structuralVariants, linxSvAnnotations, TestEnsemblDataCacheFactory.loadTestCache());
-    }
-
-    public static void assertFallbackBreakendAttributes(@Nullable com.hartwig.hmftools.datamodel.linx.LinxBreakend breakend)
-    {
-        assertNotNull(breakend);
-        assertEquals("", breakend.chromosome());
-        assertEquals("", breakend.chromosomeBand());
-        assertEquals(LinxBreakendType.BND, breakend.type());
-        assertEquals(0, breakend.orientation());
-        assertEquals(0.0D, breakend.junctionCopyNumber(), 0.0D);
     }
 }

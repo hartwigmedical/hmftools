@@ -113,8 +113,8 @@ public class LinxInterpreter
     private List<StructuralVariant> combine(@Nullable List<StructuralVariant> svList1, @Nullable List<StructuralVariant> svList2)
     {
         return Stream.concat(
-                Optional.ofNullable(svList1).orElse(List.of()).stream(),
-                Optional.ofNullable(svList2).orElse(List.of()).stream())
+                        Optional.ofNullable(svList1).orElse(List.of()).stream(),
+                        Optional.ofNullable(svList2).orElse(List.of()).stream())
                 .collect(Collectors.toList());
     }
 }
