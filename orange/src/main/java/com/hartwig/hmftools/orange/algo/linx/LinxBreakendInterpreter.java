@@ -83,7 +83,7 @@ public class LinxBreakendInterpreter
     }
 
     @NotNull
-    private static String chromosome(StructuralVariant structuralVariant, boolean isStart)
+    private static String chromosome(@Nullable StructuralVariant structuralVariant, boolean isStart)
     {
         if(structuralVariant == null || structuralVariant.chromosome(isStart) == null)
         {
@@ -104,7 +104,7 @@ public class LinxBreakendInterpreter
     }
 
     @NotNull
-    private static LinxBreakendType svType(StructuralVariant structuralVariant)
+    private static LinxBreakendType svType(@Nullable StructuralVariant structuralVariant)
     {
         if(structuralVariant == null)
         {
@@ -116,7 +116,7 @@ public class LinxBreakendInterpreter
         }
     }
 
-    private static byte orientation(StructuralVariant structuralVariant, boolean isStart)
+    private static byte orientation(@Nullable StructuralVariant structuralVariant, boolean isStart)
     {
         if(structuralVariant == null)
         {
