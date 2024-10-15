@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.vchord.ImmutableVChordPrediction;
 import com.hartwig.hmftools.common.vchord.VChordPrediction;
 import com.hartwig.hmftools.common.vchord.VChordPredictionFile;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,13 +41,13 @@ public class VChordApplication
 
     public void run() throws MalformedModelException, IOException
     {
-        Image circosPng = ImageFactory.getInstance().fromFile(Path.of(
-                String.format("%splot/%s.circos.png", mConfig.getPurpleDir(), mConfig.getSampleId())));
+        Path circosPngPath = Path.of(String.format("%s/plot/%s.circos.png", mConfig.getPurpleDir(), mConfig.getSampleId()));
+        Image circosPng = ImageFactory.getInstance().fromFile(circosPngPath);
 
         // purity
         final double purity = PurityContextFile.read(mConfig.getPurpleDir(), mConfig.getSampleId()).bestFit().purity();
 
-        LOGGER.info("loaded images");
+        LOGGER.info("loaded circos image({}), purity({})", circosPngPath, purity);
 
         ImmutableVChordPrediction.Builder vChordPredBuilder = ImmutableVChordPrediction.builder();
 
@@ -65,6 +66,8 @@ public class VChordApplication
                 try(Predictor<VChordInput, Classifications> predictor = model.newPredictor(new PurplePlotTranslater()))
                 {
                     double pred = predictor.predict(input).item(0).getProbability();
+
+                    LOGGER.printf(Level.INFO, "%s hrd score: %.3f", cancerType.name().toLowerCase(), pred);
 
                     switch(cancerType)
                     {
@@ -109,8 +112,7 @@ public class VChordApplication
         configBuilder.checkAndParseCommandLine(args);
 
         VersionInfo versionInfo = new VersionInfo("vchord.version");
-        LOGGER.info("vChord version: {}, build timestamp: {}",
-                versionInfo.version(),
+        LOGGER.info("build timestamp: {}",
                 versionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
 
         new VChordApplication(configBuilder).run();

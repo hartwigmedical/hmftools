@@ -36,32 +36,18 @@
         </dependency>
         <dependency>
             <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <version>${pytorch.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-jni</artifactId>
             <version>${pytorch.version}-${djl.version}</version>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- following two dependencies are not strictly necessary. DJL can download them during run time.
-             For pipelines it is better to include them in the build. -->
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>osx-aarch64</classifier>
-            <version>${pytorch.version}</version>
-            <scope>runtime</scope>
-        </dependency>
+        <!-- We package the linux native cpu into the JAR such that it can run without any downloads in the
+             pipeline. On other platforms the native lib will need to be downloaded first time it is run -->
         <dependency>
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-native-cpu</artifactId>
             <classifier>linux-x86_64</classifier>
             <version>${pytorch.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>

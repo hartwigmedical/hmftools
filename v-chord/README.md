@@ -1,6 +1,7 @@
 # vCHORD
 
-vCHORD calculates homologous repair deficiency(HRD) score for panel samples. For WGS samples, please use CHORD instead.
+vCHORD calculates homologous repair deficiency(HRD) score for panel samples. For WGS samples, please use ![CHORD](../chord/src/main/R/CHORD/README.md)
+instead. vCHORD employs a convolutional neural network model to predict HRD from ![PURPLE](../purple/README.md) plots.
 
 ## Installation
 
@@ -21,7 +22,7 @@ Arguments:
 Example Usage:
 
 ```
-java -Xmx16G -jar v-chord.jar \
+java -Xmx1G -jar v-chord.jar \
    -sample COLO829T \
    -purple /path/to/COLO829/purple \
    -model /path/to/model_scripted.pt \
@@ -45,7 +46,7 @@ The vCHORD prediction file is a TSV file with the following columns:
 
 ## Algorithm
 
-vCHORD model is modified from resnet18[1]. We add dropout layers after each relu layer, and concat cancer type and purity as linear input
+vCHORD uses convolutional neural network. model is modified from resnet18[1]. We add dropout layers after each relu layer, and concat cancer type and purity as linear input
 to the first fully connected layer. The model schematic is shown below:
 
 ![Input vCHORD model](doc/vchord.svg)
@@ -61,11 +62,41 @@ There are 3 inputs to vCHORD, they are
 Command to train model:
 
 ```
-python hrd_train.py \
-   --sample_tsv=../cancer_list.tsv \
-   --image_root=purple_output \
+python vchord_train.py \
+   --sample_tsv=../sample_list.tsv \
+   --purple_root=purple_output \
+   --hrd_sample_duplication 7 \
    --epoch=400
 ```
+
+It requires a sample tsv list with the following columns:
+
+| Column               | Description                                          |
+|----------------------|------------------------------------------------------|
+| sampleId             | Name of the sample                                   |
+| primaryTumorLocation | Primary tumor location                               |
+| hrd                  | HRD score truth                                      |
+| hrStatus             | HR_DEFICIENT or HR_PROFICIENT truth                  |
+
+The `purple_root` input expects a directory that contains the purple output for each samples. It should have the following structure:
+
+```markdown
+purple_root
+    ├── sample_id_1
+    │   ├── sample_id_1.circos.png
+    │   └── sample_id_1.purple.purity.tsv
+    └── sample_id_2
+        ├── sample_id_2.circos.png
+        └── sample_id_2.purple.purity.tsv
+```
+
+The training script loads the purple circos plot and the purity from the purple_root directory.
+After training, the script writes a file `model_scripted.pt`, that is the model that can be used for prediction.
+
+### Training notes
+
+* The model training does not work as well if the HRD and non HRD samples are not balanced. Use `hrd_sample_duplication` parameter
+to ensure the HRD and non HRD sample numbers are similar.
 
 ## Version History and Download Links
 
