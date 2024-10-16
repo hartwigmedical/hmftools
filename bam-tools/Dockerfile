@@ -6,7 +6,9 @@ ARG TOOL_ALIAS=bamtools
 ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
 
 USER root
-RUN apk update && apk upgrade && apk add procps
+RUN apk update && apk upgrade && apk add \
+    bash \
+    procps
 
 ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
