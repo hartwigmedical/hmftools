@@ -1,4 +1,4 @@
-FROM openjdk:17-alpine
+FROM bash:5.2
 
 ARG VERSION
 ARG TOOL_NAME=bam-tools
@@ -7,8 +7,8 @@ ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
 
 USER root
 RUN apk update && apk upgrade && apk add \
-    bash \
-    procps
+    procps \
+    openjdk17
 
 ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
