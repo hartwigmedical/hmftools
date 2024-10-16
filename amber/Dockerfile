@@ -7,8 +7,9 @@ USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge 'openjdk >=8' && micromamba clean --all --yes
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
-    r-dplyr && \
-    micromamba clean --all --yes
+    r-dplyr  \
+    bioconductor-copynumber \
+    && micromamba clean --all --yes
 
 USER root
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
