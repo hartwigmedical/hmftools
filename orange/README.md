@@ -268,6 +268,7 @@ investigate potential causes for QC failure.
     - Add presence of tumor stats to quality control page and to orange-datamodel
     - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
     - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
+    - Derive breakend fields type, chromosome, chromosomeBand, orientation and junctionCopyNumber from root sources
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation
