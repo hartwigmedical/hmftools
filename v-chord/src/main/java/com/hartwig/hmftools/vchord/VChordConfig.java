@@ -56,7 +56,7 @@ public class VChordConfig
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(MODEL_PATH_CFG, true, "path to the torchscript model");
-        addOutputDir(configBuilder);
+        addOutputDir(configBuilder, true);
         addLoggingOptions(configBuilder);
     }
 }

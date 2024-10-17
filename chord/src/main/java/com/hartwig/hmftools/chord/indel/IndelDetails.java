@@ -28,9 +28,6 @@ public class IndelDetails
     public final MutationType mMutationType;
     public final ContextType mContextType;
 
-    public static final int RIGHT_FLANK_INDEL_LENGTH_UNITS = 3;
-    public static final int LEFT_FLANK_INDEL_LENGTH_UNITS = 1;
-
     private IndelDetails(
             String sampleId,
             String chromosome, int position, String refBases, String altBases,
@@ -58,6 +55,21 @@ public class IndelDetails
         mContextType = contextType;
     }
 
+    // Thresholds for determining the context of an indel
+    private static final int REPETITIVE_REGION_MIN_REPEAT_UNITS = 2;
+    private static final int SHORT_REPEAT_UNIT_MAX_LENGTH = 50;
+
+    private static final int MIN_HOMOLOGOUS_BASES = 2;
+    private static final int LONG_INDEL_MIN_HOMOLOGOUS_BASES = 1;
+    private static final int LONG_INDEL_MIN_LENGTH = 4;
+
+    // Left flank only used to determine homology, therefore do not need to scan far
+    private static final int LEFT_FLANK_INDEL_LENGTH_UNITS = 1;
+
+    // Right flank used to determine homology, but also the number of repeat lengths after which we consider the indel region repetitive.
+    // We therefore only need to scan just further than the number of repeat lengths after which we consider the indel region repetitive.
+    private static final int RIGHT_FLANK_INDEL_LENGTH_UNITS = REPETITIVE_REGION_MIN_REPEAT_UNITS + 1; //
+
     public static IndelDetails from(String sampleId, IndelVariant indel, RefGenomeSource refGenome)
     {
         int indelLength = indel.mIndelLength;
@@ -69,31 +81,13 @@ public class IndelDetails
 
         int rightHomBasesCount = IndelVariant.countHomologousBases(indelSequence, rightFlankBases);
         int leftHomBasesCount = IndelVariant.countHomologousBases(reverse(indelSequence), reverse(leftFlankBases));
-        int maxHomBasesCount = Math.max(rightHomBasesCount, leftHomBasesCount);
+        int homBasesCount = Math.max(rightHomBasesCount, leftHomBasesCount);
 
         // Only need to check repeat units from the 5' -> 3' direction, since the reported POS of an indel in a repeat region is
         // always the first position of the repeat region.
         int repeatUnitsCount = IndelVariant.countRepeatUnits(indelSequence, rightFlankBases);
 
-        ContextType contextType;
-        if(repeatUnitsCount >= 2)
-        {
-            contextType = (indelLength < 50) ?
-                    ContextType.REPEAT :
-                    ContextType.MICROHOMOLOGY;
-        }
-        else if(repeatUnitsCount >= 1 && maxHomBasesCount >= 2)
-        { // Require more homologous bases for shorter indels
-            contextType = ContextType.MICROHOMOLOGY;
-        }
-        else if(repeatUnitsCount >= 1 && maxHomBasesCount >= 1 && indelLength > 3)
-        { // Tolerate fewer homologous bases for longer indels
-            contextType = ContextType.MICROHOMOLOGY;
-        }
-        else
-        {
-            contextType = ContextType.NONE;
-        }
+        ContextType contextType = determineIndelContext(indelLength, repeatUnitsCount, homBasesCount);
 
         return new IndelDetails(
                 sampleId,
@@ -103,9 +97,43 @@ public class IndelDetails
                 indel.mVariant.AltBases,
                 indelSequence, indelLength,
                 rightFlankBases, leftFlankBases,
-                rightHomBasesCount, leftHomBasesCount, maxHomBasesCount, repeatUnitsCount,
+                rightHomBasesCount, leftHomBasesCount, homBasesCount, repeatUnitsCount,
                 mutationType, contextType
         );
+    }
+
+    private static ContextType determineIndelContext(int indelLength, int repeatUnitsCount, int homBasesCount)
+    {
+        ContextType contextType;
+
+        if(repeatUnitsCount >= REPETITIVE_REGION_MIN_REPEAT_UNITS)
+        {
+            if(indelLength < SHORT_REPEAT_UNIT_MAX_LENGTH)
+            {
+                // In repetitive regions where the repeat unit is a short sequence, an indel is more likely due to polymerase slippage
+                // rather than homology directed repair
+                return ContextType.REPEAT;
+            }
+            else
+            {
+                // An indel with a long sequence exactly matching the flanking region is more likely a result of homology directed repair
+                contextType = ContextType.MICROHOMOLOGY;
+            }
+        }
+        else if(homBasesCount >= MIN_HOMOLOGOUS_BASES)
+        {
+            contextType = ContextType.MICROHOMOLOGY;
+        }
+        else if(homBasesCount >= LONG_INDEL_MIN_HOMOLOGOUS_BASES && indelLength >= LONG_INDEL_MIN_LENGTH)
+        { // Tolerate fewer homologous bases for longer indels
+            contextType = ContextType.MICROHOMOLOGY;
+        }
+        else
+        {
+            contextType = ContextType.NONE;
+        }
+
+        return contextType;
     }
 
     private static String reverse(String sequence) { return new StringBuilder(sequence).reverse().toString(); }

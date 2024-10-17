@@ -74,25 +74,26 @@ def image_to_tensor(input_png_path, circos_png_path, image_size=IMAGE_SIZE, tran
 
     # input png we use gray scale image
     #input_png = transform(v2.functional.to_grayscale(read_image(input_png_path)))
-    input_png = transform(read_image(input_png_path))
+    #input_png = transform(read_image(input_png_path))
     circos_png = transform(read_image(circos_png_path))
     #return torch.cat((input_png, circos_png), dim=0)
     return circos_png
 
 def cancer_type_to_tensor(cancer_type, purity):
-    cancer_type = cancer_type.lower()
-    if cancer_type == "breast":
-        i = 0
-    elif cancer_type == "ovary" or cancer_type == "ovarian":
-        i = 1
-    elif cancer_type == "pancreas" or cancer_type == "pancreatic":
-        i = 2
-    elif cancer_type == "prostate":
-        i = 3
-    else:
-        i = 4
     a = [0.0, 0.0, 0.0, 0.0, 0.0]
-    a[i] = 1.0
+    i = -1
+    if isinstance(cancer_type, str):
+        cancer_type = cancer_type.lower()
+        if cancer_type == "breast":
+            i = 0
+        elif cancer_type == "ovary" or cancer_type == "ovarian":
+            i = 1
+        elif cancer_type == "pancreas" or cancer_type == "pancreatic":
+            i = 2
+        elif cancer_type == "prostate":
+            i = 3
+    if i != -1:
+        a[i] = 1.0
     a[4] = purity
     #logger.info(f"cancer type: {cancer_type}, encoded: {a}")
     return torch.tensor(a, dtype=torch.float32)
@@ -216,7 +217,7 @@ def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup):
     from sklearn.model_selection import train_test_split
 
     # Split the data into training and testing sets
-    train_df, test_df = train_test_split(df, test_size=0.25, random_state=42)
+    train_df, test_df = train_test_split(df, test_size=0.25, random_state=None)
 
     # write out the train and test set
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
@@ -240,18 +241,49 @@ def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup):
 
     return train_dataloader, test_dataloader
 
-def train_model(model, train_dataloader, test_dataloader, num_epochs):
+'''
+Notes:
+SGD with weight decay seems to slow down learning too much, don't use it
+SGD with no LR result in jumping around towards the end
+ADAM is very lr sensitive
+Using pretrained weights results in getting stuck often
+SGD with Nesterov momentum is worse
+'''
+def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nesterov=False):
+    # loss_fn = nn.BCELoss()
 
     # use this cause the model does not have a logit
     loss_fn = nn.BCEWithLogitsLoss()
 
-    # adamw
-    # optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=2.5e-2)
+    '''
+    # this paper shows SGD is hard to beat:
+    # Closing the Generalization Gap of Adaptive Gradient Methods in Training Deep Neural Networks
+    # They also did GRID search to optimise the parameters
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9) # best so far
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.05, momentum=0.9) # best so far
+    '''
 
-    # nesterov with cosine annealing gives the best model, but trains slower
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=optimizer.param_groups[0]["lr"] * 0.2)
-       
+    '''
+    # use parameters from this paper: High-speed hyperparameter optimization for deep ResNet modelsin image recognition (2021)
+    # but weight decay is bad
+    #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+
+    # parameters from this paper: Efficient ResNets: Residual Network Design (2023)
+    # this seems to be the best paper that tested different optimisers, lr schedulers and along with the parameters
+    # also see https://github.com/Nikunj-Gupta/Efficient_ResNets/blob/master/resnet_configs/config.yaml
+    # with some changes such as no weight decay, sa it seems to worsen training for me
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=optimizer.param_groups[0]["lr"] * 0.1)
+    '''
+
+    if use_nesterov:
+        # nesterov with cosine annealing gives the best model, but trains slower
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=optimizer.param_groups[0]["lr"] * 0.2)
+    else:
+        # adamw is best
+        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=2.5e-2)
+
     train_stats_list = []
     test_stats_list = []
 
@@ -337,6 +369,16 @@ def train_model(model, train_dataloader, test_dataloader, num_epochs):
 
     plt.savefig('epoch.png', bbox_inches='tight')
 
+    # make sure we have a good model
+    final_test_acc = epoch_df["testAccuracy"][-1]
+    final_test_tp = epoch_df["testTP"][-1]
+    final_test_tn = epoch_df["testTN"][-1]
+
+    if final_test_tp < final_test_tn:
+        logger.warn(f"final testTP[{final_test_tp:>6.2f}] < testTN[{final_test_tn:>6.2f}], please retrain")
+        return False
+    return True
+
 
 def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log):
     size = len(dataloader.dataset)
@@ -356,7 +398,7 @@ def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
+
         epoch_stats.update_loss(loss.item(), y.size(dim=0))
 
         # sigmoid is needed since we use loss with logit
@@ -413,24 +455,28 @@ def init_model(dropout_rate):
     # 5
     return hrd_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
-def train_main(sample_tsv, image_root, epochs, batch_size, augment, dropout_rate, hrd_sample_dup):
+def train_main(sample_tsv, purple_root, epochs, batch_size, augment, dropout_rate, hrd_sample_dup, use_nesterov, starting_model):
     df = pd.read_csv(sample_tsv, sep="\t")
-    df["inputPngPath"] = image_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".input.png"
-    df["circosPngPath"] = image_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".circos.png"
+    df["inputPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".input.png"
+    df["circosPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".circos.png"
 
     # load the purity
-    df["purity"] = [pd.read_csv(f'{image_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
-    
+    df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
+
     df = filter_df(df)
     #df = df.head(5).reset_index(drop=True)
 
-    model = init_model(dropout_rate)
+    if starting_model:
+        logger.info(f"starting model: {starting_model}")
+        model = torch.jit.load(starting_model, map_location=torch.device('cpu'))
+    else:
+        model = init_model(dropout_rate)
 
     model = model.to(device)
 
     train_dataloader, test_dataloader = create_dataloader(df, image_size=IMAGE_SIZE, batch_size=batch_size,
                                                           augment=augment, hrd_sample_dup=hrd_sample_dup)
-    train_model(model, train_dataloader, test_dataloader, num_epochs=epochs)
+    train_model(model, train_dataloader, test_dataloader, num_epochs=epochs, use_nesterov=use_nesterov)
 
     # save the model, always save in cpu
     model = model.to("cpu")
@@ -447,18 +493,22 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="train hrd predictor")
     parser.add_argument('--sample_tsv', help='input tsv file', required=True)
-    parser.add_argument('--image_root', help='path to purple plots', required=True)
+    parser.add_argument('--purple_root', help='path to purple plots', required=True)
     parser.add_argument('--epochs', help='number epochs', type=int, default=200)
     parser.add_argument('--batch_size', help='batch size', type=int, default=25)
     parser.add_argument('--no_augment', help='disable augment training set by random rotation', action='store_true')
     parser.add_argument('--dropout_rate', help='dropout rate', type=float, default=0.2)
-    parser.add_argument('--hrd_sample_duplication', help='number to duplicate HRD samples by', type=int, default=3)
+    parser.add_argument('--hrd_sample_duplication', help='number to duplicate HRD samples by', type=int, default=7)
+    parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
+    parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
     args = parser.parse_args()
 
     logger.info(f"using {device} device")
     logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, augment={not args.no_augment}, " +
-          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}")
-    train_main(args.sample_tsv, args.image_root, args.epochs, args.batch_size, not args.no_augment, args.dropout_rate, args.hrd_sample_duplication)
+          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, use_nesterov={args.use_nesterov}, " +
+          f"starting_model={args.starting_model}")
+    train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, not args.no_augment, args.dropout_rate,
+               args.hrd_sample_duplication, args.use_nesterov, args.starting_model)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ class HrdModel(nn.Module):
     def __init__(self, dropout_rate, num_tumor_types):
         super().__init__()
 
-        # use pretrained weights
         self.resnet = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
 
         with torch.no_grad():
