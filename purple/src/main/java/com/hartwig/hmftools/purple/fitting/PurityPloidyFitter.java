@@ -264,10 +264,7 @@ public class PurityPloidyFitter
 
     private void determineFinalFit()
     {
-        if(mFitMethod != FittedPurityMethod.SOMATIC)
-            return;
-
-        if(mTargetedMode || mConfig.tumorOnlyMode()) // skip the deleted genes check
+        if(!(mFitMethod == FittedPurityMethod.SOMATIC || mFitMethod == FittedPurityMethod.NO_TUMOR) || mFinalPurityFit == mCopyNumberPurityFit)
             return;
 
         // test the impact on deleted genes from a switch to use the somatic fit
@@ -275,12 +272,13 @@ public class PurityPloidyFitter
 
         if(deletedPercent >= MAX_SOMATIC_FIT_DELETED_PERC)
         {
-            PPL_LOGGER.info(format("somatic fit(purity=%.3f ploidy=%.3f) deleted DW percent(%.3f), reverting to normal fit(purity=%.3f ploidy=%.3f)",
-                    mSomaticPurityFit.purity(), mSomaticPurityFit.ploidy(), deletedPercent,
+            PPL_LOGGER.info(format("%s fit(purity=%.3f ploidy=%.3f) deleted DW percent(%.3f), reverting to normal fit(purity=%.3f ploidy=%.3f)",
+                    mFitMethod.toString().toLowerCase(), mFinalPurityFit.purity(), mFinalPurityFit.ploidy(), deletedPercent,
                     mCopyNumberPurityFit.purity(), mCopyNumberPurityFit.ploidy()));
 
             // re-build using the normal fit
             mFinalPurityFit = mCopyNumberPurityFit;
+            mFitMethod = NORMAL;
 
             buildCopyNumbers(mFinalPurityFit);
         }
