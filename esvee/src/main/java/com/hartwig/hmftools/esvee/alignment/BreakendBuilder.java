@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
@@ -171,7 +172,7 @@ public class BreakendBuilder
             int homPosEnd = indelPosEnd;
             String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
 
-            homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
+            homology = determineHomology(basesEnd, basesStart, basesEnd, maxLength);
 
             if(homology.Homology.isEmpty())
             {
@@ -441,14 +442,24 @@ public class BreakendBuilder
 
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                String assemblyOverlapBases = mAssemblyAlignment.overlapBases(alignment.sequenceEnd());
+                HomologyData newHomology = determineHomology(fullSequence, alignment, nextAlignment);
 
-                if(assemblyOverlapBases.isEmpty())
+                if(newHomology == null)
+                {
+                    // SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
+                }
+
+                // OLD routine:
+                String assemblyOverlapBases = mAssemblyAlignment.overlapBases(alignment.sequenceEnd());
+                int seqOverlapLength = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
+
+                if(assemblyOverlapBases.isEmpty() || assemblyOverlapBases.length() < seqOverlapLength)
                 {
                     assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
                 }
 
-                homology = HomologyData.determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
+                homology = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
+                // HomologyData homologyOld = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {

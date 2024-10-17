@@ -2,14 +2,11 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_GENOME;
 import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
@@ -19,20 +16,19 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemb
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
 import com.hartwig.hmftools.esvee.alignment.HomologyData;
+import com.hartwig.hmftools.esvee.alignment.MdTag;
+import com.hartwig.hmftools.esvee.alignment.MdTagType;
 import com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -287,5 +283,93 @@ public class HomologyTest
         assertEquals(homologyBases, second.Homology.Homology);
         assertEquals(-1, second.Homology.ExactStart);
         assertEquals(2, second.Homology.ExactEnd);
+    }
+
+    @Test
+    public void testMdTagParsing()
+    {
+        MdTag mdTag = new MdTag("5G3");
+
+        assertEquals(3, mdTag.elements().size());
+        assertEquals(9, mdTag.baseLength());
+        int index = 0;
+        assertEquals(5, mdTag.elements().get(index).Length);
+        assertEquals(MdTagType.MATCH, mdTag.elements().get(index).Type);
+
+        assertEquals(MdTagType.SNV, mdTag.elements().get(++index).Type);
+        assertEquals(3, mdTag.elements().get(++index).Length);
+        assertEquals(MdTagType.MATCH, mdTag.elements().get(index).Type);
+
+        index = 0;
+        mdTag = new MdTag("0A0A3T");
+        assertEquals(4, mdTag.elements().size());
+        assertEquals(6, mdTag.baseLength());
+        assertEquals(MdTagType.SNV, mdTag.elements().get(index).Type);
+
+        assertEquals(MdTagType.SNV, mdTag.elements().get(++index).Type);
+        assertEquals(3, mdTag.elements().get(++index).Length);
+        assertEquals(MdTagType.SNV, mdTag.elements().get(++index).Type);
+
+        // deletes
+        index = 0;
+        mdTag = new MdTag("5^AA0T5^GGG5");
+        assertEquals(6, mdTag.elements().size());
+        assertEquals(21, mdTag.baseLength());
+        assertEquals(MdTagType.MATCH, mdTag.elements().get(index).Type);
+        assertEquals(5, mdTag.elements().get(index).Length);
+
+        assertEquals(MdTagType.DEL, mdTag.elements().get(++index).Type);
+        assertEquals(2, mdTag.elements().get(index).Length);
+
+        assertEquals(MdTagType.SNV, mdTag.elements().get(++index).Type);
+
+        assertEquals(MdTagType.MATCH, mdTag.elements().get(++index).Type);
+        assertEquals(5, mdTag.elements().get(index).Length);
+
+        assertEquals(MdTagType.DEL, mdTag.elements().get(++index).Type);
+        assertEquals(3, mdTag.elements().get(index).Length);
+
+        assertEquals(MdTagType.MATCH, mdTag.elements().get(++index).Type);
+        assertEquals(5, mdTag.elements().get(index).Length);
+
+        String mdTagStr = "12G16T12G1T8C0A6C1C0C9C0C0T0T7T20A0C0C0C7C0A1C5^G1T8A9G3C9C0T8C3A6T3^CTC14C9G13C679";
+
+        mdTag = new MdTag(mdTagStr);
+
+        assertEquals(61, mdTag.elements().size());
+    }
+
+    @Test
+    public void testMdSequenceComparisons()
+    {
+        // String seq1 = "AAAAAAAA";
+        // String seq2 = "AAAACAAA";
+
+        /*
+        String mdTag1 = "8";
+        String mdTag2 = "4C3";
+
+        // byte[] mdSeq1 = MdTagComparer.extractSequence(mdTag1, seq1, 0, seq1.length() - 1);
+        //byte[] mdSeq2 = MdTagComparer.extractSequence(mdTag2, seq2, 0, seq1.length() - 1);
+
+        int endMismatchIndex = compareMdTagSequences(
+                mdTag1, 0, 7, mdTag2, 0, 7);
+
+        assertEquals(3, endMismatchIndex);
+
+        mdTag1 = "12G16T12G1T8C0A6C1C0C9C0C0T0T7T20A0C0C0C7C0A1C5^G1T8A9G3C9C0T8C3A6T3^CTC14C9G13C679";
+        mdTag2 = "76C644";
+
+        int comparisonLength = 244;
+        int secondLength = 721;
+
+        endMismatchIndex = compareMdTagSequences(
+                mdTag1, 0, comparisonLength - 1, mdTag2,
+                secondLength - comparisonLength, secondLength - 1);
+
+        assertEquals(3, endMismatchIndex);
+        */
+
+
     }
 }

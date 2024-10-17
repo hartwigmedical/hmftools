@@ -300,8 +300,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s:%d %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d adj=%d) aligned(%d adj=%d)",
+        return format("%s:%d %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d adj=%d) aligned(%d adj=%d) md(%s)",
                 mRefLocation, mOrientation.asByte(), mCigar, mRawSequenceStart, mRawSequenceEnd,
-                mSequenceStart, mSequenceEnd, mScore, mFlags, mMapQual, mModifiedMapQual, mAlignedBases, mAdjustedAlignment);
+                mSequenceStart, mSequenceEnd, mScore, mFlags, mMapQual, mModifiedMapQual, mAlignedBases, mAdjustedAlignment, mMdTag);
     }
 }
