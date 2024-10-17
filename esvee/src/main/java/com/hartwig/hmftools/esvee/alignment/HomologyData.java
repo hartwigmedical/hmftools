@@ -6,15 +6,11 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
-import static com.hartwig.hmftools.esvee.alignment.MdTagComparer.extractSequence;
-
-import java.util.List;
+import static com.hartwig.hmftools.esvee.alignment.MdTag.MATCH_BYTE;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-
-import htsjdk.samtools.CigarElement;
 
 public class HomologyData
 {
@@ -33,7 +29,8 @@ public class HomologyData
         InexactEnd = inexactEnd;
     }
 
-    public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
+    public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)",
+            Homology.isEmpty() ? "none" : Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
     public boolean isSymmetrical() { return abs(InexactStart) == InexactEnd; }
 
@@ -65,6 +62,9 @@ public class HomologyData
 
         String overlapBases = fullSequence.substring(rightAlignment.sequenceStart(), leftAlignment.sequenceEnd() + 1);
 
+        if(leftAlignment.isReverse())
+            overlapBases = Nucleotides.reverseComplementBases(overlapBases);
+
         MdTag leftMdTag = new MdTag(leftAlignment.mdTag());
         MdTag rightMdTag = new MdTag(rightAlignment.mdTag());
 
@@ -83,18 +83,26 @@ public class HomologyData
             return null;
 
         // count mismatches between the 2 sequence arrays progressively along the full sequence
-        int[] indexMismatches = new int[leftMdSeq.length];
+        int[] indexMismatches = new int[leftMdSeq.length + 1];
         int minMismatchCount = -1;
         int minMismatchEndIndex = -1;
 
-        for(int endIndex = 0; endIndex < leftMdSeq.length; ++endIndex)
+        for(int endIndex = 0; endIndex <= leftMdSeq.length; ++endIndex)
         {
             int mismatchCount = 0;
 
-            for(int i = 0; i <= endIndex; ++i)
+            for(int i = 0; i < leftMdSeq.length; ++i)
             {
-                if(leftMdSeq[i] != rightMdSeq[i])
-                    ++mismatchCount;
+                if(i < endIndex)
+                {
+                    if(leftMdSeq[i] != MATCH_BYTE)
+                        ++mismatchCount;
+                }
+                else
+                {
+                    if(rightMdSeq[i] != MATCH_BYTE)
+                        ++mismatchCount;
+                }
             }
 
             indexMismatches[endIndex] = mismatchCount;
@@ -115,15 +123,13 @@ public class HomologyData
             return new HomologyData(overlapBases, -exactStart, exactEnd, -exactStart, exactEnd);
         }
 
-        StringBuilder sb = new StringBuilder();
-
         // find the range with minimum mismatches
         int rangeStart = -1;
         int rangeEnd = -1;
         int longestRangeStart = -1;
         int longestRangeEnd = -1;
 
-        for(int i = 0; i < overlapLength; ++i)
+        for(int i = 0; i < indexMismatches.length; ++i)
         {
             if(indexMismatches[i] == minMismatchCount)
             {
@@ -150,21 +156,37 @@ public class HomologyData
         {
             // extended until the end
             longestRangeStart = rangeStart;
-            longestRangeEnd = overlapLength;
+            longestRangeEnd = indexMismatches.length - 1;
         }
 
         int rangeLength = longestRangeEnd - longestRangeStart + 1;
-
         int halfRange = rangeLength / 2;
-        int exactStart = max(halfRange, 1); // round up if an odd length
-        int exactEnd = rangeLength - exactStart - 1;
+
+        int exactStart = 0;
+        int exactEnd = 0;
+        String exactHomology = "";
+
+        if(longestRangeStart >= 0 && longestRangeEnd > longestRangeStart)
+        {
+            exactStart = max(halfRange, 1); // round up if an odd length
+            exactEnd = rangeLength - exactStart - 1;
+
+            exactHomology = overlapBases.substring(longestRangeStart, longestRangeEnd);
+        }
 
         int inexactStart = longestRangeStart + halfRange;
         int inexactEnd = overlapLength - inexactStart;
 
-        return new HomologyData(sb.toString(), -exactStart, exactEnd, -inexactStart, inexactEnd);
+        return new HomologyData(exactHomology, -exactStart, exactEnd, -inexactStart, inexactEnd);
     }
 
+    public boolean matches(final HomologyData other)
+    {
+        return other.Homology.equals(Homology) && ExactStart == other.ExactStart && ExactEnd == other.ExactEnd
+                && InexactStart == other.InexactStart && InexactEnd == other.InexactEnd;
+    }
+
+    @Deprecated
     public static HomologyData determineHomology(
             final String assemblyOverlap, final AlignData alignStart, final AlignData alignEnd, final RefGenomeInterface refGenome)
     {
@@ -301,23 +323,6 @@ public class HomologyData
 
         return new HomologyData(sb.toString(), -exactStart, exactEnd, -inexactStart, inexactEnd);
     }
-
-    public static void assessMdTagMismatches(
-            final List<CigarElement> firstCigar, final String firstMdTag, int firstIndexStart,
-            final List<CigarElement> secondCigar, final String secondMdTag, int secondIndexEnd)
-    {
-        int firstCigarIndex = 0;
-        int firstMdTagIndex = 0;
-        int secondCigarIndex = 0;
-        int secondMdTagIndex = 0;
-
-    }
-
-    public static HomologyData inverse(final HomologyData homologyData)
-    {
-        return invert(homologyData, true);
-    }
-    public static HomologyData invert(final HomologyData homologyData) { return invert(homologyData, false); }
 
     private static HomologyData invert(final HomologyData homologyData, final boolean reverseBases)
     {

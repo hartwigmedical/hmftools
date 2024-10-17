@@ -442,11 +442,11 @@ public class BreakendBuilder
 
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                HomologyData newHomology = determineHomology(fullSequence, alignment, nextAlignment);
+                homology = determineHomology(fullSequence, alignment, nextAlignment);
 
-                if(newHomology == null)
+                if(homology == null)
                 {
-                    // SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
+                    SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
                 }
 
                 // OLD routine:
@@ -458,8 +458,12 @@ public class BreakendBuilder
                     assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
                 }
 
-                homology = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
-                // HomologyData homologyOld = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
+                HomologyData homologyOld = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
+
+                if(homology != null && homologyOld != null && !homology.matches(homologyOld))
+                {
+                    SV_LOGGER.debug("assembly({}) homology diff new({}) old({})", mAssemblyAlignment, homology, homologyOld);
+                }
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {

@@ -160,15 +160,13 @@ public class AssemblyTestUtils
             final String chromosome, int posStart, int posEnd, int segStart, int segEnd, final String cigar)
     {
         int score = segEnd - segStart + 1;
-        return createAlignment(chromosome, posStart, posEnd, false, DEFAULT_MAP_QUAL, score, segStart, segEnd, cigar, "");
+        return createAlignment(chromosome, posStart, posEnd, false, DEFAULT_MAP_QUAL, score, segStart, segEnd, cigar, "", "");
     }
 
     public static AlignData createAlignment(
             final String chromosome, int posStart, int posEnd, boolean reversed, int mapQual, int score, int segStart, int segEnd,
-            final String cigar, final String xaTag)
+            final String cigar, final String xaTag, final String mdTag)
     {
-        String mdTag = "";
-
         int flags = 0;
 
         if(reversed)

@@ -31,10 +31,13 @@ public class MdTag
 
     public boolean hasMismatches() { return mElements.stream().anyMatch(x -> x.Type != MdTagType.MATCH); }
 
+    public static final byte MATCH_BYTE = (byte)MdTagType.MATCH.ordinal();
+    // private static final byte DEL_BYTE = (byte)MdTagType.SNV.ordinal();
+    // private static final byte SNV_BYTE = (byte)MdTagType.DEL.ordinal();
+
     public byte[] extractSubSequence(final int seqIndexStart, final int seqIndexEnd, boolean reverse)
     {
-        // establish the sequence start of the MD tag
-        StringBuilder sb = new StringBuilder();
+        // build an array of values representing matches or mismatches for the sequence vs the ref genome from this alignment tag
 
         int seqIndex = 0;
 
@@ -50,27 +53,30 @@ public class MdTag
             elements = mElements;
         }
 
+        int length = seqIndexEnd - seqIndexStart + 1;
+        byte[] matchArray = new byte[length];
+        int index = 0;
+
         for(MdTagElement element : elements)
         {
             for(int i = 0; i < element.Length; ++i)
             {
-                if(element.Type != MdTagType.DEL)
-                {
-                    if(seqIndex >= seqIndexStart)
-                        sb.append(element.Base);
-
-                    ++seqIndex;
-                }
-
                 if(seqIndex > seqIndexEnd)
                     break;
+
+                if(seqIndex >= seqIndexStart)
+                {
+                    matchArray[index++] = (byte)element.Type.ordinal();
+                }
+
+                ++seqIndex;
             }
 
             if(seqIndex > seqIndexEnd)
                 break;
         }
 
-        return sb.toString().getBytes();
+        return matchArray;
     }
 
     private void parseTag()
@@ -133,5 +139,48 @@ public class MdTag
     private static boolean isBase(char c)
     {
         return Nucleotides.baseIndex(c) >= 0;
+    }
+
+    @Deprecated
+    private byte[] extractSubSequenceOld(final int seqIndexStart, final int seqIndexEnd, boolean reverse)
+    {
+        // establish the sequence start of the MD tag
+        StringBuilder sb = new StringBuilder();
+
+        int seqIndex = 0;
+
+        List<MdTagElement> elements;
+
+        if(reverse)
+        {
+            elements = Lists.newArrayList(mElements);
+            Collections.reverse(elements);
+        }
+        else
+        {
+            elements = mElements;
+        }
+
+        for(MdTagElement element : elements)
+        {
+            for(int i = 0; i < element.Length; ++i)
+            {
+                if(element.Type != MdTagType.DEL)
+                {
+                    if(seqIndex >= seqIndexStart)
+                        sb.append(element.Base);
+
+                    ++seqIndex;
+                }
+
+                if(seqIndex > seqIndexEnd)
+                    break;
+            }
+
+            if(seqIndex > seqIndexEnd)
+                break;
+        }
+
+        return sb.toString().getBytes();
     }
 }

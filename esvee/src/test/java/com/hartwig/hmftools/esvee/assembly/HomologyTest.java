@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_GENOME;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemblyAlignment;
@@ -38,22 +39,43 @@ import org.junit.Test;
 
 public class HomologyTest
 {
+    private static HomologyData buildHomology(final String leftMdTag, final String rightMdTag, final String sequence)
+    {
+        int seqIndexStart = 0;
+        int seqIndexEnd = sequence.length();
+        int posStart = 1;
+        int posEnd = posStart + sequence.length() - 1;
+        String cigar = makeCigarString(sequence, 0, 0);
+        String xaTag = "";
+
+        AlignData leftAlignment = createAlignment(
+                CHR_1, posStart, posEnd, false, DEFAULT_MAP_QUAL, sequence.length(), seqIndexStart, seqIndexEnd, cigar, xaTag, leftMdTag);
+
+        AlignData rightAlignment = createAlignment(
+                CHR_1, posStart, posEnd, false, DEFAULT_MAP_QUAL, sequence.length(), seqIndexStart, seqIndexEnd, cigar, xaTag, rightMdTag);
+
+        return determineHomology(sequence, leftAlignment, rightAlignment);
+    }
+
     @Test
     public void testHomology()
     {
-        AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
-        AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
+        //AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
+        //AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
 
-        String assemblyOverlap = "";
-
-        assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, REF_GENOME));
+        // assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, REF_GENOME));
 
         String basesStart = "TTCTTCTTCTC";
         String basesEnd = basesStart;
-        assemblyOverlap = basesStart;
+        String assemblyOverlap = basesStart;
 
         // test 1: exact match
         HomologyData homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+
+        String leftMdTag = "11";
+        String rightMdTag = "11";
+        assemblyOverlap = "TTCTTCTTCTC";
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
         assertNotNull(homology);
         assertEquals(basesStart, homology.Homology);
         assertEquals(-6, homology.ExactStart);
@@ -64,6 +86,15 @@ public class HomologyTest
         // test 2: first base now no longer matches
         basesStart = "GTCTTCTTCTC";
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+
+        // left bases:  GTCTTCTTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCATCTTCTC - matches assembly
+        leftMdTag = "0T2A7";
+        rightMdTag = "11";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
         assertEquals("", homology.Homology);
         assertEquals(0, homology.ExactStart);
         assertEquals(0, homology.ExactEnd);
@@ -75,6 +106,15 @@ public class HomologyTest
         assemblyOverlap = "TTCATCTTCTC";
         basesEnd = assemblyOverlap;
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+
+        // left bases:  TGCATCTTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCATCTTCTC - matches assembly
+        leftMdTag = "1T9";
+        rightMdTag = "11";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
         assertEquals("T", homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(0, homology.ExactEnd);
@@ -86,6 +126,15 @@ public class HomologyTest
         assemblyOverlap = "TTCATCTTCTC";
         basesEnd = assemblyOverlap;
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+
+        // left bases:  TTGATCTTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCATCTTCTC - matches assembly
+        leftMdTag = "2C8";
+        rightMdTag = "11";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
         assertEquals("TT", homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(1, homology.ExactEnd);
@@ -97,7 +146,16 @@ public class HomologyTest
         assemblyOverlap = "TTCATCTTCTC";
         basesEnd = "TTCTTCTTCTC";
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("TTC", homology.Homology);
+
+        // left bases:  TTCATCGTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCTTCTTCTC
+        leftMdTag = "6T4";
+        rightMdTag = "3A7";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
+        assertEquals("TC", homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(1, homology.ExactEnd);
         assertEquals(-5, homology.InexactStart);
@@ -108,7 +166,16 @@ public class HomologyTest
         assemblyOverlap = "TTCATCTTCTC";
         basesEnd = basesStart;
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals(basesStart, homology.Homology);
+
+        // left bases:  TTCATGTTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCATGTTCTC
+        leftMdTag = "5C5";
+        rightMdTag = leftMdTag;
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
+        assertEquals(assemblyOverlap, homology.Homology);
         assertEquals(-6, homology.ExactStart);
         assertEquals(5, homology.ExactEnd);
         assertEquals(-6, homology.InexactStart);
@@ -119,17 +186,32 @@ public class HomologyTest
         assemblyOverlap = "TTCATCTTCTC";
         basesEnd = "TTCATATTCTC";
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
-        assertEquals("TTCAT", homology.Homology);
-        assertEquals(-6, homology.ExactStart);
-        assertEquals(5, homology.ExactEnd);
-        assertEquals(-6, homology.InexactStart);
-        assertEquals(5, homology.InexactEnd);
+
+        // left bases:  TT^ATGTTCTC
+        // assembly:    TTCATCTTCTC
+        // right bases: TTCATATTCTC
+        leftMdTag = "2^C8";
+        rightMdTag = "11";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
+        assertEquals("TT", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(10, homology.InexactEnd);
 
         // test 8: with an even number of bases
         basesStart = "AA";
         assemblyOverlap = basesStart;
         basesEnd = basesStart;
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+
+        leftMdTag = "2";
+        rightMdTag = "2";
+        assemblyOverlap = "AA";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
         assertEquals(basesStart, homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(1, homology.ExactEnd);
@@ -158,8 +240,13 @@ public class HomologyTest
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(refGenome, assemblyAlignment);
 
-        AlignData alignment1 = createAlignment(CHR_1, 22, 121, 0, 100, "100M50S");
-        AlignData alignment2 = createAlignment(CHR_1, 202, 302, 97, 197, "50S100M");
+        AlignData alignment1 = createAlignment(
+                CHR_1, 22, 121, false, DEFAULT_MAP_QUAL, 101, 0, 100,
+                "100M50S", "", "100");
+
+        AlignData alignment2 = createAlignment(
+                CHR_1, 202, 302, false, DEFAULT_MAP_QUAL, 101, 97, 197,
+                "50S100M", "", "100");
 
         List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2);
 
@@ -189,11 +276,13 @@ public class HomologyTest
 
         breakendBuilder = new BreakendBuilder(refGenome, assemblyAlignment);
 
-        alignment1 = createAlignment(CHR_1, 22, 121, 0, 100, "100M50S");
+        alignment1 = createAlignment(
+                CHR_1, 22, 121, false, DEFAULT_MAP_QUAL, 101, 0, 100,
+                "100M50S", "", "100");
 
         alignment2 = createAlignment(
                 CHR_1, 241, 340, true, DEFAULT_MAP_QUAL, 100, 0, 100,
-                "100M50S", "");
+                "100M50S", "", "100");
 
         alignments = Lists.newArrayList(alignment1, alignment2);
 
@@ -258,9 +347,10 @@ public class HomologyTest
 
         alignment1 = createAlignment(
                 CHR_1, pos1, pos1 + refLength - 1, true, DEFAULT_MAP_QUAL, 100, 97, 197,
-                "50S100M", "");
+                "50S100M", "", "100");
 
-        alignment2 = createAlignment(CHR_1, pos2, pos2 + refLength - 1, 97, 197, "50S100M");
+        alignment2 = createAlignment(CHR_1, pos2, pos2 + refLength - 1, false, DEFAULT_MAP_QUAL, 100, 97, 197,
+                "50S100M", "", "100");
 
         alignments = Lists.newArrayList(alignment1, alignment2);
 
@@ -337,39 +427,5 @@ public class HomologyTest
         mdTag = new MdTag(mdTagStr);
 
         assertEquals(61, mdTag.elements().size());
-    }
-
-    @Test
-    public void testMdSequenceComparisons()
-    {
-        // String seq1 = "AAAAAAAA";
-        // String seq2 = "AAAACAAA";
-
-        /*
-        String mdTag1 = "8";
-        String mdTag2 = "4C3";
-
-        // byte[] mdSeq1 = MdTagComparer.extractSequence(mdTag1, seq1, 0, seq1.length() - 1);
-        //byte[] mdSeq2 = MdTagComparer.extractSequence(mdTag2, seq2, 0, seq1.length() - 1);
-
-        int endMismatchIndex = compareMdTagSequences(
-                mdTag1, 0, 7, mdTag2, 0, 7);
-
-        assertEquals(3, endMismatchIndex);
-
-        mdTag1 = "12G16T12G1T8C0A6C1C0C9C0C0T0T7T20A0C0C0C7C0A1C5^G1T8A9G3C9C0T8C3A6T3^CTC14C9G13C679";
-        mdTag2 = "76C644";
-
-        int comparisonLength = 244;
-        int secondLength = 721;
-
-        endMismatchIndex = compareMdTagSequences(
-                mdTag1, 0, comparisonLength - 1, mdTag2,
-                secondLength - comparisonLength, secondLength - 1);
-
-        assertEquals(3, endMismatchIndex);
-        */
-
-
     }
 }
