@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemb
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -187,10 +189,10 @@ public class HomologyTest
         basesEnd = "TTCATATTCTC";
         homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
 
-        // left bases:  TT^ATGTTCTC
+        // left bases:  TTATGTTCTC
         // assembly:    TTCATCTTCTC
         // right bases: TTCATATTCTC
-        leftMdTag = "2^C8";
+        leftMdTag = "2C0A0T0C1T0C0T";
         rightMdTag = "11";
         assemblyOverlap = "TTCATCTTCTC";
 
@@ -201,18 +203,28 @@ public class HomologyTest
         assertEquals(-1, homology.InexactStart);
         assertEquals(10, homology.InexactEnd);
 
-        // test 8: with an even number of bases
-        basesStart = "AA";
-        assemblyOverlap = basesStart;
-        basesEnd = basesStart;
-        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        // test 8:
+        // left bases:  TTCATGTTCTC
+        // assembly:    TT^ATCTTCTC
+        // right bases: TT^ATATTCTC
+        leftMdTag = "2^C8";
+        rightMdTag = "10";
+        assemblyOverlap = "TTATATTCTC";
 
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
+        assertEquals("TT", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(9, homology.InexactEnd);
+
+        // test X: with an even number of bases
         leftMdTag = "2";
         rightMdTag = "2";
         assemblyOverlap = "AA";
 
         homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
-        assertEquals(basesStart, homology.Homology);
+        assertEquals(assemblyOverlap, homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(1, homology.ExactEnd);
         assertEquals(-1, homology.InexactStart);
@@ -382,6 +394,7 @@ public class HomologyTest
 
         assertEquals(3, mdTag.elements().size());
         assertEquals(9, mdTag.baseLength());
+
         int index = 0;
         assertEquals(5, mdTag.elements().get(index).Length);
         assertEquals(MdTagType.MATCH, mdTag.elements().get(index).Type);
@@ -402,9 +415,10 @@ public class HomologyTest
 
         // deletes
         index = 0;
-        mdTag = new MdTag("5^AA0T5^GGG5");
+        mdTag = new MdTag("5^AA0T5^GGG5"); // implies an assembly sequence of
         assertEquals(6, mdTag.elements().size());
         assertEquals(21, mdTag.baseLength());
+        assertEquals(16, mdTag.sequenceLength());
         assertEquals(MdTagType.MATCH, mdTag.elements().get(index).Type);
         assertEquals(5, mdTag.elements().get(index).Length);
 
@@ -422,10 +436,17 @@ public class HomologyTest
         assertEquals(MdTagType.MATCH, mdTag.elements().get(++index).Type);
         assertEquals(5, mdTag.elements().get(index).Length);
 
+        byte[] sequenceMatches = mdTag.extractSubSequence(0, 15, false);
+        assertEquals(16, sequenceMatches.length);
+
+        // test a mismatch sequence from a sample's germline BRCA2 homology
         String mdTagStr = "12G16T12G1T8C0A6C1C0C9C0C0T0T7T20A0C0C0C7C0A1C5^G1T8A9G3C9C0T8C3A6T3^CTC14C9G13C679";
 
         mdTag = new MdTag(mdTagStr);
 
         assertEquals(61, mdTag.elements().size());
+
+        sequenceMatches = mdTag.extractSubSequence(0, 243, false);
+        assertEquals(244, sequenceMatches.length);
     }
 }

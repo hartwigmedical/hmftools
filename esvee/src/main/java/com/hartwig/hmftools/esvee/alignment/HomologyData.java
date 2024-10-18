@@ -30,7 +30,7 @@ public class HomologyData
     }
 
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)",
-            Homology.isEmpty() ? "none" : Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
+            Homology.isEmpty() ? "none" : Homology, ExactStart, ExactEnd, InexactStart, InexactEnd); }
 
     public boolean isSymmetrical() { return abs(InexactStart) == InexactEnd; }
 

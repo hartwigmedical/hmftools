@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SUPPORT_FRAGMENT_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_S
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;

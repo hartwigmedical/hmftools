@@ -383,13 +383,13 @@ public class RefBaseSequenceTest
         // refBases1: AAACCCGGGT       TAACC TTTTT GGTTACGTAA"
         // refBases2: AAACCCGGGT TTACG TAACC TTTTT GGTTACGTAA"
         // refBases3: AAACCCGGGT       TAACC       GGTTACGTAA"
-        String insert = "TTTT";
+        String insert = "TT";
         String refBases1 = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
-        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M4I10M40S");
+        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M2I10M40S");
 
         // has the insert but not the delete
         String refBases2 = readRefBases.substring(0, 20) + insert + readRefBases.substring(20, 30);
-        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M4I10M40S");
+        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M2I10M40S");
 
         // has the delete but not the insert
         String refBases3 = readRefBases.substring(0, 10) + readRefBases.substring(15, 30);
@@ -408,12 +408,12 @@ public class RefBaseSequenceTest
         refSeqBases = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
         assertEquals(refSeqBases, refBaseSeqBuilder.refBaseSequence());
         assertEquals(71, refBaseSeqBuilder.refBasePosition());
-        assertEquals(29, refBaseSeqBuilder.refBaseLength());
-        assertEquals("10M5D5M4I10M", refBaseSeqBuilder.cigarStr());
+        assertEquals(27, refBaseSeqBuilder.refBaseLength());
+        assertEquals("10M5D5M2I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(4, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(2, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
     }
 
     @Test

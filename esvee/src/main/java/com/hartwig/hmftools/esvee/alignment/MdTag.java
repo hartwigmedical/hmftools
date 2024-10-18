@@ -10,7 +10,6 @@ public class MdTag
 {
     private final String mTag;
     private final List<MdTagElement> mElements;
-    private final int mBaseLength;
 
     public MdTag(final String tag)
     {
@@ -18,8 +17,6 @@ public class MdTag
         mElements = Lists.newArrayList();
 
         parseTag();
-
-        mBaseLength = mElements.stream().mapToInt(x -> x.Length).sum();
     }
 
     public List<MdTagElement> elements() { return mElements; }
@@ -27,18 +24,24 @@ public class MdTag
     protected static final char DEL_TAG = '^';
     protected static final char MATCH_TAG = '0';
 
-    public int baseLength() { return mBaseLength; }
+    public int baseLength()
+    {
+        // includes deleted bases
+        return mElements.stream().mapToInt(x -> x.Length).sum();
+    }
+
+    public int sequenceLength()
+    {
+        return mElements.stream().filter(x -> x.Type != MdTagType.DEL).mapToInt(x -> x.Length).sum();
+    }
 
     public boolean hasMismatches() { return mElements.stream().anyMatch(x -> x.Type != MdTagType.MATCH); }
 
     public static final byte MATCH_BYTE = (byte)MdTagType.MATCH.ordinal();
-    // private static final byte DEL_BYTE = (byte)MdTagType.SNV.ordinal();
-    // private static final byte SNV_BYTE = (byte)MdTagType.DEL.ordinal();
 
     public byte[] extractSubSequence(final int seqIndexStart, final int seqIndexEnd, boolean reverse)
     {
         // build an array of values representing matches or mismatches for the sequence vs the ref genome from this alignment tag
-
         int seqIndex = 0;
 
         List<MdTagElement> elements;
@@ -56,17 +59,31 @@ public class MdTag
         int length = seqIndexEnd - seqIndexStart + 1;
         byte[] matchArray = new byte[length];
         int index = 0;
+        boolean followsDel = false;
 
         for(MdTagElement element : elements)
         {
             for(int i = 0; i < element.Length; ++i)
             {
+                if(followsDel)
+                {
+                    followsDel = false;
+                    ++seqIndex;
+                    continue;
+                }
+
                 if(seqIndex > seqIndexEnd)
                     break;
 
                 if(seqIndex >= seqIndexStart)
                 {
                     matchArray[index++] = (byte)element.Type.ordinal();
+
+                    if(element.Type == MdTagType.DEL)
+                    {
+                        followsDel = true;
+                        break; // count this mismatch once only
+                    }
                 }
 
                 ++seqIndex;
