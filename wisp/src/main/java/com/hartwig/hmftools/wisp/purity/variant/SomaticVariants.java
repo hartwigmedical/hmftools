@@ -37,6 +37,8 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GERMLINE_AF;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NEARBY_INDEL;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
@@ -343,6 +345,18 @@ public class SomaticVariants
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
         List<FilterReason> filters = Lists.newArrayList();
+
+        if(mSample.ReferenceId != null)
+        {
+            Genotype referenceGenotype = variant.context().getGenotype(mSample.ReferenceId);
+            float germlineAF = Float.parseFloat(referenceGenotype.getAnyAttribute("AF").toString());
+            float germlineABQ = Float.parseFloat(referenceGenotype.getAnyAttribute("ABQ").toString().split(",")[1]);
+            if(germlineAF >= 0.01 && germlineABQ >= 30)
+                filters.add(GERMLINE_AF);
+        }
+
+        if(variant.context().getCommonInfo().hasAttribute("NEARBY_INDEL"))
+            filters.add(NEARBY_INDEL);
 
         if(variant.context().isFiltered())
             filters.add(NO_PASS);
