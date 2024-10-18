@@ -168,7 +168,7 @@ public class BreakendBuilder
             int homPosEnd = indelPosEnd;
             String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
 
-            homology = determineHomology(basesEnd, basesStart, basesEnd, maxLength);
+            homology = HomologyData.determineIndelHomology(basesStart, basesEnd, maxLength);
 
             if(homology.Homology.isEmpty())
             {
@@ -176,7 +176,7 @@ public class BreakendBuilder
             }
             else
             {
-                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted foward
+                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
                 // by the same amount, being the exact homology at the start
                 // shift breakend positions forward by exact homology
                 indelPosStart += abs(homology.ExactStart);
@@ -443,22 +443,6 @@ public class BreakendBuilder
                 if(homology == null)
                 {
                     SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
-                }
-
-                // OLD routine:
-                String assemblyOverlapBases = mAssemblyAlignment.overlapBases(alignment.sequenceEnd());
-                int seqOverlapLength = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
-
-                if(assemblyOverlapBases.isEmpty() || assemblyOverlapBases.length() < seqOverlapLength)
-                {
-                    assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
-                }
-
-                HomologyData homologyOld = determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
-
-                if(homology != null && homologyOld != null && !homology.matches(homologyOld))
-                {
-                    SV_LOGGER.debug("assembly({}) homology diff new({}) old({})", mAssemblyAlignment, homology, homologyOld);
                 }
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
