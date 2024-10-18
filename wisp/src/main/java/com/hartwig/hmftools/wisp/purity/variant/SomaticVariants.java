@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -17,6 +18,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.ABQ_KEY;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.AF_KEY;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.NEARBY_INDEL_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -27,6 +31,8 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_F
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
@@ -349,13 +355,13 @@ public class SomaticVariants
         if(mSample.ReferenceId != null)
         {
             Genotype referenceGenotype = variant.context().getGenotype(mSample.ReferenceId);
-            float germlineAF = Float.parseFloat(referenceGenotype.getAnyAttribute("AF").toString());
-            float germlineABQ = Float.parseFloat(referenceGenotype.getAnyAttribute("ABQ").toString().split(",")[1]);
-            if(germlineAF >= 0.01 && germlineABQ >= 30)
+            double germlineAF = Double.parseDouble(referenceGenotype.getAnyAttribute(AF_KEY).toString());
+            double germlineABQ = Double.parseDouble(referenceGenotype.getAnyAttribute(ABQ_KEY).toString().split(CSV_DELIM)[1]);
+            if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
                 filters.add(GERMLINE_AF);
         }
 
-        if(variant.context().getCommonInfo().hasAttribute("NEARBY_INDEL"))
+        if(variant.context().getCommonInfo().hasAttribute(NEARBY_INDEL_TAG))
             filters.add(NEARBY_INDEL);
 
         if(variant.context().isFiltered())
