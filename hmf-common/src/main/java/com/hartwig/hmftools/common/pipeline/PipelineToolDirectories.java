@@ -4,6 +4,7 @@ public final class PipelineToolDirectories
 {
     public static final String AMBER_DIR = "amber";
     public static final String CHORD_DIR = "chord";
+    public static final String CIDER_DIR = "cider";
     public static final String COBALT_DIR = "cobalt";
     public static final String CUPPA_DIR = "cuppa";
     public static final String GRIPSS_SOMATIC_DIR = "gripss_somatic";
