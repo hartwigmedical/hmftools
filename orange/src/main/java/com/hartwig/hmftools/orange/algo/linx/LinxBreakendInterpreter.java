@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class LinxBreakendInterpreter
 {
-
     @NotNull
     Map<String, StructuralVariant> structuralVariantsMap;
     @NotNull
@@ -33,13 +32,10 @@ public class LinxBreakendInterpreter
     public LinxBreakendInterpreter(
             @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<LinxSvAnnotation> linxSvAnnotations,
-            @NotNull final EnsemblDataCache ensemblDataCache
-    )
+            @NotNull final EnsemblDataCache ensemblDataCache)
     {
-        this.structuralVariantsMap = structuralVariants.stream()
-                .collect(Collectors.toMap(StructuralVariant::id, s -> s));
-        this.linxSvAnnotationsMap = linxSvAnnotations.stream()
-                .collect(Collectors.toMap(LinxSvAnnotation::svId, s -> s));
+        this.structuralVariantsMap = structuralVariants.stream().collect(Collectors.toMap(StructuralVariant::id, s -> s));
+        this.linxSvAnnotationsMap = linxSvAnnotations.stream().collect(Collectors.toMap(LinxSvAnnotation::svId, s -> s));
         this.ensemblDataCache = ensemblDataCache;
     }
 

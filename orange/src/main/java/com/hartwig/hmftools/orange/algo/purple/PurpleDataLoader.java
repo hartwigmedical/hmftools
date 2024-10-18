@@ -94,7 +94,7 @@ public final class PurpleDataLoader
         List<StructuralVariant> allSomaticStructuralVariants =
                 StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
 
-        List<StructuralVariant> allInferredSomaticStruturalVariants = loadInferredStructuralVariants(somaticStructuralVariantVcf);
+        List<StructuralVariant> allInferredSomaticStructuralVariants = loadInferredStructuralVariants(somaticStructuralVariantVcf);
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
@@ -132,7 +132,7 @@ public final class PurpleDataLoader
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .allSomaticStructuralVariants(allSomaticStructuralVariants)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
-                .allInferredSomaticStructuralVariants(allInferredSomaticStruturalVariants)
+                .allInferredSomaticStructuralVariants(allInferredSomaticStructuralVariants)
                 .allInferredGermlineStructuralVariants(allInferredGermlineStructuralVariants)
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)

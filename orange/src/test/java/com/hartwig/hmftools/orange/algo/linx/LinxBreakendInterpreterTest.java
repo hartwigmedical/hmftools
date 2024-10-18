@@ -27,9 +27,7 @@ public class LinxBreakendInterpreterTest
     @Test
     public void canInterpretValidData()
     {
-        List<StructuralVariant> structuralVariants = List.of(
-                createStructuralVariant()
-        );
+        List<StructuralVariant> structuralVariants = List.of(createStructuralVariant());
 
         List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation());
         List<LinxBreakend> breakends = createBreakends();
@@ -53,9 +51,7 @@ public class LinxBreakendInterpreterTest
     @Test
     public void canFallbackWhenNoSvAnnotation()
     {
-        List<StructuralVariant> structuralVariants = List.of(
-                createStructuralVariant()
-        );
+        List<StructuralVariant> structuralVariants = List.of(createStructuralVariant());
 
         List<LinxSvAnnotation> linxSvAnnotations = List.of();
         List<LinxBreakend> breakends = createBreakends();
@@ -110,16 +106,15 @@ public class LinxBreakendInterpreterTest
     }
 
     @NotNull
-    private StructuralVariant createStructuralVariant()
+    private static StructuralVariant createStructuralVariant()
     {
-        return PurpleTestUtils.createStructuralVariant(
-                        "7", 50, "7", 200, StructuralVariantType.DUP, 1.0, 1.0)
+        return PurpleTestUtils.createStructuralVariant("7", 50, "7", 200, StructuralVariantType.DUP, 1.0, 1.0)
                 .id(VCF_ID)
                 .build();
     }
 
     @NotNull
-    private List<LinxBreakend> createBreakends()
+    private static List<LinxBreakend> createBreakends()
     {
         return List.of(
                 createBreakend(1, true),
@@ -128,8 +123,7 @@ public class LinxBreakendInterpreterTest
     }
 
     @NotNull
-    private LinxBreakend createBreakend(int id, boolean isStart)
-
+    private static LinxBreakend createBreakend(int id, boolean isStart)
     {
         return LinxTestFactory.breakendBuilder()
                 .id(id)
@@ -153,8 +147,8 @@ public class LinxBreakendInterpreterTest
     }
 
     @NotNull
-    private static LinxBreakendInterpreter createInterpreter(@NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<LinxSvAnnotation> linxSvAnnotations)
+    private static LinxBreakendInterpreter createInterpreter(@NotNull List<StructuralVariant> structuralVariants,
+            @NotNull List<LinxSvAnnotation> linxSvAnnotations)
     {
         return new LinxBreakendInterpreter(structuralVariants, linxSvAnnotations, TestEnsemblDataCacheFactory.loadTestCache());
     }

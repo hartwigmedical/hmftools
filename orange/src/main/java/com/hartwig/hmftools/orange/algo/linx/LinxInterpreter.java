@@ -82,14 +82,12 @@ public class LinxInterpreter
         LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
                 combine(allSomaticStructuralVariants, allInferredSomaticStructuralVariants),
                 linx.allSomaticStructuralVariants(),
-                ensemblDataCache
-        );
+                ensemblDataCache);
 
         LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
                 combine(allGermlineStructuralVariants, allInferredGermlineStructuralVariants),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
-                ensemblDataCache
-        );
+                ensemblDataCache);
 
         return ImmutableLinxRecord.builder()
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDrivers(), LinxConversion::convert))
