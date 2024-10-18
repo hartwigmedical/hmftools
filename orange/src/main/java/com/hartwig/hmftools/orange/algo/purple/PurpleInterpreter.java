@@ -145,7 +145,7 @@ public class PurpleInterpreter
         if(allGermlineDeletions != null)
         {
             List<GermlineDeletion> impliedDeletions =
-                    implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(), purple.allGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
+                    implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(), purple.allPassingGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
             List<GermlineDeletion> mergedGermlineDeletions = Lists.newArrayList();

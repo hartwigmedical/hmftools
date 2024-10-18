@@ -29,7 +29,7 @@ public class TumorStatsFactory
     private static int structuralVariantTumorFragmentCount(@NotNull PurpleData purpleData)
     {
         int svFragmentReadCount = 0;
-        for(StructuralVariant variant : purpleData.allSomaticStructuralVariants())
+        for(StructuralVariant variant : purpleData.allPassingSomaticStructuralVariants())
         {
             if(variant.isFiltered() || variant.type() == StructuralVariantType.SGL)
             {
@@ -71,7 +71,7 @@ public class TumorStatsFactory
 
     private static int hotspotStructuralVariants(@NotNull PurpleData purpleData)
     {
-        return (int) purpleData.allSomaticStructuralVariants().stream()
+        return (int) purpleData.allPassingSomaticStructuralVariants().stream()
                 .filter(variant -> !variant.isFiltered() && variant.hotspot())
                 .count();
     }
