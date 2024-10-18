@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
@@ -16,6 +18,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
@@ -40,12 +44,17 @@ public class FileSources
     public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
 
+    public final String Cider;
+
+    public final String Teal;
+
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf)
+            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf,
+            final String cider, String teal)
     {
         Source = source;
         Linx = linx;
@@ -56,6 +65,8 @@ public class FileSources
         Chord = chord;
         SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
+        Cider = cider;
+        Teal = teal;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
@@ -69,7 +80,10 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.Lilac, sampleId),
                 convertWildcardSamplePath(fileSources.Chord, sampleId),
                 convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId));
+                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId),
+                convertWildcardSamplePath(fileSources.Cider, sampleId),
+                convertWildcardSamplePath(fileSources.Teal, sampleId)
+                );
     }
 
     public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
@@ -100,6 +114,8 @@ public class FileSources
             addPathConfig(configBuilder, LILAC_DIR_CFG, LILAC_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CHORD_DIR_CFG, CHORD_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceName);
 
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_VCF, sourceName), false,
@@ -143,8 +159,12 @@ public class FileSources
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
+        String ciderDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CIDER_DIR, CIDER_DIR_CFG, sourceName);
+        String tealDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.TEAL_DIR, TEAL_DIR_CFG, sourceName);
+
         return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, somaticUnfilteredVcf);
+                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, somaticUnfilteredVcf,
+                ciderDir, tealDir);
     }
 
     private static String getDirectory(
