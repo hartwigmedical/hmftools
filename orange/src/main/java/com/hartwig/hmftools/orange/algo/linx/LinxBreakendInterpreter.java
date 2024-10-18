@@ -23,11 +23,11 @@ import org.jetbrains.annotations.Nullable;
 public class LinxBreakendInterpreter
 {
     @NotNull
-    Map<String, StructuralVariant> structuralVariantsMap;
+    private final Map<String, StructuralVariant> structuralVariantsMap;
     @NotNull
-    Map<Integer, LinxSvAnnotation> linxSvAnnotationsMap;
+    private final Map<Integer, LinxSvAnnotation> linxSvAnnotationsMap;
     @NotNull
-    EnsemblDataCache ensemblDataCache;
+    private final EnsemblDataCache ensemblDataCache;
 
     public LinxBreakendInterpreter(
             @NotNull final List<StructuralVariant> structuralVariants,

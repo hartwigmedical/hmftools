@@ -30,15 +30,15 @@ public class LinxInterpreter
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
-    List<StructuralVariant> allSomaticStructuralVariants;
+    private final List<StructuralVariant> allSomaticStructuralVariants;
     @Nullable
-    List<StructuralVariant> allGermlineStructuralVariants;
+    private final List<StructuralVariant> allGermlineStructuralVariants;
     @NotNull
-    List<StructuralVariant> allInferredSomaticStructuralVariants;
+    private final List<StructuralVariant> allInferredSomaticStructuralVariants;
     @Nullable
-    List<StructuralVariant> allInferredGermlineStructuralVariants;
+    private final List<StructuralVariant> allInferredGermlineStructuralVariants;
     @NotNull
-    EnsemblDataCache ensemblDataCache;
+    private final EnsemblDataCache ensemblDataCache;
 
     public LinxInterpreter(
             @NotNull final List<DriverGene> driverGenes,

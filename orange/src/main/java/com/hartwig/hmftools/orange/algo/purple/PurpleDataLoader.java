@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -20,11 +22,11 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public final class PurpleDataLoader
@@ -90,27 +92,21 @@ public final class PurpleDataLoader
         List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
                 .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
         List<PurpleVariantContext> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
-
-        List<StructuralVariant> allSomaticStructuralVariants =
-                StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
-
-        List<StructuralVariant> allInferredSomaticStructuralVariants = loadInferredStructuralVariants(somaticStructuralVariantVcf);
+        StructuralVariants somaticStructuralVariants = loadStructuralVariants(somaticStructuralVariantVcf);
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
         List<Segment> segments = SegmentFile.read(segmentTsv);
 
         List<DriverCatalog> germlineDrivers = null;
-        List<StructuralVariant> allGermlineStructuralVariants = null;
         List<PurpleVariantContext> allGermlineVariants = null;
         List<PurpleVariantContext> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
-        List<StructuralVariant> allInferredGermlineStructuralVariants = null;
+        StructuralVariants germlineStructuralVariants = new StructuralVariants(null, null);
         if(referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
-            allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
             allGermlineVariants = new PurpleVariantContextLoader().fromVCFFile(tumorSample, referenceSample, rnaSample,
                     germlineVariantVcf);
@@ -119,7 +115,7 @@ public final class PurpleDataLoader
             allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
 
-            allInferredGermlineStructuralVariants = loadInferredStructuralVariants(germlineStructuralVariantVcf);
+            germlineStructuralVariants = loadStructuralVariants(germlineStructuralVariantVcf);
         }
 
         return ImmutablePurpleData.builder()
@@ -130,10 +126,10 @@ public final class PurpleDataLoader
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
-                .allSomaticStructuralVariants(allSomaticStructuralVariants)
-                .allGermlineStructuralVariants(allGermlineStructuralVariants)
-                .allInferredSomaticStructuralVariants(allInferredSomaticStructuralVariants)
-                .allInferredGermlineStructuralVariants(allInferredGermlineStructuralVariants)
+                .allPassingSomaticStructuralVariants(somaticStructuralVariants.allPassingStructuralVariants)
+                .allPassingGermlineStructuralVariants(germlineStructuralVariants.allPassingStructuralVariants)
+                .allInferredSomaticStructuralVariants(somaticStructuralVariants.allInferredStructuralVariants)
+                .allInferredGermlineStructuralVariants(germlineStructuralVariants.allInferredStructuralVariants)
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
@@ -185,11 +181,34 @@ public final class PurpleDataLoader
         return reported;
     }
 
-    @NotNull
-    private static List<StructuralVariant> loadInferredStructuralVariants(@NotNull String structuralVariantVcf) throws IOException
+    private static class StructuralVariants
     {
-        return StructuralVariantFileLoader.fromFile(structuralVariantVcf, new AlwaysPassFilter()).stream()
-                .filter(x -> x.filter().equals(INFERRED))
-                .collect(Collectors.toList());
+        @Nullable
+        final List<StructuralVariant> allPassingStructuralVariants;
+        @Nullable
+        final List<StructuralVariant> allInferredStructuralVariants;
+
+        private StructuralVariants(@Nullable final List<StructuralVariant> allPassingStructuralVariants,
+                @Nullable List<StructuralVariant> allInferredStructuralVariants)
+        {
+            this.allPassingStructuralVariants = allPassingStructuralVariants;
+            this.allInferredStructuralVariants = allInferredStructuralVariants;
+        }
+    }
+
+    @NotNull
+    private static StructuralVariants loadStructuralVariants(@NotNull String vcfPath) throws IOException
+    {
+        CompoundFilter passingOrInferredFilter = new CompoundFilter(false);
+        passingOrInferredFilter.add(new PassingVariantFilter());
+        passingOrInferredFilter.add(variantContext -> variantContext.getFilters().contains(INFERRED));
+
+        List<StructuralVariant> passingOrInferred =
+                StructuralVariantFileLoader.fromFile(vcfPath, passingOrInferredFilter);
+
+        Map<Boolean, List<StructuralVariant>> partitioned =
+                passingOrInferred.stream().collect(Collectors.partitioningBy(x -> Objects.equals(x.filter(), INFERRED)));
+
+        return new StructuralVariants(partitioned.get(false), partitioned.get(true));
     }
 }

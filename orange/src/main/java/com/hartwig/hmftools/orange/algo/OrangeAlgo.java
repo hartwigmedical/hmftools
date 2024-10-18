@@ -203,8 +203,8 @@ public class OrangeAlgo
         LinxInterpreter linxInterpreter = new LinxInterpreter(
                 driverGenes,
                 knownFusionCache,
-                purpleData.allSomaticStructuralVariants(),
-                purpleData.allGermlineStructuralVariants(),
+                purpleData.allPassingSomaticStructuralVariants(),
+                purpleData.allPassingGermlineStructuralVariants(),
                 purpleData.allInferredSomaticStructuralVariants(),
                 purpleData.allInferredGermlineStructuralVariants(),
                 ensemblDataCache
@@ -440,7 +440,7 @@ public class OrangeAlgo
                 purple.reportableSomaticVariants().size());
         LOGGER.info(" Loaded {} somatic copy numbers entries", purple.allSomaticCopyNumbers().size());
         LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
-        LOGGER.info(" Loaded {} somatic structural variants", purple.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} somatic structural variants", purple.allPassingSomaticStructuralVariants().size());
 
         if(referenceSample != null)
         {
@@ -453,7 +453,7 @@ public class OrangeAlgo
                     purple.allGermlineDeletions().size(),
                     purple.reportableGermlineDeletions().size());
 
-            LOGGER.info(" Loaded {} germline structural variants", purple.allGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} germline structural variants", purple.allPassingGermlineStructuralVariants().size());
         }
         else
         {
