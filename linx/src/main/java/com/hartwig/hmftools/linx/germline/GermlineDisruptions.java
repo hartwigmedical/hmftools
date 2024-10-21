@@ -535,10 +535,10 @@ public class GermlineDisruptions
         if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
             return false;
 
-        final SvCluster cluster = var.getCluster();
-
-        if(!mReportableSgls.contains(var) && !REPORTED_RESOLVED_TYPES.contains(cluster.getResolvedType()))
+        if(disruptionData.isPseudogeneDeletion())
             return false;
+
+        final SvCluster cluster = var.getCluster();
 
         if(cluster.getSvCount() == 1)
         {
@@ -551,10 +551,14 @@ public class GermlineDisruptions
                 return false;
         }
 
-        if(disruptionData.isPseudogeneDeletion())
-            return false;
+        if(mReportableSgls.contains(var))
+            return true;
 
-        return true;
+        if(REPORTED_RESOLVED_TYPES.contains(cluster.getResolvedType()))
+            return true;
+
+        // a clustered DEL or DUP is also reportable
+        return var.type() == DEL || var.type() == DUP;
     }
 
     private int getPonCount(final SvVarData var)

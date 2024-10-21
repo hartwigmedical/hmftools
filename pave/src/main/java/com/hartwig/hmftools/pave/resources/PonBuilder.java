@@ -61,6 +61,10 @@ public class PonBuilder
     private static final String MIN_SAMPLES = "min_samples";
     private static final String MANUAL_ENTRIES = "manual_entries";
 
+    private static final int DEFAULT_MIN_SAMPLES = 3;
+    private static final int DEFAULT_MIN_MAP_QUAL = -10;
+    private static final int DEFAULT_MIN_QUAL = 40;
+
     public PonBuilder(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
@@ -289,9 +293,9 @@ public class PonBuilder
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
-        configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", 3);
-        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", 50);
-        configBuilder.addInteger(MQF_CUTOFF, "MQF cut-off for variant inclusion", -10);
+        configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", DEFAULT_MIN_SAMPLES);
+        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", DEFAULT_MIN_QUAL);
+        configBuilder.addInteger(MQF_CUTOFF, "MQF cut-off for variant inclusion", DEFAULT_MIN_MAP_QUAL);
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
         configBuilder.addPath(PON_FILE, false, "PON entries");

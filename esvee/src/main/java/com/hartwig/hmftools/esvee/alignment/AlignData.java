@@ -6,11 +6,14 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -230,13 +233,27 @@ public class AlignData
     {
         List<AlternativeAlignment> altAlignments = rawAltAlignments();
 
+        AlternativeAlignment defaultAlignment = new AlternativeAlignment(
+                mRefLocation.Chromosome, mRefLocation.start(), orientation(), mCigar, mMapQual);
+
         if(altAlignments.isEmpty())
-            return altAlignments;
+        {
+            if(mRefLocation.Chromosome.startsWith(CHR_PREFIX))
+            {
+                if(MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38.stream().noneMatch(x -> x.overlaps(mRefLocation)))
+                    return altAlignments;
+            }
+            else
+            {
+                if(MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37.stream().noneMatch(x -> x.overlaps(mRefLocation)))
+                    return altAlignments;
+            }
+        }
 
         // otherwise include the default alignment as well
         List<AlternativeAlignment> allAlignments = Lists.newArrayListWithCapacity(altAlignments.size() + 1);
 
-        allAlignments.add(new AlternativeAlignment(mRefLocation.Chromosome, mRefLocation.start(), orientation(), mCigar, mMapQual));
+        allAlignments.add(defaultAlignment);
         allAlignments.addAll(altAlignments);
         return allAlignments;
     }
@@ -283,8 +300,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s:%d %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d adj=%d) aligned(%d adj=%d)",
+        return format("%s:%d %s seq(%d-%d adj=%d-%d) score(%d) flags(%d) mapQual(%d adj=%d) aligned(%d adj=%d) md(%s)",
                 mRefLocation, mOrientation.asByte(), mCigar, mRawSequenceStart, mRawSequenceEnd,
-                mSequenceStart, mSequenceEnd, mScore, mFlags, mMapQual, mModifiedMapQual, mAlignedBases, mAdjustedAlignment);
+                mSequenceStart, mSequenceEnd, mScore, mFlags, mMapQual, mModifiedMapQual, mAlignedBases, mAdjustedAlignment, mMdTag);
     }
 }

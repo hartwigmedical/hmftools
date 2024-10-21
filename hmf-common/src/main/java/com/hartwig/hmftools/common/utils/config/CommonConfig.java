@@ -60,6 +60,9 @@ public final class CommonConfig
     public static final String CHORD_DIR_CFG = toolDirectory("chord");
     public static final String CHORD_DIR_DESC = toolDirectoryDesc("Chord");
 
+    public static final String CIDER_DIR_CFG = toolDirectory("cider");
+    public static final String CIDER_DIR_DESC = toolDirectoryDesc("Cider");
+
     public static final String COBALT_DIR_CFG = toolDirectory("cobalt");
     public static final String COBALT_DIR_DESC = toolDirectoryDesc("Cobalt");
 
@@ -101,6 +104,9 @@ public final class CommonConfig
 
     public static final String SIGS_DIR_CFG = toolDirectory("sigs");
     public static final String SIGS_DIR_DESC = toolDirectoryDesc("Signatures");
+
+    public static final String TEAL_DIR_CFG = toolDirectory("teal");
+    public static final String TEAL_DIR_DESC = toolDirectoryDesc("Teal");
 
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");

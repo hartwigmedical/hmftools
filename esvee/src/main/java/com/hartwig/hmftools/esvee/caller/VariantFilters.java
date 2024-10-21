@@ -80,9 +80,6 @@ public class VariantFilters
 
         if(isShortLowVafInversion(var))
             var.addFilter(SHORT_LOW_VAF_INV);
-
-        // if(hasStrandBias(var))
-        //    var.addFilter(FilterType.STRAND_BIAS);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -259,37 +256,6 @@ public class VariantFilters
         String homologySequence = var.contextStart().getAttributeAsString(HOMSEQ, "");
         return homologySequence.length() > INV_SHORT_MAX_HOMOLOGY;
     }
-
-    /*
-    private boolean hasStrandBias(final Variant var)
-    {
-        private boolean singleStrandBias(final Breakend breakend)
-        {
-            if(!breakend.isSgl() || breakend.IsLineInsertion)
-                return false;
-
-            if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
-                return false;
-
-            double strandBias = calcStrandBias(breakend.Context);
-            return strandBias < SGL_MIN_STRAND_BIAS || strandBias > SGL_MAX_STRAND_BIAS;
-        }
-
-        if(sv.isShortLocal())
-        {
-            double strandBias = breakend.Context.getAttributeAsDouble(STRAND_BIAS, 0.5);
-            return max(strandBias, 1 - strandBias) > MAX_STRAND_BIAS;
-        }
-
-        return false;
-    }
-
-    private static double calcStrandBias(final VariantContext variantContext)
-    {
-        double strandBias = variantContext.getAttributeAsDouble(STRAND_BIAS, 0.5);
-        return max(strandBias, 1 - strandBias);
-    }
-    */
 
     public static void logFilterTypeCounts(final List<Variant> variantList)
     {

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -17,7 +18,6 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionE
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -168,7 +168,7 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(read.mappingQuality() < MIN_MAP_QUALITY)
+            if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
                 continue;
 
             if(mJunction.isForward())
@@ -215,7 +215,7 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(read.mappingQuality() < MIN_MAP_QUALITY)
+            if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
             {
                 mNonJunctionReads.add(read);
                 continue;

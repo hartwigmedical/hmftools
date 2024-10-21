@@ -3,7 +3,12 @@ package com.hartwig.hmftools.esvee;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+
+import java.util.List;
+
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class AssemblyConstants
 {
@@ -18,7 +23,6 @@ public final class AssemblyConstants
     public static final int UNMAPPED_TRIM_THRESHOLD = 40;
 
     // primary assembly
-    public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
     public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;;
     public static final int DECOY_MAX_MISMATCHES = 3;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
@@ -30,6 +34,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = 2;
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
+    public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
@@ -64,7 +69,7 @@ public final class AssemblyConstants
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
     // alignment
-    public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
+    public static final int ALIGNMENT_MIN_SOFT_CLIP = MIN_VARIANT_LENGTH;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
     public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
@@ -75,4 +80,12 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
+
+    public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37 = List.of(
+            new ChrBaseRegion("4", 190930000, 191030000),
+            new ChrBaseRegion("10", 135420000, 135520000 ));
+
+    public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38 = List.of(
+            new ChrBaseRegion("chr4", 190060000, 190190000),
+            new ChrBaseRegion("chr10", 133660000, 133770000));
 }

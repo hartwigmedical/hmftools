@@ -213,9 +213,11 @@ public class AssemblyConfig
         SpecificJunctions = Lists.newArrayList();
         if(configBuilder.hasValue(SPECIFIC_JUNCTIONS))
         {
-            String[] specificJunctionsStr = configBuilder.getValue(SPECIFIC_JUNCTIONS).split(ITEM_DELIM);
+            String specificJunctionsStr = configBuilder.getValue(SPECIFIC_JUNCTIONS);
+            String junctionDelim = specificJunctionsStr.contains("_") ? "_" : ITEM_DELIM;
+            String[] specificJunctionsList = specificJunctionsStr.split(junctionDelim);
 
-            for(String specificJuncStr : specificJunctionsStr)
+            for(String specificJuncStr : specificJunctionsList)
             {
                 Junction junction = Junction.fromConfigStr(specificJuncStr);
 
