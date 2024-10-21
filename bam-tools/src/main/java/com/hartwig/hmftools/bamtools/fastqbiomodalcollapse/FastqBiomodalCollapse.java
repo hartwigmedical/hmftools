@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.compress.utils.Lists;
@@ -354,9 +355,10 @@ public class FastqBiomodalCollapse
         }
         String read2RevComp = read2RevCompBuilder.toString();
 
+        int maxShift = max(read1.length(), read2.length());
         int bestMismatchCount = Integer.MAX_VALUE;
         int bestRead1Shift = 0;
-        for(int read1Shift = -120; read1Shift <= 120; read1Shift++)
+        for(int read1Shift = -maxShift; read1Shift <= maxShift; read1Shift++)
         {
             int i1 = 0;
             int i2 = 0;
@@ -386,7 +388,7 @@ public class FastqBiomodalCollapse
                 i2++;
             }
 
-            if(totalCount == 0)
+            if(totalCount < 5)
             {
                 continue;
             }
@@ -457,12 +459,28 @@ public class FastqBiomodalCollapse
         return cigarBuilder.toString();
     }
 
-    private static List<BaseQualPair> fastqToSeq(final FastqRecord fastq)
+    private static List<BaseQualPair> fastqToSeq(final FastqRecord fastq, int start, int end)
     {
         List<BaseQualPair> seq = Lists.newArrayList();
-        for(int i = 0; i < fastq.getReadLength(); i++)
+        for(int i = start; i <= end; i++)
         {
             seq.add(new BaseQualPair(fastq.getReadString().charAt(i), fastq.getBaseQualities()[i]));
+        }
+
+        return seq;
+    }
+
+    private static List<BaseQualPair> fastqToSeq(final FastqRecord fastq)
+    {
+        return fastqToSeq(fastq, 0, fastq.getReadLength() - 1);
+    }
+
+    private static List<BaseQualPair> stringToSeq(final String s)
+    {
+        List<BaseQualPair> seq = Lists.newArrayList();
+        for(int i = 0; i < s.length(); i++)
+        {
+            seq.add(new BaseQualPair(s.charAt(i), 0));
         }
 
         return seq;
@@ -484,6 +502,18 @@ public class FastqBiomodalCollapse
         return new FastqRecord(fastq.getReadName(), bases.toString(), fastq.getBaseQualityHeader(), quals.toString());
     }
 
+    private static List<BaseQualPair> revCompSeq(final List<BaseQualPair> seq)
+    {
+        List<BaseQualPair> output = Lists.newArrayList();
+        for(int i = seq.size() - 1; i >= 0; i--)
+        {
+            BaseQualPair base = seq.get(i);
+            output.add(base.complementBase());
+        }
+
+        return output;
+    }
+
     private static BaseQualPair consensusBaseQualPair(final BaseQualPair base1, final BaseQualPair base2)
     {
         boolean base1Missing = base1 == null || base1.Base == MISSING_BASE;
@@ -498,7 +528,7 @@ public class FastqBiomodalCollapse
         {
             if(base2.Base == 'G')
             {
-                return new BaseQualPair(MISSING_BASE, 0);
+                return base2;
             }
 
             Set<Character> consensusBases = Sets.newHashSet();
@@ -509,6 +539,11 @@ public class FastqBiomodalCollapse
                 {
                     consensusBases.add(consensusBase);
                 }
+            }
+
+            if(consensusBases.contains('C'))
+            {
+                consensusBases.remove(MODC_BASE);
             }
 
             if(consensusBases.size() == 1)
@@ -534,6 +569,11 @@ public class FastqBiomodalCollapse
                 {
                     consensusBases.add(consensusBase);
                 }
+            }
+
+            if(consensusBases.contains('C'))
+            {
+                consensusBases.remove(MODC_BASE);
             }
 
             if(consensusBases.size() == 1)
@@ -572,6 +612,11 @@ public class FastqBiomodalCollapse
                 }
             }
 
+            if(consensusBases.contains('C'))
+            {
+                consensusBases.remove(MODC_BASE);
+            }
+
             if(consensusBases.size() == 1)
             {
                 return new BaseQualPair(consensusBases.stream().findFirst().orElse(null), base1.Qual - base2.Qual);
@@ -584,7 +629,7 @@ public class FastqBiomodalCollapse
         {
             if(base2.Base == 'G')
             {
-                return new BaseQualPair(MISSING_BASE, 0);
+                return base2;
             }
 
             Set<Character> consensusBases = Sets.newHashSet();
@@ -595,6 +640,11 @@ public class FastqBiomodalCollapse
                 {
                     consensusBases.add(consensusBase_);
                 }
+            }
+
+            if(consensusBases.contains('C'))
+            {
+                consensusBases.remove(MODC_BASE);
             }
 
             if(consensusBases.size() == 1)
@@ -646,20 +696,6 @@ public class FastqBiomodalCollapse
         return new BaseQualPair(MISSING_BASE, 0);
     }
 
-    private static String getConsensusRead(final FastqRecord trimmedFastq1, final FastqRecord trimmedFastq2)
-    {
-        List<BaseQualPair> seq1 = fastqToSeq(trimmedFastq1);
-        List<BaseQualPair> seq2 = fastqToSeq(trimmedFastq2);
-
-        StringBuilder consensusRead = new StringBuilder();
-        for(int i = 0; i < min(seq1.size(), seq2.size()); i++)
-        {
-            consensusRead.append(consensusBaseQualPair(seq1.get(i), seq2.get(i)).Base);
-        }
-
-        return consensusRead.toString();
-    }
-
     private static List<BaseQualPair> collapseAlignedSeq(final List<Pair<BaseQualPair, BaseQualPair>> alignedSeq)
     {
         return alignedSeq.stream().map(x -> consensusBaseQualPair(x.getLeft(), x.getRight())).collect(Collectors.toList());
@@ -700,7 +736,104 @@ public class FastqBiomodalCollapse
         return seq.stream().map(x -> x == null ? String.valueOf(ZERO_QUAL) : String.valueOf(x.qualChar())).collect(Collectors.joining());
     }
 
-    private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1, final FastqRecord fastq2) throws IOException
+    private static class AlignedHairpinInfo
+    {
+        public final int FirstHairpinPos;
+        public final int LastHairpinPos;
+        public final int ExactMatchCount;
+        public final int MismatchCount;
+        public final int IndelCount;
+        public final int SuffixCount;
+
+        public AlignedHairpinInfo(final int firstHairpinPos, final int lastHairpinPos, final int exactMatchCount, final int mismatchCount,
+                final int indelCount, final int suffixCount)
+        {
+            FirstHairpinPos = firstHairpinPos;
+            LastHairpinPos = lastHairpinPos;
+            ExactMatchCount = exactMatchCount;
+            MismatchCount = mismatchCount;
+            IndelCount = indelCount;
+            SuffixCount = suffixCount;
+        }
+    }
+
+    private static AlignedHairpinInfo getAlignedHairpinInfo(final List<Pair<BaseQualPair, BaseQualPair>> alignment)
+    {
+        int matchCount = alignment.stream().mapToInt(x -> x.getLeft() != null && x.getRight() != null ? 1 : 0).sum();
+        if(matchCount == 0)
+        {
+            return null;
+        }
+
+        int firstHairpinPos = 0;
+        while(alignment.get(firstHairpinPos).getRight() == null)
+        {
+            firstHairpinPos++;
+        }
+
+        int suffixCount = 0;
+        while(alignment.get(alignment.size() - 1).getLeft() == null)
+        {
+            suffixCount++;
+            alignment.remove(alignment.size() - 1);
+        }
+
+        int lastHairpinPos = alignment.size() - 1;
+        while(alignment.get(lastHairpinPos).getRight() == null)
+        {
+            lastHairpinPos--;
+        }
+
+        int exactMatchCount = 0;
+        int mismatchCount = 0;
+        int indelCount = 0;
+        for(int i = firstHairpinPos; i <= lastHairpinPos; i++)
+        {
+            Pair<BaseQualPair, BaseQualPair> alignedBase = alignment.get(i);
+            BaseQualPair base1 = alignedBase.getLeft();
+            BaseQualPair base2 = alignedBase.getRight();
+            if(base1 == null || base2 == null)
+            {
+                indelCount++;
+                continue;
+            }
+
+            if(base1.Base == base2.Base)
+            {
+                exactMatchCount++;
+                continue;
+            }
+
+            mismatchCount++;
+        }
+
+        return new AlignedHairpinInfo(firstHairpinPos, lastHairpinPos, exactMatchCount, mismatchCount, indelCount, suffixCount);
+    }
+
+    private static <T, S> List<Pair<T, S>> zip(List<T> xs, List<S> ys)
+    {
+        List<Pair<T, S>> output = Lists.newArrayList();
+        for(int i = 0; i < max(xs.size(), ys.size()); i++)
+        {
+            T left = null;
+            S right = null;
+            if(i < xs.size())
+            {
+                left = xs.get(i);
+            }
+
+            if(i < ys.size())
+            {
+                right = ys.get(i);
+            }
+
+            output.add(Pair.of(left, right));
+        }
+
+        return output;
+    }
+
+    private void processFastqPair(final BufferedWriter writer, final FastqRecord fastq1_, final FastqRecord fastq2_) throws IOException
     {
         if(mFastqPairProcessedCount % 100 == 0)
         {
@@ -709,180 +842,177 @@ public class FastqBiomodalCollapse
 
         mFastqPairProcessedCount++;
 
+        int trimmedLength = min(fastq1_.getReadLength(), fastq2_.getReadLength());
+        FastqRecord fastq1 = new FastqRecord(fastq1_.getReadName(), fastq1_.getReadString().substring(0, trimmedLength), fastq1_.getBaseQualityHeader(), fastq1_.getBaseQualityString().substring(0, trimmedLength));
+        FastqRecord fastq2 = new FastqRecord(fastq2_.getReadName(), fastq2_.getReadString().substring(0, trimmedLength), fastq2_.getBaseQualityHeader(), fastq2_.getBaseQualityString().substring(0, trimmedLength));
+
         List<BaseQualPair> seq1 = fastqToSeq(fastq1);
-        List<BaseQualPair> seqRevComp2 = fastqToSeq(revCompFastq(fastq2));
+        List<BaseQualPair> seq2 = fastqToSeq(fastq2);
 
-        List<Pair<BaseQualPair, BaseQualPair>> fullFragmentSeq = ALIGNER.align(seq1, seqRevComp2, FastqBiomodalCollapse::getExactScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, false, false, true);
+        List<BaseQualPair> seq1RC = fastqToSeq(revCompFastq(fastq1));
+        List<BaseQualPair> seq2RC = fastqToSeq(revCompFastq(fastq2));
 
-        List<BaseQualPair> fullFragmentConsensusSeq = collapseAlignedSeqExact(fullFragmentSeq);
+        RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
+        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
 
-        String fullFragmentCigar = getCigar(fullFragmentSeq);
+        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
+        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
 
-        HairpinInfo fullFragmentHairpin = findHairpin(seqReadString(fullFragmentConsensusSeq), FORWARD_HAIRPIN);
-        if(fullFragmentHairpin != null && fullFragmentHairpin.PrefixMatchLength != -1)
+        // naive alignment
+        List<Pair<BaseQualPair, BaseQualPair>> naiveAlignment = Lists.newArrayList();
+        for(int i = 0; i < min(trimmedLength, min(hairpin1 == null ? Integer.MAX_VALUE : hairpin1.StartIndex, hairpin2 == null ? Integer.MAX_VALUE : hairpin2.StartIndex)); i++)
         {
-            fullFragmentHairpin = null;
+            BaseQualPair base1 = seq1.get(i);
+            BaseQualPair base2 = seq2.get(i);
+            naiveAlignment.add(Pair.of(base1, base2));
         }
 
-        List<BaseQualPair> read1 = Lists.newArrayList();
-        List<BaseQualPair> read2 = Lists.newArrayList();
-        List<BaseQualPair> read2_b = Lists.newArrayList();
-        List<BaseQualPair> read1_b = Lists.newArrayList();
-        List<Pair<BaseQualPair, BaseQualPair>> alignedSeq = null;
-        List<BaseQualPair> consensusSeq = null;
-        String cigar = null;
-        List<Pair<BaseQualPair, BaseQualPair>> alignedSeqRevComp = null;
-        List<BaseQualPair> consensusSeqRevComp = null;
-        String cigarRevComp = null;
-        List<Pair<BaseQualPair, BaseQualPair>> finalAlignedSeq = null;
-        List<BaseQualPair> finalConsensusSeq = null;
-        String finalCigar = null;
-        if(fullFragmentHairpin != null)
+        List<BaseQualPair> naiveConsensus = collapseAlignedSeq(naiveAlignment);
+        ReadPairStats naiveStats = getReadPairStats(naiveAlignment);
+
+        // forward naive consensus
+        int hairpin1StartIndex = hairpin1 == null ? trimmedLength : hairpin1.StartIndex;
+        int hairpin2StartIndex = hairpin2 == null ? trimmedLength : hairpin2.StartIndex;
+        int hairpinStartIndex = min(hairpin1StartIndex, hairpin2StartIndex);
+        List<BaseQualPair> read1 = seq1.subList(0, hairpinStartIndex);
+        List<BaseQualPair> read2 = seq2.subList(0, hairpinStartIndex);
+        List<BaseQualPair> forwardConsensus = collapseAlignedSeq(zip(read1, read2));
+
+        // reverse naive consensus
+        List<BaseQualPair> reverseConsensus = null;
+        if(rcMatch1.MismatchCount != -1)
         {
-            int hairpinStart = fullFragmentHairpin.StartIndex;
-            int hairpinEnd = fullFragmentHairpin.StartIndex + FORWARD_HAIRPIN.length() - 1;
-            for(int i = 0; i < fullFragmentSeq.size(); i++)
+            int rcStartIndex = -rcMatch1.Read1Shift;
+            int rcLength = min(trimmedLength, hairpinStartIndex - rcStartIndex);
+            if(rcLength > 0)
             {
-                if(i < hairpinStart)
-                {
-                    if(fullFragmentSeq.get(i).getLeft() != null)
-                        read1.add(fullFragmentSeq.get(i).getLeft());
-
-                    if(fullFragmentSeq.get(i).getRight() != null)
-                        read2_b.add(fullFragmentSeq.get(i).getRight());
-
-                    continue;
-                }
-
-                if(i > hairpinEnd)
-                {
-                    if(fullFragmentSeq.get(i).getLeft() != null)
-                        read1_b.add(fullFragmentSeq.get(i).getLeft().complementBase());
-
-                    if(fullFragmentSeq.get(i).getRight() != null)
-                        read2.add(fullFragmentSeq.get(i).getRight().complementBase());
-                }
+                List<BaseQualPair> read1RC = seq1RC.subList(0, rcLength);
+                List<BaseQualPair> read2RC = seq2RC.subList(0, rcLength);
+                reverseConsensus = collapseAlignedSeq(zip(read2RC, read1RC));
             }
+        }
 
-            if(read1.isEmpty() || read2.isEmpty())
+        // forward aligned consensus
+        List<Pair<BaseQualPair, BaseQualPair>> forwardAlignment = null;
+        read1 = hairpin1 != null ? seq1.subList(0, hairpin1.StartIndex) : seq1;
+        read2 = hairpin2 != null ? seq2.subList(0, hairpin2.StartIndex) : seq2;
+        if(read1.size() == read2.size())
+        {
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, false, false);
+        }
+        else if(read1.size() < read2.size())
+        {
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, false, true);
+            while(!forwardAlignment.isEmpty() && forwardAlignment.get(forwardAlignment.size() - 1).getLeft() == null)
             {
-                fullFragmentHairpin = null;
+                forwardAlignment.remove(forwardAlignment.size() - 1);
+            }
+        }
+        else
+        {
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, false);
+            while(!forwardAlignment.isEmpty() && forwardAlignment.get(forwardAlignment.size() - 1).getRight() == null)
+            {
+                forwardAlignment.remove(forwardAlignment.size() - 1);
+            }
+        }
+
+        List<BaseQualPair> forwardAlignmentConsensus = collapseAlignedSeq(forwardAlignment);
+        ReadPairStats indelStats = getReadPairStats(forwardAlignment);
+
+        int forwardMatchCount = 0;
+        int forwardInsert1Count = 0;
+        int forwardInsert2Count = 0;
+        for(int i = 0; i < forwardAlignment.size(); i++)
+        {
+            BaseQualPair base1 = forwardAlignment.get(i).getLeft();
+            BaseQualPair base2 = forwardAlignment.get(i).getRight();
+            if(base1 != null && base2 != null)
+            {
+                forwardMatchCount++;
+            }
+            else if(base1 != null)
+            {
+                forwardInsert1Count++;
             }
             else
             {
-                Collections.reverse(read1_b);
-                Collections.reverse(read2);
-
-                alignedSeq = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, false, false);
-                consensusSeq = collapseAlignedSeq(alignedSeq);
-                cigar = getCigar(alignedSeq);
-
-                alignedSeqRevComp = ALIGNER.align(read2_b, read1_b, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, false, false);
-                consensusSeqRevComp = collapseAlignedSeq(alignedSeqRevComp);
-                cigarRevComp = getCigar(alignedSeqRevComp);
-
-                finalAlignedSeq = ALIGNER.align(consensusSeq, consensusSeqRevComp, FastqBiomodalCollapse::getExactScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, false, false, true);
-                finalConsensusSeq = collapseAlignedSeqExact(finalAlignedSeq);
-                finalCigar = getCigar(finalAlignedSeq);
+                forwardInsert2Count++;
             }
         }
 
-        if(fullFragmentHairpin == null)
-        {
-            read1 = fastqToSeq(revCompFastq(fastq1));
-            read2 = fastqToSeq(revCompFastq(fastq2));
-            read2_b = fastqToSeq(revCompFastq(fastq2));
-            read1_b = fastqToSeq(revCompFastq(fastq1));
-
-            alignedSeq = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, true);
-            consensusSeq = collapseAlignedSeq(alignedSeq);
-            cigar = getCigar(alignedSeq);
-
-            alignedSeqRevComp = ALIGNER.align(read2_b, read1_b, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, false, false);
-            consensusSeqRevComp = collapseAlignedSeq(alignedSeqRevComp);
-            cigarRevComp = getCigar(alignedSeqRevComp);
-
-            finalAlignedSeq = ALIGNER.align(consensusSeq, consensusSeqRevComp, FastqBiomodalCollapse::getExactScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, false, false, true);
-            finalConsensusSeq = collapseAlignedSeqExact(finalAlignedSeq);
-            finalCigar = getCigar(finalAlignedSeq);
-        }
+        // reverse aligned consensus
 
         // write output
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
-        statLine.add(fastq1.getReadName());
-        statLine.add(String.valueOf(fastq1.getReadLength()));
-        statLine.add(String.valueOf(fastq2.getReadLength()));
+        statLine.add(fastq1_.getReadName());
+        statLine.add(String.valueOf(fastq1_.getReadLength()));
+        statLine.add(String.valueOf(fastq2_.getReadLength()));
         statLine.add(fastq1.getReadString());
         statLine.add(fastq1.getBaseQualityString());
         statLine.add(fastq2.getReadString());
         statLine.add(fastq2.getBaseQualityString());
 
-        HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         hairpin1 = hairpin1 != null ? hairpin1 : new HairpinInfo(-2, -1, -1);
         statLine.add(String.valueOf(hairpin1.StartIndex + 1));
         statLine.add(String.valueOf(hairpin1.MatchCount));
         statLine.add(String.valueOf(hairpin1.PrefixMatchLength));
 
-        HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
         hairpin2 = hairpin2 != null ? hairpin2 : new HairpinInfo(-2, -1, -1);
         statLine.add(String.valueOf(hairpin2.StartIndex + 1));
         statLine.add(String.valueOf(hairpin2.MatchCount));
         statLine.add(String.valueOf(hairpin2.PrefixMatchLength));
 
-        RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
-        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
         statLine.add(String.valueOf(rcMatch1.Read1Shift));
         statLine.add(String.valueOf(rcMatch1.MismatchCount));
         statLine.add(String.valueOf(rcMatch2.Read1Shift));
         statLine.add(String.valueOf(rcMatch2.MismatchCount));
 
-        hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
-        hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
-        int trimmedEnd1 = hairpin1 == null ? fastq1.getReadLength() - 1 : hairpin1.StartIndex - 1;
-        int trimmedEnd2 = hairpin2 == null ? fastq2.getReadLength() - 1 : hairpin2.StartIndex - 1;
-        FastqRecord trimmedFastq1 = new FastqRecord(fastq1.getReadName(), fastq1.getReadString().substring(0, trimmedEnd1 + 1), fastq1.getBaseQualityHeader(), fastq1.getBaseQualityString().substring(0, trimmedEnd1 + 1));
-        FastqRecord trimmedFastq2 = new FastqRecord(fastq1.getReadName(), fastq2.getReadString().substring(0, trimmedEnd2 + 1), fastq1.getBaseQualityHeader(), fastq2.getBaseQualityString().substring(0, trimmedEnd2 + 1));
-        ReadPairStats stats = getReadPairStats(trimmedFastq1, trimmedFastq2);
+        statLine.add(consensusReadForOutput(seqReadString(naiveConsensus)));
+        statLine.add(seqBaseQualString(naiveConsensus));
 
-        statLine.add(consensusReadForOutput(getConsensusRead(trimmedFastq1, trimmedFastq2)));
-        statLine.add(String.valueOf(stats.MissingCount));
-        statLine.add(String.valueOf(stats.MismatchCount));
-        statLine.add(String.valueOf(stats.HighQualMismatchCountGG));
-        statLine.add(String.valueOf(stats.HighQualMismatchCountOther));
-        statLine.add(String.valueOf(stats.LowQualUnambiguousCount));
-        statLine.add(String.valueOf(stats.LowQualAmbiguousCount));
-        statLine.add(String.valueOf(stats.ModCGCount));
-        statLine.add(String.valueOf(stats.ModCOtherCount));
+        statLine.add(String.valueOf(naiveStats.MissingCount));
+        statLine.add(String.valueOf(naiveStats.MismatchCount));
+        statLine.add(String.valueOf(naiveStats.HighQualMismatchCountGG));
+        statLine.add(String.valueOf(naiveStats.HighQualMismatchCountOther));
+        statLine.add(String.valueOf(naiveStats.LowQualUnambiguousCount));
+        statLine.add(String.valueOf(naiveStats.LowQualAmbiguousCount));
+        statLine.add(String.valueOf(naiveStats.ModCGCount));
+        statLine.add(String.valueOf(naiveStats.ModCOtherCount));
 
-        statLine.add(firstOfAlignmentReadString(fullFragmentSeq));
-        statLine.add(firstOfAlignmentBaseQualString(fullFragmentSeq));
-        statLine.add(secondOfAlignmentReadString(fullFragmentSeq));
-        statLine.add(secondOfAlignmentBaseQualString(fullFragmentSeq));
-        statLine.add(fullFragmentCigar);
-        statLine.add(consensusReadForOutput(seqReadString(fullFragmentConsensusSeq)));
-        statLine.add(seqBaseQualString(fullFragmentConsensusSeq));
+        statLine.add(revCompFastq(fastq1).getReadString());
+        statLine.add(revCompFastq(fastq1).getBaseQualityString());
+        statLine.add(revCompFastq(fastq2).getReadString());
+        statLine.add(revCompFastq(fastq2).getBaseQualityString());
 
-        fullFragmentHairpin = fullFragmentHairpin != null ? fullFragmentHairpin : new HairpinInfo(-2, -1, -1);
-        statLine.add(String.valueOf(fullFragmentHairpin.StartIndex + 1));
-        statLine.add(String.valueOf(fullFragmentHairpin.MatchCount));
+        statLine.add(forwardConsensus == null ? "-" : consensusReadForOutput(seqReadString(forwardConsensus)));
+        statLine.add(forwardConsensus == null ? "-" : seqBaseQualString(forwardConsensus));
 
-        statLine.add(firstOfAlignmentReadString(alignedSeq));
-        statLine.add(firstOfAlignmentBaseQualString(alignedSeq));
-        statLine.add(secondOfAlignmentReadString(alignedSeq));
-        statLine.add(secondOfAlignmentBaseQualString(alignedSeq));
-        statLine.add(firstOfAlignmentReadString(alignedSeqRevComp));
-        statLine.add(firstOfAlignmentBaseQualString(alignedSeqRevComp));
-        statLine.add(secondOfAlignmentReadString(alignedSeqRevComp));
-        statLine.add(secondOfAlignmentBaseQualString(alignedSeqRevComp));
-        statLine.add(cigar);
-        statLine.add(consensusReadForOutput(firstOfAlignmentReadString(finalAlignedSeq)));
-        statLine.add(firstOfAlignmentBaseQualString(finalAlignedSeq));
-        statLine.add(cigarRevComp);
-        statLine.add(consensusReadForOutput(secondOfAlignmentReadString(finalAlignedSeq)));
-        statLine.add(secondOfAlignmentBaseQualString(finalAlignedSeq));
-        statLine.add(finalCigar);
-        statLine.add(consensusReadForOutput(seqReadString(finalConsensusSeq)));
-        statLine.add(seqBaseQualString(finalConsensusSeq));
+        statLine.add(reverseConsensus == null ? "-" : consensusReadForOutput(seqReadString(reverseConsensus)));
+        statLine.add(reverseConsensus == null ? "-" : seqBaseQualString(reverseConsensus));
+
+        statLine.add(consensusReadForOutput(firstOfAlignmentReadString(forwardAlignment)));
+        statLine.add(firstOfAlignmentBaseQualString(forwardAlignment));
+        statLine.add(consensusReadForOutput(secondOfAlignmentReadString(forwardAlignment)));
+        statLine.add(secondOfAlignmentBaseQualString(forwardAlignment));
+
+        statLine.add(getCigar(forwardAlignment));
+        statLine.add(String.valueOf(forwardMatchCount));
+        statLine.add(String.valueOf(forwardInsert2Count));
+        statLine.add(String.valueOf(forwardInsert1Count));
+        statLine.add(String.valueOf(forwardInsert1Count + forwardInsert2Count));
+
+        statLine.add(consensusReadForOutput(seqReadString(forwardAlignmentConsensus)));
+        statLine.add(seqBaseQualString(forwardAlignmentConsensus));
+
+        statLine.add(String.valueOf(indelStats.MissingCount));
+        statLine.add(String.valueOf(indelStats.MismatchCount));
+        statLine.add(String.valueOf(indelStats.HighQualMismatchCountGG));
+        statLine.add(String.valueOf(indelStats.HighQualMismatchCountOther));
+        statLine.add(String.valueOf(indelStats.LowQualUnambiguousCount));
+        statLine.add(String.valueOf(indelStats.LowQualAmbiguousCount));
+        statLine.add(String.valueOf(indelStats.ModCGCount));
+        statLine.add(String.valueOf(indelStats.ModCOtherCount));
 
         writer.write(statLine.toString());
         writer.newLine();
@@ -908,7 +1038,8 @@ public class FastqBiomodalCollapse
             "rev_comp_mismatch_count1",
             "rev_comp_read_shift2",
             "rev_comp_mismatch_count2",
-            "consensus_read",
+            "naive_consensus_read",
+            "naive_consensus_qual",
             "missing_count",
             "mismatch_count",
             "high_qual_GG_mismatch_count",
@@ -917,32 +1048,33 @@ public class FastqBiomodalCollapse
             "low_qual_ambiguous_count",
             "methC_G_count",
             "methC_other_count",
-            "full_aligned_read1",
-            "full_aligned_qual1",
-            "full_aligned_read2_rev_comp",
-            "full_aligned_qual2_rev_comp",
-            "full_fragment_cigar",
-            "full_fragment_consensus_read",
-            "full_fragment_consensus_qual",
-            "full_fragment_consensus_hairpin_start_pos",
-            "full_fragment_consensus_hairpin_8mer_match_count",
-            "read1",
-            "qual1",
-            "read2",
-            "qual2",
-            "read2_b",
-            "qual2_b",
-            "read1_b",
-            "qual1_b",
-            "cigar",
-            "consensus_read",
-            "consensus_qual",
-            "cigar_rc",
-            "consensus_rc_read",
-            "consensus_rc_qual",
-            "final_cigar",
-            "final_consensus_read",
-            "final_consensus_qual"
+            "read1_rc",
+            "qual1_rc",
+            "read2_rc",
+            "qual2_rc",
+            "forward_consensus_read",
+            "forward_consensus_qual",
+            "reverse_consensus_read",
+            "reverse_consensus_qual",
+            "aligned_read1",
+            "aligned_qual1",
+            "aligned_read2",
+            "aligned_qual2",
+            "forward_cigar",
+            "forward_match_count",
+            "forward_insert1_count",
+            "forward_insert2_count",
+            "forward_indel_count",
+            "forward_consensus_read",
+            "forward_consensus_qual",
+            "aligned_missing_count",
+            "aligned_mismatch_count",
+            "aligned_high_qual_GG_mismatch_count",
+            "aligned_high_qual_other_mismatch_count",
+            "aligned_low_qual_unambiguous_count",
+            "aligned_low_qual_ambiguous_count",
+            "aligned_methC_G_count",
+            "aligned_methC_other_count"
     };
 
     public static class ReadPairStats
@@ -974,10 +1106,8 @@ public class FastqBiomodalCollapse
         }
     }
 
-    private static ReadPairStats getReadPairStats(final FastqRecord fastq1, final FastqRecord fastq2)
+    private static ReadPairStats getReadPairStats(List<Pair<BaseQualPair, BaseQualPair>> alignment)
     {
-        String consensusRead = getConsensusRead(fastq1, fastq2);
-
         int missingCount = 0;
         int mismatchCount = 0;
         int highQualMismatchCountGG = 0;
@@ -987,24 +1117,23 @@ public class FastqBiomodalCollapse
         int modCGCount = 0;
         int modCOtherCount = 0;
         int indelCount = 0;
-        for(int i = 0; i < consensusRead.length(); i++)
+        for(int i = 0; i < alignment.size(); i++)
         {
-            char base1 = fastq1.getReadString().charAt(i);
-            int qual1 = fastq1.getBaseQualities()[i];
-            char base2 = fastq2.getReadString().charAt(i);
-            int qual2 = fastq2.getBaseQualities()[i];
-            if(base1 == INS_BASE || base2 == INS_BASE)
+            BaseQualPair base1 = alignment.get(i).getLeft();
+            BaseQualPair base2 = alignment.get(i).getRight();
+            if(base1 == null || base2 == null)
             {
                 indelCount++;
                 continue;
             }
-            else if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+            else if(base1.Base == MISSING_BASE || base2.Base == MISSING_BASE)
             {
                 missingCount++;
                 continue;
             }
 
-            char consensusBase = base2 == 'G' ? MISMATCH_BASE : getConsensusBase(base1, base2);
+            char consensusBase;
+            consensusBase = base2.Base == 'G' ? MISMATCH_BASE : getConsensusBase(base1.Base, base2.Base);
 
             if(baseIndex(consensusBase) != -1)
             {
@@ -1012,9 +1141,9 @@ public class FastqBiomodalCollapse
             else if(consensusBase == MISMATCH_BASE)
             {
                 mismatchCount++;
-                if(min(qual1, qual2) > 30)
+                if(min(base1.Qual, base2.Qual) > 30)
                 {
-                    if(base1 == 'G' && base2 == 'G')
+                    if(base1.Base == 'G' && base2.Base == 'G')
                     {
                         highQualMismatchCountGG++;
                     }
@@ -1023,11 +1152,11 @@ public class FastqBiomodalCollapse
                         highQualMismatchCountOther++;
                     }
                 }
-                else if(qual1 > 30 && base1 != 'T')
+                else if(base1.Qual > 30 && base1.Base != 'T')
                 {
                     lowQualUnambiguousCount++;
                 }
-                else if(qual2 > 30 && base2 != 'A')
+                else if(base2.Qual > 30 && base2.Base != 'A')
                 {
                     lowQualUnambiguousCount++;
                 }
@@ -1038,14 +1167,27 @@ public class FastqBiomodalCollapse
             }
             else if(consensusBase == MODC_BASE)
             {
-                if(i < consensusRead.length() - 1 && consensusRead.charAt(i + 1) == 'G')
-                {
-                    modCGCount++;
-                }
-                else
+                if(i == alignment.size() - 1)
                 {
                     modCOtherCount++;
+                    continue;
                 }
+
+                BaseQualPair nextBase1 = alignment.get(i + 1).getLeft();
+                BaseQualPair nextBase2 = alignment.get(i + 1).getRight();
+                if(nextBase1 == null || nextBase2 == null)
+                {
+                    modCOtherCount++;
+                    continue;
+                }
+
+                if(consensusBaseQualPair(nextBase1, nextBase2).Base == 'G')
+                {
+                    modCGCount++;
+                    continue;
+                }
+
+                modCOtherCount++;
             }
             else
             {
