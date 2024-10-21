@@ -187,7 +187,7 @@ public class JunctionAssembler
             }
         }
 
-        if(extensionJuncPositions.isEmpty())
+        if(extensionJuncPositions.size() < ASSEMBLY_MIN_READ_SUPPORT)
             return;
 
         if(mJunction.isForward())
