@@ -356,9 +356,10 @@ public class FastqBiomodalCollapse
         String read2RevComp = read2RevCompBuilder.toString();
 
         int maxShift = max(read1.length(), read2.length());
-        int bestMismatchCount = Integer.MAX_VALUE;
+        Float bestMismatchProp = null;
         int bestRead1Shift = 0;
-        for(int read1Shift = -maxShift; read1Shift <= maxShift; read1Shift++)
+        int bestMismatchCount = Integer.MAX_VALUE;
+        for(int read1Shift = -maxShift; read1Shift <= min(maxShift, -50); read1Shift++)
         {
             int i1 = 0;
             int i2 = 0;
@@ -398,14 +399,17 @@ public class FastqBiomodalCollapse
                 continue;
             }
 
-            if(mismatchCount < bestMismatchCount)
+            float mismatchProp = 1.0f*mismatchCount/totalCount;
+
+            if(bestMismatchProp == null || mismatchProp < bestMismatchProp)
             {
-                bestMismatchCount = mismatchCount;
+                bestMismatchProp = mismatchProp;
                 bestRead1Shift = read1Shift;
+                bestMismatchCount = mismatchCount;
             }
         }
 
-        if(bestMismatchCount == Integer.MAX_VALUE)
+        if(bestMismatchProp == null)
         {
             return new RevCompMatchInfo(0, -1);
         }
