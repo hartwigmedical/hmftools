@@ -39,10 +39,16 @@ public interface PurpleData
     List<PurpleVariantContext> reportableGermlineVariants();
 
     @NotNull
-    List<StructuralVariant> allSomaticStructuralVariants();
+    List<StructuralVariant> allPassingSomaticStructuralVariants();
 
     @Nullable
-    List<StructuralVariant> allGermlineStructuralVariants();
+    List<StructuralVariant> allPassingGermlineStructuralVariants();
+
+    @NotNull
+    List<StructuralVariant> allInferredSomaticStructuralVariants();
+
+    @Nullable
+    List<StructuralVariant> allInferredGermlineStructuralVariants();
 
     @NotNull
     List<PurpleCopyNumber> allSomaticCopyNumbers();
