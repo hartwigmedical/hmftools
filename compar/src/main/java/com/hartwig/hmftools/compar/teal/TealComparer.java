@@ -67,7 +67,7 @@ public class TealComparer implements ItemComparer
         }
         catch(UncheckedIOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load cider VDJ sequence data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load Teal data: {}", sampleId, e.toString());
             return null;
         }
     }
