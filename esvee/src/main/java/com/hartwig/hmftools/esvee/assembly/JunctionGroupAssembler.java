@@ -168,7 +168,7 @@ public class JunctionGroupAssembler extends ThreadTask
             if(candidateReads.isEmpty())
                 continue;
 
-            if(junction.DiscordantOnly && mConfig.DiscordantOnlyMinFrags == 0)
+            if(junction.DiscordantOnly && mConfig.DiscordantOnlyDisabled)
                 continue;
 
             List<JunctionAssembly> candidateAssemblies = null;

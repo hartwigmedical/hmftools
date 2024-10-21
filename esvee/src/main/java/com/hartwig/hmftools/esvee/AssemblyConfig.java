@@ -100,7 +100,7 @@ public class AssemblyConfig
     public final int AssemblyRefBaseWriteMax;
     public final int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
-    public final int DiscordantOnlyMinFrags;
+    public final boolean DiscordantOnlyDisabled;
 
     public final int Threads;
 
@@ -128,7 +128,7 @@ public class AssemblyConfig
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
-    private static final String DISC_ONLY_MIN_FRAGS = "disc_only_min_frags";
+    private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
 
     private static final String RUN_REMOTE_REF_LINKING = "run_remote_ref_linking";
@@ -239,7 +239,7 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
-        DiscordantOnlyMinFrags = configBuilder.getInteger(DISC_ONLY_MIN_FRAGS);
+        DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
 
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
@@ -331,7 +331,7 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
-        configBuilder.addInteger(DISC_ONLY_MIN_FRAGS, "Discordant only junction min fragments", 0);
+        configBuilder.addFlag(DISC_ONLY_DISABLED, "Disable discordant only junctions");
 
         configBuilder.addInteger(
                 ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",
@@ -391,7 +391,7 @@ public class AssemblyConfig
         AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;
         PhaseProcessingLimit = 0;
-        DiscordantOnlyMinFrags = 0;
+        DiscordantOnlyDisabled = false;
         Threads = 0;
         TruthsetFile = null;
         AlignmentFile = null;
