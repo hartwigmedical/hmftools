@@ -129,6 +129,16 @@ class TrainingRunner(LoggerMixin):
         self.X = X
         return None
 
+    def _check_X_y_rows(self):
+
+        if self.y.shape[0] != self.X.shape[0]:
+            self.logger.warning(
+                "Mismatched number of samples in metadata (%s) and features (%s). Subsetting features with samples present in metadata" %
+                (self.y.shape[0], self.X.shape[0])
+            )
+
+        self.X = self.X.loc[self.y.index]
+
     def load_data(self) -> None:
         self.load_sample_metadata()
         self.get_training_samples()
@@ -137,6 +147,7 @@ class TrainingRunner(LoggerMixin):
         self._get_y_split()
 
         self.get_X()
+        self._check_X_y_rows()
 
     ## CV ================================
     def cv_fit(self) -> None:
