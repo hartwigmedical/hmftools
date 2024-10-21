@@ -187,6 +187,9 @@ public class JunctionAssembler
             }
         }
 
+        if(extensionJuncPositions.isEmpty())
+            return;
+
         if(mJunction.isForward())
             Collections.sort(extensionJuncPositions, Comparator.reverseOrder());
         else
