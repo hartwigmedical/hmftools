@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
+from cuppa.constants import TRAIN_NA_FILL_VALUE
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.compose.pipeline import PipelineCrossValidator
 from cuppa.logger import LoggerMixin, initialize_logging
@@ -31,7 +32,7 @@ class TrainingRunner(LoggerMixin):
         min_samples_with_rna: int = DEFAULT_RUNNER_ARGS.min_samples_with_rna,
         excl_classes: str | list[str] = DEFAULT_RUNNER_ARGS.excl_classes,
 
-        fusion_overrides_path=DEFAULT_RUNNER_ARGS.fusion_overrides_path,
+        fusion_overrides_path: str | None = DEFAULT_RUNNER_ARGS.fusion_overrides_path,
 
         skip_cv: bool = DEFAULT_RUNNER_ARGS.skip_cv,
         cv_folds: int = DEFAULT_RUNNER_ARGS.cv_folds,
@@ -123,7 +124,7 @@ class TrainingRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        loader = CuppaFeaturesLoader(self.features_path)
+        loader = CuppaFeaturesLoader(self.features_path, na_fill_value=TRAIN_NA_FILL_VALUE)
         X = loader.load()
         self.X = X
         return None

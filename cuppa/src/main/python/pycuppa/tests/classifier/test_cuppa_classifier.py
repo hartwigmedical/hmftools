@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from tests.mock_data import MockTrainingData, MockCuppaClassifier
-from cuppa.constants import NA_FILL_VALUE
+from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 from cuppa.components.calibration import RollingAvgCalibration
@@ -44,7 +44,7 @@ class TestMissingFeaturesHandler:
         handler = MissingFeaturesHandler(X, required_features=required_features)
         X_filled = handler.fill_missing()
 
-        assert all(X_filled[missing_features].iloc[0] == NA_FILL_VALUE)
+        assert all(X_filled[missing_features].iloc[0] == PREDICT_NA_FILL_VALUE)
 
     def test_missing_rna_features_are_filled_with_na(self):
         X = pd.DataFrame(

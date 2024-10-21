@@ -10,7 +10,7 @@ from sklearn.compose import make_column_selector
 
 from cuppa.components.passthrough import PassthroughTransformer
 from cuppa.components.preprocessing import NaRowFilter
-from cuppa.constants import SUB_CLF_NAMES, SIG_QUANTILE_TRANSFORMER_NAME, NA_FILL_VALUE
+from cuppa.constants import SUB_CLF_NAMES, SIG_QUANTILE_TRANSFORMER_NAME, PREDICT_NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class MissingFeaturesHandler(LoggerMixin):
         X: pd.DataFrame,
         cuppa_classifier: CuppaClassifier | None = None,
         required_features: Iterable | None = None,
-        fill_value: int | float = NA_FILL_VALUE,
+        fill_value: int | float = PREDICT_NA_FILL_VALUE,
         verbose: bool = True
     ):
         self.X = X
