@@ -359,7 +359,7 @@ public class FastqBiomodalCollapse
         Float bestMismatchProp = null;
         int bestRead1Shift = 0;
         int bestMismatchCount = Integer.MAX_VALUE;
-        for(int read1Shift = -maxShift; read1Shift <= min(maxShift, -50); read1Shift++)
+        for(int read1Shift = -maxShift; read1Shift <= maxShift; read1Shift++)
         {
             int i1 = 0;
             int i2 = 0;
@@ -902,11 +902,11 @@ public class FastqBiomodalCollapse
         read2 = hairpin2 != null ? seq2.subList(0, hairpin2.StartIndex) : seq2;
         if(read1.size() == read2.size())
         {
-            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, false, false);
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, true);
         }
         else if(read1.size() < read2.size())
         {
-            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, false, true);
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, true);
             while(!forwardAlignment.isEmpty() && forwardAlignment.get(forwardAlignment.size() - 1).getLeft() == null)
             {
                 forwardAlignment.remove(forwardAlignment.size() - 1);
@@ -914,7 +914,7 @@ public class FastqBiomodalCollapse
         }
         else
         {
-            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, false);
+            forwardAlignment = ALIGNER.align(read1, read2, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, true);
             while(!forwardAlignment.isEmpty() && forwardAlignment.get(forwardAlignment.size() - 1).getRight() == null)
             {
                 forwardAlignment.remove(forwardAlignment.size() - 1);
@@ -946,6 +946,63 @@ public class FastqBiomodalCollapse
         }
 
         // reverse aligned consensus
+        int rcEndIndex = -1;
+        List<Pair<BaseQualPair, BaseQualPair>> reverseAlignment = null;
+        List<BaseQualPair> reverseAlignmentConsensus = null;
+
+        int reverseMatchCount = 0;
+        int reverseInsert1Count = 0;
+        int reverseInsert2Count = 0;
+        if(rcMatch1.MismatchCount != -1)
+        {
+            int rcStartIndex = -rcMatch1.Read1Shift;
+            int rcLength = min(trimmedLength, hairpinStartIndex - rcStartIndex);
+            rcEndIndex = rcStartIndex + rcLength - 1;
+            if(rcLength > 0)
+            {
+                List<BaseQualPair> read1RC = seq1RC.subList(0, rcLength);
+                List<BaseQualPair> read2RC = seq2RC.subList(0, rcLength);
+                reverseAlignment = ALIGNER.align(read2RC, read1RC, FastqBiomodalCollapse::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, false, false);
+
+                reverseAlignmentConsensus = collapseAlignedSeq(reverseAlignment);
+
+                for(int i = 0; i < reverseAlignment.size(); i++)
+                {
+                    BaseQualPair base1 = reverseAlignment.get(i).getLeft();
+                    BaseQualPair base2 = reverseAlignment.get(i).getRight();
+                    if(base1 != null && base2 != null)
+                    {
+                        reverseMatchCount++;
+                    }
+                    else if(base1 != null)
+                    {
+                        reverseInsert1Count++;
+                    }
+                    else
+                    {
+                        reverseInsert2Count++;
+                    }
+                }
+            }
+        }
+
+        // final consensus
+        List<Pair<BaseQualPair, BaseQualPair>> finalAlignment = null;
+        if(reverseAlignment == null)
+        {
+            finalAlignment = zip(forwardAlignmentConsensus, Collections.emptyList());
+        }
+        else
+        {
+            boolean forwardNoPenaltySuffix = rcEndIndex + 1 < hairpinStartIndex;
+            finalAlignment = ALIGNER.align(forwardAlignmentConsensus, reverseAlignmentConsensus, FastqBiomodalCollapse::getExactScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, forwardNoPenaltySuffix, false);
+            while(!finalAlignment.isEmpty() && finalAlignment.get(0).getLeft() == null)
+            {
+                finalAlignment.remove(0);
+            }
+        }
+
+        List<BaseQualPair> finalAlignmentConsensus = collapseAlignedSeqExact(finalAlignment);
 
         // write output
         StringJoiner statLine = new StringJoiner(STAT_DELIMITER);
@@ -1018,6 +1075,29 @@ public class FastqBiomodalCollapse
         statLine.add(String.valueOf(indelStats.ModCGCount));
         statLine.add(String.valueOf(indelStats.ModCOtherCount));
 
+        statLine.add(reverseAlignment == null ? "-" : consensusReadForOutput(firstOfAlignmentReadString(reverseAlignment)));
+        statLine.add(reverseAlignment == null ? "-" : firstOfAlignmentBaseQualString(reverseAlignment));
+        statLine.add(reverseAlignment == null ? "-" : consensusReadForOutput(secondOfAlignmentReadString(reverseAlignment)));
+        statLine.add(reverseAlignment == null ? "-" : secondOfAlignmentBaseQualString(reverseAlignment));
+        statLine.add(reverseAlignment == null ? "-" : String.valueOf(rcEndIndex + 1));
+
+        statLine.add(reverseAlignment == null ? "-" : getCigar(reverseAlignment));
+        statLine.add(reverseAlignment == null ? "-" : String.valueOf(reverseMatchCount));
+        statLine.add(reverseAlignment == null ? "-" : String.valueOf(reverseInsert2Count));
+        statLine.add(reverseAlignment == null ? "-" : String.valueOf(reverseInsert1Count));
+        statLine.add(reverseAlignment == null ? "-" : String.valueOf(reverseInsert1Count + reverseInsert2Count));
+
+        statLine.add(reverseAlignment == null ? "-" : consensusReadForOutput(seqReadString(reverseAlignmentConsensus)));
+        statLine.add(reverseAlignment == null ? "-" : seqBaseQualString(reverseAlignmentConsensus));
+
+        statLine.add(consensusReadForOutput(firstOfAlignmentReadString(finalAlignment)));
+        statLine.add(firstOfAlignmentBaseQualString(finalAlignment));
+        statLine.add(consensusReadForOutput(secondOfAlignmentReadString(finalAlignment)));
+        statLine.add(secondOfAlignmentBaseQualString(finalAlignment));
+
+        statLine.add(consensusReadForOutput(seqReadString(finalAlignmentConsensus)));
+        statLine.add(seqBaseQualString(finalAlignmentConsensus));
+
         writer.write(statLine.toString());
         writer.newLine();
     }
@@ -1078,7 +1158,25 @@ public class FastqBiomodalCollapse
             "aligned_low_qual_unambiguous_count",
             "aligned_low_qual_ambiguous_count",
             "aligned_methC_G_count",
-            "aligned_methC_other_count"
+            "aligned_methC_other_count",
+            "rc_aligned_read1",
+            "rc_aligned_qual1",
+            "rc_aligned_read2",
+            "rc_aligned_qual2",
+            "rc_alignment_end_pos",
+            "reverse_cigar",
+            "reverse_match_count",
+            "reverse_insert1_count",
+            "reverse_insert2_count",
+            "reverse_indel_count",
+            "reverse_consensus_read",
+            "reverse_consensus_qual",
+            "aligned_forward_consensus_read",
+            "aligned_forward_consensus_qual",
+            "aligned_reverse_consensus_read",
+            "aligned_reverse_consensus_qual",
+            "final_consensus_read",
+            "final_consensus_qual"
     };
 
     public static class ReadPairStats
