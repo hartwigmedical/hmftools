@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE, \
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, PREDICT_NA_FILL_VALUE, \
     SIG_QUANTILE_TRANSFORMER_NAME, CLF_NAMES
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
@@ -322,7 +322,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def fill_missing_cols(
         self,
         X: pd.DataFrame,
-        fill_value: int | float = NA_FILL_VALUE,
+        fill_value: int | float = PREDICT_NA_FILL_VALUE,
         verbose: bool = True
     ):
 
