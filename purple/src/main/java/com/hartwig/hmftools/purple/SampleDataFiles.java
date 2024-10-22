@@ -92,7 +92,7 @@ public class SampleDataFiles
         GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.germline.vcf.gz");
     }
 
-    public boolean usesGridssSVs() { return SomaticSvVcfFile.contains("gridss") || GermlineSvVcfFile.contains("gridss"); }
+    public boolean usesGripssSVs() { return SomaticSvVcfFile.contains("gripss") || GermlineSvVcfFile.contains("gripss"); }
 
     public boolean hasValidSampleNames(final PurpleConfig config)
     {
