@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
@@ -23,8 +22,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -126,21 +125,13 @@ public final class CandidateSerialisation
 
         if(readContext == null)
         {
-            SG_LOGGER.error("variant({}) failed to recreate read context", variant);
-            return null;
-        }
+            SG_LOGGER.warn("variant({}) failed to recreate read context, setting invalid", variant);
+            String refBases = "NNN";
 
-        // TEMP: tracking of changes
-        if(buildFromOldTags)
-        {
-            // old read base length
-            String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
-            String core = context.getAttributeAsString(READ_CONTEXT_CORE, Strings.EMPTY);
-            String rightFlank = context.getAttributeAsString(READ_CONTEXT_RIGHT_FLANK, Strings.EMPTY);
-            int oldReadBaseLength = leftFlank.length() + core.length() + rightFlank.length();
-
-            if(readContext.totalLength() != oldReadBaseLength)
-                context.getCommonInfo().putAttribute(READ_CONTEXT_UPDATED, true);
+            readContext = new VariantReadContext(
+                    variant, readContextVcfInfo.AlignmentStart, 0, refBases.getBytes(), readContextVcfInfo.readBases().getBytes(),
+                    Collections.emptyList(), 0, readContextVcfInfo.VarIndex, 0, null, null,
+                    Collections.emptyList(), 0, 0);
         }
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
