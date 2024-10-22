@@ -236,7 +236,6 @@ public final class PhaseSetMerger
 
         int primaryOffsetAdjust = 0;
         int otherOffsetAdjust = 0;
-        Map<Integer,String> newSequenceOverlaps = Maps.newHashMap();
 
         if(otherMatchStart > primaryMatchStart)
         {
@@ -244,10 +243,6 @@ public final class PhaseSetMerger
             primaryOffsetAdjust = otherMatchStart - primaryMatchStart;
             newSequence = otherSequence.substring(0, primaryOffsetAdjust);
             newSequence += primarySequence;
-
-            int minOtherSeqIndex = primaryOffsetAdjust;
-            otherAssembly.sequenceOverlaps().entrySet().stream()
-                    .filter(x -> x.getKey() < minOtherSeqIndex).forEach(x -> newSequenceOverlaps.put(x.getKey(), x.getValue()));
         }
         else
         {
@@ -264,13 +259,10 @@ public final class PhaseSetMerger
             int otherSeqIndex = otherLength - extensionLength;
 
             newSequence += otherSequence.substring(otherSeqIndex);
-
-            otherAssembly.sequenceOverlaps().entrySet().stream()
-                    .filter(x -> x.getKey() >= otherSeqIndex).forEach(x -> newSequenceOverlaps.put(x.getKey(), x.getValue()));
         }
 
         if(newSequence != null)
-            primaryAssembly.updateSequenceInfo(newSequence, otherAssembly.sequenceOverlaps(), primaryOffsetAdjust);
+            primaryAssembly.updateSequenceInfo(newSequence);
 
         // merge read support, adjusting assembly indices and orientations as required
         if(primaryOffsetAdjust > 0)

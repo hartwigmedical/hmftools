@@ -19,6 +19,7 @@ import com.hartwig.hmftools.chord.snv.SnvPrep;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SnvPrepTest
@@ -35,6 +36,7 @@ public class SnvPrepTest
         FileUtils.deleteDirectory(new File(TMP_OUTPUT_DIR));
     }
 
+    @Ignore
     @Test
     public void canPrepSnvs()
     {

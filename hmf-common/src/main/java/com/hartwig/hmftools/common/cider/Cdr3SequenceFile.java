@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 public class Cdr3SequenceFile
 {
-    enum Column
+    public enum Column
     {
         cdr3Seq,
         cdr3AA,

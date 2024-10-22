@@ -27,7 +27,7 @@ public class TumorStatsFactoryTest
     @Test
     public void canComputeStructuralVariantCount()
     {
-        PurpleData purpleData = createMinimalTestPurpleDataBuilder().addAllSomaticStructuralVariants(
+        PurpleData purpleData = createMinimalTestPurpleDataBuilder().addAllPassingSomaticStructuralVariants(
                         withStartFragmentCount(createStructuralVariant(10, 20, StructuralVariantType.INS, false), 3),
                         withStartFragmentCount(createStructuralVariant(50, 60, StructuralVariantType.DEL, false), 5)
                 )
@@ -49,7 +49,7 @@ public class TumorStatsFactoryTest
         StructuralVariantImpl nonHotspotSV2 = createStructuralVariant(50, 60, StructuralVariantType.DEL, false);
 
         PurpleData purpleData = createMinimalTestPurpleDataBuilder()
-                .addAllSomaticStructuralVariants(hotspotSV, nonHotspotSV1, nonHotspotSV2)
+                .addAllPassingSomaticStructuralVariants(hotspotSV, nonHotspotSV1, nonHotspotSV2)
                 .build();
 
         TumorStats expectedStats = createMinimalTumorStatsBuilder()

@@ -23,9 +23,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -42,7 +40,6 @@ public class AssemblyAlignment
     private String mFullSequence;
     private int mFullSequenceLength;
 
-    private final Map<Integer,String> mSequenceOverlaps;
     private String mSequenceCigar;
 
     private final List<Breakend> mBreakends;
@@ -70,7 +67,6 @@ public class AssemblyAlignment
         }
 
         mSequenceCigar = "";
-        mSequenceOverlaps = Maps.newHashMap();
         mFragmentReadsMap = Maps.newHashMap();
         mBreakends = Lists.newArrayList();
         mLinkIndices = Lists.newArrayList();
@@ -108,13 +104,6 @@ public class AssemblyAlignment
 
     public String assemblyCigar() { return mSequenceCigar; }
     public List<Integer> linkIndices() { return mLinkIndices; }
-
-    public Map<Integer,String> sequenceOverlaps() { return mSequenceOverlaps; }
-
-    public String overlapBases(int sequenceIndex)
-    {
-        return mSequenceOverlaps.containsKey(sequenceIndex) ? mSequenceOverlaps.get(sequenceIndex) : "";
-    }
 
     public String assemblyIds()
     {
@@ -331,7 +320,6 @@ public class AssemblyAlignment
             if(overlapLength > 0)
             {
                 buildSequenceCigar(sequenceCigar, I, overlapLength);
-                mSequenceOverlaps.put(currentSeqLength - 1, link.overlapBases());
             }
 
             currentSeqLength += nextAssemblyRefBases.length(); // this will have been reduced by any overlapping bases already
@@ -529,17 +517,10 @@ public class AssemblyAlignment
         }
     }
 
-    public void updateSequenceInfo(final String newSequence, final Map<Integer,String> newSequenceOverlaps, int primaryOffsetAdjust)
+    public void updateSequenceInfo(final String newSequence)
     {
         mFullSequence = newSequence;
         mFullSequenceLength = newSequence.length();
-
-        for(Map.Entry<Integer,String> entry : mSequenceOverlaps.entrySet())
-        {
-            entry.setValue(entry.getValue() + primaryOffsetAdjust);
-        }
-
-        mSequenceOverlaps.putAll(newSequenceOverlaps);
     }
 
     public String toString()

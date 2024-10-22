@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
 import java.util.List;
 
@@ -76,7 +76,7 @@ public class RefSideSoftClip
             refSideSoftClipLength = read.rightClipLength();
         }
 
-        if(refSideSoftClipLength < READ_SOFT_CLIP_JUNCTION_BUFFER)
+        if(refSideSoftClipLength < ASSEMBLY_MAX_JUNC_POS_DIFF)
             return false;
 
         int softClipPosition = refSideSoftClipPosition;

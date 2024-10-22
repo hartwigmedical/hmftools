@@ -541,10 +541,10 @@ class PipelineCrossValidator(LoggerMixin):
 
         return probs
 
-    def feat_imp(self, mode: str = "coef", return_means: bool = False) -> pd.DataFrame:
+    def feat_imp(self, return_means: bool = False) -> pd.DataFrame:
 
         ## Get feature importances across CV folds
-        importances = [cv_model.feat_imp(mode=mode) for cv_model in self.cv_models]
+        importances = [cv_model.feat_imp() for cv_model in self.cv_models]
 
         ## Convert to multi index dataframe
         importances = dict(enumerate(importances, start=1))

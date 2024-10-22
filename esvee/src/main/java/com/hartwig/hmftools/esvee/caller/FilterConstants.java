@@ -41,8 +41,6 @@ public class FilterConstants
     public static final double DEFAULT_MIN_AF_HOTSPOT = 0.001;
     public static final double DEFAULT_MIN_AF_JUNCTION = DEFAULT_MIN_AF_HOTSPOT;
 
-    public static final int DEFAULT_MIN_AVG_FRAG_FACTOR = 3;
-
     public final boolean FilterSGLs;
     private static final String FILTER_SGLS = "filter_sgls";
 
@@ -54,9 +52,6 @@ public class FilterConstants
     public static final String PON_DISTANCE = "pon_distance";
 
     public static final int SHORT_CALLING_SIZE = 1000;
-    public static final double SGL_MIN_STRAND_BIAS = 0.05;
-    public static final double SGL_MAX_STRAND_BIAS = 0.95;
-    public static final double MAX_STRAND_BIAS = 0.95;
 
     public static final int MIN_TRIMMED_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int MIN_AVG_FRAG_FACTOR = 3;

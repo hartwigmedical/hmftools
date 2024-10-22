@@ -112,7 +112,8 @@ public class PurpleInterpreter
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if(additionalSuspectGermlineVariants != null)
         {
-            LOGGER.info(" Found an additional {} germline variants that are potentially interesting", additionalSuspectGermlineVariants.size());
+            LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
+                    additionalSuspectGermlineVariants.size());
         }
 
         List<PurpleGainLoss> allSomaticGainsLosses =
@@ -125,16 +126,18 @@ public class PurpleInterpreter
                 CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(), purple.purityContext()
                         .bestFit()
                         .ploidy(), allSomaticGainsLosses, driverGenes);
-        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting", nearReportableSomaticGains.size());
+        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
+                nearReportableSomaticGains.size());
 
         List<PurpleGainLoss> additionalSuspectSomaticGainsLosses =
                 CopyNumberSelector.selectInterestingUnreportedGainsLosses(allSomaticGainsLosses, reportableSomaticGainsLosses);
-        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting", additionalSuspectSomaticGainsLosses.size());
+        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
+                additionalSuspectSomaticGainsLosses.size());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
-                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(), allGermlineDeletions, purple.purityContext()
-                        .microsatelliteStatus(), chord != null ? chord.hrStatus() : null);
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
+                        allGermlineDeletions, purple.purityContext().microsatelliteStatus(), chord != null ? chord.hrStatus() : null);
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
         List<PurpleGainLoss> allGermlineFullLosses = null;
@@ -144,8 +147,8 @@ public class PurpleInterpreter
 
         if(allGermlineDeletions != null)
         {
-            List<GermlineDeletion> impliedDeletions =
-                    implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(), purple.allGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
+            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(),
+                    purple.allPassingGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
             List<GermlineDeletion> mergedGermlineDeletions = Lists.newArrayList();
@@ -158,7 +161,8 @@ public class PurpleInterpreter
             allGermlineFullLosses = Lists.newArrayList(fullLossToReportability.keySet());
             reportableGermlineFullLosses = selectReportableGainLosses(fullLossToReportability);
 
-            LOGGER.info(" Resolved {} germline losses of which {} are reportable", allGermlineFullLosses.size(), reportableGermlineFullLosses.size());
+            LOGGER.info(" Resolved {} germline losses of which {} are reportable",
+                    allGermlineFullLosses.size(), reportableGermlineFullLosses.size());
 
             Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability =
                     germlineLossOfHeterozygosityFactory.getReportabilityMap(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
@@ -166,7 +170,8 @@ public class PurpleInterpreter
             allGermlineLossOfHeterozygosities = Lists.newArrayList(lossOfHeterozygosityToReportability.keySet());
             reportableGermlineLossOfHeterozygosities = selectReportableLossOfHeterozygosities(lossOfHeterozygosityToReportability);
 
-            LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
+            LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable",
+                    allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
         return ImmutablePurpleRecord.builder()
@@ -237,9 +242,10 @@ public class PurpleInterpreter
                     && wouldBeReportableDeletion)
             {
                 // assumes deletion is heterozygous in germline
-                impliedDeletions.add(new GermlineDeletion(first.gene(), first.chromosome(), first.chromosomeBand(), Math.min(sv.start()
-                        .position(), sv.end().position()), Math.max(sv.start().position(), sv.end()
-                        .position()), 0, 0, 0, GermlineDetectionMethod.SEGMENT, GermlineStatus.HET_DELETION, tumorStatus, 1D, tumorCopyNumber, Strings.EMPTY, 0, true));
+                impliedDeletions.add(new GermlineDeletion(first.gene(), first.chromosome(), first.chromosomeBand(),
+                        Math.min(sv.start().position(), sv.end().position()), Math.max(sv.start().position(), sv.end().position()),
+                        0, 0, 0, GermlineDetectionMethod.SEGMENT, GermlineStatus.HET_DELETION, tumorStatus, 1D,
+                        tumorCopyNumber, Strings.EMPTY, 0, true));
             }
         }
         return impliedDeletions;
@@ -380,7 +386,8 @@ public class PurpleInterpreter
 
         List<DriverCatalog> allGainLosses = Lists.newArrayList();
 
-        allGainLosses.addAll(AmplificationDrivers.findAmplifications(qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
+        allGainLosses.addAll(AmplificationDrivers.findAmplifications(
+                qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
 
         allGainLosses.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
 
