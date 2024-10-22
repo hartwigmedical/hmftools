@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -52,7 +53,15 @@ public class ReadCigarInfo
     public boolean isValid()
     {
         return FlankIndexStart >= 0 && FlankIndexEnd > FlankIndexStart
-            && CorePositionStart < CorePositionEnd && CorePositionStart >= FlankPositionStart && CorePositionEnd <= FlankPositionEnd;
+            && CorePositionStart < CorePositionEnd && CorePositionStart >= FlankPositionStart && CorePositionEnd <= FlankPositionEnd
+            && hasConsistentCigar();
+    }
+
+    private boolean hasConsistentCigar()
+    {
+        int cigarReadBaseCount = Cigar.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+        int flankBaseLength = FlankIndexEnd - FlankIndexStart + 1;
+        return cigarReadBaseCount == flankBaseLength;
     }
 
     public String toString()
@@ -162,6 +171,9 @@ public class ReadCigarInfo
                             // handles an insert that pushes the alignment out - always take the prior alignment base and reduce index start
                             // eg looking to find the alignment boundary for index start 12 for 10M5I1350M, alignment start == 100
                             // so at the insert element, read index = 10, ref pos = 110 (pointing at next ref base)
+                            if(cigar.size() > 1)
+                                cigar.remove(0);
+
                             int extraIndexStart = leftFlankIndex - readIndex + 1;
                             cigar.add(0, new CigarElement(1, M));
 
@@ -213,8 +225,13 @@ public class ReadCigarInfo
 
             if(readIndex - (element.getOperator() == D ? 1 : 0) >= leftFlankIndex && !addedElement)
             {
-                // add this element falling in between the required indices
-                cigar.add(element);
+                boolean pastFlankStart = readIndex - (element.getOperator() == D ? 1 : 0) >= leftFlankIndex;
+
+                if(pastFlankStart)
+                {
+                    // add this element falling in between the required indices
+                    cigar.add(element);
+                }
             }
 
             if(element.getOperator().consumesReadBases())
