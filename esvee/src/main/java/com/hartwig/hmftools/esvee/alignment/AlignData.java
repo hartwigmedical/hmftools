@@ -209,7 +209,7 @@ public class AlignData
         }
         else
         {
-            double lengthFactor = pow(mAdjustedAlignment / (double) max(100, mAlignedBases), 2);
+            double lengthFactor = pow(mAdjustedAlignment / (double) max(100, mAlignedBases - inexactHomologyLength), 2);
             mModifiedMapQual = (int) round(mMapQual * min(1, lengthFactor));
         }
     }
