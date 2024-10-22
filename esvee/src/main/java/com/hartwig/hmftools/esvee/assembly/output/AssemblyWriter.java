@@ -54,7 +54,7 @@ public class AssemblyWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add("Id");
-            sj.add("Chromosome").add("JunctionPosition").add("JunctionOrientation");
+            sj.add("Chromosome").add("JuncPosition").add("JuncOrientation").add("JuncType");
 
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength").add("RefBaseCigar");
 
@@ -113,6 +113,10 @@ public class AssemblyWriter
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
             sj.add(String.valueOf(assembly.junction().Orient));
+
+            String juncType = assembly.junction().DiscordantOnly ? "DISC" :
+                    (assembly.junction().indelBased() ? "INDEL" : "SPLIT");
+            sj.add(juncType);
 
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));

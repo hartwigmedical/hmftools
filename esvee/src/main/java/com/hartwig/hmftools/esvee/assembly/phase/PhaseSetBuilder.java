@@ -188,6 +188,9 @@ public class PhaseSetBuilder
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
     {
+        if(assembly.discordantOnly())
+            return false;
+
         // look for a local sequence match for the extension bases, thereby forming a short DEL or DUP
         AssemblyLink localRefLink = mLocalSequenceMatcher.tryLocalAssemblyLink(assembly);
 
@@ -235,6 +238,9 @@ public class PhaseSetBuilder
                 boolean isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2, false);
 
                 if(localOnly && !isLocalLink)
+                    continue;
+
+                if(isLocalLink && (assembly1.discordantOnly() || assembly2.discordantOnly()))
                     continue;
 
                 // proximate breakends may not share reads esp if indels vs soft-clips are the source of differences
@@ -329,6 +335,13 @@ public class PhaseSetBuilder
             {
                 boolean eitherInPrimary = primaryLinkedAssemblies.contains(extensionCandidate.Assembly)
                         || primaryLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
+
+                if(eitherInPrimary
+                && (extensionCandidate.Assembly.discordantOnly() || extensionCandidate.SecondAssembly.discordantOnly()))
+                {
+                    // ignore discordant-only junctions with links to an assembly already link
+                    continue;
+                }
 
                 extensionCandidate.markSelected();
                 applySplitLink(extensionCandidate.Link, !eitherInPrimary);

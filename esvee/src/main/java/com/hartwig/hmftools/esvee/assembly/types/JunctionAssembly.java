@@ -144,6 +144,7 @@ public class JunctionAssembly
     public boolean isReverseJunction() { return mJunction.isReverse(); }
 
     public boolean indel() { return mJunction.indelBased(); }
+    public boolean discordantOnly() { return mJunction.DiscordantOnly; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }

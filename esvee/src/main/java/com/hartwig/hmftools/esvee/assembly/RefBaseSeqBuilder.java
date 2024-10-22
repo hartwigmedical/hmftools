@@ -74,12 +74,12 @@ public class RefBaseSeqBuilder
                 if(mIsForward)
                 {
                     // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                    hasValidJunctionOverlap = mAssembly.junction().DiscordantOnly || read.isRightClipped();
+                    hasValidJunctionOverlap = mAssembly.discordantOnly() || read.isRightClipped();
                     hasValidJunctionOverlap &= read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
                 }
                 else
                 {
-                    hasValidJunctionOverlap = mAssembly.junction().DiscordantOnly || read.isLeftClipped();
+                    hasValidJunctionOverlap = mAssembly.discordantOnly() || read.isLeftClipped();
                     hasValidJunctionOverlap &= mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
                 }
             }
