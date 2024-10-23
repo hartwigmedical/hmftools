@@ -1,0 +1,12 @@
+Default settings for each track type. You can overwrite this in your configuration file.
+
+To remove a parameter, use undef as value.
+
+<plot>
+type = heatmap
+...
+# removes default stroke
+stroke_thickness = undef
+</plot>
+
+
