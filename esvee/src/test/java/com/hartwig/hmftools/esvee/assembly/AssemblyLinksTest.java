@@ -423,7 +423,8 @@ public class AssemblyLinksTest
 
         PhaseGroup phaseGroup = new PhaseGroup(firstAssembly, secondAssembly);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, null, phaseGroup);
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(
+                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
 
         phaseSetBuilder.buildPhaseSets();
 

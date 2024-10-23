@@ -18,10 +18,7 @@ public class ExtensionCandidate
     public final JunctionAssembly SecondAssembly;
     public final AssemblyLink Link;
 
-    public int AssemblyMatchedSupport;
-    public int SecondAssemblyMatchedSupport;
-    public int AssemblyCandidateReads;
-    public int SecondAssemblyCandidateReads;
+    public int SupportCount;
 
     public String ExtraInfo;
     public final Object Extender;
@@ -47,38 +44,32 @@ public class ExtensionCandidate
         mIsValid = assemblyLink != null;
         Assembly = assembly1;
         SecondAssembly = assembly2;
-        AssemblyMatchedSupport = 0;
-        SecondAssemblyMatchedSupport = 0;
-        AssemblyCandidateReads = 0;
-        SecondAssemblyCandidateReads = 0;
+        SupportCount = 0;
         ExtraInfo = "";
         Extender = null;
         mSelected = false;
     }
 
-    public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly, final Object extender, final int candidates)
+    public ExtensionCandidate(final ExtensionType type, final JunctionAssembly assembly, final Object extender, final int supportCount)
     {
         Type = type;
         mIsValid = true;
         Assembly = assembly;
         Extender = extender;
-        AssemblyCandidateReads = candidates;
-        AssemblyMatchedSupport = 0;
+        SupportCount = supportCount;
         ExtraInfo = "";
 
         Link = null;
         SecondAssembly = null;
-        SecondAssemblyMatchedSupport = 0;
-        SecondAssemblyCandidateReads = 0;
         mSelected = false;
     }
 
     public boolean selected() { return mSelected; }
     public void markSelected() { mSelected = true; }
 
-    public int totalSupport()
+    public boolean matchesAssemblies(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return AssemblyMatchedSupport + SecondAssemblyMatchedSupport + AssemblyCandidateReads + SecondAssemblyCandidateReads;
+        return (Assembly == assembly1 && SecondAssembly == assembly2) || (Assembly == assembly2 && SecondAssembly == assembly1);
     }
 
     public boolean isValid()
@@ -86,7 +77,7 @@ public class ExtensionCandidate
         if(!mIsValid)
             return false;
 
-        return totalSupport() > 0 || Type == LOCAL_DEL_DUP;
+        return SupportCount > 0 || Type == LOCAL_DEL_DUP;
     }
 
     protected static class StandardComparator implements Comparator<ExtensionCandidate>
@@ -94,11 +85,8 @@ public class ExtensionCandidate
         @Override
         public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
         {
-            int firstSupport = first.totalSupport();
-            int secondSupport = second.totalSupport();
-
-            if(firstSupport != secondSupport)
-                return firstSupport > secondSupport ? -1 : 1;
+            if(first.SupportCount != second.SupportCount)
+                return first.SupportCount > second.SupportCount ? -1 : 1;
 
             if(first.Type == ExtensionType.SPLIT_LINK && second.Type == ExtensionType.SPLIT_LINK)
             {
@@ -122,7 +110,7 @@ public class ExtensionCandidate
             if(first.Type != second.Type)
                 return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
 
-            return Integer.compare(-first.totalSupport(), -second.totalSupport());
+            return Integer.compare(-first.SupportCount, -second.SupportCount);
         }
     }
 
@@ -130,16 +118,13 @@ public class ExtensionCandidate
     {
         if(Link != null)
         {
-            return format("%s %s link(%s) support first(s=%d c=%d) second(s=%d c=%d) total(%d) %s",
-                    mSelected ? "selected" : "candidate", Type,
-                    Link, AssemblyMatchedSupport, AssemblyCandidateReads, SecondAssemblyMatchedSupport,
-                    SecondAssemblyCandidateReads, totalSupport(), ExtraInfo);
+            return format("%s %s link(%s) support(%d) %s",
+                    mSelected ? "selected" : "candidate", Type, Link, SupportCount, ExtraInfo);
         }
         else
         {
-            return format("%s %s assembly(%s) support(s=%d c=%d) total(%d) %s",
-                    mSelected ? "selected" : "candidate", Type,
-                    Assembly, AssemblyMatchedSupport, AssemblyCandidateReads, totalSupport(), ExtraInfo);
+            return format("%s %s assembly(%s) support(%d) %s",
+                    mSelected ? "selected" : "candidate", Type, Assembly, SupportCount, ExtraInfo);
         }
     }
 }

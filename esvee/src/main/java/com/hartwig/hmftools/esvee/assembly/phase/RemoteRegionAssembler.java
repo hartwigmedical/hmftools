@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.floor;
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -19,6 +21,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQua
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,7 +41,6 @@ import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
@@ -55,6 +57,7 @@ public class RemoteRegionAssembler
 
     private int mTotalRemoteReadsSearch;
     private int mTotalRemoteReadsMatched;
+    private int mRemoteReadSlices;
 
     public RemoteRegionAssembler(final RefGenomeInterface refGenome, final BamReader bamReader)
     {
@@ -67,10 +70,12 @@ public class RemoteRegionAssembler
 
         mTotalRemoteReadsSearch = 0;
         mTotalRemoteReadsMatched = 0;
+        mRemoteReadSlices = 0;
     }
 
-    public int totalRemoteReadsSearch() { return mTotalRemoteReadsSearch; }
-    public int totalRemoteReadsMatched() { return mTotalRemoteReadsMatched; }
+    public int remoteReadSlices() { return mRemoteReadSlices; }
+    public int remoteReadsSearch() { return mTotalRemoteReadsSearch; }
+    public int remoteReadsMatched() { return mTotalRemoteReadsMatched; }
 
     public static boolean isExtensionCandidateAssembly(final JunctionAssembly assembly)
     {
@@ -90,7 +95,99 @@ public class RemoteRegionAssembler
         return true;
     }
 
-    public List<Read> extractRemoteReads(final RemoteRegion remoteRegion)
+    public static List<RemoteRegion> collectCandidateRemoteRegions(
+            final JunctionAssembly assembly, final List<JunctionAssembly> phasedAssemblies)
+    {
+        List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
+
+        // ignore remote regions which overlap an assembly in this phase group with any matching reads
+        for(RemoteRegion remoteRegion : assembly.remoteRegions())
+        {
+            if(remoteRegion.isSuppOnlyRegion())
+                continue;
+
+            boolean matchesAssembly = false;
+
+            for(JunctionAssembly otherAssembly : phasedAssemblies)
+            {
+                if(otherAssembly == assembly)
+                    continue;
+
+                if(otherAssembly.discordantOnly()) // allow overlaps with discordant junctions since these don't have precise junctions
+                    continue;
+
+                if(!remoteRegion.overlapsAssembly(otherAssembly))
+                    continue;
+
+                // otherwise ignore if the overlapping assembly has these remote reads already
+                for(String readId : remoteRegion.readIds())
+                {
+                    if(otherAssembly.support().stream().filter(x -> x.type().isSplitSupport()).anyMatch(x -> x.id().equals(readId)))
+                    {
+                        matchesAssembly = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!matchesAssembly)
+                combinedRemoteRegions.add(remoteRegion);
+        }
+
+        return combinedRemoteRegions;
+    }
+
+    private static final int HIGH_REMOTE_REGION_TOTAL_READ_COUNT = 1000;
+    private static final int HIGH_REMOTE_REGION_READ_COUNT = 200;
+
+    public void extractRemoteRegionReads(
+            final int phaseGroupId, final List<RemoteRegion> remoteRegions, final List<Read> remoteRegionReads, boolean applyThresholds)
+    {
+        // slices the BAM at the specified locations for mates of reads in one or more assemblies
+        // first merges overlapping reads to avoid repeated reads
+        RemoteRegion.mergeRegions(remoteRegions);
+
+        int minRemoteRegionReadCount = 1;
+        int maxRemoteRegionReadCount = 0;
+
+        int totalRemoteReads = remoteRegions.stream().mapToInt(x -> x.readCount()).sum();
+
+        // impose restrictions on which remote regions are used - excluding those with 1 or very few reads relatively, eg for 1000 then
+        // a region will be required to have 2+ reads
+        if(applyThresholds && totalRemoteReads >= HIGH_REMOTE_REGION_TOTAL_READ_COUNT)
+        {
+            minRemoteRegionReadCount = (int)floor(log10(totalRemoteReads));
+            Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.readCount()));
+
+            maxRemoteRegionReadCount = HIGH_REMOTE_REGION_TOTAL_READ_COUNT;
+
+            int cappedTotalRemoteReads = remoteRegions.stream().mapToInt(x -> min(x.readCount(), HIGH_REMOTE_REGION_READ_COUNT)).sum();
+
+            if(cappedTotalRemoteReads > HIGH_REMOTE_REGION_TOTAL_READ_COUNT)
+            {
+                double cappedFraction = HIGH_REMOTE_REGION_TOTAL_READ_COUNT/(double)cappedTotalRemoteReads;
+                maxRemoteRegionReadCount = (int)round(cappedFraction * maxRemoteRegionReadCount);
+            }
+        }
+
+        for(RemoteRegion remoteRegion : remoteRegions)
+        {
+            if(remoteRegion.readCount() < minRemoteRegionReadCount)
+                break;
+
+            List<Read> remoteReads = extractRemoteReads(phaseGroupId, remoteRegion);
+
+            if(maxRemoteRegionReadCount > 0 && remoteReads.size() > maxRemoteRegionReadCount)
+            {
+                remoteReads = remoteReads.subList(0, maxRemoteRegionReadCount);
+            }
+
+            // finally as a way of down-sample, restrict a single region's read contribution
+            remoteRegionReads.addAll(remoteReads);
+        }
+    }
+
+    public List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion)
     {
         mRemoteRegion = remoteRegion;
 
@@ -107,10 +204,19 @@ public class RemoteRegionAssembler
 
             mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
-            SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
-                    mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
+            // SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
+            //        mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
 
             mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
+        }
+
+        ++mRemoteReadSlices;
+
+        if((mRemoteReadSlices % 1000) == 0 && mTotalRemoteReadsMatched > 100000)
+        {
+            SV_LOGGER.debug("phId({}) remote region read extraction: slices({}) matched({}) last region({}:{}-{})",
+                    phaseGroupId, mRemoteReadSlices, mTotalRemoteReadsMatched,
+                    mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end());
         }
 
         // ignore supplementaries since their bases provide no new assembly sequence information

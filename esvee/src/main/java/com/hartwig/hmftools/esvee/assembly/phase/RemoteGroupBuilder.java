@@ -168,9 +168,7 @@ public class RemoteGroupBuilder extends ThreadTask
         ++mBuildStats.AssemblyChecks;
 
         RemoteRegion overlappingRegion = assembly.remoteRegions().stream()
-                .filter(x -> x.overlaps(
-                        otherAssembly.junction().Chromosome, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
-                .findFirst().orElse(null);
+                .filter(x -> x.overlapsAssembly(otherAssembly)).findFirst().orElse(null);
 
         if(overlappingRegion == null)
             return false;
