@@ -56,7 +56,7 @@ public class CuppaData implements ComparableItem
 
         // Match by DataType in case we want to compare other DataTypes (e.g. 'feat_contrib' and 'sig_quantile') in the future
         // Currently only support 'prob' DataType
-        return otherCuppaData.PredictionEntry.DataType.equals(PredictionEntry.DataType) &
+        return otherCuppaData.PredictionEntry.DataType.equals(PredictionEntry.DataType) &&
                 otherCuppaData.PredictionEntry.ClassifierName.equals(PredictionEntry.ClassifierName);
     }
 

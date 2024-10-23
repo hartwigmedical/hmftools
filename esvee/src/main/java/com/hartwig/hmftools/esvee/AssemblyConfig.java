@@ -100,13 +100,14 @@ public class AssemblyConfig
     public final int AssemblyRefBaseWriteMax;
     public final int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
-    public final int DiscordantOnlyMinFrags;
+    public final boolean DiscordantOnlyDisabled;
 
     public final int Threads;
 
     public final String TruthsetFile;
     public final String AlignmentFile;
 
+    public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
     public static boolean RunRemoteRefLinking = false;
     public static boolean DevDebug = false;
@@ -127,7 +128,8 @@ public class AssemblyConfig
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
-    private static final String DISC_ONLY_MIN_FRAGS = "disc_only_min_frags";
+    private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
+    private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
 
     private static final String RUN_REMOTE_REF_LINKING = "run_remote_ref_linking";
 
@@ -211,9 +213,11 @@ public class AssemblyConfig
         SpecificJunctions = Lists.newArrayList();
         if(configBuilder.hasValue(SPECIFIC_JUNCTIONS))
         {
-            String[] specificJunctionsStr = configBuilder.getValue(SPECIFIC_JUNCTIONS).split(ITEM_DELIM);
+            String specificJunctionsStr = configBuilder.getValue(SPECIFIC_JUNCTIONS);
+            String junctionDelim = specificJunctionsStr.contains("_") ? "_" : ITEM_DELIM;
+            String[] specificJunctionsList = specificJunctionsStr.split(junctionDelim);
 
-            for(String specificJuncStr : specificJunctionsStr)
+            for(String specificJuncStr : specificJunctionsList)
             {
                 Junction junction = Junction.fromConfigStr(specificJuncStr);
 
@@ -235,12 +239,13 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
-        DiscordantOnlyMinFrags = configBuilder.getInteger(DISC_ONLY_MIN_FRAGS);
+        DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
 
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         RunRemoteRefLinking = configBuilder.hasFlag(RUN_REMOTE_REF_LINKING);
+        WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
@@ -326,13 +331,14 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
-        configBuilder.addInteger(DISC_ONLY_MIN_FRAGS, "Discordant only junction min fragments", 0);
+        configBuilder.addFlag(DISC_ONLY_DISABLED, "Disable discordant only junctions");
 
         configBuilder.addInteger(
                 ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",
                 DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD);
 
         configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
+        configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
         configBuilder.addFlag(RUN_REMOTE_REF_LINKING, "Use unmapped & remote read extension instead of remote ref linking");
@@ -385,14 +391,15 @@ public class AssemblyConfig
         AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;
         PhaseProcessingLimit = 0;
-        DiscordantOnlyMinFrags = 0;
+        DiscordantOnlyDisabled = false;
         Threads = 0;
         TruthsetFile = null;
         AlignmentFile = null;
 
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
-        RunRemoteRefLinking = true;
+        RunRemoteRefLinking = false;
+        WriteCandidateReads = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }

@@ -107,7 +107,8 @@ public class AlignmentWriter
     public static final String FLD_ASSEMBLY_IDS = "AssemblyIds";
     public static final String FLD_ASSEMLY_INFO = "AssemblyInfo";
     public static final String FLD_REF_LOCATION = "RefInfo";
-    public static final String FLD_SEQUENCE_COORDS = "SequenceCoords";
+    public static final String FLD_RAW_SEQ_COORDS = "RawSeqCoords";
+    public static final String FLD_ADJ_SEQ_COORDS = "AdjSeqCoords";
     public static final String FLD_MAP_QUAL = "MapQual";
     public static final String FLD_CIGAR = "Cigar";
     public static final String FLD_ALIGNED_BASES = "AlignedBases";
@@ -135,7 +136,8 @@ public class AlignmentWriter
             sj.add(FLD_ASSEMLY_INFO);
 
             sj.add(FLD_REF_LOCATION);
-            sj.add(FLD_SEQUENCE_COORDS);
+            sj.add(FLD_RAW_SEQ_COORDS);
+            sj.add(FLD_ADJ_SEQ_COORDS);
             sj.add(FLD_MAP_QUAL);
             sj.add(FLD_CIGAR);
             sj.add(FLD_ORIENTATION);
@@ -178,6 +180,7 @@ public class AlignmentWriter
                 sj.add(assemblyStr);
                 sj.add(alignment.refLocation().toString());
                 sj.add(format("%d-%d", alignment.rawSequenceStart(), alignment.rawSequenceEnd()));
+                sj.add(format("%d-%d", alignment.sequenceStart(), alignment.sequenceEnd()));
                 sj.add(String.valueOf(alignment.mapQual()));
                 sj.add(String.valueOf(alignment.cigar()));
                 sj.add(String.valueOf(alignment.orientation()));

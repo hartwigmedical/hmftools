@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 
@@ -41,6 +42,7 @@ public class ReadContextUtilsTest
         int readCoreEnd = readFlankEnd - flankSize;
 
         ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("25M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(110, readCigarInfo.FlankPositionStart);
         assertEquals(120, readCigarInfo.CorePositionStart);
@@ -60,6 +62,7 @@ public class ReadContextUtilsTest
         readCoreEnd = readFlankEnd - flankSize;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("10S10M5S", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(90, readCigarInfo.FlankPositionStart);
         assertEquals(100, readCigarInfo.CorePositionStart);
@@ -85,6 +88,7 @@ public class ReadContextUtilsTest
         readCoreEnd = readFlankEnd - flankSize;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("2M10D20M10D3M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(108, readCigarInfo.FlankPositionStart);
         assertEquals(128, readCigarInfo.CorePositionStart);
@@ -111,6 +115,7 @@ public class ReadContextUtilsTest
         readFlankEnd = 52;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("12M10D20M10D13M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(108, readCigarInfo.FlankPositionStart);
         assertEquals(118, readCigarInfo.CorePositionStart);
@@ -141,6 +146,7 @@ public class ReadContextUtilsTest
         readCoreEnd = readFlankEnd - flankSize;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals(122, readCigarInfo.CorePositionStart);
 
 
@@ -161,6 +167,7 @@ public class ReadContextUtilsTest
         readCoreEnd = readFlankEnd - flankSize;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("1M5I20M5I1M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(109, readCigarInfo.FlankPositionStart);
         assertEquals(116, readCigarInfo.CorePositionStart);
@@ -177,6 +184,7 @@ public class ReadContextUtilsTest
         readFlankEnd = 46;
 
         readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
         assertEquals("7M5I20M5I7M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
         assertEquals(103, readCigarInfo.FlankPositionStart);
         assertEquals(109, readCigarInfo.CorePositionStart);
@@ -184,5 +192,32 @@ public class ReadContextUtilsTest
         assertEquals(136, readCigarInfo.FlankPositionEnd);
         assertEquals(3, readCigarInfo.FlankIndexStart);
         assertEquals(46, readCigarInfo.FlankIndexEnd);
+    }
+
+    @Test
+    public void testReadBasesCigar2()
+    {
+        String readBases = REF_BASES_200.substring(0, 51);
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+        String readCigar = "10M2D10M1I30M";
+        SAMRecord read = buildSamRecord(100, readCigar, readBases, baseQuals);
+
+        int flankSize = DEFAULT_FLANK_LENGTH;
+
+        // test 1: basic core in aligned section
+        int readFlankStart = 20;
+        int readFlankEnd = 44;
+        int readCoreStart = readFlankStart + flankSize;
+        int readCoreEnd = readFlankEnd - flankSize;
+
+        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
+        assertTrue(readCigarInfo.isValid());
+        assertEquals("1M1I24M", CigarUtils.cigarElementsToStr(readCigarInfo.Cigar));
+        assertEquals(121, readCigarInfo.FlankPositionStart);
+        assertEquals(131, readCigarInfo.CorePositionStart);
+        assertEquals(135, readCigarInfo.CorePositionEnd);
+        assertEquals(145, readCigarInfo.FlankPositionEnd);
+        assertEquals(19, readCigarInfo.FlankIndexStart);
+        assertEquals(44, readCigarInfo.FlankIndexEnd);
     }
 }

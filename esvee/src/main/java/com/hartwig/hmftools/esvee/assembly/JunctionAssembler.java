@@ -3,36 +3,31 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
-import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
-import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getJunctionReadExtensionIndices;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -120,7 +115,7 @@ public class JunctionAssembler
             extensionReads.addAll(dominantIndelReads);
         }
 
-        if(!hasMinLengthSoftClipRead || extensionReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
+        if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
             return Collections.emptyList();
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
@@ -132,7 +127,7 @@ public class JunctionAssembler
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        if(assemblySupport.size() < ASSEMBLY_MIN_READ_SUPPORT)
+        if(!aboveMinSupportThreshold(assemblySupport))
             return Collections.emptyList();
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
@@ -144,28 +139,16 @@ public class JunctionAssembler
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
+        addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
         // test for a second well-supported, alternative assembly at the same junction
-        JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly);
+        JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
 
         if(secondAssembly != null)
             assemblies.add(secondAssembly);
 
         for(JunctionAssembly assembly : assemblies)
         {
-            int mismatchReadCount = 0;
-
-            // test other junction-spanning reads against this new assembly
-            for(Read read : junctionReads)
-            {
-                if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
-                    continue;
-
-                if(!canAddJunctionRead(assembly, read))
-                    ++mismatchReadCount;
-            }
-
-            assembly.addMismatchReadCount(mismatchReadCount);
-
             RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
             assembly.setRefBases(refBaseSeqBuilder);
 
@@ -177,31 +160,57 @@ public class JunctionAssembler
 
     private void assessDiscordantJunction(final List<Read> rawReads, final List<Read> extensionReads, final List<Read> junctionReads)
     {
+        if(rawReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
+            return;
+
         // first identify the junction position either from soft-clips or the inner most read
-        int adjustedJuncPosition = 0;
-        int maxSoftClip = 0;
+        List<Integer> extensionJuncPositions = Lists.newArrayListWithCapacity(rawReads.size());
 
         for(Read read : rawReads)
         {
+            if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
+                continue;
+
             if(mJunction.isForward())
             {
-                adjustedJuncPosition = max(read.alignmentEnd(), adjustedJuncPosition);
-                maxSoftClip = max(maxSoftClip, read.rightClipLength());
+                if(read.alignmentEnd() > mJunction.Position)
+                    continue;
+
+                extensionJuncPositions.add(read.unclippedEnd());
             }
             else
             {
-                adjustedJuncPosition = adjustedJuncPosition == 0 ? read.alignmentStart() : min(read.alignmentStart(), adjustedJuncPosition);
-                maxSoftClip = max(maxSoftClip, read.leftClipLength());
+                if(read.alignmentStart() < mJunction.Position)
+                    continue;
+
+                extensionJuncPositions.add(read.unclippedStart());
             }
         }
 
-        // ensure a soft-clip length of the minimum to call a variant
-        if(maxSoftClip < MIN_VARIANT_LENGTH)
+        if(extensionJuncPositions.size() < ASSEMBLY_MIN_READ_SUPPORT)
+            return;
+
+        if(mJunction.isForward())
+            Collections.sort(extensionJuncPositions, Comparator.reverseOrder());
+        else
+            Collections.sort(extensionJuncPositions);
+
+        int outerJuncPosition = extensionJuncPositions.get(0);
+        int secondJuncPosition = extensionJuncPositions.get(ASSEMBLY_MIN_READ_SUPPORT - 1);
+        int adjustedJuncPosition;
+        int originalJuncPosition = mJunction.Position;
+
+        if(mJunction.isForward())
         {
-            if(mJunction.isForward())
-                adjustedJuncPosition -= MIN_VARIANT_LENGTH - maxSoftClip;
-            else
-                adjustedJuncPosition += MIN_VARIANT_LENGTH - maxSoftClip;
+            outerJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+            secondJuncPosition -= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+            adjustedJuncPosition = min(outerJuncPosition, secondJuncPosition);
+        }
+        else
+        {
+            outerJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+            secondJuncPosition += ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+            adjustedJuncPosition = max(outerJuncPosition, secondJuncPosition);
         }
 
         mJunction = new Junction(
@@ -209,15 +218,27 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
+            if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
+            {
+                mNonJunctionReads.add(read);
+                continue;
+            }
+
             int extensionLength;
 
             if(mJunction.isForward())
             {
-                extensionLength = read.alignmentEnd() > adjustedJuncPosition ? read.unclippedEnd() - adjustedJuncPosition : -1;
+                if(read.alignmentEnd() > originalJuncPosition)
+                    continue;
+
+                extensionLength = read.alignmentEnd() >= adjustedJuncPosition ? read.unclippedEnd() - adjustedJuncPosition : -1;
             }
             else
             {
-                extensionLength = read.alignmentStart() < adjustedJuncPosition ? adjustedJuncPosition - read.unclippedStart() : -1;
+                if(read.alignmentStart() < originalJuncPosition)
+                    continue;
+
+                extensionLength = read.alignmentStart() <= adjustedJuncPosition ? adjustedJuncPosition - read.unclippedStart() : -1;
             }
 
             if(extensionLength >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
@@ -229,7 +250,8 @@ public class JunctionAssembler
         }
     }
 
-    private JunctionAssembly checkSecondAssembly(final List<Read> extensionReads, final JunctionAssembly firstAssembly)
+    private JunctionAssembly checkSecondAssembly(
+            final List<Read> extensionReads, final JunctionAssembly firstAssembly, final List<Read> junctionReads)
     {
         if(extensionReads.isEmpty() || mJunction.DiscordantOnly)
             return null;
@@ -259,94 +281,67 @@ public class JunctionAssembler
 
         // perform a final sequence comparison check with more liberal comparison tests
         boolean closeMatch = SequenceCompare.matchedAssemblySequences(firstAssembly, newAssembly);
-        return !closeMatch ? newAssembly : null;
+
+        if(closeMatch)
+            return null;
+
+        addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
+
+        return newAssembly;
     }
 
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final Read read)
+    private void addJunctionReads(
+            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
     {
-        int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
+        int mismatchReadCount = 0;
 
-        if(readJunctionIndex == INVALID_INDEX)
-            return false;
-
-        ReadAssemblyIndices readAssemblyIndices = getJunctionReadExtensionIndices(
-                assembly.junction(), assembly.junctionIndex(), read, readJunctionIndex);
-
-        int assemblyIndexStart = readAssemblyIndices.AssemblyIndexStart;
-        int readIndexStart = readAssemblyIndices.ReadIndexStart;
-        int readIndexEnd = readAssemblyIndices.ReadIndexEnd;
-
-        if(assemblyIndexStart < 0)
+        // test other junction-spanning reads against this new assembly
+        for(Read read : junctionReads)
         {
-            // allow for indel-adjusted reads
-            if(read.indelImpliedAlignmentStart() != mJunction.Position)
-                return false;
-
-            readIndexStart -= assemblyIndexStart;
-            assemblyIndexStart = 0;
-        }
-
-        // first attempt a straight string match for simplicity
-        int matchLength = readIndexEnd - readIndexStart + 1;
-
-        if(matchLength < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-            return false;
-
-        int highQualMatchCount = 0;
-        int mismatchCount = 0;
-        int checkedBaseCount = 0;
-
-        final byte[] assemblyBases = assembly.bases();
-        final byte[] assemblyBaseQuals = assembly.baseQuals();
-
-        int assemblyIndex = assemblyIndexStart;
-        int assemblyBaseLength = assembly.baseLength();
-
-        for(int i = readIndexStart; i <= readIndexEnd; ++i, ++assemblyIndex)
-        {
-            if(assemblyIndex < 0)
+            if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
                 continue;
 
-            if(assemblyIndex >= assemblyBaseLength)
-                break;
-
-            byte qual = read.getBaseQuality()[i];
-            ++checkedBaseCount;
-
-            if(basesMatch(read.getBases()[i], assemblyBases[assemblyIndex], qual, assemblyBaseQuals[assemblyIndex]))
-            {
-                if(aboveMinQual(qual) && assemblyIndex != assembly.junctionIndex())
-                    ++highQualMatchCount;
-            }
-            else
-            {
-                ++mismatchCount;
-
-                if(mismatchCount > PRIMARY_ASSEMBLY_READ_MAX_MISMATCH)
-                    break;
-            }
+            if(!canAddJunctionRead(assembly, extensionSeqBuilder, read))
+                ++mismatchReadCount;
         }
 
-        int permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
+        assembly.addMismatchReadCount(mismatchReadCount);
+    }
 
-        if(mismatchCount > permittedMismatches)
-        {
-            checkedBaseCount = readIndexEnd - readIndexStart + 1;
+    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
+    {
+        ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
 
-            if(assemblyIndex < 0)
-                checkedBaseCount = max(checkedBaseCount + assemblyIndex, 0);
-
-            permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
-
-            // test again taking repeats into consideration
-            mismatchCount = calcReadSequenceMismatches(
-                    mJunction.isForward(), assemblyBases, assemblyBaseQuals, assembly.repeatInfo(), read, readJunctionIndex, permittedMismatches);
-        }
-
-        if(mismatchCount > permittedMismatches || highQualMatchCount < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+        if(readParseState == null)
             return false;
 
-        assembly.addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount);
+        if(readParseState.exceedsMaxMismatches() || readParseState.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            return false;
+
+        assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
         return true;
+    }
+
+    private static boolean aboveMinSupportThreshold(final List<SupportRead> assemblySupport)
+    {
+        // account for overlapping fragments
+        if(assemblySupport.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+            return true;
+
+        Set<String> uniqueReadIds = Sets.newHashSet();
+        assemblySupport.forEach(x -> uniqueReadIds.add(x.id()));
+
+        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
+    }
+
+    private static boolean aboveMinReadThreshold(final List<Read> reads)
+    {
+        if(reads.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+            return true;
+
+        Set<String> uniqueReadIds = Sets.newHashSet();
+        reads.forEach(x -> uniqueReadIds.add(x.id()));
+
+        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
     }
 }

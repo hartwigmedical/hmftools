@@ -74,10 +74,10 @@ public interface OrangeWGSRefConfig
     @NotNull
     String chordPredictionTxt();
 
-    @NotNull
+    @Nullable
     String cuppaVisDataTsv();
 
-    @NotNull
+    @Nullable
     String cuppaSummaryPlot();
 
     @NotNull
@@ -118,10 +118,6 @@ public interface OrangeWGSRefConfig
         String chordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, CHORD_DIR);
         builder.chordPredictionTxt(mandatoryPath(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
 
-        String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
-        builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaSummaryPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
-
         String sigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
         builder.sigsAllocationTsv(mandatoryPath(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
 
@@ -140,6 +136,10 @@ public interface OrangeWGSRefConfig
 
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
+
+            String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
+            builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
+            builder.cuppaSummaryPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
 
             // PEACH optional so that skipping it in oncoanalyser still generates an ORANGE report
             String peachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, PEACH_DIR);

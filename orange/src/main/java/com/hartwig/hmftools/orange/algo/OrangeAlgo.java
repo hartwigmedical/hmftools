@@ -200,7 +200,16 @@ public class OrangeAlgo
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
-        LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
+        LinxInterpreter linxInterpreter = new LinxInterpreter(
+                driverGenes,
+                knownFusionCache,
+                purpleData.allPassingSomaticStructuralVariants(),
+                purpleData.allPassingGermlineStructuralVariants(),
+                purpleData.allInferredSomaticStructuralVariants(),
+                purpleData.allInferredGermlineStructuralVariants(),
+                ensemblDataCache
+        );
+
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);
@@ -431,7 +440,7 @@ public class OrangeAlgo
                 purple.reportableSomaticVariants().size());
         LOGGER.info(" Loaded {} somatic copy numbers entries", purple.allSomaticCopyNumbers().size());
         LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
-        LOGGER.info(" Loaded {} somatic structural variants", purple.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} somatic structural variants", purple.allPassingSomaticStructuralVariants().size());
 
         if(referenceSample != null)
         {
@@ -444,7 +453,7 @@ public class OrangeAlgo
                     purple.allGermlineDeletions().size(),
                     purple.reportableGermlineDeletions().size());
 
-            LOGGER.info(" Loaded {} germline structural variants", purple.allGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} germline structural variants", purple.allPassingGermlineStructuralVariants().size());
         }
         else
         {
@@ -590,7 +599,7 @@ public class OrangeAlgo
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws Exception
     {
         OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        if(orangeWGSRefConfig == null)
+        if(orangeWGSRefConfig == null || orangeWGSRefConfig.cuppaVisDataTsv() == null)
         {
             return null;
         }

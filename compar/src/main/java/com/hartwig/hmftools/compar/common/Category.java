@@ -25,7 +25,10 @@ public enum Category
     GERMLINE_FLAGSTAT,
     TUMOR_BAM_METRICS,
     GERMLINE_BAM_METRICS,
-    SNP_GENOTYPE;
+    SNP_GENOTYPE,
+    CDR3_SEQUENCE,
+    CDR3_LOCUS_SUMMARY,
+    TELOMERE_LENGTH;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";

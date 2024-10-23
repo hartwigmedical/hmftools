@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -11,7 +10,6 @@ import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder.readRefBaseLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +43,7 @@ public class RefBaseSequenceTest
         int readJunctionIndex = 10; // soft-clip length
         boolean isForwardJunction = false;
 
-        ReadParseState readState = new ReadParseState(
+        RefReadParseState readState = new RefReadParseState(
                 isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
 
         assertEquals(11, readState.refPosition());
@@ -70,7 +68,7 @@ public class RefBaseSequenceTest
         // test again with indels
         read = createRead(READ_ID_GENERATOR.nextId(), 1, REF_BASES_200.substring(1, 36), "5M5D5M5I10M10S");
 
-        readState = new ReadParseState(
+        readState = new RefReadParseState(
                 isForwardJunction, read, 0, readRefBaseLength(read, 0, isForwardJunction));
 
         assertEquals(1, readState.refPosition());
@@ -150,7 +148,7 @@ public class RefBaseSequenceTest
         int readJunctionIndex = 29;
         boolean isForwardJunction = true;
 
-        ReadParseState readState = new ReadParseState(
+        RefReadParseState readState = new RefReadParseState(
                 isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
 
         assertEquals(30, readState.refPosition());
@@ -182,7 +180,7 @@ public class RefBaseSequenceTest
         // bases 1-10, index 0-9 = 10S
 
         readJunctionIndex = read.basesLength() - 1;
-        readState = new ReadParseState(
+        readState = new RefReadParseState(
                 isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
 
         assertEquals(35, readState.refPosition());
@@ -262,7 +260,7 @@ public class RefBaseSequenceTest
         int readJunctionIndex = 15;
         boolean isForwardJunction = false;
 
-        ReadParseState readState = new ReadParseState(
+        RefReadParseState readState = new RefReadParseState(
                 isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
 
         assertEquals(22, readState.refPosition());
@@ -287,7 +285,7 @@ public class RefBaseSequenceTest
         readJunctionIndex = 31;
         isForwardJunction = true;
 
-        readState = new ReadParseState(
+        readState = new RefReadParseState(
                 isForwardJunction, read, readJunctionIndex, readRefBaseLength(read, readJunctionIndex, isForwardJunction));
 
         assertEquals(38, readState.refPosition());
@@ -385,13 +383,13 @@ public class RefBaseSequenceTest
         // refBases1: AAACCCGGGT       TAACC TTTTT GGTTACGTAA"
         // refBases2: AAACCCGGGT TTACG TAACC TTTTT GGTTACGTAA"
         // refBases3: AAACCCGGGT       TAACC       GGTTACGTAA"
-        String insert = "TTTT";
+        String insert = "TT";
         String refBases1 = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
-        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M4I10M40S");
+        read1 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases1 + extBases, "10M5D5M2I10M40S");
 
         // has the insert but not the delete
         String refBases2 = readRefBases.substring(0, 20) + insert + readRefBases.substring(20, 30);
-        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M4I10M40S");
+        read2 = createRead(READ_ID_GENERATOR.nextId(), 71, refBases2 + extBases, "20M2I10M40S");
 
         // has the delete but not the insert
         String refBases3 = readRefBases.substring(0, 10) + readRefBases.substring(15, 30);
@@ -410,12 +408,12 @@ public class RefBaseSequenceTest
         refSeqBases = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
         assertEquals(refSeqBases, refBaseSeqBuilder.refBaseSequence());
         assertEquals(71, refBaseSeqBuilder.refBasePosition());
-        assertEquals(29, refBaseSeqBuilder.refBaseLength());
-        assertEquals("10M5D5M4I10M", refBaseSeqBuilder.cigarStr());
+        assertEquals(27, refBaseSeqBuilder.refBaseLength());
+        assertEquals("10M5D5M2I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadIndelMismatchCount(refBaseSeqBuilder, read2));
-        assertEquals(4, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
+        assertEquals(2, getReadIndelMismatchCount(refBaseSeqBuilder, read3));
     }
 
     @Test
@@ -548,13 +546,13 @@ public class RefBaseSequenceTest
 
     private static int getReadMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)
     {
-        ReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
+        RefReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
         return readState.mismatches();
     }
 
     private static int getReadIndelMismatchCount(final RefBaseSeqBuilder refBaseSeqBuilder, final Read read)
     {
-        ReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
+        RefReadParseState readState = refBaseSeqBuilder.reads().stream().filter(x -> x.read() == read).findFirst().orElse(null);
         return readState.indelMismatches();
     }
 }

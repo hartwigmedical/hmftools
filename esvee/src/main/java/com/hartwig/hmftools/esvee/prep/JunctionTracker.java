@@ -358,6 +358,7 @@ public class JunctionTracker
         perfCounterStart(PerfCounters.DiscordantGroups);
 
         DiscordantGroups discordantGroups = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mConfig.TrackRemotes);
+
         List<JunctionData> discordantJunctions = discordantGroups.formDiscordantJunctions(mCandidateDiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
@@ -376,8 +377,8 @@ public class JunctionTracker
 
     private void createJunction(final ReadGroup readGroup)
     {
-        List<JunctionData> junctions = Lists.newArrayList();
-        List<RemoteJunction> remoteJunctions = Lists.newArrayList();
+        List<JunctionData> junctions = Lists.newArrayListWithExpectedSize(2);
+        List<RemoteJunction> remoteJunctions = mConfig.TrackRemotes ? Lists.newArrayList() : Collections.emptyList();
 
         for(PrepRead read : readGroup.reads())
         {

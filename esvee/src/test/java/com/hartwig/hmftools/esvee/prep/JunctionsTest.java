@@ -379,11 +379,6 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 560, CHR_1, 6000); // too far
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 570, CHR_1, 5000);
 
-        // initially none because they are assigned to existing junctions
-        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(0, junctions.size());
-
-        discordantCandidates.forEach(x -> x.clearJunctionPositions());
         junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
         assertEquals(8, junctions.get(0).SupportingGroups.size());

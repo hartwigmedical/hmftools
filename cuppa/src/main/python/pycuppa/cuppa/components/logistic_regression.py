@@ -87,8 +87,18 @@ class LogisticRegression(sklearn.linear_model._logistic.LogisticRegression):
 
         """
         super().fit(np.array(X), y, sample_weight)
+
         self.X_means = np.mean(X, axis=0)
         self.feature_names_in_ = np.array(X.columns)
+
+        if len(self.classes_) == 2:
+            ## Binary classification will only return a 1-row coefficient matrix which are for the positive class.
+            ## Other methods expect no. of classes == no. rows in the coefficient matrix. Therefore, we need to make
+            ## a 2 row matrix.
+            coef_pos_class = self.coef_[0]
+            coef_neg_class = coef_pos_class * -1
+            self.coef_ = np.vstack([coef_neg_class, coef_pos_class])
+
         return self
 
     def predict_proba(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -252,6 +262,7 @@ class LogisticRegression(sklearn.linear_model._logistic.LogisticRegression):
         ## Add priors
         priors = np.dot(self.coef_, self.X_means) + self.intercept_
         priors = np.array(list(priors) * n_samples)
+
         contribs.insert(0, "_prior", priors)
 
         ## Convert -0 to 0

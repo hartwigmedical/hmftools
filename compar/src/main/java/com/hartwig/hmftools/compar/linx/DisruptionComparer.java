@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFileLoader.fromGridssFile;
+import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.SvFactoryInterface;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -33,6 +36,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class DisruptionComparer implements ItemComparer
 {
@@ -77,7 +82,14 @@ public class DisruptionComparer implements ItemComparer
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
             String vcfFile = PurpleCommon.purpleSomaticSvFile(fileSources.Purple, sampleId);
+
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+
+            if(variants.stream().anyMatch(x -> x.startContext().getID().contains("gridss")))
+            {
+                variants = fromGridssFile(vcfFile, new AlwaysPassFilter());
+            }
+
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             int svId = 0;

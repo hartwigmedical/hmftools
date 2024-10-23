@@ -22,7 +22,7 @@ import org.apache.logging.log4j.core.util.IOUtils;
 
 public class CytoBands
 {
-    private final Map<String,List<CytoBand>> mChromosomeMap;
+    private final Map<String, List<CytoBand>> mChromosomeMap;
 
     public CytoBands(final RefGenomeVersion refGenomeVersion)
     {
@@ -35,7 +35,9 @@ public class CytoBands
         List<CytoBand> bands = mChromosomeMap.get(chromosome);
 
         if(bands == null)
+        {
             return null;
+        }
 
         CytoBand band = bands.stream().filter(x -> x.containsPosition(position)).findFirst().orElse(null);
         return band != null ? band.Name : null;
@@ -54,6 +56,8 @@ public class CytoBands
         int posStartIndex = 1;
         int posEndIndex = 2;
         int nameIndex = 3;
+
+        lines.remove(0); // remove header
 
         for(String line : lines)
         {

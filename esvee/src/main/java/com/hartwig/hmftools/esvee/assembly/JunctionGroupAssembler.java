@@ -168,7 +168,7 @@ public class JunctionGroupAssembler extends ThreadTask
             if(candidateReads.isEmpty())
                 continue;
 
-            if(junction.DiscordantOnly && mConfig.DiscordantOnlyMinFrags == 0)
+            if(junction.DiscordantOnly && mConfig.DiscordantOnlyDisabled)
                 continue;
 
             List<JunctionAssembly> candidateAssemblies = null;
@@ -263,10 +263,11 @@ public class JunctionGroupAssembler extends ThreadTask
         }
 
         // link first and second in pair if within the same group
-        boolean hasLocalMate = read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
+        boolean hasLocalMate = read.isMateUnmapped()
+                || (read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
                 && positionsOverlap(
                         read.mateAlignmentStart(), read.mateAlignmentEnd(),
-                        mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd());
+                        mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd()));
 
         // link first and second in pair if within the same group
         boolean hasLocalSupplementary = read.hasSupplementary() && read.supplementaryData().Chromosome.equals(read.chromosome())
@@ -279,6 +280,19 @@ public class JunctionGroupAssembler extends ThreadTask
         int expectedCount = 1 + (hasLocalMate ? 1 : 0) + (hasLocalSupplementary ? 1 : 0); // approximate only for array size
         readGroup = new ReadGroup(read, expectedCount);
         mReadGroupMap.put(read.id(), readGroup);
+
+        if(read.isUnmapped())
+        {
+            // check for an inconsistent mate which hasn't been cached in this read group
+            for(Read cachedRead : mCurrentJunctionGroup.candidateReads())
+            {
+                if(cachedRead != read && cachedRead.isMateMapped() && cachedRead.id().equals(read.id()) && !readGroup.hasRead(cachedRead))
+                {
+                    readGroup.addRead(cachedRead);
+                    break;
+                }
+            }
+        }
     }
 
     private class ReadGroup
@@ -297,6 +311,8 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             mReads.add(read);
         }
+
+        public boolean hasRead(final Read read) { return mReads.contains(read); }
 
         public void formReadLinks()
         {

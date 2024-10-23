@@ -600,20 +600,22 @@ public class SpecificAlignmentsTest
         juncRead1.bamRecord().setReadNegativeStrandFlag(true);
         juncRead1.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
+        String juncRead1Bases = extBases1.substring(51, 101) + refBases1;
         Read juncRead1b = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 100, assemblyBases1, "50S50M", CHR_1, 251, true);
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, juncRead1Bases, "50S50M", CHR_1, 251, true);
 
         Read juncRead1c = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 100, assemblyBases1, "50S50M", CHR_1, 151, true);
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, juncRead1Bases, "50S50M", CHR_1, 151, true);
         juncRead1c.bamRecord().setAttribute(MATE_CIGAR_ATTRIBUTE, "50M50S");
 
         Read juncRead1d = createRead(
-                READ_ID_GENERATOR.nextId(), CHR_1, 100, assemblyBases1, "50S50M", CHR_1, 150, true);
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, juncRead1Bases, "50S50M", CHR_1, 150, true);
 
         assembly1.addJunctionRead(juncRead1d);
 
+        String mateBases1 = refGenome.getBaseString(CHR_1, 150, 250);
         Read mate1d = createRead(
-                juncRead1d.id(), CHR_1, 150, assemblyBases1, "100M", CHR_1, 100, false);
+                juncRead1d.id(), CHR_1, 150, mateBases1, "100M", CHR_1, 100, false);
         mate1d.bamRecord().setReadNegativeStrandFlag(true);
 
         juncRead1d.setMateRead(mate1d);
@@ -767,8 +769,6 @@ public class SpecificAlignmentsTest
 
         remoteRegion.addReadDetails(remoteRead2.id(), remoteRead2.alignmentStart(), remoteRead2.alignmentEnd(), RemoteReadType.DISCORDANT);
 
-        remoteRegionAssembler.addMatchedReads(List.of(remoteRead1, remoteRead2), remoteRegion);
-
         PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
         phaseGroup.addAssembly(assembly3);
 
@@ -778,37 +778,41 @@ public class SpecificAlignmentsTest
         assertEquals(1, phaseGroup.phaseSets().size());
         PhaseSet phaseSet = phaseGroup.phaseSets().get(0);
 
-        assertEquals(4, phaseSet.assemblyLinks().size());
-        assertEquals(5, phaseSet.assemblies().size());
+        assertEquals(3, phaseSet.assemblyLinks().size());
+        assertEquals(4, phaseSet.assemblies().size());
 
-        JunctionAssembly remoteAssembly = phaseSet.assemblies().get(3);
-        JunctionAssembly branchedAssembly = phaseSet.assemblies().get(4);
+        JunctionAssembly branchedAssembly = phaseSet.assemblies().stream()
+                .filter(x -> x != assembly1 && x != assembly2 && x != assembly3)
+                .findFirst().orElse(null);
+
+        assertNotNull(branchedAssembly);
+
+        assertEquals(201, assembly1.refBaseLength());
+        assertEquals(201, assembly3.refBaseLength());
+        assertEquals(101, assembly2.refBaseLength());
+        assertEquals(101, branchedAssembly.refBaseLength());
 
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly2, assembly3, LinkType.SPLIT);
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly1, assembly3, LinkType.FACING);
         hasAssemblyLink(phaseSet.assemblyLinks(), branchedAssembly, assembly2, LinkType.FACING);
 
-        /*
-        assertEquals(3, assembly1.supportCount());
-        assertEquals(2, assembly2.supportCount());
-        assertEquals(3, assembly3.supportCount());
-        assertEquals(1, getSupportTypeCount(assembly1, DISCORDANT));
+        assertEquals(20, assembly1.supportCount());
+        assertEquals(14, assembly2.supportCount());
+        assertEquals(5, assembly3.supportCount());
+        assertEquals(0, getSupportTypeCount(assembly1, DISCORDANT));
         assertEquals(0, getSupportTypeCount(assembly2, DISCORDANT));
-        */
 
-        String bases1 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 249));
-        String bases2 = refGenome.getBaseString(CHR_1, 100, 300) + "A";
-        String bases3 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 200));
-        String bases4 = refGenome.getBaseString(CHR_2, 100, 200);
-
-        String fullSequence = bases1 + bases2 + bases3;
+        String bases1 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_2, 100, 200));
+        String bases2 = refGenome.getBaseString(CHR_1, 100, 200);
+        String bases3 = Nucleotides.reverseComplementBases(refGenome.getBaseString(CHR_1, 100, 300));
 
         // the bases from the repeated link are now omitted
-        // String fullSequence = bases1 + bases2 + bases3 + bases4;
+        String expectedFullSequence = bases1 + bases2 + "C" + bases3;
 
         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
+        String actualFullSequence = assemblyAlignment.fullSequence();
 
-        assertEquals(fullSequence, assemblyAlignment.fullSequence());
+        assertEquals(expectedFullSequence, actualFullSequence);
 
         /*
         checkSupportReadSequenceIndices(assembly1, 0, 150, FORWARD);

@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
@@ -25,13 +26,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.assembly.ReadParseState;
+import com.hartwig.hmftools.esvee.assembly.RefReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.util.CigarUtil;
 
 public class JunctionAssembly
 {
@@ -144,6 +144,7 @@ public class JunctionAssembly
     public boolean isReverseJunction() { return mJunction.isReverse(); }
 
     public boolean indel() { return mJunction.indelBased(); }
+    public boolean discordantOnly() { return mJunction.DiscordantOnly; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -334,7 +335,7 @@ public class JunctionAssembly
         for(int i = 0; i < mSupport.size(); ++i)
         {
             SupportRead read = mSupport.get(i);
-            ReadParseState readState = refBaseSeqBuilder.reads().get(i);
+            RefReadParseState readState = refBaseSeqBuilder.reads().get(i);
 
             if(readState.isValid() && !readState.exceedsMaxMismatches())
             {
@@ -342,6 +343,35 @@ public class JunctionAssembly
                 checkAddRefSideSoftClip(read.cachedRead());
             }
         }
+    }
+
+    public void trimRefBasePosition(int newRefBasePosition)
+    {
+        if(isForwardJunction())
+        {
+            int trimLength = newRefBasePosition - mRefBasePosition;
+
+            if(trimLength <= 0)
+                return;
+
+            mBases = subsetArray(mBases, trimLength, mBases.length - 1);
+            mBaseQuals = subsetArray(mBaseQuals, trimLength, mBaseQuals.length - 1);
+            mJunctionIndex -= trimLength;
+        }
+        else
+        {
+            int trimLength = mRefBasePosition - newRefBasePosition;
+
+            if(trimLength <= 0)
+                return;
+
+            mBases = subsetArray(mBases, 0, mBases.length - 1 - trimLength);
+            mBaseQuals = subsetArray(mBaseQuals, 0, mBaseQuals.length - 1 - trimLength);
+        }
+
+        mRefBasePosition = newRefBasePosition;
+
+        // note that the ref base cigar is not adjusted since it is curently not extended from additional ref based reads either
     }
 
     public void extendRefBases(int newRefBasePosition, final RefGenomeInterface refGenome)

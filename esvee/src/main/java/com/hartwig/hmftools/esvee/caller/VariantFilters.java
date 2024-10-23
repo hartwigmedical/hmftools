@@ -6,12 +6,18 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
@@ -20,6 +26,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_INV;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +37,6 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantFilters
 {
@@ -63,9 +69,6 @@ public class VariantFilters
         if(belowMinQuality(var))
             var.addFilter(MIN_QUALITY);
 
-        if(hasStrandBias(var))
-            var.addFilter(FilterType.STRAND_BIAS);
-
         if(belowMinLength(var))
             var.addFilter(MIN_LENGTH);
 
@@ -74,6 +77,9 @@ public class VariantFilters
 
         if(belowMinFragmentLength(var))
             var.addFilter(SHORT_FRAG_LENGTH);
+
+        if(isShortLowVafInversion(var))
+            var.addFilter(SHORT_LOW_VAF_INV);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -126,23 +132,36 @@ public class VariantFilters
             afThreshold = mFilterConstants.MinAfJunction;
         }
 
-        for(int se = SE_START; se <= SE_END; ++se)
+        return !anySamplesAboveAfThreshold(var, afThreshold);
+    }
+
+    private static boolean anySamplesAboveAfThreshold(final Variant var, final double afThreshold)
+    {
+        // both breakends for any sample must be above the threshold
+        int genotypeCount = var.breakendStart().Context.getGenotypes().size();
+
+        for(int g = 0; g < genotypeCount; ++g)
         {
-            if(var.breakends()[se] == null)
-                continue;
+            boolean aboveThreshold = true;
 
-            Breakend breakend = var.breakends()[se];
-
-            for(Genotype genotype : breakend.Context.getGenotypes())
+            for(int se = SE_START; se <= SE_END; ++se)
             {
+                if(var.breakends()[se] == null)
+                    continue;
+
+                Breakend breakend = var.breakends()[se];
+                Genotype genotype = breakend.Context.getGenotypes().get(g);
+
                 double af = breakend.calcAllelicFrequency(genotype);
 
-                if(af >= afThreshold)
-                    return false;
+                aboveThreshold &= af >= afThreshold;
             }
+
+            if(aboveThreshold)
+                return true;
         }
 
-        return true;
+        return false;
     }
 
     private boolean belowMinQuality(final Variant var)
@@ -224,40 +243,26 @@ public class VariantFilters
         double stdDeviation = mFragmentLengthBounds.StdDeviation;
 
         int totalSplitFrags = var.splitFragmentCount();
-        double lowerLengthLimit = medianLength - (mFilterConstants.MinAvgFragFactor * stdDeviation / sqrt(totalSplitFrags));
+        double lowerStdDevThreshold = MIN_AVG_FRAG_STD_DEV_FACTOR * stdDeviation;
+        double lowerLengthLimit = medianLength - max(MIN_AVG_FRAG_FACTOR * stdDeviation / sqrt(totalSplitFrags), lowerStdDevThreshold);
 
         return svAvgLength < lowerLengthLimit;
     }
 
-    private boolean hasStrandBias(final Variant var)
+    private boolean isShortLowVafInversion(final Variant var)
     {
-        /*
-        private boolean singleStrandBias(final Breakend breakend)
-        {
-            if(!breakend.isSgl() || breakend.IsLineInsertion)
-                return false;
+        // FILTER if [TYPE=INV, AF<0.05, LEN<1000
+        if(var.type() != INV)
+            return false;
 
-            if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
-                return false;
+        if(var.adjustedLength() > SHORT_CALLING_SIZE)
+            return false;
 
-            double strandBias = calcStrandBias(breakend.Context);
-            return strandBias < SGL_MIN_STRAND_BIAS || strandBias > SGL_MAX_STRAND_BIAS;
-        }
+        if(anySamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
+            return false;
 
-        if(sv.isShortLocal())
-        {
-            double strandBias = breakend.Context.getAttributeAsDouble(STRAND_BIAS, 0.5);
-            return max(strandBias, 1 - strandBias) > MAX_STRAND_BIAS;
-        }
-        */
-
-        return false;
-    }
-
-    private static double calcStrandBias(final VariantContext variantContext)
-    {
-        double strandBias = variantContext.getAttributeAsDouble(STRAND_BIAS, 0.5);
-        return max(strandBias, 1 - strandBias);
+        String homologySequence = var.contextStart().getAttributeAsString(HOMSEQ, "");
+        return homologySequence.length() > INV_SHORT_MAX_HOMOLOGY;
     }
 
     public static void logFilterTypeCounts(final List<Variant> variantList)

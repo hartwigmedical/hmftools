@@ -264,7 +264,11 @@ public class VcfWriter implements AutoCloseable
             int otherBreakendId = breakend.otherBreakend().id();
             builder.attribute(MATE_ID, String.valueOf(otherBreakendId));
 
-            String svId = format("%d_%d", breakend.id(), otherBreakendId);
+            // always write lower first
+            int lowerBreakendId = otherBreakendId > breakend.id() ? breakend.id() : otherBreakendId;
+            int upperBreakendId = lowerBreakendId == breakend.id() ? otherBreakendId : breakend.id();
+            String svId = format("%d_%d", lowerBreakendId, upperBreakendId);
+
             builder.attribute(SV_ID, String.valueOf(svId));
         }
 

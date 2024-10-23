@@ -618,7 +618,8 @@ public class UnmapReadsTest
         ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(
                 List.of(read1, read2), null, null, null);
 
-        assertFalse(consensusReadInfo.ConsensusRead.getReadPairedFlag());
+        assertFalse(consensusReadInfo.ConsensusRead.getProperPairFlag());
+        assertTrue(consensusReadInfo.ConsensusRead.getMateUnmappedFlag());
     }
 
     private boolean checkTransformRead(final SAMRecord read, final String chromosome)

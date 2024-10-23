@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -13,18 +14,16 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +33,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -170,7 +168,7 @@ public class BreakendBuilder
             int homPosEnd = indelPosEnd;
             String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
 
-            homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
+            homology = HomologyData.determineIndelHomology(basesStart, basesEnd, maxLength);
 
             if(homology.Homology.isEmpty())
             {
@@ -178,7 +176,7 @@ public class BreakendBuilder
             }
             else
             {
-                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted foward
+                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
                 // by the same amount, being the exact homology at the start
                 // shift breakend positions forward by exact homology
                 indelPosStart += abs(homology.ExactStart);
@@ -440,14 +438,17 @@ public class BreakendBuilder
 
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                String assemblyOverlapBases = mAssemblyAlignment.overlapBases(alignment.sequenceEnd());
+                homology = determineHomology(fullSequence, alignment, nextAlignment);
 
-                if(assemblyOverlapBases.isEmpty())
+                if(homology == null)
                 {
-                    assemblyOverlapBases = fullSequence.substring(nextAlignment.sequenceStart(), alignment.sequenceEnd() + 1);
+                    SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
                 }
 
-                homology = HomologyData.determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
+                if(alignment.isReverse() && nextAlignment.isReverse())
+                {
+                    homology = homology.invert(true, false);
+                }
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {
@@ -605,7 +606,7 @@ public class BreakendBuilder
         if(alignmentStart != null && alignmentEnd != null)
         {
             relatedAlignments = zeroQualAlignments.stream()
-                    .filter(x -> x.sequenceStart() > alignmentStart.sequenceStart() && x.sequenceStart() < alignmentEnd.sequenceStart())
+                    .filter(x -> positionsOverlap(x.sequenceStart(), x.sequenceEnd(), alignmentStart.sequenceStart(), alignmentEnd.sequenceStart()))
                     .collect(Collectors.toList());
         }
         else if(alignmentStart != null)

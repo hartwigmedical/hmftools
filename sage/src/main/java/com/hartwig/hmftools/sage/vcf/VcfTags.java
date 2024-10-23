@@ -14,9 +14,6 @@ public final class VcfTags
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
 
-    public static final String READ_CONTEXT_UPDATED = "RC_UPDATED";
-    public static final String READ_CONTEXT_UPDATED_DESC = "Read context was updated from an earlier Sage version";
-
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     public static final String READ_CONTEXT_JITTER_DESC = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 

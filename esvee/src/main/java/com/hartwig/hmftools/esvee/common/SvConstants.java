@@ -9,10 +9,13 @@ public final class SvConstants
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
     public static final int DEFAULT_DISCORDANT_FRAGMENT_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
+    public static final int MIN_UPPER_FRAGMENT_LENGTH = 800;
     public static int LOW_BASE_QUAL_THRESHOLD = 26;
 
+    public static final int MIN_MAP_QUALITY = 20;
+
     // indels
-    public static final int MIN_INDEL_SUPPORT_LENGTH = 5;
+    public static final int MIN_INDEL_SUPPORT_LENGTH = 3;
     public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;
 
     // qual calcs and filters

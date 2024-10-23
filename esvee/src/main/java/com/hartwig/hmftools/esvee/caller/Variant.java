@@ -122,8 +122,6 @@ public class Variant
     public RepeatMaskAnnotation getRmAnnotation() { return mRmAnnotation; }
     public void setRepeatMaskAnnotation(final RepeatMaskAnnotation annotation) { mRmAnnotation = annotation; }
 
-    public boolean hasReference() { return mReferenceOrdinal >= 0; }
-
     public boolean isShortLocal() { return mIsShortLocal; }
 
     public static boolean hasLength(final StructuralVariantType type)

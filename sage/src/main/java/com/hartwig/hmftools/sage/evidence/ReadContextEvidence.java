@@ -113,7 +113,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
         QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome, mMsiJitterCalcs);
 
-        mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
+        List<ReadContextCounter> allReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
+
+        // read contexts will always be valid for calling, but may be invalid for appending evidence
+        mReadCounters = allReadCounters.stream().filter(x -> x.readContext().isValid()).collect(Collectors.toList());
         mLastCandidateIndex = 0;
 
         mSelectedReadCounters = Lists.newArrayListWithCapacity(mReadCounters.size());
@@ -147,7 +150,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         mReadCounters.forEach(x -> x.jitter().setJitterQualFilterState(mMsiJitterCalcs, x));
 
-        return mReadCounters;
+        return allReadCounters;
     }
 
     private List<ChrBaseRegion> buildCandidateRegions(final List<Candidate> candidates)
@@ -246,7 +249,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int nextIndex = mLastCandidateIndex + 1;
         int prevIndex = mLastCandidateIndex;
 
-        while(prevIndex >= 0 && !mReadCounters.isEmpty())
+        while(prevIndex >= 0 && prevIndex < mReadCounters.size())
         {
             ReadContextCounter readCounter = mReadCounters.get(prevIndex);
 

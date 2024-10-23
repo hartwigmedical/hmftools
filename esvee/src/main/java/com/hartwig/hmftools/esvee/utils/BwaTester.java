@@ -24,11 +24,9 @@ import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_MD_
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_NMATCHES;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_REF_LOCATION;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SCORE;
-import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SEQUENCE_COORDS;
+import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_RAW_SEQ_COORDS;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_XA_TAG;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
-
-import static htsjdk.samtools.CigarOperator.M;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -50,8 +47,6 @@ import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.Cigar;
 
 public class BwaTester
 {
@@ -169,7 +164,7 @@ public class BwaTester
         sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
 
         sj.add(FLD_REF_LOCATION);
-        sj.add(FLD_SEQUENCE_COORDS);
+        sj.add(FLD_RAW_SEQ_COORDS);
         sj.add(FLD_MAP_QUAL);
         sj.add(FLD_CIGAR);
         sj.add(FLD_ORIENTATION);

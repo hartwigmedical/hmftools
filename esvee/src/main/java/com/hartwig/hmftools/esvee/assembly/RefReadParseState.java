@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 
@@ -15,7 +14,7 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class ReadParseState
+public class RefReadParseState
 {
     private final Read mRead;
     private final int mJunctionIndex;
@@ -39,7 +38,7 @@ public class ReadParseState
     private int mIndelMismatches;
     public int mHighQualMatches;
 
-    public ReadParseState(final boolean isForwardJunction, final Read read, final int junctionIndex, final int refBaseCount)
+    public RefReadParseState(final boolean isForwardJunction, final Read read, final int junctionIndex, final int refBaseCount)
     {
         mRead = read;
         mJunctionIndex = junctionIndex;

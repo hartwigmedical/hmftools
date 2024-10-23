@@ -29,6 +29,8 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
+import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
+import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
@@ -48,6 +50,7 @@ import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
 import com.hartwig.hmftools.compar.virus.VirusComparer;
+import com.hartwig.hmftools.compar.teal.TealComparer;
 
 public class CommonUtils
 {
@@ -150,6 +153,15 @@ public class CommonUtils
 
             case SNP_GENOTYPE:
                 return new SnpGenotypeComparer(config);
+
+            case CDR3_SEQUENCE:
+                return new CiderVdjComparer(config);
+
+            case CDR3_LOCUS_SUMMARY:
+                return new Cdr3LocusSummaryComparer(config);
+
+            case TELOMERE_LENGTH:
+                return new TealComparer(config);
 
             default:
                 return null;

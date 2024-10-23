@@ -86,7 +86,6 @@ public class PonCache
             if(ponCount > 0)
             {
                 var.setPonCount(ponCount);
-
                 var.addFilter(PON);
             }
         }

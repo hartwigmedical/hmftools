@@ -4,9 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -34,7 +34,7 @@ import htsjdk.samtools.CigarOperator;
 public class RefBaseSeqBuilder
 {
     private final JunctionAssembly mAssembly;
-    private final List<ReadParseState> mReads;
+    private final List<RefReadParseState> mReads;
 
     private final boolean mIsForward;
     private final int mJunctionPosition;
@@ -74,17 +74,19 @@ public class RefBaseSeqBuilder
                 if(mIsForward)
                 {
                     // junction reads must overlap the junction by 3+ bases to extend the ref sequence
-                    hasValidJunctionOverlap = read.isRightClipped() && read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                    hasValidJunctionOverlap = mAssembly.discordantOnly() || read.isRightClipped();
+                    hasValidJunctionOverlap &= read.unclippedEnd() - mJunctionPosition >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
                 }
                 else
                 {
-                    hasValidJunctionOverlap = read.isLeftClipped() && mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+                    hasValidJunctionOverlap = mAssembly.discordantOnly() || read.isLeftClipped();
+                    hasValidJunctionOverlap &= mJunctionPosition - read.unclippedStart() >= ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
                 }
             }
 
             int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);
 
-            ReadParseState readState = new ReadParseState(mIsForward, read, readJunctionIndex, readRefBaseLength);
+            RefReadParseState readState = new RefReadParseState(mIsForward, read, readJunctionIndex, readRefBaseLength);
 
             if(hasValidJunctionOverlap)
                 maxReadBaseLength = max(maxReadBaseLength, readRefBaseLength);
@@ -125,7 +127,7 @@ public class RefBaseSeqBuilder
         return alignedLength + insertLength;
     }
 
-    public List<ReadParseState> reads() { return mReads; }
+    public List<RefReadParseState> reads() { return mReads; }
 
     private static final byte NO_BASE = 0;
 
@@ -143,7 +145,7 @@ public class RefBaseSeqBuilder
         CigarOperator currentElementType = M;
         int currentElementLength = 0;
 
-        List<ReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
+        List<RefReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
         // boolean isIndelJunction = mAssembly.junction().indelBased();
 
@@ -191,7 +193,7 @@ public class RefBaseSeqBuilder
             }
 
             // now establish the consensus base
-            for(ReadParseState read : activeReads)
+            for(RefReadParseState read : activeReads)
             {
                 if(read.operator() != currentElementType)
                     continue;
@@ -199,7 +201,7 @@ public class RefBaseSeqBuilder
                 byte base = read.currentBase();
                 int qual = read.currentQual();
 
-                if(base == N_BASE)
+                if(base == DNA_N_BYTE)
                 {
                     base = DNA_BASE_BYTES[0];
                     qual = 0;
@@ -286,7 +288,7 @@ public class RefBaseSeqBuilder
         {
             int outerRefPosition = -1;
 
-            for(ReadParseState read : mReads)
+            for(RefReadParseState read : mReads)
             {
                 if(!read.isValid())
                     continue;
@@ -309,13 +311,13 @@ public class RefBaseSeqBuilder
             Collections.reverse(mCigarElements);
     }
 
-    private static CigarOperator findNextOperator(final List<ReadParseState> reads)
+    private static CigarOperator findNextOperator(final List<RefReadParseState> reads)
     {
         int inserts = 0;
         int deletes = 0;
         int aligned = 0;
 
-        for(ReadParseState read : reads)
+        for(RefReadParseState read : reads)
         {
             if(read.operator() == M)
                 ++aligned;
@@ -331,7 +333,7 @@ public class RefBaseSeqBuilder
         return inserts >= deletes ? I : D;
     }
 
-    private static void progressReadState(final List<ReadParseState> reads, final CigarOperator currentElementType)
+    private static void progressReadState(final List<RefReadParseState> reads, final CigarOperator currentElementType)
     {
         // move to the next position or index if during an insert
         boolean allowNonIndelMatch = false;
@@ -340,7 +342,7 @@ public class RefBaseSeqBuilder
         {
             int indelCount = 0;
 
-            for(ReadParseState read : reads)
+            for(RefReadParseState read : reads)
             {
                 if(read.operator() == I && read.elementLength() >= MIN_INDEL_SUPPORT_LENGTH)
                 {
@@ -358,7 +360,7 @@ public class RefBaseSeqBuilder
         int index = 0;
         while(index < reads.size())
         {
-            ReadParseState read = reads.get(index);
+            RefReadParseState read = reads.get(index);
 
             if(currentElementType == M || currentElementType == D)
             {
@@ -387,9 +389,9 @@ public class RefBaseSeqBuilder
     }
 
     private static void markReadBaseMatches(
-            final List<ReadParseState> reads, final CigarOperator currentElementType, final byte consensusBase, final int consensusQual)
+            final List<RefReadParseState> reads, final CigarOperator currentElementType, final byte consensusBase, final int consensusQual)
     {
-        for(ReadParseState read : reads)
+        for(RefReadParseState read : reads)
         {
             if(currentElementType == D)
             {

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -17,6 +18,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.ABQ_KEY;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.AF_KEY;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.NEARBY_INDEL_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -27,6 +31,8 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_F
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
@@ -37,6 +43,8 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GERMLINE_AF;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NEARBY_INDEL;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
@@ -301,25 +309,27 @@ public class SomaticVariants
             sampleTotalAD += sampleFragData.AlleleCount;
         }
 
-        if(filteredVariants.isEmpty())
-            return INVALID_RESULT;
+        SomaticPurityResult purityResult = INVALID_RESULT;
 
-        // check for CHIP variants and remove them from variants used for purity estimates
-        final double sampleAlleleTotal = sampleTotalAD;
-
-        List<SomaticVariant> chipVariants = filteredVariants.stream()
-                .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
-
-        for(SomaticVariant variant : chipVariants)
+        if(!filteredVariants.isEmpty())
         {
-            CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                    sampleId,   variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+            // check for CHIP variants and remove them from variants used for purity estimates
+            final double sampleAlleleTotal = sampleTotalAD;
 
-            filteredVariants.remove(variant);
-            variant.addFilterReason(CHIP);
+            List<SomaticVariant> chipVariants = filteredVariants.stream()
+                    .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
+
+            for(SomaticVariant variant : chipVariants)
+            {
+                CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
+                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+
+                filteredVariants.remove(variant);
+                variant.addFilterReason(CHIP);
+            }
+
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
         }
-
-        SomaticPurityResult purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {
@@ -341,6 +351,18 @@ public class SomaticVariants
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
         List<FilterReason> filters = Lists.newArrayList();
+
+        if(mSample.ReferenceId != null)
+        {
+            Genotype referenceGenotype = variant.context().getGenotype(mSample.ReferenceId);
+            double germlineAF = Double.parseDouble(referenceGenotype.getAnyAttribute(AF_KEY).toString());
+            double germlineABQ = Double.parseDouble(referenceGenotype.getAnyAttribute(ABQ_KEY).toString().split(CSV_DELIM)[1]);
+            if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
+                filters.add(GERMLINE_AF);
+        }
+
+        if(variant.context().getCommonInfo().hasAttribute(NEARBY_INDEL_TAG))
+            filters.add(NEARBY_INDEL);
 
         if(variant.context().isFiltered())
             filters.add(NO_PASS);

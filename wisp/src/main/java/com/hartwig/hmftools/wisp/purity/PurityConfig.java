@@ -78,6 +78,7 @@ public class PurityConfig
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
+    private static final String REFERENCE_ID = "reference_id";
     private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
     private static final String SAMPLES = "samples";
     private static final String PURITY_METHODS = "purity_methods";
@@ -221,6 +222,7 @@ public class PurityConfig
             Samples.add(new SampleData(
                     configBuilder.getValue(PATIENT_ID),
                     configBuilder.getValue(TUMOR_ID),
+                    configBuilder.getValue(REFERENCE_ID),
                     sampleIdsFromStr(configBuilder.getValue(SAMPLES)),
                     "", GcRatioMin > 0,
                     configBuilder.getValue(AMBER_EXTRA_TUMOR_ID)));
@@ -259,9 +261,10 @@ public class PurityConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,SampleIds");
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,ReferenceId,SampleIds");
         configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
         configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor ID");
+        configBuilder.addConfigItem(REFERENCE_ID, false, "Original reference ID");
         configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 

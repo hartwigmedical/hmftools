@@ -107,7 +107,7 @@ public class PurpleConfig
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
-        UseGridssSVs = SampleFiles.usesGridssSVs();
+        UseGridssSVs = SampleFiles.usesGripssSVs();
 
         if(UseGridssSVs)
         {
