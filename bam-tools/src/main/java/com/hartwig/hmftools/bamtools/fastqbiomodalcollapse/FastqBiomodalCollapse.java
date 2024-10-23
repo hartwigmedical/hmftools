@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.fastqbiomodalcollapse;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -338,11 +339,13 @@ public class FastqBiomodalCollapse
     {
         public final int Read1Shift;
         public final int MismatchCount;
+        public final float MismatchProportion;
 
-        public RevCompMatchInfo(int read1Shift, int mismatchCount)
+        public RevCompMatchInfo(int read1Shift, int mismatchCount, float mismatchProportion)
         {
             Read1Shift = read1Shift;
             MismatchCount = mismatchCount;
+            MismatchProportion = mismatchProportion;
         }
     }
 
@@ -355,11 +358,12 @@ public class FastqBiomodalCollapse
         }
         String read2RevComp = read2RevCompBuilder.toString();
 
-        int maxShift = max(read1.length(), read2.length());
+        int minShift = -read1.length() + FORWARD_HAIRPIN.length() + 1;
+        int maxShift = read1.length() % 2 == 0 ? read1.length() / 2 - 1: read1.length() / 2;
         Float bestMismatchProp = null;
         int bestRead1Shift = 0;
         int bestMismatchCount = Integer.MAX_VALUE;
-        for(int read1Shift = -maxShift; read1Shift <= maxShift; read1Shift++)
+        for(int read1Shift = minShift; read1Shift <= maxShift; read1Shift++)
         {
             int i1 = 0;
             int i2 = 0;
@@ -373,34 +377,41 @@ public class FastqBiomodalCollapse
                 i2 = read1Shift;
             }
 
-            int totalCount = 0;
+            int matchCount = 0;
             int mismatchCount = 0;
             while(i1 < read1.length() && i2 < read2RevComp.length())
             {
                 char base1 = read1.charAt(i1);
                 char base2 = read2RevComp.charAt(i2);
-                if(base1 != base2)
+                if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+                {
+                }
+                else if(base1 == base2)
+                {
+                    matchCount++;
+                }
+                else
                 {
                     mismatchCount++;
                 }
 
-                totalCount++;
                 i1++;
                 i2++;
             }
 
-            if(totalCount < 5)
+            int totalCount = matchCount + mismatchCount;
+
+            if(totalCount == 0)
             {
                 continue;
             }
 
-            if(mismatchCount >= 0.2 * totalCount)
+            if(mismatchCount >= 0.1 * totalCount)
             {
                 continue;
             }
 
             float mismatchProp = 1.0f*mismatchCount/totalCount;
-
             if(bestMismatchProp == null || mismatchProp < bestMismatchProp)
             {
                 bestMismatchProp = mismatchProp;
@@ -411,10 +422,10 @@ public class FastqBiomodalCollapse
 
         if(bestMismatchProp == null)
         {
-            return new RevCompMatchInfo(0, -1);
+            return null;
         }
 
-        return new RevCompMatchInfo(bestRead1Shift, bestMismatchCount);
+        return new RevCompMatchInfo(bestRead1Shift, bestMismatchCount, bestMismatchProp);
     }
 
     private static String getCigar(final List<Pair<BaseQualPair, BaseQualPair>> alignedSeq)
@@ -857,10 +868,80 @@ public class FastqBiomodalCollapse
         List<BaseQualPair> seq2RC = fastqToSeq(revCompFastq(fastq2));
 
         RevCompMatchInfo rcMatch1 = findBestRevCompMatch(fastq1.getReadString(), fastq2.getReadString());
-        RevCompMatchInfo rcMatch2 = findBestRevCompMatch(fastq2.getReadString(), fastq1.getReadString());
 
         HairpinInfo hairpin1 = findHairpin(fastq1.getReadString(), FORWARD_HAIRPIN);
         HairpinInfo hairpin2 = findHairpin(fastq2.getReadString(), REVERSE_HAIRPIN);
+
+        // align for rev comp
+        List<Pair<BaseQualPair, BaseQualPair>> revCompAlignment = ALIGNER.align(seq1, seq2RC, FastqBiomodalCollapse::getExactScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, true, true);
+        String revCompCigar = "-";
+        int alignedRevCompShift = 0;
+        int firstMatch;
+        for(firstMatch = 0; firstMatch < revCompAlignment.size(); firstMatch++)
+        {
+            Pair<BaseQualPair, BaseQualPair> alignedBase = revCompAlignment.get(firstMatch);
+            BaseQualPair base1 = alignedBase.getLeft();
+            BaseQualPair base2 = alignedBase.getRight();
+            if(base1 != null && base2 != null)
+            {
+                break;
+            }
+
+            alignedRevCompShift += base1 != null ? -1 : 1;
+        }
+
+        int revCompMissingCount = 0;
+        int revCompMatchCount = 0;
+        int revCompMismatchCount = 0;
+        int revCompIndelCount = 0;
+        RevCompMatchInfo alignedRevCompMatch = null;
+        if(firstMatch < revCompAlignment.size())
+        {
+            int lastMatch = -1;
+            for(lastMatch = revCompAlignment.size() - 1; lastMatch >= 0; lastMatch--)
+            {
+                Pair<BaseQualPair, BaseQualPair> alignedBase = revCompAlignment.get(lastMatch);
+                BaseQualPair base1 = alignedBase.getLeft();
+                BaseQualPair base2 = alignedBase.getRight();
+                if(base1 != null && base2 != null)
+                {
+                    break;
+                }
+            }
+
+            for(int i = firstMatch; i <= lastMatch; i++)
+            {
+                Pair<BaseQualPair, BaseQualPair> alignedBase = revCompAlignment.get(i);
+                BaseQualPair base1 = alignedBase.getLeft();
+                BaseQualPair base2 = alignedBase.getRight();
+                if(base1 == null || base2 == null)
+                {
+                    revCompIndelCount++;
+                }
+                else if(base1.Base == MISSING_BASE || base2.Base == MISSING_BASE)
+                {
+                    revCompMissingCount++;
+                }
+                else if(base1.Base == base2.Base)
+                {
+                    revCompMatchCount++;
+                }
+                else
+                {
+                    revCompMismatchCount++;
+                }
+            }
+
+            int totalCount = revCompMatchCount + revCompMismatchCount;
+            int minShift = -seq1.size() + FORWARD_HAIRPIN.length() + 1;
+            int maxShift = seq1.size() % 2 == 0 ? seq1.size() / 2 - 1: seq1.size() / 2;
+            if(totalCount > 0 && revCompMismatchCount < 0.1*totalCount && alignedRevCompShift >= minShift && alignedRevCompShift <= maxShift)
+            {
+                float revCompMismatchProp = 1.0f*revCompMismatchCount/totalCount;
+                alignedRevCompMatch = new RevCompMatchInfo(alignedRevCompShift, revCompMismatchCount, revCompMismatchProp);
+                revCompCigar = getCigar(revCompAlignment);
+            }
+        }
 
         // naive alignment
         List<Pair<BaseQualPair, BaseQualPair>> naiveAlignment = Lists.newArrayList();
@@ -884,7 +965,7 @@ public class FastqBiomodalCollapse
 
         // reverse naive consensus
         List<BaseQualPair> reverseConsensus = null;
-        if(rcMatch1.MismatchCount != -1)
+        if(rcMatch1 != null)
         {
             int rcStartIndex = -rcMatch1.Read1Shift;
             int rcLength = min(trimmedLength, hairpinStartIndex - rcStartIndex);
@@ -953,7 +1034,7 @@ public class FastqBiomodalCollapse
         int reverseMatchCount = 0;
         int reverseInsert1Count = 0;
         int reverseInsert2Count = 0;
-        if(rcMatch1.MismatchCount != -1)
+        if(rcMatch1 != null)
         {
             int rcStartIndex = -rcMatch1.Read1Shift;
             int rcLength = min(trimmedLength, hairpinStartIndex - rcStartIndex);
@@ -1024,10 +1105,18 @@ public class FastqBiomodalCollapse
         statLine.add(String.valueOf(hairpin2.MatchCount));
         statLine.add(String.valueOf(hairpin2.PrefixMatchLength));
 
+        rcMatch1 = rcMatch1 != null ? rcMatch1 : new RevCompMatchInfo(0, -1, 0.0f);
         statLine.add(String.valueOf(rcMatch1.Read1Shift));
         statLine.add(String.valueOf(rcMatch1.MismatchCount));
-        statLine.add(String.valueOf(rcMatch2.Read1Shift));
-        statLine.add(String.valueOf(rcMatch2.MismatchCount));
+        statLine.add(format("%.4f", rcMatch1.MismatchProportion));
+
+
+        alignedRevCompMatch = alignedRevCompMatch != null ? alignedRevCompMatch : new RevCompMatchInfo(0, -1, 0.0f);
+        statLine.add(String.valueOf(alignedRevCompMatch.Read1Shift));
+        statLine.add(String.valueOf(alignedRevCompMatch.MismatchCount));
+        statLine.add(format("%.4f", alignedRevCompMatch.MismatchProportion));
+        statLine.add(revCompCigar);
+        statLine.add(String.valueOf(revCompIndelCount));
 
         statLine.add(consensusReadForOutput(seqReadString(naiveConsensus)));
         statLine.add(seqBaseQualString(naiveConsensus));
@@ -1120,8 +1209,12 @@ public class FastqBiomodalCollapse
             "hairpin2_suffix_match_length",
             "rev_comp_read_shift1",
             "rev_comp_mismatch_count1",
-            "rev_comp_read_shift2",
-            "rev_comp_mismatch_count2",
+            "rev_comp_mismatch_proportion1",
+            "aligned_rev_comp_read_shift1",
+            "aligned_rev_comp_mismatch_count1",
+            "aligned_rev_comp_mismatch_proportion1",
+            "aligned_rev_comp_cigar1",
+            "aligned_rev_comp_indel_count1",
             "naive_consensus_read",
             "naive_consensus_qual",
             "missing_count",
