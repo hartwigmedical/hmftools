@@ -1,13 +1,19 @@
 FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
-
-USER mambauser
-RUN micromamba install -y -n base -c bioconda -c 'openjdk >=8' && micromamba clean --all --yes
-RUN micromamba install -y -n base -c bioconda -c conda-forge r-dplyr && micromamba clean --all --yes
+ARG TOOL_NAME=cobalt
+ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
 
 USER root
-RUN mkdir /opt/cobalt
-ADD target/cobalt-$VERSION-jar-with-dependencies.jar /opt/cobalt/cobalt.jar
+
+ADD target/${TOOL_NAME}-$VERSION-jar-with-dependencies.jar ${JAR}
+ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
+RUN chmod +x /usr/local/bin/${TOOL_NAME}
+
+RUN micromamba install -y -n base -c bioconda -c conda-forge \
+    "openjdk>=8" \
+    procps-ng \
+    r-dplyr \
+    && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
