@@ -37,7 +37,8 @@ The key configuration values to set are:
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, lilac, peach, virus (i.e. virus-interpreter), snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
 The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, 
-CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER.
+CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
+CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH.
 
 The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE.
 
@@ -79,12 +80,13 @@ Specify one or more tool directories to override the pipeline default paths.
 | PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION | purple_dir        |
 | FUSION, DISRUPTION                                           | linx_dir          |
 | GERMLINE_SV                                                  | linx_germline_dir |
-| PURITY                                                       | purple_dir        |
 | CUPPA                                                        | cuppa_dir         |
 | CHORD                                                        | chord_dir         |
 | LILAC                                                        | lilac_dir         |
 | PEACH                                                        | peach_dir         |
 | VIRUS                                                        | virus_dir         |
+| CIDER                                                        | cider_dir         |
+| TEAL                                                         | teal_dir          |
 
 Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
 Similarly, '$' can be used in place of germline sample IDs.
@@ -336,26 +338,47 @@ Data key: SampleId
 
 | Field               | Match Type & Thresholds |
 |---------------------|-------------------------|
-| DuplicatePercentage | Threshold [0.05]        |
-| Percentage30X       | Threshold [0.03]        |
-| Percentage60X       | Threshold [0.03]        |
+| duplicatePercentage | Threshold [0.05]        |
+| percentage30X       | Threshold [0.03]        |
+| percentage60X       | Threshold [0.03]        |
 
 ### Germline BAM Metrics
 Data key: SampleId
 
 | Field               | Match Type & Thresholds |
 |---------------------|-------------------------|
-| DuplicatePercentage | Threshold [0.05]        |
-| Percentage10X       | Threshold [0.03]        |
-| Percentage20X       | Threshold [0.03]        |
+| duplicatePercentage | Threshold [0.05]        |
+| percentage10X       | Threshold [0.03]        |
+| percentage20X       | Threshold [0.03]        |
 
 ### SNP Genotype
 Data key: SampleId, Chromosome, Position, Ref
 
 | Field    | Match Type & Thresholds |
 |----------|-------------------------|
-| Alt      | Exact                   |
-| Genotype | Exact                   |
+| alt      | Exact                   |
+| genotype | Exact                   |
+
+### CDR3 Sequence (Cider)
+Data key: SampleId, Cdr3Seq, Filter, Locus
+
+| Field | Match Type & Thresholds |
+|-------|-------------------------|
+| N/A   | N/A                     | 
+
+### CDR3 Locus Summary (Cider)
+Data key: SampleId, Locus
+
+| Field         | Match Type & Thresholds |
+|---------------|-------------------------|
+| passSequences | Threshold [5%]          | 
+
+### Telomere lengths
+Data key: SampleId, Type (tumor or ref)
+
+| Field          | Match Type & Thresholds |
+|----------------|-------------------------|
+| telomereLength | Threshold [5%]          | 
 
 ### Copy Number
 Only runs in DETAILED mode.
@@ -364,9 +387,9 @@ Data key: SampleId, Chromosome, StartPosition, EndPosition
 
 | Field                | Match Type & Thresholds |
 |----------------------|-------------------------|
-| CopyNumber           | Threshold [0.5, 15%]    |
-| MajorAlleleCopyNumer | Threshold [0.5, 15%]    |
-| Method               | Exact                   |
+| copyNumber           | Threshold [0.5, 15%]    |
+| majorAlleleCopyNumer | Threshold [0.5, 15%]    |
+| method               | Exact                   |
 
 ### Gene Copy Number
 Only runs in DETAILED mode.
@@ -375,10 +398,11 @@ Data key: SampleId, Gene
 
 | Field         | Match Type & Thresholds |
 |---------------|-------------------------|
-| MinCopyNumber | Threshold [0.5, 15%]    |
-| MaxCopyNumer  | Threshold [0.5, 15%]    |
+| minCopyNumber | Threshold [0.5, 15%]    |
+| maxCopyNumer  | Threshold [0.5, 15%]    |
 
 ## Version History and Download Links
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)
