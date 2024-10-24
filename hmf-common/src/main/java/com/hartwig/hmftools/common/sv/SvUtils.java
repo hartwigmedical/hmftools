@@ -8,7 +8,7 @@ public final class SvUtils
 {
     public static final int DEFAULT_DISCORDANT_FRAGMENT_LENGTH = 1000;
 
-    // must match the small deldup threshold in Esvee
+    // must match the small DEl-DUP threshold in Esvee
     public static final int SMALL_DELDUP_SIZE = 1000;
 
     public static boolean isDiscordant(final SAMRecord record) { return isDiscordant(record, DEFAULT_DISCORDANT_FRAGMENT_LENGTH); }

@@ -60,7 +60,7 @@ public class SglMapping
         byte orientation = (strandSequence == breakendOrientation) ? NEG_ORIENT : POS_ORIENT;
 
         if(orientation == POS_ORIENT)
-            position += calcCigarAlignedLength(cigar);
+            position += calcCigarAlignedLength(cigar) - 1;
 
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 
