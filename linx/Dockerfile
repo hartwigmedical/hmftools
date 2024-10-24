@@ -12,7 +12,7 @@ RUN chmod +x /usr/local/bin/${TOOL_NAME}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
-    openjdk>=8.0 \
+    "openjdk>=8" \
     xorg-libxtst \
     r-tidyr \
     r-dplyr \
@@ -20,8 +20,8 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-cowplot \
     r-magick \
     bioconductor-gviz \
-    circos>=0.69.6 \
-    perl-gd>=2.76  \
+    "circos>=0.69.6" \
+    "perl-gd>=2.76"  \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
