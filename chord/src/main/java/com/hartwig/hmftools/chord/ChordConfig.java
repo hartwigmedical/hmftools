@@ -122,7 +122,7 @@ public class ChordConfig
     public String svVcfFile(final String sampleId)
     {
         return (SvVcfFile != null) ?
-                ConfigUtils.convertWildcardSamplePath(SnvIndelVcfFile, sampleId) :
+                ConfigUtils.convertWildcardSamplePath(SvVcfFile, sampleId) :
                 ConfigUtils.convertWildcardSamplePath(PurpleDir + "/*" + PURPLE_SV_VCF_SUFFIX, sampleId);
     }
 
