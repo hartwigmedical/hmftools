@@ -1,5 +1,17 @@
-FROM openjdk:17-alpine
+FROM bash:5.2
 
 ARG VERSION
-RUN mkdir /opt/isofox
-ADD target/isofox-$VERSION-jar-with-dependencies.jar /opt/isofox/isofox.jar
+ARG TOOL_NAME=isofox
+ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
+
+USER root
+
+ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
+ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
+RUN chmod +x /usr/local/bin/${TOOL_NAME}
+
+RUN apk update && apk upgrade && apk add \
+    procps \
+    openjdk17
+
+RUN ln -s /usr/local/bin/bash /bin/bash
