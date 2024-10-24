@@ -122,7 +122,7 @@ public class ChordConfig
     public String svVcfFile(final String sampleId)
     {
         return (SvVcfFile != null) ?
-                ConfigUtils.convertWildcardSamplePath(SnvIndelVcfFile, sampleId) :
+                ConfigUtils.convertWildcardSamplePath(SvVcfFile, sampleId) :
                 ConfigUtils.convertWildcardSamplePath(PurpleDir + "/*" + PURPLE_SV_VCF_SUFFIX, sampleId);
     }
 
@@ -147,7 +147,7 @@ public class ChordConfig
         configBuilder.addPath(SNV_INDEL_VCF_FILE, false, SNV_INDEL_VCF_FILE_DESC);
         configBuilder.addPath(SV_VCF_FILE, false, SV_VCF_FILE_DESC);
 
-        configBuilder.addConfigItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        configBuilder.addConfigItem(REF_GENOME, false, REF_GENOME_CFG_DESC);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
         FileWriterUtils.addOutputOptions(configBuilder);
