@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.chord;
 
-import static com.hartwig.hmftools.chord.ChordTestUtils.HUMAN_GENOME_FASTA;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class IndelPrepTest
@@ -36,16 +35,15 @@ public class IndelPrepTest
         FileUtils.deleteDirectory(new File(TMP_OUTPUT_DIR));
     }
 
-    @Ignore
     @Test
     public void canPrepIndels()
     {
         Configurator.setRootLevel(Level.DEBUG);
 
         ChordConfig config = new ChordConfig.Builder()
-                .purpleDir(INPUT_VCF_DIR)
+                .snvIndelVcfFile(INPUT_VCF_DIR + "MINIMAL_SAMPLE.purple.somatic.vcf.gz")
+                .refGenomeFile(DUMMY_GENOME_FASTA)
                 .outputDir(TMP_OUTPUT_DIR)
-                .refGenomeFile(HUMAN_GENOME_FASTA)
                 .build();
 
         IndelPrep prep = new IndelPrep(config);
@@ -53,36 +51,36 @@ public class IndelPrepTest
         //actualContextCounts.forEach(System.out::println);
 
         List<MutContextCount> expectedContextCounts = List.of(
-                new MutContextCount("del.rep.len.1", 7),
-                new MutContextCount("del.rep.len.2", 1),
-                new MutContextCount("del.rep.len.3", 0),
-                new MutContextCount("del.rep.len.4", 1),
-                new MutContextCount("del.rep.len.5", 4),
-                new MutContextCount("ins.rep.len.1", 4),
-                new MutContextCount("ins.rep.len.2", 2),
-                new MutContextCount("ins.rep.len.3", 1),
-                new MutContextCount("ins.rep.len.4", 0),
-                new MutContextCount("ins.rep.len.5", 1),
-                new MutContextCount("del.mh.bimh.1", 0),
-                new MutContextCount("del.mh.bimh.2", 1),
-                new MutContextCount("del.mh.bimh.3", 1),
-                new MutContextCount("del.mh.bimh.4", 0),
-                new MutContextCount("del.mh.bimh.5", 1),
-                new MutContextCount("ins.mh.bimh.1", 0),
-                new MutContextCount("ins.mh.bimh.2", 0),
-                new MutContextCount("ins.mh.bimh.3", 2),
-                new MutContextCount("ins.mh.bimh.4", 1),
-                new MutContextCount("ins.mh.bimh.5", 1),
-                new MutContextCount("del.none.len.1", 4),
-                new MutContextCount("del.none.len.2", 0),
-                new MutContextCount("del.none.len.3", 0),
-                new MutContextCount("del.none.len.4", 0),
-                new MutContextCount("del.none.len.5", 0),
-                new MutContextCount("ins.none.len.1", 1),
-                new MutContextCount("ins.none.len.2", 0),
-                new MutContextCount("ins.none.len.3", 0),
-                new MutContextCount("ins.none.len.4", 0),
-                new MutContextCount("ins.none.len.5", 1)
+            new MutContextCount("del.rep.len.1", 30),
+            new MutContextCount("del.rep.len.2", 3),
+            new MutContextCount("del.rep.len.3", 1),
+            new MutContextCount("del.rep.len.4", 1),
+            new MutContextCount("del.rep.len.5", 0),
+            new MutContextCount("ins.rep.len.1", 25),
+            new MutContextCount("ins.rep.len.2", 2),
+            new MutContextCount("ins.rep.len.3", 1),
+            new MutContextCount("ins.rep.len.4", 1),
+            new MutContextCount("ins.rep.len.5", 0),
+            new MutContextCount("del.mh.bimh.1", 8),
+            new MutContextCount("del.mh.bimh.2", 11),
+            new MutContextCount("del.mh.bimh.3", 0),
+            new MutContextCount("del.mh.bimh.4", 0),
+            new MutContextCount("del.mh.bimh.5", 1),
+            new MutContextCount("ins.mh.bimh.1", 9),
+            new MutContextCount("ins.mh.bimh.2", 12),
+            new MutContextCount("ins.mh.bimh.3", 2),
+            new MutContextCount("ins.mh.bimh.4", 0),
+            new MutContextCount("ins.mh.bimh.5", 0),
+            new MutContextCount("del.none.len.1", 75),
+            new MutContextCount("del.none.len.2", 43),
+            new MutContextCount("del.none.len.3", 26),
+            new MutContextCount("del.none.len.4", 7),
+            new MutContextCount("del.none.len.5", 8),
+            new MutContextCount("ins.none.len.1", 99),
+            new MutContextCount("ins.none.len.2", 55),
+            new MutContextCount("ins.none.len.3", 35),
+            new MutContextCount("ins.none.len.4", 14),
+            new MutContextCount("ins.none.len.5", 13)
         );
 
         assertEquals(expectedContextCounts, actualContextCounts);

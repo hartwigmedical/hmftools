@@ -15,6 +15,8 @@ import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.sv.SvPrep;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,9 +38,10 @@ public class SvPrepTest
     @Test
     public void canPrepStructuralVariants()
     {
+        Configurator.setRootLevel(Level.DEBUG);
+
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(MINIMAL_SAMPLE))
-                .purpleDir(INPUT_VCF_DIR)
+                .svVcfFile(INPUT_VCF_DIR + "MINIMAL_SAMPLE.purple.sv.vcf.gz")
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
