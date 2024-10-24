@@ -2,8 +2,6 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_CFG;
@@ -16,10 +14,14 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
@@ -28,7 +30,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -41,8 +42,15 @@ public class FileSources
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
+    public final String Peach;
+    public final String Virus;
     public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
+    public final String TumorFlagstat;
+    public final String GermlineFlagstat;
+    public final String TumorBamMetrics;
+    public final String GermlineBamMetrics;
+    public final String SnpGenotype;
 
     public final String Cider;
 
@@ -51,10 +59,16 @@ public class FileSources
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
+    private static final String TUMOR_FLAGSTAT = "tumor_flagstat_dir";
+    private static final String GERMLINE_FLAGSTAT = "germline_flagstat_dir";
+    private static final String TUMOR_BAM_METRICS = "tumor_bam_metrics_dir";
+    private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
+    private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf,
-            final String cider, String teal)
+            final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
+            final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
+            final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal)
     {
         Source = source;
         Linx = linx;
@@ -63,32 +77,40 @@ public class FileSources
         Cuppa = cuppa;
         Lilac = lilac;
         Chord = chord;
+        Peach = peach;
+        Virus = virus;
         SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
+        TumorFlagstat = tumorFlagstat;
+        GermlineFlagstat = germlineFlagstat;
+        TumorBamMetrics = tumorBamMetrics;
+        GermlineBamMetrics = germlineBamMetrics;
+        SnpGenotype = snpGenotype;
         Cider = cider;
         Teal = teal;
     }
 
-    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
+    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String germlineSampleId)
     {
         return new FileSources(
                 fileSources.Source,
-                convertWildcardSamplePath(fileSources.Linx, sampleId),
-                convertWildcardSamplePath(fileSources.Purple, sampleId),
-                convertWildcardSamplePath(fileSources.LinxGermline, sampleId),
-                convertWildcardSamplePath(fileSources.Cuppa, sampleId),
-                convertWildcardSamplePath(fileSources.Lilac, sampleId),
-                convertWildcardSamplePath(fileSources.Chord, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId),
-                convertWildcardSamplePath(fileSources.Cider, sampleId),
-                convertWildcardSamplePath(fileSources.Teal, sampleId)
-                );
-    }
-
-    public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
-    {
-        return source.equals(REF_SOURCE) ? V37 : V38;
+                convertWildcardSamplePath(fileSources.Linx, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Purple, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.LinxGermline, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Cuppa, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Lilac, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Chord, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Peach, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Virus, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.TumorBamMetrics, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.GermlineBamMetrics, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.SnpGenotype, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Cider, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Teal, sampleId, germlineSampleId));
     }
 
     private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)
@@ -114,6 +136,8 @@ public class FileSources
             addPathConfig(configBuilder, LILAC_DIR_CFG, LILAC_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CHORD_DIR_CFG, CHORD_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, PEACH_DIR_CFG, PEACH_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, VIRUS_DIR_CFG, VIRUS_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceName);
 
@@ -124,6 +148,22 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
+
+            configBuilder.addPath(
+                    formSourceConfig(TUMOR_FLAGSTAT, sourceName), false,
+                    formSourceDescription("Tumor flagstat", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(GERMLINE_FLAGSTAT, sourceName), false,
+                    formSourceDescription("Germline flagstat", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(TUMOR_BAM_METRICS, sourceName), false,
+                    formSourceDescription("Tumor BAM metrics", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(GERMLINE_BAM_METRICS, sourceName), false,
+                    formSourceDescription("Germline BAM metrics", sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(SNP_GENOTYPE, sourceName), false,
+                    formSourceDescription("SNP genotype", sourceName));
         }
     }
 
@@ -155,15 +195,22 @@ public class FileSources
         String cuppaDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CUPPA_DIR, CUPPA_DIR_CFG, sourceName);
         String lilacDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LILAC_DIR, LILAC_DIR_CFG, sourceName);
         String chordDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CHORD_DIR, CHORD_DIR_CFG, sourceName);
+        String peachDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PEACH_DIR, PEACH_DIR_CFG, sourceName);
+        String virusDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.VIRUS_INTERPRETER_DIR, VIRUS_DIR_CFG, sourceName);
 
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
+        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/flagstat", TUMOR_FLAGSTAT, sourceName);
+        String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/flagstat", GERMLINE_FLAGSTAT, sourceName);
+        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_BAM_METRICS, sourceName);
+        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_BAM_METRICS, sourceName);
+        String snpGenotype = getDirectory(configBuilder, sampleDir, "$/snp_genotype", SNP_GENOTYPE, sourceName);
         String ciderDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CIDER_DIR, CIDER_DIR_CFG, sourceName);
         String tealDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.TEAL_DIR, TEAL_DIR_CFG, sourceName);
 
-        return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, somaticUnfilteredVcf,
+        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
+                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
                 ciderDir, tealDir);
     }
 

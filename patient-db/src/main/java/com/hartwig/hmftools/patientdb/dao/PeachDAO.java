@@ -8,11 +8,15 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
+import org.jooq.Record;
+import org.jooq.Result;
 
 class PeachDAO
 {
@@ -21,6 +25,25 @@ class PeachDAO
     PeachDAO(final DSLContext context)
     {
         this.context = context;
+    }
+
+    public List<PeachGenotype> readPeachGenotypes(final String sample)
+    {
+        Result<Record> result = context.select().from(PEACHGENOTYPE).where(PEACHGENOTYPE.SAMPLEID.eq(sample)).fetch();
+        List<PeachGenotype> genotypes = Lists.newArrayList();
+        for(Record record : result)
+        {
+            PeachGenotype genotype = ImmutablePeachGenotype.builder()
+                    .gene(record.getValue(PEACHGENOTYPE.GENE))
+                    .allele(record.getValue(PEACHGENOTYPE.HAPLOTYPE))
+                    .alleleCount(record.getValue(PEACHGENOTYPE.COUNT))
+                    .function(record.getValue(PEACHGENOTYPE.FUNCTION))
+                    .linkedDrugs(record.getValue(PEACHGENOTYPE.LINKEDDRUGS))
+                    .urlPrescriptionInfo(record.getValue(PEACHGENOTYPE.URLPRESCRIPTIONINFO))
+                    .build();
+            genotypes.add(genotype);
+        }
+        return genotypes;
     }
 
     void writePeach(final String sample, final List<PeachGenotype> peachGenotypes)

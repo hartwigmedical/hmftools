@@ -13,12 +13,15 @@ import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -34,20 +37,26 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
+import com.hartwig.hmftools.compar.metrics.GermlineBamMetricsComparer;
+import com.hartwig.hmftools.compar.metrics.GermlineFlagstatComparer;
+import com.hartwig.hmftools.compar.metrics.TumorBamMetricsComparer;
+import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
+import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
+import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
 
 public class CommonUtils
 {
-    public static final String SUB_ITEM_DELIM = "=";
-
     public static final String FLD_REPORTED = "Reported";
     public static final String FLD_QUAL = "Qual";
+    public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
@@ -124,6 +133,27 @@ public class CommonUtils
             case GERMLINE_SV:
                 return new GermlineSvComparer(config);
 
+            case PEACH:
+                return new PeachComparer(config);
+
+            case VIRUS:
+                return new VirusComparer(config);
+
+            case TUMOR_FLAGSTAT:
+                return new TumorFlagstatComparer(config);
+
+            case GERMLINE_FLAGSTAT:
+                return new GermlineFlagstatComparer(config);
+
+            case TUMOR_BAM_METRICS:
+                return new TumorBamMetricsComparer(config);
+
+            case GERMLINE_BAM_METRICS:
+                return new GermlineBamMetricsComparer(config);
+
+            case SNP_GENOTYPE:
+                return new SnpGenotypeComparer(config);
+
             case CDR3_SEQUENCE:
                 return new CiderVdjComparer(config);
 
@@ -148,6 +178,7 @@ public class CommonUtils
         for(String sourceName : config.SourceNames)
         {
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
+            String sourceGermlineSampleId = config.sourceGermlineSampleId(sourceName, sampleId);
             List<ComparableItem> items = null;
 
             if(!config.DbConnections.isEmpty())
@@ -156,8 +187,9 @@ public class CommonUtils
             }
             else
             {
-                FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
-                items = comparer.loadFromFile(sourceSampleId, fileSources);
+                FileSources fileSources =
+                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
+                items = comparer.loadFromFile(sourceSampleId, sourceGermlineSampleId, fileSources);
             }
 
             if(items != null)
@@ -258,5 +290,22 @@ public class CommonUtils
         }
 
         return new BasePosition(chromosome, position);
+    }
+
+    public static String determineComparisonChromosome(final String chromosome, final boolean requiresLiftover)
+    {
+        if(requiresLiftover)
+        {
+            return HumanChromosome.fromString(chromosome).name().substring(1);
+        }
+        else
+        {
+            return chromosome;
+        }
+    }
+
+    public static boolean fileExists(final String filename)
+    {
+        return Files.exists(new File(filename).toPath());
     }
 }

@@ -25,7 +25,7 @@ public class ThresholdData
         double absDiff = abs(value1 - value2);
 
         boolean hasAbsDiff = absDiff > AbsoluteDiff;
-        boolean hasRelDiff = absDiff / max(value1, value2) > PercentDiff;
+        boolean hasRelDiff = absDiff / max(abs(value1), abs(value2)) > PercentDiff;
 
         if(Type == ThresholdType.ABSOLUTE_AND_PERCENT)
             return hasAbsDiff && hasRelDiff;

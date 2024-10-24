@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.compar.common.ThresholdData;
-import com.hartwig.hmftools.compar.common.ThresholdType;
 
 public class DiffThresholds
 {

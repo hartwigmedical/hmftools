@@ -62,7 +62,7 @@ public class GermlineSvComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         List<ComparableItem> items = Lists.newArrayList();
 
@@ -132,7 +132,6 @@ public class GermlineSvComparer implements ItemComparer
                 DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends);
                 items.add(disruptionData);
             }
-
         }
         catch(IOException e)
         {

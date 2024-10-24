@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
@@ -60,19 +61,19 @@ public class GermlineDeletionComparer implements ItemComparer
     {
         final List<GermlineDeletion> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
-        germlineDeletions.forEach(x -> items.add(new GermlineDeletionData(x)));
+        germlineDeletions.forEach(x -> items.add(createGermlineDeletionData(x)));
         return items;
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
             List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(GermlineDeletion.generateFilename(fileSources.Purple, sampleId));
-            germlineDeletions.forEach(x -> comparableItems.add(new GermlineDeletionData(x)));
+            germlineDeletions.forEach(x -> comparableItems.add(createGermlineDeletionData(x)));
         }
         catch(IOException e)
         {
@@ -81,5 +82,11 @@ public class GermlineDeletionComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private GermlineDeletionData createGermlineDeletionData(final GermlineDeletion deletion)
+    {
+        String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
+        return new GermlineDeletionData(deletion, comparisonChromosome);
     }
 }

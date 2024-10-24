@@ -51,6 +51,12 @@ public class BreakendData
             return false;
         }
 
+        boolean checkTranscriptIds = !Breakend.canonical() || !other.Breakend.canonical();
+        if(checkTranscriptIds && !other.Breakend.transcriptId().equals(Breakend.transcriptId()))
+        {
+            return false;
+        }
+
         return true;
     }
 

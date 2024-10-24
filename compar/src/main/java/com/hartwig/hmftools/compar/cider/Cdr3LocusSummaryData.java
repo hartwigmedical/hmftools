@@ -39,7 +39,7 @@ public class Cdr3LocusSummaryData implements ComparableItem
     @Override
     public List<String> displayValues()
     {
-        return List.of(Cdr3LocusSummary.locus(), String.valueOf(Cdr3LocusSummary.passSequences()));
+        return List.of(String.valueOf(Cdr3LocusSummary.passSequences()));
     }
 
     @Override
