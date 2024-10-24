@@ -240,11 +240,15 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
     private static String parseAssemblyLinks(final VariantContext variantContext)
     {
-        String assemblyInfo = variantContext.getAttributeAsString(ASM_LINKS, "");
-        assemblyInfo = assemblyInfo.replaceAll("\\[", "");
-        assemblyInfo = assemblyInfo.replaceAll("]", "");
-        assemblyInfo = assemblyInfo.replaceAll(" ", "");
-        return assemblyInfo;
+        return trimStringListValue(variantContext.getAttributeAsString(ASM_LINKS, ""));
+    }
+
+    private static String trimStringListValue(final String listValue)
+    {
+        if(listValue.isEmpty())
+            return listValue;
+
+        return listValue.replaceAll("\\[", "").replaceAll("]", "").replaceAll(" ", "");
     }
 
     public StructuralVariant createSingleBreakend(final VariantContext context)
@@ -280,6 +284,8 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
         double qualityScore = context.getPhredScaledQual();
 
+        String insSequenceAlignments = trimStringListValue(context.getAttributeAsString(INSALN, ""));
+
         builder.id(context.getID())
                 .recovered(context.getAttributeAsBoolean(RECOVERED, false))
                 .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
@@ -288,7 +294,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
                 .event("")
                 .imprecise(false)
                 .qualityScore(qualityScore)
-                .insertSequenceAlignments(context.getAttributeAsString(INSALN, ""));
+                .insertSequenceAlignments(insSequenceAlignments);
 
        if(context.hasAttribute(REPEAT_MASK_REPEAT_CLASS))
         {

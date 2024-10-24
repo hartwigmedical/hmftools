@@ -80,7 +80,6 @@ public class SvVarData
 
     private final List<SglMapping> mSglMappings;
     private SvVarData[] mLinkedSVs;
-    private List<String> mAnnotationList;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
     public static final String INF_SV_TYPE = "INF";
@@ -144,7 +143,6 @@ public class SvVarData
         }
 
         mLinkedSVs = null;
-        mAnnotationList = null;
     }
 
     public int id() { return mSVData.id(); }

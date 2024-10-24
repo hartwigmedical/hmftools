@@ -14,7 +14,6 @@ import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
-import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.common.TaskQueue;
 
@@ -112,5 +111,5 @@ public class PhaseSetTask extends ThreadTask
         }
     }
 
-    public int totalRemoteReadsMatched() { return mRemoteRegionAssembler.totalRemoteReadsMatched(); }
+    public int totalRemoteReadsMatched() { return mRemoteRegionAssembler.remoteReadsMatched(); }
 }

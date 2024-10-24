@@ -16,6 +16,7 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
 import org.junit.Test;
 
@@ -120,10 +121,10 @@ public class ReadAdjustmentsTest
         Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertFalse(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+        assertFalse(ReadFilters.filterLowQualRead(read.bamRecord()));
 
         baseQualities[50] = lowQualBase;
-        assertTrue(ReadAdjustments.filterLowQualRead(read.bamRecord()));
+        assertTrue(ReadFilters.filterLowQualRead(read.bamRecord()));
     }
 
     @Test

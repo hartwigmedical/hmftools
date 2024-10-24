@@ -4,12 +4,13 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.blastn.BlastnUtil.toGenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrGeneFile
+import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.Doubles
 import org.apache.logging.log4j.LogManager
 import java.util.*
-import kotlin.collections.HashMap
 
 enum class BlastnStatus
 {
@@ -83,11 +84,11 @@ class BlastnAnnotator
             blastnRunDataMap[blastnRunData.key] = blastnRunData
         }
 
-        val blastnResults = BlastnRunner.runBlastn(
+        // run blastn on those
+        val blastnResults = BlastnUtil.runBlastn(
             sampleId, blastDir, blastDb,
             blastnRunDataMap.mapValues { runData -> runData.value.querySeq },
-            outputDir, numThreads, BLASTN_MAX_EVALUE
-        )
+            outputDir, numThreads, BLASTN_MAX_EVALUE)
 
         // put all into an identity hash multimap
         val vdjToBlastnMatch: Multimap<BlastnRunData, BlastnMatch> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
@@ -140,10 +141,12 @@ class BlastnAnnotator
 
         // we also need to fix up the matches, since we did not use the full sequence to query blastn, the queryAlignStart
         // and queryAlignEnd indices are off
-        val sortedMatches: List<BlastnMatch> = blastnMatches
-            .map { blastnMatch -> blastnMatch.copy(queryAlignStart = blastnMatch.queryAlignStart + alignStartOffset,
-                                                    queryAlignEnd = blastnMatch.queryAlignEnd + alignStartOffset) }
-            .sortedBy { m -> m.expectedValue }
+        blastnMatches.forEach { blastnMatch ->
+            blastnMatch.queryAlignStart = blastnMatch.queryAlignStart + alignStartOffset
+            blastnMatch.queryAlignEnd = blastnMatch.queryAlignEnd + alignStartOffset
+        }
+
+        val sortedMatches: List<BlastnMatch> = blastnMatches.sortedBy { m -> m.expectedValue }
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
         // locus supercedes a 100% identity match from the correct locus
@@ -269,7 +272,7 @@ class BlastnAnnotator
 
     fun findGene(blastnMatch: BlastnMatch) : IgTcrGene?
     {
-        val matchLocation = blastnMatch.toGenomicLocation() ?: return null
+        val matchLocation = toGenomicLocation(blastnMatch) ?: return null
 
         val chromosome = matchLocation.chromosome
 

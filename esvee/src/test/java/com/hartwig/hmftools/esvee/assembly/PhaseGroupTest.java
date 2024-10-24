@@ -27,11 +27,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteGroupBuilder;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -289,7 +291,9 @@ public class PhaseGroupTest
         phaseGroup.addAssembly(assembly2a);
         phaseGroup.addAssembly(assembly2b);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(new MockRefGenome(), null, phaseGroup);
+        RefGenomeInterface refGenome = new MockRefGenome();
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(
+                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
         phaseSetBuilder.buildPhaseSets();
 
         assertEquals(2, phaseGroup.phaseSets().size());
@@ -336,7 +340,8 @@ public class PhaseGroupTest
         phaseGroup.addAssembly(assembly2a);
         phaseGroup.addAssembly(assembly2b);
 
-        phaseSetBuilder = new PhaseSetBuilder(new MockRefGenome(), null, phaseGroup);
+        phaseSetBuilder = new PhaseSetBuilder(
+                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
         phaseSetBuilder.buildPhaseSets();
 
         assertEquals(2, phaseGroup.phaseSets().size());

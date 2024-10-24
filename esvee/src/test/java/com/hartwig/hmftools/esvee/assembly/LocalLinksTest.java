@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetTask;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -158,7 +159,8 @@ public class LocalLinksTest
         // now test linking logic
         PhaseGroup phaseGroup = new PhaseGroup(posAssembly, negIndelAssembly);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, null, phaseGroup);
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(
+                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
 
         phaseSetBuilder.buildPhaseSets();
 

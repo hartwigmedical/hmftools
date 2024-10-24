@@ -114,7 +114,7 @@ public final class AssemblyUtils
 
     private static boolean isCrossingConcordantRead(final SupportRead read, final Junction junction, boolean requireLower)
     {
-        if(read.isDiscordant() || read.isMateUnmapped() || !read.isPairedRead())
+        if(read.isDiscordant() || !read.isPairedRead() || read.isMateUnmapped())
             return false;
 
         if(requireLower)
