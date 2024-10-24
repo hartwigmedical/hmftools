@@ -1,4 +1,4 @@
-FROM circos
+FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
 ARG TOOL_NAME=linx
@@ -10,16 +10,18 @@ ADD target/${TOOL_NAME}-$VERSION-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
 RUN chmod +x /usr/local/bin/${TOOL_NAME}
 
-USER mambauser
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
-    "openjdk >=8" \
     procps-ng \
-    r-cowplot \
+    openjdk>=8 \
+    xorg-libxtst \
+    r-tidyr \
     r-dplyr \
     r-ggplot2 \
+    r-cowplot \
     r-magick \
-    r-tidyr \
     bioconductor-gviz \
+    circos>=0.69.6 \
+    perl-gd>=2.76  \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
