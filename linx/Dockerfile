@@ -21,9 +21,9 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-magick \
     bioconductor-gviz \
     circos>=0.69.9 \
-    libgd \
     && micromamba clean --all --yes
 
-RUN export PERL5LIB=/opt/conda/lib/perl5/site_perl/5.22.0/x86_64-linux/
+# Fixes missing GD perl module error (even though circos does install GD)
+RUN perl -MCPAN -e 'install GD'
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
