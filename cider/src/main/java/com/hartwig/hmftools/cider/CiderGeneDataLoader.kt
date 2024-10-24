@@ -35,7 +35,7 @@ object CiderGeneDataLoader
                 continue
 
             igTcrConstantDiversityRegions.add(constantRegionGene)
-            sLogger.debug("added constant / D region gene: {}, {}",
+            sLogger.trace("added constant / D region gene: {}, {}",
                 geneData.geneName, constantRegionGene)
         }
 

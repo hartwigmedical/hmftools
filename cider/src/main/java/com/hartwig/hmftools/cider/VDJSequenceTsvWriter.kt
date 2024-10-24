@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.blastn.BlastnMatch
 import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
