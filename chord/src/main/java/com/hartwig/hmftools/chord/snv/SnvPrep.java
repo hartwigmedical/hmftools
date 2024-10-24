@@ -36,6 +36,9 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
     {
         mConfig = config;
 
+        if(config.RefGenomeFile == null)
+            throw new IllegalStateException("Ref genome must be provided to run " + this.getClass().getSimpleName());
+
         mRefGenome = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
     }
 
