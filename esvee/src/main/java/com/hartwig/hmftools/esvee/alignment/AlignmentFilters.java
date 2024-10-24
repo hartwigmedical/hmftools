@@ -3,10 +3,15 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_GENE_ORIENT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_MAX_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGION_V37;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGION_V38;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
 import java.util.Collections;
@@ -16,7 +21,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class AlignmentFilters
 {
@@ -112,6 +119,9 @@ public final class AlignmentFilters
                 ++index;
             }
         }
+
+        checkSpecificLowMapPairings(candidateAlignments);
+
         int validCount = (int)candidateAlignments.stream().filter(x -> exceedsModMapQualThreshold(x)).count();
 
         if(candidateAlignments.size() == validCount)
@@ -122,6 +132,52 @@ public final class AlignmentFilters
 
         // for all the rest calculated an adjusted alignment score by subtracting overlap (inexact homology) and repeated bases from the score
         checkLocalVariants(candidateAlignments, validAlignments, lowQualAlignments);
+    }
+
+    private static void checkSpecificLowMapPairings(final List<AlignData> alignments)
+    {
+        // handle the specific case of SSX2 with poor mappability, but selecting its alt alignment if paired with a remote alignment
+        if(alignments.size() < 2)
+            return;
+
+        AlignData lowMappedAlignment = null;
+        AlternativeAlignment lowMappedAltAlignment = null;
+
+        ChrBaseRegion ssx2Region = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? SSX2_REGION_V38:  SSX2_REGION_V37;
+
+        for(AlignData alignment : alignments)
+        {
+            for(AlternativeAlignment altAlignnent : alignment.rawAltAlignments())
+            {
+                if(altAlignnent.MapQual > SSX2_MAX_MAP_QUAL || altAlignnent.Orient == SSX2_GENE_ORIENT)
+                    continue;
+
+                if(ssx2Region.containsPosition(altAlignnent.Chromosome, altAlignnent.Position))
+                {
+                    lowMappedAlignment = alignment;
+                    lowMappedAltAlignment = altAlignnent;
+                    break;
+                }
+            }
+
+            if(lowMappedAlignment != null)
+            {
+                AlignData ssx2Alignment = lowMappedAlignment;
+
+                // check for a primary mapping elsewhere
+                if(alignments.stream().filter(x -> x != ssx2Alignment).anyMatch(x -> !x.refLocation().Chromosome.equals(ssx2Region.Chromosome)))
+                {
+                    // substitute the SSX2 alignment
+                    int endPosition = lowMappedAltAlignment.Position + calcCigarAlignedLength(lowMappedAlignment.cigar()) - 1;
+
+                    ChrBaseRegion newRefLocation = new ChrBaseRegion(
+                            lowMappedAltAlignment.Chromosome, lowMappedAltAlignment.Position, endPosition);
+
+                    lowMappedAlignment.updateRefLocation(newRefLocation);
+                    return;
+                }
+            }
+        }
     }
 
     private static boolean exceedsInitialMapQualThreshold(final AlignData alignment)

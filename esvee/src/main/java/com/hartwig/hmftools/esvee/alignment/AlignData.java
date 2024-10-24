@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -39,7 +40,7 @@ import htsjdk.samtools.CigarElement;
 
 public class AlignData
 {
-    private final ChrBaseRegion mRefLocation;
+    private ChrBaseRegion mRefLocation;
     private final int mMapQual;
     private final int mNMatches;
     private final int mScore;
@@ -129,6 +130,13 @@ public class AlignData
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
+
+    public void updateRefLocation(final ChrBaseRegion refLocation)
+    {
+        mRefLocation = refLocation;
+        mModifiedMapQual = ALIGNMENT_MIN_MOD_MAP_QUAL;
+        mRawAltAlignments = null;
+    }
 
     public void setSoftClipLengths(int left, int right)
     {
