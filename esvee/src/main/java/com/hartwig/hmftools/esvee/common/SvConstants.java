@@ -15,7 +15,7 @@ public final class SvConstants
     public static final int MIN_MAP_QUALITY = 20;
 
     // indels
-    public static final int MIN_INDEL_SUPPORT_LENGTH = 3;
+    public static final int MIN_INDEL_SUPPORT_LENGTH = 5;
     public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;
 
     // qual calcs and filters

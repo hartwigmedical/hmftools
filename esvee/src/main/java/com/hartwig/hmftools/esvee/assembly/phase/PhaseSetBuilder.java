@@ -438,6 +438,8 @@ public class PhaseSetBuilder
     private void findUnmappedExtensions()
     {
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
+        boolean hasHighAssemblyCount = hasHighAssemblyCount();
+
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site
@@ -447,8 +449,8 @@ public class PhaseSetBuilder
 
             if(!AssemblyConfig.RunRemoteRefLinking)
             {
-                List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies);
-                mRemoteRegionAssembler.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount());
+                List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
+                mRemoteRegionAssembler.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount);
             }
 
             if(unmappedReads.isEmpty())

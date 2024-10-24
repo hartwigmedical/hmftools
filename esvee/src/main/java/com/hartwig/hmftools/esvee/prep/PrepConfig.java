@@ -40,7 +40,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_Q
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
@@ -243,7 +243,7 @@ public class PrepConfig
                 break;
 
             case JUNCTIONS:
-                fileExtension = PREP_JUNCTIONS_FILE_ID;
+                fileExtension = PREP_JUNCTION_FILE_ID;
                 break;
 
             case FRAGMENT_LENGTH_DIST:

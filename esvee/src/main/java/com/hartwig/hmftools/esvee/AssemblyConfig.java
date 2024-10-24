@@ -36,7 +36,7 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTE
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -117,6 +117,9 @@ public class AssemblyConfig
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
     public static final String BWA_LIB_PATH = "bwa_lib";
+    public static final String JUNCTION_FILE = "junction_file";
+
+    @Deprecated
     public static final String JUNCTION_FILES = "junction_files";
 
     private static final String WRITE_TYPES = "write_types";
@@ -166,23 +169,21 @@ public class AssemblyConfig
 
         JunctionFiles = Lists.newArrayList();
 
-        if(configBuilder.hasValue(JUNCTION_FILES))
+        if(configBuilder.hasValue(JUNCTION_FILE))
+        {
+            JunctionFiles.add(configBuilder.getValue(JUNCTION_FILE));
+        }
+        else if(configBuilder.hasValue(JUNCTION_FILES))
         {
             Arrays.stream(configBuilder.getValue(JUNCTION_FILES).split(CONFIG_FILE_DELIM)).forEach(x -> JunctionFiles.add(x));
         }
         else
         {
             // since Prep now reads multiple BAMs, only the tumor-labelled junctions file needs to be loaded
-            List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
-            combinedSampleIds.addAll(ReferenceIds);
+            String junctionFile = formPrepInputFilename(OutputDir, TumorIds.get(0), PREP_JUNCTION_FILE_ID, OutputId);
 
-            for(String sampleId : combinedSampleIds)
-            {
-                String junctionFile = formPrepInputFilename(OutputDir, sampleId, PREP_JUNCTIONS_FILE_ID, OutputId);
-
-                if(Files.exists(Paths.get(junctionFile)))
-                    JunctionFiles.add(junctionFile);
-            }
+            if(Files.exists(Paths.get(junctionFile)))
+                JunctionFiles.add(junctionFile);
         }
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -303,8 +304,10 @@ public class AssemblyConfig
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
 
+        configBuilder.addPaths(JUNCTION_FILES, false, "Use 'junction_file' instead");
+
         configBuilder.addPaths(
-                JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");
+                JUNCTION_FILE, false, "Esvee Prep junction file, default is to match by sample name");
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
