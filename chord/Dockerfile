@@ -25,6 +25,5 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
 
 RUN unzip -n ${JAR} -d /tmp/${TOOL_NAME}_jar
-RUN Rscript -e "install.packages('${TOOL_NAME}_jar/mutSigExtractor', repos=NULL, type='source')"
-RUN Rscript -e "install.packages('${TOOL_NAME}_jar/CHORD', repos=NULL, type='source')"
+RUN Rscript -e "install.packages(c('${TOOL_NAME}_jar/mutSigExtractor', '${TOOL_NAME}_jar/CHORD'), repos=NULL, type='source')"
 RUN rm -r /tmp/${TOOL_NAME}_jar
