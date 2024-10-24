@@ -10,5 +10,5 @@ public class ChordTestUtils
     public static final String INPUT_VCF_DIR = Resources.getResource("vcf/").getPath();
     public static final String TMP_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "/chord_output/";
 
-    public static final String HUMAN_GENOME_FASTA = "/Users/lnguyen/Hartwig/hartwigmedical/resources/ref_genomes/GRCh37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+    public static final String DUMMY_GENOME_FASTA = Resources.getResource("fasta/dummy_genome.fasta").getPath();
 }
