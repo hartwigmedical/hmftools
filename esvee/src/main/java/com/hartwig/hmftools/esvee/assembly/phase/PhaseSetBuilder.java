@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -37,7 +36,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_R
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragmentRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
@@ -296,45 +294,6 @@ public class PhaseSetBuilder
 
                 // now count up all possible linking fragments so as to compare with other candidate links and extensions
                 countSharedFragments(extensionCandidate, firstReadIdsRelated, secondReadIdsRelated);
-
-                /*
-                Set<String> firstSupportReadIds = assembly1.support().stream().map(x -> x.id()).collect(Collectors.toSet());
-                Set<String> firstCandidateReadIds = assembly1.candidateSupport().stream().map(x -> x.id()).collect(Collectors.toSet());
-
-                for(SupportRead support : assembly2.support())
-                {
-                    if(firstSupportReadIds.contains(support.id()))
-                    {
-                        firstSupportReadIds.remove(support.id());
-                        ++extensionCandidate.AssemblyMatchedSupport;
-                        ++extensionCandidate.SecondAssemblyMatchedSupport;
-                    }
-
-                    if(firstCandidateReadIds.contains(support.id()))
-                    {
-                        firstCandidateReadIds.remove(support.id());
-                        ++extensionCandidate.AssemblyCandidateReads;
-                        ++extensionCandidate.SecondAssemblyMatchedSupport;
-                    }
-                }
-
-                for(Read read : assembly2.candidateSupport())
-                {
-                    if(firstSupportReadIds.contains(read.id()))
-                    {
-                        firstSupportReadIds.remove(read.id());
-                        ++extensionCandidate.AssemblyMatchedSupport;
-                        ++extensionCandidate.SecondAssemblyCandidateReads;
-                    }
-
-                    if(firstCandidateReadIds.contains(read.id()))
-                    {
-                        firstCandidateReadIds.remove(read.id());
-                        ++extensionCandidate.AssemblyCandidateReads;
-                        ++extensionCandidate.SecondAssemblyCandidateReads;
-                    }
-                }
-                */
             }
         }
     }
@@ -399,23 +358,6 @@ public class PhaseSetBuilder
                 ++extensionCandidate.SupportCount;
             }
         }
-    }
-
-    private static boolean hasSharedFragments(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        if(assembly1.support().stream().anyMatch(x -> hasMatchingFragmentRead(assembly2.support(), x)))
-            return true;
-
-        if(assembly1.candidateSupport().stream().anyMatch(x -> hasMatchingFragmentRead(assembly2.support(), x)))
-            return true;
-
-        if(assembly2.candidateSupport().stream().anyMatch(x -> hasMatchingFragmentRead(assembly1.support(), x)))
-            return true;
-
-        if(assembly2.candidateSupport().stream().anyMatch(x -> Read.hasMatchingFragmentRead(assembly1.candidateSupport(), x)))
-            return true;
-
-        return false;
     }
 
     private void findOtherLinksAndExtensions()

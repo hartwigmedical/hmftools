@@ -120,6 +120,8 @@ public class RemoteRegionAssembler
                     continue;
 
                 // otherwise ignore if the overlapping assembly has these remote reads already
+                // note the max reads checked to avoid checking all reads in very large groups
+                int readsChecked = 0;
                 for(String readId : remoteRegion.readIds())
                 {
                     if(otherAssembly.support().stream().filter(x -> x.type().isSplitSupport()).anyMatch(x -> x.id().equals(readId)))
@@ -127,6 +129,16 @@ public class RemoteRegionAssembler
                         matchesAssembly = true;
                         break;
                     }
+
+                    if(otherAssembly.candidateSupport().stream().anyMatch(x -> x.id().equals(readId)))
+                    {
+                        matchesAssembly = true;
+                        break;
+                    }
+
+                    ++readsChecked;
+                    if(readsChecked > MAX_MATCHED_READ_CHECK)
+                        break;
                 }
             }
 
@@ -139,6 +151,7 @@ public class RemoteRegionAssembler
 
     private static final int HIGH_REMOTE_REGION_TOTAL_READ_COUNT = 1000;
     private static final int HIGH_REMOTE_REGION_READ_COUNT = 200;
+    private static final int MAX_MATCHED_READ_CHECK = 100;
 
     public void extractRemoteRegionReads(
             final int phaseGroupId, final List<RemoteRegion> remoteRegions, final List<Read> remoteRegionReads, boolean applyThresholds)
@@ -214,7 +227,7 @@ public class RemoteRegionAssembler
 
         if((mRemoteReadSlices % 1000) == 0 && mTotalRemoteReadsMatched > 100000)
         {
-            SV_LOGGER.debug("phId({}) remote region read extraction: slices({}) matched({}) last region({}:{}-{})",
+            SV_LOGGER.debug("pgId({}) remote region read extraction: slices({}) matched({}) last region({}:{}-{})",
                     phaseGroupId, mRemoteReadSlices, mTotalRemoteReadsMatched,
                     mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end());
         }
