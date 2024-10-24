@@ -444,6 +444,11 @@ public class BreakendBuilder
                 {
                     SV_LOGGER.debug("assembly({}) failed to determine homology", mAssemblyAlignment);
                 }
+
+                if(alignment.isReverse() && nextAlignment.isReverse())
+                {
+                    homology = homology.invert(true, false);
+                }
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {

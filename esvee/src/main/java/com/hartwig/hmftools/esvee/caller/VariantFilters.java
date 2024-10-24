@@ -132,28 +132,36 @@ public class VariantFilters
             afThreshold = mFilterConstants.MinAfJunction;
         }
 
-        return !allSamplesAboveAfThreshold(var, afThreshold);
+        return !anySamplesAboveAfThreshold(var, afThreshold);
     }
 
-    private static boolean allSamplesAboveAfThreshold(final Variant var, final double afThreshold)
+    private static boolean anySamplesAboveAfThreshold(final Variant var, final double afThreshold)
     {
-        for(int se = SE_START; se <= SE_END; ++se)
+        // both breakends for any sample must be above the threshold
+        int genotypeCount = var.breakendStart().Context.getGenotypes().size();
+
+        for(int g = 0; g < genotypeCount; ++g)
         {
-            if(var.breakends()[se] == null)
-                continue;
+            boolean aboveThreshold = true;
 
-            Breakend breakend = var.breakends()[se];
-
-            for(Genotype genotype : breakend.Context.getGenotypes())
+            for(int se = SE_START; se <= SE_END; ++se)
             {
+                if(var.breakends()[se] == null)
+                    continue;
+
+                Breakend breakend = var.breakends()[se];
+                Genotype genotype = breakend.Context.getGenotypes().get(g);
+
                 double af = breakend.calcAllelicFrequency(genotype);
 
-                if(af < afThreshold)
-                    return false;
+                aboveThreshold &= af >= afThreshold;
             }
+
+            if(aboveThreshold)
+                return true;
         }
 
-        return true;
+        return false;
     }
 
     private boolean belowMinQuality(final Variant var)
@@ -250,7 +258,7 @@ public class VariantFilters
         if(var.adjustedLength() > SHORT_CALLING_SIZE)
             return false;
 
-        if(allSamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
+        if(anySamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
             return false;
 
         String homologySequence = var.contextStart().getAttributeAsString(HOMSEQ, "");

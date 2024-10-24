@@ -82,11 +82,13 @@ public class LocalGroupBuilder extends ThreadTask
         if(junctionGroup.junctionAssemblies().size() <= 1)
             return;
 
+        // note: discordant junctions are by definition not used to link to other local ones
+
         List<JunctionAssembly> posJunctionAssemblies = junctionGroup.junctionAssemblies()
-                .stream().filter(x -> x.isForwardJunction()).collect(Collectors.toList());
+                .stream().filter(x -> x.isForwardJunction() && !x.discordantOnly()).collect(Collectors.toList());
 
         List<JunctionAssembly> negJunctionAssemblies = junctionGroup.junctionAssemblies()
-                .stream().filter(x -> !x.isForwardJunction()).collect(Collectors.toList());
+                .stream().filter(x -> x.isReverseJunction() && !x.discordantOnly()).collect(Collectors.toList());
 
         if(posJunctionAssemblies.isEmpty() || negJunctionAssemblies.isEmpty())
             return;

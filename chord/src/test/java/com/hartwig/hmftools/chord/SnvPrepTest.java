@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.chord;
 
-import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.HUMAN_GENOME_FASTA;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
@@ -17,9 +16,10 @@ import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.snv.SnvPrep;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SnvPrepTest
@@ -36,14 +36,15 @@ public class SnvPrepTest
         FileUtils.deleteDirectory(new File(TMP_OUTPUT_DIR));
     }
 
-    @Ignore
     @Test
     public void canPrepSnvs()
     {
+        Configurator.setRootLevel(Level.DEBUG);
+
         ChordConfig config = new ChordConfig.Builder()
-                .purpleDir(INPUT_VCF_DIR)
+                .snvIndelVcfFile(INPUT_VCF_DIR + "MINIMAL_SAMPLE.purple.somatic.vcf.gz")
+                .refGenomeFile(DUMMY_GENOME_FASTA)
                 .outputDir(TMP_OUTPUT_DIR)
-                .refGenomeFile(HUMAN_GENOME_FASTA)
                 .build();
 
         SnvPrep prep = new SnvPrep(config);
@@ -53,26 +54,26 @@ public class SnvPrepTest
 
         // There are 96 contexts in total, but only test the first few
         List<MutContextCount> firstExpectedContextCounts = List.of(
-                new MutContextCount("A[C>A]A", 8),
-                new MutContextCount("A[C>A]C", 1),
-                new MutContextCount("A[C>A]G", 3),
-                new MutContextCount("A[C>A]T", 2),
-                new MutContextCount("C[C>A]A", 87),
-                new MutContextCount("C[C>A]C", 10),
-                new MutContextCount("C[C>A]G", 21),
-                new MutContextCount("C[C>A]T", 48),
-                new MutContextCount("G[C>A]A", 3),
-                new MutContextCount("G[C>A]C", 1),
-                new MutContextCount("G[C>A]G", 0),
-                new MutContextCount("G[C>A]T", 1),
-                new MutContextCount("T[C>A]A", 15),
-                new MutContextCount("T[C>A]C", 7),
-                new MutContextCount("T[C>A]G", 1),
-                new MutContextCount("T[C>A]T", 12),
-                new MutContextCount("A[C>G]A", 2),
-                new MutContextCount("A[C>G]C", 4),
-                new MutContextCount("A[C>G]G", 0),
-                new MutContextCount("A[C>G]T", 3)
+            new MutContextCount("A[C>A]A", 10),
+            new MutContextCount("A[C>A]C", 6),
+            new MutContextCount("A[C>A]G", 8),
+            new MutContextCount("A[C>A]T", 3),
+            new MutContextCount("C[C>A]A", 4),
+            new MutContextCount("C[C>A]C", 4),
+            new MutContextCount("C[C>A]G", 6),
+            new MutContextCount("C[C>A]T", 5),
+            new MutContextCount("G[C>A]A", 4),
+            new MutContextCount("G[C>A]C", 4),
+            new MutContextCount("G[C>A]G", 9),
+            new MutContextCount("G[C>A]T", 5),
+            new MutContextCount("T[C>A]A", 6),
+            new MutContextCount("T[C>A]C", 4),
+            new MutContextCount("T[C>A]G", 0),
+            new MutContextCount("T[C>A]T", 6),
+            new MutContextCount("A[C>G]A", 8),
+            new MutContextCount("A[C>G]C", 1),
+            new MutContextCount("A[C>G]G", 8),
+            new MutContextCount("A[C>G]T", 11)
         );
 
         List<MutContextCount> firstActualContextCounts = new ArrayList<>();

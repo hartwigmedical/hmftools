@@ -57,8 +57,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
@@ -266,11 +264,6 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-        }
-
-        if(!header.hasInfoLine(READ_CONTEXT_UPDATED))
-        {
-            header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_UPDATED, 1, VCFHeaderLineType.Flag, READ_CONTEXT_UPDATED_DESC));
         }
     }
 

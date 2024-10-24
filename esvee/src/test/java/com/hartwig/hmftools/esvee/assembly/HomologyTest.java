@@ -115,6 +115,22 @@ public class HomologyTest
         assertEquals(0, homology.InexactStart);
         assertEquals(11, homology.InexactEnd);
 
+        // test 2b: as above but reversed
+
+        // left bases:  TTCATCTTCTC - matches assembly
+        // assembly:    TTCATCTTCTC
+        // right bases: GTCTTCTTCTC
+        leftMdTag = "11";
+        rightMdTag = "7T2C";
+        assemblyOverlap = "TTCATCTTCTC";
+
+        homology = buildHomology(leftMdTag, rightMdTag, assemblyOverlap);
+        assertEquals("", homology.Homology);
+        assertEquals(0, homology.ExactStart);
+        assertEquals(0, homology.ExactEnd);
+        assertEquals(-11, homology.InexactStart);
+        assertEquals(0, homology.InexactEnd);
+
         // test 3: first base matches, range of lowest mismatches is 0-1
 
         // left bases:  TGCATCTTCTC

@@ -23,9 +23,6 @@ public class IndelVariantTest
         String leftFlank = deletion.getFlankingRefBasesLeft(REF_GENOME, 1);
         String rightFlank = deletion.getFlankingRefBasesRight(REF_GENOME, 3);
 
-        System.out.println("Left flank: " + leftFlank);
-        System.out.println("Right flank: " + rightFlank);
-
         assertEquals(deletion.mIndelLength, 2);
         assertEquals("CC", leftFlank);
         assertEquals("AAGTCT", rightFlank);
@@ -39,9 +36,6 @@ public class IndelVariantTest
 
         String leftFlank = insertion.getFlankingRefBasesLeft(REF_GENOME, 1);
         String rightFlank = insertion.getFlankingRefBasesRight(REF_GENOME, 3);
-
-        System.out.println("Left flank: " + leftFlank);
-        System.out.println("Right flank: " + rightFlank);
 
         assertEquals(insertion.mIndelLength, 5);
         assertEquals("GGTCG", leftFlank);

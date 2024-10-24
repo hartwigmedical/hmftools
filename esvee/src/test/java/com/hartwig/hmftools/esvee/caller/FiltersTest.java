@@ -65,8 +65,8 @@ public class FiltersTest
 
         Map<String,Object> referenceAttributes = Maps.newHashMap();
 
-        referenceAttributes.put(SPLIT_FRAGS, 10); // above the threshold in the ref sample
-        referenceAttributes.put(TOTAL_FRAGS, 10);
+        referenceAttributes.put(SPLIT_FRAGS, 0); // not above the threshold in the ref sample
+        referenceAttributes.put(TOTAL_FRAGS, 0);
         referenceAttributes.put(REF_DEPTH, 100);
 
         Variant var = createSv(
