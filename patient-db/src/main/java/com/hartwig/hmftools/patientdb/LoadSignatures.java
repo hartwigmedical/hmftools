@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 public class LoadSignatures
 {
     private static final String SAMPLE_DIR = "sample_dir";
+    private static final String SAMPLE_FiLE = "sample_file";
+
 
     public static void main(@NotNull String[] args) throws ParseException
     {
@@ -38,8 +40,9 @@ public class LoadSignatures
                 System.exit(1);
             }
 
-            String sampleId = cmd.getOptionValue(SAMPLE);
-            String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
+            String sample = configBuilder.getValue(SAMPLE);
+            String sampleDir = configBuilder.getValue(SAMPLE_DIR);
+            String sampleFile = configBuilder.getValue(SAMPLE_FiLE);
 
             loadSignatureData(dbAccess, sampleId, sampleDir);
 
@@ -52,12 +55,12 @@ public class LoadSignatures
         }
     }
 
-    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleDir)
+    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile)
     {
         try
         {
             final List<SignatureAllocation> sigAllocations =
-                    SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
+                    SignatureAllocationFile.read(sampleFile);
 
             if(!sigAllocations.isEmpty())
             {
