@@ -1098,15 +1098,38 @@ public class PhaseSetBuilder
 
             assembly.clearSupportCachedReads(); // remove references to actual SAMRecords, keeping only summary info
 
-            boolean inPhaseSet = mPhaseSets.stream().anyMatch(x -> x.hasAssembly(assembly));
+            boolean inPhaseSet = false;
+            boolean inFacingLink = false;
+
+            for(PhaseSet phaseSet : mPhaseSets)
+            {
+                if(phaseSet.hasAssembly(assembly))
+                {
+                    inPhaseSet = true;
+                    inFacingLink |= phaseSet.assemblyLinks().stream().anyMatch(x -> x.type() == LinkType.FACING && x.hasAssembly(assembly));
+                }
+            }
 
             if(inPhaseSet && assembly.outcome() == UNSET)
                 assembly.setOutcome(LINKED);
 
-            RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
+            // trim ref bases unless the assembly has been matched to a facing assembly
+            if(!inFacingLink)
+                RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
 
             if(assembly.outcome() == DUP_BRANCHED)
             {
+                // remove any branched assemblies which did not form a facing link
+                if(inPhaseSet && inFacingLink)
+                {
+                    // set outcome to original assembly
+                    JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
+
+                    if(originalAssembly != null)
+                        assembly.setOutcome(originalAssembly.outcome());
+                }
+
+                /*
                 // remove any branched assemblies which did not form a facing link
                 boolean inFacingLink = false;
 
@@ -1127,6 +1150,7 @@ public class PhaseSetBuilder
                         }
                     }
                 }
+                */
 
                 if(!inFacingLink)
                 {

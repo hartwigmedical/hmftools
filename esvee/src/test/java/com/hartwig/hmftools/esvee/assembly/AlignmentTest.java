@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_MAX_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGION_V37;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
@@ -598,8 +598,10 @@ public class AlignmentTest
         int lowMapQual = SSX2_MAX_MAP_QUAL - 1;
         char altAlignmentOrientation = SSX2_GENE_ORIENT.opposite().asChar();
 
+        ChrBaseRegion ssx2Region = SSX2_REGIONS_V37.get(0);
+
         String altAlignment2 = format("%s,%c%d,100M,%d",
-            SSX2_REGION_V37.Chromosome, altAlignmentOrientation, SSX2_REGION_V37.start() + 1, lowMapQual);
+                ssx2Region.Chromosome, altAlignmentOrientation, ssx2Region.start() + 1, lowMapQual);
 
         AlignData alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_2, 20000, 20100), 101, 200,
@@ -615,7 +617,7 @@ public class AlignmentTest
         assertEquals(0, lowQualAlignments.size());
         assertEquals(2, validAlignments.size());
 
-        AlignData specificAlignment = validAlignments.stream().filter(x -> x.refLocation().overlaps(SSX2_REGION_V37)).findFirst().orElse(null);
+        AlignData specificAlignment = validAlignments.stream().filter(x -> x.refLocation().overlaps(ssx2Region)).findFirst().orElse(null);
         assertNotNull(specificAlignment);
     }
 

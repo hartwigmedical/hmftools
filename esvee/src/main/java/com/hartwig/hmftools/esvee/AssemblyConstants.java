@@ -91,9 +91,16 @@ public final class AssemblyConstants
             new ChrBaseRegion("chr4", 190060000, 190190000),
             new ChrBaseRegion("chr10", 133660000, 133770000));
 
-    // SSX2 region
-    public static final ChrBaseRegion SSX2_REGION_V37 = new ChrBaseRegion("X", 52725946, 52736239);
+    // SSX2 intron 5 region plus SSX2B
+    public static final List<ChrBaseRegion> SSX2_REGIONS_V37 = List.of(
+            new ChrBaseRegion("X", 52729628, 52731680), // first entry is SSX2
+            new ChrBaseRegion("X", 52784877, 52786929));
+
+    public static final List<ChrBaseRegion> SSX2_REGIONS_V38 = List.of(
+            new ChrBaseRegion("chrX", 52700578, 52702630),
+            new ChrBaseRegion("chrX", 52755800, 52757852));
+
     public static final Orientation SSX2_GENE_ORIENT = Orientation.REVERSE;
     public static final int SSX2_MAX_MAP_QUAL = 20;
-    public static final ChrBaseRegion SSX2_REGION_V38 = new ChrBaseRegion("chrX", 52696896, 52707189);
+
 }
