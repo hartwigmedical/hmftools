@@ -40,11 +40,11 @@ public class LoadSignatures
                 System.exit(1);
             }
 
-            String sample = configBuilder.getValue(SAMPLE);
-            String sampleDir = configBuilder.getValue(SAMPLE_DIR);
-            String sampleFile = configBuilder.getValue(SAMPLE_FiLE);
+            String sampleId = cmd.getOptionValue(SAMPLE);
+            String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
+            String sampleFile = cmd.getOptionValue(SAMPLE_FiLE);
 
-            loadSignatureData(dbAccess, sampleId, sampleDir);
+            loadSignatureData(dbAccess, sampleId, sampleFile);
 
             LOGGER.info("signature allocation loading complete");
         }
