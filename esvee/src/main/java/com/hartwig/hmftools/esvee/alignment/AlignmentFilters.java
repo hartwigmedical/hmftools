@@ -375,10 +375,7 @@ public final class AlignmentFilters
             {
                 for(AlternativeAlignment altAlignment : alignment.rawAltAlignments())
                 {
-                    if(altAlignment.MapQual > SSX2_MAX_MAP_QUAL || altAlignment.Orient == SSX2_GENE_ORIENT)
-                        continue;
-
-                    if(ssx2Regions.stream().anyMatch(x -> x.containsPosition(altAlignment.Chromosome, altAlignment.Position)))
+                    if(matchesSsx2Region(ssx2Regions, altAlignment.Chromosome, altAlignment.Position, altAlignment.Orient, altAlignment.MapQual))
                     {
                         lowMappedAlignment = alignment;
                         lowMappedAltAlignment = altAlignment;
@@ -395,10 +392,9 @@ public final class AlignmentFilters
                 if(alignments.stream().filter(x -> x != ssx2Alignment).anyMatch(x -> !x.refLocation().Chromosome.equals(ssx2Region.Chromosome)))
                 {
                     // substitute the SSX2 alignment
-                    int endPosition = ssx2Region.start() + calcCigarAlignedLength(lowMappedAlignment.cigar()) - 1;
-
-                    ChrBaseRegion newRefLocation = new ChrBaseRegion(ssx2Region.Chromosome, ssx2Region.start(), endPosition);
-                    lowMappedAlignment.updateRefLocation(newRefLocation);
+                    AlternativeAlignment altAlignment = new AlternativeAlignment(
+                            ssx2Region.Chromosome, ssx2Region.start(), SSX2_GENE_ORIENT.opposite(), lowMappedAlignment.cigar(), 0);
+                    lowMappedAlignment.setSelectedLowMapQualAltAlignment(altAlignment);
                     return;
                 }
             }
@@ -411,7 +407,7 @@ public final class AlignmentFilters
         if(mapQual > SSX2_MAX_MAP_QUAL)
             return false;
 
-        if(orientation == SSX2_GENE_ORIENT)
+        if(orientation != SSX2_GENE_ORIENT)
             return false;
 
         return ssx2Regions.stream().anyMatch(x -> x.containsPosition(chromosome, position));

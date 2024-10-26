@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.assembly.output;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
+import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN_DESC;
@@ -74,6 +76,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
@@ -361,10 +364,15 @@ public class VcfWriter implements AutoCloseable
 
     private List<Allele> buildAlleleInfo(final Breakend breakend)
     {
-        byte[] refBase = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
+        byte[] refBases = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
+        byte refBase = refBases[0];
+
+        if(!isValidDnaBase(refBase))
+            refBase = DNA_N_BASE;
+
         Allele refAllele = Allele.create(refBase, true);
 
-        String altBase = String.valueOf((char)refBase[0]);
+        String altBase = String.valueOf((char)refBase);
 
         String altBases;
 

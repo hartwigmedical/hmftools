@@ -53,7 +53,7 @@ public class AlignData
     private int mSoftClipLeft;
     private int mSoftClipRight;
 
-    private final Orientation mOrientation;
+    private Orientation mOrientation;
     private final int mAlignedBases;
 
     private final int mRawSequenceStart;
@@ -130,13 +130,6 @@ public class AlignData
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
-
-    public void updateRefLocation(final ChrBaseRegion refLocation)
-    {
-        mRefLocation = refLocation;
-        mModifiedMapQual = ALIGNMENT_MIN_MOD_MAP_QUAL;
-        mRawAltAlignments = null;
-    }
 
     public void setSoftClipLengths(int left, int right)
     {
@@ -277,6 +270,14 @@ public class AlignData
         mSelectedAltAlignment = selectedAlignment;
         mUnselectedAltAlignments = otherAlignments;
         mHasLowMapQualShortSvLink = hasShortSvLink;
+    }
+
+    public void setSelectedLowMapQualAltAlignment(final AlternativeAlignment selectedAlignment)
+    {
+        mSelectedAltAlignment = selectedAlignment;
+        mModifiedMapQual = ALIGNMENT_MIN_MOD_MAP_QUAL;
+        mRawAltAlignments = null;
+        mSoftClipRight = mSoftClipLeft = 0;
     }
 
     public List<AlternativeAlignment> unselectedAltAlignments()
