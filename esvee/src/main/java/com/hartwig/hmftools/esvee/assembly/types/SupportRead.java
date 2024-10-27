@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -59,6 +61,7 @@ public class SupportRead
     private final int mInsertSize;
     private final int mTrimCount;
     private final boolean mHasIndel;
+    private IndelCoords mIndelCoords;
     private final boolean mHasLineTail;
 
     // the distance from the read's start (ie index not position) to the assembly junction index
@@ -105,6 +108,7 @@ public class SupportRead
         mMapQual = read.mappingQuality();
         mNumOfEvents = read.numOfEvents();
         mHasIndel = read.indelCoords() != null;
+        mIndelCoords = read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH ? read.indelCoords() : null;
         mHasLineTail = read.hasLineTail();
 
         mJunctionMatches = matches;
@@ -139,6 +143,7 @@ public class SupportRead
     public int insertSize() { return mInsertSize; }
     public int trimCount() { return mTrimCount; }
     public boolean hasIndel() { return mHasIndel; }
+    public IndelCoords indelCoords() { return mIndelCoords; }
     public String cigar() { return mCigar; }
     public Orientation orientation() { return isFlagSet(READ_REVERSE_STRAND) ? REVERSE : FORWARD; }
     public Orientation mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? REVERSE : FORWARD; }

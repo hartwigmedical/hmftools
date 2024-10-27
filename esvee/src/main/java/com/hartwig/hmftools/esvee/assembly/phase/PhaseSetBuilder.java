@@ -835,7 +835,6 @@ public class PhaseSetBuilder
                     continue;
 
                 // compelling evidence is a read from the new assembly which overlaps with the linked junction's reads
-                // if(assembliesShareReads(assembly2, splitAssembly))
                 mFacingLinks.add(facingLink);
                 facingAssemblies.add(assembly1);
                 facingAssemblies.add(assembly2);
@@ -1128,29 +1127,6 @@ public class PhaseSetBuilder
                     if(originalAssembly != null)
                         assembly.setOutcome(originalAssembly.outcome());
                 }
-
-                /*
-                // remove any branched assemblies which did not form a facing link
-                boolean inFacingLink = false;
-
-                if(inPhaseSet)
-                {
-                    for(PhaseSet phaseSet : mPhaseSets)
-                    {
-                        if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(assembly)))
-                        {
-                            // set outcome to original assembly
-                            JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
-
-                            if(originalAssembly != null)
-                                assembly.setOutcome(originalAssembly.outcome());
-
-                            inFacingLink = true;
-                            break;
-                        }
-                    }
-                }
-                */
 
                 if(!inFacingLink)
                 {

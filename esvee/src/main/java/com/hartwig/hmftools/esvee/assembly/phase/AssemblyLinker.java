@@ -30,6 +30,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public final class AssemblyLinker
 {
@@ -61,15 +62,61 @@ public final class AssemblyLinker
             if(!refSideSoftClipMatchesJunction(upper, lower.junction().Position))
                 return null;
         }
+        else if(first.indel() || second.indel())
+        {
+            // if they share a read and the read contains the indel coords, then consider this a facing link
+            IndelCoords firstIndelCoords = first.indelCoords();
+            IndelCoords secondIndelCoords = second.indelCoords();
+
+            // must share a junction read and/or mate in each with one matching the indel coordinates
+            boolean matched = false;
+
+            for(SupportRead support : first.support())
+            {
+                if(!support.type().isSplitSupport())
+                    continue;
+
+                for(SupportRead secondSupport : second.support())
+                {
+                    if(!secondSupport.type().isSplitSupport())
+                        continue;
+
+                    if(!secondSupport.matchesFragment(support, true))
+                        continue;
+
+                    if(firstIndelCoords != null)
+                    {
+                        if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
+                            matched = true;
+                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
+                            matched = true;
+                    }
+                    else
+                    {
+                        if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
+                            matched = true;
+                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
+                            matched = true;
+                    }
+
+                    if(matched)
+                        break;
+                }
+            }
+
+            if(!matched)
+                return null;
+
+        }
         else
         {
             // cannot have ref bases extending past each other's junctions
             if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
                 return null;
 
-            // must share a junction read & mate in each
             boolean matched = false;
 
+            // require a shared split read
             for(SupportRead support : first.support())
             {
                 if(!support.type().isSplitSupport())
@@ -83,9 +130,6 @@ public final class AssemblyLinker
                     break;
                 }
             }
-
-            if(!matched)
-                return null;
         }
 
         // ensure the ref base positions of each assembly now match

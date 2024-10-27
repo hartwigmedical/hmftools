@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCro
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
@@ -99,7 +100,7 @@ public class JunctionAssembly
                 maxJunctionBaseQualRead = read;
             }
 
-            if(read.indelCoords() != null && indelCoords == null)
+            if(read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH && indelCoords == null)
             {
                 indelCoords = read.indelCoords();
 
@@ -145,6 +146,7 @@ public class JunctionAssembly
 
     public boolean indel() { return mJunction.indelBased(); }
     public boolean discordantOnly() { return mJunction.DiscordantOnly; }
+    public IndelCoords indelCoords() { return mIndelCoords; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -169,7 +171,6 @@ public class JunctionAssembly
     public byte[] baseQuals() { return mBaseQuals; }
 
     public String initialReadId() { return mInitialReadId; }
-    public IndelCoords indelCoords() { return mIndelCoords; }
 
     public boolean hasLineSequence() { return mHasLineSequence; }
     public void markLineSequence() { mHasLineSequence = true; }
@@ -716,7 +717,7 @@ public class JunctionAssembly
     public String toString()
     {
         return format("junc(%s) coords(extLen=%d refLen=%d refBasePos=%d len=%d juncIndex=%d) support(%d) mismatches(%d)",
-                mJunction.coords(), extensionLength(), refBaseLength(), refBasePosition(), baseLength(), mJunctionIndex,
+                mJunction.coordsTyped(), extensionLength(), refBaseLength(), refBasePosition(), baseLength(), mJunctionIndex,
                 mSupport.size(), mMismatchReadCount);
     }
 

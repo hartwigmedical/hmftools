@@ -93,6 +93,11 @@ public class Junction implements Comparable<Junction>
     // for display and logging
     public String coords() { return format("%s:%d:%d", Chromosome, Position, Orient.asByte()); }
 
+    public String coordsTyped()
+    {
+        return DiscordantOnly || indelBased() ? format("%s %c", coords(), DiscordantOnly ? 'D' : 'I') : coords();
+    }
+
     public boolean isLocalMatch(final Junction other)
     {
         return Position == other.Position && Orient == other.Orient;

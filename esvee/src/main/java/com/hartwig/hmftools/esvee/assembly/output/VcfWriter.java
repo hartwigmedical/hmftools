@@ -259,7 +259,6 @@ public class VcfWriter implements AutoCloseable
                 .start(breakend.Position)
                 .alleles(alleles)
                 .log10PError(qual / -10.0)
-                // .filters(PASS)
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())

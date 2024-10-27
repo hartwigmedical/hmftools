@@ -113,6 +113,9 @@ public class AssemblyDeduper
 
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
+        if(first.indel() != second.indel())
+            return first.indel();
+
         if(first.supportCount() != second.supportCount())
             return first.supportCount() > second.supportCount();
 
