@@ -1,4 +1,4 @@
-FROM mambaorg/micromamba:0.24.0
+FROM mambaorg/micromamba:2.0.2
 
 ARG VERSION
 ARG TOOL_NAME=purple
@@ -21,9 +21,8 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-cowplot \
     r-cairo \
     bioconductor-variantannotation \
-    perl>=5.32 \
+    circos>=0.69.6 \
     perl-gd>=2.76 \
-    circos>=0.69.9 \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
