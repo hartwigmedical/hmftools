@@ -388,8 +388,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, sampleData.SomaticCache);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);
