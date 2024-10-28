@@ -217,15 +217,15 @@ The filters can be set per variant tier in the form: 'TIER;SAMPLE_COUNT_LIMIT;MA
 
 will mark variants of tier = HOTSPOT as PON if they match an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
 
-Some variants (such as indels in microsatellite contexts) are likely to be artefacts at low VAF, but genuine pathogenic variants at high VAF. As such, we establish a concept of a 'potentially pathogenic' variant as a germline or somatic hotspot, or Clinvar pathogenic/likely_pathogenic variant. Then potentially pathogenic variants are not filtered in this way if mean PON reads (i.e. TotalReads/SamplesCount) < 6 and sample VAF > 8%.  If the variant is an indel in a microsatellite context spanning N ref bases, we also require VAF > N%.
+Some variants (such as indels in microsatellite contexts) are likely to be artefacts at low VAF, but genuine pathogenic variants at high VAF. As such, we establish a concept of a 'potentially pathogenic' variant as a germline or somatic hotspot, or Clinvar pathogenic/likely_pathogenic variant. Then 'potentially pathogenic' variants are not filtered in this way if mean PON reads (i.e. TotalReads/SamplesCount) < 6 and sample VAF > 8%.  If the variant is an indel in a microsatellite context spanning N ref bases, we also require VAF > N%.
 
 Finally, variants that are only infrequently in our PON, are likely pathogenic, and are not associated with a long microsatellite should not be PON filtered. Specifically, 'potentially pathogenic' variants with SamplesCount < 10 (and if an indel, has a repeat count < 4) are never PON filtered.
 
 ### Artefact PON Annotation and Filtering
-Pave additionally annotates and filters variants based on a supplied Panel PON Artefact file. Any variant present in this file will get the filter 'PONArtefact' from Pave, except for those satisfying the previously mentioned condition ('potentially pathogenic' variants with SamplesCount < 10 (and if an indel, has a repeat count < 4))
+Pave additionally annotates and filters variants based on a supplied Panel PON Artefact file. Any variant present in this file will get the filter 'PONArtefact' from Pave, except for those satisfying the previously mentioned condition - 'potentially pathogenic' variants with SamplesCount < 10 (and if an indel, has a repeat count < 4)
 
 ### GNOMAD Population Frequency
-We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency. Variants with over 0.00015 cohort frequency will get a 'PONGnomad' filter applied by Pave, unless they are 'poetntially pathogenic' in which case we require 0.01 frequency.
+We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency. Variants with over 0.00015 cohort frequency will get a 'PONGnomad' filter applied by Pave, unless they are 'potentially pathogenic' in which case we require 0.01 frequency.
 
 ### CLINVAR
 If a clinvar VCF is provided, PAVE annotates the clinical signficance of each variant. This is also used to determine whether a variant is 'potentially pathogenic', as described above.
