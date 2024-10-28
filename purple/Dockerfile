@@ -52,7 +52,7 @@ ARG CIRCOS_BASENAME=circos-0.69-9
 RUN wget --no-check-certificate https://circos.ca/distribution/${CIRCOS_BASENAME}.tgz
 RUN tar xvfz /tmp/${CIRCOS_BASENAME}.tgz
 RUN mkdir -p /usr/bin/etc
-COPY /tmp/${CIRCOS_BASENAME}/etc/* /usr/bin/etc/
-COPY /tmp/${CIRCOS_BASENAME}/data/* /usr/bin/
-COPY /tmp/${CIRCOS_BASENAME}/fonts/* /usr/bin/
+RUN cp -r /tmp/${CIRCOS_BASENAME}/etc/* /usr/bin/etc/
+RUN cp -r /tmp/${CIRCOS_BASENAME}/data/* /usr/bin/
+RUN cp -r /tmp/${CIRCOS_BASENAME}/fonts/* /usr/bin/
 RUN rm -r /tmp/circos*
