@@ -108,7 +108,7 @@ public class PrepConfig
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
 
-    private static final String WRITE_TYPES = "write_types";
+    private static final String WRITE_TYPES = "prep_write_types";
 
     public static final String READ_LENGTH = "read_length";
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";

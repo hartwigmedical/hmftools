@@ -82,7 +82,6 @@ public class PredictionRunner
     {
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
 
-        config.disableWarnOnRepeatedRegos();
         PrepConfig.registerConfig(config);
         PredictionConfig.registerConfig(config);
 
