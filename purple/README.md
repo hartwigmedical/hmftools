@@ -26,7 +26,6 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
   + [4. Copy Number Smoothing](#4-copy-number-smoothing)
   + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
   + [6. Allele specific copy number inferring](#6-allele-specific-copy-number-inferring)
-  + [7. Structural Variant Recovery](#7-structural-variant-recovery)
   + [8. Identify germline gene_deletions](#8-identify-germline-gene-deletions)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
@@ -91,7 +90,6 @@ java -jar purple.jar \
    -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/COLO829/COLO829.somatic.vcf.gz \
    -somatic_sv_vcf /path/COLO829/COLO829.sv.vcf.gz \
-   -sv_recovery_vcf /path/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -circos /path/circos-0.69-6/bin/circos \
    -output_dir /output/purple/ \
 ```
@@ -124,7 +122,6 @@ germline_vcf | None | Optional location of germline variants VCF. Sample names m
 somatic_vcf | None | Optional location of somatic variants vcf
 somatic_sv_vcf | None | Optional location of somatic structural variants VCF for fitting and annotation
 germline_sv_vcf | None | Optional location of germline structural variants variants VCF for annotation
-sv_recovery_vcf | None | Optional location of low confidence structural variants VCF which may be recovered by Purple
 germline_del_freq_file | None | Provide a cohort frequency for germline deletions
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 no_charts | NA | Disables creation of (non-circos) charts
@@ -230,8 +227,7 @@ For more information on how to run AMBER please refer to the [readme](https://gi
 
 ### Structural Variant Input VCFs (optional)
 Providing a high quality set of somatic structural variant calls to PURPLE allows exact base resolution of copy number changes. 
-An accurate estimation of VAF at each breakend also allows PURPLE to infer copy number changes even across very short segments of the genome where a depth based estimation is inaccurate or impractical. 
-Finally, PURPLE also supports recovery of filtered structural variant calls 
+An accurate estimation of VAF at each breakend also allows PURPLE to infer copy number changes even across very short segments of the genome where a depth based estimation is inaccurate or impractical.  
 
 A VCF with germline structural variants can also be provided. PURPLE can annotate such variants with purity adjusted local and variant copy number estimations in the tumor. Also, this information can be used to make calling of germline deletions more accurate.
 
@@ -278,7 +274,6 @@ java -jar purple.jar \
    -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/COLO829/COLO829.sv.high_confidence.vcf.gz \
-   -sv_recovery_vcf /path/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -run_drivers \
    -driver_gene_panel /path/DriverGenePanel.37.tsv \ 
    -circos /path/circos-0.69-6/bin/circos \
@@ -497,23 +492,6 @@ This rule is intended to ensure that short templated insertions do not break reg
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
 At this stage we have determined a copy number and minor allele copy number for every base in the genome
-
-### 7. Structural Variant Recovery
-
-PURPLE attempts to recover entries from a set of lower confidence structural variants if a recovery vcf (parameter: `sv_recovery_vcf`) is provided.
-
-There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.  
-
-Eligible recovery candidates must:
-
-1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant.  Breakpoints where both ends are within 1kb of a recovery site are 
-2. Not be “minTumorAF” or "DEDUP" filtered in GRIPSS
-3. Have a minQual > 300 (breakpoints) or 800 (single breakends)
-4. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
-
-In both situations, if no suitable SV candidate is found to help explain the copy number discrepancy, a single ended breakend will be inferred (with type = 'INF') at that position.
-
-Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
 ### 8. Identify germline gene deletions
 
@@ -799,7 +777,7 @@ If structural or somatic VCF files have been supplied to PURPLE then correspondi
 
 ####  Structural Variant VCF
 
-The output VCF `TUMOR.purple.sv.vcf.gz` will contain all (filtered and unfiltered) entries from the input structural variant VCF and also any entries recovered from the recovery VCF 
+The output VCF `TUMOR.purple.sv.vcf.gz` will contain all (filtered and unfiltered) entries from the input structural variant VCF 
 enriched with the following fields:
 
 Field | Count | Description 
