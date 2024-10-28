@@ -301,7 +301,7 @@ public class PrepConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
-        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addPaths(BAM_FILE, true, BAM_FILE_DESC);
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");

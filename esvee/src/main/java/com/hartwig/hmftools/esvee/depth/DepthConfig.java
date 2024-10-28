@@ -117,7 +117,7 @@ public class DepthConfig
     {
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
-        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addPaths(BAM_FILE, true, BAM_FILE_DESC);
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
         UnmappedRegions.registerConfig(configBuilder);
