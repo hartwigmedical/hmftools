@@ -1,15 +1,6 @@
-FROM mambaorg/micromamba:2.0.2
-
-ARG VERSION
-ARG TOOL_NAME=purple
-ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
-ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
+FROM mambaorg/micromamba:0.24.0
 
 USER root
-
-ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
-ADD target/entrypoint.sh ${RUN_SCRIPT}
-RUN chmod +x ${RUN_SCRIPT}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
@@ -21,38 +12,11 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-cowplot \
     r-magick \
     bioconductor-gviz \
-    wget \
+    "circos>=0.69.9" \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
 
-## Install circos and its dependencies
-RUN apt update && apt install -y \
-    libconfig-general-perl \
-    libclone-perl \
-    libfindbin-libs-perl \
-	libfont-ttf-perl \
-    libgd-perl \
-    liblist-moreutils-perl \
-    libmath-round-perl \
-    libmath-bezier-perl \
-    libmath-vecstat-perl \
-    libparams-validate-perl \
-    libreadonly-perl \
-    libregexp-common-perl \
-    libset-intspan-perl \
-    libstatistics-basic-perl \
-    libsvg-perl \
-    libtext-format-perl \
-    circos \
-    && apt clean && rm -rf /var/lib/apt/lists/*
-
-## Install default circos resources/configuration
-ARG CIRCOS_BASENAME=circos-0.69-9
-RUN wget --no-check-certificate https://circos.ca/distribution/${CIRCOS_BASENAME}.tgz
-RUN tar xvfz /tmp/${CIRCOS_BASENAME}.tgz
-RUN mkdir -p /usr/bin/etc
-RUN cp -r /tmp/${CIRCOS_BASENAME}/etc/* /usr/bin/etc/
-RUN cp -r /tmp/${CIRCOS_BASENAME}/data/* /usr/bin/
-RUN cp -r /tmp/${CIRCOS_BASENAME}/fonts/* /usr/bin/
-RUN rm -r /tmp/circos*
+# Fix missing GD perl module error (despite GD already being installed with circos)
+RUN apt update && apt install -y libconfig-general-perl
+RUN perl -MCPAN -e 'install GD'
