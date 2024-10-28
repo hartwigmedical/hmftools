@@ -83,22 +83,31 @@ Regions that overlap PANEL or fusion KB genes are excluded from the blacklist un
 ### Command
 
 ```
-java -cp esvee.jar com.hartwig.hmftools.esvee.prep.EsveeApplication 
-  -sample SAMPLE_ID
-  -bam_file /sample_data/SAMPLE_ID.bam
+java -cp esvee.jar com.hartwig.hmftools.esvee.assembly.AssemblyApplication 
+  -tumor TUMOR_SAMPLE_ID 
+  -reference REF_SAMPLE_ID
+  -tumor_bam /sample_data/TUMOR_SAMPLE_ID.bam
+  -reference_bam /sample_data/REF_SAMPLE_ID.bam
+  -junction_file /sample_data/output/TUMOR_SAMPLE_ID.esvee.prep.junction.tsv
   -ref_genome /path_to_ref_genome_fasta/
-  -ref_genome_version [37 or 38] 
+  -ref_genome_version 38
+  -write_types 'JUNC_ASSEMBLY;PHASED_ASSEMBLY;ALIGNMENTS;BREAKEND;VCF'
   -output_dir /sample_data/output/ 
+  -threads 16
 ```
 
 #### Mandatory Arguments
 
 Argument | Description 
 ---|---
-sample | Sample ID
-bam_file | Input BAM file
+tumor | Tumor sample ID
+tumor_bam | Path to Prep tumor BAM file
+reference | Tumor sample ID (can be omitted in tumo-only mode)
+reference_bam | Path to Prep reference BAM file
+junction_file | Path to Prep junction TSV file, assumes named as 'TUMOR_SAMPLE_ID.esvee.prep.junction.tsv'
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
+write_types | Minimum required is VCF for latter steps
 output_dir | Output directory
 threads | Thread count
 
@@ -106,13 +115,7 @@ threads | Thread count
 
 Argument | Description 
 ---|---
-known_fusion_bed | BED file with known fusion pair coordinates (as used in Gripss), require only 1 fragment for junctions
-blacklist_bed | See below for explanation
-existing_junction_file | Typically used for reference sample after tumor has been run - ensure fragment support is captured for these junctions
-write_types | From list of 'JUNCTIONS', 'READS', 'BAM' and 'FRAGMENT_LENGTH_DIST', default is JUNCTIONS and BAM
-partition_size | Default is 1 million bases
-min_align_bases | Min required aligned bases for a junction fragment, default = 50
-min_junction_frags | Min fragments to call a junction, default = 2
+decoy_genome | Decoy fastq sequences file, eg use HG38 decoys for a GRCH37 run
 
 
 ### Algorithm
@@ -121,18 +124,32 @@ min_junction_frags | Min fragments to call a junction, default = 2
 
 ## Reference Depth Annotation
 
-Esvee Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implementation.  This can be run with the following command: 
+Once unfiltered variants have been identified, they are annotated with the depth matching the reference genome in each input BAM. 
+This feeds into the VAF calculations in the caller routine below.
 
 ```
 java -cp esvee.jar com.hartwig.hmftools.esvee.depth.DepthAnnotator \
-  -input_vcf ${gridss_vcf} \
-  -output_vcf ${final_vcf} \
-  -samples "${reference_id},${tumor_id}" \
-  -bam_files "${reference_bam},${tumor_bam}" \
-  -ref_genome ${ref_genome} \
-  -ref_genome_version ${ref_genome_version} \
-  -threads ${threads} \
+  -sample 'REF_SAMPLE_ID,TUMOR_SAMPLE_ID'
+  -bam_file '/sample_data/REF_SAMPLE_ID.bam,/sample_data/TUMOR_SAMPLE_ID.bam'
+  -input_vcf TUMOR_SAMPLE_ID.esee.raw.vcf.gz
+  -output_vcf TUMOR_SAMPLE_ID.esee.ref_depth.vcf.gz
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version 38
+  -threads 16
 ```
+
+#### Arguments
+
+Argument | Description 
+---|---
+sample | Sample IDs separated by ','
+bam_file | BAM file paths separated by ','
+ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
+input_vcf | Input VCF from assembly, assumes named as 'TUMOR_SAMPLE_ID.esvee.raw.vcf.gz'
+output_vcf | Output VCF, default is TUMOR_SAMPLE_ID.esvee.ref_depth.vcf.gz
+threads | Thread count
+
 
 
 ## Variant Calling and Filtering
@@ -146,11 +163,15 @@ The final step is to filter and annotate all variants, and then to write out 3 V
 ### Command
 
 ```
-java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication 
-  -sample SAMPLE_ID
-  -bam_file /sample_data/SAMPLE_ID.bam
-  -ref_genome /path_to_ref_genome_fasta/
-  -ref_genome_version [37 or 38] 
+java -cp esvee.jar com.hartwig.hmftools.esvee.caller.CallerApplication 
+  -sample TUMOR_SAMPLE_ID
+  -reference REF_SAMPLE_ID
+  -input_vcf /sample_data/output/TUMOR_SAMPLE_ID.esvee.ref_depth.vcf.gz
+  -ref_genome_version 38
+  -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
+  -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
+  -known_hotspot_file /ref_data/known_fusions.38.bedpe
+  -repeat_mask_file /ref_data/repeat_mask_data.37.fa.gz
   -output_dir /sample_data/output/ 
 ```
 
@@ -158,59 +179,25 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication
 
 Argument | Description 
 ---|---
-sample | Sample ID
-bam_file | Input BAM file
-ref_genome | Reference genome fasta file
+sample | Tumor sample ID
+reference | Reference sample ID
 ref_genome_version | 37 (default) or 38
 output_dir | Output directory
-threads | Thread count
 
 #### Optional Arguments
 
 Argument | Description 
 ---|---
-known_fusion_bed | BED file with known fusion pair coordinates (as used in Gripss), require only 1 fragment for junctions
-blacklist_bed | See below for explanation
-existing_junction_file | Typically used for reference sample after tumor has been run - ensure fragment support is captured for these junctions
-write_types | From list of 'JUNCTIONS', 'READS', 'BAM' and 'FRAGMENT_LENGTH_DIST', default is JUNCTIONS and BAM
-partition_size | Default is 1 million bases
-min_align_bases | Min required aligned bases for a junction fragment, default = 50
-min_junction_frags | Min fragments to call a junction, default = 2
+input_vcf | VCF from reference depth routine above, assumed named as 'TUMOR_SAMPLE_ID.esvee.ref_depth.vcf.gz'
+pon_sgl_file | PON for SGL breakends
+pon_sv_file | PON for SVs
+known_hotspot_file | Known hotspot SVs, matches known-pair fusions as used by Linx
+repeat_mask_file | Repeat mask file
 
-
-```
-java -jar gripss.jar \
-   -sample SAMPLE_T \
-   -reference SAMPLE_N \
-   -ref_genome_version 37 \
-   -ref_genome /path/to/Homo_sapiens_assembly.fasta \
-   -pon_sgl_file /path/to/gridss_pon_single_breakend.bed \
-   -pon_sv_file /path/to/gridss_pon_breakpoint.bedpe \
-   -known_hotspot_file /path/to/KnownFusionPairs.bedpe \
-   -repeat_mask_file /path_to/37.fa.out.gz \
-   -vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
-   -output_dir /output_dir/ 
-```
-
-This will write 2 files:
-- SAMPLE_T.gripss.somatic.vcf.gz - all non-hard-filtered SVs
-- SAMPLE_T.gripss.somatic.filtered.vcf.gz - filtered for PASS and PON only
-
-These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
-
-The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
-Both files need to be sorted by chromosome and start breakend start position.
 
 
 ## Known issues and future improvements
 
-- **Soft Clip end bias** - There are several artefacts that occurs solely on the 3' end of both R1 and R2.   We could potentially explicitly filter sites with a lot of 3' support but no 5' support.
-- **Short INDEL Artefacts** - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
-- **Microsatellites** - Related, other artefacts may still be called immediately adjacent to microsatellites.   Additional filtering may help
-- **MT chromosome** - currently dropped
-- **Variants near blacklisted regions** - GRIDSS will ignore any read that overlaps a blacklisted region.   Hence, we cannot call any breakpoint which is within ~30-70 bases of a blacklisted region.
-- **Max softclip overlap** - Currently must be 30 bases of soft clip overlap.  This may cause us occasionally to miss 1 or 2 reads support at one end of a break junction if it is only identified at one end.
 
-# Version History and Download Links
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1)
+### Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/esvee-v1.0)
