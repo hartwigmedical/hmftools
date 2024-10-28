@@ -1,14 +1,17 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.esvee.alignment.Alignment.skipUnlinkedJunctionAssembly;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
@@ -27,11 +30,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.esvee.alignment.Alignment;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.assembly.alignment.Alignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
+import com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -39,7 +42,6 @@ import com.hartwig.hmftools.esvee.assembly.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.assembly.output.BamWriter;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder;
-import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetTask;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -65,9 +67,9 @@ public class AssemblyApplication
 
     private final List<PerformanceCounter> mPerfCounters;
 
-    public AssemblyApplication(final AssemblyConfig config)
+    public AssemblyApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = config;
+        mConfig = new AssemblyConfig(configBuilder);
 
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = Maps.newHashMap();
@@ -78,66 +80,20 @@ public class AssemblyApplication
         mPerfCounters = Lists.newArrayList();
     }
 
-    public boolean loadJunctionFiles()
-    {
-        if(!mConfig.SpecificJunctions.isEmpty())
-        {
-            for(Junction junction : mConfig.SpecificJunctions)
-            {
-                List<Junction> chrJunctions = mChrJunctionsMap.get(junction.Chromosome);
-                if(chrJunctions == null)
-                {
-                    chrJunctions = Lists.newArrayList();
-                    mChrJunctionsMap.put(junction.Chromosome, chrJunctions);
-                }
-
-                chrJunctions.add(junction);
-            }
-
-            return true;
-        }
-
-        for(String junctionFile : mConfig.JunctionFiles)
-        {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
-
-            if(newJunctionsMap == null)
-                return false;
-
-            Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
-        }
-
-        // if(mConfig.PerfDebug && !validateJunctionMap(mChrJunctionsMap))
-        //    System.exit(1);
-
-        if(mConfig.JunctionFiles.size() > 1)
-        {
-            SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
-        }
-
-        return true;
-    }
-
-    private void loadFragmentLengthBounds()
-    {
-        if(mConfig.JunctionFiles.isEmpty())
-            return;
-
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.sampleId());
-        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
-
-        if(fragmentLengthBounds.isValid())
-        {
-            SV_LOGGER.info("fragment length bounds(min={} max={})",
-                    fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
-
-            DISCORDANT_FRAGMENT_LENGTH = fragmentLengthBounds.UpperBound;
-        }
-    }
-
     public void run()
     {
+        long startTimeMs = System.currentTimeMillis();
+
+        SV_LOGGER.info("writing to output directory({}){}",
+                mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
+
         loadFragmentLengthBounds();
+
+        if(!loadJunctionFiles())
+        {
+            SV_LOGGER.error("failed to load junction file");
+            System.exit(1);
+        }
 
         try
         {
@@ -191,6 +147,65 @@ public class AssemblyApplication
             SV_LOGGER.error("process run error: {}", e.toString());
             e.printStackTrace();
             System.exit(1);
+        }
+
+        SV_LOGGER.info("Esvee assembly complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private boolean loadJunctionFiles()
+    {
+        if(!mConfig.SpecificJunctions.isEmpty())
+        {
+            for(Junction junction : mConfig.SpecificJunctions)
+            {
+                List<Junction> chrJunctions = mChrJunctionsMap.get(junction.Chromosome);
+                if(chrJunctions == null)
+                {
+                    chrJunctions = Lists.newArrayList();
+                    mChrJunctionsMap.put(junction.Chromosome, chrJunctions);
+                }
+
+                chrJunctions.add(junction);
+            }
+
+            return true;
+        }
+
+        for(String junctionFile : mConfig.JunctionFiles)
+        {
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
+
+            if(newJunctionsMap == null)
+                return false;
+
+            Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
+        }
+
+        // if(mConfig.PerfDebug && !validateJunctionMap(mChrJunctionsMap))
+        //    System.exit(1);
+
+        if(mConfig.JunctionFiles.size() > 1)
+        {
+            SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
+        }
+
+        return true;
+    }
+
+    private void loadFragmentLengthBounds()
+    {
+        if(mConfig.JunctionFiles.isEmpty())
+            return;
+
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.sampleId());
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+
+        if(fragmentLengthBounds.isValid())
+        {
+            SV_LOGGER.info("fragment length bounds(min={} max={})",
+                    fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
+
+            DISCORDANT_FRAGMENT_LENGTH = fragmentLengthBounds.UpperBound;
         }
     }
 
@@ -424,5 +439,18 @@ public class AssemblyApplication
     public void close()
     {
         mResultsWriter.close();
+    }
+
+    public static void main(final String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
+        AssemblyConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        AssemblyApplication assembly = new AssemblyApplication(configBuilder);
+        assembly.run();
+        assembly.close();
     }
 }

@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import org.apache.commons.cli.ParseException;
 
@@ -113,7 +112,7 @@ public class DepthConfig
         return VcfTagPrefix != null ? format("%s_%s", VcfTagPrefix, vcfTag) : vcfTag;
     }
 
-    public static void addConfig(final ConfigBuilder configBuilder)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addConfigItem(SAMPLES, true, "Sample IDs corresponding to BAM files");

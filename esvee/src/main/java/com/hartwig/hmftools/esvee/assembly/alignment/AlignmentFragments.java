@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -7,7 +7,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;

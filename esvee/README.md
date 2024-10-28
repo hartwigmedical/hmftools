@@ -3,26 +3,34 @@
 ## Overview and algorithm
 
 
-## ESVEE Prep - pre filtering
+## BAM Prep Pre-Assembly Filtering
 
-SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
-that junction. The BAM file is intended to be fed into the GRIDSS assembly.   SV Prep reduces the overall runtime of GRIDSS SV calling by ~80%.
+Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
+that junction.
 
-In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, 
-to ensure all potential evidence in the reference sample is collected for candidate tumor junctions. 
+### Command
 
-Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/scripts/run_sv_calling)
-
-### Running SvPrep
+```
+java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication 
+  -sample 'REF_SAMPLE_ID,TUMOR_SAMPLE_ID'
+  -bam_file '/sample_data/REF_SAMPLE_ID.bam,/sample_data/TUMOR_SAMPLE_ID.bam'
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version 38 
+  -known_fusion_bed /ref_data/known_fusions.38.bedpe
+  -bamtool /tools/sambamba/sambamba 
+  -output_dir /sample_data/output/ 
+  -threads 16
+```
 
 #### Mandatory Arguments
 
 Argument | Description 
 ---|---
-sample | Sample ID
-bam_file | Input BAM file
+sample | Sample IDs separated by ','
+bam_file | BAM file paths separated by ','
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
+bamtool | Sambamba or Samtools, required to sort and index the output BAMs
 output_dir | Output directory
 threads | Thread count
 
@@ -30,30 +38,11 @@ threads | Thread count
 
 Argument | Description 
 ---|---
-known_fusion_bed | BED file with known fusion pair coordinates (as used in Gripss), require only 1 fragment for junctions
+known_fusion_bed | BED file with known fusion pair coordinates, require only 1 fragment for junctions
 blacklist_bed | See below for explanation
-existing_junction_file | Typically used for reference sample after tumor has been run - ensure fragment support is captured for these junctions
-write_types | From list of 'JUNCTIONS', 'READS', 'BAM' and 'FRAGMENT_LENGTH_DIST', default is JUNCTIONS and BAM
-partition_size | Default is 1 million bases
-min_align_bases | Min required aligned bases for a junction fragment, default = 50
-min_junction_frags | Min fragments to call a junction, default = 2
 
-```
-java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication 
-  -sample SAMPLE_ID
-  -bam_file /sample_data/SAMPLE_ID.bam
-  -ref_genome /path_to_ref_genome_fasta/
-  -ref_genome_version [37 or 38] 
-  -output_dir /sample_data/output/ 
-```
 
-The bed file resources can be downloaded from [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
-- know fusion pair locations BED (see resources 'sv')
-- blacklist locations BED (see resources 'sv')
-
-### Overview and algorithm
-
-#### Extract Fragments
+### Algorithm
 
 Ignoring reads that are duplicate (or where the primary is a duplicate), secondary or contain soft clipping with more than 16 consecutive 
 bases of PolyG/C), and excluding sites in blacklisted regions, parse through BAM end to end to identify breakend sites with CREDIBLE soft clipping
@@ -83,6 +72,53 @@ For the last 2 categories (discordant & indel containing reads), we filter if th
 
 A BAM is written for each input sample which contains the reads described above and their mates. This is then fed into the Esvee assembly routine described below.
 
+The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).
+Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the max coverage is >2000x. These regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).
+
+
+## Assembly Building
+
+
+
+### Command
+
+```
+java -cp esvee.jar com.hartwig.hmftools.esvee.prep.EsveeApplication 
+  -sample SAMPLE_ID
+  -bam_file /sample_data/SAMPLE_ID.bam
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version [37 or 38] 
+  -output_dir /sample_data/output/ 
+```
+
+#### Mandatory Arguments
+
+Argument | Description 
+---|---
+sample | Sample ID
+bam_file | Input BAM file
+ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
+output_dir | Output directory
+threads | Thread count
+
+#### Optional Arguments
+
+Argument | Description 
+---|---
+known_fusion_bed | BED file with known fusion pair coordinates (as used in Gripss), require only 1 fragment for junctions
+blacklist_bed | See below for explanation
+existing_junction_file | Typically used for reference sample after tumor has been run - ensure fragment support is captured for these junctions
+write_types | From list of 'JUNCTIONS', 'READS', 'BAM' and 'FRAGMENT_LENGTH_DIST', default is JUNCTIONS and BAM
+partition_size | Default is 1 million bases
+min_align_bases | Min required aligned bases for a junction fragment, default = 50
+min_junction_frags | Min fragments to call a junction, default = 2
+
+
+### Algorithm
+
+
+
 ## Reference Depth Annotation
 
 Esvee Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implementation.  This can be run with the following command: 
@@ -98,11 +134,73 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.depth.DepthAnnotator \
   -threads ${threads} \
 ```
 
-Please see the example [script](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss) for how to run this post GRIDSS.
 
-### SV Prep Blacklist
+## Variant Calling and Filtering
 
-The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the max coverage is >2000x. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
+The final step is to filter and annotate all variants, and then to write out 3 VCFs:
+- somatic VCF - SAMPLE_ID.esvee.somatic.vcf.gz
+- germline VCF - SAMPLE_ID.esvee.germline.vcf.gz
+- unfiltered VCF - SAMPLE_ID.esvee.unfiltered.vcf.gz
+
+
+### Command
+
+```
+java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication 
+  -sample SAMPLE_ID
+  -bam_file /sample_data/SAMPLE_ID.bam
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version [37 or 38] 
+  -output_dir /sample_data/output/ 
+```
+
+#### Mandatory Arguments
+
+Argument | Description 
+---|---
+sample | Sample ID
+bam_file | Input BAM file
+ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
+output_dir | Output directory
+threads | Thread count
+
+#### Optional Arguments
+
+Argument | Description 
+---|---
+known_fusion_bed | BED file with known fusion pair coordinates (as used in Gripss), require only 1 fragment for junctions
+blacklist_bed | See below for explanation
+existing_junction_file | Typically used for reference sample after tumor has been run - ensure fragment support is captured for these junctions
+write_types | From list of 'JUNCTIONS', 'READS', 'BAM' and 'FRAGMENT_LENGTH_DIST', default is JUNCTIONS and BAM
+partition_size | Default is 1 million bases
+min_align_bases | Min required aligned bases for a junction fragment, default = 50
+min_junction_frags | Min fragments to call a junction, default = 2
+
+
+```
+java -jar gripss.jar \
+   -sample SAMPLE_T \
+   -reference SAMPLE_N \
+   -ref_genome_version 37 \
+   -ref_genome /path/to/Homo_sapiens_assembly.fasta \
+   -pon_sgl_file /path/to/gridss_pon_single_breakend.bed \
+   -pon_sv_file /path/to/gridss_pon_breakpoint.bedpe \
+   -known_hotspot_file /path/to/KnownFusionPairs.bedpe \
+   -repeat_mask_file /path_to/37.fa.out.gz \
+   -vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
+   -output_dir /output_dir/ 
+```
+
+This will write 2 files:
+- SAMPLE_T.gripss.somatic.vcf.gz - all non-hard-filtered SVs
+- SAMPLE_T.gripss.somatic.filtered.vcf.gz - filtered for PASS and PON only
+
+These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
+
+The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
+Both files need to be sorted by chromosome and start breakend start position.
+
 
 ## Known issues and future improvements
 

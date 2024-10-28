@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;

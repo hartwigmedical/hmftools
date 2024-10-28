@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
 import java.util.Map;

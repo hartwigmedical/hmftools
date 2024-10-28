@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.Queue;
 

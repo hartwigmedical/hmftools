@@ -1,18 +1,18 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_GENE_ORIENT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_MAX_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGIONS_V37;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SSX2_REGIONS_V38;
-import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
+import static com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder.segmentOrientation;
 
 import java.util.Collections;
 import java.util.Comparator;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;

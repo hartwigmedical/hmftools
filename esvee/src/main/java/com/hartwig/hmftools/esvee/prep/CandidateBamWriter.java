@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.chrFromChrPartition;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.CACHE_BAM;
 
 import java.io.File;
@@ -28,8 +28,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;

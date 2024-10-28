@@ -6,16 +6,16 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATIO
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AlignData;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 
 public class AlignmentWriter
 {

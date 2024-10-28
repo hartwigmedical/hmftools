@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.util.stream.Collectors;
@@ -13,13 +13,13 @@ import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SvPrepApplication
+public class PrepApplication
 {
     private final PrepConfig mConfig;
     private final ResultsWriter mWriter;
     private final SpanningReadCache mSpanningReadCache;
 
-    public SvPrepApplication(final ConfigBuilder configBuilder)
+    public PrepApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new PrepConfig(configBuilder);
         mWriter = new ResultsWriter(mConfig);
@@ -113,11 +113,11 @@ public class SvPrepApplication
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        PrepConfig.addConfig(configBuilder);
+        PrepConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
-        SvPrepApplication svPrep = new SvPrepApplication(configBuilder);
+        PrepApplication svPrep = new PrepApplication(configBuilder);
         svPrep.run();
     }
 }

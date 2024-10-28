@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -8,7 +8,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;

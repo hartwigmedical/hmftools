@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.BWA_LIB_PATH;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.BWA_LIB_PATH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_ALIGNED_BASES;
@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_REF
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SCORE;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_RAW_SEQ_COORDS;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_XA_TAG;
-import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner.loadAlignerLibrary;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -41,8 +41,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.esvee.alignment.AlignData;
-import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
+import com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;

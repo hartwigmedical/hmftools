@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.utils.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 import static com.hartwig.hmftools.esvee.utils.HighDepthFinder.writeHighDepthRegions;
 

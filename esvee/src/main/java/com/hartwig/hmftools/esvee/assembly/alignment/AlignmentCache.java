@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.common.region.SpecificRegions.parseStandardFormat;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_ASSEMLY_INFO;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_CIGAR;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_FLAGS;

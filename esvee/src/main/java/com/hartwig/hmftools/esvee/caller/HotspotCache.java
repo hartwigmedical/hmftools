@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

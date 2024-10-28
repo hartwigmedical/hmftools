@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.io.File;

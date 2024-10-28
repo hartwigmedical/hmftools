@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
-import static com.hartwig.hmftools.esvee.alignment.MdTag.MATCH_BYTE;
+import static com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder.segmentOrientation;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -94,12 +93,12 @@ public class HomologyData
             {
                 if(i < endIndex)
                 {
-                    if(leftMdSeq[i] != MATCH_BYTE)
+                    if(leftMdSeq[i] != MdTag.MATCH_BYTE)
                         ++mismatchCount;
                 }
                 else
                 {
-                    if(rightMdSeq[i] != MATCH_BYTE)
+                    if(rightMdSeq[i] != MdTag.MATCH_BYTE)
                         ++mismatchCount;
                 }
             }

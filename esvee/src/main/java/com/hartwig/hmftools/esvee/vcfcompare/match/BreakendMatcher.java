@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.vcfcompare.match;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.ArrayList;
 import java.util.List;

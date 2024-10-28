@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
 import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
@@ -363,7 +363,7 @@ public class DepthAnnotator
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        DepthConfig.addConfig(configBuilder);
+        DepthConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

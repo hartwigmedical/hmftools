@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -28,9 +28,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
-import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
+import static com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
@@ -53,7 +53,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.alignment.AlignmentCache;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;

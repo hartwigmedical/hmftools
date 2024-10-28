@@ -5,8 +5,8 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_MERGE_MARGIN;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_MERGE_MARGIN;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMENTARY;

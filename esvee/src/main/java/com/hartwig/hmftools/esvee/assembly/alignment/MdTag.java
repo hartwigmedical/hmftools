@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import java.util.Collections;
 import java.util.List;

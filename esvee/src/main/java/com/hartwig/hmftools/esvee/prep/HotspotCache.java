@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.IOException;

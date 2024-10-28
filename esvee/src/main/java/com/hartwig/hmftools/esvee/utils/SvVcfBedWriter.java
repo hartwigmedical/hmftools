@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.utils;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.io.BufferedWriter;
