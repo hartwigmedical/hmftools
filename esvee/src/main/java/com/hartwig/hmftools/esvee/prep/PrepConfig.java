@@ -102,6 +102,9 @@ public class PrepConfig
 
     // config strings
     public static final String BAM_FILE = "bam_file";
+    public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
+    public static final String SAMPLE_ID_DESC = "List of samples separated by ','";
+
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
 
@@ -297,8 +300,8 @@ public class PrepConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, false, "List of samples separated by ','");
-        configBuilder.addPath(BAM_FILE, false, "BAM file paths separated by ','");
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
+        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");
