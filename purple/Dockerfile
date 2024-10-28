@@ -24,6 +24,9 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     wget \
     && micromamba clean --all --yes
 
+ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
+
+## Install circos and its dependencies
 RUN apt update && apt install -y \
     libconfig-general-perl \
     libclone-perl \
@@ -44,4 +47,12 @@ RUN apt update && apt install -y \
     circos \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
+## Install default circos resources/configuration
+ARG CIRCOS_BASENAME=circos-0.69-9
+RUN wget --no-check-certificate https://circos.ca/distribution/${CIRCOS_BASENAME}.tgz
+RUN tar xvfz /tmp/${CIRCOS_BASENAME}.tgz
+RUN mkdir -p /usr/bin/etc
+COPY /tmp/${CIRCOS_BASENAME}/etc/* /usr/bin/etc/
+COPY /tmp/${CIRCOS_BASENAME}/data/* /usr/bin/
+COPY /tmp/${CIRCOS_BASENAME}/fonts/* /usr/bin/
+RUN rm -r /tmp/circos*
