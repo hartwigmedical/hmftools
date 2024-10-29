@@ -413,7 +413,7 @@ We also record the min and max of the purity, ploidy and diploid proportions of 
 
 Note that a segment is diploid only if both the major and minor allele are between 0.8 and 1.2 inclusive. 
 
-#### Somatic Purity
+#### Somatic Purity - Tumor Normal 
 
 If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
 - Tumor has one or more HOTSPOT SV or point mutation
@@ -425,9 +425,15 @@ If a tumor is detected, and there is a wide range (>= 0.15) of valid purities in
 
 First PURPLE groups all somatic SNV by VAF with 0.8 x AverageTumorDepth < totalReadCount < 1.2x AverageTumorDepth (after applying the following filters: !GNOMAD; TIER!=LOW_CONFIDENCE; repeatCount<4; germlineStatus='DIPLOID'; mappability=1; GermlineAlleleReadCount = 0 to ensure that all germline and other artefacts are strictly removed). A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(4,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
 
+<TO DO - Add readjustment>
+
 If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria OR if the somatic fit suggests biologically unlikely significant homozygous deletions (specifically more than 0.3% of depth windows have copyNumber < 0.5 excluding chrY and chr9 CDKN2A region), then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
 
 Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with known hotspot mutations, PURPLE checks if the VAF of any hotspot mutations is not outside the expected distribution of the fitted somatic VAF peak (p<0.01).  If the VAF of the hotspot is significantly higher than the fitted VAF peak, then PURPLE sets the purity to 2x maximum hotspot VAF. 
+
+#### Somatic Purity - Tumor Only 
+
+<TO DO - add>
 
 ### 4. Copy Number Smoothing 
 
@@ -550,18 +556,7 @@ if there are three or more mutations of that type, strand and context localised 
 
 For each point mutation we determined the clonality and biallelic status by comparing the estimated number of copies of the variant to the local copy number at the exact base of the variant.    The copy number of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
 
-To determine whether a mutation should be marked as biallelic (i.e. no wild type remaining), there are two cases. 
-
-If the local minor allele copy number is less than 0.5, then the mutation is marked as biallelic if Variant copy number > local copy number - 0.5.
-The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant.
-For example, if the local copy number is 2 and the local minor allele copy number is 0, then any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
-
-If the local minor allele copy number is at least 0.5, then an additional check is done. 
-In this case a biallelic state is only possible if the minor allele copy number is measured incorrectly or the mutation has developed independently on both alleles.
-Such independent identical mutations are not very likely, so when the local minor allele copy number is at least 0.5 a mutation is marked biallelic if both:
-- Variant copy number > local copy number - 0.5.
-- The probability to see at least the observed number of reads with the mutation, assuming that the variant only exists on the major allele, is at most 0.5%.
-  - More precisely: `1 - Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)], AlleleReadCount-1)<0.005`, where `Poisson` is the Poisson cumulative probability density function.
+<TO DO - ADD BIALLELIC>
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
