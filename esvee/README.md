@@ -44,36 +44,30 @@ blacklist_bed | See below for explanation
 
 ### Algorithm
 
-Ignoring reads that are duplicate (or where the primary is a duplicate), secondary or contain soft clipping with more than 16 consecutive 
-bases of PolyG/C), and excluding sites in blacklisted regions, parse through BAM end to end to identify breakend sites with CREDIBLE soft clipping
+There are 6 main steps in the ESVEE pipeline:
 
-- At least 1 read with 50 base alignment and  abs(Insert size - M length) > 5 bases (ie test for short fragments with adapter) AND a soft clip length of 30 with >=75% of soft clip bases with qual > 25. 
-- Soft clip length of <30 is allowed where the soft clip meet the polyA LINE criteria (ie 16 of first 18 soft clip bases must be A/T). 
-- The read must also not be a repeat expansion (ie the first 9 bases of soft clip and the last 9 bases of aligned read are not matching 1,2 or 3 nucleotide repeats).       
-- At least 1 additional read which have any length soft clipping at the same base OR within 50 bases with <=1 high quality mismatch between the soft clip locations  (not required for HOTSPOT regions)   
-- At least 1 read supporting directly or indirectly with a MAPQ of 20 (not required for HOTSPOT regions)
+<TO DO - Add figure>
 
-Sites with aligned INDELs of >= 32 bases are also treated as candidate sites.
+#### STEP 1: ESVEE PREP 
+ESVEE-PREP generates a set of maximally filtered SV BAM files and an initial set of candidate SV junctions from input tumor/normal BAM files. The SV BAM files includes all candidate split and discordant reads that are proximate to candidate junctions that may provide support to that junction. 
+ 
+Ignoring reads that are duplicate (or where the primary is a duplicate), secondary or contain soft clipping with more than 16 consecutive bases of PolyG/C), and excluding sites in blacklisted regions, ESVEE-PREP parses through the BAMS end to end to identify breakend sites with CREDIBLE soft clipping: 
+- At least 1 read with AdjAlignmentScore > 40 and abs(Insert size - M length) > 5 bases (ie test for short fragments with adapter) AND a soft clip length of >32 with >=75% of soft clip bases with qual > 25. 
+- Soft clip length of <32 is allowed where the soft clip meet the polyA LINE criteria (ie 16 of first 18 soft clip bases must be A/T). 
+- The read must also not be a simple repeat expansion. ie the first 9 bases of soft clip and the last 9 bases of aligned read are not matching 1,2 or 3 nucleotide repeats. 
+- At least 1 additional read which have soft clipping of any length at the same base OR within 50 bases with <=1 high quality mismatch between the soft clip locations (not required for HOTSPOT regions)
+  
+Sites with aligned INDELs of >= 32 bases are also treated as candidate sites. 
 
-Additionally, to ensure we capture SV with long (inexact) homology we also identify sites where there are >=5 reads within a 500 base region 
-with insert size outside the max(1000,99.75%) insert size (or >=3 reads if insert size is more than twice that length) with their mates also 
-starting within a 1000 base region of each other. The range can be further extended to the inner side of the fragment up to the 99.75% fragment 
-size if more reads can be found in that region with long insert sizes and mates within 1kb of each other.  If such a candidate region is found 
-and the reads do not support a site of credible soft clipping, then create a junction regardless on the innermost base of the reads supporting 
-the potential breakend.
+Additionally, to ensure we capture SV with long (inexact) homology we also identify sites where there are >=5 reads within a 500 base region with insert size outside the max(1000,99.75%) insert size (or >=3 reads if insert size is more than twice that length) with their mates also starting within a 1000 base region of each other. The sites must also be on the same chromosome within +/1MB or create a link between a known hotspot region.  At least one read must have MAPQ>=40 and adjAS>75. The range can be further extended to the inner side of the fragment up to the 99.75% fragment size if more reads can be found in that region with long insert sizes and mates within 1kb of each other. If such a candidate region is found and the reads do not support a site of credible soft clipping, then create a breakend regardless on the innermost base of the reads supporting the potential breakend. 
 
-For each site we also obtain the following reads (excluding reads with alignments that overlap blacklist regions or which have PolyG/C tails) and their mates
-- All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases)
-- All reads within min[99.75%,1kb] range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, 
-interchromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75]
-- All reads that overlap the breakend and contain an INDEL of 5+ bases
+For each site we also obtain the following reads (excluding reads with alignments that overlap blacklist regions) and their mates 
+- All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases) 
+- All reads within min[99.75%,1kb] range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, inter-chromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75] 
+- All reads that overlap the breakend and contain an INDEL of 3+ bases 
+For the last 2 categories (discordant & indel containing reads), we filter if they have more than max(5,25% of soft clip length) soft clip bases with base qual <=25, since these frequently cause FP calls in GRIDSS. 
 
-For the last 2 categories (discordant & indel containing reads), we filter if they have more than max(5,25% of soft clip length) soft clip bases with base qual < 25, since these frequently cause FP calls in GRIDSS. 
-
-A BAM is written for each input sample which contains the reads described above and their mates. This is then fed into the Esvee assembly routine described below.
-
-The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).
-Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the max coverage is >2000x. These regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).
+A BAM is written for each input sample which contains the reads described above and their mates.  
 
 
 ## Assembly Building
