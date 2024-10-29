@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
@@ -793,6 +794,13 @@ public class ExtensionSeqBuilder
             mIsValid = false;
             return;
         }
+    }
+
+    public String toString()
+    {
+        return format("junc(%s) reads(%d) baseLength(%d) lineLength(%d) maxRepeat(%s)",
+                mJunction.coordsTyped(), mReads.size(), mBases.length, mLineExtensionLength,
+                mMaxRepeat != null ? mMaxRepeat : "none");
     }
 
     public boolean hasLineSequence() { return mHasLineSequence; }
