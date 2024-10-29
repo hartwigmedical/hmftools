@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BA
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -69,6 +70,7 @@ public class SageConfig
     public final QualityConfig Quality;
     public final BqrConfig BQR;
     public final String JitterParamsDir;
+    public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final boolean IsGermline;
@@ -112,6 +114,7 @@ public class SageConfig
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
     private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
@@ -168,7 +171,34 @@ public class SageConfig
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
         BQR = new BqrConfig(configBuilder);
-        JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
+
+        if(configBuilder.hasValue(JITTER_PARAMS_DIR))
+        {
+            JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
+        }
+        else
+        {
+            // otherwise assume these are located with the BAMs
+            if(!ReferenceBams.isEmpty())
+            {
+                JitterParamsDir = pathFromFile(ReferenceBams.get(0));
+            }
+            else if(!SampleDataDir.isEmpty())
+            {
+                JitterParamsDir = SampleDataDir;
+            }
+            else if(configBuilder.hasValue(TUMOR))
+            {
+                String tumorBam = configBuilder.getValue(TUMOR).split(SAMPLE_DELIM)[0];
+                JitterParamsDir = pathFromFile(tumorBam);
+            }
+            else
+            {
+                JitterParamsDir = null;
+            }
+        }
+
+        SkipMsiJitter = configBuilder.hasFlag(SKIP_MSI_JITTER);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -341,7 +371,9 @@ public class SageConfig
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
         SequencingConfig.registerConfig(configBuilder);
+
         configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
+        configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
 
@@ -370,6 +402,7 @@ public class SageConfig
         Quality = new QualityConfig(highDepthMode);
         BQR = new BqrConfig();
         JitterParamsDir = null;
+        SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         IsGermline = false;
