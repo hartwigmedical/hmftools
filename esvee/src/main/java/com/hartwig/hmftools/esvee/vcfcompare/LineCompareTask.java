@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_VCF;

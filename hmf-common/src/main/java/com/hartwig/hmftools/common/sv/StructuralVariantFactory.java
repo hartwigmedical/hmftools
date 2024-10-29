@@ -159,9 +159,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
     public List<VariantContext> unmatched() { return Lists.newArrayList(mUnmatchedVariants.values()); }
 
-    public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
-    public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
-
     public StructuralVariant createSV(final VariantContext contextStart, final VariantContext contextEnd)
     {
         int start = contextStart.getStart();

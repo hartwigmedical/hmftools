@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
@@ -113,6 +113,9 @@ public class AssemblyDeduper
 
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
+        if(first.indel() != second.indel())
+            return first.indel();
+
         if(first.supportCount() != second.supportCount())
             return first.supportCount() > second.supportCount();
 

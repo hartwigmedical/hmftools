@@ -210,6 +210,8 @@ ORDER BY sampleCount desc;
 
 # Known issues / future improvements
 - **Population based phasing**: Could significantly increase resolution of subclonal/low tumor fraction BAF segmentation.
+- **TINC**: We should estimate tumor in normal contaminations particularly for leukemias
+
 
  
 # Version History and Download Links

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 

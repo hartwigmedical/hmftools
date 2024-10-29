@@ -1,10 +1,6 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +8,8 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-
-import htsjdk.samtools.Cigar;
 
 public class AlternativeAlignment
 {

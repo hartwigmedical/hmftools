@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.vcfcompare.line;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

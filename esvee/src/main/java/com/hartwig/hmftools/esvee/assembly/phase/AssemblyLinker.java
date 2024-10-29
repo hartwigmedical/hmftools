@@ -4,13 +4,13 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
@@ -22,14 +22,13 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
-import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
-import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public final class AssemblyLinker
 {
@@ -61,15 +60,61 @@ public final class AssemblyLinker
             if(!refSideSoftClipMatchesJunction(upper, lower.junction().Position))
                 return null;
         }
+        else if(first.indel() || second.indel())
+        {
+            // if they share a read and the read contains the indel coords, then consider this a facing link
+            IndelCoords firstIndelCoords = first.indelCoords();
+            IndelCoords secondIndelCoords = second.indelCoords();
+
+            // must share a junction read and/or mate in each with one matching the indel coordinates
+            boolean matched = false;
+
+            for(SupportRead support : first.support())
+            {
+                if(!support.type().isSplitSupport())
+                    continue;
+
+                for(SupportRead secondSupport : second.support())
+                {
+                    if(!secondSupport.type().isSplitSupport())
+                        continue;
+
+                    if(!secondSupport.matchesFragment(support, true))
+                        continue;
+
+                    if(firstIndelCoords != null)
+                    {
+                        if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
+                            matched = true;
+                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
+                            matched = true;
+                    }
+                    else
+                    {
+                        if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
+                            matched = true;
+                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
+                            matched = true;
+                    }
+
+                    if(matched)
+                        break;
+                }
+            }
+
+            if(!matched)
+                return null;
+
+        }
         else
         {
             // cannot have ref bases extending past each other's junctions
             if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
                 return null;
 
-            // must share a junction read & mate in each
             boolean matched = false;
 
+            // require a shared split read
             for(SupportRead support : first.support())
             {
                 if(!support.type().isSplitSupport())
@@ -83,9 +128,6 @@ public final class AssemblyLinker
                     break;
                 }
             }
-
-            if(!matched)
-                return null;
         }
 
         // ensure the ref base positions of each assembly now match

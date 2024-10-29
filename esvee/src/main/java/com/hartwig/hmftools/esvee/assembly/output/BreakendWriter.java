@@ -6,18 +6,18 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
+import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class BreakendWriter

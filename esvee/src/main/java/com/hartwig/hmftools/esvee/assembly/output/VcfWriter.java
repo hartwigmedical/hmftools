@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.assembly.output;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
+import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN_DESC;
@@ -62,7 +64,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.toVcfTag;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment.toVcfTag;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.util.ArrayList;
@@ -76,12 +78,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
-import com.hartwig.hmftools.esvee.alignment.BreakendSupport;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
+import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
+import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -256,7 +258,6 @@ public class VcfWriter implements AutoCloseable
                 .start(breakend.Position)
                 .alleles(alleles)
                 .log10PError(qual / -10.0)
-                // .filters(PASS)
                 .genotypes(genotypes);
 
         if(!breakend.isSingle())
@@ -361,10 +362,15 @@ public class VcfWriter implements AutoCloseable
 
     private List<Allele> buildAlleleInfo(final Breakend breakend)
     {
-        byte[] refBase = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
+        byte[] refBases = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
+        byte refBase = refBases[0];
+
+        if(!isValidDnaBase(refBase))
+            refBase = DNA_N_BASE;
+
         Allele refAllele = Allele.create(refBase, true);
 
-        String altBase = String.valueOf((char)refBase[0]);
+        String altBase = String.valueOf((char)refBase);
 
         String altBases;
 

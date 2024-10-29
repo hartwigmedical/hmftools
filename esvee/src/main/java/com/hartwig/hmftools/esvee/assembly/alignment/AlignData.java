@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -9,11 +9,12 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -39,7 +40,7 @@ import htsjdk.samtools.CigarElement;
 
 public class AlignData
 {
-    private final ChrBaseRegion mRefLocation;
+    private ChrBaseRegion mRefLocation;
     private final int mMapQual;
     private final int mNMatches;
     private final int mScore;
@@ -52,7 +53,7 @@ public class AlignData
     private int mSoftClipLeft;
     private int mSoftClipRight;
 
-    private final Orientation mOrientation;
+    private Orientation mOrientation;
     private final int mAlignedBases;
 
     private final int mRawSequenceStart;
@@ -269,6 +270,14 @@ public class AlignData
         mSelectedAltAlignment = selectedAlignment;
         mUnselectedAltAlignments = otherAlignments;
         mHasLowMapQualShortSvLink = hasShortSvLink;
+    }
+
+    public void setSelectedLowMapQualAltAlignment(final AlternativeAlignment selectedAlignment)
+    {
+        mSelectedAltAlignment = selectedAlignment;
+        mModifiedMapQual = ALIGNMENT_MIN_MOD_MAP_QUAL;
+        mRawAltAlignments = null;
+        mSoftClipRight = mSoftClipLeft = 0;
     }
 
     public List<AlternativeAlignment> unselectedAltAlignments()

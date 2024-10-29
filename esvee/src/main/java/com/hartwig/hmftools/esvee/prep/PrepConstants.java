@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.sv.LineElements;
 
 public final class PrepConstants
 {
-    public static final String PREP_JUNCTIONS_FILE_ID = "junction" + TSV_EXTENSION;
+    public static final String PREP_JUNCTION_FILE_ID = "junction" + TSV_EXTENSION;
     public static final String PREP_FRAG_LENGTH_FILE_ID = "fragment_length" + TSV_EXTENSION;
 
     // common fields

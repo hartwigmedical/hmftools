@@ -41,7 +41,7 @@ public class SomaticVariantCache
         mGenotypeIds = null;
     }
 
-    public boolean hasData() { return !mVariants.isEmpty(); }
+    public boolean hasData() { return mVcfHeader != null; }
     public List<SomaticVariant> variants() { return mVariants; }
     public GenotypeIds genotypeIds() { return mGenotypeIds; }
 

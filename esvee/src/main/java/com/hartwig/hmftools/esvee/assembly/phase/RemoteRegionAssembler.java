@@ -11,10 +11,10 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedExtensionBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createLowBaseQuals;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
@@ -96,7 +96,7 @@ public class RemoteRegionAssembler
     }
 
     public static List<RemoteRegion> collectCandidateRemoteRegions(
-            final JunctionAssembly assembly, final List<JunctionAssembly> phasedAssemblies)
+            final JunctionAssembly assembly, final List<JunctionAssembly> phasedAssemblies, boolean checkAssemblyMatches)
     {
         List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
 
@@ -105,6 +105,12 @@ public class RemoteRegionAssembler
         {
             if(remoteRegion.isSuppOnlyRegion())
                 continue;
+
+            if(!checkAssemblyMatches)
+            {
+                combinedRemoteRegions.add(remoteRegion);
+                continue;
+            }
 
             boolean matchesAssembly = false;
 
@@ -185,7 +191,7 @@ public class RemoteRegionAssembler
 
         for(RemoteRegion remoteRegion : remoteRegions)
         {
-            if(remoteRegion.readCount() < minRemoteRegionReadCount)
+            if(minRemoteRegionReadCount > 1 && remoteRegion.readCount() < minRemoteRegionReadCount)
                 break;
 
             List<Read> remoteReads = extractRemoteReads(phaseGroupId, remoteRegion);

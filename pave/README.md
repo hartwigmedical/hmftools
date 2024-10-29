@@ -41,13 +41,13 @@ sample | Sample ID
 vcf_file | Input variant VCF
 ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
-driver_gene_panel|Driver Gene Panel
 ref_genome_version | 37 (default) or 38
 
 ### Optional Arguments
 
 Argument | Description 
 ---|---
+driver_gene_panel | Driver Gene Panel
 output_dir | Output directory for VCF and transcript CSV, will use input VCF directory if not specified
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
@@ -71,16 +71,17 @@ java -jar pave.jar
 ### Optional Annotations
 The following annotations can be applied by PAVE:
 
-Argument | Description | VCF Tag
----|---|---
-pon_file | PON file to annotate variants (see file format below) | PON_COUNT, PON_MAX
-pon_filters | Apply PON filters (see details below) | Filter 'PON'
-mappability_bed | BED file with mappability values | MAPPABILITY=value
-clinvar_vcf | VCF from Clinvar database | Writes CLNSIG=significance and CLNSIGCONF=conflicting info
-gnomad_freq_file | CSV with Gnomad frequencies per variant
-gnomad_freq_dir | Path to Gnmoad frequency files per chromosome
-blacklist_bed | BED file with blacklist entries | BLACKLIST_BED
-blacklist_vcf | VCF file with blacklist entries | BLACKLIST_VCF
+Argument | Description                                                                     | VCF Tag
+---|---------------------------------------------------------------------------------|---
+pon_file | PON file to annotate and filter variants (see file format below)                | PON_COUNT, PON_MAX
+pon_artefact_file | Panel PON artefact file to annotate and filter variants | PON_PANEL
+pon_filters | Apply PON filters (see details below)                                           | Filter 'PON'
+mappability_bed | BED file with mappability values                                                | MAPPABILITY=value
+clinvar_vcf | VCF from Clinvar database                                                       | Writes CLNSIG=significance and CLNSIGCONF=conflicting info. Also affects use of pon_file and gnomad_freq
+gnomad_freq_file | CSV with Gnomad frequencies per variant                                     |  GND_FREQ   
+gnomad_freq_dir | Path to Gnmoad frequency files per chromosome                                  | GND_FREQ 
+blacklist_bed | BED file with blacklist entries                                                 | BLACKLIST_BED
+blacklist_vcf | VCF file with blacklist entries                                                 | BLACKLIST_VCF
 
 
 ## Overview and algorithm
@@ -209,28 +210,42 @@ Chromosome      Position        Ref     Alt     SamplesCount    MaxSampleReads  
 
 Pave will then add VCF tags 'PON_COUNT' from SamplesCount and 'PON_MAX' from MaxSampleReads for any matched variant.
 
-If the config 'pon_filters' is used, then Pave will additionally add the filter 'PON' to any variant which exceeds both the specified SamplesCount and MaxSampleReads values. 
+If the config 'pon_filters' is used, then Pave will additionally add the filter 'PON' to variants which exceed both the specified SamplesCount and MaxSampleReads values. 
 The filters can be set per variant tier in the form: 'TIER;SAMPLE_COUNT_LIMIT;MAX_READS_LIMIT, for example
 
 ```HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0```
 
-will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
+will mark variants of tier = HOTSPOT as PON if they match an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
+
+Some variants (such as indels in microsatellite contexts) are likely to be artefacts at low VAF, but genuine pathogenic variants at high VAF. As such, we establish a concept of a 'potentially pathogenic' variant as a germline or somatic hotspot, or Clinvar pathogenic/likely_pathogenic variant. Then 'potentially pathogenic' variants are not filtered in this way if mean PON reads (i.e. TotalReads/SamplesCount) < 6 and sample VAF > 8%.  If the variant is an indel in a microsatellite context spanning N ref bases, we also require VAF > N%.
+
+Finally, variants that are only infrequently in our PON, are likely pathogenic, and are not associated with a long microsatellite should not be PON filtered. Specifically, 'potentially pathogenic' variants with SamplesCount < 10 (and if an indel, has a repeat count < 4) are never PON filtered.
+
+### Artefact PON Annotation and Filtering
+Pave additionally annotates and filters variants based on a supplied Panel PON Artefact file. Any variant present in this file will get the filter 'PONArtefact' from Pave, except for those satisfying the previously mentioned condition - 'potentially pathogenic' variants with SamplesCount < 10 (and if an indel, has a repeat count < 4)
 
 ### GNOMAD Population Frequency
-We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency.
+We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency. Variants with over 0.00015 cohort frequency will get a 'PONGnomad' filter applied by Pave, unless they are 'potentially pathogenic' in which case we require 0.01 frequency.
 
 ### CLINVAR
-If a clinvar VCF is provided, PAVE also annotates the clinical signficance of each variant.
+If a clinvar VCF is provided, PAVE annotates the clinical signficance of each variant. This is also used to determine whether a variant is 'potentially pathogenic', as described above.
 
 ### PON settings used in the HMF pipeline
 
-A summary of the PON annotation and filtering currently used in the HMF pipeline is below:
+A summary of the PON annotation and filtering currently used in the HMF pipeline is below. First, consult the below table to see if the variant is exempted from any PON filters:
 
-Filter | Annotations | Source | Filter Thresholds | Ref Genome versions
----|---|---|---|---
-PON_GNOMAD | GND_FREQ | Gnomad v3 | GND_FREQ<0.00015 | 38 only
-PON_PANEL_ARTEFACT | PON_PANEL | Curated FFPE Panel Artefacts*** | PON_PANEL {ANY} | 38 only 
-PON | PON_COUNT* | PON_MAX** | HMF Cohort | See detailed table below | 37 & 38
+Condition 1 | Condition 2                           | Condition 3                    | Exempted from
+---|---------------------------------------|--------------------------------|---------
+'Potentially pathogenic'| SamplesCount < 10                     |RepeatCount < 4 (for indels) | PON, PON_PANEL_ARTEFACT          
+'Potentially pathogenic'| Mean PON reads < 6 | Sample VAF > 8%             | PON                             
+
+Then for any remaining variants, consult this table:
+
+Filter | Annotations | Source    | Filter Thresholds                                                                                                     | Ref Genome versions
+---|-------------|-----------|-----------------------------------------------------------------------------------------------------------------------|---
+PON_GNOMAD | GND_FREQ    | Gnomad v3 | GND_FREQ >= <br/>- 0.01 if 'potentially pathogenic'<br/> - 0.00015 otherwise                                            | 38 only
+PON_PANEL_ARTEFACT |  Curated FFPE Panel Artefacts***       | PON_PANEL | PON_PANEL {ANY}  | 38 only 
+PON | PON_COUNT*  | PON_MAX** | HMF Cohort                                                                                                            | See detailed table below | 37 & 38
 
 <nowiki>*</nowiki> Count germline samples with at least 3 reads and sum of base quality > 30
 ** Maximum read support in any one sample

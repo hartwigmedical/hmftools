@@ -9,11 +9,11 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.Arrays.initialise;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
@@ -35,7 +35,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -520,24 +519,30 @@ public class ExtensionSeqBuilder
             {
                 ExtReadParseState read = mReads.get(readIndex);
 
-                if(read.exceedsMaxMismatches())
-                {
-                    // read must differ vs the consensus repeat
-                    if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID || mReadRepeatCounts[readIndex] == mMaxRepeat.Count)
-                        continue;
-
-                    int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
-
-                    // and have only exceed max mismatches during or after the consensus repeat
-                    if(mIsForward && mismatchExceededIndex >= mMaxRepeat.Index)
-                        read.resetMatches();
-                    else if(!mIsForward && mismatchExceededIndex <= mMaxRepeat.postRepeatIndex() - 1)
-                        read.resetMatches();
-                }
-                else
+                if(!read.exceedsMaxMismatches())
                 {
                     read.resetMatches();
+                    continue;
                 }
+
+                // read must differ vs the consensus repeat
+                if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID || mReadRepeatCounts[readIndex] == mMaxRepeat.Count)
+                    continue;
+
+                // the read must have any at least one repeat to be considered to differ from jitter
+                if(mReadRepeatCounts[readIndex] == 0 && mMaxRepeat.Count > 1)
+                    continue;
+
+                // if a read has  repeats and its mismatch occurs within the range of the first repeat, consider it mismatched from jittter
+                int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
+
+                int firstRepeatEndIndex = mIsForward ?
+                        mMaxRepeat.Index + mMaxRepeat.baseLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.baseLength();
+
+                if(mIsForward && mismatchExceededIndex >= firstRepeatEndIndex)
+                    read.resetMatches();
+                else if(!mIsForward && mismatchExceededIndex <= firstRepeatEndIndex)
+                    read.resetMatches();
             }
         }
 

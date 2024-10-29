@@ -48,6 +48,7 @@ public final class Nucleotides
     }
 
     public static boolean isValidDnaBase(final char base) { return base == 'G' || base == 'A' || base == 'T' || base == 'C'; }
+    public static boolean isValidDnaBase(final byte base) { return baseIndex(base) >= 0; }
 
     public static String reverseComplementBases(final String bases)
     {

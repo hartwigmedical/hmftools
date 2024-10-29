@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 
 import org.junit.Test;
 

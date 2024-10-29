@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 
@@ -10,11 +10,10 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
-import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
@@ -438,7 +437,7 @@ public class BreakendBuilder
 
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                homology = determineHomology(fullSequence, alignment, nextAlignment);
+                homology = HomologyData.determineHomology(fullSequence, alignment, nextAlignment);
 
                 if(homology == null)
                 {

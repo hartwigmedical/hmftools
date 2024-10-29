@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class AssemblyConstants
@@ -81,6 +82,7 @@ public final class AssemblyConstants
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 
+    // DUX-4 regions
     public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37 = List.of(
             new ChrBaseRegion("4", 190930000, 191030000),
             new ChrBaseRegion("10", 135420000, 135520000 ));
@@ -88,4 +90,17 @@ public final class AssemblyConstants
     public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38 = List.of(
             new ChrBaseRegion("chr4", 190060000, 190190000),
             new ChrBaseRegion("chr10", 133660000, 133770000));
+
+    // SSX2 intron 5 region plus SSX2B
+    public static final List<ChrBaseRegion> SSX2_REGIONS_V37 = List.of(
+            new ChrBaseRegion("X", 52729628, 52731680), // first entry is SSX2
+            new ChrBaseRegion("X", 52784877, 52786929));
+
+    public static final List<ChrBaseRegion> SSX2_REGIONS_V38 = List.of(
+            new ChrBaseRegion("chrX", 52700578, 52702630),
+            new ChrBaseRegion("chrX", 52755800, 52757852));
+
+    public static final Orientation SSX2_GENE_ORIENT = Orientation.REVERSE;
+    public static final int SSX2_MAX_MAP_QUAL = 20;
+
 }

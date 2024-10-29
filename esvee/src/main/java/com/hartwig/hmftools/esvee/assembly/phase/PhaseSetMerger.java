@@ -12,12 +12,10 @@ import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;

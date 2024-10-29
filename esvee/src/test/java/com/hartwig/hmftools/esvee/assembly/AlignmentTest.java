@@ -13,13 +13,16 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentFilters.filterAlignments;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFilters.filterAlignments;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 
@@ -37,10 +40,11 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.esvee.alignment.AlignData;
-import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.alignment.Breakend;
-import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
+import com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -576,7 +580,52 @@ public class AlignmentTest
         assertEquals(1, alignment4.unselectedAltAlignments().size());
         assertTrue(alignment3.hasLowMapQualShortSvLink());
         assertTrue(alignment4.hasLowMapQualShortSvLink());
+   }
 
+    @Test
+    public void testSpecificAlignmentHandling()
+    {
+        AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
+                mRefGenome, CHR_1, 300, FORWARD, CHR_1, 350, REVERSE, "", "",
+                50, 200);
+
+        // scenario 1: based on chr7-comp 1c:
+        String cigar = "100M";
+
+        AlignData alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
+                60, 100, 0, cigar, DEFAULT_NM, "", "");
+
+        int lowMapQual = SSX2_MAX_MAP_QUAL - 1;
+        char altAlignmentOrientation = SSX2_GENE_ORIENT.asChar();
+
+        ChrBaseRegion ssx2Region = SSX2_REGIONS_V37.get(0);
+
+        String altAlignment2 = format("%s,%c%d,100M,%d",
+                ssx2Region.Chromosome, altAlignmentOrientation, ssx2Region.start() + 1, lowMapQual);
+
+        AlignData alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 20000, 20100), 101, 200,
+                0, 100, 0, cigar, DEFAULT_NM, altAlignment2, "");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2);
+
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+
+        AlignData specificAlignment = validAlignments.stream().filter(x -> x.refLocation().overlaps(ssx2Region)).findFirst().orElse(null);
+        assertNull(specificAlignment);
+
+        assertTrue(alignment2.hasSelectedAltAlignment());
+
+        AlternativeAlignment ssx2AltAlignment = alignment2.selectedAltAlignment();
+        assertTrue(ssx2Region.containsPosition(ssx2AltAlignment.Chromosome, ssx2AltAlignment.Position));
     }
 
     private AssemblyAlignment createAssemblyAlignment(

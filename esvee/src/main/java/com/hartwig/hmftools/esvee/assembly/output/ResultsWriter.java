@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 
 import java.io.BufferedWriter;
 
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.alignment.AlignmentChecker;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class ResultsWriter

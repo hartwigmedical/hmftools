@@ -224,7 +224,7 @@ public class PurpleApplication
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, mSegmentation);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions);
 
             purityPloidyFitter.run();
 
@@ -388,8 +388,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, sampleData.SomaticCache);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);
