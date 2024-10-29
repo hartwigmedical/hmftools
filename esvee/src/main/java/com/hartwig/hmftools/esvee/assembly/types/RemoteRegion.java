@@ -69,6 +69,11 @@ public class RemoteRegion extends ChrBaseRegion
         return super.overlaps(otherChr, otherPosStart, otherPosEnd);
     }
 
+    public boolean overlapsAssembly(final JunctionAssembly assembly)
+    {
+        return super.overlaps(assembly.junction().Chromosome, assembly.minAlignedPosition(), assembly.maxAlignedPosition());
+    }
+
     public boolean hasReadId(final String fullReadId)
     {
         return mReadIds.stream().anyMatch(x -> fullReadId.equals(x));

@@ -31,6 +31,7 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
 import com.hartwig.hmftools.esvee.common.TaskQueue;
+import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -228,7 +229,7 @@ public class JunctionGroupAssembler extends ThreadTask
         if(ignoreIdenticalSupplementary(record))
             return;
 
-        if(ReadAdjustments.filterLowQualRead(record))
+        if(ReadFilters.filterLowQualRead(record))
         {
             ++mReadStats.LowBaseQualFiltered;
             return;

@@ -152,33 +152,6 @@ public final class ReadAdjustments
         }
     }
 
-    public static boolean filterLowQualRead(final SAMRecord read)
-    {
-        int baseLength = read.getReadBases().length;
-        int qualCountThreshold = baseLength / 2 + 1;
-        int lowQualCount = 0;
-
-        for(int i = 0; i < baseLength; ++i)
-        {
-            if(belowMinQual(read.getBaseQualities()[i]))
-            {
-                ++lowQualCount;
-
-                if(lowQualCount >= qualCountThreshold)
-                    return true;
-            }
-            else
-            {
-                // exit early if majority will be high-qual
-                int highQualCount = i + 1 - lowQualCount;
-                if(highQualCount >= qualCountThreshold)
-                    return false;
-            }
-        }
-
-        return false;
-    }
-
     public static boolean trimLowQualSoftClipBases(final Read read)
     {
         boolean fromStart = read.negativeStrand();

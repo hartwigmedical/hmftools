@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -57,6 +58,10 @@ public class ReadFilters
 
     public boolean ignoreRead(final SAMRecord record)
     {
+        // ignore reads with the majority of bases low qual - the assembly routine has this same check for now
+        if(filterLowQualRead(record))
+            return true;
+
         // ignore local, non-chimeric, locally-aligned reads
         if(record.getSupplementaryAlignmentFlag() || record.getCigar().getCigarElements().size() > 1)
             return false;
@@ -71,6 +76,34 @@ public class ReadFilters
 
         if(mateCigarStr != null && mateCigarStr.equals(format("%dM", record.getReadBases().length)))
             return true;
+
+        return false;
+    }
+
+    public static boolean filterLowQualRead(final SAMRecord read)
+    {
+        // filter any read with 50% + bases classified as low qual
+        int baseLength = read.getReadBases().length;
+        int qualCountThreshold = baseLength / 2 + 1;
+        int lowQualCount = 0;
+
+        for(int i = 0; i < baseLength; ++i)
+        {
+            if(belowMinQual(read.getBaseQualities()[i]))
+            {
+                ++lowQualCount;
+
+                if(lowQualCount >= qualCountThreshold)
+                    return true;
+            }
+            else
+            {
+                // exit early if majority will be high-qual
+                int highQualCount = i + 1 - lowQualCount;
+                if(highQualCount >= qualCountThreshold)
+                    return false;
+            }
+        }
 
         return false;
     }
