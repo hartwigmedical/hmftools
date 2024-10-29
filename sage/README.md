@@ -446,7 +446,7 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---------------|---
-hard_min_tumor_qual | 50            | `QUAL`
+hard_min_tumor_qual | 50            | `totalQuality`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
@@ -613,6 +613,8 @@ The outputs below are found in the VCF::
  `RC_IPC`               | Read Context improper pair count
  `AD[0,1]`                | Allelic Depth  (=\[RC_CNT\[5\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] + RC_CNT\[4\]\] ) 
  `DP`                     | Read Depth (=RC_CNT\[6\])                                                                               
+ `TQP`                  | p-score associated with variant given `DP`, `AD` and base quality
+ `MQF`                  | Mapping quality factor
  `AF`                     | Allelic Frequency (=AD\[1\] / DP)                                                                       
  `QUAL`                   | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])                                            
  `AMQ[0,1]`               | Average (raw) Mapping Quality (all, alt)    
