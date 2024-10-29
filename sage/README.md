@@ -67,7 +67,8 @@ no_fragment_sync | False             | Where R1 and R2 in a fragment overlap, co
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
 germline | false             | Is a germline run, so tumor/normal filters are not applied
-jitter_param_dir | NA                | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
+jitter_param_dir | BAM path | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
+skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
 read_context_flank_size | 10                | Number of flanking bases on each side of read core
 
 The cardinality of `reference` must match `reference_bam`.
