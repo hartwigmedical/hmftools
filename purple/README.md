@@ -26,6 +26,7 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
   + [4. Copy Number Smoothing](#4-copy-number-smoothing)
   + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
   + [6. Allele specific copy number inferring](#6-allele-specific-copy-number-inferring)
+  + [7. Infer missing SV breakends](#7-Infer-missing-SV-breakends)
   + [8. Identify germline gene_deletions](#8-identify-germline-gene-deletions)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
@@ -493,6 +494,10 @@ This rule is intended to ensure that short templated insertions do not break reg
 
 At this stage we have determined a copy number and minor allele copy number for every base in the genome
 
+### 7. Infer missing SV breakends 
+ 
+Where there is a copy number a single ended breakend will be inferred (with type = 'INF') at that position.  There are two situations where PURPLE will attempt to infer a breakend. The first is when a copy number segment is unsupported by an existing structural variant. The second is where a missing breakend is required to offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
+
 ### 8. Identify germline gene deletions
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
@@ -786,9 +791,6 @@ PURPLE_JCN | 1 | Purity adjusted junction copy number of variant
 PURPLE_AF | 1 or 2 |Purity adjusted allele frequency at each breakend
 PURPLE_CN | 1 or 2 | Purity adjusted copy number at each breakend
 PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breakend
-RECOVERED | 0 | Flag to indicate entry has been recovered
-RECOVERY_METHOD | 1 | Method used to recover, one of `UNBALANCED_SV_START`, `UNBALANCED_SV_END`, `UNSUPPORTED_BREAKEND_START`, `UNSUPPORTED_BREAKEND_END`
-RECOVERY_FILTER | n | Filter prior to recovery
 REFG | 1 | Ref genome surrounding break point
 
 #### Somatic Variant VCF
