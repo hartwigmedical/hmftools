@@ -31,10 +31,9 @@ To run SAGE in germline mode we use the following parameters:
 -tumor_bam REFERENCE_BAM
 -reference TUMOR_SAMPLE
 -reference_bam TUMOR_BAM
--hotspot_min_tumor_qual 50
--panel_min_tumor_qual 75
 -ref_sample_count 0
 -panel_only
+-germline
 -panel_bed /opt/resources/sage/37/ActionableCodingPanel.37.bed.gz
 -coverage_bed /opt/resources/sage/37/CoverageCodingPanel.37.bed.gz 
 -high_confidence_bed /opt/resources/giab_high_conf/37/HighConfidence.37.bed.gz 
@@ -42,12 +41,13 @@ To run SAGE in germline mode we use the following parameters:
 -ref_genome_version 37 
 -ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
 -ensembl_data_dir /path_to_ensmebl_cache/ \
+-jitter_param_dir /path/to/TUMOR_SAMPLE.jitter_params.tsv
 -out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
 
 Note that the tumor and reference labels/bams are switched. 
 
-These changes (specifically ref_sample_count=0) disable the germline filters (which is actually the tumor).
+These changes (specifically ref_sample_count=0 and 'germline') disable the germline filters (which is actually the tumor). The `germline` flag also penalises the `TQP` of variants with a VAF substantially away from typical germline VAFs.
 
 ## Post Process
 

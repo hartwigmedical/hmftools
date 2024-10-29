@@ -87,7 +87,7 @@ SAGE
 ```
 <TO DO>
 ```
-ISOFOX (panels with targetd RNA only)
+ISOFOX (panels with targeted RNA only)
 ```
 <TO DO>
 ```
@@ -239,21 +239,6 @@ Cobalt
 Sage
 ```
 -high_depth_mode
--map_qual_ratio_factor 2.5
--fixed_qual_penalty -15
--hard_min_tumor_vaf 0.002
-```
-
-Gripss
-```
--hard_min_tumor_qual 200 
--min_qual_break_point 1000
--min_qual_break_end 1000
--filter_sgls
--qual_per_ad 30
--modified_af 0.03
--modified_af_hotspot 0.005
--target_regions_bed Target Regions BED file
 ```
 
 Purple
