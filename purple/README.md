@@ -77,7 +77,7 @@ java -jar purple.jar \
    -output_dir /output/purple/ \
 ```
 
-Purple requires a GRIDSS + Gripss VCF for structural variants, and Sage for somatic variants.
+Purple requires an ESVEE VCF (or GRIDSS + GRIPSS) for structural variants, and Sage for somatic variants.
 
 ```
 java -jar purple.jar \
@@ -232,9 +232,8 @@ An accurate estimation of VAF at each breakend also allows PURPLE to infer copy 
 
 A VCF with germline structural variants can also be provided. PURPLE can annotate such variants with purity adjusted local and variant copy number estimations in the tumor. Also, this information can be used to make calling of germline deletions more accurate.
 
-For these purposes, PURPLE provides full support and integration with the structural variant caller [GRIDSS](https://github.com/PapenfussLab/gridss). 
-GRIDSS can be run directly on tumor and reference BAMs. 
-Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of variant calls and provide additional filtering and accurate VAF estimation.
+For these purposes, PURPLE provides full support and integration with the structural variant caller [ESVEE](https://github.com/hartwigmedical/hmftools/tree/53f14f3651bd3026a76095a835b9c2ea6c6dc149/esvee) and legacy support for [GRIDSS](https://github.com/PapenfussLab/gridss). 
+
 
 ### Small Variant Input VCFs (optional)
 A high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
@@ -328,7 +327,7 @@ Finally we compare the AMBER and COBALT sexes. If they are inconsistent we use t
 
 ### 2. Segmentation
 
-We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from GRIPSS both germline and somatic. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
+We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from ESVEE both germline and somatic. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
 1. Every structural variant break starts a new segment, as does chromosome starts, ends and centromeres. 
 2. Ratio and BAF segment breaks are only included if they are at least one complete mappable read depth window away from an existing segment. 
 
