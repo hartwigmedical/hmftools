@@ -181,7 +181,7 @@ public class AssemblyApplication
             Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
         }
 
-        // if(mConfig.PerfDebug && !validateJunctionMap(mChrJunctionsMap))
+        // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);
 
         if(mConfig.JunctionFiles.size() > 1)

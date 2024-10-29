@@ -17,6 +17,7 @@ public class JunctionGroup extends BaseRegion
 {
     private final List<Junction> mJunctions;
     private final List<Read> mCandidateReads;
+    private int mFinalCandidateReadCount;
 
     private int mIndex; // in the full list for the chromosome
 
@@ -29,6 +30,7 @@ public class JunctionGroup extends BaseRegion
         mCandidateReads = Lists.newArrayList();
         mJunctionAssemblies = Lists.newArrayList();
         mIndex = -1;
+        mFinalCandidateReadCount = 0;
     }
 
     public List<Junction> junctions() { return mJunctions; }
@@ -55,8 +57,14 @@ public class JunctionGroup extends BaseRegion
 
     public List<Read> candidateReads() { return mCandidateReads; }
     public void addCandidateRead(final Read read) { mCandidateReads.add(read); }
-    public void clearCandidateReads() { mCandidateReads.clear(); }
-    public int candidateReadCount() { return mCandidateReads.size(); }
+
+    public void clearCandidateReads()
+    {
+        mFinalCandidateReadCount = mCandidateReads.size();
+        mCandidateReads.clear();
+    }
+
+    public int candidateReadCount() { return max(mFinalCandidateReadCount, mCandidateReads.size()); }
 
     public void addJunctionAssemblies(final List<JunctionAssembly> assemblies) { mJunctionAssemblies.addAll(assemblies); }
     public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
@@ -69,7 +77,7 @@ public class JunctionGroup extends BaseRegion
     public String toString()
     {
         return format("%s:%d-%d range(%d) count(%d) assemblies(%d) reads(%d)",
-            chromosome(), start(), end(), range(), mJunctions.size(), mJunctionAssemblies.size(), mCandidateReads.size());
+            chromosome(), start(), end(), range(), mJunctions.size(), mJunctionAssemblies.size(), candidateReadCount());
     }
 
     public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)

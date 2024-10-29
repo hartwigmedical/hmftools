@@ -231,7 +231,7 @@ public class RemoteRegionAssembler
 
         ++mRemoteReadSlices;
 
-        if((mRemoteReadSlices % 1000) == 0 && mTotalRemoteReadsMatched > 100000)
+        if((mRemoteReadSlices % 10000) == 0 && mTotalRemoteReadsMatched > 100000)
         {
             SV_LOGGER.debug("pgId({}) remote region read extraction: slices({}) matched({}) last region({}:{}-{})",
                     phaseGroupId, mRemoteReadSlices, mTotalRemoteReadsMatched,

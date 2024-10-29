@@ -60,11 +60,7 @@ public class RemoteGroupBuilder extends ThreadTask
     {
         return mPhaseGroupsSets;
     }
-
-    public List<PhaseGroup> removedPhaseGroups()
-    {
-        return mRemovedPhaseGroups;
-    }
+    public List<PhaseGroup> removedPhaseGroups() { return mRemovedPhaseGroups; }
 
     public void logStats()
     {
