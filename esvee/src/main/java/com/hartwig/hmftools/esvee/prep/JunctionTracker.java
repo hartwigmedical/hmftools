@@ -66,6 +66,8 @@ public class JunctionTracker
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
 
+    private final DiscordantGroups mDiscordantGroupFinder;
+
     // reads with their mate(s) in another partition, may or may not end up supporting a local junction
     private final Set<ReadGroup> mRemoteCandidateReadGroups;
 
@@ -101,6 +103,9 @@ public class JunctionTracker
         mFilterConfig = config.ReadFiltering.config();
 
         mHotspotRegions = hotspotCache.findMatchingRegions(region);
+
+        mDiscordantGroupFinder = new DiscordantGroups(
+                mRegion, mFilterConfig.fragmentLengthMax(), hotspotCache.findRegionHotspots(mRegion), mConfig.TrackRemotes);
 
         mBlacklist = blacklist;
         mBlacklistRegions = Lists.newArrayList();
@@ -341,7 +346,7 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+            if(mDiscordantGroupFinder.isDiscordantGroup(readGroup))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -357,9 +362,7 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.DiscordantGroups);
 
-        DiscordantGroups discordantGroups = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mConfig.TrackRemotes);
-
-        List<JunctionData> discordantJunctions = discordantGroups.formDiscordantJunctions(mCandidateDiscordantGroups);
+        List<JunctionData> discordantJunctions = mDiscordantGroupFinder.formDiscordantJunctions(mCandidateDiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
         {
