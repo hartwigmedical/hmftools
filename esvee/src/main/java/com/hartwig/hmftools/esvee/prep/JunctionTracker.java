@@ -364,7 +364,7 @@ public class JunctionTracker
 
         List<JunctionData> discordantJunctions = mDiscordantGroupFinder.formDiscordantJunctions(mCandidateDiscordantGroups);
 
-        if(mCandidateDiscordantGroups.size() > 500 && !discordantJunctions.isEmpty())
+        if(mCandidateDiscordantGroups.size() > 2000 && !discordantJunctions.isEmpty())
         {
             SV_LOGGER.debug("region({}) found {} discordant group junctions from {} read groups",
                     mRegion, discordantJunctions.size(), mCandidateDiscordantGroups.size());
