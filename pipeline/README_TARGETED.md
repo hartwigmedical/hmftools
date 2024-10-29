@@ -241,18 +241,6 @@ Sage
 -high_depth_mode
 ```
 
-Gripss
-```
--hard_min_tumor_qual 200 
--min_qual_break_point 1000
--min_qual_break_end 1000
--filter_sgls
--qual_per_ad 30
--modified_af 0.03
--modified_af_hotspot 0.005
--target_regions_bed Target Regions BED file
-```
-
 Purple
 ```
 -target_regions_bed Target Regions BED file
