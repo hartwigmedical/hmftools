@@ -87,7 +87,7 @@ SAGE
 ```
 <TO DO>
 ```
-ISOFOX (panels with targetd RNA only)
+ISOFOX (panels with targeted RNA only)
 ```
 <TO DO>
 ```
@@ -239,9 +239,6 @@ Cobalt
 Sage
 ```
 -high_depth_mode
--map_qual_ratio_factor 2.5
--fixed_qual_penalty -15
--hard_min_tumor_vaf 0.002
 ```
 
 Gripss
