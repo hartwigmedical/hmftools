@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.prep.KnownHotspot.matchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -59,7 +60,7 @@ public class JunctionTracker
     private final JunctionsConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
     private final List<BaseRegion> mBlacklistRegions;
-    private final List<ChrBaseRegion> mHotspotRegions;
+    private final List<KnownHotspot> mKnownHotspots;
     private final BlacklistLocations mBlacklist;
 
     private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
@@ -102,10 +103,9 @@ public class JunctionTracker
         mConfig = config;
         mFilterConfig = config.ReadFiltering.config();
 
-        mHotspotRegions = hotspotCache.findMatchingRegions(region);
+        mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
-        mDiscordantGroupFinder = new DiscordantGroups(
-                mRegion, mFilterConfig.fragmentLengthMax(), hotspotCache.findRegionHotspots(mRegion), mConfig.TrackRemotes);
+        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
 
         mBlacklist = blacklist;
         mBlacklistRegions = Lists.newArrayList();
@@ -364,7 +364,7 @@ public class JunctionTracker
 
         List<JunctionData> discordantJunctions = mDiscordantGroupFinder.formDiscordantJunctions(mCandidateDiscordantGroups);
 
-        if(mCandidateDiscordantGroups.size() > 5000 && !discordantJunctions.isEmpty())
+        if(mCandidateDiscordantGroups.size() > 500 && !discordantJunctions.isEmpty())
         {
             SV_LOGGER.debug("region({}) found {} discordant group junctions from {} read groups",
                     mRegion, discordantJunctions.size(), mCandidateDiscordantGroups.size());
@@ -1108,7 +1108,7 @@ public class JunctionTracker
         int exactSupportCount = junctionData.ExactSupportGroups.size();
 
         // check for a hotspot match
-        if(mHotspotRegions.stream().anyMatch(x -> x.containsPosition(junctionData.Position)))
+        if(matchesHotspot(mKnownHotspots, junctionData))
         {
             junctionData.markHotspot();
 

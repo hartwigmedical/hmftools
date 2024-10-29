@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSE
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
@@ -104,7 +105,6 @@ public final class AssemblyLinker
 
             if(!matched)
                 return null;
-
         }
         else
         {
@@ -128,6 +128,9 @@ public final class AssemblyLinker
                     break;
                 }
             }
+
+            if(!matched)
+                return null;
         }
 
         // ensure the ref base positions of each assembly now match
@@ -135,6 +138,25 @@ public final class AssemblyLinker
         upper.trimRefBasePosition(lower.junction().Position);
 
         return new AssemblyLink(lower, upper, LinkType.FACING, "", "");
+    }
+
+    public static boolean isFacingAssemblyCandidate(
+            final JunctionAssembly assembly, final Set<JunctionAssembly> facingAssemblies, final List<AssemblyLink> splitLinks)
+    {
+        if(facingAssemblies.contains(assembly))
+            return false;
+
+        if(assembly.outcome() == LOCAL_INDEL) // observed very few of these so excluded
+            return false;
+
+        if(assembly.discordantOnly())
+        {
+            // must have been linked
+            if(splitLinks.stream().noneMatch(x -> x.hasAssembly(assembly)))
+                return false;
+        }
+
+        return true;
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)

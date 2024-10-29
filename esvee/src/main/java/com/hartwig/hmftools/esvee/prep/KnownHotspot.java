@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.prep.types.JunctionData;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 
 public class KnownHotspot
 {
@@ -35,6 +40,60 @@ public class KnownHotspot
         && RegionEnd.containsPosition(chrStart, posStart) && OrientEnd == orientStart)
         {
             return true;
+        }
+
+        return false;
+    }
+
+    public static boolean matchesHotspot(final List<KnownHotspot> knownHotspots, final ReadGroup readGroup)
+    {
+        for(KnownHotspot knownHotspot : knownHotspots)
+        {
+            boolean matchesStart = false;
+            boolean matchesEnd = false;
+
+            for(PrepRead read : readGroup.reads())
+            {
+                matchesStart |= knownHotspot.RegionStart.overlaps(read.Chromosome, read.start(), read.end());
+                matchesStart |= knownHotspot.RegionStart.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
+                matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.start(), read.end());
+                matchesEnd |= knownHotspot.RegionEnd.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
+
+                if(matchesStart && matchesEnd)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean readGroupMatchesRegion(final ReadGroup readGroup, final ChrBaseRegion region)
+    {
+        return readGroup.reads().stream().anyMatch(x -> region.containsPosition(x.MateChromosome, x.record().getMateAlignmentStart()));
+    }
+
+    public static boolean matchesHotspot(final List<KnownHotspot> knownHotspots, final JunctionData junctionData)
+    {
+        for(KnownHotspot knownHotspot : knownHotspots)
+        {
+            if(knownHotspot.RegionStart.containsPosition(junctionData.Position))
+            {
+                // check for reads spanning to the other end
+                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                {
+                    if(readGroupMatchesRegion(readGroup, knownHotspot.RegionEnd))
+                        return true;
+                }
+            }
+            else if(knownHotspot.RegionEnd.containsPosition(junctionData.Position))
+            {
+                // check for reads spanning to the other end
+                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                {
+                    if(readGroupMatchesRegion(readGroup, knownHotspot.RegionStart))
+                        return true;
+                }
+            }
         }
 
         return false;

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGIO
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isFacingAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
@@ -816,17 +817,14 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            if(assembly1.outcome() == LOCAL_INDEL) // observed very few of these so excluded
+            if(!isFacingAssemblyCandidate(assembly1, facingAssemblies, mSplitLinks))
                 continue;
 
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(assembly2.outcome() == LOCAL_INDEL)
-                    continue;
-
-                if(facingAssemblies.contains(assembly1) || facingAssemblies.contains(assembly2))
+                if(!isFacingAssemblyCandidate(assembly2, facingAssemblies, mSplitLinks))
                     continue;
 
                 AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2);
