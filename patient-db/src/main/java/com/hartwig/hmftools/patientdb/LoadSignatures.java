@@ -41,8 +41,7 @@ public class LoadSignatures
             }
 
             String sampleId = cmd.getOptionValue(SAMPLE);
-            String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
-            String sampleFile = cmd.getOptionValue(SAMPLE_FILE);
+            String sampleFile = cmd.getOptionValue(SAMPLE_DIR);
 
             loadSignatureData(dbAccess, sampleId, sampleFile);
 
@@ -84,7 +83,6 @@ public class LoadSignatures
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(SAMPLE_FILE, true, SAMPLE_FILE);
         options.addOption(SAMPLE_DIR, true, "Directory to read signature data from");
 
         return options;
