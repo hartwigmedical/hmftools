@@ -423,9 +423,13 @@ If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks fi
 
 If a tumor is detected, and there is a wide range (>= 0.15) of valid purities in the candidate solutions and a somatic point mutation vcf has been supplied then a somatic mode of fitting is triggered, since there may be insufficient copy number events to resolve a purity.   In this case, PURPLE fits somatic peaks in VAF space. 
 
-First PURPLE groups all somatic SNV by VAF with 0.8 x AverageTumorDepth < totalReadCount < 1.2x AverageTumorDepth (after applying the following filters: !GNOMAD; TIER!=LOW_CONFIDENCE; repeatCount<4; germlineStatus='DIPLOID'; mappability=1; GermlineAlleleReadCount = 0 to ensure that all germline and other artefacts are strictly removed). A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(4,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
+First PURPLE groups all somatic SNV by VAF with 0.8 x AverageTumorDepth < totalReadCount < 1.2x AverageTumorDepth (after applying the following filters: !GNOMAD; TIER!=LOW_CONFIDENCE; repeatCount<4; germlineStatus='DIPLOID'; mappability=1; GermlineAlleleReadCount = 0 to ensure that all germline and other artefacts are strictly removed). A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2 * the highest VAF peak with weight > max(4,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
 
-<TO DO - Add readjustment>
+Note that, however, the kernal density estimator can at times miss a higher VAF peak when its bandwidth parameter of 0.03 is too coarse to capture the sample’s VAF distribution. 
+
+PURPLE therefore implements a somatic readjustment model to check for a higher VAF peak and revise the final purity upwards when appropriate. To do this, it first filters input SNVs to only select variants which would be in regions satisfying 1.8 <= implied CN <= 2.2 and minor allele CN >= 0.5 given the candidate (copy number based) fitted purity. Second, it checks if there are at least max⁡(10, 4 * expected variants) SNVs with their VAFs greater than the 99.5th percentile as expected from the fitted purity and local read depth. In the particular case where the fitted purity is less than 0.2, at least 20 variants are required instead.  
+
+If such an outlier peak is found, the readjustment model tests VAFs in increments of 0.005 between the fitted VAF peak and the maximum observed raw VAF of any somatic variant. For each candidate sample purity, it compares the number of observed variants with VAFs > 99.5th percentile (based on what would be expected from random sampling) against an expected number of ‘outliers’ calculated as 1% of the observed variants with VAF > 0.5 * candidate purity. In the particular case where there are less than 500 variants with VAF > 0.5, the outlier percentile is recalculated as the percentile that would give 5 expected outliers. The sample purity is then readjusted to be the lowest purity which satisfies the condition that observed outliers < expected outliers.
 
 If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria OR if the somatic fit suggests biologically unlikely significant homozygous deletions (specifically more than 0.3% of depth windows have copyNumber < 0.5 excluding chrY and chr9 CDKN2A region), then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
 
@@ -433,7 +437,9 @@ Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with k
 
 #### Somatic Purity - Tumor Only 
 
-<TO DO - add>
+In Tumor-only, PURPLE selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92). It then checks for the number of variants that are subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
+
+If the variant counts are less than one, then the sample is marked as NO_TUMOR. Otherwise the SOMATIC mode is triggered and the purity is calculated as 2 times the 75th percentile VAF in the sample.
 
 ### 4. Copy Number Smoothing 
 
