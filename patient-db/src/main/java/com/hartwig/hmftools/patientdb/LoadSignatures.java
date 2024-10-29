@@ -22,8 +22,6 @@ import org.jetbrains.annotations.NotNull;
 public class LoadSignatures
 {
     private static final String SAMPLE_DIR = "sample_dir";
-    private static final String SAMPLE_FILE = "sample_file";
-
 
     public static void main(@NotNull String[] args) throws ParseException
     {
