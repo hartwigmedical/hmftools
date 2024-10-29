@@ -11,14 +11,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.TextCigarCodec;
@@ -157,7 +155,7 @@ public class VariantReadContext
     public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
 
     public UltimaRealignedQualModels realignedUltimaQualModels() { return mUltimaRealignedQualModels; }
-    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels model) { mUltimaRealignedQualModels = model; }
+    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels models) { mUltimaRealignedQualModels = models; }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }

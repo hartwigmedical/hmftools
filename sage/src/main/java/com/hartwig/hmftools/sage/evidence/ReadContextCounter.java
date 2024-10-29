@@ -1,6 +1,5 @@
 // TODO: REVIEW
 package com.hartwig.hmftools.sage.evidence;
-
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -8,10 +7,14 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.BOOSTED_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
+import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -47,6 +50,7 @@ import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
+import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -58,7 +62,9 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.NumberEvents;
@@ -129,6 +135,7 @@ public class ReadContextCounter
     private final List<Integer> mHomopolymerLengths;
     private final List<Double> mHomopolymerAvgQuals;
     private int mHomopolymerAvgQualsCount;
+    private final List<Double> mT0AvgQuals;
 
     // info only for VCF
     private double mTumorQualProbability;
@@ -180,24 +187,30 @@ public class ReadContextCounter
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
-        mUmiTypeCounts = null;
+        if(mConfig.Sequencing.HasUMIs)
+            mUmiTypeCounts = new int[UMI_TYPE_COUNT]; // 3 total depth values followed by the 3 variant support values
+        else
+            mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
 
-        if(mConfig.Sequencing.Type == ULTIMA && mReadContext.variant().isIndel())
+        if(mConfig.Sequencing.Type == ULTIMA)
         {
             mHomopolymerLengths = mReadContext.coreHomopolymerLengths();
             mHomopolymerAvgQuals = Lists.newArrayList();
-            while(mHomopolymerAvgQuals.size() < mHomopolymerLengths.size())
+            mT0AvgQuals = Lists.newArrayList();
+            while (mHomopolymerAvgQuals.size() < mHomopolymerLengths.size())
             {
                 mHomopolymerAvgQuals.add(0.0);
+                mT0AvgQuals.add(0.0);
             }
         }
         else
         {
             mHomopolymerLengths = null;
             mHomopolymerAvgQuals = null;
+            mT0AvgQuals = null;
         }
 
         mHomopolymerAvgQualsCount = 0;
@@ -301,6 +314,11 @@ public class ReadContextCounter
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
     public FragmentLengthCounts fragmentLengthCounts() { return mFragmentLengthData; }
+
+    public List<Integer> homopolymerLengths() { return mHomopolymerLengths; }
+    public List<Double> homopolymerAvgQuals() { return mHomopolymerAvgQuals; }
+    public List<Double> t0AvgQuals() { return mT0AvgQuals; }
+
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
@@ -592,7 +610,7 @@ public class ReadContextCounter
                 mImproperPairCount++;
         }
 
-        if(mHomopolymerLengths != null && support != null && support == FULL)
+        if(mHomopolymerLengths != null && support != null && support == FULL && mConfig.Sequencing.Type == SequencingType.ULTIMA)
         {
             // TODO: Do this in a better way?
             String recordCore = record.getReadString()
@@ -600,6 +618,7 @@ public class ReadContextCounter
             if(recordCore.equals(mReadContext.coreStr()))
             {
                 registerHomopolymerQuals(record, readVarIndex);
+                registerT0Quals(record, readVarIndex);
             }
         }
     }
@@ -619,7 +638,7 @@ public class ReadContextCounter
             int homopolymerQual;
             if(tpValue == 0)
             {
-                homopolymerQual = ULTIMA_MAX_QUAL;
+                homopolymerQual = ULTIMA_MAX_QUAL_TP + TP_0_BOOST;
             }
             else if(len == 1)
             {
@@ -641,25 +660,53 @@ public class ReadContextCounter
             mHomopolymerAvgQuals.set(i,
                     (mHomopolymerAvgQuals.get(i) * mHomopolymerAvgQualsCount + homopolyerQuals.get(i)) / (mHomopolymerAvgQualsCount + 1));
         }
+    }
+
+    private void registerT0Quals(final SAMRecord record, int readVarIndex)
+    {
+        byte[] t0Values = extractT0Values(record);
+        int readIndex = readVarIndex - mReadContext.leftCoreLength();
+        boolean firstHomopolymer = true;
+        List<Integer> t0Quals = Lists.newArrayList();
+        for(int len : mHomopolymerLengths)
+        {
+            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
+            int t0Value = t0Values[lookupIndex];
+
+            int t0Qual;
+            if(t0Value == BOOSTED_QUAL)
+            {
+                t0Qual = ULTIMA_MAX_QUAL_T0;
+            }
+            else
+            {
+                t0Qual = t0Value;
+            }
+
+            t0Quals.add(t0Qual);
+
+            firstHomopolymer = false;
+            readIndex += len;
+        }
+
+        for(int i = 0; i < t0Quals.size(); i++)
+        {
+            mT0AvgQuals.set(i,
+                    (mT0AvgQuals.get(i) * mHomopolymerAvgQualsCount + t0Quals.get(i)) / (mHomopolymerAvgQualsCount + 1));
+        }
 
         mHomopolymerAvgQualsCount++;
     }
 
     private void countUmiType(final SAMRecord record, final boolean supportsVariant)
     {
-        if(mUmiTypeCounts == null)
-        {
-            // 3 total depth values followed by the 3 variant support values
-            mUmiTypeCounts = new int[UMI_TYPE_COUNT];
-        }
-
-        UmiReadType umiReadType = extractUmiType(record);
+        BqrReadType bqrReadType = extractReadType(record, mConfig.Sequencing.Type);
 
         // add to total and variant support if applicable
-        ++mUmiTypeCounts[umiReadType.ordinal()];
+        ++mUmiTypeCounts[bqrReadType.ordinal()];
 
         if(supportsVariant)
-            ++mUmiTypeCounts[umiReadType.ordinal() + 3];
+            ++mUmiTypeCounts[bqrReadType.ordinal() + 3];
     }
 
     private void addVariantVisRecord(
@@ -765,12 +812,25 @@ public class ReadContextCounter
 
         String lengthsStr = mHomopolymerLengths.stream()
                 .map(String::valueOf)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(ITEM_DELIM));
 
         String qualsStr = mHomopolymerAvgQuals.stream()
                 .map(x -> format("%.3f", x))
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(ITEM_DELIM));
 
-        return lengthsStr + '-' + qualsStr;
+        return lengthsStr + ITEM_DELIM + qualsStr;
+    }
+
+    @Nullable
+    public String coreT0Info()
+    {
+        if(mHomopolymerLengths == null)
+        {
+            return null;
+        }
+
+        return mT0AvgQuals.stream()
+                .map(x -> format("%.3f", x))
+                .collect(Collectors.joining(ITEM_DELIM));
     }
 }

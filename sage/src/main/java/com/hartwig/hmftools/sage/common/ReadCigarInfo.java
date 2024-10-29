@@ -162,7 +162,6 @@ public class ReadCigarInfo
                             // handles an insert that pushes the alignment out - always take the prior alignment base and reduce index start
                             // eg looking to find the alignment boundary for index start 12 for 10M5I1350M, alignment start == 100
                             // so at the insert element, read index = 10, ref pos = 110 (pointing at next ref base)
-                            cigar.remove(0);
                             int extraIndexStart = leftFlankIndex - readIndex + 1;
                             cigar.add(0, new CigarElement(1, M));
 
@@ -212,7 +211,7 @@ public class ReadCigarInfo
                 }
             }
 
-            if(!addedElement)
+            if(readIndex - (element.getOperator() == D ? 1 : 0) >= leftFlankIndex && !addedElement)
             {
                 // add this element falling in between the required indices
                 cigar.add(element);

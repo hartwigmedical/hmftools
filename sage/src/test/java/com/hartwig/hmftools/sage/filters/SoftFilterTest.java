@@ -128,7 +128,8 @@ public class SoftFilterTest
         // factor in soft-clipped bases and use a FULL match rather than CORE
         SAMRecord read3 = createSamRecord(
                 TEST_READ_ID, CHR_1, 46,
-                TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK, "8S13M4S");
+                TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase + REF_BASES.substring(position + 1, position + 3) +
+                        TEST_RIGHT_FLANK + REF_BASES.substring(1, 76), "8S13M79S");
 
         readContextCounter.processRead(read3, 1, null);
 

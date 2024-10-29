@@ -46,7 +46,7 @@ public final class SamRecordUtils
     public static final int NO_POSITION = 0;
     public static final int INVALID_READ_INDEX = -1;
 
-    private static final int PHRED_OFFSET = 33;
+    public static final int PHRED_OFFSET = 33;
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 

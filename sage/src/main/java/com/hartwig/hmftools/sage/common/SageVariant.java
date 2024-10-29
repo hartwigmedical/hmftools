@@ -20,6 +20,7 @@ public class SageVariant
     private final List<ReadContextCounter> mReferenceReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
+    private boolean mNearbyVariant;
     private int mMixedImpact;
 
     public SageVariant(
@@ -146,6 +147,9 @@ public class SageVariant
 
     public int mixedGermlineImpact() { return mMixedImpact; }
     public void mixedGermlineImpact(final int mixedImpact) { mMixedImpact = mixedImpact; }
+
+    public boolean nearbyVariant() { return mNearbyVariant; }
+    public void nearbyVariant(final boolean nearbyVariant) { mNearbyVariant = nearbyVariant; }
 
     public boolean isPassing() { return mFilters.isEmpty(); }
 

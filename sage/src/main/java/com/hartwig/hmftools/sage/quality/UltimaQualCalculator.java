@@ -1,6 +1,7 @@
 // TODO: REVIEW
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -9,7 +10,10 @@ import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.T0_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.cycleCount;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.safeQualLookup;
@@ -255,10 +259,15 @@ public class UltimaQualCalculator
                 mStraddleBaseEnd = straddleBaseEnd; // the first ref base after the deleted bases
 
                 deletedBase = deletedHpBase;
+
+                mInCyclePosStrand = isBaseInCycle(mStraddleBaseStart, mStraddleBaseEnd, deletedBase);
+
+                byte revDeletedBase = swapDnaBase(deletedBase);
+                mInCycleNegStrand = isBaseInCycle(swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), revDeletedBase);
             }
-            else
+            else  // used for SNVs where the variant's ref base is considered deleted
             {
-                // used for SNVs where the variant's ref base is considered deleted
+                // any HP deletion can just use the SNV base itself
                 mStraddleIndexStart = 0;
                 mStraddleIndexEnd = 0;
 
@@ -267,12 +276,16 @@ public class UltimaQualCalculator
                 mStraddleBaseEnd = straddleBaseEnd;
 
                 deletedBase = deletedHpBase;
+                byte altBase = (byte) variant.alt().charAt(0);
+
+                int posCycleCountRef = cycleCount(straddleBaseStart, mStraddleBaseEnd, deletedBase);
+                int posCycleCountAlt = cycleCount(straddleBaseStart, mStraddleBaseEnd, altBase);
+                mInCyclePosStrand = posCycleCountRef == posCycleCountAlt;
+
+                int negCycleCountRef = cycleCount(swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), swapDnaBase(deletedHpBase));
+                int negCycleCountAlt = cycleCount(swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), swapDnaBase(altBase));
+                mInCycleNegStrand = negCycleCountRef == negCycleCountAlt;
             }
-
-            mInCyclePosStrand = isBaseInCycle(mStraddleBaseStart, mStraddleBaseEnd, deletedBase);
-
-            byte revDeletedBase = swapDnaBase(deletedBase);
-            mInCycleNegStrand = isBaseInCycle(swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), revDeletedBase);
         }
 
         public byte calculateQual(final SAMRecord record, int varReadIndex)
@@ -280,15 +293,15 @@ public class UltimaQualCalculator
             if(record.getReadNegativeStrandFlag())
             {
                 if(!mInCycleNegStrand)
-                    return ULTIMA_MAX_QUAL;
+                    return ULTIMA_MAX_QUAL_T0;
             }
             else
             {
                 if(!mInCyclePosStrand)
-                    return ULTIMA_MAX_QUAL;
+                    return ULTIMA_MAX_QUAL_T0;
             }
 
-            final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
+            final byte[] t0Values = extractT0Values(record);
             byte qual1 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexStart);
             if(qual1 == ULTIMA_INVALID_QUAL)
             {
@@ -354,7 +367,10 @@ public class UltimaQualCalculator
             if(upperQual == ULTIMA_INVALID_QUAL)
                 return ULTIMA_INVALID_QUAL;
 
-            return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL);
+            if(lowerQual == ULTIMA_MAX_QUAL_TP + TP_0_BOOST || upperQual == ULTIMA_MAX_QUAL_TP + TP_0_BOOST)
+                return ULTIMA_MAX_QUAL_TP + TP_0_BOOST;
+
+            return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL_TP);
         }
 
         public String toString()
@@ -372,7 +388,7 @@ public class UltimaQualCalculator
             super(UltimaModelType.MICROSAT_ADJUSTMENT);
         }
 
-        public byte calculateQual(final SAMRecord record, int varReadIndex) { return UltimaBamUtils.ULTIMA_MAX_QUAL; }
+        public byte calculateQual(final SAMRecord record, int varReadIndex) { return UltimaBamUtils.ULTIMA_MAX_QUAL_TP + TP_0_BOOST; }
     }
 
     private class SnvMnv extends UltimaQualModel
@@ -488,29 +504,22 @@ public class UltimaQualCalculator
 
         public byte calculateQual(final SAMRecord record, int varReadIndex)
         {
-            if(mLeftAdjust == null && mLeftDeletion == null)
-                return ULTIMA_MAX_QUAL;
-
-            if(mLeftDeletion != null || mRightDeletion != null)
-            {
-                // any HP deletion can just use the SNV base itself
-                final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
-                return safeQualLookup(t0Values, varReadIndex);
-            }
+            if(mLeftAdjust == null && mLeftDeletion == null || mRightAdjust == null && mRightDeletion == null)
+                return ULTIMA_MAX_QUAL_T0;
 
             int leftQual = mLeftAdjust != null ?
-                    mLeftAdjust.calculateQual(record, varReadIndex) : mLeftDeletion.calculateQual(record, varReadIndex);
+                    min(mLeftAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + TP_0_BOOST) : min(mLeftDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
 
             if(leftQual == ULTIMA_INVALID_QUAL)
                 return ULTIMA_INVALID_QUAL;
 
             int rightQual = mRightAdjust != null ?
-                    mRightAdjust.calculateQual(record, varReadIndex) : mRightDeletion.calculateQual(record, varReadIndex);
+                    min(mRightAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + TP_0_BOOST) : min(mRightDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
 
             if(rightQual == ULTIMA_INVALID_QUAL)
                 return ULTIMA_INVALID_QUAL;
 
-            return (byte) min(Math.max(leftQual, rightQual), ULTIMA_MAX_QUAL);
+            return (byte) Math.max(leftQual, rightQual);
         }
 
         public String toString()

@@ -29,6 +29,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -95,6 +96,11 @@ public final class CandidateSerialisation
 
     public static Candidate toCandidate(final VariantContext context, final RefSequence refSequence)
     {
+        return toCandidate(context, refSequence, null);
+    }
+
+    public static Candidate toCandidate(final VariantContext context, final RefSequence refSequence, final SageConfig config)
+    {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),
                 context.getReference().getBaseString(), context.getAlternateAllele(0).getBaseString());
@@ -114,7 +120,7 @@ public final class CandidateSerialisation
             readContextVcfInfo = ReadContextVcfInfo.fromVcfTag(context.getAttributeAsString(READ_CONTEXT_INFO, ""));
         }
 
-        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(config, DEFAULT_FLANK_LENGTH);
 
         SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(readContextVcfInfo.AlignmentStart);
@@ -126,7 +132,7 @@ public final class CandidateSerialisation
 
         if(readContext == null)
         {
-            SG_LOGGER.error("variant({}) failed to recreate read context", variant);
+            SG_LOGGER.warn("variant({}) failed to recreate read context", variant);
             return null;
         }
 

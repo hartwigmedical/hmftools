@@ -65,9 +65,15 @@ public final class VcfTags
     public static final String TUMOR_QUALITY_PROB = "TQP";
     public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";
 
+    public static final String MAP_QUAL_FACTOR = "MQF";
+    public static final String MAP_QUAL_FACTOR_DESC = "Map qual heuristic as used in min tumor quality filter";
+
     public static final String SIMPLE_ALT_COUNT = "SAC";
     public static final String SIMPLE_ALT_COUNT_DESC = "Simple alt match count";
 
     public static final String READ_CORE_HOMOPOLYMER_INFO = "RC_HP_INFO";
     public static final String READ_CORE_HOMOPOLYMER_INFO_DESC = "Lengths and average qual of homopolymers in the read core [lengths-avg_quals]";
+
+    public static final String READ_CORE_T0_INFO = "RC_T0_INFO";
+    public static final String READ_CORE_T0_INFO_DESC = "Average qual of t0 (deletion) qualities in the read core";
 }

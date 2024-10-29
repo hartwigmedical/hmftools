@@ -78,17 +78,18 @@ public class ReadEdgeDistance
             minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
         }
 
+        int scaledMinDistance = minDistance * 100 / record.getReadLength();
         ++mUpdates;
-        mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
+        mMaxDistanceFromEdge = max(scaledMinDistance, mMaxDistanceFromEdge);
 
         if(altSupport)
         {
-            mMaxDistanceFromEdgeAlt = max(minDistance, mMaxDistanceFromEdgeAlt);
-            mTotalDistanceFromEdgeAlt += minDistance;
+            mMaxDistanceFromEdgeAlt = max(scaledMinDistance, mMaxDistanceFromEdgeAlt);
+            mTotalDistanceFromEdgeAlt += scaledMinDistance;
             ++mUpdatesAlt;
         }
 
-        mTotalDistanceFromEdge += minDistance;
+        mTotalDistanceFromEdge += scaledMinDistance;
     }
 
     private static final int NO_READ_EDGE_DISTANCE = -1;

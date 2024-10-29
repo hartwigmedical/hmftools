@@ -1,12 +1,14 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.BOOSTED_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -51,7 +54,13 @@ public class QualityCalculator
     }
 
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+    public UltimaQualCalculator ultimaQualityCalculator() { return mUltimaQualCalculator; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
+
+    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant, final byte[] coreBases)
+    {
+        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant, coreBases) : null;
+    }
 
     public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
@@ -61,7 +70,7 @@ public class QualityCalculator
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
+            final QualityConfig config, final BasePosition position, int readLength, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(isHighlyPolymorphic(position))
         {
@@ -69,7 +78,7 @@ public class QualityCalculator
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
-        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty);
+        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty * 100 / readLength);
 
         int modifiedMapQuality = mapQuality - config.FixedMapQualPenalty - improperPairPenalty - eventPenalty;
 
@@ -98,7 +107,7 @@ public class QualityCalculator
         else if(recalibrateBaseQuality)
         {
             BqrReadType readType = extractReadType(record, mSequencingType);
-            double bqr = readContextCounter.qualCache().getQual(ULTIMA_MAX_QUAL, readType, 0);
+            double bqr = readContextCounter.qualCache().getQual(BOOSTED_QUAL, readType, 0) + Math.max(ULTIMA_MAX_QUAL_TP + TP_0_BOOST, ULTIMA_MAX_QUAL_T0) - BOOSTED_QUAL;
             baseQuality = min(calcBaseQuality, bqr);
         }
         else
@@ -109,7 +118,7 @@ public class QualityCalculator
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
 
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), record.getReadLength(), mapQuality, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = baseQuality;
 

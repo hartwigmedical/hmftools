@@ -163,7 +163,7 @@ public class MsiJitterCalcs
             }
         }
 
-        return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
+        return new PerSampleJitterParams(sampleParamList, false);
     }
 
     @VisibleForTesting

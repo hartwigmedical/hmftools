@@ -358,7 +358,7 @@ public class UltimaRealignedQualModelsBuilder_0
 
         if(lastMatchedRefPos == -1 || lastMatchedReadCoreIndex == -1 || lastMatchedLength == -1)
         {
-            throw new IllegalArgumentException("Looks as though the first core homopolymers of the read and ref do not have the same base.");
+            throw new IllegalArgumentException("Looks as though the first core homopolymers of the read and ref do not have the same base, variant: " + readContext.variant().toString());
         }
 
         String chromosome = readContext.variant().chromosome();
@@ -377,7 +377,7 @@ public class UltimaRealignedQualModelsBuilder_0
                 firstAltBase = firstRefBase;
             }
 
-            if(delHomopolymer.Base == lastMatchedBase)
+            if(delHomopolymer.Base == lastMatchedBase && i == 0)  // in GGGGAG -> GGGG, don't want to attach del G to start of poly-G
             {
                 varReadIndexOffset -= lastMatchedLength;
             }
@@ -414,7 +414,7 @@ public class UltimaRealignedQualModelsBuilder_0
         {
             HomopolymerVariant insHomopolymer = insHomopolymers.get(i);
 
-            int varReadIndexOffset = insHomopolymer.ReadCoreIndex - origReadCoreIndex;
+            int varReadIndexOffset = insHomopolymer.ReadCoreIndex - origReadCoreIndex + i;
             String insBasesString = String.valueOf((char) insHomopolymer.Base).repeat(insHomopolymer.Length);
             byte firstRefBase = insHomopolymer.Base == lastMatchedBase ? priorRefBase : lastMatchedBase;
             byte firstAltBase = insHomopolymer.PriorBase;
@@ -422,6 +422,11 @@ public class UltimaRealignedQualModelsBuilder_0
             {
                 firstRefBase = readContext.readBasesBytes()[readContext.coreIndexStart() - 1];
                 firstAltBase = firstRefBase;
+            }
+
+            if(insHomopolymer.Base == lastMatchedBase && i == 0)  // in GGGG -> GGGGAG, don't want to attach ins G to start of poly-G
+            {
+                varReadIndexOffset -= lastMatchedLength;
             }
 
             String ref = String.valueOf((char) firstRefBase);

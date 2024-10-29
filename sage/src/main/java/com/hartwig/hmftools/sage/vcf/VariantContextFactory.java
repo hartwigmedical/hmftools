@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.Math.min;
@@ -28,6 +27,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_HOMOPOLYMER_INFO;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_T0_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
@@ -124,6 +124,10 @@ public final class VariantContextFactory
             String coreHomopolymerInfo = primaryRcCounter.coreHomopolymerInfo();
             if(coreHomopolymerInfo != null)
                 builder.attribute(READ_CORE_HOMOPOLYMER_INFO, coreHomopolymerInfo);
+
+            String coreT0Info = primaryRcCounter.coreT0Info();
+            if(coreT0Info != null)
+                builder.attribute(READ_CORE_T0_INFO, coreT0Info);
         }
 
         final VariantContext context = builder.make();

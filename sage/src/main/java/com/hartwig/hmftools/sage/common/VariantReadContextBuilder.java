@@ -60,7 +60,10 @@ public class VariantReadContextBuilder
                 return null;
 
             // enforce full flanks
-            if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
+
+            boolean inAppendMode = read.getReadName().equals("CANDIDATE");
+            int minFlankSize = inAppendMode ? 1 : mFlankSize; // hacky, we should do this properly
+            if(readContext.leftFlankLength() < minFlankSize || readContext.rightFlankLength() < minFlankSize)
                 return null;
 
             // enforce ref base padding for trinucleotide generation
@@ -142,7 +145,6 @@ public class VariantReadContextBuilder
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE;
             readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
         }
-
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
             return null;
 
@@ -168,23 +170,39 @@ public class VariantReadContextBuilder
                 softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
                 readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
 
+        int cigarReadBases = 0;
+        for(CigarElement element : readCigarInfo.Cigar)
+        {
+           if(element.getOperator().consumesReadBases())
+               cigarReadBases += element.getLength();
+        }
+        if(cigarReadBases != readCigarInfo.FlankIndexEnd - readCigarInfo.FlankIndexStart + 1)
+            SG_LOGGER.error("variant({}) produced inconsistent RC cigar info", variant);
+
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
 
         // for ultima we expand core so that homopolymers are not cut off in the read or the ref
         if(mConfig != null && mConfig.Sequencing.Type == ULTIMA)
         {
+            // TODO: handle this better by passing in append mode status explicitly
+            boolean inAppendMode = read.getReadName().equals("CANDIDATE"); // hacky, we should do this properly
+            // long inserts with S elements won't work properly in append mode with core extension
+            boolean skippableLongInsert = inAppendMode && isLongInsert(variant);
             UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(read.getReadBases(), refSequence,
                     softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
-                    readCigarInfo, mFlankSize);
+                    readCigarInfo, mFlankSize, inAppendMode);
 
-            if(ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid())
+            if(!skippableLongInsert && (ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid()))
                 return null;
 
-            readCoreStart = ultimaCoreInfo.ReadCoreStart;
-            readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
-            readCigarInfo = ultimaCoreInfo.CigarInfo;
+            if(ultimaCoreInfo != null)
+            {
+                readCoreStart = ultimaCoreInfo.ReadCoreStart;
+                readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
+                readCigarInfo = ultimaCoreInfo.CigarInfo;
+            }
         }
 
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted

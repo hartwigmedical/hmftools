@@ -213,10 +213,10 @@ public class UltimaCoreExtenderTest
                 new AlignedBase(2, 1, (byte) 'A', (byte) 'A', M),
                 new AlignedBase(2, 2, MISSING_BASE, (byte) 'A', I));
 
-        int flankStart = findFlankBoundary(alignedBases, 1, true, 2);
+        int flankStart = findFlankBoundary(alignedBases, 1, true, 2, false);
         assertEquals(INVALID_INDEX, flankStart);
 
-        int flankEnd = findFlankBoundary(alignedBases, 1, false, 2);
+        int flankEnd = findFlankBoundary(alignedBases, 1, false, 2, false);
         assertEquals(INVALID_INDEX, flankEnd);
     }
 
@@ -230,10 +230,10 @@ public class UltimaCoreExtenderTest
                 new AlignedBase(2, 3, MISSING_BASE, (byte) 'A', I),
                 new AlignedBase(3, 4, (byte) 'A', (byte) 'A', M));
 
-        int flankStart = findFlankBoundary(alignedBases, 2, true, 1);
+        int flankStart = findFlankBoundary(alignedBases, 2, true, 1, false);
         assertEquals(0, flankStart);
 
-        int flankEnd = findFlankBoundary(alignedBases, 2, false, 1);
+        int flankEnd = findFlankBoundary(alignedBases, 2, false, 1, false);
         assertEquals(4, flankEnd);
     }
 
@@ -245,10 +245,10 @@ public class UltimaCoreExtenderTest
                 new AlignedBase(2, 1, (byte) 'A', (byte) 'A', M),
                 new AlignedBase(2, 2, MISSING_BASE, (byte) 'A', I));
 
-        int flankStart = findFlankBoundary(alignedBases, 1, true, 1);
+        int flankStart = findFlankBoundary(alignedBases, 1, true, 1, false);
         assertEquals(INVALID_INDEX, flankStart);
 
-        int flankEnd = findFlankBoundary(alignedBases, 1, false, 1);
+        int flankEnd = findFlankBoundary(alignedBases, 1, false, 1, false);
         assertEquals(INVALID_INDEX, flankEnd);
     }
 
@@ -269,7 +269,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 1 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -307,7 +307,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 1 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -346,7 +346,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 1 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -384,7 +384,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 1 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -422,7 +422,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 2 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -460,7 +460,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 1 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -498,7 +498,7 @@ public class UltimaCoreExtenderTest
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(-1, null, -1, -1, corePositionStart, corePositionEnd, -1, -1);
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, TEST_FLANK_SIZE, false);
 
         assertEquals(2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreStart);
         assertEquals(readBases.length() - 2 - 2 * TEST_FLANK_SIZE, ultimaCoreInfo.ReadCoreEnd);
@@ -529,7 +529,7 @@ public class UltimaCoreExtenderTest
         List<CigarElement> cigarElements = Lists.newArrayList(new CigarElement(2, S), new CigarElement(1, M));
 
         UltimaCoreInfo ultimaCoreInfo =
-                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, null, INVALID_INDEX);
+                extendUltimaCore(readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, null, INVALID_INDEX, false);
 
         assertNull(ultimaCoreInfo);
     }

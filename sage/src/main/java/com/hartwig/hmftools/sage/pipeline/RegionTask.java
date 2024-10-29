@@ -155,6 +155,8 @@ public class RegionTask
             for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
             {
                 Candidate candidate = finalCandidates.get(candidateIndex);
+                boolean nearbyLeftVariant = candidateIndex > 0 && candidate.position() - finalCandidates.get(candidateIndex - 1).position() <= 5;
+                boolean nearbyRightVariant = candidateIndex < finalCandidates.size() - 1 && finalCandidates.get(candidateIndex + 1).position() - candidate.position() <= 5;
 
                 final List<ReadContextCounter> refCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
                         referenceEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
@@ -162,6 +164,7 @@ public class RegionTask
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, tumorReadCounters);
+                sageVariant.nearbyVariant(nearbyLeftVariant || nearbyRightVariant);
                 mSageVariants.add(sageVariant);
 
                 // apply filters

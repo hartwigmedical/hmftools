@@ -108,7 +108,7 @@ public class UltimaCoreExtender
 
     @Nullable
     public static UltimaCoreInfo extendUltimaCore(final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
-            final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize)
+            final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize, final boolean inAppendMode)
     {
         final List<AlignedBase> alignedBases = alignReadBases(readBases, refSequence, readAlignmentStart, cigarElements);
         if(alignedBases == null)
@@ -156,12 +156,12 @@ public class UltimaCoreExtender
                 return null;
         }
 
-        int flankStart = findFlankBoundary(alignedBases, coreStart, true, flankSize);
-        if(flankStart == INVALID_INDEX)
+        int flankStart = findFlankBoundary(alignedBases, coreStart, true, flankSize, inAppendMode);
+        if(flankStart == INVALID_INDEX && !inAppendMode)
             return null;
 
-        int flankEnd = findFlankBoundary(alignedBases, coreEnd, false, flankSize);
-        if(flankEnd == INVALID_INDEX)
+        int flankEnd = findFlankBoundary(alignedBases, coreEnd, false, flankSize, inAppendMode);
+        if(flankEnd == INVALID_INDEX && !inAppendMode)
             return null;
 
         // get cigar of the flanks and core
@@ -361,7 +361,7 @@ public class UltimaCoreExtender
         return INVALID_INDEX;
     }
 
-    public static int findFlankBoundary(final List<AlignedBase> alignedBases, int coreBoundaryIndex, boolean leftFlank, int flankSize)
+    public static int findFlankBoundary(final List<AlignedBase> alignedBases, int coreBoundaryIndex, boolean leftFlank, int flankSize, boolean inAppendMode)
     {
         int inc = leftFlank ? -1 : 1;
         int readBasesSeen = 0;
@@ -375,14 +375,18 @@ public class UltimaCoreExtender
                 break;
         }
 
-        if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
+        if(inAppendMode && (flankBoundary < 0 || flankBoundary >= alignedBases.size()))
+            flankBoundary = Math.min(Math.max(0, flankBoundary), alignedBases.size() - 1);
+        else if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
             return INVALID_INDEX;
 
         // push alignment out if the flank boundary is in an indel
         while(flankBoundary >= 0 && flankBoundary < alignedBases.size() && alignedBases.get(flankBoundary).isIndel())
             flankBoundary += inc;
 
-        if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
+        if(inAppendMode && (flankBoundary < 0 || flankBoundary >= alignedBases.size()))
+            flankBoundary = Math.min(Math.max(0, flankBoundary), alignedBases.size() - 1);
+        else if(flankBoundary < 0 || flankBoundary >= alignedBases.size())
             return INVALID_INDEX;
 
         return flankBoundary;

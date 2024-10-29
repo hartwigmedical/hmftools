@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.sequencing;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
@@ -9,7 +11,11 @@ import htsjdk.samtools.SAMRecord;
 
 public final class UltimaBamUtils
 {
-    public static final byte ULTIMA_MAX_QUAL = 40;
+    public static final byte ULTIMA_MAX_QUAL_TP = 40;
+    public static final byte TP_0_BOOST = 5;
+    public static final byte ULTIMA_MAX_QUAL_T0 = 40;
+    public static final byte BOOSTED_QUAL = 35;
+
     public static final byte ULTIMA_INVALID_QUAL = -1;
 
     public static final String TP_TAG = "tp";
@@ -32,11 +38,12 @@ public final class UltimaBamUtils
         return record.getByteArrayAttribute(TP_TAG);
     }
 
-    public static short[] extractT0Values(final SAMRecord record)
+    public static byte[] extractT0Values(final SAMRecord record)
     {
-        String strValue = record.getStringAttribute(T0_TAG);
-        short[] results = new short[record.getBaseQualities().length];
-        return results;
+        byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
+        for(byte t0Value : t0Values)
+            t0Value -= PHRED_OFFSET;
+        return t0Values;
     }
 
     public static UltimaConsensusType extractConsensusType(final SAMRecord record)
@@ -92,6 +99,10 @@ public final class UltimaBamUtils
                 }
             }
         }
+        if(qualValue1 == BOOSTED_QUAL)
+            qualValue1 = ULTIMA_MAX_QUAL_TP;
+        if(qualValue2 == BOOSTED_QUAL)
+            qualValue2 = ULTIMA_MAX_QUAL_TP;
 
         if(qualValue1 < 0)
         {
@@ -105,8 +116,13 @@ public final class UltimaBamUtils
 
             qualValue1 = baseQualities[middleIndex];
             byte tpValue = tpValues[middleIndex];
+            if(tpValue == (byte) 0)
+                return ULTIMA_MAX_QUAL_TP + TP_0_BOOST;
 
-            return (byte)min(ULTIMA_MAX_QUAL, qualValue1 + 6 * abs(tpSearchValue - tpValue));
+            if(qualValue1 == BOOSTED_QUAL)
+                qualValue1 = ULTIMA_MAX_QUAL_TP;
+
+            return (byte)min(ULTIMA_MAX_QUAL_TP, qualValue1 + 6 * abs(tpSearchValue - tpValue));
         }
 
         if(qualValue2 < 0)
@@ -115,6 +131,7 @@ public final class UltimaBamUtils
         // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
         return (byte)(qualValue1 - 3);
     }
+
 
     public static boolean isBaseInCycle(final byte startBase, final byte endBase, final byte testBase)
     {
@@ -149,6 +166,29 @@ public final class UltimaBamUtils
         }
     }
 
+    public static int cycleCount(final byte firstBase, final byte lastBase, final byte innerBase)
+    {
+        if(baseIndex(firstBase) == -1 || baseIndex(lastBase) == -1 || baseIndex(innerBase) == -1)
+            return -1;  // any base is not TGCA
+        byte[] bases = new byte[] {firstBase, innerBase, lastBase};
+        int baseIndex = 0;
+        int cycleIndex = 0;
+        int cycleCount = 1;
+        while(baseIndex < bases.length)
+        {
+            if(CYCLE_BASES[cycleIndex] == bases[baseIndex])
+                baseIndex += 1;
+            else
+                cycleIndex += 1;
+            if(cycleIndex == CYCLE_BASES.length)
+            {
+                cycleIndex = 0;
+                cycleCount += 1;
+            }
+        }
+        return cycleCount;
+    }
+
     private static int getIntegerAttribute(final SAMRecord record, final String tag, int defaultValue)
     {
         Object value = record.getAttribute(tag);
@@ -160,6 +200,10 @@ public final class UltimaBamUtils
         if(index < 0 || index >= qualityArray.length)
             return ULTIMA_INVALID_QUAL;
 
-        return (byte) (qualityArray[index] - 33);
+        byte value = qualityArray[index];
+        if(value == BOOSTED_QUAL)
+            return ULTIMA_MAX_QUAL_T0;
+
+        return value;
     }
 }

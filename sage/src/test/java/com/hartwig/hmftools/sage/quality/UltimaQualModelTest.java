@@ -1,11 +1,12 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.T0_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
@@ -94,7 +95,7 @@ public class UltimaQualModelTest
         tpValues[19] = -1;
 
         calcQual = model.calculateQual(read, 18);
-        assertEquals(40, calcQual);
+        assertEquals(Math.min(49, ULTIMA_MAX_QUAL_TP), calcQual);
 
         // insert of 2 bases
         variant = new SimpleVariant(CHR_1, 19, "A", "ATT");
@@ -184,11 +185,11 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 18);
-        assertEquals(ULTIMA_MAX_QUAL, calcQual);
+        assertEquals(ULTIMA_MAX_QUAL_T0, calcQual);
 
         read.setReadNegativeStrandFlag(true);
         calcQual = model.calculateQual(read, 18);
-        assertEquals(ULTIMA_MAX_QUAL, calcQual);
+        assertEquals(ULTIMA_MAX_QUAL_T0, calcQual);
     }
 
     @Test
@@ -276,7 +277,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 22);
-        assertEquals(37, calcQual);
+        assertEquals(ULTIMA_MAX_QUAL_TP + TP_0_BOOST, calcQual);
 
         //                             01     234     56
         refBases = BUFFER_REF_BASES + "AG" + "CCG" + "AG" + BUFFER_REF_BASES;
@@ -328,17 +329,17 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 22);
-        assertEquals(15, calcQual);
+        assertEquals(21, calcQual);
 
-        // C>T in TCG > TTG, left 1-base ins/expansion, right full delete
+        // C>T in TCA > TTA, left 1-base ins/expansion, right full delete
         //                             01     234     56
-        refBases = BUFFER_REF_BASES + "AG" + "TCG" + "AG" + BUFFER_REF_BASES;
+        refBases = BUFFER_REF_BASES + "AG" + "TCA" + "AG" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
         model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
 
         //                              0123456
-        readBases = BUFFER_REF_BASES + "AGTTGAG" + BUFFER_REF_BASES;
+        readBases = BUFFER_REF_BASES + "AGTTAAG" + BUFFER_REF_BASES;
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());

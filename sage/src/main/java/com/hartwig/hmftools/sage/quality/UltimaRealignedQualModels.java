@@ -1,9 +1,11 @@
 // TODO: REVIEW
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.MICROSAT_ADJUSTMENT;
 
@@ -40,7 +42,7 @@ public class UltimaRealignedQualModels
 
     public double calculateQual(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        double ultimaQual = ULTIMA_MAX_QUAL;
+        double ultimaQual = Math.max(ULTIMA_MAX_QUAL_TP + TP_0_BOOST, ULTIMA_MAX_QUAL_T0);
         if(mOriginalQualModel != null)
         {
             double modelQual;

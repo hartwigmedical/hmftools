@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.abs;
@@ -112,19 +111,10 @@ public class ReadContextMatcher
 
         if(allowMismatches)
         {
-            // TODO: START. ASK THOMAS. Just for ultima?
+            // TODO: Set allowMismatches=False for Ultima only
             Set<Integer> excludedBases = Sets.newHashSet();
-            List<RepeatInfo> longHomopolymerRepeats = readContext.AllRepeats.stream()
-                    .filter(x -> (x.Bases.length() == 1) && (x.Count >= 5))
-                    .collect(Collectors.toList());
-
-            for(RepeatInfo repeat : longHomopolymerRepeats)
-            {
-                for(int i = -1; i <= repeat.Count; ++i)
-                    excludedBases.add(repeat.Index + i);
-            }
-            // TODO: END
-
+            for(int i = readContext.CoreIndexStart; i <= readContext.CoreIndexEnd; i++)
+                excludedBases.add(i);
             if(mContext.variant().isIndel())
             {
                 int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
@@ -149,13 +139,9 @@ public class ReadContextMatcher
             {
                 // just the alt bases themselves - for both ref and read
                 int altRange = mContext.variant().altLength() - 1;
-
-                // TODO: START. ASK THOMAS. Just for ultima?
                 for(int i = 0; i <= altRange; ++i)
                     excludedBases.add(mContext.VarIndex + i);
-
                 mLowQualExclusionRead = new LowQualExclusion(excludedBases.stream().collect(Collectors.toList()));
-                // TODO: END
 
                 int refIndex = mContext.leftCoreLength();
                 mLowQualExclusionRef = new LowQualExclusion(refIndex, refIndex + altRange);

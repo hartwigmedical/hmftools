@@ -63,6 +63,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_UPDATED_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_HOMOPOLYMER_INFO;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_HOMOPOLYMER_INFO_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_T0_INFO;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CORE_T0_INFO_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
@@ -202,6 +204,7 @@ public class VariantVCF implements AutoCloseable
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
             header.addMetaDataLine(new VCFInfoHeaderLine(READ_CORE_HOMOPOLYMER_INFO, 1, VCFHeaderLineType.String, READ_CORE_HOMOPOLYMER_INFO_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(READ_CORE_T0_INFO, 1, VCFHeaderLineType.String, READ_CORE_T0_INFO_DESC));
         }
 
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
