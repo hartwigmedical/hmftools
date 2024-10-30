@@ -42,6 +42,7 @@ public class LoadLinxData
 {
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
+    private static final String LINX_FILE_NAME = "linx_filename";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException
     {
@@ -67,6 +68,7 @@ public class LoadLinxData
 
             String sampleId = configBuilder.getValue(SAMPLE);
             String linxDir = configBuilder.getValue(LINX_DIR_CFG);
+            String fileRootName = configBuilder.getValue(LINX_FILE_NAME);
             String linxGermlineDir = configBuilder.hasValue(LINX_GERMLINE_DIR_CFG) ? configBuilder.getValue(LINX_GERMLINE_DIR_CFG) : linxDir;
 
             boolean loadGermline = !configBuilder.hasFlag(SOMATIC_ONLY);
@@ -75,10 +77,10 @@ public class LoadLinxData
             dbAccess.context().transaction(tr ->
             {
                 if(loadSomatic)
-                    loadSomaticData(dbAccess, sampleId, linxDir);
+                    loadSomaticData(dbAccess, sampleId, linxDir, fileRootName);
 
                 if(loadGermline)
-                    loadGermlineData(dbAccess, sampleId, linxGermlineDir);
+                    loadGermlineData(dbAccess, sampleId, linxGermlineDir, fileRootName);
             });
 
             LOGGER.info("Linx data loading complete");
@@ -90,18 +92,18 @@ public class LoadLinxData
         }
     }
 
-    private static void loadSomaticData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir)
+    private static void loadSomaticData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir, String fileRootName)
             throws IOException
     {
         LOGGER.info("sample({}) loading Linx somatic data", sampleId);
 
-        final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, sampleId, false);
-        final String svClusterFile = LinxCluster.generateFilename(linxDir, sampleId, false);
-        final String svLinkFile = LinxLink.generateFilename(linxDir, sampleId, false);
-        final String svBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, false);
-        final String svFusionFile = LinxFusion.generateFilename(linxDir, sampleId);
-        final String svDriverFile = LinxDriver.generateFilename(linxDir, sampleId);
-        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, true);
+        final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, fileRootName, false);
+        final String svClusterFile = LinxCluster.generateFilename(linxDir, fileRootName, false);
+        final String svLinkFile = LinxLink.generateFilename(linxDir, fileRootName, false);
+        final String svBreakendFile = LinxBreakend.generateFilename(linxDir, fileRootName, false);
+        final String svFusionFile = LinxFusion.generateFilename(linxDir, fileRootName);
+        final String svDriverFile = LinxDriver.generateFilename(linxDir, fileRootName);
+        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, fileRootName, true);
 
         List<String> requiredFiles = Lists.newArrayList(
                 svAnnotationFile, svClusterFile, svLinkFile, svBreakendFile, svFusionFile, svDriverFile, driverCatalogFile);
@@ -142,14 +144,14 @@ public class LoadLinxData
         dbAccess.writeLinxDriverCatalog(sampleId, driverCatalog, DRIVERS_LINX_SOMATIC);
     }
 
-    private static void loadGermlineData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir)
+    private static void loadGermlineData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir, String fileRootName)
             throws IOException
     {
         LOGGER.info("sample({}) loading Linx germline data", sampleId);
 
-        final String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, sampleId);
-        final String germlineBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
-        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, false);
+        final String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, fileRootName);
+        final String germlineBreakendFile = LinxBreakend.generateFilename(linxDir, fileRootName, true);
+        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, fileRootName, false);
 
         List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile); // required after v5.31
 
@@ -182,6 +184,7 @@ public class LoadLinxData
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addConfigItem(LINX_FILE_NAME, true, LINX_FILE_NAME);
         configBuilder.addConfigItem(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
         configBuilder.addFlag(GERMLINE_ONLY, "Only load germline data");
