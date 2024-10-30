@@ -184,8 +184,7 @@ Minimum length  | We require 32 bases to call a variant. At the ESVEE-PREP and l
 Low Quality SNV errors | Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
 Minimum assembly overlap | We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
 Mismatch tolerance | When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch 
-Adjust alignment score (AdjAS) | Modified length of an alignment after allowing for inexact homology, repeats and mismatches.  Defined as: 
- adjAS= AS - inexact homology length – repeatBases[repeatCount>2]  Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
+Adjust alignment score (AdjAS) | Modified length of an alignment after allowing for inexact homology, repeats and mismatches. Defined as: adjAS = AS - inexact homology length – repeatBases[repeatCount>2]  Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
 Modified MAPQ 
 (modMAPQ)  | The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignmnet score is low relative to the length    modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2 
 
@@ -245,7 +244,6 @@ Phase groups are created by maximally linking any breakends which share at least
 - both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail insertion sequence 
 
 During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging. 
- 
 
 At this stage each phase group consists of multiple breakends:
 - Sharing fragment support (=1) or  
