@@ -357,7 +357,7 @@ The following filters are applied to the variant with a context of ‘any sample
 Filter Name | Samples | Definition | Junction | LINE Site | Single | Hotspot
 ---|---|---|---|---|---|---
 minQual | Any | QUAL  | 30 | 30<sup>1</sup>   | 30  | 30 
-minSupport  | Any   | VF | 4 | 4 | 6 | 2 
+minSupport  | Any   | VF | 4 | 4<sup>1</sup>  | 6 | 2 
 minAF | Any | min(AF[BE1],AF[BE2]) | 0.001 | 0.001 | 0.05  | 0.001 
 minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
