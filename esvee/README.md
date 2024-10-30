@@ -327,12 +327,11 @@ shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 
 minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
 shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 0.05##### | NA | NA  | NA 
 
-<sup>
-1. The inserted sequence length must also meet these requirements 
-2. Same chromosome junctions only.  
-3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile	 
-4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. 
-5. Only applied to variants with type=INV, LEN<1kb and HOMLEN>4 
+<sup>1. The inserted sequence length must also meet these requirements </sup>
+<sup>2. Same chromosome junctions only. </sup>
+<sup>3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
+<sup>4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
+<sup>5. Only applied to variants with type=INV, LEN<1kb and HOMLEN>4 
 </sup>
 
 Note that for pairs of breakends at LINE insertion sites, if one has a PASS filter we should always PASS the other side.   
