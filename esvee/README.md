@@ -5,12 +5,14 @@
 Esvee is a structural variant caller optimised for short read sequencing that identifies somatic and germline somatic rearrangements.
 
 Esvee runs is run in 4 steps
-
-<TO DO - Add figure>
+- ESVEE Prep
+- Assembly & Alignment
+- Reference Depth Annotation
+- Variant Calling * Filtering 
 
 The full algorithm for each step is described in the algorithm section below.
 
-## STEP 1: ESVEE PREP
+## STEP 1: ESVEE Prep
 
 Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
 that junction.
