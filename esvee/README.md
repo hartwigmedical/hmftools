@@ -383,7 +383,7 @@ If the same precise breakend is found to PASS multiple times in the VCF then ret
 #### Germline or Somatic determination 
 A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
-## Summary of special exceptions for LINE Insertion sites
+## Summary of LINE insertion site behaviour
 
 Stage  | Special rules 
 ---|---
