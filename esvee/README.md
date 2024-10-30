@@ -240,7 +240,7 @@ All remaining breakend assemblies are then extended into the reference base dire
 Duplicate assemblies may exist at either the same breakend or within +/-50 bases with the same orientation. Assemblies are deduped (the assembly with the higher initial read support is retained) if they satisfy an assembly comparison within mismatch tolerances (see above) 
 
 #### Local assembly filtering 
-Any local breakend which fully aligns to a decoy or ALT (excluding HLA ALTs) sequence (top alignment with <=3 mismatches and AS/length > 0.9) in the hg38 genome is hard filtered at this stage.  
+Any local breakend which fully aligns to a decoy or ALT (excluding HLA ALTs) sequence (top alignment with <=3 mismatches and AS/length > 0.9) in the hg38 genome are filtered at this stage and not processed further.  
 
 For any junction with average of support reads less than MAPQ < 10, the reference base sequence is aligned.  If the aligner returns MAPQ < 10 and no XA tag we filter the assembly as it cannot lead to a breakend with our later alignment rules 
 
