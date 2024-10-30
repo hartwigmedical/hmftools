@@ -64,6 +64,12 @@ public class FileBasedPlotManager implements PlotManager
             return null;
         }
 
+        if(!Files.exists(Paths.get(sourcePlotPath)))
+        {
+            LOGGER.warn("Missing source plot path: " + sourcePlotPath);
+            return null;
+        }
+
         String targetPath = checkAddDirSeparator(plotDirectoryPath()) + extractFileName(sourcePlotPath);
 
         if(!Files.exists(Paths.get(targetPath)))

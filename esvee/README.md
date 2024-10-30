@@ -1,16 +1,18 @@
 # Esvee - Structural Variant Calling
 
-## Overview and algorithm
+## Overview
 
 Esvee is a structural variant caller optimised for short read sequencing that identifies somatic and germline somatic rearrangements.
 
 Esvee runs is run in 4 steps
-
-<TO DO - Add figure>
+- ESVEE Prep
+- Assembly & Alignment
+- Reference Depth Annotation
+- Variant Calling * Filtering 
 
 The full algorithm for each step is described in the algorithm section below.
 
-## STEP 1: ESVEE PREP
+## STEP 1: ESVEE Prep
 
 Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
 that junction.
@@ -266,9 +268,9 @@ Each breakend consists of:
 - A phase group which contains any breakends which are proximate or with shared fragment support 
  
 ### STEP 2C: Merge & extend assemblies 
-
 Breakend assemblies are merged and extended to form junctions. There are 6 sub-steps: 
- <TO DO - FIGURE>
+<img width="536" alt="image" src="https://github.com/user-attachments/assets/a680046e-5ba0-4e79-9c47-6c1bf592a6ff">
+
 In each step, ESVEE attempts to merge existing assemblies with other assemblies, remote regions and/or mates of assembled reads. Assemblies are merged if a 10 base exact seed within a range of +/- 100 bases of each breakend can be matched, and the seed can be extended to the end of each assembly sequence with the minimium require overlap aand up to the prescribed number of high- quality mismatches (see above). When 2 breakends are assembled, if there is a gap between the reference sequences, an insert sequence is recorded. If there is an overlap of reference sequences, the reference bases are also extended. Assemblies are branched into multiple assemblies if there is at least 5 reads and 20% maximum support supporting an alternative alignment. This may occur in the case of foldback inversions. 
 
 #### 1. Assemble local pairs 
@@ -357,7 +359,7 @@ The following filters are applied to the variant with a context of ‘any sample
 Filter Name | Samples | Definition | Junction | LINE Site | Single | Hotspot
 ---|---|---|---|---|---|---
 minQual | Any | QUAL  | 30 | 30<sup>1</sup>   | 30  | 30 
-minSupport  | Any   | VF | 4 | 4 | 6 | 2 
+minSupport  | Any   | VF | 4 | 4<sup>1</sup>  | 6 | 2 
 minAF | Any | min(AF[BE1],AF[BE2]) | 0.001 | 0.001 | 0.05  | 0.001 
 minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
@@ -381,8 +383,65 @@ If the same precise breakend is found to PASS multiple times in the VCF then ret
 #### Germline or Somatic determination 
 A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
+## Summary of LINE insertion site behaviour
+
+Stage  | Special rules 
+---|---
+Esvee Prep| min 32 base length is not required 
+Trimming | Don’t trim the first 18 bases if at least 16 of them are PolyA or T  
+Local assembly | Prioritse reads with the 5’ in the softclip and which reach beyond the PolyA for extension; Allow any length of PolyA to match. Set the length in the assembly to be the median of lengths with additional bases beyond the PolyA or else just the longest PolyA sequence if none exist; Require only 16 bases longest and 8 bases 2nd longest to retain soft clip 
+Phasing | Phase breakends even if neither has a locally concordant mate 
+Assembly extension | Allow remote regions and unmapped mates of both sides to extend the assembly 
+Alignment | Secondary links are still aligned for LINE insertion sites; Call single breakend if PolyA length exceeds 1.5x reference PolyA length (no 50 base minimumum); Secondary links are still aligned for LINE insertion sites 
+Filters | MinLength, ShortFrags, minAnchorLength filters not applied; PASS if either side PASES ; MinSupport & MinQual uses qual of both sides 
+Germline vs Somatic | Mark as germline if either side meets germline filters 
+
 ## Output 
-<TO DO - Add>
+
+### VCF INFO fields
+Field |Description
+---|---
+ALTALN |Potential alternative alignments of segment in the format chr:start|strand|cigar|mapq
+ASMID	|Unique id(s) of assembly(s) containing the breakend
+ASMLEN	|Total length(s) of assembly(s) containing the breakend
+ASMLNKS |Breakend id of breakends linked by assembly
+ASMSEG	| #(s) of segments in assembly(s) containing the breakend
+AVGLEN	|Average implied length of fragments supporting the junction
+BEAOR	|Breakend orientation(s) in assembly(s)
+BEAPOS	|Breakend position(s) in assembly(s)
+BEOR	|Breakend orientation(s) in reference genome
+CIPOS	|Confidence interval around breakend position (for homlogy)
+HOMSEQ	|Homology sequence at junction
+HOTSPOT	|Is Known fusion hotpsot
+IHOMPOS	|Offset positions of inexact homology
+INSALN	|Potential alignment locations of insert sequence in the format chr:start|strand|cigar|mapq. Populated when max MAPQ =0 and <= 5 alternative alignments
+INSRMP	|Portion of inserted sequence whose alignment overlaps the repeatmasker repeat
+INSRMRC	|IInserted sequence repeatmasker repeat class
+INSRMRT	|Inserted sequence repeatmasker repeat type
+LINE	|LINE Insertion Site
+MATEID	|Id of other breakend in junction
+PON_COUNT	|PON count if in PON
+SEGALEN	|Aligned length of segment(s) in reference genome
+SEGID	|Unique id(s) of segment(s) containing the breakend
+SEGMAPQ	|MAPQ of segment containing the breakend with highest QUAL contribution
+SEGRL	|Repeat length of segment  with highest QUAL contribution
+SEGSCO	|Alignment score of segments containing the breakend with highest QUAL contribution
+SVID	|ID shared by both breakends in the variant
+SVTYPE	|Type of structural variant
+
+### VCF sample specific fields
+Field |Description
+---|---
+AD	| Allelic depths for the ref and alt alleles in the order listed
+AF	|	Allele frequency of the breakend
+DF	|	Count of discordant fragments with a read either side of the breakend
+DP	|	Approximate read depth
+GT	|	Genotype
+REF	|	Count of fragments supporting the reference with a read overlapping the breakend
+REFPAIR	|	Count of paired fragments supporting the ref with a read either side of the breakend
+SB	|	Proportion of split reads with 3' end facing the breakend. Fragments with both reads split are counted in both directions
+SF	|	Count of fragments supporting the breakend with a read overlapping the breakend
+VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 <TO DO - Add>
