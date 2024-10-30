@@ -268,6 +268,7 @@ Each breakend consists of:
 ### STEP 2C: Merge & extend assemblies 
 Breakend assemblies are merged and extended to form junctions. There are 6 sub-steps: 
 <img width="536" alt="image" src="https://github.com/user-attachments/assets/a680046e-5ba0-4e79-9c47-6c1bf592a6ff">
+
 In each step, ESVEE attempts to merge existing assemblies with other assemblies, remote regions and/or mates of assembled reads. Assemblies are merged if a 10 base exact seed within a range of +/- 100 bases of each breakend can be matched, and the seed can be extended to the end of each assembly sequence with the minimium require overlap aand up to the prescribed number of high- quality mismatches (see above). When 2 breakends are assembled, if there is a gap between the reference sequences, an insert sequence is recorded. If there is an overlap of reference sequences, the reference bases are also extended. Assemblies are branched into multiple assemblies if there is at least 5 reads and 20% maximum support supporting an alternative alignment. This may occur in the case of foldback inversions. 
 
 #### 1. Assemble local pairs 
