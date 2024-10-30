@@ -438,7 +438,7 @@ public class VariantFilters
 
     private boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
     {
-        if(!primaryTumor.isIndel())
+        if(primaryTumor.homopolymerLengths() == null || !primaryTumor.isIndel())
             return false;
         if(primaryTumor.isLongIndel() && Collections.max(primaryTumor.homopolymerLengths()) < 5)
             return false;
@@ -470,6 +470,8 @@ public class VariantFilters
 
     private boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
     {
+        if(primaryTumor.t0AvgQuals() == null)
+            return false;
         int threshold = nearbyVariant ? 28 : 18;
         return Collections.min(primaryTumor.t0AvgQuals()) < threshold;
     }

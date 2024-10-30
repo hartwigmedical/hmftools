@@ -1065,6 +1065,78 @@ public class UltimaRealignedQualModelsBuilderTest
     }
 
     @Test
+    public void testGetRealignedVariantsHomopolyerCreationThenHomopolymerCreation()
+    {
+        List<Homopolymer> refHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'T', 3),
+                new Homopolymer((byte) 'G', 5));
+
+        List<Homopolymer> readHomopolymers = Lists.newArrayList(
+                new Homopolymer((byte) 'A', 5),
+                new Homopolymer((byte) 'G', 1),
+                new Homopolymer((byte) 'A', 1),
+                new Homopolymer((byte) 'T', 3),
+                new Homopolymer((byte) 'G', 5));
+
+        int refGenomePaddingLength = 99;
+        String refGenomePadding = "C".repeat(refGenomePaddingLength);
+        String refGenomeBases =
+                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
+        refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
+
+        int flankLength = 10;
+        String flankBases = "C".repeat(flankLength);
+        int corePositionStart = refGenomePaddingLength + 1;
+        int coreIndexStart = flankLength;
+        int varIndex = flankLength + 4;
+        String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
+
+        SimpleVariant mockVariant = mock(SimpleVariant.class);
+        when(mockVariant.chromosome()).thenReturn(CHR_1);
+        when(mockVariant.isIndel()).thenReturn(true);
+
+        VariantReadContext mockReadContext = mock(VariantReadContext.class);
+        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.corePositionStart()).thenReturn(corePositionStart);
+        when(mockReadContext.coreIndexStart()).thenReturn(coreIndexStart);
+        when(mockReadContext.varIndex()).thenReturn(varIndex);
+        when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+
+        UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
+        List<RefMask> refMasks = Lists.newArrayList();
+        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+
+        assertEquals(2, realignedVariants.size());
+
+        UltimaRealignedQualModel realignedVariant1 = realignedVariants.get(0);
+        UltimaRealignedQualModel realignedVariant2 = realignedVariants.get(1);
+        assertTrue(realignedVariant1.baseQualModel().type() == HOMOPOLYMER_ADJUSTMENT);
+        assertEquals(0, realignedVariant1.varReadIndexOffset());
+        assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "AG"));
+
+        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+
+        assertEquals(-1, qualModel1.refAdjustCount());
+        assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
+        assertEquals(1, qualModel1.hpEndIndex() + realignedVariant1.varReadIndexOffset());
+
+        assertTrue(realignedVariant2.baseQualModel().type() == HOMOPOLYMER_ADJUSTMENT);
+        assertEquals(1, realignedVariant2.varReadIndexOffset());
+        assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 4, "A", "GA"));
+
+        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+
+        assertEquals(-1, qualModel2.refAdjustCount());
+        assertEquals(2, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
+        assertEquals(2, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
+    }
+
+    @Test
     public void testGetRealignedVariantsSNV()
     {
         List<Homopolymer> refHomopolymers = Lists.newArrayList(

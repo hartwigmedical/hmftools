@@ -370,7 +370,8 @@ public class UltimaRealignedQualModelsBuilder_0
             int varReadIndexOffset = lastMatchedReadCoreIndex - origReadCoreIndex;
             String delBasesString = String.valueOf((char) delHomopolymer.Base).repeat(delHomopolymer.Length);
             byte firstRefBase = delHomopolymer.PriorBase;
-            byte firstAltBase = delHomopolymer.Base == lastMatchedBase ? priorReadBase : lastMatchedBase;
+            // in GGGGAG -> GGGG, don't want to attach ins G to start of poly-G
+            byte firstAltBase = (delHomopolymer.Base == lastMatchedBase && i == 0) ? priorReadBase : lastMatchedBase;
             if(firstRefBase == INVALID_BASE || firstAltBase == INVALID_BASE)
             {
                 firstRefBase = readContext.readBasesBytes()[readContext.coreIndexStart() - 1];
@@ -409,24 +410,19 @@ public class UltimaRealignedQualModelsBuilder_0
 
             realignedVariants.add(realignedQualModel);
         }
-
         for(int i = 0; i < insHomopolymers.size(); i++)
         {
             HomopolymerVariant insHomopolymer = insHomopolymers.get(i);
 
-            int varReadIndexOffset = insHomopolymer.ReadCoreIndex - origReadCoreIndex + i;
+            int varReadIndexOffset = insHomopolymer.ReadCoreIndex - origReadCoreIndex;
             String insBasesString = String.valueOf((char) insHomopolymer.Base).repeat(insHomopolymer.Length);
-            byte firstRefBase = insHomopolymer.Base == lastMatchedBase ? priorRefBase : lastMatchedBase;
+            // in GGGG -> GGGGAG, don't want to attach ins G to start of poly-G
+            byte firstRefBase = (insHomopolymer.Base == lastMatchedBase && i == 0) ? priorRefBase : lastMatchedBase;
             byte firstAltBase = insHomopolymer.PriorBase;
             if(firstRefBase == INVALID_BASE || firstAltBase == INVALID_BASE)
             {
                 firstRefBase = readContext.readBasesBytes()[readContext.coreIndexStart() - 1];
                 firstAltBase = firstRefBase;
-            }
-
-            if(insHomopolymer.Base == lastMatchedBase && i == 0)  // in GGGG -> GGGGAG, don't want to attach ins G to start of poly-G
-            {
-                varReadIndexOffset -= lastMatchedLength;
             }
 
             String ref = String.valueOf((char) firstRefBase);

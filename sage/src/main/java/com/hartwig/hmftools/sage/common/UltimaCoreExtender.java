@@ -157,11 +157,11 @@ public class UltimaCoreExtender
         }
 
         int flankStart = findFlankBoundary(alignedBases, coreStart, true, flankSize, inAppendMode);
-        if(flankStart == INVALID_INDEX && !inAppendMode)
+        if(flankStart == INVALID_INDEX)
             return null;
 
         int flankEnd = findFlankBoundary(alignedBases, coreEnd, false, flankSize, inAppendMode);
-        if(flankEnd == INVALID_INDEX && !inAppendMode)
+        if(flankEnd == INVALID_INDEX)
             return null;
 
         // get cigar of the flanks and core

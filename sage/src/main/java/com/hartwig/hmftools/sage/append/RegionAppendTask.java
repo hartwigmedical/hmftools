@@ -46,7 +46,6 @@ public class RegionAppendTask implements Callable
     private final FragmentLengthWriter mFragmentLengths;
 
     private final List<VariantContext> mOriginalVariants;
-    private final List<VariantContext> mFilteredOriginalVariants;
     private final List<VariantContext> mFinalVariants;
 
     public RegionAppendTask(
@@ -57,7 +56,6 @@ public class RegionAppendTask implements Callable
         mTaskId = taskId;
         mRegion = region;
         mOriginalVariants = variants;
-        mFilteredOriginalVariants = Lists.newArrayList();
         mFragmentLengths = fragmentLengths;
 
         mFinalVariants = Lists.newArrayList();
@@ -89,15 +87,16 @@ public class RegionAppendTask implements Callable
 
         RefSequence refSequence = new RefSequence(extendedRegion, mRefGenome);
 
-        List<Candidate> candidates = Lists.newArrayList();
-        for(VariantContext context : mOriginalVariants)
+        List<Candidate> candidates = mOriginalVariants.stream()
+                .map(x -> CandidateSerialisation.toCandidate(x, refSequence, mConfig.Common))
+                .filter(x -> x != null)
+                .collect(Collectors.toList());
+
+        if(candidates.size() < mOriginalVariants.size())
         {
-            Candidate candidate = CandidateSerialisation.toCandidate(context, refSequence, mConfig.Common);
-            if(candidate != null)
-            {
-                mFilteredOriginalVariants.add(context);
-                candidates.add(candidate);
-            }
+            SG_LOGGER.error("region({}) failed to recreate variant context for {} variants",
+                    mRegion, mOriginalVariants.size() - candidates.size());
+            System.exit(1);
         }
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
@@ -107,7 +106,7 @@ public class RegionAppendTask implements Callable
 
         if(mConfig.Common.WriteFragmentLengths)
         {
-            for(int i = 0; i < mFilteredOriginalVariants.size(); ++i)
+            for(int i = 0; i < mOriginalVariants.size(); ++i)
             {
                 Candidate variant = candidates.get(i);
 
@@ -132,9 +131,9 @@ public class RegionAppendTask implements Callable
 
     public void createFinalVariants(final ReadContextCounters readContextCounters, final List<String> sampleIds)
     {
-        for(int i = 0; i < mFilteredOriginalVariants.size(); ++i)
+        for(int i = 0; i < mOriginalVariants.size(); ++i)
         {
-            VariantContext origVariant = mFilteredOriginalVariants.get(i);
+            VariantContext origVariant = mOriginalVariants.get(i);
 
             List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i);
             mFinalVariants.add(addGenotype(origVariant, sampleCounters, sampleIds));

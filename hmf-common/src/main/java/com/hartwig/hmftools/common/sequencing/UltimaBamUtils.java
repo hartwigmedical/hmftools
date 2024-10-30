@@ -41,8 +41,8 @@ public final class UltimaBamUtils
     public static byte[] extractT0Values(final SAMRecord record)
     {
         byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
-        for(byte t0Value : t0Values)
-            t0Value -= PHRED_OFFSET;
+        for(int i = 0; i < t0Values.length; ++i)
+            t0Values[i] -= PHRED_OFFSET;
         return t0Values;
     }
 

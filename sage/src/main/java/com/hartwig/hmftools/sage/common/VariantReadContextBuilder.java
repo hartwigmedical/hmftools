@@ -60,7 +60,7 @@ public class VariantReadContextBuilder
                 return null;
 
             // enforce full flanks
-
+            // TODO: should determine append status in a nicer way
             boolean inAppendMode = read.getReadName().equals("CANDIDATE");
             int minFlankSize = inAppendMode ? 1 : mFlankSize; // hacky, we should do this properly
             if(readContext.leftFlankLength() < minFlankSize || readContext.rightFlankLength() < minFlankSize)
@@ -169,15 +169,6 @@ public class VariantReadContextBuilder
                 softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                 softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
                 readFlankStart, readCoreStart, readCoreEnd, readFlankEnd);
-
-        int cigarReadBases = 0;
-        for(CigarElement element : readCigarInfo.Cigar)
-        {
-           if(element.getOperator().consumesReadBases())
-               cigarReadBases += element.getLength();
-        }
-        if(cigarReadBases != readCigarInfo.FlankIndexEnd - readCigarInfo.FlankIndexStart + 1)
-            SG_LOGGER.error("variant({}) produced inconsistent RC cigar info", variant);
 
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;

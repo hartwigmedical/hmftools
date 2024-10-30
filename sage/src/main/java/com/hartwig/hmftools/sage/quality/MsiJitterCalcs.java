@@ -162,7 +162,7 @@ public class MsiJitterCalcs
                 }
             }
         }
-
+        // TODO: need separate jitter defaults for Ultima, rather than just ignoring the existing defaults
         return new PerSampleJitterParams(sampleParamList, false);
     }
 

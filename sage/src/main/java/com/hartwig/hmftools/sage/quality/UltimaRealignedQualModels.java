@@ -1,4 +1,3 @@
-// TODO: REVIEW
 package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_0_BOOST;
