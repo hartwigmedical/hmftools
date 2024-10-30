@@ -399,7 +399,7 @@ BEAPOS	|Breakend position(s) in assembly(s)
 BEOR	|Breakend orientation(s) in reference genome
 CIPOS	|Confidence interval around breakend position (for homlogy)
 HOMSEQ	|Homology sequence at junction
-HOTSPOT	|TBD
+HOTSPOT	|Is Known fusion hotpsot
 IHOMPOS	|Offset positions of inexact homology
 INSALN	|Potential alignment locations of insert sequence in the format chr:start|strand|cigar|mapq. Populated when max MAPQ =0 and <= 5 alternative alignments
 INSRMP	|Portion of inserted sequence whose alignment overlaps the repeatmasker repeat
