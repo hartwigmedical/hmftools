@@ -176,19 +176,13 @@ Remote region | Co-ordinates and orientation of a set of overlapping (or near fo
 LINE insertion site | A site where a LINE element has been inserted characterised by 2 opposite orientation breakends either facing each other with less than 10 bases gap or overlapping with less than 30 bases and with either a long PolyA insertion sequence on the negatively oriented breakend or a long polyT insertion sequence on the positively oriented breakend. The insertion sequence size may vary from just a few bases to a long sequence and is often unmappable due to the repetitive LINE elements in the human genome.  LINE insertion sites have special logic throughout each of the ESVEE steps to maximise sensitivity. 
 SV Length | For INV, DEL, DUP and INS, the SV length is defined as the position difference between the 2 locations (excluding the last mapped base) + length of any insert sequence.  
 
-Much of the logic depends in ESVEE depends on assembling reads into contiguous sequence, first locally and then merging assemblies and remote regions within phase groups. Some of the key common concepts across this process are: 
+Much of the logic depends in ESVEE depends on assembling reads into contiguous sequence, first locally and then merging assemblies and remote regions within phase groups. The algorithms use the following tolerances throughout ESVEE:
+- **Minimum length**: We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
+- **Low Quality SNV errors**: Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
+- **Minimum assembly overlap**: We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
+- **Mismatch tolerance**: When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch
 
-#### Minimum length 
-We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
-
-#### Low Quality SNV errors
-Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
-
-#### Minimum assembly overlap
-We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
-
-#### Mismatch tolerance
-When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch 
+ESVEE also employees concepts of a modified alignment scores and MAPQs to try to represent absolute versus relative likelihood of mismatch.  THese are defined as follows:
 
 #### Adjust alignment score (AdjAS) 
 Modified length of an alignment after allowing for inexact homology, repeats and mismatches. Defined as: 
