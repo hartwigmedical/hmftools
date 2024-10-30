@@ -110,8 +110,6 @@ if [ "${ref_genome_version}" == "V37" ]; then
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
   sv_blacklist_bed=${resources_dir}/sv/sv_prep_blacklist.37.bed
-  gridss_blacklist_bed=${resources_dir}/sv/gridss_blacklist.37.bed.gz
-  gridss_config=${resources_dir}/sv/gridss.properties
   sv_pon_file=${resources_dir}/sv/sv_pon.37.bedpe.gz
   sgl_pon_file=${resources_dir}/sv/sgl_pon.37.bed.gz
   repeat_mask_file=${resources_dir}/sv/repeat_mask_data.37.fa.gz
@@ -155,8 +153,6 @@ else
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
   sv_blacklist_bed=${resources_dir}/sv/sv_prep_blacklist.38.bed
-  gridss_blacklist_bed=${resources_dir}/sv/gridss_blacklist.38.bed.gz
-  gridss_config=${resources_dir}/sv/gridss.properties
   sv_pon_file=${resources_dir}/sv/sv_pon.38.bedpe.gz
   sgl_pon_file=${resources_dir}/sv/sgl_pon.38.bed.gz
   repeat_mask_file=${resources_dir}/sv/repeat_mask_data.38.fa.gz
@@ -181,7 +177,7 @@ fi
 sage_jar=${tools_dir}/sage.jar
 pave_jar=${tools_dir}/pave.jar
 amber_jar=${tools_dir}/amber.jar
-gripss_jar=${tools_dir}/gripss.jar
+esvee_jar=${tools_dir}/esvee.jar
 cobalt_jar=${tools_dir}/cobalt.jar
 purple_jar=${tools_dir}/purple.jar
 linx_jar=${tools_dir}/linx.jar
@@ -274,57 +270,27 @@ if [ "${reference_id}" != "none" ]; then
 fi
 
 
-# Gridss 
-gridss_dir=${sample_dir}/gridss
-gridss_vcf=${gridss_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
+# Esvee
+esvee_dir=${sample_dir}/esvee
+esvee_vcf=${gridss_dir}/${tumor_id}.esvee_vcf.unfiltered.vcf.gz
 
 ${scripts_dir}/run_sv_calling ${tools_dir} \
   ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
   ${gridss_dir} ${gridss_vcf} \
   ${ref_genome_version} ${ref_genome} \
   ${sv_blacklist_bed} ${sv_hotspot_file} \
-  ${gridss_blacklist_bed} ${gridss_config} \
+  ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} ${target_regions_definition} \
   ${threads} ${max_memory} \
-
-
-# Gripss somatic
-if [ "${reference_id}" != "none" ]; then
-  gripss_somatic_dir=${sample_dir}/gripss_somatic
-else
-  gripss_somatic_dir=${sample_dir}/gripss
-fi
-
-${scripts_dir}/run_gripss_somatic ${gripss_jar} \
-  ${tumor_id} ${reference_id} \
-  ${gripss_somatic_dir} ${gridss_vcf} \
-  ${run_mode} ${ref_genome_version} ${ref_genome} \
-  ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} ${target_regions_definition}
-
-
-gripss_germline_dir=${sample_dir}/gripss_germline
-
-if [ "${reference_id}" != "none" ]; then
-
-  # Gripss germline
-
-  ${scripts_dir}/run_gripss_germline ${gripss_jar} \
-    ${tumor_id} ${reference_id} \
-    ${gripss_germline_dir} ${gridss_vcf} \
-    ${ref_genome_version} ${ref_genome} \
-    ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file}
-fi
-
 
 # Purple
 purple_dir=${sample_dir}/purple
 
-somatic_sv_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.filtered.somatic.vcf.gz
-sv_unfiltered_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.somatic.vcf.gz
-germline_sv_vcf=${gripss_germline_dir}/${tumor_id}.gripss.filtered.germline.vcf.gz
+somatic_sv_vcf=${esvee_dir}/${tumor_id}.esvee.somatic.vcf.gz
+germline_sv_vcf=${esvee_dir}/${tumor_id}.esvee.germline.vcf.gz
 
 ${scripts_dir}/run_purple ${purple_jar} \
   ${tumor_id} ${reference_id} \
-  ${pave_vcf} ${somatic_sv_vcf} ${sv_unfiltered_vcf} \
+  ${pave_vcf} ${somatic_sv_vcf} \
   ${pave_germline_vcf} ${germline_sv_vcf} \
   ${amber_dir} ${cobalt_dir} ${purple_dir} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \

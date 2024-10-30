@@ -53,6 +53,7 @@ Argument | Default           | Description
 ---|-------------------|---
 reference | NA                | Comma separated names of the reference sample
 reference_bam | NA                | Comma separated paths to indexed reference BAM file
+germline | NA | Flag is required to run in germline mode, impacts variant filtering
 ref_sample_count | 1                 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
 resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
 threads | 2                 | Number of threads to use
@@ -141,7 +142,6 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -jitter_param_dir /path/to/COLO829v003T.jitter_params.tsv \
     -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
