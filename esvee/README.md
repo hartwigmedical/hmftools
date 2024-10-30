@@ -158,6 +158,37 @@ repeat_mask_file | Repeat mask file
 
 ## Algorithm
 
+### Key concepts 
+ESVEE is a structural variant caller that evaluates evidence for candidate breakends in a BAM and outputs forms fully assembled, aligned junctions, fully annotated and filtered based on read support.  
+ 
+Some key terms and concepts in ESVEE are set out below: 
+
+Term | Definition 
+---|---
+Breakend | A candidate position and orientation for a structural variant 
+Split read | A read which directly overlaps a breakend and is normally soft clipped at or near the breakend (depending on homology) 
+Discordant read | A read with mate which is unmapped OR on different chromosome OR Fragment Length > 99.75%or < 0.25%. Discordant reads <1kb from and facing a junction are kept by SV_PREP and considered in assembly extension. 
+INDEL read | A read with an INDEL that exceeds the minLength threshold of SV (32 bases). These are used to form and support junctions.  Shorter INDELS are converted to soft clips in read processing step 
+Junction | A linked pair of breakends that together form a structural variant 
+Chained breakends | A pair of breakends that face each other and are explicitly cis-phased by fragments. This normally represents a short-templated piece of DNA which may be inserted into another location. 
+Phase group | Maximal set of breakends that share at least 1 fragment with another breakend in the group. Breakends which may imply short DEL/DUP/INS may also be added to the same phase group, even without shared fragment evidence. Phase groups are created to limit complexity of assembly: all assembly merging and extension is done within phase groups only. 
+Remote region | Co-ordinates and orientation of a set of overlapping (or near for gaps) reads that are paired with assembled or discordant reads. Breakends may have one or many remote regions. 
+LINE insertion site | A site where a LINE element has been inserted characterised by 2 opposite orientation breakends either facing each other with less than 10 bases gap or overlapping with less than 30 bases and with either a long PolyA insertion sequence on the negatively oriented breakend or a long polyT insertion sequence on the positively oriented breakend. The insertion sequence size may vary from just a few bases to a long sequence and is often unmappable due to the repetitive LINE elements in the human genome.  LINE insertion sites have special logic throughout each of the ESVEE steps to maximise sensitivity. 
+SV Length | For INV, DEL, DUP and INS, the SV length is defined as the position difference between the 2 locations (excluding the last mapped base) + length of any insert sequence.  
+
+Much of the logic depends in ESVEE depends on assembling reads into contiguous sequence, first locally and then merging assemblies and remote regions within phase groups. Some of the key common concepts across this process are: 
+
+Term | Definition 
+---|---
+Minimum length  | We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
+Low Quality SNV errors | Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
+Minimum assembly overlap | We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
+Mismatch tolerance | When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch 
+Adjust alignment score (AdjAS) | Modified length of an alignment after allowing for inexact homology, repeats and mismatches.  Defined as: 
+ adjAS= AS - inexact homology length – repeatBases[repeatCount>2]  Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
+Modified MAPQ 
+(modMAPQ)  | The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignmnet score is low relative to the length    modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2 
+
 ### STEP 1: ESVEE PREP 
 ESVEE-PREP generates a set of maximally filtered SV BAM files and an initial set of candidate SV junctions from input tumor/normal BAM files. The SV BAM files includes all candidate split and discordant reads that are proximate to candidate junctions that may provide support to that junction. 
  
