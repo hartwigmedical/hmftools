@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.liftover;
+package com.hartwig.hmftools.geneutils.utils;
 
 import static java.lang.String.format;
 
