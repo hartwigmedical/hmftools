@@ -1,6 +1,6 @@
 # Esvee - Structural Variant Calling
 
-## Overview and algorithm
+## Overview
 
 Esvee is a structural variant caller optimised for short read sequencing that identifies somatic and germline somatic rearrangements.
 
@@ -384,7 +384,51 @@ If the same precise breakend is found to PASS multiple times in the VCF then ret
 A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
 ## Output 
-<TO DO - Add>
+
+### VCF INFO fields
+Field |Description
+---|---
+ALTALN |Potential alternative alignments of segment in the format chr:start|strand|cigar|mapq
+ASMID	|Unique id(s) of assembly(s) containing the breakend
+ASMLEN	|Total length(s) of assembly(s) containing the breakend
+ASMLNKS |Breakend id of breakends linked by assembly
+ASMSEG	| #(s) of segments in assembly(s) containing the breakend
+AVGLEN	|Average implied length of fragments supporting the junction
+BEAOR	|Breakend orientation(s) in assembly(s)
+BEAPOS	|Breakend position(s) in assembly(s)
+BEOR	|Breakend orientation(s) in reference genome
+CIPOS	|Confidence interval around breakend position (for homlogy)
+HOMSEQ	|Homology sequence at junction
+HOTSPOT	|TBD
+IHOMPOS	|Offset positions of inexact homology
+INSALN	|Potential alignment locations of insert sequence in the format chr:start|strand|cigar|mapq. Populated when max MAPQ =0 and <= 5 alternative alignments
+INSRMP	|Portion of inserted sequence whose alignment overlaps the repeatmasker repeat
+INSRMRC	|IInserted sequence repeatmasker repeat class
+INSRMRT	|Inserted sequence repeatmasker repeat type
+LINE	|LINE Insertion Site
+MATEID	|Id of other breakend in junction
+PON_COUNT	|PON count if in PON
+SEGALEN	|Aligned length of segment(s) in reference genome
+SEGID	|Unique id(s) of segment(s) containing the breakend
+SEGMAPQ	|MAPQ of segment containing the breakend with highest QUAL contribution
+SEGRL	|Repeat length of segment  with highest QUAL contribution
+SEGSCO	|Alignment score of segments containing the breakend with highest QUAL contribution
+SVID	|ID shared by both breakends in the variant
+SVTYPE	|Type of structural variant
+
+### VCF sample specific fields
+Field |Description
+---|---
+AD	| Allelic depths for the ref and alt alleles in the order listed
+AF	|	Allele frequency of the breakend
+DF	|	Count of discordant fragments with a read either side of the breakend
+DP	|	Approximate read depth
+GT	|	Genotype
+REF	|	Count of fragments supporting the reference with a read overlapping the breakend
+REFPAIR	|	Count of paired fragments supporting the ref with a read either side of the breakend
+SB	|	Proportion of split reads with 3' end facing the breakend. Fragments with both reads split are counted in both directions
+SF	|	Count of fragments supporting the breakend with a read overlapping the breakend
+VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 <TO DO - Add>
