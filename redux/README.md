@@ -93,6 +93,8 @@ All supplementary and secondary reads with <10 bases aligned outside a problemat
 
 Note that when a read is unmapped or a supplementary is deleted, other reads in the read group pair are also updated to reflect the mates unmmaped status.  Removing / unmapping these reads simplifies and improve performance of variant calling downstream including in SAGE, COBALT and SV calling. 
 
+Note also that all supplementary reads with alignment score < 30 are unmapped.
+
 ### Deduplication
 
 There are 2 steps in the deduplication algorithm:
