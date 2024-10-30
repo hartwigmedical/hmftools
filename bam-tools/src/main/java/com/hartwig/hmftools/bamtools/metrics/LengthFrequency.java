@@ -3,9 +3,9 @@ package com.hartwig.hmftools.bamtools.metrics;
 public class LengthFrequency
 {
     public final int Length;
-    public int Frequency;
+    public long Frequency;
 
-    public LengthFrequency(final int length, final int frequency)
+    public LengthFrequency(final int length, final long frequency)
     {
         Length = length;
         Frequency = frequency;

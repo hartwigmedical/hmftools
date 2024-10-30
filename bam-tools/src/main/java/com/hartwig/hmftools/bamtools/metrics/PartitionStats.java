@@ -8,11 +8,11 @@ import htsjdk.samtools.SAMRecord;
 
 public class PartitionStats
 {
-    public int TotalReads;
-    public int DuplicateReads;
-    public int ChimericReads;
-    public int InterPartition;
-    public int UnmappedReads;
+    public long TotalReads;
+    public long DuplicateReads;
+    public long ChimericReads;
+    public long InterPartition;
+    public long UnmappedReads;
     public double ProcessTime;
 
     public PartitionStats()

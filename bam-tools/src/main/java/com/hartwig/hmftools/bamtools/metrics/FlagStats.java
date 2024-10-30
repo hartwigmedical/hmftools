@@ -18,7 +18,7 @@ public class FlagStats
     }
 
     public List<FlagQCStats> typeStats() { return mTypeStats; }
-    public int passCount(final FlagStatType type) { return mTypeStats.get(type.ordinal()).getPassed(); }
+    public long passCount(final FlagStatType type) { return mTypeStats.get(type.ordinal()).getPassed(); }
 
     public void merge(final FlagStats other)
     {
