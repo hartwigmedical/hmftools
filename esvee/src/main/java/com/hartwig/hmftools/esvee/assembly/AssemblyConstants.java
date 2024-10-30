@@ -26,6 +26,7 @@ public final class AssemblyConstants
     // primary assembly
     public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;;
     public static final int DECOY_MAX_MISMATCHES = 3;
+    public static final double DECOY_MIN_SCORE_FACTOR = 0.9;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
     public static final int ASSEMBLY_SPLIT_MIN_READ_SUPPORT = 5;
     public static final double PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC = 0.2;

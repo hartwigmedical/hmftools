@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DECOY_MAX_MISMATCHES;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DECOY_MIN_SCORE_FACTOR;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -72,9 +73,11 @@ public class AlignmentChecker
 
         writeMatchInfo(mWriter, assembly, topAlignment, alignedBases, nextAlignment);
 
-        int unalignedBases = fullSequence.length() - alignedBases;
+        int sequenceLength = fullSequence.length();
+        int unalignedBases = sequenceLength - alignedBases;
+        double scoreFactor = topAlignment.getAlignerScore() / (double)sequenceLength;
 
-        if(unalignedBases <= DECOY_MAX_MISMATCHES)
+        if(unalignedBases <= DECOY_MAX_MISMATCHES && scoreFactor >= DECOY_MIN_SCORE_FACTOR)
         {
             ++mSequenceMatched;
             return true;

@@ -10,5 +10,6 @@ public enum AssemblyOutcome
     SECONDARY, // an assembly linked to an assembly which was primarily linked to another
     SUPP_ONLY, // the assmebly comprised supplementary reads only
     NO_LINK,
+    DECOY, // matched a decoy
     UNSET;
 }
