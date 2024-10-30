@@ -178,14 +178,29 @@ SV Length | For INV, DEL, DUP and INS, the SV length is defined as the position 
 
 Much of the logic depends in ESVEE depends on assembling reads into contiguous sequence, first locally and then merging assemblies and remote regions within phase groups. Some of the key common concepts across this process are: 
 
-Term | Definition 
----|---
-Minimum length  | We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
-Low Quality SNV errors | Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
-Minimum assembly overlap | We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
-Mismatch tolerance | When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch 
-Adjust alignment score (AdjAS) | Modified length of an alignment after allowing for inexact homology, repeats and mismatches. Defined as: adjAS = AS - inexact homology length – repeatBases[repeatCount>2]  Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
-Modified MAPQ (modMAPQ)  | The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignmnet score is low relative to the length    modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2 
+#### Minimum length 
+We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
+
+#### Low Quality SNV errors
+Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
+
+#### Minimum assembly overlap
+We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
+
+#### Mismatch tolerance
+When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch 
+
+#### Adjust alignment score (AdjAS) 
+Modified length of an alignment after allowing for inexact homology, repeats and mismatches. Defined as: 
+```
+adjAS = AS - inexact homology length – repeatBases[repeatCount>2]
+```
+Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
+#### Modified MAPQ (modMAPQ)  
+The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignmnet score is low relative to the length.
+```
+modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2 
+```
 
 ### STEP 1: ESVEE PREP 
 ESVEE-PREP generates a set of maximally filtered SV BAM files and an initial set of candidate SV junctions from input tumor/normal BAM files. The SV BAM files includes all candidate split and discordant reads that are proximate to candidate junctions that may provide support to that junction. 
