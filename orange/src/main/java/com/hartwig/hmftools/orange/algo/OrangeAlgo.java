@@ -725,7 +725,7 @@ public class OrangeAlgo
 
         if(purplePlots.stream().anyMatch(Objects::isNull))
         {
-            LOGGER.warn("Skipping making ORANGE report: missing one or more PURPLE plot paths, likely because the input sample(s) contains no data");
+            LOGGER.warn("Skipping making ORANGE report: missing one or more PURPLE plot paths, likely because the input sample(s) has no or extremely sparse data");
             System.exit(0);
         }
 
