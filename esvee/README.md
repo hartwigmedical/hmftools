@@ -383,6 +383,19 @@ If the same precise breakend is found to PASS multiple times in the VCF then ret
 #### Germline or Somatic determination 
 A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
+## Summary of special exceptions for LINE Insertion sites
+
+Stage  | Special rules 
+---|---
+Esvee Prep| min 32 base length is not required 
+Trimming | Don’t trim the first 18 bases if at least 16 of them are PolyA or T  
+Local assembly | Prioritse reads with the 5’ in the softclip and which reach beyond the PolyA for extension; Allow any length of PolyA to match. Set the length in the assembly to be the median of lengths with additional bases beyond the PolyA or else just the longest PolyA sequence if none exist; Require only 16 bases longest and 8 bases 2nd longest to retain soft clip 
+Phasing | Phase breakends even if neither has a locally concordant mate 
+Assembly extension | Allow remote regions and unmapped mates of both sides to extend the assembly 
+Alignment | Secondary links are still aligned for LINE insertion sites; Call single breakend if PolyA length exceeds 1.5x reference PolyA length (no 50 base minimumum); Secondary links are still aligned for LINE insertion sites 
+Filters | MinLength, ShortFrags, minAnchorLength filters not applied; PASS if either side PASES ; MinSupport & MinQual uses qual of both sides 
+Germline vs Somatic | Mark as germline if either side meets germline filters 
+
 ## Output 
 
 ### VCF INFO fields
