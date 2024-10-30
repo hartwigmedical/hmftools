@@ -161,6 +161,8 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters, variant.nearbyVariant());
 
+            variant.setHasSomaticFilters(!tumorFilters.isEmpty());
+
             if(!mIsGermline)
             {
                 for(int i = 0; i < maxReferenceSamples; ++i)

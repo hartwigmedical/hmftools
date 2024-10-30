@@ -150,6 +150,7 @@ public class RegionTask
 
             // combine reference and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+            Set<ReadContextCounter> germlineOrSomaticIndels = Sets.newHashSet();
             Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
             for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
@@ -174,7 +175,23 @@ public class RegionTask
                 if(sageVariant.isPassing())
                     passingTumorReadCounters.add(tumorReadCounters.get(0));
 
+                if(sageVariant.isIndel() && !sageVariant.hasSomaticFilters())
+                    germlineOrSomaticIndels.add(tumorReadCounters.get(0));
+
                 validTumorReadCounters.add(tumorReadCounters.get(0));
+            }
+
+            for(ReadContextCounter indel : germlineOrSomaticIndels)
+            {
+                for(SageVariant variant : mSageVariants)
+                {
+                   if(indel.readContext().AlignmentEnd < variant.position())
+                       break;
+                   if(indel.readContext().AlignmentStart > variant.position())
+                       continue;
+                   if(!variant.isIndel())
+                    variant.setNearbyIndel();
+                }
             }
 
             // phase variants now all evidence has been collected and filters applied

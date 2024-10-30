@@ -48,6 +48,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.NEARBY_INDEL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.NEARBY_INDEL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
@@ -204,6 +206,7 @@ public class VariantVCF implements AutoCloseable
             header.addMetaDataLine(new VCFInfoHeaderLine(READ_CORE_HOMOPOLYMER_INFO, 1, VCFHeaderLineType.String, READ_CORE_HOMOPOLYMER_INFO_DESC));
             header.addMetaDataLine(new VCFInfoHeaderLine(READ_CORE_T0_INFO, 1, VCFHeaderLineType.String, READ_CORE_T0_INFO_DESC));
         }
+        header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(MAP_QUAL_FACTOR, 1, VCFHeaderLineType.Float, MAP_QUAL_FACTOR_DESC));

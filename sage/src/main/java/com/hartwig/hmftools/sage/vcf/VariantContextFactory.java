@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.sage.vcf.VcfTags.NEARBY_INDEL;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.log10;
@@ -128,6 +129,10 @@ public final class VariantContextFactory
             String coreT0Info = primaryRcCounter.coreT0Info();
             if(coreT0Info != null)
                 builder.attribute(READ_CORE_T0_INFO, coreT0Info);
+        }
+        if(variant.hasNearbyIndel())
+        {
+            builder.attribute(NEARBY_INDEL, true);
         }
 
         final VariantContext context = builder.make();
