@@ -38,12 +38,14 @@ import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadLinxData {
+public class LoadLinxData
+{
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
     private static final String LINX_FILE_NAME = "linx_filename";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException
+    {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addConfig(configBuilder);
 
@@ -55,7 +57,8 @@ public class LoadLinxData {
         setLogLevel(configBuilder);
         logVersion();
 
-        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder)) {
+        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
+        {
             if (dbAccess == null) {
                 LOGGER.error("Failed to create DB connection");
                 System.exit(1);
@@ -99,7 +102,8 @@ public class LoadLinxData {
         List<String> requiredFiles = Lists.newArrayList(
                 svAnnotationFile, svClusterFile, svLinkFile, svBreakendFile, svFusionFile, svDriverFile, driverCatalogFile);
 
-        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x)))) {
+        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
+        {
             LOGGER.info("skipping somatic data - no files present");
             return;
         }
@@ -135,7 +139,8 @@ public class LoadLinxData {
     }
 
     private static void loadGermlineData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir, String fileRootName)
-            throws IOException {
+            throws IOException
+    {
         LOGGER.info("sample({}) loading Linx germline data", sampleId);
 
         final String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, fileRootName);
@@ -144,7 +149,8 @@ public class LoadLinxData {
 
         List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile); // required after v5.31
 
-        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x)))) {
+        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
+        {
             LOGGER.info("skipping germline data - no files present");
             return;
         }
@@ -160,7 +166,8 @@ public class LoadLinxData {
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
         dbAccess.writeGermlineSVs(sampleId, germlineSVs);
 
-        if (Files.exists(Paths.get(germlineBreakendFile))) {
+        if (Files.exists(Paths.get(germlineBreakendFile)))
+        {
             List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
             LOGGER.info("sample({}) loading {} germline breakend records", sampleId, germlineBreakends.size());
             dbAccess.writeGermlineBreakends(sampleId, germlineBreakends);

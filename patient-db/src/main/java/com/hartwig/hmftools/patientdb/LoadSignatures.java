@@ -18,11 +18,13 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadSignatures {
+public class LoadSignatures
+{
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SAMPLE_FILE = "sample_file";
 
-    public static void main(@NotNull String[] args) throws ParseException {
+    public static void main(@NotNull String[] args) throws ParseException
+    {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
@@ -36,8 +38,10 @@ public class LoadSignatures {
         String sampleFile = configBuilder.getValue(SAMPLE_FILE);
         String sampleDir = configBuilder.getValue(SAMPLE_DIR);
 
-        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder)) {
-            if (dbAccess == null) {
+        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
+        {
+            if (dbAccess == null)
+            {
                 LOGGER.error("Failed to create DB connection");
                 System.exit(1);
             }
@@ -57,7 +61,8 @@ public class LoadSignatures {
                     SignatureAllocationFile.read(sampleFile) :
                     SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
 
-            if (!sigAllocations.isEmpty()) {
+            if (!sigAllocations.isEmpty())
+            {
                 LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
                 dbAccess.writeSignatures(sampleId, sigAllocations);
             } else {
