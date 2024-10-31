@@ -194,7 +194,6 @@ public class CohortAnalyser
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        configBuilder.disableWarnOnRepeatedRegos();
         CohortConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

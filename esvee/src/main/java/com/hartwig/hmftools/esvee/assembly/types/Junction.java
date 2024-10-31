@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATIO
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
@@ -92,6 +92,11 @@ public class Junction implements Comparable<Junction>
 
     // for display and logging
     public String coords() { return format("%s:%d:%d", Chromosome, Position, Orient.asByte()); }
+
+    public String coordsTyped()
+    {
+        return DiscordantOnly || indelBased() ? format("%s %c", coords(), DiscordantOnly ? 'D' : 'I') : coords();
+    }
 
     public boolean isLocalMatch(final Junction other)
     {

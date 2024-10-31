@@ -36,7 +36,6 @@ import com.hartwig.hmftools.purple.SampleData;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.Segmentation;
-import com.hartwig.hmftools.purple.sv.RecoverStructuralVariants;
 
 public class PurityPloidyFitter
 {
@@ -47,7 +46,6 @@ public class PurityPloidyFitter
     private final ExecutorService mExecutorService;
     private final PurpleConfig mConfig;
     private final boolean mTargetedMode;
-    private final Segmentation mSegmentation;
 
     private VariantPurityFitter mVariantPurityFitter;
 
@@ -68,7 +66,7 @@ public class PurityPloidyFitter
 
     public PurityPloidyFitter(
             final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData, final ExecutorService executorService,
-            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Segmentation segmentation)
+            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions)
     {
         mSampleData = sampleData;
         mConfig = config;
@@ -76,7 +74,6 @@ public class PurityPloidyFitter
         mExecutorService = executorService;
         mRegionFitCalculator = regionFitCalculator;
         mObservedRegions = observedRegions;
-        mSegmentation = segmentation;
 
         mCopyNumbers = Lists.newArrayList();
         mFittedRegions = Lists.newArrayList();
@@ -310,22 +307,6 @@ public class PurityPloidyFitter
         mFittedRegions.addAll(mRegionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), mObservedRegions));
 
         copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.variants());
-
-        int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
-                mSampleData, mConfig.SampleFiles, mConfig, mPurityAdjuster, copyNumberFactory.copyNumbers());
-
-        if(recoveredSVCount > 0)
-        {
-            PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-            final List<ObservedRegion> recoveredObservedRegions =
-                    mSegmentation.createObservedRegions(mSampleData.SvCache.variants(), amberData, cobaltData);
-
-            PPL_LOGGER.info("recalculating copy number");
-            mFittedRegions.clear();
-            mFittedRegions.addAll(mRegionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
-
-            copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.variants());
-        }
 
         mCopyNumbers.addAll(copyNumberFactory.copyNumbers());
 

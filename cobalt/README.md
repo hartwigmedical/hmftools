@@ -24,7 +24,8 @@ male sex chromosomes in addition to the following exceptions:
 | `MOSAIC_X`                | X             | use median X ratio |
 | `KLINEFELTER`             | X             | 1                  |
 | `KLINEFELTER`             | Y             | 0.5                |
-| `TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5                |
+| `TRISOMY_[X,21,13,18,15,9P]` | X,21,13,18,15,9P | 1.5                |
+| `TETRASOMY_9P` | 9P | 1.5                |
 
 ### Depth window consoldiation
 Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at

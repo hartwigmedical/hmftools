@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.genome.chromosome.GermlineAberration.NONE;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -224,7 +226,7 @@ public class PurpleApplication
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, mSegmentation);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions);
 
             purityPloidyFitter.run();
 
@@ -388,8 +390,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            SomaticVariantCache somaticCache = new SomaticVariantCache(mConfig);
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, sampleData.SomaticCache);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);
@@ -408,7 +409,7 @@ public class PurpleApplication
             PurpleQC purpleQC = ImmutablePurpleQC.builder()
                     .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
                     .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
-                    .status(Collections.emptyList()).germlineAberrations(Collections.emptyList()).amberMeanDepth(0).build();
+                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).build();
 
             PurityContext purityContext =  ImmutablePurityContext.builder()
                     .bestFit(fittedPurity)

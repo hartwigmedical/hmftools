@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -717,6 +719,15 @@ public class OrangeAlgo
         String purpleVariantCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+
+        List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
+                purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleKataegisPlot);
+
+        if(purplePlots.stream().anyMatch(Objects::isNull))
+        {
+            LOGGER.warn("Skipping making ORANGE report: missing one or more PURPLE plot paths, likely because the input sample(s) has no or extremely sparse data");
+            System.exit(0);
+        }
 
         String cuppaSummaryPlot = plotManager.processPlotFile(
                 (config.wgsRefConfig() != null) ? config.wgsRefConfig().cuppaSummaryPlot() : null

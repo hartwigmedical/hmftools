@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
@@ -9,11 +10,11 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.Arrays.initialise;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
@@ -35,7 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -117,7 +117,7 @@ public class ExtensionSeqBuilder
             mHasLineSequence = false;
         }
 
-        buildSequence();
+        buildSequence(true);
 
         if(AssemblyConfig.AssemblyBuildDebug)
         {
@@ -172,7 +172,7 @@ public class ExtensionSeqBuilder
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
-    private void buildSequence()
+    private void buildSequence(boolean isInitial)
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
@@ -189,6 +189,9 @@ public class ExtensionSeqBuilder
             int repeatLength = mMaxRepeat.baseLength();
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
+                if(mReads.get(readIndex).exceedsMaxMismatches())
+                    continue;
+
                 if(mReadRepeatCounts[readIndex] != READ_REPEAT_COUNT_INVALID)
                     readRepeatSkipCounts[readIndex] = (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength;
                 else
@@ -198,6 +201,7 @@ public class ExtensionSeqBuilder
 
         boolean checkReadRepeats = false;
         boolean readRepeatsComplete = false;
+        byte[] currentReadBases = new byte[mReads.size()]; // each read's base at this index if valid and above min qual
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
@@ -228,6 +232,8 @@ public class ExtensionSeqBuilder
             {
                 ExtReadParseState read = mReads.get(readIndex);
 
+                currentReadBases[readIndex] = 0;
+
                 if(read.exhausted())
                     continue;
 
@@ -238,6 +244,9 @@ public class ExtensionSeqBuilder
 
                 byte base = read.currentBase();
                 int qual = read.currentQual();
+
+                if(aboveMinQual(qual))
+                    currentReadBases[readIndex] = base;
 
                 if(checkReadRepeats && readRepeatSkipCounts[readIndex] != 0)
                 {
@@ -333,6 +342,20 @@ public class ExtensionSeqBuilder
 
                 consensusBase = DNA_BASE_BYTES[maxBaseIndex];
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
+
+                if(!isInitial)
+                {
+                    // on a second sequence build, even after culling mismatched reads and allowing for repeat differences, some reads
+                    // may still not agree - so track these differences and then stop using reads which exceed the permitted count
+                    for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
+                    {
+                        if(currentReadBases[readIndex] > 0 && currentReadBases[readIndex] != consensusBase)
+                        {
+                            ExtReadParseState read = mReads.get(readIndex);
+                            read.addMismatch();
+                        }
+                    }
+                }
             }
 
             mBases[extensionIndex] = consensusBase;
@@ -520,24 +543,30 @@ public class ExtensionSeqBuilder
             {
                 ExtReadParseState read = mReads.get(readIndex);
 
-                if(read.exceedsMaxMismatches())
-                {
-                    // read must differ vs the consensus repeat
-                    if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID || mReadRepeatCounts[readIndex] == mMaxRepeat.Count)
-                        continue;
-
-                    int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
-
-                    // and have only exceed max mismatches during or after the consensus repeat
-                    if(mIsForward && mismatchExceededIndex >= mMaxRepeat.Index)
-                        read.resetMatches();
-                    else if(!mIsForward && mismatchExceededIndex <= mMaxRepeat.postRepeatIndex() - 1)
-                        read.resetMatches();
-                }
-                else
+                if(!read.exceedsMaxMismatches() || mReadRepeatCounts[readIndex] == mMaxRepeat.Count)
                 {
                     read.resetMatches();
+                    continue;
                 }
+
+                // read must differ vs the consensus repeat
+                if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID)
+                    continue;
+
+                // the read must have any at least one repeat to be considered to differ from jitter
+                if(mReadRepeatCounts[readIndex] == 0 && mMaxRepeat.Count > 1)
+                    continue;
+
+                // if a read has repeats and its mismatch occurs within the range of the first repeat, consider it mismatched from jittter
+                int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
+
+                int firstRepeatEndIndex = mIsForward ?
+                        mMaxRepeat.Index + mMaxRepeat.baseLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.baseLength();
+
+                if(mIsForward && mismatchExceededIndex >= firstRepeatEndIndex)
+                    read.resetMatches();
+                else if(!mIsForward && mismatchExceededIndex <= firstRepeatEndIndex)
+                    read.resetMatches();
             }
         }
 
@@ -548,7 +577,7 @@ public class ExtensionSeqBuilder
 
         mReads.forEach(x -> x.resetIndex());
 
-        buildSequence();
+        buildSequence(false);
     }
 
     private void finaliseBases()
@@ -765,6 +794,13 @@ public class ExtensionSeqBuilder
             mIsValid = false;
             return;
         }
+    }
+
+    public String toString()
+    {
+        return format("junc(%s) reads(%d) baseLength(%d) lineLength(%d) maxRepeat(%s)",
+                mJunction.coordsTyped(), mReads.size(), mBases.length, mLineExtensionLength,
+                mMaxRepeat != null ? mMaxRepeat : "none");
     }
 
     public boolean hasLineSequence() { return mHasLineSequence; }

@@ -23,7 +23,6 @@ public class SampleDataFiles
     public final String SampleDataDir;
     public final String SomaticSvVcfFile;
     public final String GermlineSvVcfFile;
-    public final String RecoveredSvVcfFile;
     public final String SomaticVcfFile;
     public final String GermlineVcfFile;
     public final String AmberDirectory;
@@ -34,7 +33,6 @@ public class SampleDataFiles
     private static final String COBALT = "cobalt";
     private static String SOMATIC_SV_VCF = "somatic_sv_vcf";
     private static String GERMLINE_SV_VCF = "germline_sv_vcf";
-    private static String SV_RECOVERY_VCF = "sv_recovery_vcf";
     public static String GERMLINE_VARIANTS = "germline_vcf";
     private static String SOMATIC_VARIANTS = "somatic_vcf";
 
@@ -51,7 +49,6 @@ public class SampleDataFiles
 
         configBuilder.addPath(SOMATIC_SV_VCF, false, "Somatic SV VCF");
         configBuilder.addPath(GERMLINE_SV_VCF, false, "Germline SV VCF to annotate");
-        configBuilder.addPath(SV_RECOVERY_VCF, false, "Unfiltered SV VCF that may be recovered");
         configBuilder.addPath(GERMLINE_VARIANTS, false, "Germline variant VCF");
         configBuilder.addPath(SOMATIC_VARIANTS, false, "Somatic variant VCF");
     }
@@ -78,14 +75,12 @@ public class SampleDataFiles
         {
             SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, ESVEE_DIR, sampleId, ".esvee.somatic.vcf.gz");;
             GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, ESVEE_DIR, sampleId, ".esvee.germline.vcf.gz");;
-            RecoveredSvVcfFile = getFilename(configBuilder, SV_RECOVERY_VCF, ESVEE_DIR, sampleId, ".esvee.unfiltered.vcf.gz");
         }
         else
         {
             PPL_LOGGER.debug("loading deprecated Gridss/Gripss SV files");
             SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.filtered.somatic.vcf.gz");;
             GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, GRIPSS_GERMLINE_DIR, sampleId, ".gripss.filtered.germline.vcf.gz");
-            RecoveredSvVcfFile = getFilename(configBuilder, SV_RECOVERY_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.somatic.vcf.gz");
         }
 
         SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");

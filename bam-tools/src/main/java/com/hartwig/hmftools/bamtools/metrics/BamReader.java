@@ -56,7 +56,7 @@ public class BamReader
 
     private final PerformanceCounter mPerfCounter;
     private boolean mLogReadIds;
-    private int mLastFragmentMapReadCountCheck;
+    private long mLastFragmentMapReadCountCheck;
 
     public BamReader(
             final ChrBaseRegion region, final MetricsConfig config, final SamReader samReader, final BamSlicer bamSlicer,

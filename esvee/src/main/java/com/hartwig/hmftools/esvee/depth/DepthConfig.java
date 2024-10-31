@@ -11,14 +11,19 @@ import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOp
 import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE_DESC;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.SAMPLE_ID_DESC;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +36,6 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import org.apache.commons.cli.ParseException;
 
@@ -56,22 +60,18 @@ public class DepthConfig
     public final double PerfLogTime;
     public final List<ChrBaseRegion> SpecificRegions;
 
-    private static final String SAMPLES = "samples";
-    private static final String BAM_FILES = "bam_files";
     private static final String PROXIMITY_DISTANCE = "proximity_distance";
     private static final String VAF_CAP = "vaf_cap";
     private static final String PERF_LOG_TIME = "perf_log_time";
     public static final String VCF_TAG_PREFIX = "vcf_tag_prefix";
-
-    private static final String DELIM = ",";
 
     protected static final int DEFAULT_PROXIMITY_DISTANCE = 2000;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 
     public DepthConfig(final ConfigBuilder configBuilder)
     {
-        Samples = Arrays.stream(configBuilder.getValue(SAMPLES).split(DELIM, -1)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
+        Samples = Arrays.stream(configBuilder.getValue(SAMPLE).split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
+        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILE).split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -113,11 +113,11 @@ public class DepthConfig
         return VcfTagPrefix != null ? format("%s_%s", VcfTagPrefix, vcfTag) : vcfTag;
     }
 
-    public static void addConfig(final ConfigBuilder configBuilder)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
-        configBuilder.addConfigItem(SAMPLES, true, "Sample IDs corresponding to BAM files");
-        configBuilder.addConfigItem(BAM_FILES, true, "BAM file(s) to slice for depth");
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
+        configBuilder.addPaths(BAM_FILE, true, BAM_FILE_DESC);
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
         UnmappedRegions.registerConfig(configBuilder);

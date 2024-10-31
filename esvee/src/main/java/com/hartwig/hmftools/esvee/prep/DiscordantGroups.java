@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MAX_LOCAL_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_ALIGN_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -33,13 +34,15 @@ import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 public class DiscordantGroups
 {
     private final ChrBaseRegion mRegion;
-    private final int mShortFragmentLength;
+    private final int mMaxConcordantFragmentLength;
     private final boolean mTrackRemotes;
+    private final List<KnownHotspot> mKnownHotspots;
 
-    public DiscordantGroups(final ChrBaseRegion region, int shortFragmentLength, boolean trackRemotes)
+    public DiscordantGroups(final ChrBaseRegion region, int shortFragmentLength, final List<KnownHotspot> knownHotspots, boolean trackRemotes)
     {
         mRegion = region;
-        mShortFragmentLength = shortFragmentLength;
+        mMaxConcordantFragmentLength = shortFragmentLength;
+        mKnownHotspots = knownHotspots;
         mTrackRemotes = trackRemotes;
     }
 
@@ -110,14 +113,7 @@ public class DiscordantGroups
         if(!mRegion.containsPosition(discordantGroup.Region.Chromosome, discordantGroup.innerPosition()))
             return false;
 
-        /*
-        int readGroups = discordantGroup.readGroups().size();
-        int junctionReadGroups = (int)discordantGroup.readGroups().stream().filter(x -> x.hasReadType(ReadType.JUNCTION)).count();
-        int readGroupsWithJuncSupport = (int)discordantGroup.readGroups().stream().filter(x -> x.hasJunctionPositions()).count();
-
-        SV_LOGGER.debug("discGroup {}: readGroups({} junc={} suppJunc={})",
-                discordantGroup, readGroups, junctionReadGroups, readGroupsWithJuncSupport);
-        */
+        // only consider pairings which are either local within the defined distance limit or in a known fusion region
 
         // check that at least one remote region also has sufficient reads
         List<DiscordantRemoteRegion> remoteRegions = discordantGroup.remoteRegions();
@@ -217,7 +213,7 @@ public class DiscordantGroups
     {
         boolean isShortLocal = discordantGroup.Region.Chromosome.equals(remoteRegion.Chromosome)
                 && min(abs(discordantGroup.innerPosition() - remoteRegion.start()),
-                abs(discordantGroup.innerPosition() - remoteRegion.end())) <= mShortFragmentLength * 2;
+                abs(discordantGroup.innerPosition() - remoteRegion.end())) <= mMaxConcordantFragmentLength * 2;
 
         if(isShortLocal)
             return remoteRegion.readCount() >= DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -225,7 +221,7 @@ public class DiscordantGroups
             return remoteRegion.readCount() >= DISCORDANT_GROUP_MIN_FRAGMENTS;
     }
 
-    public static boolean isDiscordantGroup(final ReadGroup readGroup, final int maxFragmentLength)
+    public boolean isDiscordantGroup(final ReadGroup readGroup)
     {
         boolean hasNonSupp = false;
         boolean hasPassingMapQual = false;
@@ -240,7 +236,38 @@ public class DiscordantGroups
             return false;
 
         // only the first read is used and so only that is checked
-        return isDiscordantFragment(readGroup.reads().get(0).record(), maxFragmentLength, null);
+        if(!isDiscordantFragment(readGroup.reads().get(0).record(), mMaxConcordantFragmentLength, null))
+            return false;
+
+        // must then either be in a known hotspot pair or a local DEL or DUP within the required distance
+        for(KnownHotspot knownHotspot : mKnownHotspots)
+        {
+            boolean matchesStart = false;
+            boolean matchesEnd = false;
+
+            for(PrepRead read : readGroup.reads())
+            {
+                matchesStart |= knownHotspot.RegionStart.overlaps(read.Chromosome, read.start(), read.end());
+                matchesStart |= knownHotspot.RegionStart.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
+                matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.start(), read.end());
+                matchesEnd |= knownHotspot.RegionEnd.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
+
+                if(matchesStart && matchesEnd)
+                    return true;
+            }
+        }
+
+        // otherwise must be local
+        PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+
+        if(firstRead == null)
+            return false;
+
+        if(!firstRead.Chromosome.equals(firstRead.MateChromosome))
+            return false;
+
+        int length = abs(firstRead.start() - firstRead.record().getMateAlignmentStart());
+        return length <= DISCORDANT_GROUP_MAX_LOCAL_LENGTH;
     }
 
     private static class ReadGroupSorter implements Comparator<ReadGroup>

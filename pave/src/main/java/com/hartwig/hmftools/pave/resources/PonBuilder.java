@@ -128,13 +128,13 @@ public class PonBuilder
         String lastRef = "";
         String lastAlt = "";
 
-            for(VariantContext variantContext : vcfReader.iterator())
-            {
-                double qual = variantContext.getPhredScaledQual();
-                double mqf = variantContext.getAttributeAsDouble(MAP_QUAL_FACTOR, 0);
+        for(VariantContext variantContext : vcfReader.iterator())
+        {
+            double qual = variantContext.getPhredScaledQual();
+            double mqf = variantContext.getAttributeAsDouble(MAP_QUAL_FACTOR, 0);
 
-                if(qual < mQualCutoff || mqf < mMqfCutoff)
-                    continue;
+            if(qual < mQualCutoff || mqf < mMqfCutoff)
+                continue;
 
             String tier = variantContext.getAttributeAsString(TIER, "");
             if(tier.equals(HOTSPOT.toString()))

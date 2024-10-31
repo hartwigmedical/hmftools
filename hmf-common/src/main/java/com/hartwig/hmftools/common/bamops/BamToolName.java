@@ -32,8 +32,6 @@ public enum BamToolName
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort/merge/index");
-        configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for sort/merge");
         configBuilder.addPath(BAMTOOL_PATH, false, "Path to sambamba or samtools for sort/merge");
     }
 }

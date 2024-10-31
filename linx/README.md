@@ -697,8 +697,6 @@ Each breakend is additionally annotated for the transcript with the following in
 - exon total count: The total number of exons in the transcript (for reference)
 - transcript biotype: The ensembl biotype of the transcript
 
-
-
 #### Known pathogenic fusions and promiscuous partners
 Configuration of pathogenic fusions impacts Linx in 2 ways:
 Some criteria for fusion calling are relaxed for known fusions due to the high prior likelihood of pathogenic fusions
@@ -765,7 +763,8 @@ Each candidate chained splice acceptor and splice donor fusion pair may have mul
 - No exons are skipped
 - Best 3’ partner transcript, ranked by canonical and then longest (non NMD) protein coding
 - Best 5’ partner transcript ranked by canonical, then longest protein coding, then longest
-- If multiple chains link the same 2 genes then they are prioritised again according to the above logic.
+
+If multiple chains link the same 2 genes then they are prioritised again according to the above logic and then by junction copy number.
 
 For IG enhancer rearrangements, the canonical transcript is reported for all 3' gene partners.
 

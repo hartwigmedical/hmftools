@@ -5,7 +5,6 @@ tumor_id=$1 && shift
 reference_id=$1 && shift
 somatic_vcf=$1 && shift
 somatic_sv_vcf=$1 && shift
-sv_unfiltered_vcf=$1 && shift
 germline_vcf=$1 && shift
 germline_sv_vcf=$1 && shift
 amber_dir=$1 && shift

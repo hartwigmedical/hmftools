@@ -5,10 +5,10 @@ import static com.hartwig.hmftools.compar.common.Category.TELOMERE_LENGTH;
 import static com.hartwig.hmftools.compar.teal.TealData.FLD_TELOMERE_LENGTH;
 
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.common.teal.TelomereLengthFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -48,7 +48,7 @@ public class TealComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return List.of(FLD_TELOMERE_LENGTH);
+        return TealData.comparedFieldNames();
     }
 
     @Override
@@ -61,17 +61,15 @@ public class TealComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = new ArrayList<>();
         try
         {
             TelomereLength telomereLength = TelomereLengthFile.read(TelomereLengthFile.generateFilename(fileSources.Teal, sampleId));
-            comparableItems.add(new TealData(telomereLength));
+            return Lists.newArrayList(new TealData(telomereLength));
         }
         catch(UncheckedIOException e)
         {
             CMP_LOGGER.warn("sample({}) failed to load Teal data: {}", sampleId, e.toString());
             return null;
         }
-        return comparableItems;
     }
 }

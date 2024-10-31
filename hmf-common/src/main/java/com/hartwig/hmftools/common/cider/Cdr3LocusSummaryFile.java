@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 public class Cdr3LocusSummaryFile
 {
-    enum Column
+    public enum Column
     {
         locus,
         readsUsed,

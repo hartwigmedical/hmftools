@@ -55,9 +55,9 @@ duplicate read marking and UMI processing that are distinct from other common to
 etc). Hence, it is strongly recommended that externally-generated BAMs are processed with MarkDups, this is
 particularly important where there are high rates of read duplicates or where UMIs have been used.
 
-### WGTS workflow
+### WGTS and Targeted Panel workflow
 
-![HMF_Pipeline](hmf_tools_pipeline.png)
+![HMF_Pipeline](wigits_pipeline.png)
 
 #### Available analysis types
 
@@ -70,9 +70,6 @@ Require inputs shown as :white_check_mark: for available analyses
 | Tumor only WGS    |  :white_check_mark:   |           -            |           -           |
 | Tumor only WTS    |           -           |           -            |  :white_check_mark:   |
 
-### Targeted sequencing workflow
-
-![HMF_Pipeline](hmf_tools_panel_pipeline.png)
 
 #### Available analysis types
 

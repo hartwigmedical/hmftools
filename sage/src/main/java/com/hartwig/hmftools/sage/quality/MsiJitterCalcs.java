@@ -49,6 +49,8 @@ public class MsiJitterCalcs
         {
             if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults))
                 return msiJitterCalcs;
+            else
+                System.exit(1);
         }
 
         for(String sampleId : sampleIds)
@@ -78,7 +80,11 @@ public class MsiJitterCalcs
                 String jitterCountFile = JitterCountsTableFile.generateFilename(jitterParamsDir, sampleId);
 
                 if(!Files.exists(Paths.get(jitterParamFile)) || !Files.exists(Paths.get(jitterCountFile)))
+                {
+                    SG_LOGGER.error("missing jitter param files: params({}) counts({})",
+                            jitterParamFile, jitterCountFile);
                     return false;
+                }
 
                 List<JitterModelParams> rawParams = JitterModelParamsFile.read(jitterParamFile);
                 List<MsiModelParams> msiParams = rawParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());

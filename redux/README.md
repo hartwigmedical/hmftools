@@ -93,6 +93,8 @@ All supplementary and secondary reads with <10 bases aligned outside a problemat
 
 Note that when a read is unmapped or a supplementary is deleted, other reads in the read group pair are also updated to reflect the mates unmmaped status.  Removing / unmapping these reads simplifies and improve performance of variant calling downstream including in SAGE, COBALT and SV calling. 
 
+Note also that all supplementary reads with alignment score < 30 are unmapped.
+
 ### Deduplication
 
 There are 2 steps in the deduplication algorithm:
@@ -114,7 +116,7 @@ To construct the consensus fragment, the following logic is applied separately f
 - The consensus cigar is chosen as the cigar with the most support followed by the least soft clip and then arbitarily. 
 - Using the consensus cigar as the reference,  for each base assess each reads in the duplicate group and set the consensus base to the most supported base by sum of base qual. If 2 or more alleles have the same base qual support choose the reference first. 
 - For reads which differ by an indel from the consensus, ignore the differences, and ensure that the subsequent bases match the position in the consensus cigar.  Ignore any soft clip base that is not present in the consensus cigar. 
-- Set the base qual = max(supportedBaseQual) * [max(0,Sum(supportedBaseQual) - Sum(contraryBaseQual))] / Sum(supportedBaseQual) 
+- Set the base qual = roundedUp[median(supportedBaseQual)] * [max(0,Sum(supportedBaseQual) - Sum(contraryBaseQual))] / Sum(supportedBaseQual) 
 
 In the case of DUPLEX UMIs, the logic is applied to each strand individually and then again to merge the 2 strands.   When merging strands, if the consensus base on each strand is different and one matches the ref genome then the base is set to the ref genome, otherwise the highest qual base is chosen as per above.   
 

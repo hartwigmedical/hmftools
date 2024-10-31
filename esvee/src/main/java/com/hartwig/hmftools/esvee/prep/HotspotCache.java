@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -61,6 +63,21 @@ public class HotspotCache
         }
 
         return matchedRegions;
+    }
+
+    public List<KnownHotspot> findRegionHotspots(final ChrBaseRegion region)
+    {
+        List<KnownHotspot> knownHotspots = mHotspotRegions.get(region.Chromosome);
+
+        if(knownHotspots != null)
+        {
+            return knownHotspots.stream()
+                    .filter(x -> x.RegionStart.overlaps(region) || x.RegionEnd.overlaps(region)).collect(Collectors.toList());
+        }
+        else
+        {
+            return Collections.emptyList();
+        }
     }
 
     private boolean loadFile(final String filename)
@@ -134,40 +151,4 @@ public class HotspotCache
         return true;
     }
 
-    public class KnownHotspot
-    {
-        public final ChrBaseRegion RegionStart;
-        public final Orientation OrientStart;
-        public final ChrBaseRegion RegionEnd;
-        public final Orientation OrientEnd;
-        public final String GeneInfo;
-
-        public KnownHotspot(
-                final ChrBaseRegion regionStart, final Orientation orientStart, final ChrBaseRegion regionEnd, final Orientation orientEnd,
-                final String geneInfo)
-        {
-            RegionStart = regionStart;
-            OrientStart = orientStart;
-            RegionEnd = regionEnd;
-            OrientEnd = orientEnd;
-            GeneInfo = geneInfo;
-        }
-
-        public boolean matches(final String chrStart, final String chrEnd, int posStart, int posEnd, Orientation orientStart, Orientation orientEnd)
-        {
-            if(RegionStart.containsPosition(chrStart, posStart) && OrientStart == orientStart
-            && RegionEnd.containsPosition(chrEnd, posEnd) && OrientEnd == orientEnd)
-            {
-                return true;
-            }
-
-            if(RegionStart.containsPosition(chrEnd, posEnd) && OrientStart == orientEnd
-            && RegionEnd.containsPosition(chrStart, posStart) && OrientEnd == orientStart)
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
 }

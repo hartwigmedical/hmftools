@@ -104,6 +104,9 @@ public abstract class BamFlagStats
 
     private static double roundToSixDecimals(double value)
     {
+        if(Double.isNaN(value))
+            return Double.NaN;
+
         BigDecimal bd = BigDecimal.valueOf(value);
         bd = bd.setScale(6, RoundingMode.HALF_UP);
         return bd.doubleValue();

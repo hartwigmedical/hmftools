@@ -8,15 +8,16 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_REF_MIN_READ_PERCENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DUP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READ_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isFacingAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -438,6 +439,8 @@ public class PhaseSetBuilder
     private void findUnmappedExtensions()
     {
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
+        boolean hasHighAssemblyCount = hasHighAssemblyCount();
+
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site
@@ -447,8 +450,8 @@ public class PhaseSetBuilder
 
             if(!AssemblyConfig.RunRemoteRefLinking)
             {
-                List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies);
-                mRemoteRegionAssembler.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount());
+                List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
+                mRemoteRegionAssembler.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount);
             }
 
             if(unmappedReads.isEmpty())
@@ -814,17 +817,14 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            if(assembly1.outcome() == LOCAL_INDEL) // observed very few of these so excluded
+            if(!isFacingAssemblyCandidate(assembly1, facingAssemblies, mSplitLinks))
                 continue;
 
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(assembly2.outcome() == LOCAL_INDEL)
-                    continue;
-
-                if(facingAssemblies.contains(assembly1) || facingAssemblies.contains(assembly2))
+                if(!isFacingAssemblyCandidate(assembly2, facingAssemblies, mSplitLinks))
                     continue;
 
                 AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2);
@@ -833,7 +833,6 @@ public class PhaseSetBuilder
                     continue;
 
                 // compelling evidence is a read from the new assembly which overlaps with the linked junction's reads
-                // if(assembliesShareReads(assembly2, splitAssembly))
                 mFacingLinks.add(facingLink);
                 facingAssemblies.add(assembly1);
                 facingAssemblies.add(assembly2);
@@ -1096,34 +1095,35 @@ public class PhaseSetBuilder
 
             assembly.clearSupportCachedReads(); // remove references to actual SAMRecords, keeping only summary info
 
-            boolean inPhaseSet = mPhaseSets.stream().anyMatch(x -> x.hasAssembly(assembly));
+            boolean inPhaseSet = false;
+            boolean inFacingLink = false;
+
+            for(PhaseSet phaseSet : mPhaseSets)
+            {
+                if(phaseSet.hasAssembly(assembly))
+                {
+                    inPhaseSet = true;
+                    inFacingLink |= phaseSet.assemblyLinks().stream().anyMatch(x -> x.type() == LinkType.FACING && x.hasAssembly(assembly));
+                }
+            }
 
             if(inPhaseSet && assembly.outcome() == UNSET)
                 assembly.setOutcome(LINKED);
 
-            RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
+            // trim ref bases unless the assembly has been matched to a facing assembly
+            if(!inFacingLink)
+                RefBaseExtender.trimAssemblyRefBases(assembly, ASSEMBLY_REF_BASE_MAX_GAP);
 
             if(assembly.outcome() == DUP_BRANCHED)
             {
                 // remove any branched assemblies which did not form a facing link
-                boolean inFacingLink = false;
-
-                if(inPhaseSet)
+                if(inPhaseSet && inFacingLink)
                 {
-                    for(PhaseSet phaseSet : mPhaseSets)
-                    {
-                        if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(assembly)))
-                        {
-                            // set outcome to original assembly
-                            JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
+                    // set outcome to original assembly
+                    JunctionAssembly originalAssembly = findMatchingAssembly(assembly, false);
 
-                            if(originalAssembly != null)
-                                assembly.setOutcome(originalAssembly.outcome());
-
-                            inFacingLink = true;
-                            break;
-                        }
-                    }
+                    if(originalAssembly != null)
+                        assembly.setOutcome(originalAssembly.outcome());
                 }
 
                 if(!inFacingLink)

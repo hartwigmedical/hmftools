@@ -79,7 +79,7 @@ public class FragmentLengths
         addLengthFrequency(fragmentLength, 1);
     }
 
-    private void addLengthFrequency(int fragmentLength, int frequency)
+    private void addLengthFrequency(int fragmentLength, long frequency)
     {
         int index = 0;
         while(index < mLengthFrequencies.size())
