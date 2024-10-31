@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public class LoadSignatures
 {
     private static final String SAMPLE_FILE = "sample_file";
+    private static final String SAMPLE_DIR = "sample_dir";
 
     public static void main(@NotNull String[] args) throws ParseException
     {
@@ -40,8 +41,9 @@ public class LoadSignatures
 
             String sampleId = cmd.getOptionValue(SAMPLE);
             String sampleFile = cmd.getOptionValue(SAMPLE_FILE);
+            String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
 
-            loadSignatureData(dbAccess, sampleId, sampleFile);
+            loadSignatureData(dbAccess, sampleId, sampleFile, sampleDir);
 
             LOGGER.info("signature allocation loading complete");
         }
@@ -52,12 +54,13 @@ public class LoadSignatures
         }
     }
 
-    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile)
+    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile, String sampleDir)
     {
         try
         {
-            final List<SignatureAllocation> sigAllocations =
-                    SignatureAllocationFile.read(sampleFile);
+            final List<SignatureAllocation> sigAllocations = sampleFile != null ?
+                    SignatureAllocationFile.read(sampleFile) :
+                    SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
 
             if(!sigAllocations.isEmpty())
             {
@@ -82,6 +85,7 @@ public class LoadSignatures
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(SAMPLE_FILE, true, "File location to read signature data from");
+        options.addOption(SAMPLE_DIR, true, "Location to read signature data from");
 
         return options;
     }

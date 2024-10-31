@@ -68,7 +68,8 @@ public class LoadLinxData
 
             String sampleId = configBuilder.getValue(SAMPLE);
             String linxDir = configBuilder.getValue(LINX_DIR_CFG);
-            String fileRootName = configBuilder.getValue(LINX_FILE_NAME);
+
+            String fileRootName = configBuilder.getValue(LINX_FILE_NAME) == null ? sampleId : configBuilder.getValue(LINX_FILE_NAME);
             String linxGermlineDir = configBuilder.hasValue(LINX_GERMLINE_DIR_CFG) ? configBuilder.getValue(LINX_GERMLINE_DIR_CFG) : linxDir;
 
             boolean loadGermline = !configBuilder.hasFlag(SOMATIC_ONLY);
@@ -184,7 +185,7 @@ public class LoadLinxData
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
-        configBuilder.addConfigItem(LINX_FILE_NAME, true, LINX_FILE_NAME);
+        configBuilder.addConfigItem(LINX_FILE_NAME, false, LINX_FILE_NAME);
         configBuilder.addConfigItem(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
         configBuilder.addFlag(GERMLINE_ONLY, "Only load germline data");
