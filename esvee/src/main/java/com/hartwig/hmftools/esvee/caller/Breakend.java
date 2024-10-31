@@ -105,7 +105,8 @@ public class Breakend
         return IsStart ? mVariant.breakendEnd() : mVariant.breakendStart();
     }
 
-    public boolean isEnd() { return !mVariant.isSgl() && mVariant.breakendEnd() == this;}
+    public boolean isStart() { return IsStart;}
+    public boolean isEnd() { return !IsStart;}
 
     public double calcAllelicFrequency(final Genotype genotype)
     {

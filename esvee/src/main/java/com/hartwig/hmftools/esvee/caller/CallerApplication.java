@@ -194,7 +194,7 @@ public class CallerApplication
         if(mPonCache.hasValidData())
         {
             SV_LOGGER.info("applying PON filters");
-            mPonCache.annotateVariants(mSvDataCache.getSvList());
+            mPonCache.annotateVariants(mSvDataCache.getBreakendMap());
         }
 
         if(mRepeatMaskAnnotator.hasData())

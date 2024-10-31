@@ -99,14 +99,29 @@ public class VariantFilters
 
     private boolean belowMinSupport(final Variant var)
     {
-        double supportThreshold = var.isHotspot() ? mFilterConstants.MinSupportHotspot :
-                (var.isSgl() ? mFilterConstants.MinSupportSgl : mFilterConstants.MinSupportJunction);
+        double supportThreshold;
+
+        if(var.isHotspot())
+        {
+            supportThreshold = mFilterConstants.MinSupportHotspot;
+        }
+        else if(var.isSgl() && !var.isLineSite())
+        {
+            supportThreshold = mFilterConstants.MinSupportSgl;
+        }
+        else
+        {
+            supportThreshold = mFilterConstants.MinSupportJunction;
+        }
 
         Breakend breakend = var.breakendStart();
 
         for(Genotype genotype : breakend.Context.getGenotypes())
         {
             int fragmentCount = breakend.fragmentCount(genotype);
+
+            if(var.isSgl() && breakend.lineSiteBreakend() != null)
+                fragmentCount += breakend.lineSiteBreakend().fragmentCount(genotype);
 
             if(fragmentCount >= supportThreshold)
                 return false;
