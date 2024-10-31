@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -19,14 +20,19 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public class CopyNumberData implements ComparableItem
 {
     public final PurpleCopyNumber CopyNumber;
+    public final BasePosition mComparisonPositionStart;
+    public final BasePosition mComparisonPositionEnd;
 
     protected static final String FLD_COPY_NUMBER = "CopyNumber";
     protected static final String FLD_MAJOR_ALLELE_CN = "MajorAlleleCopyNumber";
     protected static final String FLD_METHOD = "Method";
 
-    public CopyNumberData(final PurpleCopyNumber copyNumber)
+    public CopyNumberData(final PurpleCopyNumber copyNumber, final BasePosition comparisonPositionStart,
+            final BasePosition comparisonPositionEnd)
     {
         CopyNumber = copyNumber;
+        mComparisonPositionStart = comparisonPositionStart;
+        mComparisonPositionEnd = comparisonPositionEnd;
     }
 
     public Category category() {
@@ -36,7 +42,16 @@ public class CopyNumberData implements ComparableItem
     @Override
     public String key()
     {
-        return format("%s:%d_%d", CopyNumber.chromosome(), CopyNumber.start(), CopyNumber.end());
+        if(mComparisonPositionStart.equals(new BasePosition(CopyNumber.chromosome(), CopyNumber.start()))
+                && mComparisonPositionEnd.equals(new BasePosition(CopyNumber.chromosome(), CopyNumber.end())))
+        {
+            return format("%s:%d_%d", CopyNumber.chromosome(), CopyNumber.start(), CopyNumber.end());
+        }
+        else
+        {
+            return format("%s:%d_%d liftover(%s_%s)", CopyNumber.chromosome(), CopyNumber.start(), CopyNumber.end(),
+                    mComparisonPositionStart, mComparisonPositionEnd);
+        }
     }
 
     @Override
@@ -57,10 +72,14 @@ public class CopyNumberData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final CopyNumberData otherCn = (CopyNumberData)other;
+        final CopyNumberData otherCn = (CopyNumberData) other;
 
-        return CopyNumber.chromosome().equals(otherCn.CopyNumber.chromosome())
-                && CopyNumber.start() == otherCn.CopyNumber.start() && CopyNumber.end() == otherCn.CopyNumber.end();
+        if(!mComparisonPositionStart.Chromosome.equals(otherCn.CopyNumber.chromosome())
+                || !mComparisonPositionEnd.Chromosome.equals(otherCn.CopyNumber.chromosome()))
+            return false;
+
+        return mComparisonPositionStart.Position == otherCn.CopyNumber.start()
+                && mComparisonPositionEnd.Position == otherCn.CopyNumber.end();
     }
 
     @Override

@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryData.FLD_PASS_SEQUENCES;
 import static com.hartwig.hmftools.compar.common.Category.CDR3_LOCUS_SUMMARY;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -35,7 +36,7 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_PASS_SEQUENCES, Double.NaN, 0.05);
+        thresholds.addFieldThreshold(Cdr3LocusSummaryFile.Column.passSequences.name(), Double.NaN, 0.05);
     }
 
     @Override
@@ -47,18 +48,19 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return List.of(FLD_PASS_SEQUENCES);
+        return Cdr3LocusSummaryData.comparedFieldNames();
     }
 
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        // currently unsupported
-        return Collections.emptyList();
+        return dbAccess.readCdr3LocusSummaries(sampleId).stream()
+                .map(Cdr3LocusSummaryData::new)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         try
         {

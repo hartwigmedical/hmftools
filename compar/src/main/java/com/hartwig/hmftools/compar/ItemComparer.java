@@ -16,7 +16,7 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName);
 
-    List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
+    List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources);
 
     List<String> comparedFieldNames();
 

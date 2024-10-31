@@ -9,9 +9,12 @@ import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
+import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
+import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
+import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +26,7 @@ import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -41,6 +45,12 @@ public class FusionComparer implements ItemComparer
     public Category category() { return FUSION; }
 
     @Override
+    public void registerThresholds(final DiffThresholds thresholds)
+    {
+        thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+    }
+
+    @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
@@ -50,8 +60,8 @@ public class FusionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
-                FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_EXON_UP, FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM,
-                FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST);
+                FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_TRANSCRIPT_UP, FLD_EXON_UP, FLD_TRANSCRIPT_DOWN,
+                FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST, FLD_JUNCTION_COPY_NUMBER);
     }
 
     @Override
@@ -62,7 +72,7 @@ public class FusionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         try
         {
