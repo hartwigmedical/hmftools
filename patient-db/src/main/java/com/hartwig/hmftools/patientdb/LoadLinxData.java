@@ -169,7 +169,7 @@ public class LoadLinxData {
 
     private static void addConfig(final ConfigBuilder configBuilder) {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addConfigItem(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addConfigItem(LINX_FILE_NAME, false, LINX_FILE_NAME);
         configBuilder.addConfigItem(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
