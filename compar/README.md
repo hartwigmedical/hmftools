@@ -360,11 +360,12 @@ Data key: SampleId, Chromosome, Position, Ref
 | genotype | Exact                   |
 
 ### CDR3 Sequence (Cider)
-Data key: SampleId, Cdr3Seq, Filter, Locus
+Data key: SampleId, Cdr3AA, Cdr3Seq
 
-| Field | Match Type & Thresholds |
-|-------|-------------------------|
-| N/A   | N/A                     | 
+| Field  | Match Type & Thresholds |
+|--------|-------------------------|
+| Filter | Exact                   |
+| Locus  | Exact                   |
 
 ### CDR3 Locus Summary (Cider)
 Data key: SampleId, Locus
