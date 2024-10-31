@@ -40,7 +40,7 @@ public class LoadSignatures
 
         try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
         {
-            if (dbAccess == null)
+            if(dbAccess == null)
             {
                 LOGGER.error("Failed to create DB connection");
                 System.exit(1);
@@ -61,11 +61,12 @@ public class LoadSignatures
                     SignatureAllocationFile.read(sampleFile) :
                     SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
 
-            if (!sigAllocations.isEmpty())
+            if(!sigAllocations.isEmpty())
             {
                 LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
                 dbAccess.writeSignatures(sampleId, sigAllocations);
-            } else {
+            }else
+            {
                 LOGGER.info("sample({}) has not signature allocations", sampleId);
             }
         } catch (IOException e) {

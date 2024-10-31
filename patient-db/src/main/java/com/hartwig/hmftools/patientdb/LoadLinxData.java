@@ -49,7 +49,8 @@ public class LoadLinxData
         ConfigBuilder configBuilder = new ConfigBuilder();
         addConfig(configBuilder);
 
-        if (!configBuilder.parseCommandLine(args)) {
+        if(!configBuilder.parseCommandLine(args))
+        {
             configBuilder.logInvalidDetails();
             System.exit(1);
         }
@@ -59,7 +60,8 @@ public class LoadLinxData
 
         try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
         {
-            if (dbAccess == null) {
+            if(dbAccess == null)
+            {
                 LOGGER.error("Failed to create DB connection");
                 System.exit(1);
             }
@@ -82,14 +84,16 @@ public class LoadLinxData
             });
 
             LOGGER.info("Linx data loading complete");
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             LOGGER.error("Failed to load Linx data", e);
             System.exit(1);
         }
     }
 
     private static void loadSomaticData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir, String fileRootName)
-            throws IOException {
+            throws IOException
+    {
         LOGGER.info("sample({}) loading Linx somatic data", sampleId);
         final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, fileRootName, false);
         final String svClusterFile = LinxCluster.generateFilename(linxDir, fileRootName, false);
@@ -102,13 +106,13 @@ public class LoadLinxData
         List<String> requiredFiles = Lists.newArrayList(
                 svAnnotationFile, svClusterFile, svLinkFile, svBreakendFile, svFusionFile, svDriverFile, driverCatalogFile);
 
-        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
+        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
             LOGGER.info("skipping somatic data - no files present");
             return;
         }
 
-        if (hasMissingFiles(requiredFiles, "somatic"))
+        if(hasMissingFiles(requiredFiles, "somatic"))
             System.exit(1);
 
         List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(svAnnotationFile);
@@ -149,13 +153,13 @@ public class LoadLinxData
 
         List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile); // required after v5.31
 
-        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
+        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
             LOGGER.info("skipping germline data - no files present");
             return;
         }
 
-        if (hasMissingFiles(requiredFiles, "germline"))
+        if(hasMissingFiles(requiredFiles, "germline"))
             System.exit(1);
 
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
@@ -166,7 +170,7 @@ public class LoadLinxData
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
         dbAccess.writeGermlineSVs(sampleId, germlineSVs);
 
-        if (Files.exists(Paths.get(germlineBreakendFile)))
+        if(Files.exists(Paths.get(germlineBreakendFile)))
         {
             List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
             LOGGER.info("sample({}) loading {} germline breakend records", sampleId, germlineBreakends.size());
@@ -174,7 +178,8 @@ public class LoadLinxData
         }
     }
 
-    private static void addConfig(final ConfigBuilder configBuilder) {
+    private static void addConfig(final ConfigBuilder configBuilder)
+    {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addConfigItem(LINX_FILE_NAME, false, LINX_FILE_NAME);
