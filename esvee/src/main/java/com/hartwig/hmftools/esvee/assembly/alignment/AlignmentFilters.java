@@ -359,7 +359,6 @@ public final class AlignmentFilters
             return;
 
         AlignData lowMappedAlignment = null;
-        AlternativeAlignment lowMappedAltAlignment = null;
 
         List<ChrBaseRegion> ssx2Regions = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? SSX2_REGIONS_V38:  SSX2_REGIONS_V37;
         ChrBaseRegion ssx2Region = ssx2Regions.get(0);
@@ -369,7 +368,6 @@ public final class AlignmentFilters
             if(matchesSsx2Region(ssx2Regions, alignment.chromosome(), alignment.positionStart(), alignment.orientation(), alignment.mapQual()))
             {
                 lowMappedAlignment = alignment;
-                lowMappedAltAlignment = null;
             }
             else
             {
@@ -378,7 +376,6 @@ public final class AlignmentFilters
                     if(matchesSsx2Region(ssx2Regions, altAlignment.Chromosome, altAlignment.Position, altAlignment.Orient, altAlignment.MapQual))
                     {
                         lowMappedAlignment = alignment;
-                        lowMappedAltAlignment = altAlignment;
                         break;
                     }
                 }

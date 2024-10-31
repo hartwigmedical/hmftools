@@ -89,8 +89,11 @@ public class SageApplication implements AutoCloseable
 
         List<String> combinedSampleIds = Lists.newArrayList(mConfig.TumorIds);
         combinedSampleIds.addAll(mConfig.Common.ReferenceIds);
+
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
-                combinedSampleIds, mConfig.Common.JitterParamsDir, mConfig.Common.Quality.HighDepthMode);
+                combinedSampleIds,
+                !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterParamsDir : null,
+                mConfig.Common.Quality.HighDepthMode);
 
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())

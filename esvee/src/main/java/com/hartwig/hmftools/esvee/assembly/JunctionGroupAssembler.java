@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentChecker;
+import com.hartwig.hmftools.esvee.assembly.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -47,6 +49,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final Map<String,ReadGroup> mReadGroupMap;
     private final Map<String,SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
     private final ReadStats mReadStats;
+    private final List<JunctionAssembly> mDecoyAssemblies;
 
     public JunctionGroupAssembler(
             final AssemblyConfig config, final BamReader bamReader, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
@@ -55,6 +58,8 @@ public class JunctionGroupAssembler extends ThreadTask
         mConfig = config;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
+
+        mDecoyAssemblies = Lists.newArrayList();
 
         mAlignmentChecker = new AlignmentChecker(mConfig, resultsWriter.decoyMatchWriter());
 
@@ -122,6 +127,7 @@ public class JunctionGroupAssembler extends ThreadTask
     }
 
     public ReadStats readStats() { return mReadStats; }
+    public List<JunctionAssembly> decoyAssemblies() { return mDecoyAssemblies; }
 
     private void processJunctionGroup(final JunctionGroup junctionGroup)
     {
@@ -194,6 +200,8 @@ public class JunctionGroupAssembler extends ThreadTask
                 {
                     SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
                     ++mReadStats.DecoySequences;
+
+                    mDecoyAssemblies.add(assembly);
                     continue;
                 }
 

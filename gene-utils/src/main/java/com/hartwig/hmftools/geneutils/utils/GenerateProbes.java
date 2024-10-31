@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.common;
+package com.hartwig.hmftools.geneutils.utils;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;

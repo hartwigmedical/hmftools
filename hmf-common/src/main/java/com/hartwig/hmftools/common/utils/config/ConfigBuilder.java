@@ -35,7 +35,6 @@ public class ConfigBuilder
     private final String mAppName;
     private final List<ConfigItem> mItems;
     private final Set<ErrorType> mErrors;
-    private boolean mWarnOnRepeatedRegos;
 
     private static final String DEFAULT_CONFIG_PREFIX = "-";
     private static final String PRINT_HELP = "-help";
@@ -67,10 +66,7 @@ public class ConfigBuilder
         mItems = Lists.newArrayList();
         mErrors = Sets.newHashSet();
         mConfigPrefix = prefix;
-        mWarnOnRepeatedRegos = true;
     }
-
-    public void disableWarnOnRepeatedRegos() { mWarnOnRepeatedRegos = false; }
 
     public void addConfigItem(final ConfigItem item)
     {
@@ -78,9 +74,9 @@ public class ConfigBuilder
 
         if(matched != null)
         {
-            if(mWarnOnRepeatedRegos)
+            if(matched.Type != item.Type || matched.Required != item.Required)
             {
-                LOGGER.warn("registering config item({}) again", matched);
+                LOGGER.warn("repeat config registration differs: existing({}) vs new({})", matched, item);
             }
 
             return;

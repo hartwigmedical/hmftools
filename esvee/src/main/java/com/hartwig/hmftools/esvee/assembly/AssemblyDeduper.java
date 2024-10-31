@@ -110,7 +110,6 @@ public class AssemblyDeduper
         removeExisting.forEach(x -> existingAssemblies.remove(x));
     }
 
-
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
         if(first.indel() != second.indel())

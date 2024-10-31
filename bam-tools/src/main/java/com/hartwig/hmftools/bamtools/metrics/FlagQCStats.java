@@ -2,8 +2,8 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 public class FlagQCStats
 {
-    private int mPassed;
-    private int mFailed;
+    private long mPassed;
+    private long mFailed;
 
     public FlagQCStats()
     {
@@ -33,11 +33,11 @@ public class FlagQCStats
         mFailed += other.mFailed;
     }
 
-    public int getPassed()
+    public long getPassed()
     {
         return mPassed;
     }
-    public int getFailed()
+    public long getFailed()
     {
         return mFailed;
     }

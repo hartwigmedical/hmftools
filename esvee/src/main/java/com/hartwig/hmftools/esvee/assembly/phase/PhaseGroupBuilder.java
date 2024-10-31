@@ -122,6 +122,8 @@ public class PhaseGroupBuilder
         // clean-up phase groups which were transferred into another group
         remoteBuilderTasks.forEach(x -> x.removedPhaseGroups().forEach(y -> mPhaseGroups.remove(y)));
 
+        SV_LOGGER.info("phase group building complete, final group count({})", mPhaseGroups.size());
+
         mergePerfCounters(perfCounters, remoteBuilderTasks.stream().collect(Collectors.toList()));
 
         remoteBuilderTasks.forEach(x -> x.logStats());
@@ -144,7 +146,7 @@ public class PhaseGroupBuilder
         }
 
         // run validation
-        if(mConfig.PerfDebug)
+        if(AssemblyConfig.DevDebug)
         {
             // check if an assembly is in 2 phase groups
             List<JunctionAssembly> assemblies = Lists.newArrayList();

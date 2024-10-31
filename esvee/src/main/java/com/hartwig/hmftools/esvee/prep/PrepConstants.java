@@ -46,6 +46,7 @@ public final class PrepConstants
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT = 5;
+    public static final int DISCORDANT_GROUP_MAX_LOCAL_LENGTH = 1_000_000;
     public static final int DISCORDANT_GROUP_MIN_MAP_QUAL = 40;
     public static final int DISCORDANT_GROUP_MIN_ALIGN_SCORE = 75;
 

@@ -34,7 +34,7 @@ This is the default and recommended mode.
 | tumor_bam     | Path to indexed tumor BAM file                                                             |
 | output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
 | loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
-| ref_genome_version | One of `37` or `38`. Required only when using CRAM files.                             |
+| ref_genome_version | One of `37` or `38`
 
 The loci file used by HMF for both 37 and 38 reference genomes is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). These loci are generated using GNOMAD v3 SNP sites (lifted over for GRCH37 version) from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.  These sites are further filtered to remove loci with frequently unclear zygosity in a set of 60 HMF samples, yielding around 6.3M sites overall.  
 
@@ -45,18 +45,17 @@ AMBER supports both BAM and CRAM file formats.
 
 ### Optional Arguments
 
-| Argument              | Default | Description                                                                                       |
-|-----------------------|---------|---------------------------------------------------------------------------------------------------|
-| threads               | 1       | Number of threads to use                                                                          |
-| min_mapping_quality   | 50       | Minimum mapping quality for an alignment to be used                                               |
-| min_base_quality      | 13      | Minimum quality for a base to be considered                                                       |
-| tumor_min_depth      | 8      | Min tumor depth for a site to be considered |
-| min_depth_percent     | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
-| max_depth_percent     | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
-| min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                                           |
-| max_het_af_percent    | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                                           |
-| ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
-| validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
+| Argument               | Default | Description                                                                                       |
+|------------------------|---------|---------------------------------------------------------------------------------------------------|
+| min_mapping_quality    | 50      | Minimum mapping quality for an alignment to be used                                               |
+| min_base_quality       | 13      | Minimum quality for a base to be considered                                                       |
+| tumor_min_depth        | 8 / 25  | Min tumor depth for a site to be considered, uses 25 in tumor-only mode                           |
+| min_depth_percent      | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
+| max_depth_percent      | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
+| min_het_af_percent     | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                       |
+| max_het_af_percent     | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                       |
+| validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
+| threads                | 1       | Number of threads to use                                                                          |
 
 ### Example Usage
 
@@ -90,10 +89,10 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 ### Tumor-only specific optional Arguments
 
-| Argument          | Default | Description                                                                   |
-|-------------------|---------|-------------------------------------------------------------------------------|
-| tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
-| tumor_only_min_support | 2 | Min support in ref and alt in tumor only mode                                 |
+| Argument          | Default | Description                                   |
+|-------------------|---------|-----------------------------------------------|
+| tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor-only mode     |
+| tumor_only_min_support | 2 | Min support in ref and alt in tumor-only mode |
 
 ### Example Usage
 

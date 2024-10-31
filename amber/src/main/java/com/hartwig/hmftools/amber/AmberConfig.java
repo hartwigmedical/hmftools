@@ -170,9 +170,9 @@ public class AmberConfig
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
 
         configBuilder.addInteger(
-                TUMOR_ONLY_MIN_SUPPORT, "Min support in ref and alt in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
+                TUMOR_ONLY_MIN_SUPPORT, "Min support in ref and alt in tumor-only mode", DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
 
-        configBuilder.addDecimal(TUMOR_ONLY_MIN_VAF, "Min VAF in ref and alt in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_VAF);
+        configBuilder.addDecimal(TUMOR_ONLY_MIN_VAF, "Min VAF in ref and alt in tumor-only mode", DEFAULT_TUMOR_ONLY_MIN_VAF);
 
         configBuilder.addConfigItem(TUMOR_MIN_DEPTH,
                 format("Min tumor depth, default tumor/normal(%d) tumor-only(%d)", DEFAULT_TUMOR_MIN_DEPTH, DEFAULT_TUMOR_ONLY_MIN_DEPTH));

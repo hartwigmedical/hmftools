@@ -53,6 +53,7 @@ Argument | Default           | Description
 ---|-------------------|---
 reference | NA                | Comma separated names of the reference sample
 reference_bam | NA                | Comma separated paths to indexed reference BAM file
+germline | NA | Flag is required to run in germline mode, impacts variant filtering
 ref_sample_count | 1                 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
 resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
 threads | 2                 | Number of threads to use
@@ -67,7 +68,8 @@ no_fragment_sync | False             | Where R1 and R2 in a fragment overlap, co
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
 germline | false             | Is a germline run, so tumor/normal filters are not applied
-jitter_param_dir | NA                | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
+jitter_param_dir | BAM path | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
+skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
 read_context_flank_size | 10                | Number of flanking bases on each side of read core
 
 The cardinality of `reference` must match `reference_bam`.
@@ -140,7 +142,6 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -jitter_param_dir /path/to/COLO829v003T.jitter_params.tsv \
     -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
@@ -361,15 +362,6 @@ For each candidate, SAGE tallies the ref/alt support and total quality and selec
 
 A candidate will be dropped at this stage if it is only identified on one fragment.
 
-The variants at this stage have the following properties available in the VCF:
-
-Field | Description
----|---
-`RC_INFO` | Read context info: `RCAlignmentStart`-`RCVariantIndex`-`LeftFlank`-`Core`-`RightFlank`-`RCCigar`
-`RC_REPC` | Longest repeat count identified in read core
-`RC_REPS` | Repeating unit associated with `RC_REPC`
-`RC_MH` | Microhomology in read context
-
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
 
@@ -449,35 +441,13 @@ We then take the minimum of the 2 modified qualities as the read contribution to
 totalQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
 </pre>
 
-### Output
-
-The outputs of this stage are found in the VCF as:
-
- Field                    | Description                                                                                             
---------------------------|---------------------------------------------------------------------------------------------------------
- `RC_CNT[0,1,2,3,4,5]`  | Read Context Count \[`FULL`, `PARTIAL_CORE`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]              
- `RC_QUAL[0,1,2,3,4,5]` | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`,`REFERENCE`, `TOTAL`\]             
- `RC_JIT[0,1]`          | Read Context Jitter \[`SHORTENED`, `LENGTHENED`\]                                     
- `AD[0,1]`                | Allelic Depth  (=\[RC_CNT\[5\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] + RC_CNT\[4\]\] ) 
- `DP`                     | Read Depth (=RC_CNT\[6\])                                                                               
- `AF`                     | Allelic Frequency (=AD\[1\] / DP)                                                                       
- `QUAL`                   | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])                                            
- `AMQ[0,1]`               | Average (raw) Mapping Quality (all, alt)    
- `AMMQ`               | Average modified mapping quality                                                                
- `AMBQ`               | Average modified base quality
- `MED`                    | Max read edge distance for alt-supporting reads 
- `AED`                    | Average read edge distance (all, alt)
- `RSB[0,1]`               | Proportion of alt-supporting reads on the forward strand                                          
- `SB[0,1]`                | Proportion of alt-supporting fragments with F1R2 orientation                                           
- `SAC`                | Simple alt count (not considered to be AD) 
-
 ### Hard Filters
 
 To reduce processing the following hard filters are applied: 
 
 Filter | Default Value | Field
 ---|---------------|---
-hard_min_tumor_qual | 50            | `QUAL`
+hard_min_tumor_qual | 50            | `totalQuality`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
@@ -486,7 +456,7 @@ filtered_max_normal_alt_support | 3             | Normal `AD[1]`
 Note that hotspots are never hard-filtered.
 
 Variants failing any of the first 4 filters are excluded from this point onwards and have no further processing applied to them. The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample. The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
- 
+
 ## 4. Jitter determinations
 After aggregating read support counts, as well as `LENGTHENED` and `SHORTENED` jitter counts in the previous step, we now determine if the variant should be discarded as likely jitter noise from an alternative allele.
 
@@ -631,6 +601,36 @@ TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
 ```
 
 A 'missed variant likelihood' is calculated using poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene.
+
+# Outputs
+
+The outputs below are found in the VCF::
+
+ Field                    | Description                                                                                             
+--------------------------|---------------------------------------------------------------------------------------------------------
+ `RC_CNT[0,1,2,3,4,5]`  | Read Context Count \[`FULL`, `PARTIAL_CORE`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]              
+ `RC_QUAL[0,1,2,3,4,5]` | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`,`REFERENCE`, `TOTAL`\]             
+ `RC_JIT[0,1]`          | Read Context Jitter \[`SHORTENED`, `LENGTHENED`\]    
+ `RC_IPC`               | Read Context improper pair count
+ `AD[0,1]`                | Allelic Depth  (=\[RC_CNT\[5\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] + RC_CNT\[4\]\] ) 
+ `DP`                     | Read Depth (=RC_CNT\[6\])                                                                               
+ `TQP`                  | p-score associated with variant given `DP`, `AD` and base quality
+ `MQF`                  | Mapping quality factor
+ `AF`                     | Allelic Frequency (=AD\[1\] / DP)                                                                       
+ `QUAL`                   | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])                                            
+ `AMQ[0,1]`               | Average (raw) Mapping Quality (all, alt)    
+ `AMMQ`               | Average modified mapping quality                                                                
+ `AMBQ`               | Average modified base quality
+ `ABQ[0,1]`               | Average recalibrated base quality (all, alt)
+ `MED`                    | Max read edge distance for alt-supporting reads 
+ `AED`                    | Average read edge distance (all, alt)
+ `RSB[0,1]`               | Proportion of alt-supporting reads on the forward strand                                          
+ `SB[0,1]`                | Proportion of alt-supporting fragments with F1R2 orientation                                           
+ `SAC`                | Simple alt count (not considered to be AD)
+`RC_INFO` | Read context info: `RCAlignmentStart`-`RCVariantIndex`-`LeftFlank`-`Core`-`RightFlank`-`RCCigar`
+`RC_REPC` | Longest repeat count identified in read core
+`RC_REPS` | Repeating unit associated with `RC_REPC`
+`RC_MH` | Microhomology in read context
 
 # Performance Characteristics
 Time taken for Sage to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 

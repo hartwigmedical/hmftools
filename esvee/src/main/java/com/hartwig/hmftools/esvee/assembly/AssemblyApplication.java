@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DECOY;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
@@ -181,7 +182,7 @@ public class AssemblyApplication
             Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
         }
 
-        // if(mConfig.PerfDebug && !validateJunctionMap(mChrJunctionsMap))
+        // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);
 
         if(mConfig.JunctionFiles.size() > 1)
@@ -235,6 +236,20 @@ public class AssemblyApplication
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
+
+        if(mResultsWriter.assemblyWriter() != null)
+        {
+            for(JunctionGroupAssembler jgAssembler : primaryAssemblyTasks)
+            {
+                for(JunctionAssembly decoyAssembly : jgAssembler.decoyAssemblies())
+                {
+                    decoyAssembly.setOutcome(DECOY, true);
+                    mResultsWriter.assemblyWriter().writeAssembly(decoyAssembly);
+                }
+
+                jgAssembler.decoyAssemblies().clear();
+            }
+        }
 
         int assemblyCount = 0;
         int junctionReadCount = 0;

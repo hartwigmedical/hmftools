@@ -31,8 +31,6 @@ To run SAGE in germline mode we use the following parameters:
 -tumor_bam REFERENCE_BAM
 -reference TUMOR_SAMPLE
 -reference_bam TUMOR_BAM
--hotspot_min_tumor_qual 50
--panel_min_tumor_qual 75
 -ref_sample_count 0
 -panel_only
 -germline
