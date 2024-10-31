@@ -586,9 +586,19 @@ public class DatabaseAccess implements AutoCloseable
         ciderDAO.writeCdr3Sequence(sample, cdr3Sequences);
     }
 
+    public List<Cdr3Sequence> readCdr3Sequences(final String sample)
+    {
+        return ciderDAO.readCdr3Sequence(sample);
+    }
+
     public void writeCdr3LocusSummaries(final String sample, final List<Cdr3LocusSummary> locusSummaries)
     {
         ciderDAO.writeLocusSummaries(sample, locusSummaries);
+    }
+
+    public List<Cdr3LocusSummary> readCdr3LocusSummaries(final String sample)
+    {
+        return ciderDAO.readCdr3LocusSummaries(sample);
     }
 
     public void writeTelomereLength(final String sample, @Nullable TelomereLength germlineTelomereLength, @Nullable TelomereLength somaticTelomereLength)

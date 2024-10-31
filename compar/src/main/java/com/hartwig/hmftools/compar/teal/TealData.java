@@ -20,6 +20,7 @@ public class TealData implements ComparableItem
 {
     public final TelomereLength TelomereLength;
 
+    protected static final String FLD_TYPE = "Type";
     protected static final String FLD_TELOMERE_LENGTH = "TelomereLength";
 
     public TealData(final TelomereLength telomereLength)
@@ -33,13 +34,18 @@ public class TealData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s", TelomereLength.type());
+        return String.format("type(%s)", TelomereLength.type());
+    }
+
+    public static List<String> comparedFieldNames()
+    {
+        return List.of(FLD_TELOMERE_LENGTH);
     }
 
     @Override
     public List<String> displayValues()
     {
-        return List.of(format("%s", TelomereLength.finalTelomereLength()));
+        return List.of(format("%.2f", TelomereLength.finalTelomereLength()));
     }
 
     @Override
