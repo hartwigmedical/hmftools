@@ -1,7 +1,7 @@
 FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
-ARG TOOL_NAME=esvee
+ARG TOOL_NAME=sage
 ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
 ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 
