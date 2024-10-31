@@ -12,40 +12,40 @@ An example targeted-panel pipeline, including support for the HMF and TSO-500 pa
 
 ## Pipeline overview
 Here is a schematic showing how the interactions between the core molecular DNA components of the tool suite:
-![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
+
+![HMF_Pipeline](./pipeline/wigits_pipeline.png)
 
 ## Latest Pipeline Version
 
-The latest HMF pipeline is v5.34. Release notes
+The latest HMF pipeline is v6.0. Release notes
 are [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/docs/PipelineReleaseNotes.v5.34.pdf).
 
 The table below has links for the each tool used in this release.
 
 ### DNA Tools
 
-| Component                         | Description                                                            | Current Version                                                                   |
-|-----------------------------------|------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| [Amber](./amber/README.md)        | Generate a tumor BAF file for Purple's copy number fit                 | [4.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.0.1)     |
-| [BamTools](./bam-tools/README.md) | BAM metrics and slicing                                                | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.2)     |
-| [Cider](./cider/README.md)        | TCR/BCR V(D)J recombination sequence detection                         | [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)     |
-| [Cobalt](./cobalt/README.md)      | Determines the read depth ratios for Purple's copy number fit          | [1.16](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.16)      |
-| [Cuppa](./cuppa/README.md)        | Tissue of origin prediction from WGS/WTS                               | [2.1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.1.1)     |
-| [Gripss](./gripss/README.md)      | SV filtering                                                           | [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.4)        |
-| [Lilac](./lilac/README.md)        | HLA typing                                                             | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)         |
-| [Linx](./linx/README.md)          | SV annotation, clustering & chaining, fusion and disruption calling    | [1.25](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.25)        |
-| [Pave](./pave/README.md)          | Point mutation annotation and gene impact                              | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.6)          |
-| [Purple](./purple/README.md)      | Estimates copy number, purity and ploidy, and identifies driver events | [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v4.0)        |
-| [Redux](./redux/README.md)        | Duplicate marking, consensus reads, UMIs and read unmapping            | [1.1.7](https://github.com/hartwigmedical/hmftools/releases/tag/mark-dups-v1.1.7) |
-| [Sage](./sage/README.md)          | Point mutation variant calling and filtering                           | [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.4)          |
-| [Teal](./teal/README.md)          | Measures telomere content and estimates telomeric length               | [1.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.0)      |
-| [SvPrep](./esvee/README.md)       | Pre-GRIDSS BAM filtering                                               | [1.2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.2.3)   |
+| Component                         | Description                                                            | Current Version                                                                 |
+|-----------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [Amber](./amber/README.md)        | Generate a tumor BAF file for Purple's copy number fit                 | [4.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.1)       |
+| [BamTools](./bam-tools/README.md) | BAM metrics and slicing                                                | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.3)   |
+| [Cider](./cider/README.md)        | TCR/BCR V(D)J recombination sequence detection                         | [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)   |
+| [Cobalt](./cobalt/README.md)      | Determines the read depth ratios for Purple's copy number fit          | [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v2.0)      |
+| [Cuppa](./cuppa/README.md)        | Tissue of origin prediction from WGS/WTS                               | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.3)       |
+| [Esvee](./esvee/README.md)        | SV calling                                                             | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/esvee-v1.0)       |
+| [Lilac](./lilac/README.md)        | HLA typing                                                             | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)       |
+| [Linx](./linx/README.md)          | SV annotation, clustering & chaining, fusion and disruption calling    | [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v2.0)        |
+| [Pave](./pave/README.md)          | Point mutation annotation and gene impact                              | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.7)        |
+| [Purple](./purple/README.md)      | Estimates copy number, purity and ploidy, and identifies driver events | [4.1](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v4.1)      |
+| [Redux](./redux/README.md)        | Duplicate marking, consensus reads, UMIs and read unmapping            | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/redux-v1.1.0)     |
+| [Sage](./sage/README.md)          | Point mutation variant calling and filtering                           | [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v4.0)        |
+| [Teal](./teal/README.md)          | Measures telomere content and estimates telomeric length               | [1.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.0)    |
 
 The following external tools are also used in the pipeline:
 
-| Component                                        | Description                                   | Current Version                                                       |
-|--------------------------------------------------|-----------------------------------------------|-----------------------------------------------------------------------|
-| [GRIDSS](https://github.com/PapenfussLab/gridss) | Structural variant calling                    | [2.13.2](https://github.com/PapenfussLab/gridss/releases/tag/v2.13.2) |
-| [Chord](https://github.com/UMCUGenetics/CHORD)   | Homologous Recombination Deficiency detection | [2.0](https://github.com/UMCUGenetics/CHORD/releases/tag/2.00)        |
+| Component                                               | Description                                   | Current Version                                                       |
+|---------------------------------------------------------|-----------------------------------------------|-----------------------------------------------------------------------|
+| [VirusBreakend](https://github.com/PapenfussLab/gridss) | Viral integration detection                   | [2.13.2](https://github.com/PapenfussLab/gridss/releases/tag/v2.13.2) |
+| [Chord](https://github.com/UMCUGenetics/CHORD)          | Homologous Recombination Deficiency detection | [2.0](https://github.com/UMCUGenetics/CHORD/releases/tag/2.00)        |
 
 ### RNA Tools
 
