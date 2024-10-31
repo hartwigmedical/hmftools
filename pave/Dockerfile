@@ -3,12 +3,13 @@ FROM bash:5.2
 ARG VERSION
 ARG TOOL_NAME=pave
 ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
+ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 
 USER root
 
 ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
-ADD target/entrypoint.sh /usr/local/bin/${TOOL_NAME}
-RUN chmod +x /usr/local/bin/${TOOL_NAME}
+ADD target/entrypoint.sh ${RUN_SCRIPT}
+RUN chmod +x ${RUN_SCRIPT}
 
 RUN apk update && apk upgrade && apk add \
     procps \
