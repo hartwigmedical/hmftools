@@ -49,15 +49,18 @@ public class LoadSignatures
             loadSignatureData(dbAccess, sample, sampleFile, sampleDir);
 
             LOGGER.info("signature allocation loading complete");
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
     }
 
-    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile, final String sampleDir) {
-        try {
+    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile, final String sampleDir)
+    {
+        try
+        {
             final List<SignatureAllocation> sigAllocations = sampleFile != null ?
                     SignatureAllocationFile.read(sampleFile) :
                     SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
@@ -72,7 +75,7 @@ public class LoadSignatures
                 LOGGER.info("sample({}) has not signature allocations", sampleId);
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LOGGER.error("failed to load sample({}) allocations: {}", sampleId, e.toString());
         }

@@ -76,10 +76,10 @@ public class LoadLinxData
 
             dbAccess.context().transaction(tr ->
             {
-                if (loadSomatic)
+                if(loadSomatic)
                     loadSomaticData(dbAccess, sampleId, linxDir, fileRootName);
 
-                if (loadGermline)
+                if(loadGermline)
                     loadGermlineData(dbAccess, sampleId, linxGermlineDir, fileRootName);
             });
 
