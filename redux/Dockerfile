@@ -13,7 +13,7 @@ RUN chmod +x ${RUN_SCRIPT}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
-    "openjdk>=8" \
+    "openjdk=11" \
     "sambamba>=1.0.1" \
     && micromamba clean --all --yes
 
