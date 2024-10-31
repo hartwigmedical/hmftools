@@ -18,60 +18,52 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadSignatures
-{
+public class LoadSignatures {
+    private static final String SAMPLE_DIR = "sample_dir";
     private static final String SAMPLE_FILE = "sample_file";
 
-    public static void main(@NotNull String[] args) throws ParseException
-    {
+    public static void main(@NotNull String[] args) throws ParseException {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addPath(SAMPLE_FILE, true, "File path to read signature data from");
+        configBuilder.addPath(SAMPLE_FILE, false, "File path to read signature data from");
+        configBuilder.addPath(SAMPLE_DIR, false, "Path to read signature data from");
 
         configBuilder.checkAndParseCommandLine(args);
 
         String sample = configBuilder.getValue(SAMPLE);
         String sampleFile = configBuilder.getValue(SAMPLE_FILE);
+        String sampleDir = configBuilder.getValue(SAMPLE_DIR);
 
-        try(DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
-        {
-            if(dbAccess == null)
-            {
+        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder)) {
+            if (dbAccess == null) {
                 LOGGER.error("Failed to create DB connection");
                 System.exit(1);
             }
 
-            loadSignatureData(dbAccess, sample, sampleFile);
+            loadSignatureData(dbAccess, sample, sampleFile, sampleDir);
 
             LOGGER.info("signature allocation loading complete");
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
     }
 
-    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile)
-    {
-        try
-        {
-            final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sampleFile);
+    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile, final String sampleDir) {
+        try {
+            final List<SignatureAllocation> sigAllocations = sampleFile != null ?
+                    SignatureAllocationFile.read(sampleFile) :
+                    SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
 
-            if(!sigAllocations.isEmpty())
-            {
+            if (!sigAllocations.isEmpty()) {
                 LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
                 dbAccess.writeSignatures(sampleId, sigAllocations);
-            }
-            else
-            {
+            } else {
                 LOGGER.info("sample({}) has not signature allocations", sampleId);
             }
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             LOGGER.error("failed to load sample({}) allocations: {}", sampleId, e.toString());
         }
     }
