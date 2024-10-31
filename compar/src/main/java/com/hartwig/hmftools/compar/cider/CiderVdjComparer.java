@@ -50,7 +50,7 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         try
         {

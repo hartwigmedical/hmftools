@@ -7,9 +7,14 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.Category.LILAC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.DiffThresholds.DEFAULT_DIFF_PERC;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_INFRAME_INDEL;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_MISSENSE;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_REF_TOTAL;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SPLICE;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SYNONYMOUS;
+import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_TOTAL;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
 
@@ -35,6 +40,8 @@ public class LilacComparer implements ItemComparer
 
     private static final double FRAG_DIFF_PERC = 0.01;
     private static final double FRAG_DIFF_ABS = 10;
+    private static final double VARIANT_DIFF_PERC = 0.1;
+    private static final double VARIANT_DIFF_ABS = 0.4;
 
     public LilacComparer(final ComparConfig config)
     {
@@ -53,6 +60,13 @@ public class LilacComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_FIT_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_DISC_ALIGN_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_DISC_INDELS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+
+        thresholds.addFieldThreshold(FLD_MISSENSE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_NONSENSE_OR_FRAMESHIFT, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_INFRAME_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_SYNONYMOUS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_TUMOR_COPY_NUMBER, 0.5, 0.15);
     }
 
     @Override
@@ -70,11 +84,12 @@ public class LilacComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
+        // Not currently supported
         return Lists.newArrayList();
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 

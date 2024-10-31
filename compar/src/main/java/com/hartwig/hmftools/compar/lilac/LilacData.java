@@ -32,8 +32,15 @@ public class LilacData implements ComparableItem
 
     protected static final String FLD_ALLELES = "Alleles";
     protected static final String FLD_VARIANTS = "SomaticVariants";
+
     protected static final String FLD_REF_TOTAL = "RefTotal";
     protected static final String FLD_TUMOR_TOTAL = "TumorTotal";
+    protected static final String FLD_MISSENSE = "SomaticMissense";
+    protected static final String FLD_NONSENSE_OR_FRAMESHIFT = "SomaticNonsenseOrFrameshift";
+    protected static final String FLD_SPLICE = "SomaticSplice";
+    protected static final String FLD_INFRAME_INDEL = "SomaticInframeIndel";
+    protected static final String FLD_SYNONYMOUS = "SomaticSynonymous";
+    protected static final String FLD_TUMOR_COPY_NUMBER = "TumorCopyNumber";
 
     private static final String ALLELE_DELIM = ":";
 
@@ -94,7 +101,6 @@ public class LilacData implements ComparableItem
         checkDiff(diffs, FLD_DISC_ALIGN_FRAGS, QcData.discardedAlignmentFragments(), otherData.QcData.discardedAlignmentFragments(), thresholds);
         checkDiff(diffs, FLD_DISC_INDELS, QcData.discardedIndels(), otherData.QcData.discardedIndels(), thresholds);
         checkDiff(diffs, FLD_HLA_Y, QcData.hlaYAllele(), otherData.QcData.hlaYAllele());
-        checkDiff(diffs, FLD_VARIANTS, somaticVariantCount(), otherData.somaticVariantCount());
 
         List<LilacAllele> origDiffs = Alleles.stream().filter(x -> !hasAllele(x, otherData.Alleles)).collect(Collectors.toList());
         List<LilacAllele> newDiffs = otherData.Alleles.stream().filter(x -> !hasAllele(x, Alleles)).collect(Collectors.toList());
@@ -106,22 +112,34 @@ public class LilacData implements ComparableItem
             StringJoiner newDiffsSj = new StringJoiner(ALLELE_DELIM);
             newDiffs.forEach(x -> newDiffsSj.add(x.allele()));
 
-            diffs.add(String.format("%s(%s/%s)", FLD_ALLELES, origDiffsSj, newDiffsSj.toString()));
+            diffs.add(String.format("%s(%s/%s)", FLD_ALLELES, origDiffsSj, newDiffsSj));
         }
 
-        if(matchLevel == MatchLevel.DETAILED)
+        // matches alleles in order when an allele is homozygous
+        List<LilacAllele> newAllelesToMatch = Lists.newArrayList(otherData.Alleles);
+        for(LilacAllele refAllele : Alleles)
         {
-            checkDiff(diffs, FLD_HLA_Y, QcData.hlaYAllele(), otherData.QcData.hlaYAllele());
-
-            for(LilacAllele refAllele : Alleles)
+            LilacAllele matchingNewAllele =
+                    newAllelesToMatch.stream().filter(x -> x.allele().equals(refAllele.allele())).findFirst().orElse(null);
+            if(matchingNewAllele != null)
             {
-                LilacAllele newAllele = otherData.Alleles.stream().filter(x -> x.allele().equals(refAllele.allele())).findFirst().orElse(null);
+                List<String> temporaryDiffs = Lists.newArrayList();
+                checkDiff(temporaryDiffs, FLD_MISSENSE, refAllele.somaticMissense(), matchingNewAllele.somaticMissense(), thresholds);
+                checkDiff(temporaryDiffs, FLD_NONSENSE_OR_FRAMESHIFT, refAllele.somaticNonsenseOrFrameshift(),
+                        matchingNewAllele.somaticNonsenseOrFrameshift(), thresholds);
+                checkDiff(temporaryDiffs, FLD_SPLICE, refAllele.somaticSplice(), matchingNewAllele.somaticSplice(), thresholds);
+                checkDiff(temporaryDiffs, FLD_INFRAME_INDEL, refAllele.somaticInframeIndel(), matchingNewAllele.somaticInframeIndel(), thresholds);
+                checkDiff(temporaryDiffs, FLD_TUMOR_COPY_NUMBER, refAllele.tumorCopyNumber(), matchingNewAllele.tumorCopyNumber(), thresholds);
+                if(matchLevel == MatchLevel.DETAILED)
+                {
+                    checkDiff(temporaryDiffs, FLD_REF_TOTAL, refAllele.refFragments(), matchingNewAllele.refFragments(), thresholds);
+                    checkDiff(temporaryDiffs, FLD_TUMOR_TOTAL, refAllele.tumorFragments(), matchingNewAllele.tumorFragments(), thresholds);
+                    checkDiff(temporaryDiffs, FLD_SYNONYMOUS, refAllele.somaticSynonymous(), matchingNewAllele.somaticSynonymous(), thresholds);
 
-                if(newAllele == null)
-                    continue;
+                }
 
-                checkDiff(diffs, FLD_REF_TOTAL, refAllele.refFragments(), newAllele.refFragments(), thresholds);
-                checkDiff(diffs, FLD_TUMOR_TOTAL, refAllele.tumorFragments(), newAllele.tumorFragments(), thresholds);
+                temporaryDiffs.stream().map(d -> refAllele.allele() + ALLELE_DELIM + d).forEach(d -> diffs.add(d));
+                newAllelesToMatch.remove(matchingNewAllele);
             }
         }
 
