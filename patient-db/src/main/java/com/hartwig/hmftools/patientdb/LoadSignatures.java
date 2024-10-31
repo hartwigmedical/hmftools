@@ -38,7 +38,7 @@ public class LoadSignatures
         String sampleFile = configBuilder.getValue(SAMPLE_FILE);
         String sampleDir = configBuilder.getValue(SAMPLE_DIR);
 
-        try (DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
+        try(DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
         {
             if(dbAccess == null)
             {
@@ -49,7 +49,8 @@ public class LoadSignatures
             loadSignatureData(dbAccess, sample, sampleFile, sampleDir);
 
             LOGGER.info("signature allocation loading complete");
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
@@ -65,11 +66,14 @@ public class LoadSignatures
             {
                 LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
                 dbAccess.writeSignatures(sampleId, sigAllocations);
-            }else
+            }
+            else
             {
                 LOGGER.info("sample({}) has not signature allocations", sampleId);
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOGGER.error("failed to load sample({}) allocations: {}", sampleId, e.toString());
         }
     }

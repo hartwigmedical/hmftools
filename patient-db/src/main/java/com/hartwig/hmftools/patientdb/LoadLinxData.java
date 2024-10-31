@@ -84,7 +84,8 @@ public class LoadLinxData
             });
 
             LOGGER.info("Linx data loading complete");
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             LOGGER.error("Failed to load Linx data", e);
             System.exit(1);
