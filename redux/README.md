@@ -223,6 +223,13 @@ GCount  | Frequency of ‘G’ NT
 TCount  | Frequency of ‘T’ NT 
 NCount | Frequency of ‘N’ NT 
 
+### Microsatellite jitter modelling
+File Name | Details 
+---|---
+SAMPLE_ID.repeat.tsv.gz | Frequency of each repeat count for each site 
+SAMPLE_ID.ms_table.tsv.gz | Equivalent to `SAMPLE_ID.repeat.tsv.gz` after aggregating sites by repeat unit / ref repeat count and discarding potential alt sites
+SAMPLE_ID.jitter_params.tsv  | 6-parameter model parameterisation for each repeat unit
+
 ## Problematic regions file defintion
 
 Certain regions of the genome are consistently problematic and lead to frequently obvious mismapped regions which can cause several downstream intepretation problems in variant calling.   We specifically identify 2 types of such regions - very long repeats and regions which consistently align with much higher coverage across many WGS samples and create a bed file   
