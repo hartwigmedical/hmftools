@@ -640,11 +640,11 @@ public class ReadUnmapper
 
     private static boolean isSupplementaryChimericRead(final SAMRecord record, SupplementaryReadData suppReadData)
     {
-        if(record.getMateUnmappedFlag())
-            return true;
-
         if(record.getReadPairedFlag())
         {
+            if(record.getMateUnmappedFlag())
+                return true;
+
             // inter-chromosomal
             if(!suppReadData.Chromosome.equals(record.getMateReferenceName()))
                 return true;

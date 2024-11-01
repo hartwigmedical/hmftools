@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -209,7 +210,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
             if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
                 return; // drop unmapped supplementaries
 
-            if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
+            if(read.getReadUnmappedFlag() && SamRecordUtils.mateUnmapped(read))
             {
                 mBamWriter.writeFragment(new Fragment(read));
                 ++mStats.Unmapped;
