@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.redux.common.Fragment;
 
 import htsjdk.samtools.SAMRecord;
@@ -102,7 +103,7 @@ public class ReadPositionsCache
         // check for an existing mate if on the same chromosome
         // store in a group of fragments with a matching first fragment coordinate
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
-        boolean mateUnmapped = read.getMateUnmappedFlag();
+        boolean mateUnmapped = SamRecordUtils.mateUnmapped(read);
         boolean readUnmapped = read.getReadUnmappedFlag();
 
         if(readUnmapped && mateUnmapped) // shouldn't occur since is handled prior

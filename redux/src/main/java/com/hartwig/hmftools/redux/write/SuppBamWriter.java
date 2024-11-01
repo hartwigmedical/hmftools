@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.write;
 
 import static com.hartwig.hmftools.common.bamops.BamMerger.buildCombinedHeader;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
-import static com.hartwig.hmftools.redux.write.FileWriterCache.BAM_FILE_ID;
+import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 
 import java.io.File;
 
@@ -12,8 +12,6 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class SuppBamWriter
 {
@@ -38,7 +36,7 @@ public class SuppBamWriter
 
     public static String formBamFilename(final ReduxConfig config, final String multiId)
     {
-        String filename = config.OutputDir + config.SampleId + "." + BAM_FILE_ID;
+        String filename = config.OutputDir + config.SampleId + "." + FILE_ID;
 
         if(config.OutputId != null)
             filename += "." + config.OutputId;

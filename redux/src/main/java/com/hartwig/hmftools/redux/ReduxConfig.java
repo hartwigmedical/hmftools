@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DEL
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
@@ -205,6 +206,7 @@ public class ReduxConfig
 
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
+
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
@@ -272,7 +274,7 @@ public class ReduxConfig
 
     public String formFilename(final String fileType)
     {
-        String filename = OutputDir + SampleId;
+        String filename = OutputDir + SampleId + "." + FILE_ID;
 
         filename += "." + fileType;
 
