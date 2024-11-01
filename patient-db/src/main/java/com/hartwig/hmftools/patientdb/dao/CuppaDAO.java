@@ -89,7 +89,7 @@ public class CuppaDAO
         {
             inserter.values(
                     timestamp,
-                    cuppaPredictionEntry.SampleId,
+                    sample,
                     parseClfName(cuppaPredictionEntry.ClfName),
                     cuppaPredictionEntry.CancerType,
                     parseDouble(cuppaPredictionEntry.DataValue),
