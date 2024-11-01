@@ -11,7 +11,7 @@ Alternatively, an example WGS pipeline which runs each of these components in tu
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
 
 ## Pipeline overview
-Here is a schematic showing how the interactions between the core molecular DNA components of the tool suite:
+Here is a schematic showing how the interactions between the core molecular components of the tool suite:
 
 ![HMF_Pipeline](./pipeline/wigits_pipeline.png)
 
