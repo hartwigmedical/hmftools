@@ -269,4 +269,9 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 - REDUX should increase minimum 10 bases outside of problematic region to 20.
 - REDUX should unmap any read with discordant mate if 'repeat trimmed length' < 30 bases
 
+**Microsatellite jitter modelling**
+- For non-homopolymers, the empirical jitter model does not closely resemble an Asymmetric Laplace distribution for medium to large repeat counts. This mainfests as the model overstating the likelihood of 1xINS/DEL, and understating the likelihood of >=3xINS/DEL. Could change underlying model or add a wing boost
+- The empirical 4bp repeat / 5bp jitter data tends to be sparse and difficult to fit. To address this, we clump all 3bp/4bp/5bp microsatellite data together and fit as one microsatellite category
+- Empirical jitter is likely lower for non-SINGLE consensus fragments, as this would imply the jitter is consistent across the duplicate reads used to source the fragment. We could anticipate this by splitting parameterisation by consensus type
+
  ## Version History and Download Links
