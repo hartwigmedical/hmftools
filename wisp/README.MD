@@ -1,6 +1,6 @@
 # WISP
 
-<TO DO>
+WISP estimates TF in cfDNA, guided by the WGS results from a primary tissue biopsy.   The algorithm supports data generated from both WGS or tarrgeted cfDNA.    
 
 ## Commands
 
