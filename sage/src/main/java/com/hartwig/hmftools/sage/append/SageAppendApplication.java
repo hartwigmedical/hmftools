@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.module.ModuleDescriptor.Version;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -54,7 +54,7 @@ public class SageAppendApplication
     private final IndexedFastaSequenceFile mRefGenome;
     private final FragmentLengthWriter mFragmentLengths;
 
-    private static final double MIN_PRIOR_VERSION = 2.8;
+    private static final Version MIN_PRIOR_VERSION = Version.parse("2.8");
 
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
@@ -227,10 +227,11 @@ public class SageAppendApplication
 
     private boolean validateInputHeader(VCFHeader header)
     {
-        double oldVersion = sageVersion(header);
-        if(Doubles.lessThan(oldVersion, MIN_PRIOR_VERSION))
+        Version version = sageVersion(header);
+
+        if(version.compareTo(MIN_PRIOR_VERSION) < 0)
         {
-            SG_LOGGER.error("Sage VCF version({}) older than required({})", oldVersion, MIN_PRIOR_VERSION);
+            SG_LOGGER.error("Sage VCF version({}) older than required({})", version, MIN_PRIOR_VERSION);
             return false;
         }
 
@@ -255,24 +256,14 @@ public class SageAppendApplication
         return true;
     }
 
-    private static double sageVersion(@NotNull final VCFHeader header)
+    private static Version sageVersion(@NotNull final VCFHeader header)
     {
-        VCFHeaderLine oldVersion = header.getMetaDataLine(VERSION_META_DATA);
+        VCFHeaderLine version = header.getMetaDataLine(VERSION_META_DATA);
 
-        if(oldVersion == null)
-            return 0;
+        if(version == null)
+            return Version.parse("0");
 
-        String[] versionComponents = oldVersion.getValue().split("\\.", -1);
-
-        try
-        {
-            return Double.parseDouble(versionComponents[0]) + Double.parseDouble(versionComponents[1]);
-        }
-        catch(Exception e)
-        {
-            SG_LOGGER.error("failed to parse Sage version: {}", oldVersion.getValue());
-            return 0;
-        }
+        return Version.parse(version.getValue());
     }
 
     private static Set<String> existingSamples(final VCFHeader header)
