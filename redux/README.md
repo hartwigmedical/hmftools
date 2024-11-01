@@ -145,7 +145,7 @@ For each read, identify the insertion or deletion at the start of the microsatel
   * For ±4 repeat counts: AF > 15%
   * For ±5 or more repeat counts: AF > 10%
 
-Once these reads are identified, we identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and this becomes the jitter count. The per-site data is exported to `SAMPLE.repeat.tsv.gz`. The column `realVariant` specifies whether any of the above conditions are true - if so, this site is not considered any further.
+At this point, the per-site data is exported to `SAMPLE.repeat.tsv.gz`. The column `realVariant` specifies whether any of the above conditions are true - if so, this site is not considered any further.
 
 Other sites are aggregated by repeat unit and repeat count (from 4-20), producing a file which is exported as `SAMPLE.ms_table.tsv.gz`. This aggregated data is then used to produce a 6-parameter model for each repeat unit describing a series of asymmetric laplace distributions, which collectively model empirical jitter frequencies for any given repeat unit + repeat count. A file containing the 6 parameters for each repeat unit is exported as `SAMPLE.jitter_params.tsv`. The parameters can be interpreted as such:
 * `optimalScaleRepeat4` - represents the magnitude of jitter at repeat count = 4
