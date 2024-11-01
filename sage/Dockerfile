@@ -13,7 +13,7 @@ RUN chmod +x ${RUN_SCRIPT}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
-    "openjdk=11" \
+    "openjdk >=8,<=17" \
     bioconductor-variantannotation \
     bioconductor-genomicranges \
     r-dplyr \
