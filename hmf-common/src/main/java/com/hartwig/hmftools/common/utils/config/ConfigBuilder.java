@@ -241,7 +241,7 @@ public class ConfigBuilder
 
     private boolean isValidPath(final ConfigItem item)
     {
-        if(!item.hasValue() || item.value().contains("*"))
+        if(!item.hasValue() || item.value().contains("*") || item.value().contains("$"))
             return true;
 
         List<String> paths = item.Type == PATHS ?
