@@ -1,7 +1,7 @@
 # Redux
 
 The Redux component performs both UMI aware and UMI agnostic duplicate marking. 
-As the first component to run after alignment it also performs post-alignment improvements to the BAM, specifically by unmapping certain reads and deleting supplementary reads in specific problematic regions of the BAM
+As the first component to run after alignment it also performs post-alignment improvements to the BAM, specifically by unmapping certain reads and deleting supplementary reads in specific problematic regions of the BAM. It also models sample-specific microsatellite jitter.
 
 UMI are used to label each molecule in a sample with a unique sequence prior to PCR amplification.
 
@@ -47,6 +47,8 @@ output_dir | Optional | If not specified will write output same directory as inp
 output_id | Optional | Additonal file suffix
 read_output | Optional, default = NONE | Write detailed read info to CSV, types are: ALL, DUPLICATE, NONE
 write_stats | Optional | Writes a duplicate frequency TSV file
+jitter_msi_only | Optional, default = false | Only runs to model sample-specific microsatellite jitter
+ref_genome_msi_file | Optional | Path to file of microsatellite sites used for sample-specific jitter
 
 ### UMI Command
 
@@ -62,6 +64,7 @@ java -jar redux.jar
     -umi_duplex
     -umi_duplex_delim + 
     -umi_base_diff_stats 
+    -ref_genome_msi_file /path/to/msi_jitter_sites.37.tsv.gz
     -sambamba /path_to_sambamba/ 
     -samtools /path_to_samtools/ 
     -output_dir /path_to_output/
@@ -122,6 +125,47 @@ In the case of DUPLEX UMIs, the logic is applied to each strand individually and
 
 The ‘CR’ flag is added to the bam to record the number of reads contributing to each consensus read. The ‘UT’ tag is also used to mark the UMI group as either ‘SINGLE’ or ‘DUAL_STRAND’ 
 
+### Microsatellite jitter modelling
+
+Different sequencing technologies, lab preperation techniques and sample-specific idiosyncracies can affect the rate of jitter error in microsatellite sites. As such, the magnitude and skew of errors are both modelled for use in downstream tools such as Sage.
+
+This process begins by considering reads that cover a given microsatellite repeat from the provided microsatellite repeats file. Such reads must satisfy the following conditions:
+* Mapping quality >= 50 
+* At least 5 aligned (i.e. inside M cigar element) flanking the microsatellite repeat on both sites
+* Each base associated with the microsatellite repeat is part of a M, I or D Cigar element
+* Any inserted bases should be multiples of the microsatellite repeat unit
+
+For each read, identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and this becomes the repeat unit count. Then for each microsatellite site,  the number of reads with repeat unit counts from ref_count-10 to ref_count+10 are determined. Then a site is considered to potentially contain an alt if any of the following are true:
+* 20% or more considered reads are rejected
+* Less than 20 non-rejected reads are accumulated
+* A site has a sufficiently high AF for a non-zero repeat count change:
+  * For ±1 repeat count: AF > 30%
+  * For ±2 repeat counts: AF > 25%
+  * For ±3 repeat counts: AF > 20%
+  * For ±4 repeat counts: AF > 15%
+  * For ±5 or more repeat counts: AF > 10%
+
+Once these reads are identified, we identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and this becomes the jitter count. The per-site data is exported to `SAMPLE.repeat.tsv.gz`. The column `realVariant` specifies whether any of the above conditions are true - if so, this site is not considered any further.
+
+Other sites are aggregated by repeat unit and repeat count (from 4-20), producing a file which is exported as `SAMPLE.ms_table.tsv.gz`. This aggregated data is then used to produce a 6-parameter model for each repeat unit describing a series of asymmetric laplace distributions, which collectively model empirical jitter frequencies for any given repeat unit + repeat count. A file containing the 6 parameters for each repeat unit is exported as `SAMPLE.jitter_params.tsv`. The parameters can be interpreted as such:
+* `optimalScaleRepeat4` - represents the magnitude of jitter at repeat count = 4
+* `optimalScaleRepeat5` - represents the magnitude of jitter at repeat count = 5
+* `optimalScaleRepeat6` - represents the magnitude of jitter at repeat count = 6
+* `scaleFitGradient`, `scaleFitIntercept` - collectively describe a linear relationship between the repeat count and magnitude of jitter for repeat counts > 6
+* `scaleFitSkew` - describes the skew between delete and insert jitter. 1.0 represents a symmetric distribution
+
+The fitting process works as follows:
+* Each repeat unit + repeat count will end up with two jitter parameters, scale and skew
+* These parameters describe an modified asymmetric laplace distribution, normalised to sum to 1 over the range `[-5, 5]`
+* A loss function is defined, which minimises the difference between predicted and actual phred score (capped at 40) associated with jitter rates, with per-repeat count weights proportional to their frequency
+
+Then for each repeat unit, we do the following:
+1. For each repeat length 4-6, find the optimal scale and skew values using the loss function, with a small regularisation term that penalises highly skewed distributions
+   * If the total read count for any of these repeat lengths < 20000, we replace the optimal scale with a fallback value
+2. Repeat the process for each repeat length 7-15, adding an additional regularisation term penalising scale values deviating sharply from the previous length's value. Fallback scales are not used for these repeat lengths
+3. Fit a weighted least squares linear regression between repeat length and optimal scale from 7-15. The weight of a repeat length’s data point is proportional to the count of observations for that repeat length, capped at 20% of the total count from 7-15
+4. Assuming at least 2 counts from 7-15 have at least 20000 total read count and the gradient of the linear regression is positive, `scaleFitGradient` and `scaleFitIntercept` are set to the gradient and intercept of the regression, respectively. In this case, `scaleFitSkew` is set to a weighted average of the optimal skew values for each repeat length 7-15, where the weights for each repeat are the same ones specified in step 3
+   * If the above conditions are not both satisfied, we fall back to `scaleFitGradient=0.06`, and `scaleFitIntercept` is set such that a line with slope of `0.06` and intercept of `scaleFitIntercept` passes through the optimal scale associated with repeat length=6. `scaleFitSkew` is set based on an aggregate count of delete and insert jitter counts, unless at least one of these sums < 50, in which case it defaults to 1.0
 ## Performance and Settings
 
 When run wth multiple threads, a BAM will be written per thread and then merged and index at the end.
