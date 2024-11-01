@@ -19,6 +19,13 @@ public enum Category
     CUPPA,
     LILAC,
     CHORD,
+    PEACH,
+    VIRUS,
+    TUMOR_FLAGSTAT,
+    GERMLINE_FLAGSTAT,
+    TUMOR_BAM_METRICS,
+    GERMLINE_BAM_METRICS,
+    SNP_GENOTYPE,
     CDR3_SEQUENCE,
     CDR3_LOCUS_SUMMARY,
     TELOMERE_LENGTH;
@@ -35,5 +42,8 @@ public enum Category
 
     public static List<Category> linxCategories() { return Lists.newArrayList(DRIVER, FUSION, DISRUPTION, GERMLINE_SV); }
 
-    public static List<Category> panelCategories() { return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION); }
+    public static List<Category> panelCategories()
+    {
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS, SNP_GENOTYPE);
+    }
 }

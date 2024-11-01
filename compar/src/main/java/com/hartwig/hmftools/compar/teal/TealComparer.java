@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.common.teal.TelomereLengthFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -47,7 +48,7 @@ public class TealComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return List.of(FLD_TELOMERE_LENGTH);
+        return TealData.comparedFieldNames();
     }
 
     @Override
@@ -58,12 +59,12 @@ public class TealComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         try
         {
             TelomereLength telomereLength = TelomereLengthFile.read(TelomereLengthFile.generateFilename(fileSources.Teal, sampleId));
-            return List.of(new TealData(telomereLength));
+            return Lists.newArrayList(new TealData(telomereLength));
         }
         catch(UncheckedIOException e)
         {

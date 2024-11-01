@@ -14,7 +14,11 @@ import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 
 import java.util.Arrays;
 import java.util.List;
@@ -121,7 +125,10 @@ public class GermlineVariantData implements ComparableItem
         checkDiff(diffs, FLD_OTHER_REPORTED, refVar.otherReportedEffects(), otherVar.otherReportedEffects());
 
         checkDiff(diffs, FLD_QUAL, (int) refVar.qual(), (int) otherVar.qual(), thresholds);
-
+        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, refVar.variantCopyNumber(), otherVar.variantCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, refVar.adjustedVAF(), otherVar.adjustedVAF(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, refVar.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, thresholds);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, refVar.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, thresholds);
         return diffs;
     }
 
@@ -138,5 +145,9 @@ public class GermlineVariantData implements ComparableItem
         values.add(String.format("%s", variant.canonicalHgvsProteinImpact()));
         values.add(String.format("%s", variant.otherReportedEffects()));
         values.add(String.format("%.0f", variant.qual()));
+        values.add(String.format("%.2f", variant.variantCopyNumber()));
+        values.add(String.format("%.2f", variant.adjustedVAF()));
+        values.add(String.format("%d", variant.allelicDepth().AlleleReadCount));
+        values.add(String.format("%d", variant.allelicDepth().TotalReadCount));
     }
 }

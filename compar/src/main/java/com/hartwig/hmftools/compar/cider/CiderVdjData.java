@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.compar.common.Category.CDR3_SEQUENCE;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
+import static org.apache.commons.lang3.StringUtils.capitalize;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,13 +34,19 @@ public class CiderVdjData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s", mCdr3Sequence.cdr3Seq());
+        return String.format("cdr3AA(%s) cdr3Seq(%s)", mCdr3Sequence.cdr3AA(), mCdr3Sequence.cdr3Seq());
+    }
+
+    public static List<String> comparedFieldNames()
+    {
+        return List.of(capitalize(Cdr3SequenceFile.Column.filter.name()),
+                       capitalize(Cdr3SequenceFile.Column.locus.name()));
     }
 
     @Override
     public List<String> displayValues()
     {
-        return List.of(mCdr3Sequence.cdr3AA(), mCdr3Sequence.locus());
+        return List.of(mCdr3Sequence.filter(), mCdr3Sequence.locus());
     }
 
     @Override
@@ -49,10 +57,8 @@ public class CiderVdjData implements ComparableItem
     {
         final Cdr3Sequence other = ((CiderVdjData) o).mCdr3Sequence;
 
-        // compare the cdr3 sequence, locus, filter
-        return mCdr3Sequence.cdr3Seq().equals(other.cdr3Seq()) &&
-                mCdr3Sequence.filter().equals(other.filter()) &&
-                mCdr3Sequence.locus().equals(other.locus());
+        // match cdr3 seq by their sequence
+        return mCdr3Sequence.cdr3Seq().equals(other.cdr3Seq());
     }
 
     @Override
@@ -62,7 +68,6 @@ public class CiderVdjData implements ComparableItem
 
         final List<String> diffs = new ArrayList<>();
 
-        checkDiff(diffs, Cdr3SequenceFile.Column.cdr3Seq.name(), mCdr3Sequence.cdr3Seq(), other.cdr3Seq());
         checkDiff(diffs, Cdr3SequenceFile.Column.filter.name(), mCdr3Sequence.filter(), other.filter());
         checkDiff(diffs, Cdr3SequenceFile.Column.locus.name(), mCdr3Sequence.locus(), other.locus());
 

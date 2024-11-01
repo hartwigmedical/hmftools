@@ -35,11 +35,11 @@ public class PonCache
     private final boolean mAllowUnordered;
 
     // keep indices into the 2 collections assuming that requests to match on the PON will be made sequentially through the genome
-    private String mCurrentSvChromosome;
     private int mCurrentSvIndex;
-    private String mCurrentSglChromosome;
     private int mCurrentSglIndex;
     private boolean mHasValidData;
+
+    private final boolean mRunChecks = false;
 
     private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
@@ -66,8 +66,6 @@ public class PonCache
         if(ponSglFile != null)
             loadPonSglFile(ponSglFile);
 
-        mCurrentSglChromosome = "";
-        mCurrentSvChromosome = "";
         mCurrentSglIndex = 0;
         mCurrentSvIndex = 0;
     }
@@ -77,57 +75,64 @@ public class PonCache
     public Map<String,List<PonSvRegion>> svRegions() { return mSvRegions; }
     public Map<String,List<PonSglRegion>> sglRegions() { return mSglRegions; }
 
-    public void annotateVariants(final List<Variant> variantList)
+    public void annotateVariants(final Map<String,List<Breakend>> chrBreakendMap)
     {
-        for(Variant var : variantList)
+        for(Map.Entry<String,List<Breakend>> entry : chrBreakendMap.entrySet())
         {
-            int ponCount = getPonCount(var);
+            String chromosome = entry.getKey();
 
-            if(ponCount > 0)
+            mCurrentSvIndex = 0;
+            mCurrentSglIndex = 0;
+
+            List<PonSglRegion> sglRegions = mSglRegions.get(chromosome);
+            List<PonSvRegion> svRegions = mSvRegions.get(chromosome);
+
+            int lastPosStart = -1;
+
+            for(Breakend breakend : entry.getValue())
             {
-                var.setPonCount(ponCount);
-                var.addFilter(PON);
-            }
-        }
-    }
+                if(!breakend.isSgl() && breakend.isEnd()) // only looked up on the first breakend
+                    continue;
 
-    public int getPonCount(final Variant var)
-    {
-        // matching routine:
-        // - get regions by chromosome
-        // - use a binary search using start position
-        // - if a region is matched, search up and down from their checking both positions and orientations
-
-        if(var.isSgl())
-        {
-            List<PonSglRegion> regions = mSglRegions.get(var.chromosomeStart());
-            if(regions != null)
-            {
-                if(!mCurrentSglChromosome.equals(var.chromosomeStart()))
+                if(lastPosStart > 0 && breakend.Position < lastPosStart)
                 {
-                    mCurrentSglChromosome = var.chromosomeStart();
-                    mCurrentSglIndex = 0;
+                    SV_LOGGER.error("var({}) out of order");
                 }
 
-                return findSglPonMatch(regions, var);
-            }
-        }
-        else
-        {
-            List<PonSvRegion> regions = mSvRegions.get(var.chromosomeStart());
-            if(regions != null)
-            {
-                if(!mCurrentSvChromosome.equals(var.chromosomeStart()))
+                lastPosStart = breakend.Position;
+
+                Variant var = breakend.sv();
+
+                int ponCount = 0;
+                int compareCount = 0;
+
+                if(breakend.isSgl())
                 {
-                    mCurrentSvChromosome = var.chromosomeStart();
-                    mCurrentSvIndex = 0;
+                    ponCount = findSglPonMatch(sglRegions, var);
+
+                    if(mRunChecks)
+                        compareCount = findSglPonMatchBasic(sglRegions, var);
+                }
+                else
+                {
+                    ponCount = findSvPonMatch(svRegions, var);
+
+                    if(mRunChecks)
+                        compareCount = findSvPonMatchBasic(svRegions, var);
                 }
 
-                return findPonMatch(regions, var);
+                if(mRunChecks && ponCount != compareCount)
+                {
+                    SV_LOGGER.error("var({}) incorrect pon({}) vs basic({})", var, ponCount, compareCount);
+                }
+
+                if(ponCount > 0)
+                {
+                    var.setPonCount(ponCount);
+                    var.addFilter(PON);
+                }
             }
         }
-
-        return 0;
     }
 
     private static int[] breakendMargin(final Breakend breakend)
@@ -139,7 +144,7 @@ public class PonCache
         return margins;
     }
 
-    private int findPonMatch(final List<PonSvRegion> regions, final Variant var)
+    private int findSvPonMatch(final List<PonSvRegion> regions, final Variant var)
     {
         final int[] marginStart = breakendMargin(var.breakendStart());
         final int[] marginEnd = breakendMargin(var.breakendEnd());
@@ -224,7 +229,7 @@ public class PonCache
                 return findSglPonMatch(regions, var, svStart, mCurrentSglIndex);
             }
 
-            // exit if the PON is now past this point and retreat one position
+            // exit if the PON is now past this point then retreat one position
             if(region.Region.start() > svStart.end())
             {
                 if(mCurrentSglIndex > 0)
@@ -264,6 +269,63 @@ public class PonCache
                 else
                     --currentIndex;
             }
+        }
+
+        return 0;
+    }
+
+    private int findSvPonMatchBasic(final List<PonSvRegion> regions, final Variant var)
+    {
+        final int[] marginStart = breakendMargin(var.breakendStart());
+        final int[] marginEnd = breakendMargin(var.breakendEnd());
+
+        BaseRegion svStart = new BaseRegion(
+                var.posStart() + marginStart[SE_START] - mPositionMargin,
+                var.posStart() + marginStart[SE_END] + mPositionMargin);
+
+        for(int i = 0; i < regions.size(); ++i)
+        {
+            PonSvRegion region = regions.get(i);
+
+            if(region.RegionStart.overlaps(svStart))
+            {
+                // test the PON entries around this position
+                ChrBaseRegion svEnd = new ChrBaseRegion(
+                        var.chromosomeEnd(),
+                        var.posEnd() + marginEnd[SE_START] - mPositionMargin,
+                        var.posEnd() + marginEnd[SE_END] + mPositionMargin);
+
+                return findPonMatch(regions, var, svStart, svEnd, i);
+            }
+
+            if(region.RegionStart.start() > svStart.end())
+                break;
+        }
+
+        return 0;
+    }
+
+    private int findSglPonMatchBasic(final List<PonSglRegion> regions, final Variant var)
+    {
+        final int[] marginStart = breakendMargin(var.breakendStart());
+
+        BaseRegion svStart = new BaseRegion(
+                var.posStart() + marginStart[SE_START] - mPositionMargin,
+                var.posStart() + marginStart[SE_END] + mPositionMargin);
+
+        for(int i = 0; i < regions.size(); ++i)
+        {
+            PonSglRegion region = regions.get(i);
+
+            if(region.Region.overlaps(svStart))
+            {
+                // test the PON entries around this position
+                return findSglPonMatch(regions, var, svStart, 0);
+            }
+
+            // exit if the PON is now past this point then retreat one position
+            if(region.Region.start() > svStart.end())
+                break;
         }
 
         return 0;
@@ -430,5 +492,4 @@ public class PonCache
         configBuilder.addInteger(
                 GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
     }
-
 }

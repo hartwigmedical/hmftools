@@ -2,8 +2,6 @@
 
 The WiGiTS tool suite fully supports targeted panel sequencing as well as WGS and WTS.  
 
-![HMF_Pipeline](hmf_tools_panel_pipeline.png)
-
 The output from the pipeline largely matches that of WGS/WTS but with some modules excluded:
 * germline analysis is typically disabled (unless the panel is also run for a normal sample)
 * Cuppa is disabled
@@ -11,7 +9,9 @@ The output from the pipeline largely matches that of WGS/WTS but with some modul
 * TMB and MSI have custom calculations routines
 * TPM is normalised to be in line with observed WGS rates 
 
-For each panel a set of custom resources is required to fit and normalise the biases inherent to that specific panel.  These are described in detail below.
+For each panel a set of custom resources is required to fit and normalise the biases inherent to that specific panel. These are described in detail below.
+
+[OncoAnalyser](./pipeline/README_ONCOANALYSER.md) can be used to run any targeted panel.
 
 ## Panel-specific resources files
 
@@ -256,32 +256,6 @@ Purple
 -deviation_penalty_gc_min_adjust 0.25
 -gc_ratio_exponent 3.0
 ```
-
-## Example Pipeline Scripts
-These scripts demonstrate how to run the HMF pipeline in targeted panel mode on a panel tumor BAM.
-
-1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
-- also ensure that samtools (1.10 or higher) and bwa (0.7.17 or higher) are on the path
-
-2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
-- The latest resource files version is v5.33.
-- The latest resource files for the TSO-500 panel is labeled 'hmf_tso500_pipeline_resources.38_v5.33.gz'
-- The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/ref_genome/).
-
-3. Call the pipeline with the following arguments:
-- a sample tumorId (eg 'COLO829T')
-- the sample data directory with an existing directory named as per the sample's tumorId
-- tumor BAM and BAM index files in the sample's directory, named as tumorId.bam
-- all required tools in a tools directory
-- all required resource files in a resource files directory
-- the reference genome version - either 'V37' or 'V38'
-- panel mode 'PANEL' (instead of 'WGS')
-- number of threads used for each component
-- maximum memory allocated to each component (default=12GB)
-
-```
-./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ COLO829T V38 PANEL 10 16 \
-```  
 
 ## Future improvements
 * **HRD** - a panel based HRD classifier will be made available in v6
