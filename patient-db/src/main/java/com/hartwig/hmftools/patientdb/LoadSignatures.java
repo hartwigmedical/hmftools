@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public class LoadSignatures
 {
     private static final String SAMPLE_DIR = "sample_dir";
+    private static final String SAMPLE_FILE = "sample_file";
 
     public static void main(@NotNull String[] args) throws ParseException
     {
@@ -28,11 +29,13 @@ public class LoadSignatures
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addPath(SAMPLE_DIR, true, "Directory to read signature data from");
+        configBuilder.addPath(SAMPLE_FILE, false, "File path to read signature data from");
+        configBuilder.addPath(SAMPLE_DIR, false, "Path to read signature data from");
 
         configBuilder.checkAndParseCommandLine(args);
 
         String sample = configBuilder.getValue(SAMPLE);
+        String sampleFile = configBuilder.getValue(SAMPLE_FILE);
         String sampleDir = configBuilder.getValue(SAMPLE_DIR);
 
         try(DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
@@ -43,22 +46,23 @@ public class LoadSignatures
                 System.exit(1);
             }
 
-            loadSignatureData(dbAccess, sample, sampleDir);
+            loadSignatureData(dbAccess, sample, sampleFile, sampleDir);
 
             LOGGER.info("signature allocation loading complete");
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
     }
 
-    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleDir)
+    private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleFile, final String sampleDir)
     {
         try
         {
-            final List<SignatureAllocation> sigAllocations =
+            final List<SignatureAllocation> sigAllocations = sampleFile != null ?
+                    SignatureAllocationFile.read(sampleFile) :
                     SignatureAllocationFile.read(SignatureAllocationFile.generateFilename(sampleDir, sampleId));
 
             if(!sigAllocations.isEmpty())
