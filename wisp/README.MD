@@ -21,7 +21,7 @@ WISP can infer tumor fraction of a sample via 3 different meths
 - CNA (WGS only)
 - LOH (WGS only)
 
-An overview of the suggested pipeline for WISP can be found below:
+Here is a schematic of the recommended pipeline setup to run WISP
 ![WISP](./WISP.png)      
 
 ###  SNV tumor fraction estimate
