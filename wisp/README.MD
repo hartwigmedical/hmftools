@@ -151,11 +151,68 @@ CopyNumberPurityHigh | Upper bound of CNA cfDNA tumor fraction estimate
 AnueploidyScore | Proportion of tissue biopsy genome with CN != most frequent CN 
 ClonalPercent | Proportion of tissue biopsy genome with CN not with +/- 0.2 of an integer value 
 
+### Somatic Variant 
+This file contains counts and filtering rules for each variant used in the SNV tumor fraction estimate 
+
+Field | Description 
+---|---
+PatientId | Id of Patient 
+SampleId | Id of sample 
+Chromosome | Chromosome of variant 
+Position | Position of variant 
+Ref | Ref nucleotide of variant 
+Alt | Alt nucleotide of variant 
+IsProbe | Variant was included in panel design 
+Filter | Either PASS or filter reason 
+Tier | SAGE variant calling tier {HOTSPOT,PANEL,HIGH_CONFIDENCE,LOW_CONFIDENCE} 
+Type | {INDEL,MNV or SNV} 
+TNC | Trinucleotide context of variant (used for error rate estimation) 
+Mappability | Mappability of variant position 
+SubclonalPerc | Probability that variant is subclonal 
+RepeatCount | Repeat count of variant 
+Gene | Gene context of variant 
+CodingEffect | {MISSENSE,NONSENSE_OR_FRAMESHIFT,SPLICE or NONE} 
+Hotspot | Is hotspot {TRUE,FALSE} 
+Reported | Variant is reportable {TRUE,FALSE} 
+VCN | Variant copy number (from primary tumor) 
+CopyNumber | Copy number of variant position (from primary tumor) 
+TumorDP | Depth at variant site in primary tumor 
+TumorAD | Allelic depth support for variant in primary tumor 
+SampleDP | Depth at variant site in cfDNA sample 
+SampleAD | Allelic depth support for variant in cfDNA sample 
+SampleDualDP | DUPLEX depth at variant site in cfDNA sample 
+SampleDualAD | DUPLEX allelic depth support for variant in cfDNA sample 
+QualPerAD | Average quality per allelic depth support in SAGE (used as filter) 
+SeqGCRatio | GC ratio of 120 bases surrounding variant site 
+BQRErrorRate | Empirically measure error rate for variant trinucleotide + alt context from SAGE. 
+
+### SCNA output 
+Field | Description 
+---|---
+PatientId | Id of Patient 
+SampleId | Id of Sample 
+Chromosome | Chromosome of copy number segment in primary tumor 
+SegmentStart | Start position of segment 
+SegmentEnd | End position of segment 
+CopyNumber | Copy number of segment 
+GcRatioCount | Depth windows in segment in primary tumor 
+GcRatioMedian | Median GC ratio of segment in cfDNA sample 
+GcRatioMean | Mean GC ratio of segment in cfDNA sample 
+
+
 
 
 ## Known Issues / Future improvements
+Additional biomarkers
+- SV
+- C-circles
+- CDR3
 
-<TO DO>
+Additional features
+- Fragmentomics: 5' & 3' trinculeotide frequencies AND positional biases of ref and alt fragments per site
+- TINC: add explicit support
+- Support for phased analysis 
+
 
  ## Version History and Download Links
 
