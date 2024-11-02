@@ -22,7 +22,7 @@ WISP can infer tumor fraction of a sample via 3 different meths
 - LOH (WGS only)
 
 An overview of the suggested pipeline for WISP can be found below:
-![WISP](./wisp.png)
+![WISP](./WISP.png)      
 
 ###  SNV tumor fraction estimate
 Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters 
