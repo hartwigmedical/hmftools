@@ -16,10 +16,12 @@ Argument | Required | Description
 
 ## Algorithm
 
-WISP can infer tumor fraction of a sample via 3 different meths
+WISP can infer tumor fraction of a sample via 3 different method:
 - SNV (& small Indel)
 - CNA (WGS only)
 - LOH (WGS only)
+
+These are described in detail below.
 
 WISP addiitonally annotates allele and ref support fragment counts at sites of interest if the necessary files are provided from SAGE.
 
