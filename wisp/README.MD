@@ -32,11 +32,13 @@ Here is a schematic of the recommended pipeline setup to run WISP
 ![WISP](./WISP.png)      
 
 ###  SNV tumor fraction estimate
-Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters 
+Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters based on the primary tumor annotations
 - High confidence variant in primary:  Mappability>=0.5 & RepeatCount<4 
 - High confidence observation in ctDNA: QualPerAD>minQualPerAD|AD==0 
 - Not subclonal:  AND(SubclonalPerc<0.5,VCN<0.7) 
 - GC content:  GC[probe] > 0.4 (if in PANEL mode) 
+- !NEAR_INDEL: ie no germline or somatic indel present in the variant core (as annotated by SAGE)
+- GERMLINE_VAF < 1% OR GERLMINE_ABQ < 30
 
 Considering only the remaining unfiltered sites calculate the TFctDNA using the following formula 
 ```
