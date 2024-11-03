@@ -487,11 +487,13 @@ The key principles behind the filters are ensuring sufficient support for the va
 The filters are tiered to maximise sensitivity in regions of high prior likelihood for variants. 
 A hotspot panel of 10,000 specific variants are set to the highest sensitivity (TIER=`HOTSPOT`) followed by medium sensitivity for exonic and splice regions for the canonical transcripts of a panel of cancer related genes (TIER =`PANEL`) and more aggressive filtering genome wide in both high confidence (TIER=`HIGH_CONFIDENCE`) and low confidence (TIER=`LOW_CONFIDENCE`) regions to ensure a low false positive rate genome wide.   These tiers can be customised by providing alternative bed files as configuration.
 
+**NOTE: Variants can get `min_tumor_qual` filtered due to having either insufficient base or map quality. The `QUAL` field in the VCF only refers to the base quality of the variant, and is equal to the phred score of `TQP`, capped at 200. The `MQF` annotation specifies the map quality of the variant.**
+
 The specific filters and default settings for each tier are:
 
 Filter  | Hotspot             | Panel               | High Confidence     | Low Confidence      | Field
 ---|---------------------|---------------------|---------------------|---------------------|---
-min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP`
+min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP` / `QUAL`
 min_tumor_qual<sup>7</sup>| -6                  | -6                  | 0                   | 0                   |`MQF`
 min_tumor_vaf<sup>5</sup>| 1.0%                | 2.0%                | 2.5%                | 2.5%                |`AF`
 min_germline_depth| 0                   | 0                   | 10                  | 10                  | Normal `RC_CNT[6]`
