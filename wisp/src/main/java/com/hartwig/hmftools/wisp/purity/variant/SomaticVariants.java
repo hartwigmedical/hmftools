@@ -14,13 +14,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.ABQ_KEY;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.AF_KEY;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.NEARBY_INDEL_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -63,6 +62,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
@@ -354,14 +354,18 @@ public class SomaticVariants
 
         if(mSample.ReferenceId != null)
         {
-            Genotype referenceGenotype = variant.context().getGenotype(mSample.ReferenceId);
-            double germlineAF = Double.parseDouble(referenceGenotype.getAnyAttribute(AF_KEY).toString());
-            double germlineABQ = Double.parseDouble(referenceGenotype.getAnyAttribute(ABQ_KEY).toString().split(CSV_DELIM)[1]);
+            Genotype refGenotype = variant.context().getGenotype(mSample.ReferenceId);
+
+            AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
+            double germlineAF = refAllelicDepth.alleleFrequency();
+
+            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(AVG_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+
             if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
                 filters.add(GERMLINE_AF);
         }
 
-        if(variant.context().getCommonInfo().hasAttribute(NEARBY_INDEL_TAG))
+        if(variant.context().getCommonInfo().hasAttribute(NEARBY_INDEL_FLAG))
             filters.add(NEARBY_INDEL);
 
         if(variant.context().isFiltered())

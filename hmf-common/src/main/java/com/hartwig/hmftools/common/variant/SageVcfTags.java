@@ -45,6 +45,12 @@ public final class SageVcfTags
     public static final String MAP_QUAL_FACTOR = "MQF";
     public static final String MAP_QUAL_FACTOR_DESC = "Map qual heuristic as used in min tumor quality filter";
 
+    public static final String AVG_BASE_QUAL = "ABQ";
+    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality (all,alt)";
+
+    public static final String NEARBY_INDEL_FLAG = "NEARBY_INDEL";
+    public static final String NEARBY_INDEL_FLAG_DESC = "Variant has an INDEL overlapping its core";
+
     public static final int UMI_TYPE_COUNT = 6;
 
     public static final String LIST_SEPARATOR = ",";

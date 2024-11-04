@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -42,7 +43,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEA
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;

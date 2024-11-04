@@ -41,9 +41,6 @@ public final class VcfTags
     public static final String READ_STRAND_BIAS = "RSB";
     public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
-    public static final String AVG_BASE_QUAL = "ABQ";
-    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality (all,alt)";
-
     public static final String AVG_MODIFIED_BASE_QUAL = "AMBQ";
     public static final String AVG_MODIFIED_BASE_QUAL_DESC = "Average modified map quality";
 
