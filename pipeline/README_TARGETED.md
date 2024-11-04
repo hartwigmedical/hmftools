@@ -258,4 +258,5 @@ Purple
 ```
 
 ## Future improvements
-* **HRD** - a panel based HRD classifier will be made available in v6
+* **HRD** - vCHORD (HRD classifier) is completed and will be made available in an upcoming release.
+* **TOO** - vCUPPA (CNN based tissue of origin classifier) is under development
