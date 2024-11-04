@@ -47,6 +47,8 @@ public class PartitionData
 
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
 
+    // if true, treat supplementaries like other reads - cache them against incomplete read groups awaiting resolved status
+    // otherwise pass them back to the partition reader to be written to the temp supplementary BAM(s) for post-run processing
     private boolean mCacheSupplementaries;
 
     // any update to the maps is done under a lock
@@ -281,6 +283,7 @@ public class PartitionData
 
     private boolean isUnhandledSupplementary(final SAMRecord read)
     {
+        // return true if the supplementary read isn't to be cached immediately, but written to a temp supplementary BAM
         return !mCacheSupplementaries && read.getSupplementaryAlignmentFlag();
     }
 

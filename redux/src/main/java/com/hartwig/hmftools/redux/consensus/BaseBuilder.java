@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.util.Collections;
 import java.util.List;
