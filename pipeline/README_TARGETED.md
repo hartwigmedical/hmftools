@@ -29,7 +29,7 @@ The following files define the panel and are typically compiled manually and rep
 | Panel regions BED | Multiple | Defines the targeted regions of the bed file.  Other regions are ignored in the training. May include gene exons or other regions of interest.  The bed file must be sorted and exclude any ALT contigs or non standard human chromosomes |
 | MSI Indels TSV | Purple | List of {chromosome,position} of MSI loci to consider in MSI model |
 | TMB/MSI Configuration TSV    | Purple | Configuration for TMB/L estimation<sup>2</sup>|
-| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc). See [Driver_Catalog](https://github.com/hartwigmedical/hmftools/edit/master/purple/DriverCatalog.md) for details of this file |
+| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc). See [Driver_Catalog](https://github.com/hartwigmedical/hmftools/blob/master/purple/DriverCatalog.md) for details of this file |
 | Coverage Coding Regions BED<sup>1</sup> | Sage   | Gene regions to assess coverage|
 | Actionable Coding Regions BED<sup>1</sup> | Sage   | Gene coding regions for sensitive variant calling       |
 1. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
@@ -258,4 +258,5 @@ Purple
 ```
 
 ## Future improvements
-* **HRD** - a panel based HRD classifier will be made available in v6
+* **HRD** - vCHORD (HRD classifier) is completed and will be made available in an upcoming release.
+* **TOO** - vCUPPA (CNN based tissue of origin classifier) is under development

@@ -223,6 +223,14 @@ By default the first reference sample is also treated as a 'germline' sample, wh
 
 Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please see more details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
+## Variant qual conventions
+
+In pre-4.0 versions of Sage, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In Sage 4.0+, variant quality is now split into two:
+- Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, Sage has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
+- Map quality, which is a heuristic aggregated from all reads contributing to DP. This is recorded in `MQF` and is not encoded in the `QUAL` field, but can still cause a variant to be `minTumorQual` filtered based on separate per-tier thresholds.
+
+Both sets of per-tier thresholds are specified in the 'Soft Filters' section of the readme.
+
 ## Read context 
  
  The read context of a variant is the region surrounding it in the read where it was found. It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
@@ -487,11 +495,13 @@ The key principles behind the filters are ensuring sufficient support for the va
 The filters are tiered to maximise sensitivity in regions of high prior likelihood for variants. 
 A hotspot panel of 10,000 specific variants are set to the highest sensitivity (TIER=`HOTSPOT`) followed by medium sensitivity for exonic and splice regions for the canonical transcripts of a panel of cancer related genes (TIER =`PANEL`) and more aggressive filtering genome wide in both high confidence (TIER=`HIGH_CONFIDENCE`) and low confidence (TIER=`LOW_CONFIDENCE`) regions to ensure a low false positive rate genome wide.   These tiers can be customised by providing alternative bed files as configuration.
 
+**Note: Variants can get `min_tumor_qual` filtered due to having either insufficient base or map quality. The `QUAL` field in the VCF only refers to the base quality of the variant, and is equal to the phred score of `TQP`, capped at 200. The `MQF` annotation specifies the map quality of the variant.**
+
 The specific filters and default settings for each tier are:
 
 Filter  | Hotspot             | Panel               | High Confidence     | Low Confidence      | Field
 ---|---------------------|---------------------|---------------------|---------------------|---
-min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP`
+min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP`, i.e. `QUAL`
 min_tumor_qual<sup>7</sup>| -6                  | -6                  | 0                   | 0                   |`MQF`
 min_tumor_vaf<sup>5</sup>| 1.0%                | 2.0%                | 2.5%                | 2.5%                |`AF`
 min_germline_depth| 0                   | 0                   | 10                  | 10                  | Normal `RC_CNT[6]`
