@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.SNP_GENOTYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_GENOTYPE;
+import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_VCF_SAMPLE_ID;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class SnpGenotypeComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_ALT, FLD_GENOTYPE);
+        return Lists.newArrayList(FLD_ALT, FLD_GENOTYPE, FLD_VCF_SAMPLE_ID);
     }
 
     @Override
@@ -82,12 +83,19 @@ public class SnpGenotypeComparer implements ItemComparer
                 int position = variantContext.getStart();
                 String ref = variantContext.getReference().getBaseString();
                 String alt = !variantContext.getAlternateAlleles().isEmpty() ? variantContext.getAlternateAlleles().get(0).toString() : ".";
-                String genotype = variantContext.getGenotype(germlineSampleId).getType().name();
+
+                List<String> vcfSampleIds = variantContext.getSampleNamesOrderedByName();
+                if(vcfSampleIds.size() != 1)
+                {
+                    throw new RuntimeException("sample(" + sampleId + ") SNPcheck VCF has more than one sample ID: " + vcfSampleIds);
+                }
+                String vcfSampleId = vcfSampleIds.get(0);
+                String genotype = variantContext.getGenotype(vcfSampleId).getType().name();
 
                 BasePosition comparisonPosition = determineComparisonGenomePosition(
                         chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, comparisonPosition));
+                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonPosition));
             }
         }
         catch(Exception e)
@@ -98,4 +106,5 @@ public class SnpGenotypeComparer implements ItemComparer
 
         return items;
     }
+
 }
