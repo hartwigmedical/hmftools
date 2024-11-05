@@ -73,7 +73,10 @@ public class SuppBamReprocessor implements Callable
         processCachedReads();
         mPendingReads.clear();
 
-        RD_LOGGER.debug("finished reprocessing {} supplementaries from {}", mProcessedCount, mBamFilename);
+        if(mProcessedCount > 0)
+        {
+            RD_LOGGER.debug("finished reprocessing {} supplementaries from {}", mProcessedCount, mBamFilename);
+        }
 
         return (long) 0;
     }

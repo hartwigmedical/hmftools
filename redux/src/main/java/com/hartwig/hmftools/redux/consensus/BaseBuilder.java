@@ -188,7 +188,7 @@ public class BaseBuilder
 
         mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
 
-        byte refBase = mRefGenome.getBaseString(chromosome, position, position).getBytes()[0];
+        byte refBase = getRefBase(chromosome, position);
         boolean firstIsRef = firstBaseAndQual[0] == refBase;
         boolean secondIsRef = secondBaseAndQual[0] == refBase;
 
@@ -229,6 +229,16 @@ public class BaseBuilder
 
         byte qual = (byte) max(BASE_QUAL_MINIMUM, refQual - differingQual);
         return new byte[] { refBase, qual };
+    }
+
+    private byte getRefBase(final String chromosome, int position)
+    {
+        int chromosomeLength = mRefGenome.getChromosomeLength(chromosome);
+
+        if(position > chromosomeLength)
+            return NO_BASE;
+
+        return mRefGenome.getBases(chromosome, position, position)[0];
     }
 
     public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
@@ -277,7 +287,6 @@ public class BaseBuilder
 
         byte maxBase = distinctBases.get(0);
         boolean maxIsRef = false;
-        int maxQual = maxQuals.get(0);
         int maxQualTotal = qualTotals.get(0);
 
         for(int i = 1; i < distinctBases.size(); ++i)
@@ -285,22 +294,20 @@ public class BaseBuilder
             if(qualTotals.get(i) > maxQualTotal)
             {
                 maxQualTotal = qualTotals.get(i);
-                maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
             else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position != INVALID_POSITION)
             {
                 // chromosome will be null for unmapped reads
-                String refBase = mRefGenome.getBaseString(chromosome, position, position);
+                byte refBase = getRefBase(chromosome, position);
 
-                if(maxBase == refBase.getBytes()[0])
+                if(maxBase == refBase)
                 {
                     maxIsRef = true;
                 }
-                else if(distinctBases.get(i) == refBase.getBytes()[0])
+                else if(distinctBases.get(i) == refBase)
                 {
                     maxQualTotal = qualTotals.get(i);
-                    maxQual = maxQuals.get(i);
                     maxBase = distinctBases.get(i);
                     maxIsRef = true;
                 }
