@@ -22,9 +22,6 @@ public class FragmentTotals
     private double mSampleWeightedDepthTotal;
     private double mSampleTumorAdjustedDepthTotal;
 
-    private double mTumorAdjustedFragsTotal;
-    private double mTumorAdjustedDepthTotal;
-
     private double mVcnSampleDepthTotal;
     private double mCnSampleDepthTotal;
 
@@ -44,8 +41,6 @@ public class FragmentTotals
         mSampleDepthPerCopyNumberTotal = 0;
         mSampleWeightedDepthTotal = 0;
         mSampleTumorAdjustedDepthTotal = 0;
-        mTumorAdjustedFragsTotal = 0;
-        mTumorAdjustedDepthTotal = 0;
         mVcnSampleDepthTotal = 0;
         mCnSampleDepthTotal = 0;
 
@@ -71,11 +66,9 @@ public class FragmentTotals
 
         // wVAF = Σ(i=1->n)[ADi /CNi] * Σ(i=1->n)[DPi /CNi]
 
-        mTumorAdjustedFragsTotal += tumorAlleleFrags / copyNumber;
         mSampleAdjustedFragsTotal += sampleAlleleFrags / copyNumber;
 
         double tumorDpPerCn = tumorDepth / copyNumber;
-        mTumorAdjustedDepthTotal += tumorDpPerCn;
 
         mSampleDepthPerCopyNumberTotal += sampleDepth / copyNumber;
 
@@ -89,7 +82,6 @@ public class FragmentTotals
 
     public int variantCount() { return mVariantCount; }
     public int sampleAdTotal() { return mSampleFragsTotal; }
-    public int tumorDepthTotal() { return mTumorDepthTotal; }
     public int sampleDepthTotal() { return mSampleDepthTotal; }
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }

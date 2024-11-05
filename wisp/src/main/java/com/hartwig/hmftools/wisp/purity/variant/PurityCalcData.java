@@ -13,6 +13,7 @@ public class PurityCalcData
     public double Probability;
     public double LodPurityEstimate;
     public double DualProbability;
+    public double DualLodPurityEstimate;
 
     public ClonalityData Clonality;
 
@@ -32,6 +33,7 @@ public class PurityCalcData
         LodPurityEstimate = CALC_NO_SET;
         Probability = CALC_NO_SET;
         DualProbability = CALC_NO_SET;
+        DualLodPurityEstimate = CALC_NO_SET;
         BqrQualThreshold = 0;
         ErrorRate = 0;
         RawBqrErrorRate = 0;

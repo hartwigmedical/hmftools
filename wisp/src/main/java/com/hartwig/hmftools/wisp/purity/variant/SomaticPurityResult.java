@@ -67,6 +67,7 @@ public class SomaticPurityResult
         sj.add("ClonalDropoutRate");
         sj.add("DualSNVPValue");
         sj.add("SNVLod");
+        sj.add("DualSNVLod");
         sj.add("TotalFragments");
         sj.add("TotalDual");
         sj.add("AlleleFragments");
@@ -104,6 +105,7 @@ public class SomaticPurityResult
         sj.add(format("%.2f", PurityCalcs.Clonality.DropoutRate));
         sj.add(formatProbabilityValue(PurityCalcs.DualProbability));
         sj.add(formatPurityValue(PurityCalcs.LodPurityEstimate));
+        sj.add(formatPurityValue(PurityCalcs.DualLodPurityEstimate));
 
         sj.add(format("%d", FragTotals.sampleDepthTotal()));
         sj.add(format("%d", UmiCounts.TotalDual));

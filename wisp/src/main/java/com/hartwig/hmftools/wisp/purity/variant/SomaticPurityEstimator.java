@@ -48,6 +48,7 @@ public class SomaticPurityEstimator
             final String sampleId, final List<SomaticVariant> variants, final int totalVariantCount, final int chipVariants)
     {
         FragmentTotals fragmentTotals = new FragmentTotals();
+        FragmentTotals dualFragmentTotals = new FragmentTotals();
 
         int sampleDualDP = 0;
         int sampleDualAD = 0;
@@ -62,6 +63,10 @@ public class SomaticPurityEstimator
             fragmentTotals.addVariantData(
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
                     tumorFragData.Depth, sampleFragData.Depth);
+
+            dualFragmentTotals.addVariantData(
+                    variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.UmiCounts.AlleleDual,
+                    tumorFragData.Depth, sampleFragData.UmiCounts.TotalDual);
 
             umiTypeCounts.add(sampleFragData.UmiCounts);
             sampleDualDP += sampleFragData.UmiCounts.TotalDual;
@@ -176,8 +181,10 @@ public class SomaticPurityEstimator
         }
 
         // report final probability as min of Dual and Normal Prob
-        double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;
+        double dualNoiseRate = mConfig.noiseRate(true);
+        double expectedDualNoiseFragments = dualNoiseRate * sampleDualDP;
         purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
+        purityCalcData.DualLodPurityEstimate = calcLimitOfDetection(dualFragmentTotals, dualNoiseRate);
 
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
