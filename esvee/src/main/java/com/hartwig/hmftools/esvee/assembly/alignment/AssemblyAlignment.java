@@ -116,9 +116,9 @@ public class AssemblyAlignment
     public String info()
     {
         if(mAssemblies.size() == 1)
-            return mAssemblies.get(0).junction().coords();
+            return mAssemblies.get(0).junction().coordsTyped(true);
 
-        return mAssemblies.stream().map(x -> x.junction().coords()).collect(Collectors.joining("_"));
+        return mAssemblies.stream().map(x -> x.junction().coordsTyped(true)).collect(Collectors.joining("_"));
     }
 
     private enum LinkType

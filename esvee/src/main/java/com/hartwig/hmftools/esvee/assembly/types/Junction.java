@@ -39,10 +39,12 @@ public class Junction implements Comparable<Junction>
 
     private boolean mIndelBased;
     public final String mDetails;
+    private int mRawDiscordantPosition;
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
         this(chromosome, position, orientation, false, false, false);
+        mRawDiscordantPosition = -1;
     }
 
     public Junction(
@@ -80,6 +82,9 @@ public class Junction implements Comparable<Junction>
     public void markAsIndel() { mIndelBased = true; }
     public boolean indelBased() { return mIndelBased; }
 
+    public int rawDiscordantPosition() { return mRawDiscordantPosition; }
+    public void setRawDiscordantPosition(int position) { mRawDiscordantPosition = position; }
+
     public String toString()
     {
         if(DiscordantOnly || mIndelBased || Hotspot)
@@ -92,10 +97,16 @@ public class Junction implements Comparable<Junction>
 
     // for display and logging
     public String coords() { return format("%s:%d:%d", Chromosome, Position, Orient.asByte()); }
+    public String coordsTyped() { return coordsTyped(false); }
 
-    public String coordsTyped()
+    public String coordsTyped(boolean useRawDiscordant)
     {
-        return DiscordantOnly || indelBased() ? format("%s %c", coords(), DiscordantOnly ? 'D' : 'I') : coords();
+        if(DiscordantOnly)
+            return format("%s:%d:%d;D", Chromosome, useRawDiscordant ? mRawDiscordantPosition : Position, Orient.asByte());
+        else if(indelBased())
+            return format("%s:I", coords());
+        else
+            return coords();
     }
 
     public boolean isLocalMatch(final Junction other)

@@ -19,17 +19,26 @@ public class DiscordantGroup
     private final List<ReadGroup> mReadGroups;
     private final List<DiscordantRemoteRegion> mRemoteRegions;
 
-    public DiscordantGroup(final ChrBaseRegion region, final Orientation orient, final ReadGroup readGroup, final PrepRead initialRead)
+    public DiscordantGroup(final ChrBaseRegion region, final Orientation orient, final ReadGroup readGroup)
     {
         Region = region;
         Orient = orient;
         mReadGroups = Lists.newArrayList(readGroup);
-        mInnermostRead = initialRead;
         mRemoteRegions = Lists.newArrayList();
+        mInnermostRead = null;
     }
 
-    public int innerPosition() { return Orient.isForward() ? Region.end() : Region.start(); }
+    public int innerPosition()
+    {
+        if(mInnermostRead == null)
+            return Orient.isForward() ? Region.end() : Region.start();
+
+        return Orient.isForward() ? mInnermostRead.end() : mInnermostRead.start();
+    }
+
+    public void setInnerRead(final PrepRead read) { mInnermostRead = read; }
     public PrepRead innerRead() { return mInnermostRead; }
+
     public List<ReadGroup> readGroups() { return mReadGroups; }
 
     public boolean tryAddReadGroup(final ReadGroup readGroup, final PrepRead read)
@@ -45,17 +54,11 @@ public class DiscordantGroup
         if(read.end() > Region.end())
         {
             Region.setEnd(read.end());
-
-            if(Orient.isForward())
-                mInnermostRead = read;
         }
 
         if(read.start() < Region.start())
         {
             Region.setStart(read.start());
-
-            if(Orient.isReverse())
-                mInnermostRead = read;
         }
 
         addRemoteRegionRead(readGroup, read);
@@ -102,7 +105,7 @@ public class DiscordantGroup
         PrepRead firstRead = firstPrimaryRead(readGroup);
 
         ChrBaseRegion region = new ChrBaseRegion(firstRead.Chromosome, firstRead.start(), firstRead.end());
-        DiscordantGroup discordantGroup = new DiscordantGroup(region, firstRead.orientation(), readGroup, firstRead);
+        DiscordantGroup discordantGroup = new DiscordantGroup(region, firstRead.orientation(), readGroup);
 
         discordantGroup.addRemoteRegionRead(readGroup, firstRead);
 

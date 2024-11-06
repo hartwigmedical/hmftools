@@ -45,7 +45,9 @@ public class KnownHotspot
         return false;
     }
 
-    public static boolean matchesHotspot(final List<KnownHotspot> knownHotspots, final ReadGroup readGroup)
+    public boolean sameOrientation() { return OrientStart == OrientEnd;}
+
+    public static boolean readGroupMatchesHotspot(final List<KnownHotspot> knownHotspots, final ReadGroup readGroup)
     {
         for(KnownHotspot knownHotspot : knownHotspots)
         {
@@ -59,7 +61,13 @@ public class KnownHotspot
                 matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.start(), read.end());
                 matchesEnd |= knownHotspot.RegionEnd.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
 
-                if(matchesStart && matchesEnd)
+                if(!matchesStart || !matchesEnd)
+                    continue;
+
+                // must match the orientation pairing of the hotspot
+                boolean readSameOrientation = read.orientation() == read.mateOrientation();
+
+                if(readSameOrientation == knownHotspot.sameOrientation())
                     return true;
             }
         }
@@ -72,7 +80,7 @@ public class KnownHotspot
         return readGroup.reads().stream().anyMatch(x -> region.containsPosition(x.MateChromosome, x.record().getMateAlignmentStart()));
     }
 
-    public static boolean matchesHotspot(final List<KnownHotspot> knownHotspots, final JunctionData junctionData)
+    public static boolean junctionMatchesHotspot(final List<KnownHotspot> knownHotspots, final JunctionData junctionData)
     {
         for(KnownHotspot knownHotspot : knownHotspots)
         {

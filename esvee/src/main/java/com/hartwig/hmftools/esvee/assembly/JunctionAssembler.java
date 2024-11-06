@@ -216,6 +216,8 @@ public class JunctionAssembler
         mJunction = new Junction(
                 mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
 
+        mJunction.setRawDiscordantPosition(originalJuncPosition);
+
         for(Read read : rawReads)
         {
             if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)

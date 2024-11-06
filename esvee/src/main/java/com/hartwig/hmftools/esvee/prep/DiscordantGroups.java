@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.esvee.prep.KnownHotspot.readGroupMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MAX_LOCAL_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_ALIGN_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
@@ -110,7 +111,7 @@ public class DiscordantGroups
             return false;
 
         // only consider junctions from groups within this region
-        if(!mRegion.containsPosition(discordantGroup.Region.Chromosome, discordantGroup.innerPosition()))
+        if(!mRegion.overlaps(discordantGroup.Region))
             return false;
 
         // only consider pairings which are either local within the defined distance limit or in a known fusion region
@@ -118,7 +119,9 @@ public class DiscordantGroups
         // check that at least one remote region also has sufficient reads
         List<DiscordantRemoteRegion> remoteRegions = discordantGroup.remoteRegions();
 
-        if(remoteRegions.stream().noneMatch(x -> x.readCount() >= DISCORDANT_GROUP_MIN_FRAGMENTS))
+        Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.readCount()));
+
+        if(remoteRegions.get(0).readCount() < DISCORDANT_GROUP_MIN_FRAGMENTS)
             return false;
 
         boolean aboveMinMapQual = false;
@@ -150,8 +153,37 @@ public class DiscordantGroups
 
     private void addJunctions(final DiscordantGroup discordantGroup, final List<JunctionData> discordantJunctions)
     {
-        JunctionData junctionData = new JunctionData(
-                discordantGroup.innerPosition(), discordantGroup.Orient, discordantGroup.innerRead());
+        // define the junction point from the inner most read from the remote region with the most support
+        DiscordantRemoteRegion mainRemoteRegion = discordantGroup.remoteRegions().get(0);
+
+        PrepRead innerRead = null;
+        int innerPosition = 0;
+
+        for(ReadGroup readGroup : mainRemoteRegion.ReadGroups)
+        {
+            PrepRead read = firstPrimaryRead(readGroup);
+
+            if(discordantGroup.Orient.isForward())
+            {
+                if(innerRead == null || read.end() > innerRead.end())
+                {
+                    innerRead = read;
+                    innerPosition = read.end();
+                }
+            }
+            else
+            {
+                if(innerRead == null || read.start() < innerRead.start())
+                {
+                    innerRead = read;
+                    innerPosition = read.start();
+                }
+            }
+        }
+
+        JunctionData junctionData = new JunctionData(innerPosition, discordantGroup.Orient, innerRead);
+        discordantGroup.setInnerRead(innerRead);
+
         discordantJunctions.add(junctionData);
 
         junctionData.markDiscordantGroup();
@@ -211,9 +243,15 @@ public class DiscordantGroups
 
     private boolean hasRemoteRequiredFragments(final DiscordantGroup discordantGroup, final DiscordantRemoteRegion remoteRegion)
     {
-        boolean isShortLocal = discordantGroup.Region.Chromosome.equals(remoteRegion.Chromosome)
-                && min(abs(discordantGroup.innerPosition() - remoteRegion.start()),
-                abs(discordantGroup.innerPosition() - remoteRegion.end())) <= mMaxConcordantFragmentLength * 2;
+        boolean isShortLocal = false;
+
+        if(discordantGroup.Region.Chromosome.equals(remoteRegion.Chromosome))
+        {
+            int minDistance = remoteRegion.start() > discordantGroup.Region.end() ?
+                    remoteRegion.start() - discordantGroup.Region.end() : discordantGroup.Region.start() - remoteRegion.end();
+
+            isShortLocal = minDistance <= mMaxConcordantFragmentLength * 2;
+        }
 
         if(isShortLocal)
             return remoteRegion.readCount() >= DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -236,34 +274,20 @@ public class DiscordantGroups
             return false;
 
         // only the first read is used and so only that is checked
-        if(!isDiscordantFragment(readGroup.reads().get(0).record(), mMaxConcordantFragmentLength, null))
-            return false;
-
-        // must then either be in a known hotspot pair or a local DEL or DUP within the required distance
-        for(KnownHotspot knownHotspot : mKnownHotspots)
-        {
-            boolean matchesStart = false;
-            boolean matchesEnd = false;
-
-            for(PrepRead read : readGroup.reads())
-            {
-                matchesStart |= knownHotspot.RegionStart.overlaps(read.Chromosome, read.start(), read.end());
-                matchesStart |= knownHotspot.RegionStart.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
-                matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.start(), read.end());
-                matchesEnd |= knownHotspot.RegionEnd.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
-
-                if(matchesStart && matchesEnd)
-                    return true;
-            }
-        }
-
-        // otherwise must be local
         PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
 
         if(firstRead == null)
             return false;
 
-        if(!firstRead.Chromosome.equals(firstRead.MateChromosome))
+        if(!isDiscordantFragment(firstRead.record(), mMaxConcordantFragmentLength, null))
+            return false;
+
+        // must then either be in a known hotspot pair or a local DEL or DUP within the required distance
+        if(readGroupMatchesHotspot(mKnownHotspots, readGroup))
+            return true;
+
+        // must be local and a DEL or DUP
+        if(!firstRead.Chromosome.equals(firstRead.MateChromosome) || firstRead.orientation() == firstRead.mateOrientation())
             return false;
 
         int length = abs(firstRead.start() - firstRead.record().getMateAlignmentStart());

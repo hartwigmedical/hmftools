@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
-import static com.hartwig.hmftools.esvee.prep.KnownHotspot.matchesHotspot;
+import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -1108,7 +1108,7 @@ public class JunctionTracker
         int exactSupportCount = junctionData.ExactSupportGroups.size();
 
         // check for a hotspot match
-        if(matchesHotspot(mKnownHotspots, junctionData))
+        if(junctionMatchesHotspot(mKnownHotspots, junctionData))
         {
             junctionData.markHotspot();
 
