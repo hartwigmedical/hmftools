@@ -14,8 +14,10 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequen
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 
@@ -24,10 +26,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -163,24 +167,57 @@ public class JunctionAssembler
         if(rawReads.size() < ASSEMBLY_MIN_READ_SUPPORT)
             return;
 
-        // first identify the junction position either from soft-clips or the inner most read
+        int originalJuncPosition = mJunction.Position;
+
+        // find the applicable remote region from amongst
+        List<Read> candidateJunctionReads = rawReads.stream()
+                .filter(x -> (mJunction.isForward() && x.alignmentEnd() == originalJuncPosition)
+                        || (mJunction.isReverse() && x.alignmentStart() == originalJuncPosition))
+                .collect(Collectors.toList());
+
+        if(candidateJunctionReads.isEmpty())
+            return;
+
+        List<RemoteRegion> remoteRegions = Lists.newArrayList();
+        candidateJunctionReads.forEach(x -> addOrCreateMateRemoteRegion(remoteRegions, x, true));
+
+        if(remoteRegions.isEmpty())
+            return;
+
+        if(remoteRegions.size() > 1)
+        {
+            mergeRegions(remoteRegions);
+            Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.readCount()));
+        }
+
+        RemoteRegion mainRemoteRegion = remoteRegions.get(0);
+
+        // take the inner-most read position and its remote region, then only use other reads with matching remote regions
         List<Integer> extensionJuncPositions = Lists.newArrayListWithCapacity(rawReads.size());
+
+        Set<String> candidateReadIds = Sets.newHashSet();
 
         for(Read read : rawReads)
         {
             if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
                 continue;
 
+            // check that the read maps to the same remote region to qualify as an junction candidate
+            if(!mainRemoteRegion.overlaps(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd()))
+                continue;
+
+            candidateReadIds.add(read.id());
+
             if(mJunction.isForward())
             {
-                if(read.alignmentEnd() > mJunction.Position)
+                if(read.alignmentEnd() > originalJuncPosition)
                     continue;
 
                 extensionJuncPositions.add(read.unclippedEnd());
             }
             else
             {
-                if(read.alignmentStart() < mJunction.Position)
+                if(read.alignmentStart() < originalJuncPosition)
                     continue;
 
                 extensionJuncPositions.add(read.unclippedStart());
@@ -198,7 +235,6 @@ public class JunctionAssembler
         int outerJuncPosition = extensionJuncPositions.get(0);
         int secondJuncPosition = extensionJuncPositions.get(ASSEMBLY_MIN_READ_SUPPORT - 1);
         int adjustedJuncPosition;
-        int originalJuncPosition = mJunction.Position;
 
         if(mJunction.isForward())
         {
@@ -220,7 +256,7 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
+            if(!candidateReadIds.contains(read.id()) || read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
             {
                 mNonJunctionReads.add(read);
                 continue;

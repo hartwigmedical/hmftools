@@ -58,7 +58,7 @@ public final class AssemblyConstants
 
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;
-    public static final int REMOTE_REGION_MERGE_MARGIN = 150;
+    public static final int REMOTE_REGION_MERGE_MARGIN = 500;
     public static final int REMOTE_REGION_REF_MIN_READS = REMOTE_PHASING_MIN_READS;
     public static final double REMOTE_REGION_REF_MIN_READ_PERCENT = 0.1;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;

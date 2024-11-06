@@ -88,7 +88,7 @@ public final class RemoteRegionFinder
             return positionsOverlap(assembly.junction().Position, assembly.refBasePosition(), remoteRegion.start(), remoteRegion.end());
     }
 
-    private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
+    public static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
     {
         if(read.isMateUnmapped() || read.isSupplementary())
             return;
@@ -117,8 +117,7 @@ public final class RemoteRegionFinder
         }
         else
         {
-            RemoteRegion newRegion = new RemoteRegion(
-                    new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.id(), readType);
+            RemoteRegion newRegion = new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.id(), readType);
             remoteRegions.add(newRegion);
             return newRegion;
         }

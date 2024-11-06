@@ -86,7 +86,9 @@ public class RemoteRegion extends ChrBaseRegion
                 mReadTypeCount[SUPPLEMENTARY.ordinal()], mReadTypeCount[DISCORDANT.ordinal()], mSoftClipMapQualTotal);
     }
 
-    public static void mergeRegions(final List<RemoteRegion> regions)
+    public static void mergeRegions(final List<RemoteRegion> regions) { mergeRegions(regions, REMOTE_REGION_MERGE_MARGIN); }
+
+    public static void mergeRegions(final List<RemoteRegion> regions, int distanceBuffer)
     {
         Collections.sort(regions, Comparator.comparing(x -> x));
 
@@ -102,7 +104,7 @@ public class RemoteRegion extends ChrBaseRegion
 
                 boolean mergeRegions = region.Chromosome.equals(nextRegion.Chromosome)
                         && (positionsOverlap(region.start(), region.end(), nextRegion.start(), nextRegion.end())
-                        || region.end() >= nextRegion.start() - REMOTE_REGION_MERGE_MARGIN); // within close proximity
+                        || region.end() >= nextRegion.start() - distanceBuffer); // within close proximity
 
 
                 if(mergeRegions)
