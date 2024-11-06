@@ -116,10 +116,10 @@ public class AmberApplication implements AutoCloseable
 
                 for(AmberSite amberSite : amberSites)
                 {
-                    if(amberSite.position() < currentRegion.start())
+                    if(amberSite.position() < currentRegion.start() - TARGET_REGION_SITE_BUFFER)
                         continue;
 
-                    while(amberSite.position() > currentRegion.end())
+                    while(amberSite.position() > currentRegion.end() + TARGET_REGION_SITE_BUFFER)
                     {
                         ++regionIndex;
 
