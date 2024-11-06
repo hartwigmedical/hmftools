@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.loh;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_CN_THRE
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MINOR_ALLELE_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_AF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_TUMOR_BAF;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_MEDIAN_ABS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_MEDIAN_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
@@ -36,6 +39,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 import com.hartwig.hmftools.wisp.purity.SampleData;
@@ -92,73 +96,22 @@ public class AmberLohCalcs
     {
         try
         {
-            String sampleAmberFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.getAmberDir(sampleId), sampleId);
-            Multimap<Chromosome,AmberBAF> sampleChromosomeBafs = AmberBAFFile.read(sampleAmberFile, true);
+            Map<String,List<PurpleCopyNumber>> chrCopyNumbers = buildCopyNumberMap();
 
-            // select only regions with an LOH
-            Map<String,List<PurpleCopyNumber>> chrCopyNumbers = Maps.newHashMap();
+            List<RegionData> regionDataList = buildCopyNumberRegions(sampleId, chrCopyNumbers);
 
-            for(PurpleCopyNumber copyNumber : mCopyNumbers)
+            if(mWriter != null)
             {
-                // purpleLOH = purpleCN %>% filter(minorAlleleCopyNumber<0.2&copyNumber>0.8)
-                if(copyNumber.minorAlleleCopyNumber() > AMBER_LOH_MINOR_ALLELE_THRESHOLD
-                || copyNumber.averageTumorCopyNumber() < AMBER_LOH_CN_THRESHOLD)
-                {
-                    continue;
-                }
-
-                List<PurpleCopyNumber> copyNumbers = chrCopyNumbers.get(copyNumber.chromosome());
-
-                if(copyNumbers == null)
-                {
-                    copyNumbers = Lists.newArrayList();
-                    chrCopyNumbers.put(copyNumber.chromosome(), copyNumbers);
-                }
-
-                copyNumbers.add(copyNumber);
+                regionDataList.forEach(x -> writeLohData(mWriter, mConfig, mSample, sampleId, x));
             }
-
-            List<RegionData> regionDataList = Lists.newArrayList();
 
             int totalAmberSites = 0;
-
             for(Map.Entry<String,List<PurpleCopyNumber>> entry : chrCopyNumbers.entrySet())
             {
-                String chrStr = entry.getKey();
-                Chromosome chromosome = HumanChromosome.fromString(chrStr);
-
+                Chromosome chromosome = HumanChromosome.fromString(entry.getKey());
                 Collection<AmberBAF> tumorChrSites = mTumorChromosomeBafs.get(chromosome);
-                Collection<AmberBAF> sampleChrites = sampleChromosomeBafs.get(chromosome);
-                Collection<AmberBAF> secondaryTumorChrSites = mSecondaryTumorChromosomeBafs.get(chromosome);
-
                 totalAmberSites += tumorChrSites.size();
-                // totalAmberSites += sampleChrites.size(); // only count the tumor
-
-                for(PurpleCopyNumber copyNumber : entry.getValue())
-                {
-                    List<AmberBAF> tumorLohSites = tumorChrSites.stream()
-                            .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
-
-                    List<AmberBAF> secondaryTumorLohSites = secondaryTumorChrSites != null ?
-                            secondaryTumorChrSites.stream()
-                                    .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList())
-                            : Collections.emptyList();
-
-                    List<AmberBAF> sampleLohSites = sampleChrites.stream()
-                            .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
-
-                    RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, secondaryTumorLohSites, sampleLohSites);
-
-                    if(regionData == null)
-                        continue;
-
-                    regionDataList.add(regionData);
-
-                    writeLohData(mWriter, mConfig, mSample, sampleId, regionData);
-                }
             }
-
-            sampleChromosomeBafs.clear();
 
             List<Double> lohSiteAFs = Lists.newArrayList();
             List<Double> lohSiteImpliedPurities = Lists.newArrayList();
@@ -201,9 +154,14 @@ public class AmberLohCalcs
             Collections.sort(lohSiteImpliedPurities);
 
             int medianIndex = lohSiteAFs.size() / 2;
-            double lohEstimatedPurity = lohSiteImpliedPurities.get(medianIndex);
+            double rawEstimatedPurity = lohSiteImpliedPurities.get(medianIndex);
 
             double lohMedianAf = lohSiteAFs.get(medianIndex);
+
+            // consider peaks above the median
+            double peakImpliedPurity = checkPeakImpliedPurity(rawEstimatedPurity, totalLohSiteCount, regionDataList);
+
+            double lohImpliedPurity = peakImpliedPurity > rawEstimatedPurity ? peakImpliedPurity : rawEstimatedPurity;
 
             double lohMeanAf = totalRegionAf / (double)lohSiteAFs.size();
 
@@ -216,8 +174,8 @@ public class AmberLohCalcs
             double lohLod = calcLimitOfDetection(LOW_PROBABILITY, lohMeanCN, totalLohSupportCount);
 
             return new AmberLohResult(
-                    totalLohRegionCount, totalLohSiteCount, lohEstimatedPurity, lohPercent, lohLod, lohMeanCN, lohMedianAf, lohMeanAf,
-                    lohProbability, totalLohSupportCount);
+                    totalLohRegionCount, totalLohSiteCount, rawEstimatedPurity, lohImpliedPurity, lohPercent, lohLod, lohMeanCN, lohMedianAf,
+                    lohMeanAf, lohProbability, totalLohSupportCount);
         }
         catch(Exception e)
         {
@@ -225,6 +183,123 @@ public class AmberLohCalcs
             e.printStackTrace();
             return null;
         }
+    }
+
+    private static final double NO_PEAK_PURITY = -1;
+
+    private double checkPeakImpliedPurity(double estimatedPurity, int lohSiteCount, final List<RegionData> regionDataList)
+    {
+        // consider peaks above the median
+        double peakPurityThreshold = max(estimatedPurity * AMBER_LOH_PEAK_MEDIAN_PERC, estimatedPurity + AMBER_LOH_PEAK_MEDIAN_ABS);
+
+        List<RegionData> peakRegions = regionDataList.stream()
+                .filter(x -> x.impliedPurity() > peakPurityThreshold).collect(Collectors.toList());
+
+        if(peakRegions.isEmpty())
+            return NO_PEAK_PURITY;
+
+        int peakFragments = 0;
+        int peakDepth = 0;
+        int peakSites = 0;
+        int expectedFragments = 0;
+
+        for(RegionData region : peakRegions)
+        {
+            peakFragments += region.siteSupport();
+            peakDepth += region.siteDepth();
+            peakSites += region.Sites.size();
+
+            expectedFragments += region.expectedSupport(estimatedPurity);
+        }
+
+        double peakSitesPerc = peakSites / (double)lohSiteCount;
+
+        if(peakSitesPerc <= 0.01)
+            return NO_PEAK_PURITY;
+
+        if(peakFragments > expectedFragments)
+            return NO_PEAK_PURITY;
+
+        PoissonDistribution poissonDistribution = new PoissonDistribution(expectedFragments);
+        double peakProbability = poissonDistribution.cumulativeProbability(peakFragments);
+
+        if(peakProbability < LOW_PROBABILITY)
+        {
+            List<Double> impliedPurities = peakRegions.stream().map(x -> x.impliedPurity()).collect(Collectors.toList());
+            double medianPurity = Doubles.median(impliedPurities);
+            return medianPurity;
+        }
+
+        return NO_PEAK_PURITY;
+    }
+
+    private Map<String,List<PurpleCopyNumber>> buildCopyNumberMap()
+    {
+        // select only regions with an LOH
+        Map<String,List<PurpleCopyNumber>> chrCopyNumbers = Maps.newHashMap();
+
+        for(PurpleCopyNumber copyNumber : mCopyNumbers)
+        {
+            // purpleLOH = purpleCN %>% filter(minorAlleleCopyNumber<0.2&copyNumber>0.8)
+            if(copyNumber.minorAlleleCopyNumber() > AMBER_LOH_MINOR_ALLELE_THRESHOLD
+            || copyNumber.averageTumorCopyNumber() < AMBER_LOH_CN_THRESHOLD)
+            {
+                continue;
+            }
+
+            List<PurpleCopyNumber> copyNumbers = chrCopyNumbers.get(copyNumber.chromosome());
+
+            if(copyNumbers == null)
+            {
+                copyNumbers = Lists.newArrayList();
+                chrCopyNumbers.put(copyNumber.chromosome(), copyNumbers);
+            }
+
+            copyNumbers.add(copyNumber);
+        }
+
+        return chrCopyNumbers;
+    }
+
+    private List<RegionData> buildCopyNumberRegions(final String sampleId, Map<String,List<PurpleCopyNumber>> chrCopyNumbers) throws IOException
+    {
+        String sampleAmberFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.getAmberDir(sampleId), sampleId);
+        Multimap<Chromosome,AmberBAF> sampleChromosomeBafs = AmberBAFFile.read(sampleAmberFile, true);
+
+        List<RegionData> regionDataList = Lists.newArrayList();
+
+        for(Map.Entry<String,List<PurpleCopyNumber>> entry : chrCopyNumbers.entrySet())
+        {
+            String chrStr = entry.getKey();
+            Chromosome chromosome = HumanChromosome.fromString(chrStr);
+
+            Collection<AmberBAF> tumorChrSites = mTumorChromosomeBafs.get(chromosome);
+            Collection<AmberBAF> sampleChrites = sampleChromosomeBafs.get(chromosome);
+            Collection<AmberBAF> secondaryTumorChrSites = mSecondaryTumorChromosomeBafs.get(chromosome);
+
+            for(PurpleCopyNumber copyNumber : entry.getValue())
+            {
+                List<AmberBAF> tumorLohSites = tumorChrSites.stream()
+                        .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
+
+                List<AmberBAF> secondaryTumorLohSites = secondaryTumorChrSites != null ?
+                        secondaryTumorChrSites.stream()
+                                .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList())
+                        : Collections.emptyList();
+
+                List<AmberBAF> sampleLohSites = sampleChrites.stream()
+                        .filter(x -> positionWithin(x.Position, copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
+
+                RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, secondaryTumorLohSites, sampleLohSites);
+
+                if(regionData == null)
+                    continue;
+
+                regionDataList.add(regionData);
+            }
+        }
+
+        return regionDataList;
     }
 
     private RegionData buildCopyNumberRegionData(
@@ -314,7 +389,7 @@ public class AmberLohCalcs
             addCommonHeaderFields(sj, config);
 
             sj.add("Chromosome").add("CnSegmentStart").add("CnSegmentEnd").add("CopyNumber");
-            sj.add("SiteCount").add("SupportCount").add("AvgAF").add("ImpliedPurity");
+            sj.add("Sites").add("Support").add("Depth").add("AvgAF").add("ImpliedPurity");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -346,7 +421,9 @@ public class AmberLohCalcs
             sj.add(String.valueOf(regionData.Sites.size()));
 
             int totalSupport = regionData.Sites.stream().mapToInt(x -> x.Support).sum();
+            int totalDepth = regionData.Sites.stream().mapToInt(x -> x.SampleDepth).sum();
             sj.add(String.valueOf(totalSupport));
+            sj.add(String.valueOf(totalDepth));
             sj.add(format("%.2f", regionData.averageAF()));
             sj.add(format("%.2f", regionData.impliedPurity()));
 

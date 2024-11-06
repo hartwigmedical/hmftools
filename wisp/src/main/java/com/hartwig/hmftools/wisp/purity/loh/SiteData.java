@@ -20,7 +20,7 @@ public class SiteData
 
         double adjustedSampleBaf = TumorBaf < 0.5 ? SampleBaf : 1 - SampleBaf;
         double support = sampleDepth * adjustedSampleBaf;
-        Support = (int) round(support);
+        Support = (int)round(support);
         AF = SampleDepth > 0 ? support / SampleDepth : 0;
     }
 }

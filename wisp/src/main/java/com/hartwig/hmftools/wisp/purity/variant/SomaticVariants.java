@@ -371,6 +371,9 @@ public class SomaticVariants
         if(variant.context().isFiltered())
             filters.add(NO_PASS);
 
+        if(variant.repeatCount() > PurityConstants.MAX_REPEAT_COUNT)
+            filters.add(REPEAT_COUNT);
+
         if(mConfig.ApplyRefVariantFilters) // no others are applied
             return filters;
 
@@ -379,9 +382,6 @@ public class SomaticVariants
 
         if(variant.context().hasAttribute(MAPPABILITY_TAG) && variant.mappability() < 1)
             filters.add(MAPPABILITY);
-
-        if(variant.repeatCount() > PurityConstants.MAX_REPEAT_COUNT)
-            filters.add(REPEAT_COUNT);
 
         if(variant.tier() == VariantTier.LOW_CONFIDENCE)
             filters.add(LOW_CONFIDENCE);

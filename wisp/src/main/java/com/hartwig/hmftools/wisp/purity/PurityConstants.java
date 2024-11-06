@@ -63,6 +63,8 @@ public class PurityConstants
     public static final double AMBER_LOH_CN_THRESHOLD = 0.8;
     public static final double AMBER_LOH_MIN_TUMOR_BAF = 0.55;
     public static final double AMBER_LOH_MIN_AF = 0.55;
+    public static final double AMBER_LOH_PEAK_MEDIAN_PERC = 1.2;
+    public static final double AMBER_LOH_PEAK_MEDIAN_ABS = 0.02;
 
     public static final String PURPLE_APPENDED_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }
