@@ -62,7 +62,6 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
         if(variants.size()>0)
             checkRefGenomeVersion(mRefGenome, variants.get(0));
 
-
         List<SmallVariant> snvs = new ArrayList<>();
         for(VariantContext variantContext : variants)
         {
@@ -109,6 +108,15 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
 
                 if(mConfig.WriteDetailedFiles)
                     mSnvDetailsList.add(snvDetails);
+
+                if(!triNucNameCountsMap.containsKey(snvDetails.mTriNucContext))
+                {
+                    CHORD_LOGGER.error("Found invalid trinucleotide context '{}' for variant '{}:{}:{}:{}'",
+                            snvDetails.mTriNucContext,
+                            snvDetails.mChromosome, snvDetails.mPosition, snvDetails.mRefBases, snv.AltBases
+                    );
+                    return null;
+                }
 
                 triNucNameCountsMap.compute(snvDetails.mTriNucContext, (k,v) -> v + 1);
             }
