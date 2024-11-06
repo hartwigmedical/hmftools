@@ -5,17 +5,36 @@ WISP estimates TF in a given sample (typically ctDNA), guided by the biomarkers 
 ## Commands
 
 ```
-<TO DO>
+java -jar wisp.jar 
+    -patient_id PATIENT_ID
+    -tumor_id TUMOR_ID
+    -samples SAMPLE_ID
+    -purple_dir /sample_data/purple/
+    -amber_dir /sample_data/amber/
+    -cobalt_dir /sample_data/cobalt/
+    -somatic_vcf /sample_data/sage_append/TUMOR_ID.purple.somatic.vcf.gz
+    -bqr_dir /sample_data/sage/  
+    -ref_genome /path_to_ref_genome/
+    -ref_genome_version 37
+    -output_dir /path_to_output/
 ```
 
 ## Arguments
 
-Argument | Required | Description
----|---|---
+Argument | Description
+---|---
+patient_id | Patient ID
+tumor_id | Tumor ID as per original pipeline run
+samples | One or more sample IDs matching longitudinal samples, separated by ';'
+purple_dir | Path to Purple pipeline output
+amber_dir | Path to Amber pipeline output
+cobalt_dir | Path to Cobalt pipeline output
+somatic_vcf | Path to somatic VCF with longitudinal samples
+bqr_dir | Path to Sage pipeline output
+ref_genome | Path to reference gebnome
+ref_genome | 37 or 38
+output_dir | Output directory
 
-```
-<TO DO>
-```
 
 ## Algorithm
 
