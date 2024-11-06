@@ -36,8 +36,7 @@ public class ChordRunner
                     mConfig.OutputDir,
                     sampleId,
                     mConfig.snvIndelVcfFile(sampleId),
-                    mConfig.svVcfFile(sampleId),
-                    mConfig.RefGenVersion.toString()
+                    mConfig.svVcfFile(sampleId)
             ));
 
             if(!(mConfig.ChordToolDir == null || mConfig.ChordToolDir.isEmpty()))
