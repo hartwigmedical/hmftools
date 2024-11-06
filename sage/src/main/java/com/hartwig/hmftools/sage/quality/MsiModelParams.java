@@ -10,21 +10,21 @@ import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHAN
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsConsensus;
 
 public class MsiModelParams
 {
-    private final JitterModelParams mParams;
+    private final JitterModelParamsConsensus mParams;
 
     private final Map<Integer,Double> mRepeatCountPdfSum;
 
-    public MsiModelParams(final JitterModelParams params)
+    public MsiModelParams(final JitterModelParamsConsensus params)
     {
         mParams = params;
         mRepeatCountPdfSum = Maps.newHashMap();
     }
 
-    public JitterModelParams params() { return mParams; }
+    public JitterModelParamsConsensus params() { return mParams; }
 
     public double calcErrorRate(int repeatCount, int repeatCountChange, final Double fixedScale)
     {

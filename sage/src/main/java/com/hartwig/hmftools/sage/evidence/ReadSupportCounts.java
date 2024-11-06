@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static java.lang.Math.round;
 
 import javax.annotation.Nullable;
 
+import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
+import htsjdk.samtools.SAMRecord;
 
 public class ReadSupportCounts
 {
@@ -14,6 +18,7 @@ public class ReadSupportCounts
     public int Realigned;
     public int Ref;
     public int Total;
+    public int StrongSimplexSupport;
 
     public ReadSupportCounts()
     {
@@ -23,11 +28,18 @@ public class ReadSupportCounts
         Realigned = 0;
         Ref = 0;
         Total = 0;
+        StrongSimplexSupport = 0;
     }
 
-    public void addSupport(@Nullable final VariantReadSupport support, final int count)
+    public void addSupport(SAMRecord record, int readIndex, @Nullable final VariantReadSupport support, final int count)
     {
         Total += count;
+        if(support == VariantReadSupport.FULL || support == VariantReadSupport.PARTIAL_CORE || support == VariantReadSupport.REALIGNED)
+        {
+            BqrReadType readType = extractReadType(record, SequencingType.SBX, record.getBaseQualities()[readIndex]);
+            if(readType == BqrReadType.NONE)
+                StrongSimplexSupport += count;
+        }
 
         if(support != null)
         {
@@ -58,6 +70,7 @@ public class ReadSupportCounts
 
     public int altSupport() { return Full + PartialCore + Core + Realigned; }
     public int strongSupport() { return Full + PartialCore + Realigned; }
+    public int strongSimplexSupport() { return StrongSimplexSupport; }
 
     public void applyRatio(double ratio)
     {

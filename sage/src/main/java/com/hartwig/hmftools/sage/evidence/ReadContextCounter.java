@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -52,8 +53,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
@@ -197,6 +199,7 @@ public class ReadContextCounter
 
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
+    public int strongSimplexSupport() { return mCounts.strongSimplexSupport(); }
     public int refSupport() { return mCounts.Ref; }
 
     public int simpleAltMatches() { return mSimpleAltMatches; }
@@ -235,7 +238,7 @@ public class ReadContextCounter
 
     public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaQualModel ultimaQualModel() { return mReadContext.ultimaQualModel(); }
-    public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
+    public boolean useMsiErrorRate() { return mQualCache.usesMsiIndelErrorQual();}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
     public StrandBiasData fragmentStrandBiasNonAlt() { return mNonAltFragmentStrandBias; }
@@ -401,7 +404,7 @@ public class ReadContextCounter
 
                 registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
 
-                mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
+                mQualCounters.update(record, qualityScores, matchType, readVarIndex);
 
                 mReadEdgeDistance.update(record, fragmentData, matchType.FullAltSupport);
 
@@ -444,9 +447,9 @@ public class ReadContextCounter
                 if(realignedType == EXACT)
                 {
                     matchType = ReadContextMatch.REALIGNED;
-                    registerReadSupport(record, REALIGNED, modifiedQuality, readVarIndex);
+                    registerReadSupport(record, REALIGNED, modifiedQuality, realignedReadIndex);
 
-                    mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
+                    mQualCounters.update(record, qualityScores, matchType, realignedReadIndex);
 
                     mReadEdgeDistance.update(record, fragmentData, true);
 
@@ -491,7 +494,7 @@ public class ReadContextCounter
         if(matchType == NONE && mVariant.isInsert() && readVarIndex - mVariant.indelLength() < 0)
             return UNRELATED;
 
-        mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
+        mQualCounters.update(record, qualityScores, matchType, readVarIndex);
 
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
@@ -533,15 +536,15 @@ public class ReadContextCounter
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality, int readVarIndex)
     {
-        mCounts.addSupport(support, 1);
-        mQualities.addSupport(support, (int) quality);
+        mCounts.addSupport(record, readVarIndex, support, 1);
+        mQualities.addSupport(record, readVarIndex, support, (int) quality);
 
         boolean supportsVariant = support != null
                 && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
 
         if(mConfig.Sequencing.HasUMIs)
         {
-            countUmiType(record, supportsVariant);
+            countUmiType(record, supportsVariant, readVarIndex);
         }
 
         if(mFragmentLengthData != null && (support == REF || supportsVariant))
@@ -556,7 +559,7 @@ public class ReadContextCounter
         }
     }
 
-    private void countUmiType(final SAMRecord record, final boolean supportsVariant)
+    private void countUmiType(final SAMRecord record, final boolean supportsVariant, final int readVarIndex)
     {
         if(mUmiTypeCounts == null)
         {
@@ -564,13 +567,13 @@ public class ReadContextCounter
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }
 
-        UmiReadType umiReadType = extractUmiType(record);
+        BqrReadType bqrReadType = extractReadType(record, mConfig.Sequencing.Type, record.getBaseQualities()[readVarIndex]);
 
         // add to total and variant support if applicable
-        ++mUmiTypeCounts[umiReadType.ordinal()];
+        ++mUmiTypeCounts[bqrReadType.ordinal()];
 
         if(supportsVariant)
-            ++mUmiTypeCounts[umiReadType.ordinal() + 3];
+            ++mUmiTypeCounts[bqrReadType.ordinal() + 3];
     }
 
     private void addVariantVisRecord(

@@ -262,10 +262,16 @@ public class BqrRegionReader implements CigarHandler
 
     public static BqrReadType extractReadType(final SAMRecord record, final SequencingType sequencingType)
     {
+        return extractReadType(record, sequencingType, 0);
+    }
+    public static BqrReadType extractReadType(final SAMRecord record, final SequencingType sequencingType, final int baseQuality)
+    {
         if(sequencingType == SequencingType.ILLUMINA)
             return BqrReadType.fromUmiType(extractUmiType(record));
-        else
+        else if(sequencingType == SequencingType.ULTIMA)
             return BqrReadType.fromUltimaType(extractConsensusType(record));
+        else
+            return baseQuality < 25 ? BqrReadType.NONE : BqrReadType.DUAL;
     }
 
     private static final int SHORT_FRAG_BOUNDARY_NONE = -1;
@@ -309,23 +315,23 @@ public class BqrRegionReader implements CigarHandler
     public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
         // note: ref position here is the last base of the previous aligned element - likewise for deletes
-        markIndelPosition(refPos);
+        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]));
     }
 
     @Override
     public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        markIndelPosition(refPos);
+        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]));
     }
 
-    private void markIndelPosition(int position)
+    private void markIndelPosition(int position, BqrReadType readType)
     {
         if(!mRegion.containsPosition(position))
             return;
 
         byte ref = mRefSequence.base(position);
         byte[] trinucleotideContext = mRefSequence.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType);
         bqData.setHasIndel();
     }
 
@@ -365,11 +371,12 @@ public class BqrRegionReader implements CigarHandler
             if(alt == N || !isValid(trinucleotideContext))
                 continue;
 
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
+            BqrReadType readType = extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]);
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType);
             baseQualityData.processReadBase(alt, quality);
 
             if(mWriteReadData && ref != alt)
-                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, mCurrentReadType);
+                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, readType);
         }
     }
 

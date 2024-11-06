@@ -24,7 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsConsensus;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
@@ -309,9 +310,9 @@ public class JitterTest
     @Test
     public void testMsiJitterCalcs()
     {
-        JitterModelParams jitterParams = new JitterModelParams(
+        JitterModelParamsConsensus jitterParams = new JitterModelParamsConsensus(
                 "A/T",	0.05,0.05, 0.11,	0.0444,
-                -0.1835,	1.0164);
+                -0.1835,	1.0164, BqrReadType.DUAL);
 
         MsiModelParams modelParams = new MsiModelParams(jitterParams);
 
@@ -327,17 +328,17 @@ public class JitterTest
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
-        JitterModelParams jitterParams1 = new JitterModelParams(
+        JitterModelParamsConsensus jitterParams1 = new JitterModelParamsConsensus(
                 "A/T",	0.05,0.06, 0.07,	0.0444,
-                -0.1835,	1.0164);
+                -0.1835,	1.0164, BqrReadType.DUAL);
 
-        JitterModelParams jitterParams2 = new JitterModelParams(
+        JitterModelParamsConsensus jitterParams2 = new JitterModelParamsConsensus(
                 "AT/TA",	0.02,0.03, 0.04,	0.0444,
-                -0.1835,	1.0164);
+                -0.1835,	1.0164, BqrReadType.DUAL);
 
-        JitterModelParams jitterParams3 = new JitterModelParams(
+        JitterModelParamsConsensus jitterParams3 = new JitterModelParamsConsensus(
                 REPEAT_UNIT_3_PLUS_LABEL,	0.1, 0.11, 0.12, 0.0133,
-                0.1115, 1.6087);
+                0.1115, 1.6087, BqrReadType.DUAL);
 
         String sampleId = TEST_SAMPLE;
         msiJitterCalcs.setSampleParams(sampleId, List.of(jitterParams1, jitterParams2, jitterParams3));
@@ -346,27 +347,27 @@ public class JitterTest
         VariantReadContext readContext = createReadContext(variant, "GT", "AAAAAAAAAT");
         setMaxRefRepeat(readContext);
 
-        double errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
+        double errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId, BqrReadType.DUAL);
         assertEquals(2.09e-2, errorRate, 1e-4);
 
         variant = createSimpleVariant(100, "T", "TAA");
         readContext = createReadContext(variant, "GT", "AAAAAAAAAAAAT");
 
-        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
+        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId, BqrReadType.DUAL);
         assertEquals(2.81e-3, errorRate, 1e-5);
 
         // too many repeats changing
         variant = createSimpleVariant(100, "T", "TAAAAAAA");
         readContext = createReadContext(variant, "GT", "AAAAT");
 
-        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
+        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId, BqrReadType.DUAL);
         assertEquals(0, errorRate, 0.001);
 
         // 4-base repeat
         variant = createSimpleVariant(100, "ACGTA", "A");
         readContext = createReadContext(variant, "GT", "CGTACGTACGTACGTACGTGG");
 
-        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId);
+        errorRate = msiJitterCalcs.calcErrorRate(readContext, sampleId, BqrReadType.DUAL);
         assertEquals(1.99e-4, errorRate, 1e-6);
     }
 
@@ -375,9 +376,9 @@ public class JitterTest
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
-        JitterModelParams jitterParams1 = new JitterModelParams(
+        JitterModelParamsConsensus jitterParams1 = new JitterModelParamsConsensus(
                 "A/C/G/T",	0.05,0.06, 0.07,	0.05,
-                -0.02,	0.05);
+                -0.02,	0.05, BqrReadType.DUAL);
 
         msiJitterCalcs.setSampleParams(TEST_SAMPLE, List.of(jitterParams1));
 

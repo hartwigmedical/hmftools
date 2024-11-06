@@ -138,6 +138,8 @@ public enum JitterMatch
                 break;
 
             byte readContextBase = readContext.ReadBases[readContextIndex];
+            if(readQuals[readIndex] == 18 && readContextIndex >= readContext.CoreIndexStart && readContextIndex <= readContext.CoreIndexEnd)
+                return false;  // never count jitter for a core that contains non-duplex bases. this allows us to make a jitter determination with DUAL error rates only
 
             if(altMatchCount > 0)
             {

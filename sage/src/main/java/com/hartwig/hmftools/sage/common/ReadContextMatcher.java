@@ -247,10 +247,24 @@ public class ReadContextMatcher
         return matchType;
     }
 
+    public boolean containsZeroQualBases(final byte[] readQuals, final int readVarIndex)
+    {
+        int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mAltIndexLower;
+        int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
+        for (int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
+        {
+            if(readQuals[i] == 0)
+                return true;
+        }
+        return false;
+    }
+
     public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
     {
         if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readVarIndex))
             return ReadContextMatch.REF;
+        if(readQuals != null && containsZeroQualBases(readQuals, readVarIndex))
+            return NONE;
 
         ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
 

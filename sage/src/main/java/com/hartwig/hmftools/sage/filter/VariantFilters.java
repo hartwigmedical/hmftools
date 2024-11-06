@@ -80,8 +80,8 @@ public class VariantFilters
     {
         mConfig = config.Filter;
         mIsGermline = config.IsGermline;
-        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
-        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
+        mReadEdgeDistanceThreshold = (int)(100 * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
+        mReadEdgeDistanceThresholdPanel = (int)(100 * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
     }
 
@@ -204,10 +204,10 @@ public class VariantFilters
             filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
 
-        if(belowMinFragmentCoords(primaryTumor))
-        {
-            filters.add(SoftFilter.FRAGMENT_COORDS);
-        }
+//        if(belowMinFragmentCoords(primaryTumor))
+//        {
+//            filters.add(SoftFilter.FRAGMENT_COORDS);
+//        }
 
         if(belowMinStrongSupport(primaryTumor))
         {
@@ -271,12 +271,16 @@ public class VariantFilters
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
-        int strongSupport = primaryTumor.strongAltSupport();
+        int strongDuplexSupport = primaryTumor.strongAltSupport() - primaryTumor.strongSimplexSupport();
+        double modifiedAltSimplexBaseQualityTotal = primaryTumor.qualCounters().modifiedAltSimplexBaseQualityTotal();
+        double modifiedAltDuplexBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltSimplexBaseQualityTotal;
+        int simplexSupportContribution = (int)(strongDuplexSupport * modifiedAltSimplexBaseQualityTotal/modifiedAltDuplexBaseQualityTotal);
+        int strongSupport = strongDuplexSupport + simplexSupportContribution;
 
         if(strongSupport == 0)
             return true;
 
-        int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+        int qualPerRead = (int)round(modifiedAltDuplexBaseQualityTotal / strongDuplexSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty

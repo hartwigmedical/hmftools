@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -59,7 +60,7 @@ public class QualityCalculator
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
+            final QualityConfig config, final BasePosition position, int readLength, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(isHighlyPolymorphic(position))
         {
@@ -67,7 +68,7 @@ public class QualityCalculator
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
-        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty);
+        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty * 100 / readLength);
 
         int modifiedMapQuality = mapQuality - config.FixedMapQualPenalty - improperPairPenalty - eventPenalty;
 
@@ -77,6 +78,7 @@ public class QualityCalculator
     public QualityScores calculateQualityScores(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double calcBaseQuality)
     {
+        BqrReadType readType = extractReadType(record, SequencingType.SBX, (int)averageCoreQuality(readContextCounter.readContext(), record, readBaseIndex));
         double baseQuality;
 
         if(readContextCounter.isIndel() || readContextCounter.artefactContext() != null
@@ -92,11 +94,11 @@ public class QualityCalculator
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
 
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), record.getReadLength(), mapQuality, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = baseQuality;
 
-        if(!readContextCounter.useMsiErrorRate())
+        if(readContextCounter.qualCache().msiIndelErrorQual(readType) == INVALID_BASE_QUAL)
             modifiedBaseQuality -= mConfig.BaseQualityFixedPenalty;
 
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
@@ -112,6 +114,7 @@ public class QualityCalculator
 
     public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
+        BqrReadType readType = extractReadType(record, SequencingType.SBX, (int)averageCoreQuality(readContextCounter.readContext(), record, readIndex));
         if(readContextCounter.ultimaQualModel() != null)
             return readContextCounter.ultimaQualModel().calculateQual(record, readIndex);
 
@@ -120,16 +123,16 @@ public class QualityCalculator
 
         if(readContextCounter.isIndel())
         {
-            if(readContextCounter.qualCache().usesMsiIndelErrorQual() && artefactAdjustedQual != INVALID_BASE_QUAL)
+            if(readContextCounter.qualCache().msiIndelErrorQual(readType) != INVALID_BASE_QUAL && artefactAdjustedQual != INVALID_BASE_QUAL)
             {
                 // min the min of the two models
-                return min(artefactAdjustedQual, readContextCounter.qualCache().msiIndelErrorQual());
+                return min(artefactAdjustedQual, readContextCounter.qualCache().msiIndelErrorQual(readType));
             }
 
             double avgCoreQuality = averageCoreQuality(readContextCounter.readContext(), record, readIndex);
 
-            if(readContextCounter.qualCache().usesMsiIndelErrorQual())
-                return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual());
+            if(readContextCounter.qualCache().msiIndelErrorQual(readType) != INVALID_BASE_QUAL)
+                return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual(readType));
             else if(artefactAdjustedQual != INVALID_BASE_QUAL)
                 return min(avgCoreQuality, artefactAdjustedQual);
             else
@@ -158,7 +161,7 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        BqrReadType readType = extractReadType(record, mSequencingType);
+        BqrReadType readType = extractReadType(record, mSequencingType, record.getBaseQualities()[startReadIndex]);
 
         if(readContextCounter.isSnv())
         {
@@ -214,7 +217,7 @@ public class QualityCalculator
 
         for(int i = readIndexStart; i <= readIndexEnd; i++)
         {
-            quality += record.getBaseQualities()[i];
+            quality += Math.min(record.getBaseQualities()[i], MAX_RAW_BASE_QUAL);
         }
 
         return (int)round(quality / baseLength);

@@ -41,7 +41,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
     // read evidence
-    public static final int MATCHING_BASE_QUALITY = 20;
+    public static final int MATCHING_BASE_QUALITY = 15;
     public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
     public static final int FLANK_LOW_QUAL_MISMATCHES = 3;
     public static final double SC_READ_EVENTS_FACTOR = 12;
@@ -97,7 +97,7 @@ public class SageConstants
     public static final double GERMLINE_HET_MIN_SAMPLING_PROB = 1e-3;
 
 
-    public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
+    public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.275;
     public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
     public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
@@ -130,10 +130,11 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 12;
     public static final double MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
     public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
     public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
+    public static final int MAX_RAW_BASE_QUAL = 40;
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
 
