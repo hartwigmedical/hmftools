@@ -352,7 +352,7 @@ public class SomaticVariants
     {
         List<FilterReason> filters = Lists.newArrayList();
 
-        if(mSample.ReferenceId != null)
+        if(mSample.hasReference())
         {
             Genotype refGenotype = variant.context().getGenotype(mSample.ReferenceId);
 

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.INDEL_ERROR_RATE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SNV_QUAL_THRESHOLDS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
@@ -214,22 +215,27 @@ public class SomaticPurityEstimator
 
         for(SomaticVariant variant : variants)
         {
-            boolean useBqrData = variant.Type == VariantType.SNP;
-
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-            if(useBqrData)
+            double varBqrErrorRate = 0;
+
+            if(variant.Type == VariantType.SNP)
             {
                 if(!hasVariantContext(filteredBqrData, variant.TriNucContext, variant.Alt))
                     continue;
 
-                double varBqrErrorRate = getBqrErrorRate(variant);
-                sampleFragData.setBqrErrorRate(varBqrErrorRate);
-
-                depthWeightedErrorRate += varBqrErrorRate * sampleFragData.Depth;
-
-                sampleDepthTotal += sampleFragData.Depth;
+                varBqrErrorRate = getBqrErrorRate(variant);
             }
+            else
+            {
+                varBqrErrorRate = INDEL_ERROR_RATE;
+            }
+
+            sampleFragData.setBqrErrorRate(varBqrErrorRate);
+
+            depthWeightedErrorRate += varBqrErrorRate * sampleFragData.Depth;
+
+            sampleDepthTotal += sampleFragData.Depth;
 
             GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 

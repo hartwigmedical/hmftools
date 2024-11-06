@@ -44,6 +44,7 @@ public class SampleData
     }
 
     public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
+    public boolean hasReference() { return ReferenceId != null && !ReferenceId.isEmpty(); }
 
     public String toString()
     {
@@ -71,8 +72,10 @@ public class SampleData
 
             int patientIndex = fieldsIndexMap.get("PatientId");
             int tumorIndex = fieldsIndexMap.get("TumorId");
-            int referenceIndex = fieldsIndexMap.get("ReferenceId");
             int sampleIdsIndex = fieldsIndexMap.get("SampleIds");
+
+            // optional fields
+            Integer referenceIndex = fieldsIndexMap.get("ReferenceId");
             Integer vcfIndex = fieldsIndexMap.get("VcfTag");
             Integer isPanelIndex = fieldsIndexMap.get("IsPanel");
             Integer amberExtraTumorIdIndex = fieldsIndexMap.get("AmberExtraTumorId");
@@ -90,7 +93,7 @@ public class SampleData
 
                 String patientId = values[patientIndex];
                 String tumorId = values[tumorIndex];
-                String referenceId = values[referenceIndex];
+                String referenceId = referenceIndex != null ? values[referenceIndex] : "";
                 String amberExtraTumorId = amberExtraTumorIdIndex != null ? values[amberExtraTumorIdIndex] : null;
                 List<String> sampleIds = sampleIdsFromStr(values[sampleIdsIndex]);
 
