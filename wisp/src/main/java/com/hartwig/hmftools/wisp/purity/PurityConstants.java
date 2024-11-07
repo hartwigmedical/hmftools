@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
-import com.hartwig.hmftools.wisp.purity.variant.BqrAdjustment;
 
 public class PurityConstants
 {
@@ -66,8 +65,11 @@ public class PurityConstants
     public static final double AMBER_LOH_CN_THRESHOLD = 0.8;
     public static final double AMBER_LOH_MIN_TUMOR_BAF = 0.55;
     public static final double AMBER_LOH_MIN_AF = 0.55;
-    public static final double AMBER_LOH_PEAK_MEDIAN_PERC = 1.2;
-    public static final double AMBER_LOH_PEAK_MEDIAN_ABS = 0.02;
+    public static final double AMBER_LOH_PEAK_PURITY_FACTOR = 1.5;
+    public static final double AMBER_LOH_PEAK_PURITY_MIN = 0.03;
+    public static final double AMBER_LOH_PEAK_PROBABILITY = 0.001;
+    public static final double AMBER_LOH_PEAK_SITE_PERC = 0.03;
+    public static final int AMBER_LOH_PEAK_SITE_MIN_COUNT = 2000;
 
     public static final String PURPLE_APPENDED_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }

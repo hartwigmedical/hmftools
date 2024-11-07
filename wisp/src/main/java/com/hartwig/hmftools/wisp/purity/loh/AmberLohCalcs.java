@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.wisp.purity.loh;
 
-import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -13,8 +12,11 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_CN_THRE
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MINOR_ALLELE_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_AF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_TUMOR_BAF;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_MEDIAN_ABS;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_MEDIAN_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_PURITY_MIN;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_PURITY_FACTOR;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_SITE_MIN_COUNT;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_PEAK_SITE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
@@ -113,6 +115,8 @@ public class AmberLohCalcs
                 totalAmberSites += tumorChrSites.size();
             }
 
+            chrCopyNumbers.clear();
+
             List<Double> lohSiteAFs = Lists.newArrayList();
             List<Double> lohSiteImpliedPurities = Lists.newArrayList();
             int totalLohSupportCount = 0;
@@ -190,47 +194,46 @@ public class AmberLohCalcs
     private double checkPeakImpliedPurity(double estimatedPurity, int lohSiteCount, final List<RegionData> regionDataList)
     {
         // consider peaks above the median
-        double peakPurityThreshold = max(estimatedPurity * AMBER_LOH_PEAK_MEDIAN_PERC, estimatedPurity + AMBER_LOH_PEAK_MEDIAN_ABS);
+        double peakPurityThreshold = estimatedPurity * AMBER_LOH_PEAK_PURITY_FACTOR;
 
-        List<RegionData> peakRegions = regionDataList.stream()
-                .filter(x -> x.impliedPurity() > peakPurityThreshold).collect(Collectors.toList());
+        List<RegionData> peakRegions = Lists.newArrayList();
+        int peakSiteCount = 0;
+
+        for(RegionData region : regionDataList)
+        {
+            double regionPurity = region.impliedPurity();
+
+            if(regionPurity < peakPurityThreshold || regionPurity < AMBER_LOH_PEAK_PURITY_MIN)
+                continue;
+
+            int expectedFragments = region.expectedSupport(estimatedPurity);
+
+            int regionSupport = region.siteSupport();
+            if(regionSupport > expectedFragments || expectedFragments <= 0)
+                continue;
+
+            PoissonDistribution poissonDistribution = new PoissonDistribution(expectedFragments);
+            double probability = poissonDistribution.cumulativeProbability(regionSupport);
+
+            if(probability >= AMBER_LOH_PEAK_PROBABILITY)
+                continue;
+
+            peakRegions.add(region);
+
+            peakSiteCount += region.Sites.size();
+        }
 
         if(peakRegions.isEmpty())
             return NO_PEAK_PURITY;
 
-        int peakFragments = 0;
-        int peakDepth = 0;
-        int peakSites = 0;
-        int expectedFragments = 0;
+        double peakSitesPerc = peakSiteCount / (double)lohSiteCount;
 
-        for(RegionData region : peakRegions)
-        {
-            peakFragments += region.siteSupport();
-            peakDepth += region.siteDepth();
-            peakSites += region.Sites.size();
-
-            expectedFragments += region.expectedSupport(estimatedPurity);
-        }
-
-        double peakSitesPerc = peakSites / (double)lohSiteCount;
-
-        if(peakSitesPerc <= 0.01)
+        if(peakSitesPerc <= AMBER_LOH_PEAK_SITE_PERC || peakSiteCount < AMBER_LOH_PEAK_SITE_MIN_COUNT)
             return NO_PEAK_PURITY;
 
-        if(peakFragments > expectedFragments)
-            return NO_PEAK_PURITY;
-
-        PoissonDistribution poissonDistribution = new PoissonDistribution(expectedFragments);
-        double peakProbability = poissonDistribution.cumulativeProbability(peakFragments);
-
-        if(peakProbability < LOW_PROBABILITY)
-        {
-            List<Double> impliedPurities = peakRegions.stream().map(x -> x.impliedPurity()).collect(Collectors.toList());
-            double medianPurity = Doubles.median(impliedPurities);
-            return medianPurity;
-        }
-
-        return NO_PEAK_PURITY;
+        List<Double> impliedPurities = peakRegions.stream().map(x -> x.impliedPurity()).collect(Collectors.toList());
+        double medianPurity = Doubles.median(impliedPurities);
+        return medianPurity;
     }
 
     private Map<String,List<PurpleCopyNumber>> buildCopyNumberMap()
