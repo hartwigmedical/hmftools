@@ -11,6 +11,8 @@ import java.util.List;
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
+import org.jetbrains.annotations.Nullable;
+
 public class ChordDataWriter
 {
     public final ChordConfig mConfig;
@@ -28,14 +30,14 @@ public class ChordDataWriter
         mWriter = initializeWriter();
     }
 
-    public static String formOutputFile(String outputDir, String sampleId, String outputId)
+    public static String formOutputFile(String outputDir, String sampleId, @Nullable String outputId)
     {
         String outputFile = outputDir + "/" + sampleId;
 
-        if(!outputId.isEmpty())
-            outputFile += "." + outputId;
-
         outputFile += MUTATION_CONTEXTS_FILE_SUFFIX;
+
+        if(outputId != null)
+            outputFile += "." + outputId;
 
         return outputFile;
     }

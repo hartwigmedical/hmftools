@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.chord.indel;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
+import static com.hartwig.hmftools.chord.prep.PrepUtils.checkRefGenomeVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,10 +52,13 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
     public List<IndelVariant> loadVariants(String sampleId) throws NoSuchFileException
     {
         VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass).logPrefix(mLogPrefix);
-        List<VariantContext> variantContexts = vcfFile.loadVariants();
+        List<VariantContext> variants = vcfFile.loadVariants();
+
+        if(variants.size()>0)
+            checkRefGenomeVersion(mRefGenome, variants.get(0));
 
         List<IndelVariant> indels = new ArrayList<>();
-        for(VariantContext variantContext : variantContexts)
+        for(VariantContext variantContext : variants)
         {
             SmallVariant smallVariant = new SmallVariant(variantContext);
 

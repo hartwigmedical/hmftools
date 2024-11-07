@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.chord.snv;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
+import static com.hartwig.hmftools.chord.prep.PrepUtils.checkRefGenomeVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,7 +17,9 @@ import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.common.SmallVariant;
 import com.hartwig.hmftools.chord.prep.VariantTypePrep;
 import com.hartwig.hmftools.chord.common.VcfFile;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -55,6 +58,9 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
         VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass).logPrefix(mLogPrefix);
 
         List<VariantContext> variants = vcfFile.loadVariants();
+
+        if(variants.size()>0)
+            checkRefGenomeVersion(mRefGenome, variants.get(0));
 
         List<SmallVariant> snvs = new ArrayList<>();
         for(VariantContext variantContext : variants)
@@ -102,6 +108,15 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
 
                 if(mConfig.WriteDetailedFiles)
                     mSnvDetailsList.add(snvDetails);
+
+                if(!triNucNameCountsMap.containsKey(snvDetails.mTriNucContext))
+                {
+                    CHORD_LOGGER.error("Found invalid trinucleotide context '{}' for variant '{}:{}:{}:{}'",
+                            snvDetails.mTriNucContext,
+                            snvDetails.mChromosome, snvDetails.mPosition, snvDetails.mRefBases, snv.AltBases
+                    );
+                    return null;
+                }
 
                 triNucNameCountsMap.compute(snvDetails.mTriNucContext, (k,v) -> v + 1);
             }

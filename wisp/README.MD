@@ -127,7 +127,7 @@ The implied tumor fraction for each region is estimated as:
 ```
 TF = (1-2*AF) / [AF*(CN-2)+1] 
 ```
-WISP then uses the median TF across all the regions as the final TF (weighted by number of sites per region).   A final check is made to see if there is a subset of regions which have TF significantly higher than the median indicating that some of the identified LOH regions may have been subclonal in the tumor.  For this WISP searches for regions with TF > max(median*1.2, median + 2%) AND impliedTF >> medianTF (p-value).   If at least 1% of the LOH sites satisify these condtions, then the TF is instead set to the median of those selected regions.    
+WISP then uses the median TF across all the regions as the final TF (weighted by number of sites per region).   A final check is made to see if there is a subset of regions which have TF significantly higher than the median indicating that some of the identified LOH regions may have been subclonal in the tumor.  For this WISP searches for regions with TF > max(median*1.5, 3%) AND impliedTF >> medianTF (P<0.001).   If at least max(2000,5%) of the LOH sites satisify these condtions, then the TF is instead set to the median of those selected regions.    
 
 A LOD is calculated based on the TF consistent with an AF that would return a p-value of <0.01 given the total fragments observed at LOH sites.
 
