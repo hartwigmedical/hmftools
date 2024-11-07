@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -429,6 +430,7 @@ public class ExtensionSeqBuilder
         int repeatJunctionOffset = mIsForward ? repeatIndexStart : mBases.length - 1 - repeatIndexStart;
 
         Map<Integer,Integer> skipFrequencies = Maps.newHashMap();
+        List<Integer> readRepeatCounts = Lists.newArrayList();
 
         for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
         {
@@ -444,6 +446,7 @@ public class ExtensionSeqBuilder
                 mReadRepeatCounts[readIndex] = readRepeatCount;
                 Integer freq = skipFrequencies.get(readRepeatCount);
                 skipFrequencies.put(readRepeatCount, freq != null ? freq + 1 : 1);
+                readRepeatCounts.add(readRepeatCount);
             }
             else
             {
@@ -454,17 +457,34 @@ public class ExtensionSeqBuilder
         if(skipFrequencies.size() == 1)
             return; // no disagreement, mismatches must be explained by other read sequence differences
 
+        // first check the median repeat count and if zero then assume there is no dominant repeats
+        int medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+
+        if(medianRepeatCount == 0)
+            return;
+
         int consensusRepeatCount = 0;
         int consensusRepeatFreq = 0;
 
         for(Map.Entry<Integer,Integer> entry : skipFrequencies.entrySet())
         {
+            if(entry.getKey() == 0) // ignore zero has the most frequent since the median is above zero
+                continue;
+
             if(entry.getValue() > consensusRepeatFreq)
             {
                 consensusRepeatFreq = entry.getValue();
                 consensusRepeatCount = entry.getKey();
             }
         }
+
+        // recompute the median from the non-zero repeat counts
+        readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
+        medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+
+        // use median if there is no dominant repeat count
+        if(consensusRepeatFreq < readRepeatCounts.size() / 2)
+            consensusRepeatCount = medianRepeatCount;
 
         repeatIndexStart = maxRepeat.Index;
 
