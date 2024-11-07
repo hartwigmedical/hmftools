@@ -23,6 +23,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
+import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
@@ -53,7 +54,8 @@ public class UltimaQualCalculator
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
 
         // extract sufficient ref bases to set the context for most scenarios (only not for homopolymer transition)
-        final byte[] refBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
+        final byte[] origRefBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
+        final byte[] refBases = Arrays.copyArray(origRefBases);
         if(refMasks != null)
         {
             for(RefMask refMask : refMasks)
@@ -71,7 +73,11 @@ public class UltimaQualCalculator
 
         if(variant.isIndel())
         {
-            if(variant.isDelete() && isHomopolymerDeletion(variant, refBases))
+            if(variant.isDelete() && isHomopolymerDeletion(variant, origRefBases))
+            {
+                return new HomopolymerDeletion(variant, origRefBases[2], coreBases[1], coreBases[2]);
+            }
+            else if(variant.isDelete() && isHomopolymerDeletion(variant, refBases))
             {
                 return new HomopolymerDeletion(variant, refBases[2], coreBases[1], coreBases[2]);
             }
