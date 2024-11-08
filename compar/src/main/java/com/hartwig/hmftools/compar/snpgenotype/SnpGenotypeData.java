@@ -24,18 +24,21 @@ public class SnpGenotypeData implements ComparableItem
     public final String Ref;
     public final String Alt;
     public final String Genotype;
+    public final String VcfSampleId;
     public final BasePosition mComparisonPosition;
 
     protected static final String FLD_GENOTYPE = "Genotype";
+    protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
 
     public SnpGenotypeData(final String chromosome, final int position, final String ref, final String alt, final String genotype,
-            final BasePosition comparisonPosition)
+            final String vcfSampleId, final BasePosition comparisonPosition)
     {
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
         Alt = alt;
         Genotype = genotype;
+        VcfSampleId = vcfSampleId;
         mComparisonPosition = comparisonPosition;
     }
 
@@ -64,6 +67,7 @@ public class SnpGenotypeData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(format("%s", Alt));
         values.add(format("%s", Genotype));
+        values.add(format("%s", VcfSampleId));
         return values;
     }
 
@@ -96,6 +100,7 @@ public class SnpGenotypeData implements ComparableItem
 
         checkDiff(diffs, FLD_ALT, Alt, otherData.Alt);
         checkDiff(diffs, FLD_GENOTYPE, Genotype, otherData.Genotype);
+        checkDiff(diffs, FLD_VCF_SAMPLE_ID, VcfSampleId, otherData.VcfSampleId);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

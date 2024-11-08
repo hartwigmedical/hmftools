@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -38,7 +39,6 @@ public class ChordConfig
     public final String SvVcfFile;
 
     public final String RefGenomeFile;
-    public final RefGenomeVersion RefGenVersion;
 
     public final String OutputDir;
     public final String OutputId;
@@ -77,7 +77,6 @@ public class ChordConfig
         checkRequiredInputPaths(PurpleDir, SnvIndelVcfFile, SvVcfFile);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -148,7 +147,6 @@ public class ChordConfig
         configBuilder.addPath(SV_VCF_FILE, false, SV_VCF_FILE_DESC);
 
         configBuilder.addConfigItem(REF_GENOME, false, REF_GENOME_CFG_DESC);
-        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
 
         FileWriterUtils.addOutputOptions(configBuilder);
 
@@ -164,11 +162,8 @@ public class ChordConfig
 
     @VisibleForTesting
     public ChordConfig(
-            List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile,
-            String refGenomeFile, RefGenomeVersion refGenomeVersion,
-            String outputDir, String outputId,
-            int threads, boolean includeNonPass, boolean writeDetailedFiles,
-            String chordToolDir
+            List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile, String refGenomeFile,
+            String outputDir, String outputId, int threads, boolean includeNonPass, boolean writeDetailedFiles, String chordToolDir
     )
     {
         SampleIds = sampleIds;
@@ -176,7 +171,6 @@ public class ChordConfig
         SnvIndelVcfFile = snvIndelVcfFile;
         SvVcfFile = svFileFile;
         RefGenomeFile = refGenomeFile;
-        RefGenVersion = refGenomeVersion;
         OutputDir = outputDir;
         OutputId = outputId;
         Threads = threads;
@@ -193,7 +187,6 @@ public class ChordConfig
         private String SnvIndelVcfFile;
         private String SvVcfFile;
         private String RefGenomeFile;
-        private RefGenomeVersion RefGenVersion = V37;
         private String OutputDir;
         private String OutputId = "";
         private int Threads = 1;
@@ -228,12 +221,6 @@ public class ChordConfig
         public Builder refGenomeFile(String refGenomeFile)
         {
             RefGenomeFile = refGenomeFile;
-            return this;
-        }
-
-        public Builder refGenomeVersion(RefGenomeVersion refGenomeVersion)
-        {
-            RefGenVersion = refGenomeVersion;
             return this;
         }
 
@@ -276,10 +263,8 @@ public class ChordConfig
         public ChordConfig build()
         {
             return new ChordConfig(
-                    SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile,
-                    RefGenomeFile, RefGenVersion,
-                    OutputDir, OutputId,
-                    Threads, IncludeNonPass, WriteDetailedFiles, ChordToolDir
+                    SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile, RefGenomeFile,
+                    OutputDir, OutputId, Threads, IncludeNonPass, WriteDetailedFiles, ChordToolDir
             );
         }
     }

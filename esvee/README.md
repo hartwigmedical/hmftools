@@ -364,7 +364,7 @@ minAF | Any | min(AF[BE1],AF[BE2]) | 0.001 | 0.001 | 0.05  | 0.001
 minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
 minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
-shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 0.05##### | NA | NA  | NA 
+shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 0.05<sup>5</sup> | NA | NA  | NA 
 
 <sup>1. The inserted sequence length must also meet these requirements </sup>
 <sup>2. Same chromosome junctions only. </sup>

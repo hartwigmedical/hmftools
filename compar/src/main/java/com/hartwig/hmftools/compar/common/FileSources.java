@@ -201,8 +201,8 @@ public class FileSources
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
-        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/flagstat", TUMOR_FLAGSTAT, sourceName);
-        String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/flagstat", GERMLINE_FLAGSTAT, sourceName);
+        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_FLAGSTAT, sourceName);
+        String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_FLAGSTAT, sourceName);
         String tumorBamMetrics = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_BAM_METRICS, sourceName);
         String germlineBamMetrics = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_BAM_METRICS, sourceName);
         String snpGenotype = getDirectory(configBuilder, sampleDir, "$/snp_genotype", SNP_GENOTYPE, sourceName);

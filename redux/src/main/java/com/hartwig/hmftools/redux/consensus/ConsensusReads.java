@@ -183,7 +183,7 @@ public class ConsensusReads
         // if all mates were unmapped from non-human contigs, then mark this read as unpaired
         for(SAMRecord read : reads)
         {
-            if(!read.getMateUnmappedFlag())
+            if(!read.getReadPairedFlag() || !read.getMateUnmappedFlag())
                 return;
 
             String mateCoordsStr = read.getStringAttribute(UNMAP_ATTRIBUTE);

@@ -101,7 +101,8 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
-   -loci /path/to/GermlineHetPon.37.vcf.gz 
+   -loci /path/to/GermlineHetPon.37.vcf.gz \
+   -ref_genome_version 38
 ```
 ## Germline Only Mode
 

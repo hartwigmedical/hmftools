@@ -323,7 +323,7 @@ public class DuplicateGroup
         return readGroup.size() >= expectedCount;
     }
 
-    public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
+    public synchronized List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
     {
         // take each read group type in turn and if complete, or in a final processing step, create a consensus read
         // and collect all reads to be written and then cleared from this UMI group

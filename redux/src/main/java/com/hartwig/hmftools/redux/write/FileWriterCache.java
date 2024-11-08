@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,10 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class FileWriterCache
 {
@@ -41,7 +38,6 @@ public class FileWriterCache
 
     private final JitterAnalyser mJitterAnalyser;
 
-    public static final String BAM_FILE_ID = "redux";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
 
@@ -146,7 +142,7 @@ public class FileWriterCache
         if(!mConfig.MultiBam && mConfig.Threads == 1 && mConfig.OutputBam != null && !runSortMergeIndex())
             return mConfig.OutputBam; // no need to write a temporary BAM
 
-        String filename = mConfig.OutputDir + mConfig.SampleId + "." + BAM_FILE_ID;
+        String filename = mConfig.OutputDir + mConfig.SampleId + "." + FILE_ID;
 
         if(mConfig.OutputId != null)
             filename += "." + mConfig.OutputId;
@@ -252,8 +248,9 @@ public class FileWriterCache
         if(!mConfig.KeepInterimBams)
             deleteInterimBams(interimBams);
 
-        // no need for indexing since both merge methods now create an index
-        // indexFinalBam(finalBamFilename);
+        // only need to index if no merge was performed
+        if(mBamWriters.size() == 1)
+            indexFinalBam(finalBamFilename);
 
         return true;
     }

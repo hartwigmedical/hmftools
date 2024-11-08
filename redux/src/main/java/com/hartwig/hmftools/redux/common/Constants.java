@@ -2,6 +2,8 @@ package com.hartwig.hmftools.redux.common;
 
 public class Constants
 {
+    public static final String FILE_ID = "redux";
+
     // BAM processing
     public static final int DEFAULT_PARTITION_SIZE = 1000000;
     public static final int DEFAULT_POS_BUFFER_SIZE = 500;

@@ -57,8 +57,7 @@ public class SuppBamReprocessor implements Callable
         mCacheCount = 0;
         mProcessedCount = 0;
 
-        mBamReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(config.RefGenomeFile)).open(new File(bamFilename));
+        mBamReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(bamFilename));
     }
 
     @Override
@@ -120,7 +119,7 @@ public class SuppBamReprocessor implements Callable
 
             PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
-            PartitionResults partitionResults = partitionData.processIncompleteFragments(reads, true);
+            PartitionResults partitionResults = partitionData.processIncompleteFragments(reads, false);
 
             if(partitionResults == null)
                 return;
@@ -137,9 +136,6 @@ public class SuppBamReprocessor implements Callable
 
             if(partitionResults.resolvedFragments() != null)
                 mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
-
-            if(partitionResults.supplementaries() != null)
-                partitionResults.supplementaries().forEach(x -> mBamWriter.writeSupplementary(x));
 
             reads.clear();
         }
