@@ -83,7 +83,7 @@ public final class Doubles
 
         int count = values.size();
 
-        if (count == 0)
+        if(count == 0)
             return 0;
 
         return count % 2 == 0 ? (values.get(count / 2) + values.get(count / 2 - 1)) / 2 : values.get(count / 2);
