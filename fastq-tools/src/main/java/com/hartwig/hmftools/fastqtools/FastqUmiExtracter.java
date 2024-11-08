@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.fastq;
+package com.hartwig.hmftools.fastqtools;
 
 import static java.lang.Math.max;
 
@@ -9,9 +9,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.APP_NAME;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -32,6 +31,7 @@ public class FastqUmiExtracter
     private final String mOutputDir;
     private final String mOutputId;
     private final int mUmiLength;
+    private final String mUmiDelim;
     private final int mAdapterLength;
     private final int mAdapterUmiLength;
     private final String mAdapterSequence;
@@ -44,6 +44,7 @@ public class FastqUmiExtracter
     // config
     private static final String FASTQ_FILES = "fastq_files";
     private static final String UMI_LENGTH = "umi_length";
+    private static final String UMI_DELIM = "umi_delim";
     private static final String ADAPTER_LENGTH = "adapter_length";
     private static final String ADAPTER_SEQUENCE = "adapter_seq";
     private static final String SPECIFIC_READ = "specific_read";
@@ -59,6 +60,7 @@ public class FastqUmiExtracter
         mUmiLength = configBuilder.getInteger(UMI_LENGTH);
         mAdapterLength = configBuilder.getInteger(ADAPTER_LENGTH);
         mAdapterSequence = configBuilder.getValue(ADAPTER_SEQUENCE);
+        mUmiDelim = configBuilder.getValue(UMI_DELIM);
 
         mSpecificRead = configBuilder.hasValue(SPECIFIC_READ) ? configBuilder.getInteger(SPECIFIC_READ) : null;
 
@@ -93,23 +95,23 @@ public class FastqUmiExtracter
 
         if(fastqFiles.length != 2)
         {
-            RD_LOGGER.info("invalid fastq file config: {}", mFastqFiles);
+            FQ_LOGGER.info("invalid fastq file config: {}", mFastqFiles);
             System.exit(1);
         }
 
         if(!Files.exists(Paths.get(fastqFiles[0])) || !Files.exists(Paths.get(fastqFiles[1])))
         {
-            RD_LOGGER.info("fastq files do not exist: {}", mFastqFiles);
+            FQ_LOGGER.info("fastq files do not exist: {}", mFastqFiles);
             System.exit(1);
         }
 
-        RD_LOGGER.info("starting Fastq UMI extractions with files: {}", mFastqFiles);
+        FQ_LOGGER.info("starting Fastq UMI extractions with files: {}", mFastqFiles);
 
         long startTimeMs = System.currentTimeMillis();
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        RD_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+        FQ_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;
@@ -134,7 +136,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            RD_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
+            FQ_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
             System.exit(1);
             return null;
         }
@@ -170,12 +172,12 @@ public class FastqUmiExtracter
                 {
                     if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
                     {
-                        RD_LOGGER.error("invalid entries at line({})", lineCount);
+                        FQ_LOGGER.error("invalid entries at line({})", lineCount);
 
                         for(int i = 0; i < r1ReadBuffer.length; ++i)
                         {
-                            RD_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
-                            RD_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
+                            FQ_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
+                            FQ_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
                         }
 
                         System.exit(1);
@@ -188,7 +190,7 @@ public class FastqUmiExtracter
 
                 if(lineCount > 0 && (lineCount % LINE_LOG_COUNT) == 0)
                 {
-                    RD_LOGGER.info("processed {} lines", lineCount);
+                    FQ_LOGGER.info("processed {} lines", lineCount);
                 }
             }
 
@@ -197,7 +199,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            RD_LOGGER.error("error reading fastq({}): {}", mFastqFiles, e.toString());
+            FQ_LOGGER.error("error reading fastq({}): {}", mFastqFiles, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -295,7 +297,7 @@ public class FastqUmiExtracter
             String umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
 
             // append UMIs to read Id and remove from bases and quals
-            String duplexUmiId = umiBases1 + DEFAULT_DUPLEX_UMI_DELIM + umiBases2;
+            String duplexUmiId = umiBases1 + mUmiDelim + umiBases2;
             String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
             r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
             r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
@@ -321,7 +323,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            RD_LOGGER.error("failed to write output file: {}", e.toString());
+            FQ_LOGGER.error("failed to write output file: {}", e.toString());
             return false;
         }
     }
@@ -333,6 +335,7 @@ public class FastqUmiExtracter
         configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
         configBuilder.addRequiredInteger(UMI_LENGTH, "UMI length");
         configBuilder.addConfigItem(ADAPTER_SEQUENCE, "Adapter sequence (optional)");
+        configBuilder.addConfigItem(UMI_DELIM, "UMI delimiter");
         configBuilder.addInteger(SPECIFIC_READ, "Specific read to extract from (optional)", 0);
         configBuilder.addInteger(ADAPTER_LENGTH, "Adapter length", 0);
 
