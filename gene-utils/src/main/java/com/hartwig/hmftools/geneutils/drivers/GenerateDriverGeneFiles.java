@@ -5,6 +5,10 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -55,12 +59,13 @@ public class GenerateDriverGeneFiles
     private final String mResourceRepoDir;
     private final String mOutputDir;
     private final List<String> mPanelGeneOverrides;
+    private final List<RefGenomeVersion> mRefGenomeVersions;
+
+    private static final String SAGE_RESOURCE_DIR = "sage";
 
     // config
     private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
 
-    private static final String GENE_PANEL_DIR = "gene_panel";
-    private static final String SAGE_DIR = "sage";
     private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
     public GenerateDriverGeneFiles(final ConfigBuilder configBuilder)
@@ -72,11 +77,22 @@ public class GenerateDriverGeneFiles
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
 
+        mRefGenomeVersions = Lists.newArrayList();
         mPanelGeneOverrides = Lists.newArrayList();
 
         if(configBuilder.hasValue(PANEL_GENE_OVERRIDES))
         {
             Arrays.stream(configBuilder.getValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
+        }
+
+        if(configBuilder.hasValue(REF_GENOME_VERSION))
+        {
+            mRefGenomeVersions.add(RefGenomeVersion.from(configBuilder));
+        }
+        else
+        {
+            mRefGenomeVersions.add(V37);
+            mRefGenomeVersions.add(V38);
         }
     }
 
@@ -86,8 +102,6 @@ public class GenerateDriverGeneFiles
         GU_LOGGER.info("output directory: {}", mOutputDir);
 
         createOutputDir(mOutputDir);
-        createOutputDir(mOutputDir + GENE_PANEL_DIR + File.separator);
-        createOutputDir(mOutputDir + SAGE_DIR + File.separator);
 
         List<String> actionableGenes = Lists.newArrayList(mPanelGeneOverrides);
         List<String> coverageGenes = Lists.newArrayList(mPanelGeneOverrides);
@@ -119,8 +133,10 @@ public class GenerateDriverGeneFiles
             coverageGenes.addAll(geneNames);
         }
 
-        process(RefGenomeVersion.V37, driverGenes, actionableGenes, coverageGenes);
-        process(RefGenomeVersion.V38, driverGenes, actionableGenes, coverageGenes);
+        for(RefGenomeVersion refGenomeVersion : mRefGenomeVersions)
+        {
+            process(refGenomeVersion, driverGenes, actionableGenes, coverageGenes);
+        }
 
         GU_LOGGER.info("file generation complete");
     }
@@ -135,27 +151,22 @@ public class GenerateDriverGeneFiles
             final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes,
             final List<String> actionableGenes, final List<String> coverageGenes)
     {
-        String sageDir = mOutputDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
-        createOutputDir(sageDir + File.separator);
-
         if(!driverGenes.isEmpty())
         {
             writeDriverGeneFiles(refGenomeVersion, driverGenes);
 
-            writeGermlineBlacklist(refGenomeVersion, sageDir);
-            writeGermlineHotspots(refGenomeVersion, driverGenes, sageDir);
+            writeGermlineBlacklist(refGenomeVersion);
+            writeGermlineHotspots(refGenomeVersion, driverGenes);
         }
 
-        writeGenePanelRegions(refGenomeVersion, actionableGenes, coverageGenes, sageDir);
+        writeGenePanelRegions(refGenomeVersion, actionableGenes, coverageGenes);
     }
 
     private void writeDriverGeneFiles(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
     {
         try
         {
-            String genePanelDir = mOutputDir + GENE_PANEL_DIR + File.separator + refGenomeVersion.identifier() + File.separator;
-            createOutputDir(genePanelDir);
-            String driverGeneFile = refGenomeVersion.addVersionToFilePath(genePanelDir + "DriverGenePanel.tsv");
+            String driverGeneFile = refGenomeVersion.addVersionToFilePath(mOutputDir + "DriverGenePanel.tsv");
             DriverGeneFile.write(driverGeneFile, driverGenes);
         }
         catch(IOException e)
@@ -165,7 +176,7 @@ public class GenerateDriverGeneFiles
     }
 
     private void writeGenePanelRegions(
-            final RefGenomeVersion refGenomeVersion, final List<String> actionableGenes, final List<String> coverageGenes, final String sageDir)
+            final RefGenomeVersion refGenomeVersion, final List<String> actionableGenes, final List<String> coverageGenes)
     {
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
 
@@ -173,14 +184,14 @@ public class GenerateDriverGeneFiles
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
-        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
+        String codingWithUtr = formVersionFile(mOutputDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
 
         GU_LOGGER.info("writing {} panel coding regions file({}) for {} genes",
                 refGenomeVersion, codingWithUtr, actionableGenes.size());
 
         writeGenePanelRegions(refGenomeVersion, ensemblDataCache, actionableGenes, true, codingWithUtr);
 
-        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
+        String coverageWithoutUtr = formVersionFile(mOutputDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
 
         GU_LOGGER.info("writing {} panel coverage regions file({}) for {} genes",
                 refGenomeVersion, coverageWithoutUtr, coverageGenes.size());
@@ -320,15 +331,15 @@ public class GenerateDriverGeneFiles
         return regions;
     }
 
-    private void writeGermlineBlacklist(final RefGenomeVersion refGenomeVersion, final String sageDir)
+    private void writeGermlineBlacklist(final RefGenomeVersion refGenomeVersion)
     {
-        String germlineBlacklistFile = formVersionFile(sageDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
+        String germlineBlacklistFile = formVersionFile(mOutputDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
 
         GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
 
         try
         {
-            List<VariantContext> germlineBlackList = refGenomeVersion == RefGenomeVersion.V37 ?
+            List<VariantContext> germlineBlackList = refGenomeVersion == V37 ?
                     GermlineResources.blacklist37() : GermlineResources.blacklist38();
 
             GermlineBlacklistVCF.write(germlineBlacklistFile, germlineBlackList);
@@ -339,11 +350,11 @@ public class GenerateDriverGeneFiles
         }
     }
 
-    private void writeGermlineHotspots(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes, final String sageDir)
+    private void writeGermlineHotspots(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
     {
-        String germlineHotspotFile = formVersionFile(sageDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
+        String germlineHotspotFile = formVersionFile(mOutputDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
 
-        String sageRefDir = mResourceRepoDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
+        String sageRefDir = mResourceRepoDir + SAGE_RESOURCE_DIR + File.separator + refGenomeVersion.identifier();
         String clinvarFile = formVersionFile(sageRefDir, "clinvar.vcf.gz", refGenomeVersion);
 
         GU_LOGGER.info("located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
@@ -372,6 +383,7 @@ public class GenerateDriverGeneFiles
         configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         configBuilder.addConfigItem(PANEL_GENE_OVERRIDES, "List of comma-separated genes to include in panel");
         configBuilder.addConfigItem(GENE_ID_FILE, GENE_ID_FILE_DESC);
+        addRefGenomeVersion(configBuilder);
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);
 
