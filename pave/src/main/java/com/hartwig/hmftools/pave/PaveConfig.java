@@ -46,10 +46,6 @@ public class PaveConfig
     public final boolean ReadPassOnly;
     public final boolean WritePassOnly;
 
-
-    // PON related threholds
-    // public final double mPonFilterThreshold;
-
     public final boolean SetReportable;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int Threads;

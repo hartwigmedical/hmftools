@@ -146,27 +146,27 @@ public class VariantTest
         PonAnnotation standardPon = new PonAnnotation(null, false);
         PonChrCache artefactsPon = new PonChrCache(CHR_1, new StringCache());
 
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, false, false, false);
 
         // Gnomad
         var.setGnomadFrequency(0.02);
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, false, false, true);
 
         // standard PON
         var.setPonFrequency(11, 7, 100);
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, false, true);
 
         // artefact PON
         artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 11, 11, 100);
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, true, true);
 
         artefactsPon.clear();
         artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 5, 11, 20);
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, false, true);
 
         // non-hotspot variant
@@ -174,7 +174,7 @@ public class VariantTest
         var.setContext(variantContext);
 
         var.setGnomadFrequency(0.001);
-        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon);
+        applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, true, true);
     }
 

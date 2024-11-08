@@ -41,9 +41,11 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     private final boolean mEnabled;
     private final String mGnomadFilename;
     private final StringCache mStringCache;
+    private final boolean mNoFilter;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
+    public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
 
     public static final String PON_GNOMAD_FILTER = "PONGnomad";
 
@@ -73,6 +75,8 @@ public class GnomadAnnotation extends AnnotationData implements Callable
             mGnomadFilename = null;
             mEnabled = false;
         }
+
+        mNoFilter = configBuilder.hasFlag(GNOMAD_NO_FILTER);
     }
 
     @Override
@@ -80,6 +84,8 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 
     @Override
     public boolean enabled() { return mGnomadFilename != null || !mChromosomeFiles.isEmpty(); }
+
+    public boolean applyFilter() { return !mNoFilter; }
 
     @Override
     public boolean hasValidData() { return mHasValidData; }
@@ -251,6 +257,7 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     {
         configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
         configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
+        configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
     }
 
     public static void addHeader(final VCFHeader header)

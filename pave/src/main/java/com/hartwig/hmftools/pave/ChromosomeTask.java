@@ -224,12 +224,13 @@ public class ChromosomeTask implements Callable
 
     private void applyFilters(final VariantData variant)
     {
-        applyFilters(variant, mConfig.SampleId, mReferenceData.StandardPon, mArtefactsPon);
+        applyFilters(variant, mConfig.SampleId, mReferenceData.StandardPon, mArtefactsPon, mReferenceData.Gnomad.applyFilter());
     }
 
     @VisibleForTesting
     public static void applyFilters(
-            final VariantData variant, final String sampleId, final PonAnnotation standardPon, final PonChrCache artefactsPon)
+            final VariantData variant, final String sampleId, final PonAnnotation standardPon, final PonChrCache artefactsPon,
+            boolean applyGnomadFilter)
     {
         variant.filters().clear();
 
@@ -280,12 +281,15 @@ public class ChromosomeTask implements Callable
             }
         }
 
-        Double gnmoadFrequency = variant.gnomadFrequency();
-        double gnomadThreshold = hotspotOrPathogenic ? GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD : GNMOAD_FILTER_THRESHOLD;
-
-        if(gnmoadFrequency != null && gnmoadFrequency >= gnomadThreshold)
+        if(applyGnomadFilter)
         {
-            variant.addFilter(PON_GNOMAD_FILTER);
+            Double gnmoadFrequency = variant.gnomadFrequency();
+            double gnomadThreshold = hotspotOrPathogenic ? GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD : GNMOAD_FILTER_THRESHOLD;
+
+            if(gnmoadFrequency != null && gnmoadFrequency >= gnomadThreshold)
+            {
+                variant.addFilter(PON_GNOMAD_FILTER);
+            }
         }
     }
 
