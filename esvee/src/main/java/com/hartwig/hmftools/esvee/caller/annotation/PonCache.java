@@ -146,6 +146,9 @@ public class PonCache
 
     private int findSvPonMatch(final List<PonSvRegion> regions, final Variant var)
     {
+        if(regions == null)
+            return 0;
+
         final int[] marginStart = breakendMargin(var.breakendStart());
         final int[] marginEnd = breakendMargin(var.breakendEnd());
 
@@ -213,6 +216,9 @@ public class PonCache
 
     private int findSglPonMatch(final List<PonSglRegion> regions, final Variant var)
     {
+        if(regions == null)
+            return 0;
+
         final int[] marginStart = breakendMargin(var.breakendStart());
 
         BaseRegion svStart = new BaseRegion(

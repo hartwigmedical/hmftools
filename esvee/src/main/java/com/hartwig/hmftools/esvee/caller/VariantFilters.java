@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
@@ -181,7 +183,7 @@ public class VariantFilters
 
     private boolean belowMinQuality(final Variant var)
     {
-        double qualThreshold = mFilterConstants.MinQual;
+        double qualThreshold = var.isHotspot() ? mFilterConstants.MinQualHotspot : mFilterConstants.MinQual;
 
         Breakend breakend = var.breakendStart();
         Breakend otherBreakend = var.breakendEnd();
@@ -266,18 +268,18 @@ public class VariantFilters
 
     private boolean isShortLowVafInversion(final Variant var)
     {
-        // FILTER if [TYPE=INV, AF<0.05, LEN<1000
+        // FILTER if [TYPE=INV, AF<0.05, LEN<2500
         if(var.type() != INV)
             return false;
 
-        if(var.adjustedLength() > SHORT_CALLING_SIZE)
+        if(var.adjustedLength() > INV_SHORT_LENGTH)
             return false;
 
         if(anySamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
             return false;
 
-        String homologySequence = var.contextStart().getAttributeAsString(HOMSEQ, "");
-        return homologySequence.length() > INV_SHORT_MAX_HOMOLOGY;
+        int inexactHomology = var.breakendStart().InexactHomology.length();
+        return inexactHomology > INV_SHORT_MAX_HOMOLOGY;
     }
 
     public static void logFilterTypeCounts(final List<Variant> variantList)

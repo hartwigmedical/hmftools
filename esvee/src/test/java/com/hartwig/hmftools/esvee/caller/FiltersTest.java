@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
@@ -163,6 +164,7 @@ public class FiltersTest
     {
         Map<String, Object> commonAttributes = Maps.newHashMap();
         commonAttributes.put(HOMSEQ, "AGGCT");
+        commonAttributes.put(IHOMPOS, new int[] {-10,10});
 
         Variant var = createSv(
                 "01", CHR_1, CHR_1, 100, 200, POS_ORIENT, POS_ORIENT, "",
@@ -175,46 +177,4 @@ public class FiltersTest
 
         assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
     }
-
-    /*
-
-        @Test
-    public void testDeduplication()
-    {
-        MockRefGenome refGenome = new MockRefGenome();
-        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
-        refGenome.RefGenomeMap.put(CHR_2, REF_BASES_200);
-
-        AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                refGenome, CHR_1, 100, FORWARD, CHR_2, 50, REVERSE, "", "");
-
-        Breakend breakend1 = new Breakend(assemblyAlignment, CHR_1, 100, FORWARD, "", null);
-        Breakend breakend2 = new Breakend(assemblyAlignment, CHR_1, 100, REVERSE, "", null);
-
-        Breakend breakend3 = new Breakend(assemblyAlignment, CHR_1, 100, FORWARD, "", null);
-
-        HomologyData homology = new HomologyData("AAA", -3, 3, -3, 3);
-        Breakend breakend4 = new Breakend(assemblyAlignment, CHR_1, 102, FORWARD, "", homology);
-        Breakend breakend5 = new Breakend(assemblyAlignment, CHR_1, 104, REVERSE, "AAG", homology);
-        Breakend breakend6 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "AAG", homology);
-        Breakend breakend7 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "AAG", homology);
-        Breakend breakend8 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "CCC", homology);
-
-        List<Breakend> breakends = Lists.newArrayList(
-                breakend1, breakend2, breakend3, breakend4, breakend5, breakend6, breakend7, breakend8);
-        Collections.sort(breakends);
-
-        Deduplication.deduplicateBreakends(breakends);
-
-        assertTrue(breakend1.passing());
-        assertTrue(breakend2.passing());
-        assertTrue(breakend3.filters().contains(FilterType.DUPLICATE));
-        assertFalse(breakend4.filters().contains(FilterType.DUPLICATE));
-        assertTrue(breakend5.passing());
-        assertTrue(breakend6.passing());
-        assertTrue(breakend7.filters().contains(FilterType.DUPLICATE));
-        assertTrue(breakend8.passing());
-    }
-     */
-
 }
