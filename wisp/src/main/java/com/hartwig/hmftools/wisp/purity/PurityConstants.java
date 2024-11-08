@@ -68,7 +68,7 @@ public class PurityConstants
     public static final double AMBER_LOH_PEAK_PURITY_FACTOR = 1.5;
     public static final double AMBER_LOH_PEAK_PURITY_MIN = 0.03;
     public static final double AMBER_LOH_PEAK_PROBABILITY = 0.001;
-    public static final double AMBER_LOH_PEAK_SITE_PERC = 0.03;
+    public static final double AMBER_LOH_PEAK_SITE_PERC = 0.05;
     public static final int AMBER_LOH_PEAK_SITE_MIN_COUNT = 2000;
 
     public static final String PURPLE_APPENDED_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
