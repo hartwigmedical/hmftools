@@ -48,7 +48,9 @@ CANCER_TYPE_METADATA <- (function(){
    return(df)
 })()
 
+## Enforce cancer type order
 VIS_DATA$cancer_supertype <- CANCER_TYPE_METADATA[VIS_DATA$cancer_type, "supertype"]
+VIS_DATA$cancer_type <- factor(VIS_DATA$cancer_type, rownames(CANCER_TYPE_METADATA))
 
 ## Constants ================================
 MAPPINGS_CLASSIFIER_NAMES <- c(
