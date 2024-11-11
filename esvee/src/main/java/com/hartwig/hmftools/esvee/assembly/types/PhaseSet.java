@@ -178,5 +178,16 @@ public class PhaseSet
         }
     }
 
-    public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
+    public String toString()
+    {
+        if(mAssemblyLinks.size() == 1)
+        {
+            // most common case
+            return format("id(%d) link(%s)", mId, mAssemblyLinks.get(0));
+        }
+
+        return format("id(%d) links(%d facing=%d, seconds=%d) first(%s)",
+                mId, mAssemblyLinks.size(), mAssemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).count(),
+                mSecondaryLinks.size(), mAssemblyLinks.get(0));
+    }
 }

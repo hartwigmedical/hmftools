@@ -115,6 +115,7 @@ public class TestUtils
                 false, false, null);
 
         record.setMateNegativeStrandFlag(true);
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar); // assume the same
 
         return new Read(record);
     }

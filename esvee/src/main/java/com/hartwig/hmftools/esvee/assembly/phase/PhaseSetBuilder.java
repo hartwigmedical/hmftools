@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOCAL_ASSEMB
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READ_PERCENT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isFacingAssemblyCandidate;
@@ -242,7 +241,7 @@ public class PhaseSetBuilder
 
                 boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
 
-                boolean isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2, false);
+                boolean isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
 
                 if(localOnly && !isLocalLink)
                     continue;
@@ -773,9 +772,15 @@ public class PhaseSetBuilder
         }
     }
 
+    private static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // just checks orientation, no read concordance
+        return AssemblyUtils.isLocalAssemblyCandidate(first, second, false, false);
+    }
+
     private void addLocalMateSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        if(!isLocalAssemblyCandidate(assembly1, assembly2, false))
+        if(!isLocalAssemblyCandidate(assembly1, assembly2))
             return;
 
         // look for concordant mate reads which are on the other side of the junction and so were initially excluded
@@ -921,6 +926,8 @@ public class PhaseSetBuilder
 
         Set<JunctionAssembly> processedSecondaries = Sets.newHashSet();
 
+        List<PhaseSet> secondaryLinePhaseSets = Lists.newArrayList();
+
         for(AssemblyLink link : mSecondarySplitLinks)
         {
             boolean firstIsLineSite = link.first().outcome() == SECONDARY && mLineRelatedAssemblies.contains(link.first());
@@ -935,7 +942,7 @@ public class PhaseSetBuilder
                 if(!processed)
                 {
                     PhaseSet phaseSet = new PhaseSet(link);
-                    mPhaseSets.add(phaseSet);
+                    secondaryLinePhaseSets.add(phaseSet);
 
                     if(firstIsLineSite)
                         processedSecondaries.add(link.first());
@@ -954,6 +961,8 @@ public class PhaseSetBuilder
                 }
             }
         }
+
+        mPhaseSets.addAll(secondaryLinePhaseSets);
     }
 
     private AssemblyLink findLinkedAssembly(final JunctionAssembly assembly, boolean findSplit)

@@ -64,7 +64,6 @@ public class AssemblyWriter
 
             addPhasingHeader(sj);
 
-            AssemblyStats.addReadStatsHeader(sj);
             sj.add("MismatchReads");
 
             sj.add("RefBaseTrimmed");
@@ -83,10 +82,10 @@ public class AssemblyWriter
             // extra detailed fields
             sj.add("InitialReadId");
 
-            sj.add("MergedAssemblies");
-
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
+            sj.add("MergedAssemblies");
+            AssemblyStats.addReadStatsHeader(sj);
 
             writer.write(sj.toString());
             writer.newLine();
@@ -129,7 +128,6 @@ public class AssemblyWriter
 
             addPhasingInfo(assembly, sj);
 
-            assembly.stats().addReadStats(sj);
             sj.add(String.valueOf(assembly.mismatchReadCount()));
 
             sj.add(assembly.refBasesRepeatedTrimmed());
@@ -159,11 +157,11 @@ public class AssemblyWriter
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
 
-            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
-
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
+            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+            assembly.stats().addReadStats(sj);
 
             mWriter.write(sj.toString());
             mWriter.newLine();

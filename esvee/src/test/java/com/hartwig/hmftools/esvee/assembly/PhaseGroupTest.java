@@ -131,7 +131,9 @@ public class PhaseGroupTest
 
         phaseGroup = phaseGroups.stream().filter(x -> x.assemblies().contains(posAssembly3)).findFirst().orElse(null);
         assertNotNull(phaseGroup);
-        assertEquals(3, phaseGroup.assemblyCount());
+        assertEquals(4, phaseGroup.assemblyCount());
+        assertTrue(phaseGroup.assemblies().contains(posAssembly3));
+        assertTrue(phaseGroup.assemblies().contains(posAssembly4));
         assertTrue(phaseGroup.assemblies().contains(negAssembly3));
         assertTrue(phaseGroup.assemblies().contains(negAssembly4));
     }

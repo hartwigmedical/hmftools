@@ -77,7 +77,8 @@ public final class AssemblyUtils
         return first == second || first == DNA_N_BYTE || second == DNA_N_BYTE || belowMinQual(firstQual) || belowMinQual(secondQual);
     }
 
-    public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second, boolean checkReads)
+    public static boolean isLocalAssemblyCandidate(
+            final JunctionAssembly first, final JunctionAssembly second, boolean checkConcordantReads, boolean checkLineInsertion)
     {
         if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return false;
@@ -93,7 +94,13 @@ public final class AssemblyUtils
         if((isDelType && junctionDistance > PROXIMATE_DEL_LENGTH) || (!isDelType && junctionDistance > PROXIMATE_DUP_LENGTH))
             return false;
 
-        if(checkReads)
+        if(!checkConcordantReads && !checkLineInsertion)
+            return true;
+
+        if(checkLineInsertion && (first.hasLineSequence() || second.hasLineSequence()))
+            return true;
+
+        if(checkConcordantReads)
         {
             // must have concordant reads with mates crossing the other junction
             JunctionAssembly lowerAssembly = firstIsLower ? first : second;
@@ -101,14 +108,14 @@ public final class AssemblyUtils
             Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
             Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
 
-            if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, upperJunction, false)))
-                return false;
-
-            if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, lowerJunction, true)))
-                return false;
+            if(lowerAssembly.support().stream().anyMatch(x -> isCrossingConcordantRead(x, upperJunction, false))
+            || upperAssembly.support().stream().anyMatch(x -> isCrossingConcordantRead(x, lowerJunction, true)))
+            {
+                return true;
+            }
         }
 
-        return true;
+        return false;
     }
 
     private static boolean isCrossingConcordantRead(final SupportRead read, final Junction junction, boolean requireLower)

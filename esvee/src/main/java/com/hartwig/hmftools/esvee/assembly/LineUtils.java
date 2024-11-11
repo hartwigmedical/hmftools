@@ -203,10 +203,33 @@ public final class LineUtils
         return lengths.get(medianIndex);
     }
 
+    public static boolean hasLineSourceSequence(final JunctionAssembly assembly)
+    {
+        int extIndexStart, extIndexEnd;
+
+        if(assembly.isForwardJunction())
+        {
+            extIndexStart = assembly.junctionIndex() + 1;
+            extIndexEnd = extIndexStart + LINE_POLY_AT_TEST_LEN - 1;
+        }
+        else
+        {
+            extIndexEnd = assembly.junctionIndex() - 1;
+            extIndexStart = extIndexEnd - LINE_POLY_AT_TEST_LEN + 1;
+        }
+
+        byte lineBase = assembly.isForwardJunction() ? LINE_BASE_A : LINE_BASE_T;
+        int lineBaseCount = findLineSequenceCount(assembly.bases(), extIndexStart, extIndexEnd, lineBase);
+        return lineBaseCount >= LINE_POLY_AT_REQ;
+    }
+
     public static AssemblyLink tryLineSequenceLink(
             final JunctionAssembly first, final JunctionAssembly second, boolean firstReversed, boolean secondReversed)
     {
         if(!first.hasLineSequence() && !second.hasLineSequence())
+            return null;
+
+        if(first.hasLineSequence() && second.hasLineSequence()) // also cannot both be LINE insertions - only one will have the poly A/T
             return null;
 
         // look for a poly A/T match of sufficient length at the ends of each sequence
