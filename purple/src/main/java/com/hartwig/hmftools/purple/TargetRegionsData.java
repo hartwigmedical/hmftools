@@ -73,9 +73,9 @@ public class TargetRegionsData
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
     public boolean isValid() { return mIsValid; }
 
-    public boolean inTargetRegions(final String chromsome, int position)
+    public boolean inTargetRegions(final String chromosome, int position)
     {
-        final List<BaseRegion> chrRegions = mTargetRegions.get(chromsome);
+        final List<BaseRegion> chrRegions = mTargetRegions.get(chromosome);
 
         if(chrRegions == null)
             return false;
