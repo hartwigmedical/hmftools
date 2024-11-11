@@ -41,9 +41,11 @@ public class VcfFile implements LoggingOptions
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            boolean isPassVariant = variantContext.getFilters().isEmpty();
+            boolean isExplicitPassVariant =
+                    variantContext.getFilters().isEmpty() &&
+                    variantContext.filtersWereApplied(); // Ignore variants where FILTER is "."
 
-            if(!mIncludeNonPass && !isPassVariant)
+            if(!mIncludeNonPass && !isExplicitPassVariant)
                 continue;
 
             variants.add(variantContext);
@@ -53,5 +55,11 @@ public class VcfFile implements LoggingOptions
         CHORD_LOGGER.debug("{}Loaded {} {}variants from: {}", mLogPrefix, variants.size(), filterType, mPath);
 
         return variants;
+    }
+
+    public static void main(String[] args) throws NoSuchFileException
+    {
+        VcfFile vcfFile = new VcfFile("/Users/lnguyen/Hartwig/experiments/chord/20241111_chord_regression_test/sample_data/ACTN01020032T.purple.sv.vcf.gz", true);
+        vcfFile.loadVariants();
     }
 }
