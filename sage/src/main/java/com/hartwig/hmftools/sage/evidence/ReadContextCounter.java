@@ -172,7 +172,7 @@ public class ReadContextCounter
         mLpsCounts = null;
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
-        mFragmentCoords = config.Filter.DisableFragmentCoords ? null : new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
+        mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
 
         mTumorQualProbability = 0;
