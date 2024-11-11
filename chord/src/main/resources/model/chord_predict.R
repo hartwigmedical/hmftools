@@ -14,12 +14,12 @@ GLOBAL_LOG_LEVEL <- args[4]
 GLOBAL_LOG_LEVEL <- toupper(GLOBAL_LOG_LEVEL)
 
 LOG_LEVEL <- list(
-   TRACE = list(ordinal = 1, name = "TRACE", display_name = "TRACE"),
-   DEBUG = list(ordinal = 2, name = "DEBUG", display_name = "DEBUG"),
-   INFO  = list(ordinal = 3, name = "INFO",  display_name = "INFO "),
-   WARN  = list(ordinal = 4, name = "WARN",  display_name = "WARN "),
-   ERROR = list(ordinal = 5, name = "ERROR", display_name = "ERROR"),
-   FATAL = list(ordinal = 6, name = "FATAL", display_name = "FATAL")
+   TRACE = list(severity = 1, name = "TRACE", display_name = "TRACE"),
+   DEBUG = list(severity = 2, name = "DEBUG", display_name = "DEBUG"),
+   INFO  = list(severity = 3, name = "INFO",  display_name = "INFO "),
+   WARN  = list(severity = 4, name = "WARN",  display_name = "WARN "),
+   ERROR = list(severity = 5, name = "ERROR", display_name = "ERROR"),
+   FATAL = list(severity = 6, name = "FATAL", display_name = "FATAL")
 )
 
 logMessage <- function(log_level, string){
@@ -28,16 +28,14 @@ logMessage <- function(log_level, string){
    
    log_message <- sprintf("%s [R] [%s] %s", current_time, log_level$display_name, string)
    
-   if(log_level$ordinal >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$ordinal)
+   if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
    
-   if(log_level$ordinal >= LOG_LEVEL[[GLOBAL_LOG_LEVEL]]$ordinal)
+   if(log_level$severity >= LOG_LEVEL[[GLOBAL_LOG_LEVEL]]$severity)
       message(log_message)
 }
 
 ## Parse args ================================
-logMessage(LOG_LEVEL$INFO, sprintf("Starting CHORD predict"))
-
 logMessage(LOG_LEVEL$INFO, sprintf("Loading CHORD model: %s", CHORD_MODEL_PATH))
 CHORD_MODEL <- readRDS(CHORD_MODEL_PATH)
 
@@ -110,7 +108,7 @@ mergeIndelContexts <- function(indel_contexts){
 
 mergeMutationContextsByType <- function(mutation_contexts){
    
-   logMessage(LOG_LEVEL$INFO, "Transforming CHORD input features")
+   logMessage(LOG_LEVEL$INFO, "Transforming mutation contexts")
    
    contexts_by_type <- groupColumns(df = mutation_contexts, regex_list = MUTATION_TYPE_REGEX)
    
@@ -148,7 +146,7 @@ LOW_SV_LOAD_THRES <- 30
 
 chordPredict <- function(mutation_contexts_by_type){
    
-   logMessage(LOG_LEVEL$INFO, "Calculating mutation context relative counts")
+   logMessage(LOG_LEVEL$DEBUG, "Calculating mutation context relative counts")
    context_rel_counts <- lapply(mutation_contexts_by_type, function(contexts){
       contexts <- contexts/rowSums(contexts)
       contexts[is.na(contexts)] <- 0
@@ -156,13 +154,11 @@ chordPredict <- function(mutation_contexts_by_type){
    })
    
    context_rel_counts <- do.call(cbind, unname(context_rel_counts))
-   
-   
+
    logMessage(LOG_LEVEL$INFO, "Predicting HRD probabilities from random forest")
    probs <- randomForest:::predict.randomForest(object=CHORD_MODEL, newdata=context_rel_counts, type='prob')
    probs <- data.frame(probs)
-   
-   
+
    logMessage(LOG_LEVEL$DEBUG, "Determining HR status")
    probs_brca_type <- probs[c("BRCA1","BRCA2")]
    prob_hrd <- rowSums(probs_brca_type)
@@ -182,7 +178,7 @@ chordPredict <- function(mutation_contexts_by_type){
    )
    
    
-   logMessage(LOG_LEVEL$INFO, "Performing QC checks")
+   logMessage(LOG_LEVEL$DEBUG, "Performing QC checks")
    indel_rep_counts <- rowSums(cbind(
       mutation_contexts_by_type$indel$del.rep,
       mutation_contexts_by_type$indel$ins.rep
@@ -222,5 +218,3 @@ PREDICTIONS <- chordPredict(MUTATION_CONTEXTS_BY_TYPE)
 ## Output ================================
 logMessage(LOG_LEVEL$INFO, sprintf("Writing CHORD predictions to: %s", OUTPUT_FILE_PATH))
 write.table(PREDICTIONS, OUTPUT_FILE_PATH, sep="\t", quote=FALSE, row.names=FALSE)
-
-logMessage(LOG_LEVEL$INFO, sprintf("Completed CHORD predict"))

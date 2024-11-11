@@ -37,7 +37,6 @@ public class ChordDataPrep
     public void prepSingleSample() throws IOException
     {
         String sampleId = mConfig.SampleIds.get(0);
-        CHORD_LOGGER.info("Extracting CHORD features for sample: {}", sampleId);
 
         SamplePrepTask sampleTask = new SamplePrepTask(mConfig, 0, null);
         sampleTask.processSample();
@@ -52,8 +51,6 @@ public class ChordDataPrep
 
     public void prepMultiSample() throws IOException
     {
-        CHORD_LOGGER.info("Extracting CHORD features in multi sample mode: {} samples, {} threads", mConfig.SampleIds.size(), mConfig.Threads);
-
         ConcurrentHashMap<String, List<MutContextCount>> contextCountsMatrix = new ConcurrentHashMap<>();
 
         List<SamplePrepTask> sampleTasks = new ArrayList<>();
@@ -80,21 +77,21 @@ public class ChordDataPrep
 
     public void run()
     {
+        CHORD_LOGGER.info("Starting CHORD feature extraction");
+        long startTimeMs = System.currentTimeMillis();
+
         if(mConfig.SampleIds.isEmpty())
         {
             CHORD_LOGGER.error("No sample ID(s) loaded");
             System.exit(1);
         }
+
         try
         {
-            long startTimeMs = System.currentTimeMillis();
-
             if(mConfig.isSingleSample())
                 prepSingleSample();
             else
                 prepMultiSample();
-
-            CHORD_LOGGER.info("CHORD feature extraction complete, mins({})", runTimeMinsStr(startTimeMs));
         }
         catch(Exception e)
         {
@@ -102,6 +99,8 @@ public class ChordDataPrep
             e.printStackTrace();
             System.exit(1);
         }
+
+        CHORD_LOGGER.info("Completed CHORD feature extraction, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)

@@ -12,6 +12,8 @@ import com.hartwig.hmftools.chord.indel.IndelPrep;
 import com.hartwig.hmftools.chord.snv.SnvPrep;
 import com.hartwig.hmftools.chord.sv.SvPrep;
 
+import org.apache.logging.log4j.Level;
+
 import org.jetbrains.annotations.Nullable;
 
 public class SamplePrepTask implements Callable<Long>
@@ -45,18 +47,24 @@ public class SamplePrepTask implements Callable<Long>
 
     public void processSample()
     {
-        String logPrefix = mConfig.isSingleSample() ? "" : String.format("sample(%s): ", mSampleId);
+        String logPrefix = mConfig.isMultiSample() ?
+                String.format("%s/%s: sample(%s): ", mSampleIndex+1, mConfig.SampleIds.size(), mSampleId) :
+                "";
+
+        boolean showCoarseProgress = mConfig.isMultiSample() &&
+                CHORD_LOGGER.getLevel().isMoreSpecificThan(Level.INFO) &&
+                (mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0);
+
+        if(showCoarseProgress)
+        {
+            CHORD_LOGGER.info(logPrefix + "Running " + ChordDataPrep.class.getSimpleName());
+        }
 
         List<VariantTypePrep<?>> variantTypePreps = List.of(
                 new SnvPrep(mConfig).logPrefix(logPrefix),
                 new IndelPrep(mConfig).logPrefix(logPrefix),
                 new SvPrep(mConfig).logPrefix(logPrefix)
         );
-
-        if(mConfig.isMultiSample() && (mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0))
-        {
-            CHORD_LOGGER.info("{}/{}: sample({})", mSampleIndex+1, mConfig.SampleIds.size(), mSampleId);
-        }
 
         for(VariantTypePrep variantTypePrep : variantTypePreps)
         {

@@ -41,6 +41,8 @@ public class ChordModel
 
     public void predict(String mutContextsPath, String outputFilePath)
     {
+        CHORD_LOGGER.info("Starting CHORD predict");
+
         try
         {
             copyModelToTmpPath();
@@ -75,5 +77,7 @@ public class ChordModel
             if(modelTmpPath.isFile())
                 modelTmpPath.delete();
         }
+
+        CHORD_LOGGER.info("Completed CHORD predict");
     }
 }
