@@ -17,8 +17,8 @@ public class ChordModel
 {
     private final String mModelPath;
 
-    private static final String SCRIPT_RESOURCE_PATH = "model/chord_predict.R";
-    private static final String MODEL_RESOURCE_PATH = "model/CHORD.rds";
+    private static final String SCRIPT_RESOURCE_PATH = "chord_predict.R";
+    private static final String MODEL_RESOURCE_PATH = "CHORD.rds";
     private static final String MODEL_TMP_PATH = System.getProperty("java.io.tmpdir") + "/CHORD.rds";
 
     private ChordModel(String modelPath)
