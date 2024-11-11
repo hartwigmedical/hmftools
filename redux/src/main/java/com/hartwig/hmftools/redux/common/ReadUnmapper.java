@@ -85,7 +85,9 @@ public class ReadUnmapper
            - supplementaries - unmap if their primary or another associated supplementary will be, or if they need to be
          */
 
-        if(read.getReadPairedFlag())
+        if(read.isSecondaryAlignment())
+            return checkSecondaryRead(read, regionState);
+        else if(read.getReadPairedFlag())
             return checkTransformPairedRead(read, regionState);
         else
             return checkTransformUnpairedRead(read, regionState);
@@ -244,6 +246,36 @@ public class ReadUnmapper
         }
 
         return unmapRead || unmapSuppAlignment;
+    }
+
+    private boolean checkSecondaryRead(final SAMRecord read, final UnmapRegionState regionState)
+    {
+        if(read.getReadUnmappedFlag())
+            return false; // nothing to do
+
+        UnmapReason unmapReason = checkUnmapRead(read, regionState);
+
+        if(unmapReason == UnmapReason.NONE)
+            return false;
+
+        switch(unmapReason)
+        {
+            case HIGH_DEPTH:
+                mStats.HighDepthCount.incrementAndGet();
+                break;
+
+            case SOFT_CLIP:
+                mStats.LongSoftClipCount.incrementAndGet();
+                break;
+
+            default:
+                break;
+        }
+
+        // these will be dropped from the BAM - only set the unmapped flag
+        read.setReadUnmappedFlag(true);
+        mStats.SecondaryCount.incrementAndGet();
+        return true;
     }
 
     private enum UnmapReason

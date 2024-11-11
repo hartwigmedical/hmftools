@@ -11,6 +11,7 @@ public class UnmapStats
     public AtomicInteger MateCount;
     public AtomicInteger SuppAlignmentCount; // supplementary alignment (ie attribute) is unmapped
     public AtomicInteger SupplementaryCount; // supplementary read is unmapped
+    public AtomicInteger SecondaryCount; // secondary read is unmapped
     public AtomicInteger UnmappedCount; // ie both read and mate
 
     // reasons for unmapping a read
@@ -24,6 +25,7 @@ public class UnmapStats
         MateCount = new AtomicInteger();
         SuppAlignmentCount = new AtomicInteger();
         SupplementaryCount = new AtomicInteger();
+        SecondaryCount = new AtomicInteger();
         UnmappedCount = new AtomicInteger();
         HighDepthCount = new AtomicInteger();
         LongSoftClipCount = new AtomicInteger();
@@ -32,8 +34,8 @@ public class UnmapStats
 
     public String toString()
     {
-        return format("reads(%d) mates(%d) both(%d) supplementary(read=%d align=%d) reasons(depth=%d softClip=%d chimeric=%d)",
+        return format("reads(%d) mates(%d) both(%d) supps(read=%d align=%d) seconds(%d) reasons(depth=%d softClip=%d chimeric=%d)",
             ReadCount.get(), MateCount.get(), UnmappedCount.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
-                HighDepthCount.get(), LongSoftClipCount.get(), ChimericCount.get());
+                SecondaryCount.get(), HighDepthCount.get(), LongSoftClipCount.get(), ChimericCount.get());
     }
 }

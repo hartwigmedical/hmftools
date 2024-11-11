@@ -196,19 +196,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(read.isSecondaryAlignment())
-        {
-            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
-            mBamWriter.writeRead(read, FragmentStatus.UNSET);
-            return;
-        }
-
         if(mConfig.UnmapRegions.enabled())
         {
             mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-            if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
-                return; // drop unmapped supplementaries
+            if((read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment()) && read.getReadUnmappedFlag())
+                return; // drop unmapped supplementaries and secondaries
 
             if(read.getReadUnmappedFlag() && SamRecordUtils.mateUnmapped(read))
             {
