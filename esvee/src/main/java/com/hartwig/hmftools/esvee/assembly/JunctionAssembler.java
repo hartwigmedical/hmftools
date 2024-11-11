@@ -142,6 +142,8 @@ public class JunctionAssembler
         if(LineUtils.hasLineSourceSequence(firstAssembly))
             return Collections.emptyList();
 
+        firstAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
+
         if(extensionSeqBuilder.hasLineSequence())
             firstAssembly.markLineSequence();
 
@@ -326,6 +328,11 @@ public class JunctionAssembler
 
         if(closeMatch)
             return null;
+
+        if(LineUtils.hasLineSourceSequence(newAssembly))
+            return null;
+
+        newAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
 
         addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
 

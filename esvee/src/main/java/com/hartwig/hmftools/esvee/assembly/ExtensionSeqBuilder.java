@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.Arrays.initialise;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
@@ -30,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -60,6 +63,7 @@ public class ExtensionSeqBuilder
 
     private boolean mHasLineSequence;
     private boolean mIsValid;
+    private boolean mRequiredRebuild;
 
     private static final double MISMATCH_READ_REBUILD_PERC = 0.1;
     private static final int READ_REPEAT_COUNT_INVALID = -1;
@@ -104,6 +108,7 @@ public class ExtensionSeqBuilder
         mExtensionRepeats = Lists.newArrayList();
         mMaxRepeat = null;
         mReadRepeatCounts = null;
+        mRequiredRebuild = false;
 
         mIsValid = true;
 
@@ -553,6 +558,8 @@ public class ExtensionSeqBuilder
         if(mismatchReadCount == 0)
             return;
 
+        mRequiredRebuild = true;
+
         // otherwise look for a variable repeat as an explanation for the mismatches
         findConsensusRepeats();
 
@@ -824,6 +831,48 @@ public class ExtensionSeqBuilder
     }
 
     public boolean hasLineSequence() { return mHasLineSequence; }
+
+    public String buildInformation()
+    {
+        // ReadCount;MismatchReadCount;Rebuild;MaxRepeatInfo;ReadRepeatInfo;
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        sj.add(String.valueOf(mReads.size()));
+
+        int mismatchReads = (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count();
+        sj.add(String.valueOf(mismatchReads));
+        sj.add(String.valueOf(mRequiredRebuild));
+
+        int noRepeat = 0;
+        int closeRepeat = 0;
+        int notCloseRepeat = 0;
+        int matchedRepeat = 0;
+
+        if(mMaxRepeat != null)
+        {
+            sj.add(format("%d:%s:%d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count));
+
+            for(int i = 0; i < mReadRepeatCounts.length; ++i)
+            {
+                if(mReadRepeatCounts[i] <= 0)
+                    ++noRepeat;
+                else if(mReadRepeatCounts[i] == mMaxRepeat.Count)
+                    ++matchedRepeat;
+                else if(abs(mReadRepeatCounts[i] - mMaxRepeat.Count) <= 2)
+                    ++closeRepeat;
+                else if(mReadRepeatCounts[i] == mMaxRepeat.Count)
+                    ++notCloseRepeat;
+            }
+
+            sj.add(format("%d:%d:%d:%d", matchedRepeat, closeRepeat, notCloseRepeat, noRepeat));
+        }
+        else
+        {
+            sj.add("0:0:0");
+            sj.add("0:0:0:0");
+        }
+        return sj.toString();
+    }
 
     @VisibleForTesting
     public String junctionSequence() { return new String(mBases); }
