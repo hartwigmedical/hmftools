@@ -17,6 +17,7 @@ public class FilterConfig
 {
     public final boolean DisableHardFilter;
     public final boolean DisableSoftFilter;
+    public final boolean DisableFragmentCoords;
     public final int HardMinTumorQual;
     public final double HardMinTumorVaf;
     public final int FilteredMaxGermlineAltSupport;
@@ -34,7 +35,7 @@ public class FilterConfig
 
     private static final String DISABLE_SOFT_FILTER = "disable_soft_filter";
     private static final String DISABLE_HARD_FILTER = "disable_hard_filter";
-
+    private static final String DISABLE_FRAGMENT_COORDS = "disable_fragment_coords";
     private static final String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     private static final String HARD_MIN_TUMOR_VAF = "hard_min_tumor_vaf";
     private static final String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
@@ -47,6 +48,7 @@ public class FilterConfig
     {
         DisableSoftFilter = configBuilder.hasFlag(DISABLE_SOFT_FILTER);
         DisableHardFilter = configBuilder.hasFlag(DISABLE_HARD_FILTER);
+        DisableFragmentCoords = configBuilder.hasFlag(DISABLE_FRAGMENT_COORDS);
         FilteredMaxGermlineAltSupport = configBuilder.getInteger(FILTERED_MAX_GERMLINE_ALT_SUPPORT);
         HardMinTumorQual = configBuilder.getInteger(HARD_MIN_TUMOR_QUAL);
         HardMinTumorVaf = configBuilder.getDecimal(HARD_MIN_TUMOR_VAF);
@@ -64,6 +66,7 @@ public class FilterConfig
     {
         DisableHardFilter = true;
         DisableSoftFilter = false;
+        DisableFragmentCoords = false;
         HardMinTumorQual = DEFAULT_HARD_MIN_TUMOR_QUAL;
         HardMinTumorVaf = DEFAULT_HARD_MIN_TUMOR_VAF;
         SoftHotspotFilter = DEFAULT_HOTSPOT_FILTER;
@@ -80,6 +83,7 @@ public class FilterConfig
     {
         configBuilder.addFlag(DISABLE_SOFT_FILTER, "Disable soft filters");
         configBuilder.addFlag(DISABLE_HARD_FILTER, "Disable hard filters");
+        configBuilder.addFlag(DISABLE_FRAGMENT_COORDS, "Disable minFragmentCoords filter");
 
         configBuilder.addInteger(
                 FILTERED_MAX_GERMLINE_ALT_SUPPORT, "Filtered max germline alt support", DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT);
