@@ -16,7 +16,7 @@ Report Nonsense | T/F | Report if any nonsense or frameshift variant is found in
 Report Splice | T/F |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE.
 Report Amplification | T/F | Report amplification if min gene copy number > 3x sample ploidy and partial amplification if max gene copy number > 3x sample ploidy (for genes on chrX for males 1.5x sample ploidy is used). (Note if qcstatus = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV).
 Report Deletion | T/F | Report if gene copy number < 0.5 (Note - If qcStatus in {WARN_DELETED_GENES,WARN_HIGH_COPY_NUMBER_NOISE} deletions must also be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases)
-Report Disruption | T/F | LINX will report ‘HOM DISRUPTION' where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain), or simply DISRUPTION for other structural variants which may disrupt the stucture of the canonical transcript.
+Report Disruption | T/F | LINX will report ‘HOM DISRUPTION' where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain), or simply DISRUPTION for other structural variants which may disrupt the structure of the canonical transcript.
 Report Hotspot | T/F | Report somatic hotspot mutation regardless of other rules
 Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
 reportGermlineVariant	| 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report any germline variants that meet pathogenic criteria based on specified tumor status
@@ -74,7 +74,7 @@ Note that the TMB is calculated separately for INDELs and SNVs.   For TSG dnds r
   
 ## Known issues / points for improvement
  
-- **Clustered variants** - Pahtogenic variants are likely to occur clustered in specific locations of genes that are functionally important.  This should be reflected in driver likelihood
+- **Clustered variants** - Pathogenic variants are likely to occur clustered in specific locations of genes that are functionally important.  This should be reflected in driver likelihood
 - **Cancer type specificity** - DNDS is calculated pan-cancer due to size of cohorts. Ideally this would be calculated cancer type specific, especially for large cohorts.
 - **INFRAME INDELS in repeats with 3 base microhomology** - Generally inframe indels are extremely rare and are likely to be drivers and hece are give driver likelihood = 1.  An exception should be made for 3 base indels found in microsatellites with a repeat length of 3 as this is a common passenger mutaiton, particularly in MSI samples.
 - **AMPLIFICATION PASSENGERS** - All amplifications are given a likelihood of 1.  Since nearby genes are amplified together, some of the amplification drivers may well be passengers, commonly amplified with nearby drivers.  

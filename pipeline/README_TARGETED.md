@@ -15,7 +15,7 @@ For each panel a set of custom resources is required to fit and normalise the bi
 
 ## Panel-specific resources files
 
-To run in targeted mode, panel specific resources first need to be generated. As indicated in the below diagram, some of these are configured and some of these can be trained by first running onconnalyser on a representative set of aligned BAMs from samples captured with the panel and then running a set of normalisation scripts that are described below.  Here is a schematic of this process
+To run in targeted mode, panel specific resources first need to be generated. As indicated in the below diagram, some of these are configured and some of these can be trained by first running oncoanalyser on a representative set of aligned BAMs from samples captured with the panel and then running a set of normalisation scripts that are described below.  Here is a schematic of this process
 <p align="center">
 <img width="428"  alt="image" src="https://github.com/user-attachments/assets/03ec7de5-80df-4e8b-9b13-51735e37f00a">
 </p>
