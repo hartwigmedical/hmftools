@@ -190,7 +190,7 @@ A custom model is used for TMB estimated in targeted mode. The main challenges o
 - GENE in PANEL and not in {HLA-A,HLA-B,HLA-C,PIM1,BCL2}
 - Type = SNV
 - !HOTSPOT
-- AF < 0.9
+- 0.05 <AF < 0.9
 
 Each variant included is classified as ‘somatic’ if somatic likelihood = HIGH.    If somatic likelihood = MEDIUM, then the variant is marked as 'unclear'.
 
