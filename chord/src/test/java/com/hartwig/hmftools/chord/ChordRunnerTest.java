@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
-import static com.hartwig.hmftools.chord.prep.ChordDataWriter.COHORT_FILE_PREFIX;
 
 import static org.junit.Assert.assertTrue;
 
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.chord.prep.ChordDataPrep;
-import com.hartwig.hmftools.chord.prep.ChordDataWriter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
@@ -55,7 +53,7 @@ public class ChordRunnerTest
         ChordDataPrep prep = new ChordDataPrep(config);
         prep.run();
 
-        File outputFile = new File(ChordDataWriter.formOutputFile(TMP_OUTPUT_DIR, COHORT_FILE_PREFIX, null));
+        File outputFile = new File(prep.mOutputFile);
         assertTrue(outputFile.exists());
     }
 }
