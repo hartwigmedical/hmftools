@@ -15,44 +15,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class ChordDataWriter
 {
-    public final ChordConfig mConfig;
-
+    private final String mOutputFile;
     private final BufferedWriter mWriter;
 
-    public static final String MUTATION_CONTEXTS_FILE_SUFFIX = ".chord.mutation_contexts.tsv";
-    public static final String COHORT_FILE_PREFIX = "cohort";
     private static final String FLD_SAMPLE_ID = "sample_id";
 
-    public ChordDataWriter(ChordConfig config) throws IOException
+    public ChordDataWriter(String outputFile) throws IOException
     {
-        mConfig = config;
-
+        mOutputFile = outputFile;
         mWriter = initializeWriter();
-    }
-
-    public static String formOutputFile(String outputDir, String sampleId, @Nullable String outputId)
-    {
-        String outputFile = outputDir + "/" + sampleId;
-
-        outputFile += MUTATION_CONTEXTS_FILE_SUFFIX;
-
-        if(outputId != null)
-            outputFile += "." + outputId;
-
-        return outputFile;
     }
 
     private BufferedWriter initializeWriter() throws IOException
     {
-        String sampleIdOrCohort = mConfig.isSingleSample() ?
-                mConfig.SampleIds.get(0) :
-                COHORT_FILE_PREFIX;
-
-        String outputFile = formOutputFile(mConfig.OutputDir, sampleIdOrCohort, mConfig.OutputId);
-
-        CHORD_LOGGER.info("Writing mutation context counts to: {}", outputFile);
-
-        return FileWriterUtils.createBufferedWriter(outputFile, false);
+        CHORD_LOGGER.info("Writing mutation context counts to: {}", mOutputFile);
+        return FileWriterUtils.createBufferedWriter(mOutputFile, false);
     }
 
     public void writeHeader(List<MutContextCount> contextCountsFirstSample) throws IOException

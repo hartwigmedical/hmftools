@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.hartwig.hmftools.chord.ChordConfig;
+import com.hartwig.hmftools.chord.common.ChordOutput;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -19,10 +20,19 @@ import org.jetbrains.annotations.NotNull;
 public class ChordDataPrep
 {
     public final ChordConfig mConfig;
+    public final String mOutputFile;
 
-    public ChordDataPrep(final ConfigBuilder configBuilder) { mConfig = new ChordConfig(configBuilder); }
+    public ChordDataPrep(final ChordConfig config)
+    {
+        mConfig = config;
+        mOutputFile = ChordOutput.mutationContextsFile(config);
+    }
 
-    public ChordDataPrep(final ChordConfig config) { mConfig = config; }
+    public ChordDataPrep(final ConfigBuilder config)
+    {
+        mConfig = new ChordConfig(config);
+        mOutputFile = ChordOutput.mutationContextsFile(mConfig);
+    }
 
     public void prepSingleSample() throws IOException
     {
@@ -34,7 +44,7 @@ public class ChordDataPrep
 
         List<MutContextCount> contextCounts = sampleTask.mContextCounts;
 
-        ChordDataWriter writer = new ChordDataWriter(mConfig);
+        ChordDataWriter writer = new ChordDataWriter(mOutputFile);
         writer.writeHeader(contextCounts);
         writer.writeValues(sampleId, contextCounts);
         writer.close();
@@ -56,7 +66,7 @@ public class ChordDataPrep
         List<Callable> callableTasks = new ArrayList<>(sampleTasks);
         TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
-        ChordDataWriter writer = new ChordDataWriter(mConfig);
+        ChordDataWriter writer = new ChordDataWriter(mOutputFile);
         writer.writeHeader(contextCountsMatrix.get(mConfig.SampleIds.get(0)));
 
         for(String sampleId : mConfig.SampleIds)
@@ -75,7 +85,6 @@ public class ChordDataPrep
             CHORD_LOGGER.error("No sample ID(s) loaded");
             System.exit(1);
         }
-
         try
         {
             long startTimeMs = System.currentTimeMillis();
