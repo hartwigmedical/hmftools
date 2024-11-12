@@ -12,8 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.chord.common.ChordOutput;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;

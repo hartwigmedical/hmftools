@@ -3,7 +3,6 @@ package com.hartwig.hmftools.chord;
 import static com.hartwig.hmftools.chord.ChordConstants.APP_NAME;
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 
-import com.hartwig.hmftools.chord.common.ChordOutput;
 import com.hartwig.hmftools.chord.predict.ChordModel;
 import com.hartwig.hmftools.chord.prep.ChordDataPrep;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;

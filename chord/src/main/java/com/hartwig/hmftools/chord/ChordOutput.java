@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.common;
+package com.hartwig.hmftools.chord;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 

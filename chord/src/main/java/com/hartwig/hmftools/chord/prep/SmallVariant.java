@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.chord.common;
+package com.hartwig.hmftools.chord.prep;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
