@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
 
 import java.io.BufferedReader;
 

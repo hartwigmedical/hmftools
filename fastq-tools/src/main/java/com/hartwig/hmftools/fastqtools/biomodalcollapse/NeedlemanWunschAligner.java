@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.M;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.PREFIX_X;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.PREFIX_Y;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.SUFFIX_X;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.SUFFIX_Y;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.X;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.Y;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.M;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.PREFIX_X;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.PREFIX_Y;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.SUFFIX_X;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.SUFFIX_Y;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.X;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.NeedlemanWunschAligner.TraceBackState.Y;
 
 import java.util.Collections;
 import java.util.Comparator;

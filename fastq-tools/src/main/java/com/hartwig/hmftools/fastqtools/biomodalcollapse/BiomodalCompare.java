@@ -1,13 +1,12 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.sanatizeQualString;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.COMPARE_DELIMITER;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.COMPARE_HEADERS;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.sanatizeQualString;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.COMPARE_DELIMITER;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.COMPARE_HEADERS;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
@@ -104,7 +103,7 @@ public class BiomodalCompare
 
     public void run()
     {
-        BT_LOGGER.info("starting BiomodalCompare...");
+        FQ_LOGGER.info("starting BiomodalCompare...");
         long startTimeMs = System.currentTimeMillis();
 
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
@@ -133,7 +132,7 @@ public class BiomodalCompare
             throw new RuntimeException(e);
         }
 
-        BT_LOGGER.info("BiomodalCompare complete, mins({})", runTimeMinsStr(startTimeMs));
+        FQ_LOGGER.info("BiomodalCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static class AlignmentInfo
@@ -561,7 +560,7 @@ public class BiomodalCompare
 
     public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder();
         BiomodalCompareConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 

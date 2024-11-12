@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;

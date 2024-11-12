@@ -1,10 +1,6 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.FORWARD_HAIRPIN;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.LOW_QUAL_CUTOFF;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
 
 import java.util.List;
 
@@ -37,7 +33,7 @@ public class ReverseComplementMatchInfo
     {
         ReverseComplementMatchInfo bestMatch = null;
 
-        int minShift = -seq1.size() + FORWARD_HAIRPIN.length() + 1;
+        int minShift = -seq1.size() + BiomodalConstants.FORWARD_HAIRPIN.length() + 1;
         int maxShift = seq1.size() % 2 == 0 ? seq1.size() / 2 - 1 : seq1.size() / 2;
         for(int read1Shift = minShift; read1Shift <= maxShift; read1Shift++)
         {
@@ -61,14 +57,14 @@ public class ReverseComplementMatchInfo
                 byte base1 = seq1.get(i1).Base;
                 byte base2 = seq2RevComplement.get(i2).Base;
                 int qual = min(seq1.get(i1).Qual, seq2RevComplement.get(i2).Qual);
-                if(base1 == MISSING_BASE || base2 == MISSING_BASE)
+                if(base1 == BiomodalConstants.MISSING_BASE || base2 == BiomodalConstants.MISSING_BASE)
                 {
                 }
                 else if(base1 == base2)
                 {
                     matchCount++;
                 }
-                else if(qual > LOW_QUAL_CUTOFF)
+                else if(qual > BiomodalConstants.LOW_QUAL_CUTOFF)
                 {
                     highQualMismatchCount++;
                 }

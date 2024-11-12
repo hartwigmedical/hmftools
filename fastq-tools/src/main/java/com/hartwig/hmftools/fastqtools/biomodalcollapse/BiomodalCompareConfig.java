@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 

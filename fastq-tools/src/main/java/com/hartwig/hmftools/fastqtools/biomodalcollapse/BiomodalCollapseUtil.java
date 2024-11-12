@@ -1,17 +1,10 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_SECOND;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.LOW_QUAL_CUTOFF;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISMATCH_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE_TRIM_PROPORTION_THRESHOLD;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.PREFIX_TRIM_LENGTH;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_SECOND;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
 import java.io.BufferedReader;
@@ -170,30 +163,30 @@ public class BiomodalCollapseUtil
 
         if(base1 == base2)
         {
-            return base1 == (byte) 'C' ? MODC_BASE : base1;
+            return base1 == (byte) 'C' ? BiomodalConstants.MODC_BASE : base1;
         }
 
         if(base1 == (byte) 'G')
         {
-            return base2 == (byte) 'A' ? (byte) 'G' : MISMATCH_BASE;
+            return base2 == (byte) 'A' ? (byte) 'G' : BiomodalConstants.MISMATCH_BASE;
         }
 
         if(base1 == (byte) 'T')
         {
-            return base2 == (byte) 'C' ? (byte) 'C' : MISMATCH_BASE;
+            return base2 == (byte) 'C' ? (byte) 'C' : BiomodalConstants.MISMATCH_BASE;
         }
 
-        return MISMATCH_BASE;
+        return BiomodalConstants.MISMATCH_BASE;
     }
 
     public static int getModCScore(final BaseQualPair base1, final BaseQualPair base2)
     {
-        if(base1.Base == MISSING_BASE || base2.Base == MISSING_BASE)
+        if(base1.Base == BiomodalConstants.MISSING_BASE || base2.Base == BiomodalConstants.MISSING_BASE)
         {
             return 0;
         }
 
-        if(getConsensusBase(base1.Base, base2.Base) != MISMATCH_BASE)
+        if(getConsensusBase(base1.Base, base2.Base) != BiomodalConstants.MISMATCH_BASE)
         {
             return 1;
         }
@@ -203,13 +196,13 @@ public class BiomodalCollapseUtil
 
     public static int getExactScore(final BaseQualPair base1, final BaseQualPair base2, boolean collapseModC)
     {
-        if(base1.Base == MISSING_BASE || base2.Base == MISSING_BASE)
+        if(base1.Base == BiomodalConstants.MISSING_BASE || base2.Base == BiomodalConstants.MISSING_BASE)
         {
             return 0;
         }
 
-        byte collapsedBase1 = base1.Base == MODC_BASE && collapseModC ? (byte) 'C' : base1.Base;
-        byte collapsedBase2 = base2.Base == MODC_BASE && collapseModC ? (byte) 'C' : base2.Base;
+        byte collapsedBase1 = base1.Base == BiomodalConstants.MODC_BASE && collapseModC ? (byte) 'C' : base1.Base;
+        byte collapsedBase2 = base2.Base == BiomodalConstants.MODC_BASE && collapseModC ? (byte) 'C' : base2.Base;
         if(collapsedBase1 == collapsedBase2)
         {
             return 1;
@@ -237,7 +230,7 @@ public class BiomodalCollapseUtil
 
         if(base1 == (byte) 'C')
         {
-            return Sets.newHashSet(MODC_BASE);
+            return Sets.newHashSet(BiomodalConstants.MODC_BASE);
         }
 
         throw new RuntimeException("Unreachable");
@@ -272,22 +265,22 @@ public class BiomodalCollapseUtil
 
     public static BaseQualPair modCConsensusBaseQualPair(final BaseQualPair base1, final BaseQualPair base2)
     {
-        boolean base1Missing = base1 == null || base1.Base == MISSING_BASE;
-        boolean base2Missing = base2 == null || base2.Base == MISSING_BASE;
+        boolean base1Missing = base1 == null || base1.Base == BiomodalConstants.MISSING_BASE;
+        boolean base2Missing = base2 == null || base2.Base == BiomodalConstants.MISSING_BASE;
         boolean bothBasesExist = !base1Missing && !base2Missing;
 
         if(base1Missing && base2Missing)
         {
-            return new BaseQualPair(MISSING_BASE, 0);
+            return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
         }
 
-        byte consensusBase = base1Missing || base2Missing ? MISMATCH_BASE : getConsensusBase(base1.Base, base2.Base);
-        if(bothBasesExist && consensusBase == MISMATCH_BASE && base1.Qual == base2.Qual)
+        byte consensusBase = base1Missing || base2Missing ? BiomodalConstants.MISMATCH_BASE : getConsensusBase(base1.Base, base2.Base);
+        if(bothBasesExist && consensusBase == BiomodalConstants.MISMATCH_BASE && base1.Qual == base2.Qual)
         {
-            return new BaseQualPair(MISSING_BASE, 0);
+            return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
         }
 
-        if(base1Missing || bothBasesExist && consensusBase == MISMATCH_BASE && base2.Qual > base1.Qual)
+        if(base1Missing || bothBasesExist && consensusBase == BiomodalConstants.MISMATCH_BASE && base2.Qual > base1.Qual)
         {
             Set<Byte> consensusBases = modCConsensusBaseOptionsFromRead2Base(base2.Base);
             if(consensusBases.size() == 1)
@@ -298,10 +291,10 @@ public class BiomodalCollapseUtil
                 return new BaseQualPair(base, qual);
             }
 
-            return new BaseQualPair(MISSING_BASE, 0);
+            return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
         }
 
-        if(base2Missing || bothBasesExist && consensusBase == MISMATCH_BASE && base1.Qual > base2.Qual)
+        if(base2Missing || bothBasesExist && consensusBase == BiomodalConstants.MISMATCH_BASE && base1.Qual > base2.Qual)
         {
             Set<Byte> consensusBases = modCConsensusBaseOptionsFromRead1Base(base1.Base);
             if(consensusBases.size() == 1)
@@ -312,10 +305,10 @@ public class BiomodalCollapseUtil
                 return new BaseQualPair(base, qual);
             }
 
-            return new BaseQualPair(MISSING_BASE, 0);
+            return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
         }
 
-        if(consensusBase != MISMATCH_BASE)
+        if(consensusBase != BiomodalConstants.MISMATCH_BASE)
         {
             if(base2.Base == (byte) 'G')
             {
@@ -351,13 +344,13 @@ public class BiomodalCollapseUtil
         int qual = consensus.Qual;
         if(qualCapping == CAP_BY_FIRST)
         {
-            boolean base1Missing = base1 == null || base1.Base == MISSING_BASE;
+            boolean base1Missing = base1 == null || base1.Base == BiomodalConstants.MISSING_BASE;
             int base1Qual = base1Missing ? 0 : base1.Qual;
             qual = min(qual, base1Qual);
         }
         else if(qualCapping == CAP_BY_SECOND)
         {
-            boolean base2Missing = base2 == null || base2.Base == MISSING_BASE;
+            boolean base2Missing = base2 == null || base2.Base == BiomodalConstants.MISSING_BASE;
             int base2Qual = base2Missing ? 0 : base2.Qual;
             qual = min(qual, base2Qual);
         }
@@ -367,12 +360,12 @@ public class BiomodalCollapseUtil
 
     public static BaseQualPair exactConsensusBaseQualPair(final BaseQualPair base1, final BaseQualPair base2)
     {
-        boolean base1Missing = base1 == null || base1.Base == MISSING_BASE;
-        boolean base2Missing = base2 == null || base2.Base == MISSING_BASE;
+        boolean base1Missing = base1 == null || base1.Base == BiomodalConstants.MISSING_BASE;
+        boolean base2Missing = base2 == null || base2.Base == BiomodalConstants.MISSING_BASE;
 
         if(base1Missing && base2Missing)
         {
-            return new BaseQualPair(MISSING_BASE, 0);
+            return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
         }
 
         if(base1Missing)
@@ -385,13 +378,13 @@ public class BiomodalCollapseUtil
             return base1;
         }
 
-        if(base1.Base == MODC_BASE && base2.Base == MODC_BASE)
+        if(base1.Base == BiomodalConstants.MODC_BASE && base2.Base == BiomodalConstants.MODC_BASE)
         {
-            return new BaseQualPair(MODC_BASE, max(base1.Qual, base2.Qual));
+            return new BaseQualPair(BiomodalConstants.MODC_BASE, max(base1.Qual, base2.Qual));
         }
 
-        byte collapsedBase1 = base1.Base == MODC_BASE ? (byte) 'C' : base1.Base;
-        byte collapsedBase2 = base2.Base == MODC_BASE ? (byte) 'C' : base2.Base;
+        byte collapsedBase1 = base1.Base == BiomodalConstants.MODC_BASE ? (byte) 'C' : base1.Base;
+        byte collapsedBase2 = base2.Base == BiomodalConstants.MODC_BASE ? (byte) 'C' : base2.Base;
         if(collapsedBase1 == collapsedBase2)
         {
             return new BaseQualPair(collapsedBase1, max(base1.Qual, base2.Qual));
@@ -407,7 +400,7 @@ public class BiomodalCollapseUtil
             return new BaseQualPair(base2.Base, base2.Qual - base1.Qual);
         }
 
-        return new BaseQualPair(MISSING_BASE, 0);
+        return new BaseQualPair(BiomodalConstants.MISSING_BASE, 0);
     }
 
     public static List<BaseQualPair> collapseAlignedSeqModC(final List<Pair<BaseQualPair, BaseQualPair>> alignedSeq)
@@ -525,11 +518,11 @@ public class BiomodalCollapseUtil
     public static Pair<Integer, Integer> qualityTrim(final List<BaseQualPair> seq)
     {
         List<SuffixClipper> suffixClippers = Lists.newArrayList();
-        suffixClippers.add(new SuffixClipper(x -> x.Base != MISSING_BASE
-                && x.Qual <= LOW_QUAL_CUTOFF, LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
-        suffixClippers.add(new SuffixClipper(x -> x.Base == MISSING_BASE, MISSING_BASE_TRIM_PROPORTION_THRESHOLD));
+        suffixClippers.add(new SuffixClipper(x -> x.Base != BiomodalConstants.MISSING_BASE
+                && x.Qual <= BiomodalConstants.LOW_QUAL_CUTOFF, BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
+        suffixClippers.add(new SuffixClipper(x -> x.Base == BiomodalConstants.MISSING_BASE, BiomodalConstants.MISSING_BASE_TRIM_PROPORTION_THRESHOLD));
 
-        List<BaseQualPair> trimmedSeq = seq.subList(PREFIX_TRIM_LENGTH, seq.size());
+        List<BaseQualPair> trimmedSeq = seq.subList(BiomodalConstants.PREFIX_TRIM_LENGTH, seq.size());
 
         int suffixTrimLength = suffixClipLength(trimmedSeq, suffixClippers);
         if(suffixTrimLength == trimmedSeq.size())
@@ -537,7 +530,7 @@ public class BiomodalCollapseUtil
             return null;
         }
 
-        return Pair.of(PREFIX_TRIM_LENGTH, seq.size() - 1 - suffixTrimLength);
+        return Pair.of(BiomodalConstants.PREFIX_TRIM_LENGTH, seq.size() - 1 - suffixTrimLength);
     }
 
     public static String getCigar(final List<Pair<BaseQualPair, BaseQualPair>> alignedSeq)
@@ -592,13 +585,13 @@ public class BiomodalCollapseUtil
         for(int i = 0; i < consensusRead.length(); i++)
         {
             char c = consensusRead.charAt(i);
-            if(c == (char) MISMATCH_BASE)
+            if(c == (char) BiomodalConstants.MISMATCH_BASE)
             {
-                output.append((char) MISSING_BASE);
+                output.append((char) BiomodalConstants.MISSING_BASE);
                 continue;
             }
 
-            if(c == (char) MODC_BASE)
+            if(c == (char) BiomodalConstants.MODC_BASE)
             {
                 output.append('X');
                 continue;

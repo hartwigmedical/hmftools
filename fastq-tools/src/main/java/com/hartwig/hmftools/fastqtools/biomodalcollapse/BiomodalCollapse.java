@@ -1,13 +1,9 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_DELIMITER;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_HEADERS;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -66,7 +62,7 @@ public class BiomodalCollapse
 
     public void run()
     {
-        BT_LOGGER.info("starting BimodalCollapse");
+        FQ_LOGGER.info("starting BimodalCollapse");
         long startTimeMs = System.currentTimeMillis();
 
         Map<String, FastqRecord> refResolvesFastqMap = loadRefResolvedFastq();
@@ -87,7 +83,7 @@ public class BiomodalCollapse
 
             if(debugStatsWriter != null)
             {
-                debugStatsWriter.write(Arrays.stream(STAT_HEADERS).collect(Collectors.joining(STAT_DELIMITER)));
+                debugStatsWriter.write(Arrays.stream(BiomodalConstants.STAT_HEADERS).collect(Collectors.joining(BiomodalConstants.STAT_DELIMITER)));
                 debugStatsWriter.newLine();
             }
 
@@ -129,7 +125,7 @@ public class BiomodalCollapse
                     }
                     catch(InterruptedException e)
                     {
-                        BT_LOGGER.warn("Failed to join worker thread: threadId({}) {}", worker.ThreadId, e);
+                        FQ_LOGGER.warn("Failed to join worker thread: threadId({}) {}", worker.ThreadId, e);
                     }
                 }
             }
@@ -140,8 +136,8 @@ public class BiomodalCollapse
             closeBufferedWriter(debugStatsWriter);
         }
 
-        BT_LOGGER.info(stats.toString());
-        BT_LOGGER.info("BimodalCollapse complete, mins({})", runTimeMinsStr(startTimeMs));
+        FQ_LOGGER.info(stats.toString());
+        FQ_LOGGER.info("BimodalCollapse complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public synchronized static void writeResolvedFastqRecord(final BufferedWriter writer, final FastqRecord resolvedFastq)
@@ -156,7 +152,7 @@ public class BiomodalCollapse
             {
                 skip++;
             }
-            else if(base == (char) MODC_BASE)
+            else if(base == (char) BiomodalConstants.MODC_BASE)
             {
                 readStr.setCharAt(i, 'C');
                 MMTagSkipsStr.append(',');
@@ -200,7 +196,7 @@ public class BiomodalCollapse
 
     public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder();
         BiomodalCollapseConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
@@ -208,7 +204,7 @@ public class BiomodalCollapse
         // must do this otherwise unhandled exception in other threads might not be reported
         Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
         {
-            BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
+            FQ_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
             e.printStackTrace(System.err);
             System.exit(1);
         });

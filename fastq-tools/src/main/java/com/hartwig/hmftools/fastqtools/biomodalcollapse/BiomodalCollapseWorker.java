@@ -1,38 +1,26 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.AlignmentStats.getAlignmentStats;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapse.writeStatLine;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.collapseAlignedSeqExact;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.collapseAlignedSeqModC;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.consensusReadForStatOutput;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.fastqToSeq;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getCigar;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getCutPoint;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getExactScore;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getLeftElements;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getRightElements;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.qualityTrim;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.reverseComplementSeq;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.sanatizeQualString;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.seqToFastq;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.zip;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.EXTEND_GAP_PENALTY;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.FORWARD_HAIRPIN;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.INS_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MIN_RESOLVED_READ_LENGTH;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.OPEN_GAP_PENALTY;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.REVERSE_HAIRPIN;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_DELIMITER;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.STAT_HEADERS;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.HairpinInfo.findHairpin;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.ReverseComplementMatchInfo.findBestReverseComplementMatch;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.collapseAlignedSeqExact;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.collapseAlignedSeqModC;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.consensusReadForStatOutput;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.fastqToSeq;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getCigar;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getCutPoint;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getExactScore;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getLeftElements;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getRightElements;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.qualityTrim;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.reverseComplementSeq;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.sanatizeQualString;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.seqToFastq;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.zip;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.HairpinInfo.findHairpin;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.ReverseComplementMatchInfo.findBestReverseComplementMatch;
 
 import java.io.BufferedWriter;
 import java.util.Collections;
@@ -47,7 +35,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 
 public class BiomodalCollapseWorker extends Thread
 {
-    private static final BaseQualPair INS_BASE_QUAL_QUAL = new BaseQualPair(INS_BASE, 0);
+    private static final BaseQualPair INS_BASE_QUAL_QUAL = new BaseQualPair(BiomodalConstants.INS_BASE, 0);
 
     public final int ThreadId;
 
@@ -84,7 +72,7 @@ public class BiomodalCollapseWorker extends Thread
             int processedFastqPairs = mStats.ProcessedFastqPairCount.incrementAndGet();
             if(processedFastqPairs % 10_000 == 0)
             {
-                BT_LOGGER.info(format("%d fastq pairs have been processed", processedFastqPairs));
+                FQ_LOGGER.info(format("%d fastq pairs have been processed", processedFastqPairs));
             }
 
             if(resolvedFastq != null)
@@ -108,8 +96,8 @@ public class BiomodalCollapseWorker extends Thread
 
         ReverseComplementMatchInfo rcMatch = findBestReverseComplementMatch(seq1, seq2RC);
 
-        HairpinInfo hairpin1 = findHairpin(seq1, FORWARD_HAIRPIN);
-        HairpinInfo hairpin2 = findHairpin(seq2, REVERSE_HAIRPIN);
+        HairpinInfo hairpin1 = findHairpin(seq1, BiomodalConstants.FORWARD_HAIRPIN);
+        HairpinInfo hairpin2 = findHairpin(seq2, BiomodalConstants.REVERSE_HAIRPIN);
 
         int cutPoint = getCutPoint(trimmedLength, hairpin1, hairpin2, rcMatch);
         if(cutPoint <= 0)
@@ -128,7 +116,7 @@ public class BiomodalCollapseWorker extends Thread
         List<BaseQualPair> read1 = seq1.subList(0, cutPoint);
         List<BaseQualPair> read2 = seq2.subList(0, cutPoint);
         List<Pair<BaseQualPair, BaseQualPair>> forwardAlignment =
-                mAligner.approxAlign(read1, read2, BiomodalCollapseUtil::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, false, false, true, true);
+                mAligner.approxAlign(read1, read2, BiomodalCollapseUtil::getModCScore, BiomodalConstants.OPEN_GAP_PENALTY, BiomodalConstants.EXTEND_GAP_PENALTY, false, false, true, true);
         List<BaseQualPair> forwardConsensus = collapseAlignedSeqModC(forwardAlignment);
 
         // reverse aligned consensus
@@ -145,7 +133,7 @@ public class BiomodalCollapseWorker extends Thread
                 List<BaseQualPair> read1RC = seq1RC.subList(0, rcLength);
                 List<BaseQualPair> read2RC = seq2RC.subList(0, rcLength);
                 reverseAlignment =
-                        mAligner.approxAlign(read2RC, read1RC, BiomodalCollapseUtil::getModCScore, OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, false, false);
+                        mAligner.approxAlign(read2RC, read1RC, BiomodalCollapseUtil::getModCScore, BiomodalConstants.OPEN_GAP_PENALTY, BiomodalConstants.EXTEND_GAP_PENALTY, true, true, false, false);
                 reverseConsensus = collapseAlignedSeqModC(reverseAlignment);
             }
         }
@@ -184,7 +172,7 @@ public class BiomodalCollapseWorker extends Thread
 
         // clipping final consensus
         Pair<Integer, Integer> clippingBounds = qualityTrim(finalConsensus);
-        if(clippingBounds != null && clippingBounds.getRight() - clippingBounds.getLeft() + 1 < MIN_RESOLVED_READ_LENGTH)
+        if(clippingBounds != null && clippingBounds.getRight() - clippingBounds.getLeft() + 1 < BiomodalConstants.MIN_RESOLVED_READ_LENGTH)
         {
             clippingBounds = null;
         }
@@ -225,7 +213,7 @@ public class BiomodalCollapseWorker extends Thread
         int cutPoint = getCutPoint(trimmedLength, hairpin1, hairpin2, reverseComplementMatchInfo);
 
         // form initial output
-        StringJoinerCounter statLine = new StringJoinerCounter(STAT_DELIMITER);
+        StringJoinerCounter statLine = new StringJoinerCounter(BiomodalConstants.STAT_DELIMITER);
         statLine.add(fastq1.getReadName());
         statLine.add(String.valueOf(fastq1.getReadLength()));
         statLine.add(String.valueOf(fastq2.getReadLength()));
@@ -254,12 +242,12 @@ public class BiomodalCollapseWorker extends Thread
 
         if(cutPoint <= 0)
         {
-            while(statLine.componentCount() < STAT_HEADERS.length)
+            while(statLine.componentCount() < BiomodalConstants.STAT_HEADERS.length)
             {
                 statLine.add("-");
             }
 
-            writeStatLine(mDebugStatsWriter, statLine.toString());
+            BiomodalCollapse.writeStatLine(mDebugStatsWriter, statLine.toString());
             return;
         }
 
@@ -268,7 +256,7 @@ public class BiomodalCollapseWorker extends Thread
         List<BaseQualPair> read2 = seq2.subList(0, cutPoint);
         List<Pair<BaseQualPair, BaseQualPair>> naiveForwardAlignment = zip(read1, read2);
         FastqRecord naiveForwardConsensusFastq = seqToFastq(collapseAlignedSeqModC(naiveForwardAlignment));
-        AlignmentStats naiveStats = getAlignmentStats(naiveForwardAlignment);
+        AlignmentStats naiveStats = AlignmentStats.getAlignmentStats(naiveForwardAlignment);
 
         // reverse naive consensus
         FastqRecord naiveReverseConsensusFastq = null;
@@ -285,7 +273,7 @@ public class BiomodalCollapseWorker extends Thread
         }
 
         // forward aligned consensus
-        AlignmentStats alignedStats = getAlignmentStats(forwardAlignment);
+        AlignmentStats alignedStats = AlignmentStats.getAlignmentStats(forwardAlignment);
         FastqRecord forwardConsensusFastq = seqToFastq(forwardConsensus);
 
         int forwardMatchCount = 0;
@@ -348,12 +336,12 @@ public class BiomodalCollapseWorker extends Thread
                     continue;
                 }
 
-                if(base1.Base == (byte) 'C' && base2.Base == MODC_BASE)
+                if(base1.Base == (byte) 'C' && base2.Base == BiomodalConstants.MODC_BASE)
                 {
                     CmodCMismatchCount++;
                 }
 
-                if(base2.Base == (byte) 'C' && base1.Base == MODC_BASE)
+                if(base2.Base == (byte) 'C' && base1.Base == BiomodalConstants.MODC_BASE)
                 {
                     modCCMismatchCount++;
                 }
@@ -372,7 +360,7 @@ public class BiomodalCollapseWorker extends Thread
         {
             List<BaseQualPair> refSeq = fastqToSeq(refFastq);
             refAlignment =
-                    mAligner.align(clippedConsensus, refSeq, (a, b) -> getExactScore(a, b, true), OPEN_GAP_PENALTY, EXTEND_GAP_PENALTY, true, true, true, true, OptionalInt.empty());
+                    mAligner.align(clippedConsensus, refSeq, (a, b) -> getExactScore(a, b, true), BiomodalConstants.OPEN_GAP_PENALTY, BiomodalConstants.EXTEND_GAP_PENALTY, true, true, true, true, OptionalInt.empty());
 
             int firstMatchBase;
             for(firstMatchBase = 0; firstMatchBase < refAlignment.size(); firstMatchBase++)
@@ -421,7 +409,7 @@ public class BiomodalCollapseWorker extends Thread
 
                     if(base1.Base != base2.Base)
                     {
-                        if(base1.Base == MISSING_BASE || base2.Base == MISSING_BASE)
+                        if(base1.Base == BiomodalConstants.MISSING_BASE || base2.Base == BiomodalConstants.MISSING_BASE)
                         {
                             resolvedMissingMismatches++;
                         }
@@ -541,6 +529,6 @@ public class BiomodalCollapseWorker extends Thread
         statLine.add(String.valueOf(resolvedNonMissingMismatches));
         statLine.add(String.valueOf(resolvedIndelCount));
 
-        writeStatLine(mDebugStatsWriter, statLine.toString());
+        BiomodalCollapse.writeStatLine(mDebugStatsWriter, statLine.toString());
     }
 }

@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.bamtools.biomodalcollapse;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.getConsensusBase;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalCollapseUtil.modCConsensusBaseQualPair;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.LOW_QUAL_CUTOFF;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISMATCH_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
-import static com.hartwig.hmftools.bamtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getConsensusBase;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.modCConsensusBaseQualPair;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.LOW_QUAL_CUTOFF;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MISMATCH_BASE;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MISSING_BASE;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
 import java.util.List;
