@@ -131,12 +131,12 @@ public class ReduxConfig
 
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
-    private static final String USE_SUPP_BAM = "use_supp_bam";
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
-    // debug
+    // dev and options
+    private static final String NO_SUPP_BAM = "no_supp_bam";
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String RUN_CHECKS = "run_checks";
@@ -246,7 +246,7 @@ public class ReduxConfig
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
-        UseSupplementaryBam = MultiBam && configBuilder.hasFlag(USE_SUPP_BAM);
+        UseSupplementaryBam = !configBuilder.hasFlag(NO_SUPP_BAM) && MultiBam;
 
         LogReadIds = parseLogReadIds(configBuilder);
 
@@ -309,7 +309,7 @@ public class ReduxConfig
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
-        configBuilder.addFlag(USE_SUPP_BAM, "Cache supplementary reads in temporary BAM");
+        configBuilder.addFlag(NO_SUPP_BAM, "Skip use of supplementary reads temporary BAMs");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         configBuilder.addFlag(JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");

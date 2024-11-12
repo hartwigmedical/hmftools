@@ -238,7 +238,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         }
 
         if(!mConfig.NoMateCigar && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.getSupplementaryAlignmentFlag()
-                && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             ++mStats.MissingMateCigar;
 
