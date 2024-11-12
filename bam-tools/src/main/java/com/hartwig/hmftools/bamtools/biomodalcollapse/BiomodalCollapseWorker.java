@@ -56,14 +56,12 @@ public class BiomodalCollapseWorker extends Thread
     private final BufferedWriter mDebugStatsWriter;
     private final Map<String, FastqRecord> mRefResolvesFastqMap;
     private final BiomodalCollapseStats mStats;
-    private final SynchronizedPairedFastqWriter mBadFastqPairWriter;
 
     private final NeedlemanWunschAligner<BaseQualPair> mAligner;
 
     public BiomodalCollapseWorker(int threadId, final SynchronizedPairedFastqReader fastqPairReader,
             final BufferedWriter resolvedFastqWriter, @Nullable final BufferedWriter debugStatsWriter,
-            final Map<String, FastqRecord> refResolvesFastqMap, final BiomodalCollapseStats stats,
-            @Nullable final SynchronizedPairedFastqWriter badFastqPairWriter)
+            final Map<String, FastqRecord> refResolvesFastqMap, final BiomodalCollapseStats stats)
     {
         ThreadId = threadId;
         mFastqPairReader = fastqPairReader;
@@ -71,7 +69,6 @@ public class BiomodalCollapseWorker extends Thread
         mDebugStatsWriter = debugStatsWriter;
         mStats = stats;
         mRefResolvesFastqMap = refResolvesFastqMap;
-        mBadFastqPairWriter = badFastqPairWriter;
 
         mAligner = new NeedlemanWunschAligner<>();
     }
@@ -122,12 +119,6 @@ public class BiomodalCollapseWorker extends Thread
                 writeStats(fastq1, fastq2, hairpin1, hairpin2, rcMatch, seq1, seq2, seq1RC, seq2RC, null, null,
                         null, null, 0, null, null, 0,
                         null, 0, 0);
-            }
-
-            mStats.BadWrittenFastqPairCount.getAndIncrement();
-            if(mBadFastqPairWriter != null)
-            {
-                mBadFastqPairWriter.write(fastq1, fastq2);
             }
 
             return null;

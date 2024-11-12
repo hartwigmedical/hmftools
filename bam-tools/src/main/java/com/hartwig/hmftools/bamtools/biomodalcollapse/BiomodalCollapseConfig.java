@@ -18,8 +18,6 @@ public class BiomodalCollapseConfig
     public final int MaxFastqPairsProcessed;
     public final String RefResolvedFastqPath;
     public final String DebugStatsOutputPath;
-    public final String BadFastq1OutputPath;
-    public final String BadFastq2OutputPath;
 
     private static final String FASTQ1_PATH = "fastq1";
     private static final String FASTQ2_PATH = "fastq2";
@@ -27,10 +25,6 @@ public class BiomodalCollapseConfig
     private static final String MAX_FASTQ_PAIRS_PROCESSED = "max_fastq_pairs_read";
     private static final String REF_RESOLVED_FASTQ_PATH = "ref_resolved_fastq";
     private static final String DEBUG_STATS_OUTPUT_PATH = "out_debug_tsv";
-
-    // TODO: remove this
-    private static final String BAD_FASTQ1_OUTPUT_PATH = "out_bad_fastq1";
-    private static final String BAD_FASTQ2_OUTPUT_PATH = "out_bad_fastq2";
 
     public BiomodalCollapseConfig(final ConfigBuilder configBuilder)
     {
@@ -44,9 +38,6 @@ public class BiomodalCollapseConfig
         RefResolvedFastqPath = configBuilder.getValue(REF_RESOLVED_FASTQ_PATH, null);
         DebugStatsOutputPath = configBuilder.getValue(DEBUG_STATS_OUTPUT_PATH, null);
 
-        BadFastq1OutputPath = configBuilder.getValue(BAD_FASTQ1_OUTPUT_PATH, null);
-        BadFastq2OutputPath = configBuilder.getValue(BAD_FASTQ2_OUTPUT_PATH, null);
-
         validate();
     }
 
@@ -55,11 +46,6 @@ public class BiomodalCollapseConfig
         if(RefResolvedFastqPath != null && DebugStatsOutputPath == null)
         {
             throw new RuntimeException(format("Cannot specify %s unless %s is specified", REF_RESOLVED_FASTQ_PATH, DEBUG_STATS_OUTPUT_PATH));
-        }
-
-        if(BadFastq1OutputPath != null ^ BadFastq2OutputPath != null)
-        {
-            throw new RuntimeException(format("Must specify none of or both of %s and %s", BAD_FASTQ1_OUTPUT_PATH, BAD_FASTQ2_OUTPUT_PATH));
         }
     }
 
@@ -72,9 +58,6 @@ public class BiomodalCollapseConfig
 
         configBuilder.addConfigItem(REF_RESOLVED_FASTQ_PATH, false, "Path to resolved fragments for comparison");
         configBuilder.addConfigItem(DEBUG_STATS_OUTPUT_PATH, false, "Path to where debug details for each read pair will be written to as a tsv");
-
-        configBuilder.addConfigItem(BAD_FASTQ1_OUTPUT_PATH, false, "Path where the bad fastq1 records is written to");
-        configBuilder.addConfigItem(BAD_FASTQ2_OUTPUT_PATH, false, "Path where the bad fastq2 records is written to");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);

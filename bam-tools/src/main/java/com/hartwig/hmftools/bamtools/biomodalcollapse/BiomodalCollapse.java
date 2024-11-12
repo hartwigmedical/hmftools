@@ -78,19 +78,12 @@ public class BiomodalCollapse
         BufferedReader fastq2Reader = null;
         BufferedWriter resolvedFastqWriter = null;
         BufferedWriter debugStatsWriter = null;
-
-        // TODO: remove this
-        BufferedWriter badFastq1Writer = null;
-        BufferedWriter badFastq2Writer = null;
         try
         {
             fastq1Reader = createBufferedReader(mConfig.Fastq1Path);
             fastq2Reader = createBufferedReader(mConfig.Fastq2Path);
             resolvedFastqWriter = createBufferedWriter(mConfig.CollapsedFastqOutputPath);
             debugStatsWriter = mConfig.DebugStatsOutputPath == null ? null : createBufferedWriter(mConfig.DebugStatsOutputPath);
-
-            badFastq1Writer = mConfig.BadFastq1OutputPath == null ? null : createBufferedWriter(mConfig.BadFastq1OutputPath);
-            badFastq2Writer = mConfig.BadFastq2OutputPath == null ? null : createBufferedWriter(mConfig.BadFastq2OutputPath);
 
             if(debugStatsWriter != null)
             {
@@ -100,12 +93,11 @@ public class BiomodalCollapse
 
             SynchronizedPairedFastqReader fastqPairReader =
                     new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, mConfig.MaxFastqPairsProcessed);
-            SynchronizedPairedFastqWriter badFastqPairWriter =
-                    badFastq1Writer == null ? null : new SynchronizedPairedFastqWriter(badFastq1Writer, badFastq2Writer);
+
             if(mConfig.Threads == 1)
             {
                 BiomodalCollapseWorker worker =
-                        new BiomodalCollapseWorker(0, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats, badFastqPairWriter);
+                        new BiomodalCollapseWorker(0, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats);
                 worker.run();
                 workers.add(worker);
             }
@@ -114,7 +106,7 @@ public class BiomodalCollapse
                 for(int i = 0; i < mConfig.Threads; i++)
                 {
                     BiomodalCollapseWorker worker =
-                            new BiomodalCollapseWorker(i, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats, badFastqPairWriter);
+                            new BiomodalCollapseWorker(i, fastqPairReader, resolvedFastqWriter, debugStatsWriter, refResolvesFastqMap, stats);
                     worker.start();
                     workers.add(worker);
                 }
@@ -146,8 +138,6 @@ public class BiomodalCollapse
             closeBufferedReader(fastq2Reader);
             closeBufferedWriter(resolvedFastqWriter);
             closeBufferedWriter(debugStatsWriter);
-            closeBufferedWriter(badFastq1Writer);
-            closeBufferedWriter(badFastq2Writer);
         }
 
         BT_LOGGER.info(stats.toString());
