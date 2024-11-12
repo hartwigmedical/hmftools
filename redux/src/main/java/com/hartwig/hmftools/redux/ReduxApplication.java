@@ -194,7 +194,7 @@ public class ReduxApplication
             combinedStats.logStats();
 
             long totalWrittenReads = fileWriterCache.totalWrittenReads();
-            long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
+            long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
 
             if(mConfig.UnmapRegions.enabled())
             {
