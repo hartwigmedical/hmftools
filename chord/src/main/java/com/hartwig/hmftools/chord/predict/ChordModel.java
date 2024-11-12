@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.chord.predict;
 
+import static com.hartwig.hmftools.chord.ChordConstants.APP_NAME;
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 
 import java.io.File;
@@ -11,7 +12,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
+
+import org.jetbrains.annotations.NotNull;
 
 public class ChordModel
 {
@@ -39,7 +43,7 @@ public class ChordModel
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    public void predict(String mutContextsPath, String outputFilePath)
+    public void predict(String mutContextsFile, String outputFile)
     {
         CHORD_LOGGER.info("Starting CHORD predict");
 
@@ -49,8 +53,8 @@ public class ChordModel
 
             List<String> scriptArgs = new ArrayList<>(List.of(
                     mModelPath,
-                    mutContextsPath,
-                    outputFilePath,
+                    mutContextsFile,
+                    outputFile,
                     CHORD_LOGGER.getLevel().toString()
             ));
 
@@ -79,5 +83,18 @@ public class ChordModel
         }
 
         CHORD_LOGGER.info("Completed CHORD predict");
+    }
+
+    public static void main(@NotNull final String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        PredictConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        ChordModel model = ChordModel.fromResources();
+
+        PredictConfig config = new PredictConfig(configBuilder);
+        model.predict(config.MutContextsFile, config.OutputFile);
     }
 }
