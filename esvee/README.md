@@ -451,7 +451,7 @@ Know sources of errors
 - MSI Jitter of germline INDELS just under 32 bases in length may be intepreted as a somatic SV of 32+ bases
 - Long dinucleotide MS expansions can fail minAnchorfilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
-- LINE performance 
+- **Somatically activated LINE insertion sites** - Some insertion sites of LINE elments may become active LINE source elements themselves.   These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
 
 Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
