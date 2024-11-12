@@ -9,7 +9,7 @@ public class ChordOutput
     public static final String COHORT_FILE_PREFIX = "cohort";
 
     public static final String CHORD_MUTATION_CONTEXTS = ".chord.mutation_contexts";
-    public static final String CHORD_PREDICTIONS = ".chord.predictions";
+    public static final String CHORD_PREDICTION = ".chord.prediction";
 
     private static String formOutputFile(String outputDir, String prefix, String suffix, String outputId)
     {
@@ -39,6 +39,6 @@ public class ChordOutput
 
     public static String predictionsFile(ChordConfig config)
     {
-        return formOutputFile(config.OutputDir, prefixSampleIdOrCohort(config), CHORD_PREDICTIONS, config.OutputId);
+        return formOutputFile(config.OutputDir, prefixSampleIdOrCohort(config), CHORD_PREDICTION, config.OutputId);
     }
 }
