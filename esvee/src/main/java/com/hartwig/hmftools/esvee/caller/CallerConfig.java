@@ -38,7 +38,7 @@ public class CallerConfig
 
     public final String OutputDir;
     public final String OutputId;
-    public final List<String> RestrictedChromosomes;
+    public final List<String> SpecificChromosomes;
 
     public final int ManualRefDepth;
     public static final String MANUAL_REF_DEPTH = "manual_ref_depth";
@@ -52,13 +52,18 @@ public class CallerConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(configBuilder.hasValue(INPUT_VCF))
+        {
             VcfFile = configBuilder.getValue(INPUT_VCF);
+        }
         else
-            VcfFile = formEsveeInputFilename(OutputDir, SampleId, DEPTH_VCF_SUFFIX, OutputId);
+        {
+            String fileSampleId = SampleId != null ? SampleId : ReferenceId;
+            VcfFile = formEsveeInputFilename(OutputDir, fileSampleId, DEPTH_VCF_SUFFIX, OutputId);
+        }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        RestrictedChromosomes = loadSpecificChromsomes(configBuilder);
+        SpecificChromosomes = loadSpecificChromsomes(configBuilder);
 
         ManualRefDepth = configBuilder.getInteger(MANUAL_REF_DEPTH);
     }
@@ -89,8 +94,8 @@ public class CallerConfig
     public boolean excludeVariant(final Variant sv)
     {
         // optionally filter out all but specified chromosomes
-        if(!RestrictedChromosomes.isEmpty() && !RestrictedChromosomes.contains(sv.chromosomeStart())
-        && (sv.type() == SGL || !RestrictedChromosomes.contains(sv.chromosomeEnd())))
+        if(!SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(sv.chromosomeStart())
+        && (sv.type() == SGL || !SpecificChromosomes.contains(sv.chromosomeEnd())))
         {
             return true;
         }
@@ -100,7 +105,7 @@ public class CallerConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addInteger(MANUAL_REF_DEPTH, "Manually set ref depth for testing", 0);
