@@ -24,6 +24,7 @@ public class MockRefGenome implements RefGenomeInterface
         mOneBasedIndexing = oneBasedIndexing;
         RefGenomeMap = Maps.newHashMap();
         ChromosomeLengths = Maps.newHashMap();
+        populateChromosomeLengths(RefGenomeVersion.V37);
     }
 
     public MockRefGenome()
@@ -33,6 +34,8 @@ public class MockRefGenome implements RefGenomeInterface
 
     public void populateChromosomeLengths(final RefGenomeVersion version)
     {
+        ChromosomeLengths.clear();
+
         RefGenomeCoordinates coords = version == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
         coords.Lengths.entrySet().stream().forEach(x -> ChromosomeLengths.put(x.getKey().toString(), x.getValue()));
     }
@@ -85,6 +88,9 @@ public class MockRefGenome implements RefGenomeInterface
 
         return refBases.toString();
     }
+
+    @Override
+    public Map<String,Integer> chromosomeLengths() { return ChromosomeLengths; }
 
     public static String generateRandomBases(int length)
     {

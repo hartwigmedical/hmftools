@@ -200,15 +200,25 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-            if((read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment()) && read.getReadUnmappedFlag())
-                return; // drop unmapped supplementaries and secondaries
-
-            if(read.getReadUnmappedFlag() && SamRecordUtils.mateUnmapped(read))
+            if(read.getReadUnmappedFlag())
             {
-                mBamWriter.writeFragment(new Fragment(read));
-                ++mStats.Unmapped;
-                return;
+                if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+                    return; // drop unmapped supplementaries and secondaries
+
+                if(SamRecordUtils.mateUnmapped(read))
+                {
+                    mBamWriter.writeFragment(new Fragment(read));
+                    ++mStats.Unmapped;
+                    return;
+                }
             }
+        }
+
+        if(read.isSecondaryAlignment())
+        {
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            return;
         }
 
         try
