@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-import com.hartwig.hmftools.chord.common.SmallVariant;
+import com.hartwig.hmftools.chord.prep.SmallVariant;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;

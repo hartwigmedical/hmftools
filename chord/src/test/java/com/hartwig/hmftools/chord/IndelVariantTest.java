@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.chord.indel.IndelVariant;
-import com.hartwig.hmftools.chord.common.SmallVariant;
+import com.hartwig.hmftools.chord.prep.SmallVariant;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.junit.Test;
