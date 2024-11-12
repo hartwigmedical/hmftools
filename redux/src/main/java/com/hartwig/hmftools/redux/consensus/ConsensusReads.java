@@ -41,7 +41,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
 {
-    private final RefGenomeInterface mRefGenome;
+    private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
 
@@ -50,8 +50,8 @@ public class ConsensusReads
 
     public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
-        mRefGenome = refGenome;
-        mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
+        mRefGenome = new RefGenome(refGenome);
+        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mValidateConsensusReads = false;

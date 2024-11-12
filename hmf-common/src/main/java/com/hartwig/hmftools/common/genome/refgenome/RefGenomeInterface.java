@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RefGenomeInterface
 {
@@ -11,4 +12,6 @@ public interface RefGenomeInterface
     int getChromosomeLength(final String chromosome);
 
     byte[] getBases(final String chromosome, int posStart, int posEnd);
+
+    Map<String,Integer> chromosomeLengths();
 }

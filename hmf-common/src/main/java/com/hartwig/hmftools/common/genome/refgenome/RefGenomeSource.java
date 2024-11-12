@@ -9,12 +9,15 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -78,6 +81,19 @@ public class RefGenomeSource implements RefGenomeInterface
     public byte[] getBases(final String chromosome, int posStart, int posEnd)
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
+    }
+
+    @Override
+    public Map<String,Integer> chromosomeLengths()
+    {
+        Map<String,Integer> chromosomeLengthMap = Maps.newHashMap();
+
+        for(SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
+        {
+            chromosomeLengthMap.put(sequenceRecord.getSequenceName(), sequenceRecord.getSequenceLength());
+        }
+
+        return chromosomeLengthMap;
     }
 
     public static RefGenomeVersion deriveRefGenomeVersion(final RefGenomeSource refGenomeSource)

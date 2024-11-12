@@ -17,13 +17,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class BaseBuilder
 {
-    private final RefGenomeInterface mRefGenome;
+    private final RefGenome mRefGenome;
     private final ConsensusStatistics mConsensusStats;
 
     // cached for the majority of successive reads being on the same chromosome, to protect against ref genome base requests beyond limits
     private int mChromosomeLength;
 
-    public BaseBuilder(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
+    public BaseBuilder(final RefGenome refGenome, final ConsensusStatistics consensusStats)
     {
         mRefGenome = refGenome;
         mConsensusStats = consensusStats;
@@ -32,7 +32,7 @@ public class BaseBuilder
 
     public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
     public int chromosomeLength() { return mChromosomeLength; }
-    public RefGenomeInterface refGenome() { return mRefGenome; }
+    public RefGenome refGenome() { return mRefGenome; }
 
     public static final byte NO_BASE = 0;
     public static final int INVALID_POSITION = -1;
@@ -188,7 +188,7 @@ public class BaseBuilder
 
         mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
 
-        byte refBase = getRefBase(chromosome, position);
+        byte refBase = mRefGenome.getRefBase(chromosome, position);
         boolean firstIsRef = firstBaseAndQual[0] == refBase;
         boolean secondIsRef = secondBaseAndQual[0] == refBase;
 
@@ -229,16 +229,6 @@ public class BaseBuilder
 
         byte qual = (byte) max(BASE_QUAL_MINIMUM, refQual - differingQual);
         return new byte[] { refBase, qual };
-    }
-
-    private byte getRefBase(final String chromosome, int position)
-    {
-        int chromosomeLength = mRefGenome.getChromosomeLength(chromosome);
-
-        if(position > chromosomeLength)
-            return NO_BASE;
-
-        return mRefGenome.getBases(chromosome, position, position)[0];
     }
 
     public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
@@ -299,7 +289,7 @@ public class BaseBuilder
             else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position != INVALID_POSITION)
             {
                 // chromosome will be null for unmapped reads
-                byte refBase = getRefBase(chromosome, position);
+                byte refBase = mRefGenome.getRefBase(chromosome, position);
 
                 if(maxBase == refBase)
                 {
