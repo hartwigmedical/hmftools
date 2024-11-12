@@ -35,7 +35,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 
 public class BiomodalCollapseWorker extends Thread
 {
-    private static final BaseQualPair INS_BASE_QUAL_QUAL = new BaseQualPair(BiomodalConstants.INS_BASE, 0);
+    private static final BaseQualPair INS_BASE_QUAL_PAIR = new BaseQualPair(BiomodalConstants.INS_BASE, 0);
 
     public final int ThreadId;
 
@@ -445,8 +445,8 @@ public class BiomodalCollapseWorker extends Thread
         statLine.add(naiveReverseConsensusFastq == null ? "-" : consensusReadForStatOutput(naiveReverseConsensusFastq.getReadString()));
         statLine.add(naiveReverseConsensusFastq == null ? "-" : sanatizeQualString(naiveReverseConsensusFastq.getBaseQualityString()));
 
-        FastqRecord forwardAlignmentRead1 = seqToFastq(getLeftElements(forwardAlignment, INS_BASE_QUAL_QUAL));
-        FastqRecord forwardAlignmentRead2 = seqToFastq(getRightElements(forwardAlignment, INS_BASE_QUAL_QUAL));
+        FastqRecord forwardAlignmentRead1 = seqToFastq(getLeftElements(forwardAlignment, INS_BASE_QUAL_PAIR));
+        FastqRecord forwardAlignmentRead2 = seqToFastq(getRightElements(forwardAlignment, INS_BASE_QUAL_PAIR));
         statLine.add(consensusReadForStatOutput(forwardAlignmentRead1.getReadString()));
         statLine.add(sanatizeQualString(forwardAlignmentRead1.getBaseQualityString()));
         statLine.add(consensusReadForStatOutput(forwardAlignmentRead2.getReadString()));
@@ -471,9 +471,9 @@ public class BiomodalCollapseWorker extends Thread
         statLine.add(String.valueOf(alignedStats.ModCOtherCount));
 
         FastqRecord reverseAlignmentRead1 =
-                reverseAlignment == null ? null : seqToFastq(getLeftElements(reverseAlignment, INS_BASE_QUAL_QUAL));
+                reverseAlignment == null ? null : seqToFastq(getLeftElements(reverseAlignment, INS_BASE_QUAL_PAIR));
         FastqRecord reverseAlignmentRead2 =
-                reverseAlignment == null ? null : seqToFastq(getRightElements(reverseAlignment, INS_BASE_QUAL_QUAL));
+                reverseAlignment == null ? null : seqToFastq(getRightElements(reverseAlignment, INS_BASE_QUAL_PAIR));
         statLine.add(reverseAlignment == null ? "-" : consensusReadForStatOutput(reverseAlignmentRead1.getReadString()));
         statLine.add(reverseAlignment == null ? "-" : sanatizeQualString(reverseAlignmentRead1.getBaseQualityString()));
         statLine.add(reverseAlignment == null ? "-" : consensusReadForStatOutput(reverseAlignmentRead2.getReadString()));
@@ -490,8 +490,8 @@ public class BiomodalCollapseWorker extends Thread
         statLine.add(reverseAlignment == null ? "-" : consensusReadForStatOutput(reverseConsensusFastq.getReadString()));
         statLine.add(reverseAlignment == null ? "-" : sanatizeQualString(reverseConsensusFastq.getBaseQualityString()));
 
-        FastqRecord finalAlignmentRead1 = seqToFastq(getLeftElements(finalAlignment, INS_BASE_QUAL_QUAL));
-        FastqRecord finalAlignmentRead2 = seqToFastq(getRightElements(finalAlignment, INS_BASE_QUAL_QUAL));
+        FastqRecord finalAlignmentRead1 = seqToFastq(getLeftElements(finalAlignment, INS_BASE_QUAL_PAIR));
+        FastqRecord finalAlignmentRead2 = seqToFastq(getRightElements(finalAlignment, INS_BASE_QUAL_PAIR));
         statLine.add(consensusReadForStatOutput(finalAlignmentRead1.getReadString()));
         statLine.add(sanatizeQualString(finalAlignmentRead1.getBaseQualityString()));
         statLine.add(consensusReadForStatOutput(finalAlignmentRead2.getReadString()));
@@ -515,8 +515,8 @@ public class BiomodalCollapseWorker extends Thread
         statLine.add(String.valueOf(clippedConsensus == null ? 0 : clippedConsensus.size()));
         statLine.add(String.valueOf(refFastq == null ? 0 : refFastq.getReadLength()));
 
-        FastqRecord refAlignmentRead1 = refAlignment == null ? null : seqToFastq(getLeftElements(refAlignment, INS_BASE_QUAL_QUAL));
-        FastqRecord refAlignmentRead2 = refAlignment == null ? null : seqToFastq(getRightElements(refAlignment, INS_BASE_QUAL_QUAL));
+        FastqRecord refAlignmentRead1 = refAlignment == null ? null : seqToFastq(getLeftElements(refAlignment, INS_BASE_QUAL_PAIR));
+        FastqRecord refAlignmentRead2 = refAlignment == null ? null : seqToFastq(getRightElements(refAlignment, INS_BASE_QUAL_PAIR));
         statLine.add(refAlignment == null ? "-" : consensusReadForStatOutput(refAlignmentRead1.getReadString()));
         statLine.add(refAlignment == null ? "-" : sanatizeQualString(refAlignmentRead1.getBaseQualityString()));
         statLine.add(refAlignment == null ? "-" : consensusReadForStatOutput(refAlignmentRead2.getReadString()));
