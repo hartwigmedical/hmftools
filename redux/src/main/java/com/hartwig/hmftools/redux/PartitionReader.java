@@ -383,7 +383,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
             double timeTakenSec = secondsSinceNow(startTimeMs);
 
             RD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
-                    mCurrentRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(), duplicateGroups.size(),
+                    mCurrentRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
+                    duplicateGroups != null ? duplicateGroups.size() : 0,
                     candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
                     format("%.1fs", timeTakenSec));
         }
