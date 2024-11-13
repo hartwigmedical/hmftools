@@ -171,6 +171,11 @@ public class PurityPloidyFitter
 
     private void performSomaticFit()
     {
+        List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(mCopyNumberFitCandidates);
+
+        FittedPurity lowestPurityFit = !diploidCandidates.isEmpty() ?
+                diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get() : mCopyNumberPurityFit;
+
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
             if(highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
@@ -184,9 +189,16 @@ public class PurityPloidyFitter
                 }
                 else
                 {
+                    // revert to the diploid, lowest purity fit
                     mFinalPurityFit = ImmutableFittedPurity.builder()
-                            .purity(MIN_PURITY_DEFAULT).ploidy(2)
-                            .score(0).diploidProportion(1).normFactor(1).somaticPenalty(0).build();
+                            .purity(MIN_PURITY_DEFAULT)
+                            .ploidy(2)
+                            .normFactor(lowestPurityFit.normFactor())
+                            .score(lowestPurityFit.score())
+                            .diploidProportion(lowestPurityFit.diploidProportion())
+                            .somaticPenalty(0) // defaults for the rest
+                            .build();
+
                     mFitMethod = FittedPurityMethod.NO_TUMOR;
                 }
             }
@@ -202,14 +214,9 @@ public class PurityPloidyFitter
         boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
         boolean hasTumor = !highlyDiploid || mVariantPurityFitter.hasTumor();
 
-        List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(mCopyNumberFitCandidates);
-
         PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
                 formatPurity(mFitPurityScore.maxDiploidProportion()), diploidCandidates.size(),
                 formatPurity(mFitPurityScore.minPurity()), formatPurity(mFitPurityScore.maxPurity()), hasTumor);
-
-        FittedPurity lowestPurityFit = diploidCandidates.isEmpty() ?
-                mCopyNumberPurityFit : diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
 
         if(!hasTumor)
         {
