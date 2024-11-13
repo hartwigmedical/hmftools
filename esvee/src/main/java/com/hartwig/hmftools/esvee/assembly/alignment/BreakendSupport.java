@@ -6,6 +6,8 @@ public class BreakendSupport
 {
     public int SplitFragments;
     public int DiscordantFragments;
+
+    // from split reads only
     public int ForwardReads;
     public int ReverseReads;
 

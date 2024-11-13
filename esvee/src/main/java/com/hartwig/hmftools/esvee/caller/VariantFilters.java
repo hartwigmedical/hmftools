@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
@@ -17,6 +18,8 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
@@ -26,11 +29,13 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_INV;
+import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -79,6 +84,9 @@ public class VariantFilters
 
         if(isShortLowVafInversion(var))
             var.addFilter(SHORT_LOW_VAF_INV);
+
+        if(failsStrandBias(var))
+            var.addFilter(STRAND_BIAS);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -277,6 +285,39 @@ public class VariantFilters
 
         int inexactHomology = var.breakendStart().InexactHomology.length();
         return inexactHomology > INV_SHORT_MAX_HOMOLOGY;
+    }
+
+    private boolean failsStrandBias(final Variant var)
+    {
+        if(!var.isSgl())
+            return false;
+
+        Breakend breakend = var.breakendStart();
+
+        boolean hasPassing = false;
+        boolean hasFailing = false;
+
+        for(Genotype genotype : breakend.Context.getGenotypes())
+        {
+            int fragmentCount = breakend.fragmentCount(genotype);
+
+            if(fragmentCount <= 1)
+                continue;
+
+            double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+
+            if(strandBias == 1.0 && var.insertSequence().contains(PON_INS_SEQ_FWD_STRAND))
+                hasFailing = true;
+            else if(strandBias == 0 && var.insertSequence().contains(PON_INS_SEQ_REV_STRAND))
+                hasFailing = true;
+            else
+                hasPassing = true;
+        }
+
+        if(hasFailing && !hasPassing)
+            return true;
+
+        return false;
     }
 
     public static void logFilterTypeCounts(final List<Variant> variantList)

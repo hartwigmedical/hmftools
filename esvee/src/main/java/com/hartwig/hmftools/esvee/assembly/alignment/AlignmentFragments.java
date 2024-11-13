@@ -213,15 +213,21 @@ public class AlignmentFragments
         int forwardReads = 0;
         int reverseReads = 0;
 
-        if(firstRead.orientation().isForward())
-            ++forwardReads;
-        else
-            ++reverseReads;
+        if(firstRead.type() == SupportType.JUNCTION)
+        {
+            if(firstRead.orientation().isForward())
+                ++forwardReads;
+            else
+                ++reverseReads;
+        }
 
-        if(secondRead.orientation().isForward())
-            ++forwardReads;
-        else
-            ++reverseReads;
+        if(secondRead.type() == SupportType.JUNCTION)
+        {
+            if(secondRead.orientation().isForward())
+                ++forwardReads;
+            else
+                ++reverseReads;
+        }
 
         Set<Breakend> breakends = Sets.newHashSet();
 
@@ -273,10 +279,13 @@ public class AlignmentFragments
         int forwardReads = 0;
         int reverseReads = 0;
 
-        if(read.orientation().isForward())
-            ++forwardReads;
-        else
-            ++reverseReads;
+        if(read.type() == SupportType.JUNCTION)
+        {
+            if(read.orientation().isForward())
+                ++forwardReads;
+            else
+                ++reverseReads;
+        }
 
         Set<Breakend> breakends = Sets.newHashSet();
         addUniqueBreakends(breakends, readBreakendMatches);
