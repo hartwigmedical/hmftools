@@ -13,7 +13,7 @@ BRCA2-type HRD. For more info on CHORD, please see the paper: [Pan-cancer landsc
 
 ## Arguments
 
-### Main class (`com.hartwig.hmftools.chord.ChordApplication`) and feature extraction (`com.hartwig.hmftools.chord.prep.ChordDataPrep`)
+**Main class** (`com.hartwig.hmftools.chord.ChordApplication`) **and feature extraction** (`com.hartwig.hmftools.chord.prep.ChordDataPrep`)
 
 | Argument                | Example                                           | Description                                                                                                       |
 |-------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
@@ -34,7 +34,7 @@ Notes:
 1. Provide either `-sample` or `-sample_id_file`
 2. Provide either `-snv_indel_vcf_file` and `-sv_vcf_file` together, or `-purple_dir`
 
-### Predicting from existing mutation contexts (`com.hartwig.hmftools.chord.predict.ChordModel`)
+**Predicting from existing mutation contexts** (`com.hartwig.hmftools.chord.predict.ChordModel`)
 
 | Argument             | Example                                  | Description                                                   |
 |----------------------|------------------------------------------|---------------------------------------------------------------|
