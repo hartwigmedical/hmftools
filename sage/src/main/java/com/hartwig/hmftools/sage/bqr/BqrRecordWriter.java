@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 import com.hartwig.hmftools.sage.SageConfig;
 
 import htsjdk.samtools.SAMRecord;
@@ -44,7 +45,7 @@ public class BqrRecordWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add("Chromosome").add("Position").add("Ref").add("Alt").add("TriNuc");
-            sj.add("Quality").add("ReadType").add("Count");
+            sj.add("Quality").add("ReadType").add("ReadStrand").add("Count");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -61,7 +62,7 @@ public class BqrRecordWriter
     }
     public synchronized void writePositionData(
             final String chromosome, final int position, final byte ref, final byte alt,
-            final byte[] trinucleotideContext, final byte quality, final BqrReadType readType, final int count)
+            final byte[] trinucleotideContext, final byte quality, final BqrReadType readType, final BqrReadStrand readStrand, final int count)
     {
         if(mPositionWriter == null)
             return;
@@ -77,6 +78,7 @@ public class BqrRecordWriter
             sj.add(new String(trinucleotideContext));
             sj.add(String.valueOf(quality));
             sj.add(String.valueOf(readType));
+            sj.add(String.valueOf(readStrand));
             sj.add(String.valueOf(count));
 
             mPositionWriter.write(sj.toString());
@@ -101,7 +103,7 @@ public class BqrRecordWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add("Ref").add("Alt").add("TriNuc");
-            sj.add("Chromosome").add("Position").add("ReadIndex").add("Quality").add("ReadType");
+            sj.add("Chromosome").add("Position").add("ReadIndex").add("Quality").add("ReadType").add("ReadStrand");
             sj.add("ReadOrient").add("FragOrient").add("FivePrimeDist").add("ThreePrimeDist");
 
             writer.write(sj.toString());
@@ -120,7 +122,7 @@ public class BqrRecordWriter
 
     public synchronized void writeRecordData(
             final SAMRecord record, final int position, final int readIndex, final byte ref, final byte alt,
-            final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
+            final byte[] trinucleotideContext, final byte quality, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         if(mReadWriter == null)
             return;
@@ -137,6 +139,7 @@ public class BqrRecordWriter
             sj.add(String.valueOf(readIndex));
             sj.add(String.valueOf(quality));
             sj.add(String.valueOf(readType));
+            sj.add(String.valueOf(readStrand));
 
             boolean isNegStrand = record.getReadNegativeStrandFlag();
             int readLength = record.getReadBases().length;

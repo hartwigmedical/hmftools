@@ -220,7 +220,7 @@ public class BaseQualityRecalibration
             if(key.Quality == 0)
                 continue;
 
-            BqrKey triNucKey = new BqrKey(noBaseOrQual, noBaseOrQual, key.TrinucleotideContext, noBaseOrQual, key.ReadType);
+            BqrKey triNucKey = new BqrKey(noBaseOrQual, noBaseOrQual, key.TrinucleotideContext, noBaseOrQual, key.ReadType, key.ReadStrand);
 
             Integer triNucCount = triNucMap.get(triNucKey);
             triNucMap.put(triNucKey, triNucCount != null ? triNucCount + count : count);
@@ -237,7 +237,7 @@ public class BaseQualityRecalibration
 
             double recalibratedQual = 0;
 
-            BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality, key.ReadType);
+            BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality, key.ReadType, key.ReadStrand);
 
             if(key.Alt == key.Ref)
             {
@@ -258,7 +258,7 @@ public class BaseQualityRecalibration
                 if(alt == refKey.Ref)
                     continue;
 
-                BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality, key.ReadType);
+                BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality, key.ReadType, key.ReadStrand);
 
                 if(!allQualityCounts.containsKey(altKey) && !syntheticAltKeys.contains(altKey))
                 {
@@ -288,13 +288,13 @@ public class BaseQualityRecalibration
 
         byte[] altTriNucContext = new byte[] { key.TrinucleotideContext[0], key.Alt, key.TrinucleotideContext[2] };
 
-        BqrKey altKey = new BqrKey(key.Alt, key.Alt, altTriNucContext, key.Quality, key.ReadType);
+        BqrKey altKey = new BqrKey(key.Alt, key.Alt, altTriNucContext, key.Quality, key.ReadType, key.ReadStrand);
         int altRefCount = refCountMap.getOrDefault(altKey, 0);
 
-        BqrKey altTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, altTriNucContext, NO_BASE_OR_QUAL, key.ReadType);
+        BqrKey altTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, altTriNucContext, NO_BASE_OR_QUAL, key.ReadType, key.ReadStrand);
         int altTriNucCount = triNucMap.getOrDefault(altTriNucKey, 0);
 
-        BqrKey refTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, key.TrinucleotideContext, NO_BASE_OR_QUAL, key.ReadType);
+        BqrKey refTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, key.TrinucleotideContext, NO_BASE_OR_QUAL, key.ReadType, key.ReadStrand);
         int refTriNucCount = triNucMap.getOrDefault(refTriNucKey, 0);
 
         double triNucRate = refTriNucCount > 0 ? altTriNucCount / (double)refTriNucCount : 0;

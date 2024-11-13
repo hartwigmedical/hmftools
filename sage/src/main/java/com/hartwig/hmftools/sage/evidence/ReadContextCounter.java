@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -43,6 +42,7 @@ import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.N;

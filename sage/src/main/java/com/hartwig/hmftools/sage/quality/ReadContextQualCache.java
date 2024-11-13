@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -57,15 +58,17 @@ public class ReadContextQualCache
     public boolean usesMsiIndelErrorQual()
     {
         for(Map.Entry<BqrReadType, Double> entry : mMsiIndelErrorQual.entrySet())
-        if(entry.getValue() != INVALID_BASE_QUAL)
-            return true;
+        {
+            if (entry.getValue() != INVALID_BASE_QUAL)
+                return true;
+        }
         return false;
     }
     public boolean isMsiSampleAndVariant() { return mIsMsiSampleAndVariant; }
 
-    public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
+    public double getQual(final byte baseQual, final BqrReadType readType, final BqrReadStrand readStrand, final int refIndex)
     {
-        String key = String.valueOf(baseQual) + "_" + readType.ordinal();
+        String key = String.valueOf(baseQual) + "_" + readType.ordinal() + "_" + readStrand.ordinal();
         Double bqrQual = mQualMapByIndex[refIndex].get(key);
 
         if(bqrQual != null)
@@ -74,7 +77,7 @@ public class ReadContextQualCache
         byte[] trinucleotideContext = mQualityCalculator.getTrinucleotideContext(mVariantPosition + refIndex);
 
         double bqrValue = mQualityCalculator.lookupRecalibrateQuality(
-                trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual, readType);
+                trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual, readType, readStrand);
 
         mQualMapByIndex[refIndex].put(key, bqrValue);
 

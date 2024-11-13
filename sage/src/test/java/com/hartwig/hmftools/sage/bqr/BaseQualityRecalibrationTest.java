@@ -15,6 +15,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.qual.BqrRecord;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -36,11 +37,11 @@ public class BaseQualityRecalibrationTest
         bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
 
         int pos1 = 100;
-        BqrKey key1 = createKey('A', 'G', 30, BqrReadType.NONE);
-        BqrKey key2 = createKey('A', 'A', 20, BqrReadType.NONE);
-        BqrKey key3 = createKey('A', 'G', 15, BqrReadType.NONE); // a repeated alt
+        BqrKey key1 = createKey('A', 'G', 30, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey key2 = createKey('A', 'A', 20, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey key3 = createKey('A', 'G', 15, BqrReadType.NONE, BqrReadStrand.FORWARD); // a repeated alt
 
-        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext, BqrReadType.NONE);
+        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext, BqrReadType.NONE, BqrReadStrand.FORWARD);
 
         bqData1.processReadBase(key1.Alt, key1.Quality);
 
@@ -56,8 +57,8 @@ public class BaseQualityRecalibrationTest
 
         // repeated alt at different locations
         int pos2 = 150;
-        BqrKey key4 = createKey('C', 'G', 25, BqrReadType.NONE); // another repeated alt
-        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext, BqrReadType.NONE);
+        BqrKey key4 = createKey('C', 'G', 25, BqrReadType.NONE, BqrReadStrand.FORWARD); // another repeated alt
+        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext, BqrReadType.NONE, BqrReadStrand.FORWARD);
 
         for(int i = 0; i < 4; ++i)
         {
@@ -65,8 +66,8 @@ public class BaseQualityRecalibrationTest
         }
 
         int pos3 = 200;
-        BqrKey key5 = createKey('A', 'G', 20, BqrReadType.NONE); // an alt but not repeated
-        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext, BqrReadType.NONE);
+        BqrKey key5 = createKey('A', 'G', 20, BqrReadType.NONE, BqrReadStrand.FORWARD); // an alt but not repeated
+        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext, BqrReadType.NONE, BqrReadStrand.FORWARD);
 
         bqData3.processReadBase(key5.Alt, key5.Quality);
 
@@ -112,25 +113,25 @@ public class BaseQualityRecalibrationTest
         byte qual1 = 37;
         byte qual2 = 25;
 
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, qual1);
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, qual1);
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
 
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.SINGLE, qual1);
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.SINGLE, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.SINGLE, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.SINGLE, BqrReadStrand.FORWARD, qual1);
 
-        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.DUAL, qual1);
-        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.DUAL, qual1);
-        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.DUAL, qual1);
-        addReadBaseQual(bqrCounter, 103, refBase, altBase, BqrReadType.DUAL, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 103, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual1);
 
-        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.DUAL, qual2);
-        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.DUAL, qual2);
+        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual2);
+        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.DUAL, BqrReadStrand.FORWARD, qual2);
 
-        BqrKey keyNone = createKey(refBase, altBase, qual1, BqrReadType.NONE);
-        BqrKey keySingle = createKey(refBase, altBase, qual1, BqrReadType.SINGLE);
-        BqrKey keyDualQ1 = createKey(refBase, altBase, qual1, BqrReadType.DUAL);
-        BqrKey keyDualQ2 = createKey(refBase, altBase, qual2, BqrReadType.DUAL);
+        BqrKey keyNone = createKey(refBase, altBase, qual1, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey keySingle = createKey(refBase, altBase, qual1, BqrReadType.SINGLE, BqrReadStrand.FORWARD);
+        BqrKey keyDualQ1 = createKey(refBase, altBase, qual1, BqrReadType.DUAL, BqrReadStrand.FORWARD);
+        BqrKey keyDualQ2 = createKey(refBase, altBase, qual2, BqrReadType.DUAL, BqrReadStrand.FORWARD);
 
         bqrCounter.buildQualityCounts();
 
@@ -154,16 +155,16 @@ public class BaseQualityRecalibrationTest
     }
 
     private static void addReadBaseQual(
-            final BqrRegionReader bqrCounter, int position, char ref, char alt, final BqrReadType readType, byte quality)
+            final BqrRegionReader bqrCounter, int position, char ref, char alt, final BqrReadType readType, final BqrReadStrand readStrand, byte quality)
     {
         byte[] context = new byte[] { 65,  (byte)ref, 65};
-        bqrCounter.getOrCreateBaseQualData(position, (byte)ref, context, readType).processReadBase((byte)alt, quality);
+        bqrCounter.getOrCreateBaseQualData(position, (byte)ref, context, readType, readStrand).processReadBase((byte)alt, quality);
     }
 
-    private BqrKey createKey(char ref, char alt, int qual, final BqrReadType readType)
+    private BqrKey createKey(char ref, char alt, int qual, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         byte[] context = new byte[] { 65,  (byte)ref, 65};
-        return new BqrKey((byte)ref, (byte)alt, context, (byte)qual, readType);
+        return new BqrKey((byte)ref, (byte)alt, context, (byte)qual, readType, readStrand);
     }
 
     @Test
@@ -180,18 +181,18 @@ public class BaseQualityRecalibrationTest
         byte[] triNucContext1 = new byte[] {gBase, aBase, gBase};
         byte[] triNucContext2 = new byte[] {gBase, cBase, gBase};
 
-        BqrKey aRefKey = new BqrKey(aBase, aBase, triNucContext1, qualHigh, BqrReadType.NONE);
-        BqrKey cRefKey = new BqrKey(cBase, cBase, triNucContext2, qualHigh, BqrReadType.NONE);
-        BqrKey cAltKey = new BqrKey(aBase, cBase, triNucContext1, qualHigh, BqrReadType.NONE);
+        BqrKey aRefKey = new BqrKey(aBase, aBase, triNucContext1, qualHigh, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey cRefKey = new BqrKey(cBase, cBase, triNucContext2, qualHigh, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey cAltKey = new BqrKey(aBase, cBase, triNucContext1, qualHigh, BqrReadType.NONE, BqrReadStrand.FORWARD);
 
         allQualityCounts.put(aRefKey, 1000);
         allQualityCounts.put(cRefKey, 4000);
         allQualityCounts.put(cAltKey, 10);
 
         byte qualLow = 10;
-        BqrKey aRefKeyLow = new BqrKey(aBase, aBase, triNucContext1, qualLow, BqrReadType.NONE);
-        BqrKey cRefKeyLow = new BqrKey(cBase, cBase, triNucContext2, qualLow, BqrReadType.NONE);
-        BqrKey cAltKeyLow = new BqrKey(aBase, cBase, triNucContext1, qualLow, BqrReadType.NONE);
+        BqrKey aRefKeyLow = new BqrKey(aBase, aBase, triNucContext1, qualLow, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey cRefKeyLow = new BqrKey(cBase, cBase, triNucContext2, qualLow, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey cAltKeyLow = new BqrKey(aBase, cBase, triNucContext1, qualLow, BqrReadType.NONE, BqrReadStrand.FORWARD);
 
         allQualityCounts.put(aRefKeyLow, 2000);
         allQualityCounts.put(cRefKeyLow, 2000);
@@ -204,7 +205,7 @@ public class BaseQualityRecalibrationTest
         BqrRecord rec1 = bqrRecords.stream().filter(x -> x.Key.equals(cAltKey)).findFirst().orElse(null);
         assertEquals(25.2, rec1.RecalibratedQuality, 0.1);
 
-        BqrKey aAltKey = new BqrKey(aBase, gBase, triNucContext1, qualHigh, BqrReadType.NONE);
+        BqrKey aAltKey = new BqrKey(aBase, gBase, triNucContext1, qualHigh, BqrReadType.NONE, BqrReadStrand.FORWARD);
         BqrRecord rec2 = bqrRecords.stream().filter(x -> x.Key.equals(aAltKey)).findFirst().orElse(null);
         assertEquals(37, rec2.RecalibratedQuality, 0.1);
     }

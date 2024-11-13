@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -162,12 +163,13 @@ public class QualityCalculator
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
         BqrReadType readType = extractReadType(record, mSequencingType, record.getBaseQualities()[startReadIndex]);
+        BqrReadStrand readStrand = record.getReadNegativeStrandFlag() ? BqrReadStrand.REVERSE : BqrReadStrand.FORWARD;
 
         if(readContextCounter.isSnv())
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return readContextCounter.qualCache().getQual(rawQuality, readType, 0);
+            return readContextCounter.qualCache().getQual(rawQuality, readType, readStrand, 0);
         }
 
         // MNV case
@@ -180,7 +182,7 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, readType, i);
+            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, readType, readStrand, i);
             quality = min(quality, recalibratedQual);
         }
 
@@ -192,7 +194,7 @@ public class QualityCalculator
         return mRefBases.containsPosition(refPosition) ? mRefBases.trinucleotideContext(refPosition) : null;
     }
 
-    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final BqrReadType readType)
+    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         if(rawQuality == 0)
             return 0; // never adjust a zero qual up
@@ -200,7 +202,7 @@ public class QualityCalculator
         if(mQualityRecalibrationMap == null)
             return rawQuality;
 
-        return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType);
+        return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType, readStrand);
     }
 
     public static double averageCoreQuality(final VariantReadContext readContext, final SAMRecord record, final int readVarIndex)

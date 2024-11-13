@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -60,6 +61,7 @@ public class BqrRegionReader implements CigarHandler
     private int mReadCounter;
 
     private BqrReadType mCurrentReadType;
+    private BqrReadStrand mCurrentReadStrand;
     private final SequencingType mSequencingType;
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
@@ -80,7 +82,8 @@ public class BqrRegionReader implements CigarHandler
         mWriteReadData = mConfig.BQR.WriteReads;
         mWritePositionData = mConfig.BQR.WritePositions;
 
-        mCurrentReadType = BqrReadType.NONE;
+        mCurrentReadType = null;
+        mCurrentReadStrand = null;
         mSequencingType = mConfig.Sequencing.Type;
 
         mBaseQualityData = null;
@@ -185,28 +188,30 @@ public class BqrRegionReader implements CigarHandler
         {
             if(mWritePositionData)
             {
-                for(Map.Entry<BqrReadType,BaseQualityData> entry : bqDataCollection.DataMap.entrySet())
+                for(Map.Entry<BqrReadType,Map<BqrReadStrand, BaseQualityData>> entry : bqDataCollection.DataMap.entrySet())
                 {
                     BqrReadType readType = entry.getKey();
 
                     if(readType != BqrReadType.DUAL)
                         continue;
 
-                    BaseQualityData bqData = entry.getValue();
-
-                    if(bqData.hasIndel())
-                        continue;
-
-                    for(AltQualityCount altQualityCount : bqData.altQualityCounts())
+                    for(Map.Entry<BqrReadStrand, BaseQualityData> strandEntry : entry.getValue().entrySet())
                     {
-                        mRecordWriter.writePositionData(
-                                mRegion.Chromosome, bqDataCollection.Position, bqData.Ref, altQualityCount.Alt,
-                                bqData.TrinucleotideContext, altQualityCount.Quality, readType, altQualityCount.Count);
+                        BaseQualityData bqData = strandEntry.getValue();
+
+                        if (bqData.hasIndel())
+                            continue;
+
+                        for (AltQualityCount altQualityCount : bqData.altQualityCounts()) {
+                            mRecordWriter.writePositionData(
+                                    mRegion.Chromosome, bqDataCollection.Position, bqData.Ref, altQualityCount.Alt,
+                                    bqData.TrinucleotideContext, altQualityCount.Quality, readType, strandEntry.getKey(), altQualityCount.Count);
+                        }
                     }
                 }
             }
-
-            bqDataCollection.DataMap.values().forEach(x -> buildSummaryData(x));
+            for(Map.Entry<BqrReadType,Map<BqrReadStrand, BaseQualityData>> entry : bqDataCollection.DataMap.entrySet())
+                entry.getValue().values().forEach(x -> buildSummaryData(x));
         }
     }
 
@@ -315,23 +320,25 @@ public class BqrRegionReader implements CigarHandler
     public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
         // note: ref position here is the last base of the previous aligned element - likewise for deletes
-        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]));
+        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]),
+                record.getReadNegativeStrandFlag() ? BqrReadStrand.REVERSE : BqrReadStrand.FORWARD);
     }
 
     @Override
     public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]));
+        markIndelPosition(refPos, extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]),
+                record.getReadNegativeStrandFlag() ? BqrReadStrand.REVERSE : BqrReadStrand.FORWARD);
     }
 
-    private void markIndelPosition(int position, BqrReadType readType)
+    private void markIndelPosition(int position, BqrReadType readType, BqrReadStrand readStrand)
     {
         if(!mRegion.containsPosition(position))
             return;
 
         byte ref = mRefSequence.base(position);
         byte[] trinucleotideContext = mRefSequence.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType, readStrand);
         bqData.setHasIndel();
     }
 
@@ -372,11 +379,12 @@ public class BqrRegionReader implements CigarHandler
                 continue;
 
             BqrReadType readType = extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]);
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType);
+            BqrReadStrand readStrand = record.getReadNegativeStrandFlag() ? BqrReadStrand.REVERSE : BqrReadStrand.FORWARD;
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType, readStrand);
             baseQualityData.processReadBase(alt, quality);
 
             if(mWriteReadData && ref != alt)
-                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, readType);
+                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, readType, readStrand);
         }
     }
 
@@ -398,7 +406,7 @@ public class BqrRegionReader implements CigarHandler
     }
 
     protected BaseQualityData getOrCreateBaseQualData(
-            int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+            int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         int posIndex = position - mRegion.start();
         BaseQualityDataCollection bqDataCollection = mBaseQualityData[posIndex];
@@ -410,13 +418,22 @@ public class BqrRegionReader implements CigarHandler
             mMaxIndex = posIndex;
         }
 
-        BaseQualityData bqData = bqDataCollection.DataMap.get(readType);
+        Map<BqrReadStrand, BaseQualityData> bqMap = bqDataCollection.DataMap.get(readType);
+        boolean bqMapIsNull = bqMap == null;
 
-        if(bqData == null)
-        {
-            bqData = new BaseQualityData(ref, trinucleotideContext, readType);
-            bqDataCollection.DataMap.put(readType, bqData);
-        }
+        if(bqMapIsNull)
+            bqMap = Maps.newHashMap();
+
+        BaseQualityData bqData = bqMap.get(readStrand);
+        boolean bqDataIsNull = bqData == null;
+        if(bqDataIsNull)
+            bqData = new BaseQualityData(ref, trinucleotideContext, readType, readStrand);
+
+        if(bqDataIsNull)
+            bqMap.put(readStrand, bqData);
+
+        if(bqMapIsNull)
+            bqDataCollection.DataMap.put(readType, bqMap);
 
         return bqData;
     }
@@ -435,7 +452,7 @@ public class BqrRegionReader implements CigarHandler
     private class BaseQualityDataCollection
     {
         public final int Position;
-        public final Map<BqrReadType,BaseQualityData> DataMap;
+        public final Map<BqrReadType,Map<BqrReadStrand, BaseQualityData>> DataMap;
 
         public BaseQualityDataCollection(final int position)
         {

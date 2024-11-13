@@ -14,21 +14,24 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.qual.BqrReadStrand;
 
 public class BaseQualityData
 {
     public final byte Ref;
     public final byte[] TrinucleotideContext;
     public final BqrReadType ReadType;
+    public final BqrReadStrand ReadStrand;
 
     private final List<AltQualityCount> mAltQualityCounts;
     private boolean mHasIndel;
 
-    public BaseQualityData(final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+    public BaseQualityData(final byte ref, final byte[] trinucleotideContext, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         Ref = ref;
         TrinucleotideContext = trinucleotideContext;
         ReadType = readType;
+        ReadStrand = readStrand;
 
         mHasIndel = false;
         mAltQualityCounts = Lists.newArrayList();
@@ -90,7 +93,7 @@ public class BaseQualityData
                     continue;
             }
 
-            keyCounts.put(new BqrKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality, ReadType), aqCount.Count);
+            keyCounts.put(new BqrKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality, ReadType, ReadStrand), aqCount.Count);
         }
 
         return keyCounts;
@@ -98,8 +101,8 @@ public class BaseQualityData
 
     public String toString()
     {
-        return String.format("ref(%s) context(%s) readType(%s) alts(%d)",
-                (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
+        return String.format("ref(%s) context(%s) readType(%s) readStrand(%s) alts(%d)",
+                (char)Ref, new String(TrinucleotideContext), ReadType, ReadStrand, mAltQualityCounts.size());
     }
 
 }

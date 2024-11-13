@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.qual;
 
+import ngs.Read;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -10,14 +12,16 @@ public class BqrKey
     public final byte[] TrinucleotideContext;
     public final byte Quality;
     public final BqrReadType ReadType;
+    public final BqrReadStrand ReadStrand;
 
-    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
+    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final BqrReadType readType, final BqrReadStrand readStrand)
     {
         Ref = ref;
         Alt = alt;
         TrinucleotideContext = trinucleotideContext;
         Quality = quality;
         ReadType = readType;
+        ReadStrand = readStrand;
     }
 
     @Override
@@ -30,12 +34,12 @@ public class BqrKey
             return false;
 
         BqrKey otherKey = (BqrKey)other;
-        return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext, otherKey.ReadType);
+        return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext, otherKey.ReadType, otherKey.ReadStrand);
     }
 
-    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext, BqrReadType readType)
+    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext, BqrReadType readType, BqrReadStrand readStrand)
     {
-        if(Ref != ref || Alt != alt || Quality != quality || ReadType != readType)
+        if(Ref != ref || Alt != alt || Quality != quality || ReadType != readType || ReadStrand != readStrand)
             return false;
 
         return Arrays.equals(trinucleotideContext, TrinucleotideContext);
@@ -44,14 +48,14 @@ public class BqrKey
     @Override
     public int hashCode()
     {
-        int result = Objects.hash(Ref, Alt, Quality, ReadType.ordinal());
+        int result = Objects.hash(Ref, Alt, Quality, ReadType.ordinal(), ReadStrand.ordinal());
         result = 31 * result + Arrays.hashCode(TrinucleotideContext);
         return result;
     }
 
     public String toString()
     {
-        return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s)",
-            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType);
+        return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s) strand(%s)",
+            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType, ReadStrand);
     }
 }
