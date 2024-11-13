@@ -294,7 +294,7 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
 
         if(isGermline)
         {
