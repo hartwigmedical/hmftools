@@ -239,18 +239,14 @@ public class DiscordantGroups
             readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
         }
 
+        // filter out remote regions outside the discordant range above
+        discordantGroup.purgeReads(excludedReadIds);
+
         List<DiscordantRemoteRegion> remoteRegions = discordantGroup.remoteRegions();
 
         // create junctions from remote regions which satisfy the required fragment count
         for(DiscordantRemoteRegion remoteRegion : remoteRegions)
         {
-            // filter out remote regions outside the discordant range above
-            if(remoteRegion != mainRemoteRegion)
-            {
-                if(remoteRegion.ReadGroups.stream().allMatch(x -> excludedReadIds.contains(x.id())))
-                    continue;
-            }
-
             if(mTrackRemotes)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(remoteRegion.Chromosome, remoteRegion.start(), Orientation.FORWARD);

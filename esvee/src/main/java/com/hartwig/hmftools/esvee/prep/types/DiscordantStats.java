@@ -37,7 +37,6 @@ public class DiscordantStats
 
     public String toString() { return format("shortInv(%d) bnd(%d) other(%d)", ShortInversion, Translocation, Other); }
 
-
     public static void writeDiscordantStats(final PrepConfig config, final long totalReads, final DiscordantStats discordantStats)
     {
         try

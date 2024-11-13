@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -94,6 +95,38 @@ public class DiscordantGroup
     }
 
     public List<DiscordantRemoteRegion> remoteRegions() { return mRemoteRegions; }
+
+    public void purgeReads(final Set<String> readIds)
+    {
+        if(readIds.isEmpty())
+            return;
+
+        int index = 0;
+        while(index < mReadGroups.size())
+        {
+            ReadGroup readGroup = mReadGroups.get(index);
+            if(readIds.contains(readGroup.id()))
+            {
+                mReadGroups.remove(index);
+                readIds.remove(readGroup.id());
+
+                // remove from remote groups as well
+                DiscordantRemoteRegion remoteRegion = mRemoteRegions.stream()
+                        .filter(x -> x.ReadGroups.contains(readGroup)).findFirst().orElse(null);
+
+                if(remoteRegion != null)
+                    remoteRegion.ReadGroups.remove(readGroup);
+
+
+                if(readIds.isEmpty())
+                    return;
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
 
     public static PrepRead firstPrimaryRead(final ReadGroup readGroup)
     {
