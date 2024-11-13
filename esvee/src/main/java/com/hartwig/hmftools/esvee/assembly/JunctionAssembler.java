@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
@@ -203,6 +204,19 @@ public class JunctionAssembler
 
         Set<String> candidateReadIds = Sets.newHashSet();
 
+        int minReadPosStart, maxReadPosEnd;
+
+        if(mJunction.isForward())
+        {
+            minReadPosStart = max(1, originalJuncPosition - MAX_OBSERVED_CONCORDANT_FRAG_LENGTH);
+            maxReadPosEnd = originalJuncPosition;
+        }
+        else
+        {
+            minReadPosStart = originalJuncPosition;
+            maxReadPosEnd = originalJuncPosition + MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+        }
+
         for(Read read : rawReads)
         {
             if(read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
@@ -210,6 +224,10 @@ public class JunctionAssembler
 
             // check that the read maps to the same remote region to qualify as an junction candidate
             if(!mainRemoteRegion.overlaps(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd()))
+                continue;
+
+            // ensure reads aren't past the inner-most discordant read, nor outside valid bounds
+            if(read.alignmentStart() < minReadPosStart || read.alignmentEnd() > maxReadPosEnd)
                 continue;
 
             candidateReadIds.add(read.id());
@@ -262,6 +280,9 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
+            if(read.alignmentStart() < minReadPosStart || read.alignmentEnd() > maxReadPosEnd)
+                continue;
+
             if(!candidateReadIds.contains(read.id()) || read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
             {
                 mNonJunctionReads.add(read);
