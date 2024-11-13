@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class ChordDataFileTest
 {
-    private static final String CHORD_FILE = Resources.getResource("chord/sample_chord_prediction.txt").getPath();
+    private static final String CHORD_FILE = Resources.getResource("chord/sample.chord.prediction.tsv").getPath();
     private static final double EPSILON = 1.0E-10;
 
     private static final double BRCA1 = 0.1;
