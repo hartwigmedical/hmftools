@@ -523,7 +523,7 @@ public class ReadContextCounter
         if(splitReadSegment != null)
         {
             return mMatcher.determineReadMatch(
-                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false);
+                    splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false, null);
         }
 
         return mMatcher.determineReadMatch(record, readIndex);

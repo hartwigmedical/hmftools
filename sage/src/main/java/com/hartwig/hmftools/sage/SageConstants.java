@@ -95,6 +95,7 @@ public class SageConstants
 
     public static final double GERMLINE_HET_MIN_EXPECTED_VAF = 0.4;
     public static final double GERMLINE_HET_MIN_SAMPLING_PROB = 1e-3;
+    public static final double SBX_STRANDED_TQP_PENALTY = 1e-5;
 
 
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.275;

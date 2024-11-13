@@ -68,7 +68,7 @@ public class Realignment
     {
         readContextMatcher.setRealignmentIndexOffset(realignmentOffset);
 
-        ReadContextMatch match = readContextMatcher.determineReadMatch(readBases, readQuals, readVarIndex, true);
+        ReadContextMatch match = readContextMatcher.determineReadMatch(readBases, readQuals, readVarIndex, true, null);
 
         readContextMatcher.clearRealignmentIndexOffset();
 

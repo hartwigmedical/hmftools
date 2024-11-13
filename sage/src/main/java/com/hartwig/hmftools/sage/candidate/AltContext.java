@@ -94,7 +94,7 @@ public class AltContext extends SimpleVariant
         {
             // compare the core and flanks for the 2 contexts, not allowing for mismatches
             ReadContextMatch match = candidate.matcher().determineReadMatch(
-                    read.getReadBases(), null, variantReadIndex, true);
+                    read.getReadBases(), null, variantReadIndex, true, null);
 
             switch(match)
             {

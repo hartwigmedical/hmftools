@@ -27,6 +27,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
@@ -239,16 +240,13 @@ public class ReadContextMatcher
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
     {
-        ReadContextMatch matchType = determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
-
-        if(matchType == NONE && mIsReference && checkSimpleAltMatch(record, readVarIndex))
-            return SIMPLE_ALT;
-
-        return matchType;
+        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false, record.getCigar());
     }
 
     public boolean containsZeroQualBases(final byte[] readQuals, final int readVarIndex)
     {
+        if(readQuals == null)
+            return false;
         int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mAltIndexLower;
         int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
         for (int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
@@ -259,11 +257,11 @@ public class ReadContextMatcher
         return false;
     }
 
-    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
+    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch, Cigar readCigar)
     {
         if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readVarIndex))
             return ReadContextMatch.REF;
-        if(readQuals != null && containsZeroQualBases(readQuals, readVarIndex))
+        if(containsZeroQualBases(readQuals, readVarIndex))
             return NONE;
 
         ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
@@ -281,6 +279,8 @@ public class ReadContextMatcher
                     return PARTIAL_CORE;
             }
 
+            if(mIsReference && checkSimpleAltMatch(readBases, readCigar, readVarIndex))
+                return SIMPLE_ALT;
             return NONE;
         }
 
@@ -481,15 +481,18 @@ public class ReadContextMatcher
         return BaseMatchType.MATCH;
     }
 
-    private boolean checkSimpleAltMatch(final SAMRecord record, final int readVarIndex)
+    private boolean checkSimpleAltMatch(final byte[] readBases, final Cigar readCigar, final int readVarIndex)
     {
+        if(readCigar == null)
+            return false;
+
         SimpleVariant variant = mContext.variant();
 
         if(variant.isIndel())
         {
             // check that the indel exists at this location and matches
             int readIndex = 0;
-            for(CigarElement element : record.getCigar().getCigarElements())
+            for(CigarElement element : readCigar.getCigarElements())
             {
                 if(readIndex == readVarIndex + 1)
                 {
@@ -509,7 +512,7 @@ public class ReadContextMatcher
                         for(int i = 0; i < element.getLength(); ++i)
                         {
                             byte altBase = (byte)variant.alt().charAt(i + 1);
-                            byte readBase = record.getReadBases()[readIndex + i];
+                            byte readBase = readBases[readIndex + i];
 
                             if(readBase != altBase)
                                 return false;
@@ -530,7 +533,7 @@ public class ReadContextMatcher
             for(int i = 0 ; i < variant.altLength(); ++i)
             {
                 byte altBase = (byte)variant.alt().charAt(i);
-                byte readBase = record.getReadBases()[readVarIndex + i];
+                byte readBase = readBases[readVarIndex + i];
 
                 if(readBase != altBase)
                     return false;

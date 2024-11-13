@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.SBX_STRANDED_TQP_PENALTY;
 import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
@@ -294,7 +295,20 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
+        StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
+        StrandBiasData readStrandBiasNonAlt = primaryTumor.readStrandBiasNonAlt();
+
+        boolean isStranded = true;
+        if(readStrandBiasAlt.minBias() > STRAND_BIAS_CHECK_THRESHOLD)
+            isStranded = false;
+        else if(readStrandBiasNonAlt.forward() < STRAND_BIAS_NON_ALT_MIN_DEPTH || readStrandBiasNonAlt.reverse() < STRAND_BIAS_NON_ALT_MIN_DEPTH)
+            isStranded = false;
+        else if(readStrandBiasNonAlt.minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS && (readStrandBiasNonAlt.bias() < 0.5) == (readStrandBiasAlt.bias() < 0.5))
+            isStranded = false;
+        if(isStranded)
+            prob = min(prob / SBX_STRANDED_TQP_PENALTY, 1.0);
+
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport(), isStranded);
 
         if(isGermline)
         {
@@ -317,7 +331,8 @@ public class VariantFilters
         return prob >= scoreCutoff;
     }
 
-    private static double calcMapQualFactor(final VariantTier tier, final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
+    private static double calcMapQualFactor(final VariantTier tier, final ReadContextCounter primaryTumor, final int depth,
+                                            final int altSupport, final int strongSupport, final boolean isStranded)
     {
         double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
 
@@ -338,24 +353,15 @@ public class VariantFilters
 
         double readStrandBiasPenalty;
         StrandBiasData readStrandBiasAlt = primaryTumor.readStrandBiasAlt();
-        StrandBiasData readStrandBiasNonAlt = primaryTumor.readStrandBiasNonAlt();
-        if(readStrandBiasAlt.minBias() > STRAND_BIAS_CHECK_THRESHOLD)
-        {
-            readStrandBiasPenalty = 0;
-        }
-        else if(readStrandBiasNonAlt.forward() < STRAND_BIAS_NON_ALT_MIN_DEPTH || readStrandBiasNonAlt.reverse() < STRAND_BIAS_NON_ALT_MIN_DEPTH)
-        {
-            readStrandBiasPenalty = 0;
-        }
-        else if(readStrandBiasNonAlt.minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS && (readStrandBiasNonAlt.bias() < 0.5) == (readStrandBiasAlt.bias() < 0.5))
-        {
-            readStrandBiasPenalty = 0;
-        }
-        else
+        if(isStranded)
         {
             BinomialDistribution distribution = new BinomialDistribution(readStrandBiasAlt.depth(), 0.5);
             double probability = 2 * distribution.cumulativeProbability((int)round(readStrandBiasAlt.depth() * readStrandBiasAlt.minBias()));
             readStrandBiasPenalty = -10 * log10(probability);
+        }
+        else
+        {
+            readStrandBiasPenalty = 0;
         }
 
         double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
