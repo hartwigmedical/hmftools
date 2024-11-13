@@ -40,8 +40,8 @@ public class ReadFilterConfig
     // final junction filtering
     public final int MinJunctionSupport;
 
-    private int mFragmentLengthMin; // as set by the distribution min and max percentiles
-    private int mFragmentLengthMax;
+    private int mObservedFragLengthMin; // as set by the distribution min and max percentiles
+    private int mObservedFragLengthMax;
     private int mMaxSupportingFragmentDistance;
 
     private static final String CFG_MIN_ALIGN_BASES = "min_align_bases";
@@ -66,19 +66,19 @@ public class ReadFilterConfig
         MinJunctionSupport = minJunctionSupport;
 
         mMaxSupportingFragmentDistance = DEFAULT_MAX_FRAGMENT_LENGTH;
-        mFragmentLengthMax = DEFAULT_MAX_FRAGMENT_LENGTH;
-        mFragmentLengthMin = DEFAULT_READ_LENGTH;
+        mObservedFragLengthMax = DEFAULT_MAX_FRAGMENT_LENGTH;
+        mObservedFragLengthMin = DEFAULT_READ_LENGTH;
     }
 
     public void setFragmentLengths(int minLength, int maxLength)
     {
-        mFragmentLengthMin = minLength;
-        mFragmentLengthMax = maxLength;
-        mMaxSupportingFragmentDistance = min(mFragmentLengthMax, MAX_SUPPORT_FRAGMENT_DISTANCE);
+        mObservedFragLengthMin = minLength;
+        mObservedFragLengthMax = maxLength;
+        mMaxSupportingFragmentDistance = min(mObservedFragLengthMax, MAX_SUPPORT_FRAGMENT_DISTANCE);
     }
 
-    public int fragmentLengthMax() { return mFragmentLengthMax; }
-    public int fragmentLengthMin() { return mFragmentLengthMin; }
+    public int observedFragLengthMax() { return mObservedFragLengthMax; }
+    public int observedFragLengthMin() { return mObservedFragLengthMin; }
     public int maxSupportingFragmentDistance() { return mMaxSupportingFragmentDistance; }
 
     public static ReadFilterConfig from(final ConfigBuilder configBuilder)

@@ -37,8 +37,7 @@ public class PrepApplication
 
         long startTimeMs = System.currentTimeMillis();
 
-        if(mConfig.CalcFragmentLength)
-            calcFragmentDistribution();
+        calcFragmentDistribution();
 
         CombinedStats combinedStats = new CombinedStats();
 
@@ -108,7 +107,11 @@ public class PrepApplication
                 fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
 
         if(fragmentLengthBounds.isValid())
-            mConfig.ReadFiltering.config().setFragmentLengths(fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
+        {
+            mConfig.ReadFiltering.config().setFragmentLengths(
+                    fragmentLengthBounds.LowerBound,
+                    mConfig.MaxFragmentLengthOverride > 0 ? mConfig.MaxFragmentLengthOverride : fragmentLengthBounds.UpperBound);
+        }
 
         if(fragSizeDistribution.maxReadLength() > 0)
             mConfig.ReadLength = fragSizeDistribution.maxReadLength();

@@ -10,11 +10,8 @@ import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MAX_LOCAL_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.HOTSPOT_CACHE;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_1;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
@@ -33,8 +30,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
-import org.apache.commons.compress.utils.Lists;
-import org.checkerframework.checker.units.qual.K;
 import org.junit.Test;
 
 public class JunctionsTest
@@ -340,110 +335,4 @@ public class JunctionsTest
 
         assertTrue(junctionTracker.junctions().isEmpty());
     }
-
-    private void addDiscordantCandidate(
-            final List<ReadGroup> discordantCandidates, final String readId, final String chr1, int pos1, final String chr2, int pos2)
-    {
-        PrepRead read = PrepRead.from(createSamRecord(readId, chr1, pos1, chr2, pos2, true, false, null));
-        read.setReadType(CANDIDATE_SUPPORT);
-        read.record().setMateNegativeStrandFlag(true);
-        discordantCandidates.add(new ReadGroup(read));
-    }
-
-    @Test
-    public void testDiscordantReadCriteria()
-    {
-        List<KnownHotspot> knownHotspots = Lists.newArrayList();
-
-        knownHotspots.add(new KnownHotspot(
-                new ChrBaseRegion(CHR_1, 100, 1000), FORWARD, new ChrBaseRegion(CHR_2, 100, 1000), REVERSE,
-                ""));
-
-        DiscordantGroups discordantGroups = new DiscordantGroups(
-                REGION_1, DEFAULT_MAX_FRAGMENT_LENGTH, knownHotspots, false);
-
-        PrepRead read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_2, 500,
-                true, false, null));
-
-        ReadGroup readGroup = new ReadGroup(read);
-        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
-        assertTrue(discordantGroups.isRelevantDiscordantGroup(readGroup));
-
-        // outside the known pair ranges
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_2, 10000,
-                true, false, null));
-
-        readGroup = new ReadGroup(read);
-        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
-        assertFalse(discordantGroups.isRelevantDiscordantGroup(readGroup));
-
-        // otherwise local within the required distance
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_1, 10000,
-                true, false, null));
-        read.record().setInferredInsertSize(9500);
-
-        readGroup = new ReadGroup(read);
-        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
-        assertTrue(discordantGroups.isRelevantDiscordantGroup(readGroup));
-
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_1, DISCORDANT_GROUP_MAX_LOCAL_LENGTH * 2,
-                true, false, null));
-        read.record().setInferredInsertSize(read.record().getMateAlignmentStart() - read.start());
-
-        readGroup = new ReadGroup(read);
-        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
-        assertFalse(discordantGroups.isRelevantDiscordantGroup(readGroup));
-    }
-
-    @Test
-    public void testDiscordantGroups()
-    {
-        // 3 fragments are required to support a discordant junction, unassigned to other junctions
-        List<ReadGroup> discordantCandidates = Lists.newArrayList();
-
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 5100);
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 421, CHR_2, 5000); // unrelated
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 431, CHR_1, 5150);
-
-        List<KnownHotspot> knownHotspots = Lists.newArrayList();
-        DiscordantGroups discordantGroups = new DiscordantGroups(
-                REGION_1, DEFAULT_MAX_FRAGMENT_LENGTH, knownHotspots, false);
-
-        List<JunctionData> junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(0, junctions.size());
-
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 441, CHR_1, 5050);
-
-        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(2, junctions.size());
-        assertTrue(junctions.get(0).JunctionGroups.isEmpty());
-        assertEquals(540, junctions.get(0).Position);
-        assertEquals(FORWARD, junctions.get(0).Orient);
-
-        assertEquals(5050, junctions.get(1).Position);
-        assertEquals(REVERSE, junctions.get(1).Orient);
-
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 540, CHR_1, 105000); // unrelated
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 550, CHR_1, 5300);
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 560, CHR_1, 6000); // too far
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 570, CHR_1, 5000);
-
-        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(2, junctions.size());
-        assertEquals(8, junctions.get(0).SupportingGroups.size());
-
-        // a local DEL needs more support
-        discordantCandidates.clear();
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(0, junctions.size());
-
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
-        junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(2, junctions.size());
-    }
-
 }

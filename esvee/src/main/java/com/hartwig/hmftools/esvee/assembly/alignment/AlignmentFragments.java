@@ -7,11 +7,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
-import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 
 import java.util.Collections;
 import java.util.List;
@@ -310,7 +310,7 @@ public class AlignmentFragments
             {
                 inferredFragmentLength = abs(read.insertSize()) + indelLength;
 
-                setValidFragmentLength = inferredFragmentLength <= DISCORDANT_FRAGMENT_LENGTH;
+                setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
                 if(setValidFragmentLength)
                     read.setInferredFragmentLength(inferredFragmentLength);
@@ -466,14 +466,14 @@ public class AlignmentFragments
             {
                 int maxPosition = max(breakend.maxPosition(), breakend.Position);
 
-                if(read.alignmentEnd() <= maxPosition && read.alignmentStart() >= breakend.Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
+                if(read.alignmentEnd() <= maxPosition && read.alignmentStart() >= breakend.Position - DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
                     return maxPosition - read.alignmentEnd();
             }
             else
             {
                 int minPosition = min(breakend.minPosition(), breakend.Position);
 
-                if(read.alignmentStart() >= minPosition && read.alignmentEnd() <= breakend.Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
+                if(read.alignmentStart() >= minPosition && read.alignmentEnd() <= breakend.Position + DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
                     return read.alignmentStart() - minPosition;
             }
         }
@@ -499,7 +499,7 @@ public class AlignmentFragments
                 discordantDistance = readSeqIndexStart - segment.Alignment.sequenceStart();
             }
 
-            if(discordantDistance > 0 && discordantDistance < DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
+            if(discordantDistance > 0 && discordantDistance < DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
                 return discordantDistance;
         }
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 
 public final class SvConstants
@@ -8,11 +10,16 @@ public final class SvConstants
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
-    public static final int DEFAULT_DISCORDANT_FRAGMENT_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
-    public static final int MIN_UPPER_FRAGMENT_LENGTH = 800;
     public static int LOW_BASE_QUAL_THRESHOLD = 26;
-
     public static final int MIN_MAP_QUALITY = 20;
+
+    public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
+    public static final int MIN_UPPER_FRAGMENT_LENGTH = 800; // in place for panels to maintain a minimum
+
+    public static int maxConcordantFragmentLength(int observedMaxFragmentLength)
+    {
+        return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
+    }
 
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;

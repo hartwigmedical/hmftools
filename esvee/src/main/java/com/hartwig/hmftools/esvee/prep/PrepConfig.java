@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -96,6 +97,7 @@ public class PrepConfig
     public final List<String> LogReadIds;
     public final boolean TrackRemotes;
     public final boolean PerfDebug;
+    public final int MaxFragmentLengthOverride;
 
     public final boolean NoCleanUp;
 
@@ -120,6 +122,7 @@ public class PrepConfig
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
     private static final String UNPAIRED_READS = "unpaired_reads";
+    private static final String MAX_FRAG_LENGTH_OVERRIDE = "max_frag_length_override";
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
@@ -193,6 +196,8 @@ public class PrepConfig
         LogReadIds = parseLogReadIds(configBuilder);
 
         Threads = parseThreads(configBuilder);
+
+        MaxFragmentLengthOverride = configBuilder.getInteger(MAX_FRAG_LENGTH_OVERRIDE);
 
         // optimisations and debug
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
@@ -301,6 +306,7 @@ public class PrepConfig
         TrimReadId = false;
         UnpairedReads = false;
         NoCleanUp = false;
+        MaxFragmentLengthOverride = -1;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -323,6 +329,7 @@ public class PrepConfig
         configBuilder.addFlag(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");
         configBuilder.addFlag(NO_CLEAN_UP, "Keep candidate cache BAM files");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addInteger(MAX_FRAG_LENGTH_OVERRIDE, "Set max fragment length instead of calculating", -1);
         addValidationStringencyOption(configBuilder);
         ReadFilterConfig.addConfig(configBuilder);
         BamToolName.addConfig(configBuilder);

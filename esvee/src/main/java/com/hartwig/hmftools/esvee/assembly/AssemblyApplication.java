@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DECOY;
@@ -206,7 +206,7 @@ public class AssemblyApplication
             SV_LOGGER.info("fragment length bounds(min={} max={})",
                     fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
 
-            DISCORDANT_FRAGMENT_LENGTH = fragmentLengthBounds.UpperBound;
+            MAX_OBSERVED_CONCORDANT_FRAG_LENGTH = fragmentLengthBounds.UpperBound;
         }
     }
 

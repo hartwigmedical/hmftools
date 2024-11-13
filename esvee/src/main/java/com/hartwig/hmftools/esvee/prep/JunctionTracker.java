@@ -108,7 +108,7 @@ public class JunctionTracker
 
         mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
-        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.fragmentLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
+        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
 
         mBlacklist = blacklist;
         mBlacklistRegions = Lists.newArrayList();
