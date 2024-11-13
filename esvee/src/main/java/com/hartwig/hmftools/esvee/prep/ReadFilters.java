@@ -6,9 +6,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
@@ -24,6 +21,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
@@ -124,7 +122,7 @@ public class ReadFilters
         if(mateUnmapped(record))
             return true;
 
-        return isDiscordantFragment(record, config.fragmentLengthMax(), null);
+        return isDiscordantFragment(record, maxConcordantFragmentLength(config.observedFragLengthMax()), null);
     }
 
     public void checkFilters(final PrepRead read)

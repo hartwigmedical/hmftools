@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
@@ -10,7 +11,8 @@ public final class ReadUtils
 {
     public static boolean isDiscordantFragment(final Read read)
     {
-        return CommonUtils.isDiscordantFragment(read.bamRecord(), DISCORDANT_FRAGMENT_LENGTH, read.supplementaryData());
+        return CommonUtils.isDiscordantFragment(
+                read.bamRecord(), maxConcordantFragmentLength(MAX_OBSERVED_CONCORDANT_FRAG_LENGTH), read.supplementaryData());
     }
 
     public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)

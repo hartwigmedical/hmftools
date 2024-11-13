@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
@@ -44,7 +44,7 @@ public final class AssemblyConstants
     public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
 
     // discordant fragment max upper bound is dynamically set from the fragment distribution
-    public static int DISCORDANT_FRAGMENT_LENGTH = DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+    public static int MAX_OBSERVED_CONCORDANT_FRAG_LENGTH = DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 
     // assembly extension
     public static final int ASSEMBLY_READ_OVERLAP_BASES = 20;

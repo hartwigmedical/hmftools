@@ -64,6 +64,7 @@ public class CallerApplication
 
         String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
         String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
+
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);

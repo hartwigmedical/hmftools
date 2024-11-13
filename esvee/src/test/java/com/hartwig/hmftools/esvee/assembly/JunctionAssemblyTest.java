@@ -220,7 +220,6 @@ public class JunctionAssemblyTest
         String extBases = bufferBases + consensusRead + "A" + bufferBases; // extra A
         readBases = refBases + extBases;
         Read read2 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
-
         extBases = bufferBases + consensusRead.substring(3) + bufferBases; // less As
         readBases = refBases + extBases;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));

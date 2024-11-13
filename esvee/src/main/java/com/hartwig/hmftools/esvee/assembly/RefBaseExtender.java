@@ -25,7 +25,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Collections;
@@ -186,7 +186,7 @@ public class RefBaseExtender
         return read.isPairedRead() && read.isMateMapped() && read.isMateMapped()
                 && read.chromosome().equals(read.mateChromosome())
                 && read.orientation() != read.mateOrientation()
-                && abs(read.bamRecord().getInferredInsertSize()) <= DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+                && abs(read.bamRecord().getInferredInsertSize()) <= DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
     }
 
     private static boolean isDiscordantCandidate(
