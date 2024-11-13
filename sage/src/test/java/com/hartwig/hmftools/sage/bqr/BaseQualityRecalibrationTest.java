@@ -154,6 +154,62 @@ public class BaseQualityRecalibrationTest
         assertEquals(2, qc.count());
     }
 
+    @Test
+    public void testBaseQualityCountsByReadStrand()
+    {
+        SageConfig config = createSageConfig();
+
+        BqrRegionReader bqrCounter = new BqrRegionReader(
+                config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, SAMPLE_ID));
+
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
+
+        char refBase = 'G';
+        char altBase = 'G';
+        byte qual1 = 37;
+        byte qual2 = 25;
+
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual1);
+
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.REVERSE, qual1);
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.REVERSE, qual1);
+
+        addReadBaseQual(bqrCounter, 100, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual2);
+        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual2);
+        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual2);
+        addReadBaseQual(bqrCounter, 103, refBase, altBase, BqrReadType.NONE, BqrReadStrand.FORWARD, qual2);
+
+        addReadBaseQual(bqrCounter, 101, refBase, altBase, BqrReadType.NONE, BqrReadStrand.REVERSE, qual2);
+        addReadBaseQual(bqrCounter, 102, refBase, altBase, BqrReadType.NONE, BqrReadStrand.REVERSE, qual2);
+
+        BqrKey keyForwardQ1 = createKey(refBase, altBase, qual1, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey keyReverseQ1 = createKey(refBase, altBase, qual1, BqrReadType.NONE, BqrReadStrand.REVERSE);
+        BqrKey keyForwardQ2 = createKey(refBase, altBase, qual2, BqrReadType.NONE, BqrReadStrand.FORWARD);
+        BqrKey keyReverseQ2 = createKey(refBase, altBase, qual2, BqrReadType.NONE, BqrReadStrand.REVERSE);
+
+        bqrCounter.buildQualityCounts();
+
+        Collection<BqrKeyCounter> qualityCounts = bqrCounter.getQualityCounts();
+
+        BqrKeyCounter qc = qualityCounts.stream().filter(x -> x.Key.equals(keyForwardQ1)).findFirst().orElse(null);
+        assertNotNull(qc);
+        assertEquals(3, qc.count());
+
+        qc = qualityCounts.stream().filter(x -> x.Key.equals(keyReverseQ1)).findFirst().orElse(null);
+        assertNotNull(qc);
+        assertEquals(2, qc.count());
+
+        qc = qualityCounts.stream().filter(x -> x.Key.equals(keyForwardQ2)).findFirst().orElse(null);
+        assertNotNull(qc);
+        assertEquals(4, qc.count());
+
+        qc = qualityCounts.stream().filter(x -> x.Key.equals(keyReverseQ2)).findFirst().orElse(null);
+        assertNotNull(qc);
+        assertEquals(2, qc.count());
+    }
+
     private static void addReadBaseQual(
             final BqrRegionReader bqrCounter, int position, char ref, char alt, final BqrReadType readType, final BqrReadStrand readStrand, byte quality)
     {
