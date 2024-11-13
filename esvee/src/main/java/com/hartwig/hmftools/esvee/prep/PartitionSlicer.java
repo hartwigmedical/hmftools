@@ -122,6 +122,7 @@ public class PartitionSlicer
         perfCounterStop(PerfCounters.Total);
 
         mCombinedStats.addPartitionStats(mStats);
+        mCombinedStats.addDiscordantStats(mJunctionTracker.discordantStats());
 
         if(mConfig.PerfDebug)
             mPerfCounters.addAll(mJunctionTracker.perfCounters());

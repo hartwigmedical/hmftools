@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.prep.DiscordantGroups.addDiscordantStats;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
@@ -40,6 +41,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionsConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
@@ -79,6 +81,7 @@ public class JunctionTracker
 
     private ReadIdTrimmer mReadIdTrimmer;
     private int mInitialSupportingFrags;
+    private final DiscordantStats mDiscordantStats;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -127,6 +130,7 @@ public class JunctionTracker
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
+        mDiscordantStats = new DiscordantStats();
         mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
 
         mPerfCounters = Lists.newArrayList();
@@ -149,6 +153,7 @@ public class JunctionTracker
 
     public List<JunctionData> junctions() { return mJunctions; }
     public List<PerformanceCounter> perfCounters() { return mPerfCounters; }
+    public DiscordantStats discordantStats() { return mDiscordantStats; }
 
     public List<ReadGroup> formUniqueAssignedGroups()
     {
@@ -348,7 +353,10 @@ public class JunctionTracker
 
             if(mDiscordantGroupFinder.isDiscordantGroup(readGroup))
             {
-                mCandidateDiscordantGroups.add(readGroup);
+                addDiscordantStats(readGroup, mDiscordantStats);
+
+                if(mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
+                    mCandidateDiscordantGroups.add(readGroup);
             }
         }
 

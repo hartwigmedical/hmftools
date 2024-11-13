@@ -7,5 +7,6 @@ public enum WriteType
     BAM,
     UNSORTED_BAM,
     CACHE_BAM,
-    FRAGMENT_LENGTH_DIST;
+    FRAGMENT_LENGTH_DIST,
+    DISCORDANT_STATS;
 }

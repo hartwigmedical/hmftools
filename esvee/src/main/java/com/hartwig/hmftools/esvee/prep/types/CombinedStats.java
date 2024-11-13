@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.esvee.prep.types;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
 
 public class CombinedStats
 {
     public final PartitionStats ReadStats;
+    public final DiscordantStats Discordants;
 
     public final List<PerformanceCounter> PerfCounters;
 
@@ -17,12 +16,14 @@ public class CombinedStats
     {
         ReadStats = new PartitionStats();
         PerfCounters = Lists.newArrayList();
+        Discordants = new DiscordantStats();
     }
 
     public synchronized void addPartitionStats(final PartitionStats stats)
     {
         ReadStats.add(stats);
     }
+    public synchronized void addDiscordantStats(final DiscordantStats stats) { Discordants.add(stats); }
 
     public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
     {

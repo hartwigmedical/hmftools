@@ -52,5 +52,4 @@ public class PartitionStats
                 TotalReads, JunctionCount, JunctionFragmentCount, InitialSupportingFragmentCount, SupportingFragmentCount,
                 LocalCompleteGroups, LocalIncompleteGroups, SpanningGroups);
     }
-
 }

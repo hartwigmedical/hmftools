@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.writeDiscordantStats;
 
 import java.util.stream.Collectors;
 
@@ -53,6 +54,7 @@ public class PrepApplication
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mWriter);
             chromosomeTask.process();
             combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
+            combinedStats.addDiscordantStats(chromosomeTask.combinedStats().Discordants);
 
             if(combinedStats.PerfCounters.isEmpty())
             {
@@ -66,6 +68,8 @@ public class PrepApplication
                 }
             }
         }
+
+        writeDiscordantStats(mConfig, combinedStats.ReadStats.TotalReads, combinedStats.Discordants);
 
         if(mConfig.UseCacheBam)
         {
