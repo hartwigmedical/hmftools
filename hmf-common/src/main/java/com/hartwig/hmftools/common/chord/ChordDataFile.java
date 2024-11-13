@@ -31,7 +31,7 @@ public final class ChordDataFile
     private static final String FLD_REMARKS_STATUS = "remarks_hr_status";
     private static final String FLD_REMARKS_TYPE = "remarks_hrd_type";
 
-    private static final String FILE_EXTENSION = "_chord_prediction.txt";
+    private static final String FILE_EXTENSION = ".chord.prediction.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
