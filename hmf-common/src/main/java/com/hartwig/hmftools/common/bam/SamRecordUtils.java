@@ -32,13 +32,13 @@ public final class SamRecordUtils
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
     public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
 
-    // in-house attributes
+    // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
-    public static final String UMI_TYPE_ATTRIBUTE = "UT";
-    public static final String UMI_ATTRIBUTE = "UI";
+    public static final String UMI_TYPE_ATTRIBUTE = "UT"; // UMI type - single, dual/duplex or no duplicates
+    public static final String UMI_ATTRIBUTE = "UI"; // the UMI group ID
     public static final String CONSENSUS_INFO_DELIM = ";";
 
-    public static final String UNMAP_ATTRIBUTE = "UM"; // a read has been unmapped (ie by MarkDups)
+    public static final String UNMAP_ATTRIBUTE = "UM"; // the read was unmapped
 
     public static final String NO_CHROMOSOME_NAME = "*";
     public static final String NO_CIGAR = "*";
@@ -91,15 +91,12 @@ public final class SamRecordUtils
         record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
     }
 
-    @Deprecated
-    private static final String DUAL_STRAND_OLD = "DUAL_STRAND";
-
     public static UmiReadType extractUmiType(final SAMRecord record)
     {
         String umiTypeStr = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
         if(umiTypeStr != null)
-            return umiTypeStr.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiTypeStr);
+            return UmiReadType.valueOf(umiTypeStr);
         else
             return UmiReadType.NONE;
     }
