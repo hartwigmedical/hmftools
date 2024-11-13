@@ -1,5 +1,5 @@
 CHORD: Classifier of HOmologous Recombination Deficiency
-================
+========================================================
 
 CHORD is a random forest model that predicts homologous recombination deficiency (HRD) using relative counts of somatic mutation contexts, 
 primarily deletions with flanking microhomology to distinguish HRD vs non-HRD, and 1-100kb duplications to distinguish BRCA1-type vs 
@@ -9,26 +9,39 @@ BRCA2-type HRD. For more info on CHORD, please see the paper: [Pan-cancer landsc
 - [mutSigExtractor](https://github.com/UMCUGenetics/mutSigExtractor): Performs the feature extraction from VCFs. The core functionality has been entirely migrated to Java
 - [CHORD](https://github.com/UMCUGenetics/CHORD): Runs the CHORD random forest. This is now a simple R script with a Java wrapper
 
+# Contents
+<!-- TOC -->
+* [Usage](#usage)
+  * [Arguments](#arguments)
+  * [Single sample mode](#single-sample-mode)
+  * [Multi-sample mode](#multi-sample-mode)
+  * [Alternative input arguments](#alternative-input-arguments)
+  * [Running feature extraction or prediction separately](#running-feature-extraction-or-prediction-separately)
+* [Output](#output)
+  * [Mutation contexts](#mutation-contexts)
+  * [Predictions](#predictions)
+<!-- TOC -->
+
 # Usage
 
 ## Arguments
 
-**Main class** (`com.hartwig.hmftools.chord.ChordApplication`) **and feature extraction** (`com.hartwig.hmftools.chord.prep.ChordDataPrep`)
+**Main class and feature extraction** (`com.hartwig.hmftools.chord.ChordApplication` and `com.hartwig.hmftools.chord.prep.ChordDataPrep`)
 
-| Argument                | Example                                           | Description                                                                                                       |
-|-------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
-| `-sample`               | TUMOR_SAMPLE                                      | <sup>1</sup> Sample name                                                                                          |
-| `-sample_id_file`       | sample_ids.txt                                    | <sup>1</sup> A one-column text file listing sample IDs                                                            |
-| `-snv_indel_vcf_file`   | "/data/datasets/*/purple/*.purple.somatic.vcf.gz" | <sup>2</sup> Path to a VCF containing SNVs and INDELs                                                             |
-| `-sv_vcf_file`          | "/data/datasets/*/purple/*.purple.sv.vcf.gz"      | <sup>2</sup> Path to a VCF containing SVs                                                                         |
-| `-purple_dir`           | "/data/datasets/*/purple/"                        | <sup>2</sup> Directory containing the PURPLE files                                                                |
-| `-output_dir`           | output/                                           | Directory to write the output files                                                                               |
-| `-ref_genome`           | Homo_sapiens.GRCh37.GATK.illumina.fasta           | Path to a reference genome .fasta file. The .dict and .fai index files must also be present in the same directory |
-| `-include_non_pass`     |                                                   | **Flag**. Include non PASS variants during feature extraction                                                     |
-| `-write_detailed_files` |                                                   | **Flag**. Write TSV files containing per-sample and per-variant feature extraction information                    |
-| `-threads`              | 8                                                 | Number of threads to use. Each thread processes one sample at a time                                              |
-| `-log_level`            | DEBUG                                             | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                        |
-| `-log_debug`            |                                                   | **Flag**. Set log level to DEBUG                                                                                  |
+| Argument                | Example                                            | Description                                                                                                       |
+|-------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `-sample`               | TUMOR_SAMPLE                                       | <sup>1</sup> Sample name                                                                                          |
+| `-sample_id_file`       | sample_ids.txt                                     | <sup>1</sup> A one-column text file listing sample IDs                                                            |
+| `-snv_indel_vcf_file`   | "/data/datasets/\*/purple/*.purple.somatic.vcf.gz" | <sup>2</sup> Path to a VCF containing SNVs and INDELs                                                             |
+| `-sv_vcf_file`          | "/data/datasets/\*/purple/*.purple.sv.vcf.gz"      | <sup>2</sup> Path to a VCF containing SVs                                                                         |
+| `-purple_dir`           | "/data/datasets/\*/purple/"                        | <sup>2</sup> Directory containing the PURPLE files                                                                |
+| `-output_dir`           | output/                                            | Directory to write the output files                                                                               |
+| `-ref_genome`           | Homo_sapiens.GRCh37.GATK.illumina.fasta            | Path to a reference genome .fasta file. The .dict and .fai index files must also be present in the same directory |
+| `-include_non_pass`     |                                                    | **Flag**. Include non PASS variants during feature extraction                                                     |
+| `-write_detailed_files` |                                                    | **Flag**. Write TSV files containing per-sample and per-variant feature extraction information                    |
+| `-threads`              | 8                                                  | Number of threads to use. Each thread processes one sample at a time                                              |
+| `-log_level`            | DEBUG                                              | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                        |
+| `-log_debug`            |                                                    | **Flag**. Set log level to DEBUG                                                                                  |
 
 Notes:
 1. Provide either `-sample` or `-sample_id_file`
