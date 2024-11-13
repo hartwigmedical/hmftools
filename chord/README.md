@@ -1,18 +1,46 @@
 CHORD: Classifier of HOmologous Recombination Deficiency
 ================
 
-CHORD is a random forest model that predicts homologous recombination deficiency (HRD) using somatic mutations. CHORD primarily uses the 
-relative counts of somatic mutation contexts, namely deletions with flanking microhomology and 1-100kb structural duplications, with 
-1-100kb structural duplications being used to distinguish BRCA1-type HRD from BRCA2-type HRD.
+CHORD is a random forest model that predicts homologous recombination deficiency (HRD) using relative counts of somatic mutation contexts, 
+primarily deletions with flanking microhomology to distinguish HRD vs non-HRD, and 1-100kb duplications to distinguish BRCA1-type vs 
+BRCA2-type HRD. For more info on CHORD, please see the paper: [Pan-cancer landscape of homologous recombination deficiency](https://www.nature.com/articles/s41467-020-19406-4).
 
-This repo contains Java the implementation of the [mutSigExtractor](https://github.com/UMCUGenetics/mutSigExtractor) and 
-[CHORD](https://github.com/UMCUGenetics/CHORD) R packages.
-
-For more info on CHORD, please see https://www.nature.com/articles/s41467-020-19406-4: </br> 
-**Pan-cancer landscape of homologous recombination deficiency**. </br>
-*Luan Nguyen, John Martens, Arne Van Hoeck, Edwin Cuppen. Nat Commun 11, 5584 (2020).*
+`hmftools/chord` is a Java reimplementation of the original two R packages used to run CHORD:
+- [mutSigExtractor](https://github.com/UMCUGenetics/mutSigExtractor): Performs the feature extraction from VCFs. The core functionality has been entirely migrated to Java
+- [CHORD](https://github.com/UMCUGenetics/CHORD): Runs the CHORD random forest. This is now a simple R script with a Java wrapper
 
 # Usage
+
+## Arguments
+
+### Main class (`com.hartwig.hmftools.chord.ChordApplication`) and feature extraction (`com.hartwig.hmftools.chord.prep.ChordDataPrep`)
+
+| Argument                | Example                                           | Description                                                                                                       |
+|-------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `-sample`               | TUMOR_SAMPLE                                      | <sup>1</sup> Sample name                                                                                          |
+| `-sample_id_file`       | sample_ids.txt                                    | <sup>1</sup> A one-column text file listing sample IDs                                                            |
+| `-snv_indel_vcf_file`   | "/data/datasets/*/purple/*.purple.somatic.vcf.gz" | <sup>2</sup> Path to a VCF containing SNVs and INDELs                                                             |
+| `-sv_vcf_file`          | "/data/datasets/*/purple/*.purple.sv.vcf.gz"      | <sup>2</sup> Path to a VCF containing SVs                                                                         |
+| `-purple_dir`           | "/data/datasets/*/purple/"                        | <sup>2</sup> Directory containing the PURPLE files                                                                |
+| `-output_dir`           | output/                                           | Directory to write the output files                                                                               |
+| `-ref_genome`           | Homo_sapiens.GRCh37.GATK.illumina.fasta           | Path to a reference genome .fasta file. The .dict and .fai index files must also be present in the same directory |
+| `-include_non_pass`     |                                                   | **Flag**. Include non PASS variants during feature extraction                                                     |
+| `-write_detailed_files` |                                                   | **Flag**. Write TSV files containing per-sample and per-variant feature extraction information                    |
+| `-threads`              | 8                                                 | Number of threads to use. Each thread processes one sample at a time                                              |
+| `-log_level`            | DEBUG                                             | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                        |
+| `-log_debug`            |                                                   | **Flag**. Set log level to DEBUG                                                                                  |
+
+Notes:
+1. Provide either `-sample` or `-sample_id_file`
+2. Provide either `-snv_indel_vcf_file` and `-sv_vcf_file` together, or `-purple_dir`
+
+### Predicting from existing mutation contexts (`com.hartwig.hmftools.chord.predict.ChordModel`)
+
+| Argument             | Example                                  | Description                                                   |
+|----------------------|------------------------------------------|---------------------------------------------------------------|
+| `-mut_contexts_file` | TUMOR_SAMPLE.chord.mutation_contexts.tsv | Path to the mutation contexts file created by `ChordDataPrep` |
+| `-output_file`       | TUMOR_SAMPLE.chord.prediction.tsv        | Path output the predictions                                   |
+
 
 ## Single sample mode
 
@@ -33,7 +61,7 @@ java -jar chord.jar \
 ## Multi-sample mode
 
 To run CHORD in multi-sample mode, we can provide comma-delimited sample IDs to `-sample`, and paths with wildcards (`*`) to 
-`-snv_indel_vcf_file` and `-sv_vcf_file`, 
+`-snv_indel_vcf_file` and `-sv_vcf_file`. We can also provide `-threads` to run in multithreaded mode.
 
 ```shell
 java -jar chord.jar \
@@ -79,8 +107,7 @@ SAMPLE_2
 
 ## Running feature extraction or prediction separately
 
-We can run the **feature extraction** step by calling `ChordDataPrep`. This Java class replaces the functionality of the 
-[mutSigExtractor](https://github.com/UMCUGenetics/mutSigExtractor) R package.
+We can run the **feature extraction** step by calling `ChordDataPrep`:
 
 ```shell
 java -cp chord.jar com.hartwig.hmftools.chord.prep.ChordDataPrep \
@@ -91,11 +118,10 @@ java -cp chord.jar com.hartwig.hmftools.chord.prep.ChordDataPrep \
     -ref_genome Homo_sapiens.GRCh37.GATK.illumina.fasta \
 ```
 
-We can run the random forest **prediction** step by calling `ChordModel`. This Java class replaces the 
-[CHORD](https://github.com/UMCUGenetics/CHORD) R package, and is a wrapper around a simple R script to run the CHORD random forest.
+We can run the random forest **prediction** step by calling `ChordModel`:
 ```shell
 java -cp chord.jar com.hartwig.hmftools.chord.predict.ChordModel \
-    -mut_contexts_file TUMOR_SAMPLE.chord.mutation_contexts.modified.tsv \
+    -mut_contexts_file TUMOR_SAMPLE.chord.mutation_contexts.tsv \
     -output_file TUMOR_SAMPLE.chord.prediction.tsv 
 ```
 
@@ -112,9 +138,9 @@ These files can contain the data for one or more samples.
 The `*.chord.mutation_contexts.tsv` file contains the counts of SNV, INDEL and SV contexts:
 
 ```
-         A[C>A]A A[C>A]C ... del.mh.bimh.1 del.mh.bimh.2 ... DEL_0e00_1e03_bp DEL_1e03_1e04_bp ...
-SAMPLE_1      76      41 ...             5            16 ...                5                8 ...
-SAMPLE_2      66      63 ...            19            16 ...                3                7 ...
+sample_id A[C>A]A A[C>A]C ... del.mh.bimh.1 del.mh.bimh.2 ... DEL_0e00_1e03_bp DEL_1e03_1e04_bp ...
+ SAMPLE_1      76      41 ...             5            16 ...                5                8 ...
+ SAMPLE_2      66      63 ...            19            16 ...                3                7 ...
 ```
 
 The mutation contexts include:
