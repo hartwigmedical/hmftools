@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.SHORT_INV_LENGTH;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantGroup;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantRemoteRegion;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
@@ -261,6 +263,35 @@ public class DiscordantGroups
 
     public boolean isDiscordantGroup(final ReadGroup readGroup)
     {
+        PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+
+        if(firstRead == null)
+            return false;
+
+        return isDiscordantFragment(firstRead.record(), mMaxConcordantFragmentLength, null);
+    }
+
+    public static void addDiscordantStats(final ReadGroup readGroup, final DiscordantStats stats)
+    {
+        PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+
+        if(!firstRead.Chromosome.equals(firstRead.MateChromosome))
+        {
+            ++stats.Translocation;
+            return;
+        }
+
+        if(firstRead.orientation() == firstRead.mateOrientation() && abs(firstRead.record().getInferredInsertSize()) <= SHORT_INV_LENGTH)
+        {
+            ++stats.ShortInversion;
+            return;
+        }
+
+        ++stats.Other;
+    }
+
+    public boolean isRelevantDiscordantGroup(final ReadGroup readGroup)
+    {
         boolean hasNonSupp = false;
         boolean hasPassingMapQual = false;
 
@@ -277,9 +308,6 @@ public class DiscordantGroups
         PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
 
         if(firstRead == null)
-            return false;
-
-        if(!isDiscordantFragment(firstRead.record(), mMaxConcordantFragmentLength, null))
             return false;
 
         // must then either be in a known hotspot pair or a local DEL or DUP within the required distance

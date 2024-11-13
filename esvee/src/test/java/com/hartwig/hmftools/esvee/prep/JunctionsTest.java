@@ -367,13 +367,15 @@ public class JunctionsTest
 
         ReadGroup readGroup = new ReadGroup(read);
         assertTrue(discordantGroups.isDiscordantGroup(readGroup));
+        assertTrue(discordantGroups.isRelevantDiscordantGroup(readGroup));
 
         // outside the known pair ranges
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_2, 10000,
                 true, false, null));
 
         readGroup = new ReadGroup(read);
-        assertFalse(discordantGroups.isDiscordantGroup(readGroup));
+        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
+        assertFalse(discordantGroups.isRelevantDiscordantGroup(readGroup));
 
         // otherwise local within the required distance
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_1, 10000,
@@ -382,13 +384,15 @@ public class JunctionsTest
 
         readGroup = new ReadGroup(read);
         assertTrue(discordantGroups.isDiscordantGroup(readGroup));
+        assertTrue(discordantGroups.isRelevantDiscordantGroup(readGroup));
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_1, DISCORDANT_GROUP_MAX_LOCAL_LENGTH * 2,
                 true, false, null));
         read.record().setInferredInsertSize(read.record().getMateAlignmentStart() - read.start());
 
         readGroup = new ReadGroup(read);
-        assertFalse(discordantGroups.isDiscordantGroup(readGroup));
+        assertTrue(discordantGroups.isDiscordantGroup(readGroup));
+        assertFalse(discordantGroups.isRelevantDiscordantGroup(readGroup));
     }
 
     @Test

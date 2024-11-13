@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
@@ -246,6 +247,10 @@ public class PrepConfig
 
             case FRAGMENT_LENGTH_DIST:
                 fileExtension = PREP_FRAG_LENGTH_FILE_ID;
+                break;
+
+            case DISCORDANT_STATS:
+                fileExtension = PREP_DISC_STATS_FILE_ID;
                 break;
         }
 
