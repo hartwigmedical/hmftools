@@ -31,7 +31,7 @@ public final class CommonUtils
     public static boolean belowMinQual(int qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
 
     public static boolean isDiscordantFragment(
-            final SAMRecord read, final int fragmentLengthUpperBound, @Nullable final SupplementaryReadData suppData)
+            final SAMRecord read, final int maxConcordantFragmentLength, @Nullable final SupplementaryReadData suppData)
     {
         if(read.getReadUnmappedFlag() || !read.getReadPairedFlag() || read.getMateUnmappedFlag())
             return false;
@@ -51,9 +51,10 @@ public final class CommonUtils
         if(read.getReadNegativeStrandFlag() == read.getMateNegativeStrandFlag())
             return true;
 
+        // otherwise rely on its fragment length vs the observed max concordant length
         int fragmentSize = abs(read.getInferredInsertSize());
 
-        return fragmentSize == 0 || (fragmentLengthUpperBound > 0 && fragmentSize >= fragmentLengthUpperBound);
+        return fragmentSize == 0 || (maxConcordantFragmentLength > 0 && fragmentSize >= maxConcordantFragmentLength);
     }
 
     public static boolean isLineInsertPair(final JunctionAssembly assembly1, final JunctionAssembly assembly2)

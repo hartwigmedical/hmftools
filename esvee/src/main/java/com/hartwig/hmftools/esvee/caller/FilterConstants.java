@@ -69,6 +69,9 @@ public class FilterConstants
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
+    public static final String PON_INS_SEQ_FWD_STRAND = "GTGTAGATCTCGGTGGTCGCCGTATCATTAAAAA";
+    public static final String PON_INS_SEQ_REV_STRAND = "TTTTTAATGATACGGCGACCACCGAGATCTACAC";
+
     public static final double GERMLINE_AF_THRESHOLD = 0.1;
 
     public static FilterConstants from(final ConfigBuilder configBuilder)

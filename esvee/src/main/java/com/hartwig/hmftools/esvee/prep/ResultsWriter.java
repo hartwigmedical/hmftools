@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimary
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
+import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
@@ -316,7 +317,7 @@ public class ResultsWriter
             sj.add("ReadId").add("SampleId").add("GroupCount").add("ExpectedCount").add("GroupStatus").add("HasExternal").add("ReadType");
             sj.add("Chromosome").add("PosStart").add("PosEnd").add("Cigar");
             sj.add("FragLength").add("MateChr").add("MatePosStart").add("MapQual").add("SuppData").add("Flags").add("Filters");
-            sj.add("FirstInPair").add("ReadReversed").add("Proper").add("Unmapped").add("MateUnmapped").add("Supplementary");
+            sj.add("FirstInPair").add("ReadReversed").add("MateReversed").add("Unmapped").add("MateUnmapped").add("Supplementary");
             sj.add("JunctionPositions");
 
             writer.write(sj.toString());
@@ -368,7 +369,7 @@ public class ResultsWriter
             sj.add(String.valueOf(read.filters()));
             sj.add(String.valueOf(read.isFirstOfPair()));
             sj.add(String.valueOf(read.isReadReversed()));
-            sj.add(String.valueOf(read.hasFlag(PROPER_PAIR)));
+            sj.add(String.valueOf(read.hasFlag(MATE_REVERSE_STRAND)));
             sj.add(String.valueOf(read.hasFlag(READ_UNMAPPED)));
             sj.add(String.valueOf(read.hasMate() && read.isMateUnmapped()));
             sj.add(String.valueOf(read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
