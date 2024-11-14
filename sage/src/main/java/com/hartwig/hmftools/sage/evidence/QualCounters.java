@@ -15,9 +15,10 @@ public class QualCounters
 {
     private int mRecalibratedBaseQualityTotal;
     private int mAltRecalibratedBaseQualityTotal;
+    private int mStrongSimplexAltRecalibratedBaseQualityTotal;
+    private int mStrongDuplexAltRecalibratedBaseQualityTotal;
     private int mAltBaseQualityTotal;
     private double mModifiedAltBaseQualityTotal;
-    private double mModifiedAltSimplexBaseQualityTotal;
     private int mMapQualityTotal;
     private int mAltMapQualityTotal;
     private double mModifiedAltMapQualityTotal;
@@ -27,9 +28,10 @@ public class QualCounters
     {
         mRecalibratedBaseQualityTotal = 0;
         mAltRecalibratedBaseQualityTotal = 0;
+        mStrongSimplexAltRecalibratedBaseQualityTotal = 0;
+        mStrongDuplexAltRecalibratedBaseQualityTotal = 0;
         mAltBaseQualityTotal = 0;
         mModifiedAltBaseQualityTotal = 0;
-        mModifiedAltSimplexBaseQualityTotal = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
         mModifiedAltMapQualityTotal = 0;
@@ -47,8 +49,10 @@ public class QualCounters
             mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
             mModifiedAltMapQualityTotal += qualityScores.ModifiedMapQuality;
             BqrReadType readType = extractReadType(record, SequencingType.SBX, record.getBaseQualities()[readIndex]);
-            if(readType.equals(BqrReadType.NONE))
-                mModifiedAltSimplexBaseQualityTotal += qualityScores.ModifiedBaseQuality;
+            if(readType.equals(BqrReadType.DUAL))
+                mStrongDuplexAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+            else
+                mStrongSimplexAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
         }
 
         if(matchType.SupportsAlt)
@@ -67,9 +71,11 @@ public class QualCounters
 
     public int baseQualityTotal() { return mRecalibratedBaseQualityTotal; }
     public int altRecalibratedBaseQualityTotal() { return mAltRecalibratedBaseQualityTotal; }
+    public int strongSimplexAltRecalibratedBaseQualityTotal() { return mStrongSimplexAltRecalibratedBaseQualityTotal; }
+    public int strongDuplexAltRecalibratedBaseQualityTotal() { return mStrongDuplexAltRecalibratedBaseQualityTotal; }
+
     public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
     public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }
-    public double modifiedAltSimplexBaseQualityTotal() { return mModifiedAltSimplexBaseQualityTotal; }
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
     public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }

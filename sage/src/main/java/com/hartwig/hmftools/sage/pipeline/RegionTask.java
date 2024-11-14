@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_NEARBY_INDEL_AF;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
+import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
@@ -150,6 +152,7 @@ public class RegionTask
 
             // combine reference and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+            Set<ReadContextCounter> germlineOrSomaticIndels = Sets.newHashSet();
             Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
             for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
@@ -171,7 +174,27 @@ public class RegionTask
                 if(sageVariant.isPassing())
                     passingTumorReadCounters.add(tumorReadCounters.get(0));
 
+                if(sageVariant.isIndel() && !sageVariant.hasSomaticFilters())
+                    germlineOrSomaticIndels.add(tumorReadCounters.get(0));
+
                 validTumorReadCounters.add(tumorReadCounters.get(0));
+            }
+
+            for(ReadContextCounter indel : germlineOrSomaticIndels)
+            {
+                for(SageVariant variant : mSageVariants)
+                {
+                   if(indel.readContext().AlignmentEnd < variant.position())
+                       break;
+                   if(indel.readContext().AlignmentStart > variant.position())
+                       continue;
+                   if(!variant.isIndel())
+                   {
+                       variant.setNearbyIndel();
+                       if(variant.tumorReadCounters().get(0).vaf() < MIN_NEARBY_INDEL_AF)
+                           variant.filters().add(SoftFilter.LOW_AF_NEARBY_INDEL);
+                   }
+                }
             }
 
             // phase variants now all evidence has been collected and filters applied

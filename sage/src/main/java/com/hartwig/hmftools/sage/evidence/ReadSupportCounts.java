@@ -37,7 +37,7 @@ public class ReadSupportCounts
         if(support == VariantReadSupport.FULL || support == VariantReadSupport.PARTIAL_CORE || support == VariantReadSupport.REALIGNED)
         {
             BqrReadType readType = extractReadType(record, SequencingType.SBX, record.getBaseQualities()[readIndex]);
-            if(readType == BqrReadType.NONE)
+            if(readType != BqrReadType.DUAL)
                 StrongSimplexSupport += count;
         }
 

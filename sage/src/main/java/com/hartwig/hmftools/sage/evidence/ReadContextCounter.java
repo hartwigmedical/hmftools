@@ -172,7 +172,10 @@ public class ReadContextCounter
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
-        mUmiTypeCounts = null;
+        if(mConfig.Sequencing.HasUMIs)
+            mUmiTypeCounts = new int[UMI_TYPE_COUNT]; // 3 total depth values followed by the 3 variant support values
+        else
+            mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
@@ -561,12 +564,6 @@ public class ReadContextCounter
 
     private void countUmiType(final SAMRecord record, final boolean supportsVariant, final int readVarIndex)
     {
-        if(mUmiTypeCounts == null)
-        {
-            // 3 total depth values followed by the 3 variant support values
-            mUmiTypeCounts = new int[UMI_TYPE_COUNT];
-        }
-
         BqrReadType bqrReadType = extractReadType(record, mConfig.Sequencing.Type, record.getBaseQualities()[readVarIndex]);
 
         // add to total and variant support if applicable

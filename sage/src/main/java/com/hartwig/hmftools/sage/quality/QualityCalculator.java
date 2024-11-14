@@ -113,7 +113,7 @@ public class QualityCalculator
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
-    public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    public static double calculateBaseQualityRaw(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
         BqrReadType readType = extractReadType(record, SequencingType.SBX, (int)averageCoreQuality(readContextCounter.readContext(), record, readIndex));
         if(readContextCounter.ultimaQualModel() != null)
@@ -159,6 +159,12 @@ public class QualityCalculator
         return minBaseQual;
     }
 
+    public double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    {
+        double rawBaseQuality = calculateBaseQualityRaw(readContextCounter, readIndex, record);
+        return min(rawBaseQuality, MAX_RAW_BASE_QUAL);
+    }
+
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
@@ -200,7 +206,7 @@ public class QualityCalculator
             return 0; // never adjust a zero qual up
 
         if(mQualityRecalibrationMap == null)
-            return rawQuality;
+            return min(rawQuality, MAX_RAW_BASE_QUAL);
 
         return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType, readStrand);
     }
@@ -219,7 +225,7 @@ public class QualityCalculator
 
         for(int i = readIndexStart; i <= readIndexEnd; i++)
         {
-            quality += Math.min(record.getBaseQualities()[i], MAX_RAW_BASE_QUAL);
+            quality += record.getBaseQualities()[i];
         }
 
         return (int)round(quality / baseLength);

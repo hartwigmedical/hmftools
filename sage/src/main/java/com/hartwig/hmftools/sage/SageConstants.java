@@ -136,6 +136,7 @@ public class SageConstants
     public static final int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
     public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
     public static final int MAX_RAW_BASE_QUAL = 40;
+    public static final double MIN_NEARBY_INDEL_AF = 0.1;
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
 

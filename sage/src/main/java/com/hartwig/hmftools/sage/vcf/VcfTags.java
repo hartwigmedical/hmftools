@@ -59,6 +59,9 @@ public final class VcfTags
     public static final String QUAL_MODEL_TYPE = "QMT";
     public static final String QUAL_MODEL_TYPE_DESC = "Qual model type if applicable";
 
+    public static final String NEARBY_INDEL = "NEARBY_INDEL";
+    public static final String NEARBY_INDEL_DESC = "Passing somatic or germline indel contains variant within flanks";
+
     public static final String TUMOR_QUALITY_PROB = "TQP";
     public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";
 

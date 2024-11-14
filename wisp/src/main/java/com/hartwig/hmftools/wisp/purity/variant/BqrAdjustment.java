@@ -118,7 +118,7 @@ public class BqrAdjustment
             if(bqrRecord.Key.ReadType == BqrReadType.DUAL)
                 continue;
 
-            BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, key.ReadType);
+            BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, key.ReadType, key.ReadStrand);
 
             int count = summaryCounts.getOrDefault(noAltKey, 0);
             summaryCounts.put(noAltKey, count + bqrRecord.Count);

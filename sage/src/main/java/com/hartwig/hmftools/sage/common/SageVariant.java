@@ -17,6 +17,8 @@ public class SageVariant
 {
     private final Candidate mCandidate;
     private final Set<SoftFilter> mFilters;
+    private boolean mHasSomaticFilters;
+    private boolean mHasNearbyIndel;
     private final List<ReadContextCounter> mReferenceReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
@@ -29,6 +31,7 @@ public class SageVariant
         mReferenceReadCounters = referenceCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
+        mHasNearbyIndel = false;
     }
 
     public Candidate candidate()
@@ -159,6 +162,12 @@ public class SageVariant
     public Set<SoftFilter> filters() { return mFilters; }
     public Set<String> filtersStringSet() { return mFilters.stream().map(x -> x.filterName()).collect(Collectors.toSet()); }
     public String filtersStr() { return mFilters.stream().map(x -> x.filterName()).collect(Collectors.joining(",")); }
+
+    public void setHasSomaticFilters(final boolean hasSomaticFilters) { mHasSomaticFilters = hasSomaticFilters; }
+    public boolean hasSomaticFilters() { return mHasSomaticFilters; }
+
+    public void setNearbyIndel() { mHasNearbyIndel = true; }
+    public boolean hasNearbyIndel() { return mHasNearbyIndel; }
 
     public VariantReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 

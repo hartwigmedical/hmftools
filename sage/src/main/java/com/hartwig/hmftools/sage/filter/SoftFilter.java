@@ -22,6 +22,7 @@ public enum SoftFilter
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge"),
     REALIGNED_FREQ("realignFrequency", "", true, false, "Support is predominantly realigned"),
     FRAGMENT_LENGTH("fragmentLength", "", true, false, "Alt max fragment length well below average non-alt"),
+    LOW_AF_NEARBY_INDEL("lowAFNearbyIndel", "", true, false, "Low AF SNV/MNV with nearby indel"),
     MAP_QUAL_REF_ALT_DIFFERENCE(
             "mapQualRefAltDiff", "", true, false, "Alt support map qual well below ref support"),
     JITTER("jitter", "", true, false, "Jitter filter"),

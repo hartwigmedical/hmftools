@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.NEARBY_INDEL;
 
 import java.util.List;
 
@@ -117,6 +118,10 @@ public final class VariantContextFactory
         if(primaryRcCounter.ultimaQualModel() != null)
         {
             builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
+        }
+        if(variant.hasNearbyIndel())
+        {
+            builder.attribute(NEARBY_INDEL, true);
         }
 
         final VariantContext context = builder.make();

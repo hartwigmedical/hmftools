@@ -161,6 +161,8 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
+            variant.setHasSomaticFilters(!tumorFilters.isEmpty());
+
             if(!mIsGermline)
             {
                 for(int i = 0; i < maxReferenceSamples; ++i)
@@ -273,15 +275,15 @@ public class VariantFilters
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
         int strongDuplexSupport = primaryTumor.strongAltSupport() - primaryTumor.strongSimplexSupport();
-        double modifiedAltSimplexBaseQualityTotal = primaryTumor.qualCounters().modifiedAltSimplexBaseQualityTotal();
-        double modifiedAltDuplexBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltSimplexBaseQualityTotal;
-        int simplexSupportContribution = (int)(strongDuplexSupport * modifiedAltSimplexBaseQualityTotal/modifiedAltDuplexBaseQualityTotal);
+        double simplexBaseQualityTotal = primaryTumor.qualCounters().strongSimplexAltRecalibratedBaseQualityTotal();
+        double duplexBaseQualityTotal = primaryTumor.qualCounters().strongDuplexAltRecalibratedBaseQualityTotal();
+        int simplexSupportContribution = (int)(strongDuplexSupport * simplexBaseQualityTotal/duplexBaseQualityTotal);
         int strongSupport = strongDuplexSupport + simplexSupportContribution;
 
         if(strongSupport == 0)
             return true;
 
-        int qualPerRead = (int)round(modifiedAltDuplexBaseQualityTotal / strongDuplexSupport);
+        int qualPerRead = (int)round(duplexBaseQualityTotal / strongDuplexSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
