@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
+import java.util.Arrays;
 
 public final class NumberEvents
 {
@@ -17,20 +18,45 @@ public final class NumberEvents
     {
         int nm = rawNM(record, refSequence);
 
-        int additionalIndels = 0;
+        int removedNMs = 0;
+        int readIndex = 0;
 
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
             {
+                case S:
+                case M:
+                    readIndex += cigarElement.getLength();
+                    break;
                 case D:
+                    removedNMs += cigarElement.getLength() - 1;
+                    break;
                 case I:
-                    additionalIndels += cigarElement.getLength() - 1;
+                    byte[] insSequence = Arrays.copyOfRange(record.getReadBases(), readIndex, readIndex + cigarElement.getLength());
+                    boolean shouldCountInsert = calcNumZeroQualBases(record, insSequence, readIndex) < insSequence.length;
+                    removedNMs += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
                     break;
             }
         }
 
-        return nm - additionalIndels;
+        return nm - removedNMs;
+    }
+
+    public static int calcNumZeroQualBases(final SAMRecord record, final byte[] insSequence, final int insIndex)
+    {
+        int startIndex = Math.max(insIndex - 1, 0);
+        int iterIndex = Math.min(insIndex+insSequence.length, record.getReadLength()-1);
+        int insSequenceIndex = 0;
+
+        while(iterIndex < record.getReadLength() && record.getReadBases()[iterIndex] == insSequence[insSequenceIndex])
+        {
+            iterIndex += 1;
+            insSequenceIndex = (insSequenceIndex + 1) % insSequence.length;
+        }
+
+        return (int) com.google.common.primitives.Bytes.asList(record.getBaseQualities()).subList(startIndex, iterIndex+1).stream().filter(x -> x == 0).count();
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)

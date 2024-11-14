@@ -3,10 +3,10 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.sage.common.NumberEvents.calcNumZeroQualBases;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
@@ -224,7 +224,8 @@ public class RefContextConsumer
     {
         ReadInfo readInfo = new ReadInfo();
 
-        int additionalIndels = 0;
+        int removedNMs = 0;
+        int readIndex = 0;
 
         for(CigarElement cigarElement : record.getCigar())
         {
@@ -232,22 +233,27 @@ public class RefContextConsumer
             {
                 case M:
                     readInfo.AlignedLength += cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
                     break;
-
                 case S:
                     readInfo.SoftClipLength += cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
                     break;
-
                 case D:
+                    removedNMs += cigarElement.getLength() - 1;
+                    break;
                 case I:
-                    additionalIndels += cigarElement.getLength() - 1;
+                    byte[] insSequence = java.util.Arrays.copyOfRange(record.getReadBases(), readIndex, readIndex + cigarElement.getLength());
+                    boolean shouldCountInsert = calcNumZeroQualBases(record, insSequence, readIndex) < insSequence.length;
+                    removedNMs += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
                     break;
             }
         }
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - additionalIndels, 0);
+            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - removedNMs, 0);
         }
 
         return readInfo;
