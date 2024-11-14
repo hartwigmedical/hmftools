@@ -50,7 +50,7 @@ public final class NumberEvents
         int iterIndex = Math.min(insIndex+insSequence.length, record.getReadLength()-1);
         int insSequenceIndex = 0;
 
-        while(iterIndex < record.getReadLength() && record.getReadBases()[iterIndex] == insSequence[insSequenceIndex])
+        while(iterIndex < record.getReadLength() - 1 && record.getReadBases()[iterIndex] == insSequence[insSequenceIndex])
         {
             iterIndex += 1;
             insSequenceIndex = (insSequenceIndex + 1) % insSequence.length;
