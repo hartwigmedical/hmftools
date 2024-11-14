@@ -58,7 +58,7 @@ public class ReadDataWriter
             if(mConfig.UMIs.Enabled)
                 sj.add("Umi").add("UmiType");
 
-            sj.add("AvgBaseQual").add("MapQual").add("SuppData").add("Flags");
+            sj.add("MapQual").add("SuppData").add("Flags");
             sj.add("FirstInPair").add("ReadReversed").add("MateReversed");
             sj.add("Unmapped").add("UnmapCoords").add("MateUnmapped").add("Supplementary").add("Secondary");
 
@@ -82,8 +82,7 @@ public class ReadDataWriter
     }
 
     public synchronized void writeReadData(
-            final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates,
-            final double avgBaseQual, final String umiId)
+            final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates, final String umiId)
     {
         if(mWriter == null)
             return;
@@ -104,40 +103,56 @@ public class ReadDataWriter
 
         try
         {
-            mWriter.write(format("%s\t%s\t%d\t%d\t%s",
-                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigar()));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(read.getReadName());
+            sj.add(read.getContig());
+            sj.add(String.valueOf(read.getAlignmentStart()));
+            sj.add(String.valueOf(read.getAlignmentEnd()));
+            sj.add(read.getCigar().toString());
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
             String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
             String unmapOrigCoords = read.getReadUnmappedFlag() ? read.getStringAttribute(UNMAP_ATTRIBUTE) : null;
 
-            mWriter.write(format("\t%d\t%s\t%d\t%s\t%s\t%s\t%s",
-                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
-                    read.getDuplicateReadFlag(), fragmentStatus, mateCigar != null ? mateCigar : "", fragmentCoordinates));
+            sj.add(String.valueOf(abs(read.getInferredInsertSize())));
+            sj.add(read.getMateReferenceName());
+            sj.add(String.valueOf(read.getMateAlignmentStart()));
+            sj.add(String.valueOf(read.getDuplicateReadFlag()));
+            sj.add(fragmentStatus.toString());
+            sj.add(mateCigar != null ? mateCigar : "");
+            sj.add(fragmentCoordinates);
 
             if(mConfig.UMIs.Enabled)
             {
                 String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-                mWriter.write(format("\t%s\t%s", umiId != null ? umiId : "", umiType != null ? umiType : UmiReadType.NONE));
+                sj.add(umiId != null ? umiId : "");
+                sj.add(umiType != null ? umiType : UmiReadType.NONE.toString());
             }
 
-            mWriter.write(format("\t%.2f\t%d\t%s\t%d",
-                    avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asDelimStr() : "N/A", read.getFlags()));
+            sj.add(String.valueOf(read.getMappingQuality()));
+            sj.add(suppData != null ? suppData.asDelimStr() : "N/A");
+            sj.add(String.valueOf(read.getFlags()));
 
             boolean isPaired = read.getReadPairedFlag();
-            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-                    !isPaired || read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), isPaired && read.getMateNegativeStrandFlag(),
-                    read.getReadUnmappedFlag(), unmapOrigCoords != null ? unmapOrigCoords : "",
-                    isPaired && read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
+            sj.add(String.valueOf(!isPaired || read.getFirstOfPairFlag()));
+            sj.add(String.valueOf(read.getReadNegativeStrandFlag()));
+            sj.add(String.valueOf(isPaired && read.getMateNegativeStrandFlag()));
+            sj.add(String.valueOf(read.getReadUnmappedFlag()));
+            sj.add(unmapOrigCoords != null ? unmapOrigCoords : "");
+            sj.add(String.valueOf(isPaired && read.getMateUnmappedFlag()));
+            sj.add(String.valueOf(read.getSupplementaryAlignmentFlag()));
+            sj.add(String.valueOf(read.isSecondaryAlignment()));
+
 
             if(mConfig.WriteReadBaseLength > 0 && mConfig.WriteReadBaseLength * 2 <= read.getReadBases().length)
             {
                 String readBases = read.getReadString();
-                mWriter.write(format("\t%s\t%s",
-                        readBases.substring(0, mConfig.WriteReadBaseLength),
-                        readBases.substring(readBases.length() - mConfig.WriteReadBaseLength)));
+                sj.add(readBases.substring(0, mConfig.WriteReadBaseLength));
+                sj.add(readBases.substring(readBases.length() - mConfig.WriteReadBaseLength));
             }
 
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)

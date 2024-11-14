@@ -88,7 +88,7 @@ public abstract class BamWriter
                 mConsensusReadCount.incrementAndGet();
 
                 if(mReadDataWriter.enabled())
-                    mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
+                    mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
 
                 continue;
             }
@@ -96,7 +96,7 @@ public abstract class BamWriter
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.umiId());
+            writeRead(read, DUPLICATE, group.coordinatesKey(), group.umiId());
         }
     }
 
@@ -146,18 +146,16 @@ public abstract class BamWriter
         writeRead(
                 read, fragmentStatus,
                 fragment != null ? fragment.coordinates().Key : "",
-                fragment != null ? fragment.averageBaseQual() : 0,
                 fragment != null ? fragment.umi() : "");
     }
 
     private void writeRead(
-            final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates,
-            final double avgBaseQual, final String umiId)
+            final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates, String umiId)
     {
         mNonConsensusReadCount.incrementAndGet();
 
         if(mReadDataWriter.enabled())
-            mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
+            mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, umiId);
 
         if(fragmentStatus == DUPLICATE)
         {

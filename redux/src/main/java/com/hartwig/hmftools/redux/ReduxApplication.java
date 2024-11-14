@@ -91,6 +91,12 @@ public class ReduxApplication
             partitions.addAll(chrPartitions);
         }
 
+        if(partitions.isEmpty())
+        {
+            RD_LOGGER.error("invalid partitions");
+            System.exit(1);
+        }
+
         List<PartitionThread> partitionTasks = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();
 
