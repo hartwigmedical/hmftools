@@ -36,7 +36,7 @@ public class FiltersTest
     private static final FragmentLengthBounds FRAG_LENGTHS = new FragmentLengthBounds(
             100, 100, 500, 0.1);
 
-    private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS);
+    private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.001);
 
     @Test
     public void testDeduplication()
@@ -170,11 +170,15 @@ public class FiltersTest
                 "01", CHR_1, CHR_1, 100, 200, POS_ORIENT, POS_ORIENT, "",
                 commonAttributes, null, null);
 
-        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 1);
-        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 1);
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
+        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
 
-        mVariantFilters.applyFilters(var);
+        VariantFilters invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.0001);
+        invFilters.applyFilters(var);
+        assertFalse(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
 
+        invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.1);
+        invFilters.applyFilters(var);
         assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
     }
 }
