@@ -368,10 +368,15 @@ shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 0.05<sup>5</sup> | NA | NA  | NA
 sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 
 <sup>1. The inserted sequence length must also meet these requirements </sup>
+
 <sup>2. Same chromosome junctions only. </sup>
+
 <sup>3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
+
 <sup>4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
+
 <sup>5. Only applied to variants with type=INV, LEN<1kb and HOMLEN>4 </sup>
+
 <sup>6. Only for SGL 5' end contains GTGTAGATCTCGGTGGTCGCCGTATCATTAAAAA or reverse complement TTTTTAATGATACGGCGACCACCGAGATCTACAC </sup>
 
 Note that for pairs of breakends at LINE insertion sites, if one has a PASS filter we should always PASS the other side.   
