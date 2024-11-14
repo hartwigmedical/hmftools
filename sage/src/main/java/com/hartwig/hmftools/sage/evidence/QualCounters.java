@@ -18,6 +18,7 @@ public class QualCounters
     private int mStrongSimplexAltRecalibratedBaseQualityTotal;
     private int mStrongDuplexAltRecalibratedBaseQualityTotal;
     private int mAltBaseQualityTotal;
+    private double mModifiedAltDuplexBaseQualityTotal;
     private double mModifiedAltBaseQualityTotal;
     private int mMapQualityTotal;
     private int mAltMapQualityTotal;
@@ -31,6 +32,7 @@ public class QualCounters
         mStrongSimplexAltRecalibratedBaseQualityTotal = 0;
         mStrongDuplexAltRecalibratedBaseQualityTotal = 0;
         mAltBaseQualityTotal = 0;
+        mModifiedAltDuplexBaseQualityTotal = 0;
         mModifiedAltBaseQualityTotal = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
@@ -50,7 +52,10 @@ public class QualCounters
             mModifiedAltMapQualityTotal += qualityScores.ModifiedMapQuality;
             BqrReadType readType = extractReadType(record, SequencingType.SBX, record.getBaseQualities()[readIndex]);
             if(readType.equals(BqrReadType.DUAL))
-                mStrongDuplexAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+            {
+                mStrongDuplexAltRecalibratedBaseQualityTotal += (int) round(qualityScores.RecalibratedBaseQuality);
+                mModifiedAltDuplexBaseQualityTotal += qualityScores.ModifiedBaseQuality;
+            }
             else
                 mStrongSimplexAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
         }
@@ -76,6 +81,7 @@ public class QualCounters
 
     public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
     public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }
+    public double modifiedAltDuplexBaseQualityTotal() { return mModifiedAltDuplexBaseQualityTotal; }
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
     public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }
