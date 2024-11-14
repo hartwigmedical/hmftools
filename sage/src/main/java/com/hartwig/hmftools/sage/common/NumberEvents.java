@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
+import java.util.List;
 
 public final class NumberEvents
 {
@@ -17,20 +18,32 @@ public final class NumberEvents
     {
         int nm = rawNM(record, refSequence);
 
-        int additionalIndels = 0;
+        int removedNMs = 0;
+        int readIndex = 0;
+        List<Byte> readBases = com.google.common.primitives.Bytes.asList(record.getReadBases());
 
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
             {
+                case S:
+                    readIndex += cigarElement.getLength();
+                    break;
+                case M:
+                    removedNMs += readBases.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x.equals((byte) 'N')).count();
+                    readIndex += cigarElement.getLength();
+                    break;
                 case D:
+                    removedNMs += cigarElement.getLength() - 1;
+                    break;
                 case I:
-                    additionalIndels += cigarElement.getLength() - 1;
+                    removedNMs += cigarElement.getLength() - 1;
+                    readIndex += cigarElement.getLength();
                     break;
             }
         }
 
-        return nm - additionalIndels;
+        return nm - removedNMs;
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)

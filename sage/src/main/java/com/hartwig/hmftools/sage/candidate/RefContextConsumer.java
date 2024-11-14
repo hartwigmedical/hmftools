@@ -224,30 +224,36 @@ public class RefContextConsumer
     {
         ReadInfo readInfo = new ReadInfo();
 
-        int additionalIndels = 0;
+        int removedNMs = 0;
+        int readIndex = 0;
+        List<Byte> readBases = com.google.common.primitives.Bytes.asList(record.getReadBases());
 
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
             {
-                case M:
-                    readInfo.AlignedLength += cigarElement.getLength();
-                    break;
-
                 case S:
                     readInfo.SoftClipLength += cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
                     break;
-
+                case M:
+                    removedNMs += readBases.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x.equals((byte) 'N')).count();
+                    readInfo.AlignedLength += cigarElement.getLength();
+                    readIndex += cigarElement.getLength();
+                    break;
                 case D:
+                    removedNMs += cigarElement.getLength() - 1;
+                    break;
                 case I:
-                    additionalIndels += cigarElement.getLength() - 1;
+                    removedNMs += cigarElement.getLength() - 1;
+                    readIndex += cigarElement.getLength();
                     break;
             }
         }
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - additionalIndels, 0);
+            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - removedNMs, 0);
         }
 
         return readInfo;
