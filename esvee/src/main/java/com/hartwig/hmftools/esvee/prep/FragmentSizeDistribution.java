@@ -378,6 +378,5 @@ public class FragmentSizeDistribution
             SV_LOGGER.error("failed to read fragment length file: {}", e.toString());
             return INVALID;
         }
-
     }
 }

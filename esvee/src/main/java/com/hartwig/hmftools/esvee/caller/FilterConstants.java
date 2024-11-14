@@ -62,9 +62,13 @@ public class FilterConstants
     public static final int MIN_AVG_FRAG_FACTOR = 3;
     public static final double MIN_AVG_FRAG_STD_DEV_FACTOR = 0.6;
 
-    public static final int INV_SHORT_LENGTH = 2500;
-    public static final double INV_SHORT_MIN_AF = 0.05;
-    public static final int INV_SHORT_MAX_HOMOLOGY = 4;
+    public static final int INV_SHORT_LENGTH = 3000;
+    public static final double INV_SHORT_MIN_AF_LOWER = 0.1;
+    public static final double INV_SHORT_MIN_AF_HIGHER = 0.2;
+    public static final int INV_SHORT_MAX_HOMOLOGY_LOWER = 3;
+    public static final int INV_SHORT_MAX_HOMOLOGY_HIGHER = 6;
+    public static final int INV_SHORT_RATE_LOWER = 200;
+    public static final int INV_SHORT_RATE_HIGHER = 400;
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);

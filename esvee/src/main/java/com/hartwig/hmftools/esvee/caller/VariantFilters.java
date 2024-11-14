@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -13,8 +14,12 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttri
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_LOWER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_HIGHER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_LOWER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_HIGHER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_LOWER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
@@ -46,11 +51,13 @@ public class VariantFilters
 {
     private final FilterConstants mFilterConstants;
     private final FragmentLengthBounds mFragmentLengthBounds;
+    private final double mShortInversionRate;
 
-    public VariantFilters(final FilterConstants filterConstants, final FragmentLengthBounds fragmentLengthBounds)
+    public VariantFilters(final FilterConstants filterConstants, final FragmentLengthBounds fragmentLengthBounds, double shortInvRate)
     {
         mFilterConstants = filterConstants;
         mFragmentLengthBounds = fragmentLengthBounds;
+        mShortInversionRate = shortInvRate;
     }
 
     public void applyFilters(final Variant var)
@@ -280,11 +287,23 @@ public class VariantFilters
         if(var.adjustedLength() > INV_SHORT_LENGTH)
             return false;
 
-        if(anySamplesAboveAfThreshold(var, INV_SHORT_MIN_AF))
+        int inexactHomology = var.breakendStart().InexactHomology.length();
+
+        if(inexactHomology < INV_SHORT_MAX_HOMOLOGY_LOWER)
             return false;
 
-        int inexactHomology = var.breakendStart().InexactHomology.length();
-        return inexactHomology > INV_SHORT_MAX_HOMOLOGY;
+        double vafThreshold;
+
+        if(inexactHomology >= INV_SHORT_MAX_HOMOLOGY_HIGHER)
+        {
+            vafThreshold = min(INV_SHORT_MIN_AF_HIGHER, mShortInversionRate * INV_SHORT_RATE_HIGHER);
+        }
+        else
+        {
+            vafThreshold = min(INV_SHORT_MIN_AF_LOWER, mShortInversionRate * INV_SHORT_RATE_LOWER);
+        }
+
+        return !anySamplesAboveAfThreshold(var, vafThreshold);
     }
 
     private boolean failsStrandBias(final Variant var)
@@ -323,15 +342,24 @@ public class VariantFilters
     public static void logFilterTypeCounts(final List<Variant> variantList)
     {
         Map<FilterType,Integer> filterCounts = Maps.newHashMap();
+        int passingVariants = 0;
 
         for(Variant var : variantList)
         {
+            if(var.filters().isEmpty())
+            {
+                ++passingVariants;
+                continue;
+            }
+
             for(FilterType filterType : var.filters())
             {
                 int count = filterCounts.getOrDefault(filterType, 0);
                 filterCounts.put(filterType, count + 1);
             }
         }
+
+        SV_LOGGER.debug("variants passing({})", passingVariants);
 
         for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
         {

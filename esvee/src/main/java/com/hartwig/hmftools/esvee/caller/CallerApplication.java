@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotator;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -67,9 +70,12 @@ public class CallerApplication
 
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
+        String discStatsFilename = formDiscordantStatsFilename(inputDir, mConfig.fileSampleId());
+        DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
+
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
 
-        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds);
+        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds, discordantStats.shortInversionRate());
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache(mConfig, new TargetRegions(configBuilder));
