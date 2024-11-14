@@ -2,6 +2,9 @@ package com.hartwig.hmftools.redux.umi;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.redux.umi.UmiType.SINGLE;
+import static com.hartwig.hmftools.redux.umi.UmiType.TSO500_DUPEX_DELIM;
+import static com.hartwig.hmftools.redux.umi.UmiType.TWIST_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
@@ -29,6 +32,7 @@ public class UmiConfig
     private final Set<String> mDefinedUmis;
 
     // config options
+    private static final String UMI_TYPE = "umi_type";
     private static final String UMI_ENABLED = "umi_enabled";
     private static final String UMI_DUPLEX = "umi_duplex";
     private static final String UMI_DUPLEX_DELIM = "umi_duplex_delim";
@@ -55,11 +59,35 @@ public class UmiConfig
 
     public static UmiConfig from(final ConfigBuilder configBuilder)
     {
-        UmiConfig umiConfig = new UmiConfig(
-                configBuilder.hasFlag(UMI_ENABLED),
-                configBuilder.hasFlag(UMI_DUPLEX),
-                configBuilder.getValue(UMI_DUPLEX_DELIM),
-                configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
+        boolean umiEnabled = configBuilder.hasFlag(UMI_ENABLED);
+        boolean duplexUmi = configBuilder.hasFlag(UMI_DUPLEX);
+        String duplexUmiDelim = configBuilder.getValue(UMI_DUPLEX_DELIM);
+
+        if(configBuilder.hasFlag(UMI_TYPE))
+        {
+            UmiType umiType = UmiType.valueOf(configBuilder.getValue(UMI_TYPE));
+
+            if(umiType == UmiType.TWIST_DUPLEX)
+            {
+                umiEnabled = true;
+                duplexUmi = true;
+                duplexUmiDelim = TWIST_DUPEX_DELIM;
+            }
+            else if(umiType == UmiType.TSO500_DUPEX)
+            {
+                umiEnabled = true;
+                duplexUmi = true;
+                duplexUmiDelim = TSO500_DUPEX_DELIM;
+            }
+            else if(umiType == SINGLE)
+            {
+                umiEnabled = true;
+                duplexUmi = false;
+            }
+        }
+
+
+        UmiConfig umiConfig = new UmiConfig(umiEnabled, duplexUmi, duplexUmiDelim, configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
 
         if(configBuilder.hasValue(UMI_DEFINED_IDS))
         {
@@ -122,6 +150,10 @@ public class UmiConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(
+                UMI_TYPE, false, "UMI type from values: " + UmiType.values().toString(), UmiType.NONE.toString());
+
+        // or set them individually
         configBuilder.addFlag(UMI_ENABLED, "Use UMIs for duplicates");
         configBuilder.addFlag(UMI_DUPLEX, "UMI duplex enabled");
         configBuilder.addPath(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
