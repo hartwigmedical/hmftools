@@ -364,7 +364,7 @@ minAF | Any | min(AF[BE1],AF[BE2]) | 0.001 | 0.001 | 0.05  | 0.001
 minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
 minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
-shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 0.05<sup>5</sup> | NA | NA  | NA 
+shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 3<=IHOMLEN<6:  min(0.1,200*shortINVRate); IHOMLEN>=6 min(0.2,400*shortINVRate) <sup>5</sup> | NA | NA  | NA 
 sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 
 <sup>1. The inserted sequence length must also meet these requirements </sup>
@@ -375,7 +375,7 @@ sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 
 <sup>4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
 
-<sup>5. Only applied to variants with type=INV, LEN<1kb and HOMLEN>4 </sup>
+<sup>5. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV </sup>
 
 <sup>6. Only for SGL 5' end contains GTGTAGATCTCGGTGGTCGCCGTATCATTAAAAA or reverse complement TTTTTAATGATACGGCGACCACCGAGATCTACAC </sup>
 
