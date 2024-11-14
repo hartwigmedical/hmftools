@@ -332,7 +332,7 @@ public class PartitionData
                 }
             }
 
-            return NO_READ_MATCH;
+            return new ReadMatch(true, null);
         }
 
         if(checkSupplementary && isUnhandledSupplementary(read))

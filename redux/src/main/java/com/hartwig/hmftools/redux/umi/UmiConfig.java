@@ -63,7 +63,7 @@ public class UmiConfig
         boolean duplexUmi = configBuilder.hasFlag(UMI_DUPLEX);
         String duplexUmiDelim = configBuilder.getValue(UMI_DUPLEX_DELIM);
 
-        if(configBuilder.hasFlag(UMI_TYPE))
+        if(configBuilder.hasValue(UMI_TYPE))
         {
             UmiType umiType = UmiType.valueOf(configBuilder.getValue(UMI_TYPE));
 
@@ -85,7 +85,6 @@ public class UmiConfig
                 duplexUmi = false;
             }
         }
-
 
         UmiConfig umiConfig = new UmiConfig(umiEnabled, duplexUmi, duplexUmiDelim, configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
 
