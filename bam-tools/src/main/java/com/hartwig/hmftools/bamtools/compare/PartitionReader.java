@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -248,11 +247,8 @@ public class PartitionReader implements Runnable
         ++mStats.OrigReadCount;
         ++mStats.NewReadCount;
 
-        // note that the ReadKey of both readsw match
-        if(mConfig.MatchNewUnmapped && newRead.hasAttribute(UNMAP_ATTRIBUTE))
-            return;
-
-        if(mConfig.MatchOrigUnmapped && origRead.hasAttribute(UNMAP_ATTRIBUTE))
+        // note that the ReadKey of both reads match
+        if(mConfig.IgnoreReduxUnmapped && (origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE)))
             return;
 
         List<String> diffs = compareReads(origRead, newRead, mConfig);
@@ -288,8 +284,14 @@ public class PartitionReader implements Runnable
         // check key attributes:
         for(String attribute : KEY_ATTRIBUTES)
         {
-            if(attribute.equals(SUPPLEMENTARY_ATTRIBUTE) && config.IgnoreSupplementaryReads)
-                continue;
+            if(attribute.equals(SUPPLEMENTARY_ATTRIBUTE))
+            {
+                if(config.IgnoreSupplementaryAttribute)
+                    continue;
+
+                if(origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE))
+                    continue;
+            }
 
             String readAttr1 = origRead.getStringAttribute(attribute);
             String readAttr2 = newRead.getStringAttribute(attribute);
@@ -303,15 +305,18 @@ public class PartitionReader implements Runnable
         }
 
         // check the read bases, make sure we account for the read negative strand flag
-        if(!basesMatch(origRead.getReadString(), origRead.getReadNegativeStrandFlag(),
+        if(!basesMatch(
+                origRead.getReadString(), origRead.getReadNegativeStrandFlag(),
                 newRead.getReadString(), newRead.getReadNegativeStrandFlag()))
         {
             diffs.add(format("bases(%s/%s)",
                     origRead.getReadNegativeStrandFlag() ? reverseComplement(origRead.getReadString()) : origRead.getReadString(),
                     newRead.getReadNegativeStrandFlag() ? reverseComplement(newRead.getReadString()) : newRead.getReadString()));
         }
+
         // check the base qual, make sure we account for the read negative strand flag
-        if(!stringsMatch(origRead.getBaseQualityString(), origRead.getReadNegativeStrandFlag(),
+        if(!stringsMatch(
+                origRead.getBaseQualityString(), origRead.getReadNegativeStrandFlag(),
                 newRead.getBaseQualityString(), newRead.getReadNegativeStrandFlag()))
         {
             diffs.add(format("baseQual(%s/%s)",
