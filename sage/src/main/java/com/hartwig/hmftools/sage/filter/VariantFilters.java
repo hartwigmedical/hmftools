@@ -207,10 +207,10 @@ public class VariantFilters
             filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE);
         }
 
-//        if(belowMinFragmentCoords(primaryTumor))
-//        {
-//            filters.add(SoftFilter.FRAGMENT_COORDS);
-//        }
+        if(belowMinFragmentCoords(primaryTumor))
+        {
+            filters.add(SoftFilter.FRAGMENT_COORDS);
+        }
 
         if(belowMinStrongSupport(primaryTumor))
         {
@@ -277,7 +277,7 @@ public class VariantFilters
         int strongDuplexSupport = primaryTumor.strongAltSupport() - primaryTumor.strongSimplexSupport();
         double simplexBaseQualityTotal = primaryTumor.qualCounters().strongSimplexAltRecalibratedBaseQualityTotal();
         double duplexBaseQualityTotal = primaryTumor.qualCounters().strongDuplexAltRecalibratedBaseQualityTotal();
-        int simplexSupportContribution = (int)(strongDuplexSupport * simplexBaseQualityTotal/duplexBaseQualityTotal);
+        int simplexSupportContribution = (int)round(strongDuplexSupport * simplexBaseQualityTotal/duplexBaseQualityTotal);
         int strongSupport = strongDuplexSupport + simplexSupportContribution;
 
         if(strongSupport == 0)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.SageConstants.MAX_RECALIBRATED_BASE_QUAL;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -206,7 +207,7 @@ public class QualityCalculator
             return 0; // never adjust a zero qual up
 
         if(mQualityRecalibrationMap == null)
-            return min(rawQuality, MAX_RAW_BASE_QUAL);
+            return min(rawQuality, MAX_RECALIBRATED_BASE_QUAL);
 
         return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType, readStrand);
     }

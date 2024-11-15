@@ -226,12 +226,14 @@ public class RefContextConsumer
 
         int removedNMs = 0;
         int readIndex = 0;
+        List<Byte> readQuals = com.google.common.primitives.Bytes.asList(record.getBaseQualities());
 
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
             {
                 case M:
+                    removedNMs += readQuals.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x == 0).count();
                     readInfo.AlignedLength += cigarElement.getLength();
                     readIndex += cigarElement.getLength();
                     break;
@@ -244,7 +246,7 @@ public class RefContextConsumer
                     break;
                 case I:
                     byte[] insSequence = java.util.Arrays.copyOfRange(record.getReadBases(), readIndex, readIndex + cigarElement.getLength());
-                    boolean shouldCountInsert = calcNumZeroQualBases(record, insSequence, readIndex) < insSequence.length;
+                    boolean shouldCountInsert = calcNumZeroQualBases(readQuals, record, insSequence, readIndex) < insSequence.length;
                     removedNMs += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
                     readIndex += cigarElement.getLength();
                     break;

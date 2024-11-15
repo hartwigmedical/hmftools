@@ -37,8 +37,6 @@ public class ReadContextMatcher
     private final int mMaxCoreLowQualMatches;
 
     private final boolean mIsReference;
-    private final int mUnadjustedAltIndexLower;
-    private final int mUnadjustedAltIndexUpper;
     private final int mAltIndexLower; // the first lower base relative to the index where the ref and alt differ
     private final int mAltIndexUpper;
 
@@ -90,10 +88,8 @@ public class ReadContextMatcher
 
         mIsReference = isReference;
 
-        mUnadjustedAltIndexLower = readContext.VarIndex;
-        mUnadjustedAltIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
-        int altIndexLower = mUnadjustedAltIndexLower;
-        int altIndexUpper = mUnadjustedAltIndexUpper;
+        int altIndexLower = readContext.VarIndex;
+        int altIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
 
         if(!mIsReference && !readContext.AllRepeats.isEmpty())
         {
@@ -251,8 +247,8 @@ public class ReadContextMatcher
     {
         if(readQuals == null)
             return false;
-        int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mUnadjustedAltIndexLower;
-        int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mUnadjustedAltIndexUpper;
+        int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mAltIndexLower;
+        int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
         for (int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
         {
             if(readQuals[i] == 0)

@@ -144,6 +144,27 @@ public final class SamRecordUtils
         return position;
     }
 
+    public static int getThreePrimeUnclippedPosition(final SAMRecord read)
+    {
+        // returns the 3' position of the read, factoring in any soft-clipped bases
+        int position;
+
+        if(orientation(read) == POS_ORIENT)
+        {
+            position = read.getAlignmentEnd();
+            if(read.getCigar().isRightClipped())
+                position += read.getCigar().getLastCigarElement().getLength();
+        }
+        else
+        {
+            position = read.getAlignmentStart();
+            if(read.getCigar().isLeftClipped())
+                position -= read.getCigar().getFirstCigarElement().getLength();
+        }
+
+        return position;
+    }
+
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
     {
         final List<int[]> mappedCoords = Lists.newArrayList();

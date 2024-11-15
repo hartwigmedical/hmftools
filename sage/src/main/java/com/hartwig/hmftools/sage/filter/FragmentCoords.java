@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.filter;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
@@ -34,13 +35,17 @@ public class FragmentCoords
         if(atCapacity())
             return;
 
-        int unclippedPosition = getFivePrimeUnclippedPosition(read);
+        int fivePrimeUnclippedPosition = getFivePrimeUnclippedPosition(read);
+        int threePrimeUnclippedPosition = getThreePrimeUnclippedPosition(read);
 
-        String readCoord = formLocalCoordinate(unclippedPosition, !read.getReadNegativeStrandFlag());
+        String fivePrimeReadCoord = formLocalCoordinate(fivePrimeUnclippedPosition, !read.getReadNegativeStrandFlag());
+        String threePrimeReadCoord = formLocalCoordinate(threePrimeUnclippedPosition, !read.getReadNegativeStrandFlag());
 
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
-            mLowerCoords.add(readCoord);
+
+            mLowerCoords.add(fivePrimeUnclippedPosition < threePrimeUnclippedPosition ? fivePrimeReadCoord : threePrimeReadCoord);
+            mUpperCoords.add(fivePrimeUnclippedPosition < threePrimeUnclippedPosition ? threePrimeReadCoord : fivePrimeReadCoord);
             return;
         }
 
@@ -59,7 +64,7 @@ public class FragmentCoords
 
             if(mateCigar == null)
             {
-                mLowerCoords.add(readCoord);
+                mLowerCoords.add(fivePrimeReadCoord);
                 return;
             }
 
@@ -72,16 +77,16 @@ public class FragmentCoords
                 formLocalCoordinate(mateUnclippedPosition, mateForwardStrand) :
                 formRemoteCoordinate(read.getMateReferenceName(), mateUnclippedPosition, mateForwardStrand);
 
-        if(sameChromosome && unclippedPosition <= mateUnclippedPosition
+        if(sameChromosome && fivePrimeUnclippedPosition <= mateUnclippedPosition
         || !sameChromosome && read.getReferenceIndex() < read.getMateReferenceIndex())
         {
-            mLowerCoords.add(readCoord);
+            mLowerCoords.add(fivePrimeReadCoord);
             mUpperCoords.add(mateCoord);
         }
         else
         {
             mLowerCoords.add(mateCoord);
-            mUpperCoords.add(readCoord);
+            mUpperCoords.add(fivePrimeReadCoord);
         }
     }
 

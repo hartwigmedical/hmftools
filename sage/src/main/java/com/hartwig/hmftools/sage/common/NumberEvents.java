@@ -11,6 +11,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 import java.util.Arrays;
+import java.util.List;
 
 public final class NumberEvents
 {
@@ -20,13 +21,17 @@ public final class NumberEvents
 
         int removedNMs = 0;
         int readIndex = 0;
+        List<Byte> readQuals = com.google.common.primitives.Bytes.asList(record.getBaseQualities());
 
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
             {
                 case S:
+                    readIndex += cigarElement.getLength();
+                    break;
                 case M:
+                    removedNMs += readQuals.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x == 0).count();
                     readIndex += cigarElement.getLength();
                     break;
                 case D:
@@ -34,7 +39,7 @@ public final class NumberEvents
                     break;
                 case I:
                     byte[] insSequence = Arrays.copyOfRange(record.getReadBases(), readIndex, readIndex + cigarElement.getLength());
-                    boolean shouldCountInsert = calcNumZeroQualBases(record, insSequence, readIndex) < insSequence.length;
+                    boolean shouldCountInsert = calcNumZeroQualBases(readQuals, record, insSequence, readIndex) < insSequence.length;
                     removedNMs += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
                     readIndex += cigarElement.getLength();
                     break;
@@ -44,7 +49,7 @@ public final class NumberEvents
         return nm - removedNMs;
     }
 
-    public static int calcNumZeroQualBases(final SAMRecord record, final byte[] insSequence, final int insIndex)
+    public static int calcNumZeroQualBases(final List<Byte> readQuals, final SAMRecord record, final byte[] insSequence, final int insIndex)
     {
         int startIndex = Math.max(insIndex - 1, 0);
         int iterIndex = Math.min(insIndex+insSequence.length, record.getReadLength()-1);
@@ -56,7 +61,7 @@ public final class NumberEvents
             insSequenceIndex = (insSequenceIndex + 1) % insSequence.length;
         }
 
-        return (int) com.google.common.primitives.Bytes.asList(record.getBaseQualities()).subList(startIndex, iterIndex+1).stream().filter(x -> x == 0).count();
+        return (int) readQuals.subList(startIndex, iterIndex+1).stream().filter(x -> x == 0).count();
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)

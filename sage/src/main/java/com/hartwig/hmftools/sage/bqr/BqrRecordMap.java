@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_RECALIBRATED_BASE_QUAL;
 
 import java.util.List;
 import java.util.Map;
@@ -41,6 +41,6 @@ public class BqrRecordMap
         final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual, readType, readStrand);
 
         BqrRecord record = mMap.get(key);
-        return record != null ? record.RecalibratedQuality : min(qual, MAX_RAW_BASE_QUAL);
+        return record != null ? record.RecalibratedQuality : min(qual, MAX_RECALIBRATED_BASE_QUAL);
     }
 }
