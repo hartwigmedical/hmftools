@@ -33,8 +33,13 @@ import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public final class AssemblyLinker
 {
-    public static AssemblyLink tryAssemblyFacing(final JunctionAssembly first, final JunctionAssembly second)
+    public static AssemblyLink tryAssemblyFacing(
+            final JunctionAssembly first, final JunctionAssembly second, final List<AssemblyLink> splitLinks)
     {
+        // cannot already be in a split link ie the DUP case
+        if(splitLinks.stream().anyMatch(x -> x.matches(first, second)))
+            return null;
+
         if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return null;
 
