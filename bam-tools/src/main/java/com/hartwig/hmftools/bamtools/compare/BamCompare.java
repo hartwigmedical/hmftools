@@ -152,10 +152,11 @@ public class BamCompare
         return partitions;
     }
 
-    // pass all unmapped reads to the unmatched read handler
-    private void addProcessUnmappedTasks(List<Runnable> tasks, BamReaderProvider origBamReaderProvider,
-            BamReaderProvider newBamReaderProvider, UnmatchedReadHandler unmatchedReadHandler)
+    private void addProcessUnmappedTasks(
+            final List<Runnable> tasks, BamReaderProvider origBamReaderProvider,
+            final BamReaderProvider newBamReaderProvider, final UnmatchedReadHandler unmatchedReadHandler)
     {
+        // pass all unmapped reads to the unmatched read handler
         if(!mConfig.ignoreUnmapped())
         {
             tasks.add(() ->
@@ -192,15 +193,6 @@ public class BamCompare
         CompareConfig.addConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        // set all thread exception handler
-        // we must do this otherwise unhandled exception in other threads might not be reported
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
 
         BamCompare bamCompare = new BamCompare(configBuilder);
         bamCompare.run();

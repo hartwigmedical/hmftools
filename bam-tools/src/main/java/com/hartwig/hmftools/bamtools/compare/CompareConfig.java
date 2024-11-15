@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.logging.log4j.Level;
-
 public class CompareConfig
 {
     public final String OutputFile;
@@ -34,14 +32,12 @@ public class CompareConfig
     public final int MaxCachedReadsPerThread;
     public final boolean ExcludeRegions;
     public final boolean IgnoreDupDiffs;
-    public final boolean IgnoreAlterations; // consensus reads and internal unmappings
-
     public final boolean IgnoreConsensusReads;
-
     public final boolean IgnoreSupplementaryReads;
+    public final boolean IgnoreSupplementaryAttribute;
+    public final boolean IgnoreReduxUnmapped;
 
-    public final boolean MatchOrigUnmapped;
-    public final boolean MatchNewUnmapped;
+    public final boolean IgnoreAlterations; // consensus reads and internal unmappings
 
     public final int Threads;
     public final List<String> LogReadIds;
@@ -56,10 +52,10 @@ public class CompareConfig
     private static final String MAX_CACHED_READS_PER_THREAD = "max_cached_reads_per_thread";
     private static final String IGNORE_DUP_DIFFS = "ignore_dup_diffs";
     private static final String IGNORE_ALTERATIONS = "ignore_alterations";
-    private static final String IGNORE_SUPPLEMENTARY_READS = "ignore_supplementary_reads";
+    private static final String IGNORE_SUPPLEMENTARY_READS = "ignore_supp_reads";
+    private static final String IGNORE_SUPPLEMENTARY_ATTRIBUTE = "ignore_supp_attribute";
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
-    private static final String MATCH_ORIG_UNMAPPED = "match_orig_unmapped";
-    private static final String MATCH_NEW_UNMAPPED = "match_new_unmapped";
+    private static final String IGNORE_REDUX_UNMAPPED = "ignore_redux_unmapped";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 10_000_000;
 
@@ -85,16 +81,16 @@ public class CompareConfig
         IgnoreAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
         IgnoreConsensusReads = configBuilder.hasFlag(IGNORE_CONSENSUS_READS);
         IgnoreSupplementaryReads = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_READS);
-
-        MatchOrigUnmapped = configBuilder.hasFlag(MATCH_ORIG_UNMAPPED);
-        MatchNewUnmapped = configBuilder.hasFlag(MATCH_NEW_UNMAPPED);
+        IgnoreSupplementaryAttribute = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE);
+        IgnoreReduxUnmapped = configBuilder.hasFlag(IGNORE_REDUX_UNMAPPED);
 
         BT_LOGGER.info("origBam({}) newBam({})", OrigBamFile, NewBamFile);
 
         BT_LOGGER.info("outputFile({})", OutputFile);
 
-        BT_LOGGER.info("ignoreDupDiffs({}) ignoreAlterations({}) ignoreConsensusReads({}) ignoreSupplementaryReads({})",
-                IgnoreDupDiffs, IgnoreAlterations, IgnoreConsensusReads, IgnoreSupplementaryReads);
+        BT_LOGGER.info("ignore(dupicateDiffs={} alterations={} consensusReads={} suppReads={} suppAttrDiffs={} reduxUnmapped={})",
+                IgnoreDupDiffs, IgnoreAlterations, IgnoreConsensusReads, IgnoreSupplementaryReads, IgnoreSupplementaryAttribute,
+                IgnoreReduxUnmapped);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -131,14 +127,13 @@ public class CompareConfig
         configBuilder.addInteger(MAX_CACHED_READS_PER_THREAD, "Maximum cached reads per thread", 0);
 
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlag(EXCLUDE_REGIONS, "If set, ignore excluded regions");
-        configBuilder.addFlag(IGNORE_DUP_DIFFS, "If set, ignore duplicate diffs");
-        configBuilder.addFlag(IGNORE_ALTERATIONS, "If set, ignore consensus reads and internal unmappings");
-        configBuilder.addFlag(IGNORE_CONSENSUS_READS, "If set, ignore consensus reads");
-        configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "If set, ignore supplementary reads");
-
-        configBuilder.addFlag(MATCH_ORIG_UNMAPPED, "If set, match unmapped reads in original bam against corresponding read in new bam");
-        configBuilder.addFlag(MATCH_NEW_UNMAPPED, "If set, match unmapped reads in new bam against corresponding read in original bam");
+        configBuilder.addFlag(EXCLUDE_REGIONS, "Specify regions to exclude");
+        configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
+        configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore Redux consensus reads and unmappings");
+        configBuilder.addFlag(IGNORE_CONSENSUS_READS, "Ignore consensus reads");
+        configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "Ignore supplementary reads");
+        configBuilder.addFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE, "Ignore supplementary attribute, can change from unmapping");
+        configBuilder.addFlag(IGNORE_REDUX_UNMAPPED, "Ignore differences in reads unmapped by Redux");
 
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
@@ -163,8 +158,8 @@ public class CompareConfig
         IgnoreAlterations = false;
         IgnoreConsensusReads = false;
         IgnoreSupplementaryReads = false;
-        MatchOrigUnmapped = false;
-        MatchNewUnmapped = false;
+        IgnoreSupplementaryAttribute = false;
+        IgnoreReduxUnmapped = false;
         Threads = 0;
         LogReadIds = null;
         SpecificChrRegions = null;
