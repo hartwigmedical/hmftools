@@ -112,7 +112,7 @@ public class RefContextConsumer
 
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(readInfo.SoftClipLength);
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(
-                record, readInfo.NumberOfEvents, applyMapQualEventPenalty(readStart, readEnd));
+                record, readInfo.NumberOfEventsPlusZeroQual, applyMapQualEventPenalty(readStart, readEnd));
 
         readInfo.ReadExceedsQuality = adjustedMapQual > 0;
 
@@ -196,6 +196,7 @@ public class RefContextConsumer
         public int NumberOfEvents;
         public int AlignedLength;
         public int SoftClipLength;
+        public int NumberOfEventsPlusZeroQual;
         public boolean ReadExceedsQuality;
         public boolean ReadExceedsScAdjustedQuality;
 
@@ -206,6 +207,7 @@ public class RefContextConsumer
             AlignedLength = 0;
             SoftClipLength = 0;
             NumberOfEvents = 0;
+            NumberOfEventsPlusZeroQual = 0;
             ReadExceedsQuality = false;
             ReadExceedsScAdjustedQuality = false;
             AltReads = null;
@@ -224,7 +226,8 @@ public class RefContextConsumer
     {
         ReadInfo readInfo = new ReadInfo();
 
-        int removedNMs = 0;
+        int numberZeroQuals = 0;
+        int additionalIndels = 0;
         int readIndex = 0;
         List<Byte> readQuals = com.google.common.primitives.Bytes.asList(record.getBaseQualities());
 
@@ -233,7 +236,7 @@ public class RefContextConsumer
             switch(cigarElement.getOperator())
             {
                 case M:
-                    removedNMs += readQuals.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x == 0).count();
+                    numberZeroQuals += readQuals.subList(readIndex, readIndex + cigarElement.getLength()).stream().filter(x->x == 0).count();
                     readInfo.AlignedLength += cigarElement.getLength();
                     readIndex += cigarElement.getLength();
                     break;
@@ -242,12 +245,12 @@ public class RefContextConsumer
                     readIndex += cigarElement.getLength();
                     break;
                 case D:
-                    removedNMs += cigarElement.getLength() - 1;
+                    additionalIndels += cigarElement.getLength() - 1;
                     break;
                 case I:
                     byte[] insSequence = java.util.Arrays.copyOfRange(record.getReadBases(), readIndex, readIndex + cigarElement.getLength());
                     boolean shouldCountInsert = calcNumZeroQualBases(readQuals, record, insSequence, readIndex) < insSequence.length;
-                    removedNMs += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
+                    additionalIndels += shouldCountInsert ? cigarElement.getLength() - 1 : cigarElement.getLength();
                     readIndex += cigarElement.getLength();
                     break;
             }
@@ -255,7 +258,8 @@ public class RefContextConsumer
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - removedNMs, 0);
+            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - additionalIndels - numberZeroQuals, 0);
+            readInfo.NumberOfEventsPlusZeroQual = max(rawNM(record, mRefSequence) - additionalIndels, 0);
         }
 
         return readInfo;
