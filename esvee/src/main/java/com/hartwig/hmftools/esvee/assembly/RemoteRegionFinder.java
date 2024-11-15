@@ -59,7 +59,7 @@ public final class RemoteRegionFinder
         {
             RemoteRegion remoteRegion = remoteRegions.get(index);
 
-            if(assemblyOverlapsRemoteRegion(assembly, remoteRegion))
+            if(assemblyOverlapsRemoteRegion(assembly, remoteRegion) && !remoteRegion.hasDiscordantReads())
             {
                 remoteRegions.remove(index);
             }

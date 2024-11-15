@@ -56,6 +56,7 @@ public class RemoteRegion extends ChrBaseRegion
     {
         return mReadTypeCount[JUNCTION_MATE.ordinal()] + mReadTypeCount[DISCORDANT.ordinal()];
     }
+    public boolean hasDiscordantReads() { return mReadTypeCount[DISCORDANT.ordinal()] > 0; }
 
     public boolean isSuppOnlyRegion() { return nonSuppReadCount() == 0; }
 
