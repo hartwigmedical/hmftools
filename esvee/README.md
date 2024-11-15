@@ -213,7 +213,7 @@ Additionally, to ensure we capture SV with long (inexact) homology we also ident
 
 For each site we also obtain the following reads (excluding reads with alignments that overlap blacklist regions) and their mates 
 - All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases) 
-- All reads within min[99.75%,1kb] range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, inter-chromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75] 
+- All reads within 99.75% range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, inter-chromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75] 
 - All reads that overlap the breakend and contain an INDEL of 3+ bases 
 For the last 2 categories (discordant & indel containing reads), we filter if they have more than max(5,25% of soft clip length) soft clip bases with base qual <=25, since these frequently cause FP calls in GRIDSS. 
 
@@ -253,7 +253,7 @@ If more than one assembly shares the same breakend after deduplication then seco
 ### STEP 2B: Phasing 
 Phase groups are created by maximally linking any breakends which share at least 1 fragment. Since short DEL, DUP and INS will not share discordant reads on either side of the junction, if there are no supplementary reads that directly support the junction, they will not share any reads.  Hence, we also merge any 2 proximate breakends into the same phase group if: 
 - they form a DUP orientation <500b OR DEL orientation < 1kb AND 
-- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail insertion sequence 
+- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertino site orientation.
 
 During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging. 
 
