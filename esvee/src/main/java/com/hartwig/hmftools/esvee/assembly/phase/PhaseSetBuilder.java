@@ -832,7 +832,7 @@ public class PhaseSetBuilder
                 if(!isFacingAssemblyCandidate(assembly2, facingAssemblies, mSplitLinks))
                     continue;
 
-                AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2);
+                AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2, mSplitLinks);
 
                 if(facingLink == null)
                     continue;
