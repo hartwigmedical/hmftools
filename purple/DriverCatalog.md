@@ -76,7 +76,7 @@ Note that the TMB is calculated separately for INDELs and SNVs.   For TSG dnds r
  
 - **Clustered variants** - Pathogenic variants are likely to occur clustered in specific locations of genes that are functionally important.  This should be reflected in driver likelihood
 - **Cancer type specificity** - DNDS is calculated pan-cancer due to size of cohorts. Ideally this would be calculated cancer type specific, especially for large cohorts.
-- **INFRAME INDELS in repeats with 3 base microhomology** - Generally inframe indels are extremely rare and are likely to be drivers and hece are give driver likelihood = 1.  An exception should be made for 3 base indels found in microsatellites with a repeat length of 3 as this is a common passenger mutaiton, particularly in MSI samples.
+- **INFRAME INDELS in repeats with 3 base microhomology** - Generally inframe indels are extremely rare and are likely to be drivers and hence are given driver likelihood = 1.  An exception should be made for 3 base indels found in microsatellites with a repeat length of 3 as this is a common passenger mutation, particularly in MSI samples.
 - **AMPLIFICATION PASSENGERS** - All amplifications are given a likelihood of 1.  Since nearby genes are amplified together, some of the amplification drivers may well be passengers, commonly amplified with nearby drivers.  
 - **FUNCTIONAL ANNOTATION** - may improve driver likelihood annotation
 
