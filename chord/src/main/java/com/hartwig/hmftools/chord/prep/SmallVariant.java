@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.chord.prep;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -11,7 +10,7 @@ public class SmallVariant
 
     public final String Id;
 
-    public final HumanChromosome Chromosome;
+    public final String Chromosome;
     public final int Position;
 
     public final String RefBases;
@@ -23,7 +22,7 @@ public class SmallVariant
 
         Id = id;
 
-        Chromosome = HumanChromosome.fromString(chromosome);
+        Chromosome = chromosome;
         Position = position;
 
         RefBases = refBases;
@@ -49,7 +48,7 @@ public class SmallVariant
 
         Id = null;
 
-        Chromosome = HumanChromosome.fromString(chromosome);
+        Chromosome = chromosome;
         Position = position;
 
         RefBases = refBases;

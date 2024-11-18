@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.chord.snv;
 
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
-import static com.hartwig.hmftools.chord.prep.PrepUtils.checkRefGenomeVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -56,9 +55,6 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
         VcfFile vcfFile = new VcfFile(mConfig.snvIndelVcfFile(sampleId), mConfig.IncludeNonPass).logPrefix(mLogPrefix);
 
         List<VariantContext> variants = vcfFile.loadVariants();
-
-        if(variants.size()>0)
-            checkRefGenomeVersion(mRefGenome, variants.get(0));
 
         List<SmallVariant> snvs = new ArrayList<>();
         for(VariantContext variantContext : variants)

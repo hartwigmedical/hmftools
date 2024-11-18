@@ -18,7 +18,7 @@ public class IndelVariantTest
     public void canGetDeletionFlankSequences()
     {
         // Based on deletion at chr:222493574 in COLO829v003T
-        IndelVariant deletion = new IndelVariant(new SmallVariant("chr1", 21, "CAA", "C"));
+        IndelVariant deletion = new IndelVariant(new SmallVariant("1", 21, "CAA", "C"));
 
         String leftFlank = deletion.getFlankingRefBasesLeft(REF_GENOME, 1);
         String rightFlank = deletion.getFlankingRefBasesRight(REF_GENOME, 3);
@@ -32,7 +32,7 @@ public class IndelVariantTest
     public void canGetInsertionFlankSequences()
     {
         // Based on insertion at chr17:79329838 in COLO829v003T
-        IndelVariant insertion = new IndelVariant(new SmallVariant("chr17", 21, "G", "GGGTGT"));
+        IndelVariant insertion = new IndelVariant(new SmallVariant("17", 21, "G", "GGGTGT"));
 
         String leftFlank = insertion.getFlankingRefBasesLeft(REF_GENOME, 1);
         String rightFlank = insertion.getFlankingRefBasesRight(REF_GENOME, 3);

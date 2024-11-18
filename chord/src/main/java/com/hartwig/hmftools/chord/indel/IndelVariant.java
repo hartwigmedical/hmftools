@@ -41,7 +41,7 @@ public class IndelVariant
             end = mVariant.Position + mIndelLength*indelLengthUnits;
         }
 
-        String chromosome = mVariant.Chromosome.toString();
+        String chromosome = mVariant.Chromosome;
 
         end = Math.min(end, refGenome.getChromosomeLength(chromosome));
 
@@ -53,7 +53,7 @@ public class IndelVariant
         int start = mVariant.Position - mIndelLength*indelLengthUnits + 1;
         int end = mVariant.Position;
 
-        return new String(refGenome.getBases(mVariant.Chromosome.toString(), start, end));
+        return new String(refGenome.getBases(mVariant.Chromosome, start, end));
     }
 
     public String getIndelSequence()

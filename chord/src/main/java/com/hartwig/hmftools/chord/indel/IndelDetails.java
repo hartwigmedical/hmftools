@@ -91,7 +91,7 @@ public class IndelDetails
 
         return new IndelDetails(
                 sampleId,
-                indel.mVariant.Chromosome.toString(),
+                indel.mVariant.Chromosome,
                 indel.mVariant.Position,
                 indel.mVariant.RefBases,
                 indel.mVariant.AltBases,

@@ -43,12 +43,12 @@ public class SvDetails
                 TSV_DELIM,
                 sv.Id,
 
-                sv.RefChromosome.toString(),
+                sv.RefChromosome,
                 String.valueOf(sv.RefPosition),
                 sv.RefOrientation.toString(),
                 sv.Context.getReference().getBaseString(),
 
-                sv.AltChromosome.toString(),
+                sv.AltChromosome,
                 String.valueOf(sv.AltPosition),
                 sv.AltOrientation.toString(),
                 sv.Context.getAlternateAllele(0).getDisplayString(),
