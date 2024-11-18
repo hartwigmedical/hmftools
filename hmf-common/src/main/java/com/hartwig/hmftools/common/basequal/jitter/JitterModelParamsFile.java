@@ -7,17 +7,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-
-import org.jetbrains.annotations.NotNull;
 
 public class JitterModelParamsFile
 {
     enum Column
     {
         unit,
+        consensusType,
         optimalScaleRepeat4,
         optimalScaleRepeat5,
         optimalScaleRepeat6,
@@ -40,6 +38,7 @@ public class JitterModelParamsFile
         DelimFileWriter.write(filename, columns, jitterModelParamsList, (jitterParams, row) ->
         {
             row.set(Column.unit, jitterParams.RepeatUnit);
+            row.set(Column.consensusType, jitterParams.ConsensusType.name());
             row.set(Column.optimalScaleRepeat4, jitterParams.OptimalScaleRepeat4);
             row.set(Column.optimalScaleRepeat5, jitterParams.OptimalScaleRepeat5);
             row.set(Column.optimalScaleRepeat6, jitterParams.OptimalScaleRepeat6);
@@ -59,6 +58,7 @@ public class JitterModelParamsFile
         {
             JitterModelParams params = new JitterModelParams(
                     row.get(Column.unit),
+                    ConsensusType.valueOf(row.get(Column.consensusType)),
                     row.getDouble(Column.optimalScaleRepeat4),
                     row.getDouble(Column.optimalScaleRepeat5),
                     row.getDouble(Column.optimalScaleRepeat6),

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
+import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -68,7 +69,8 @@ public class ReduxApplication
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
                     mConfig.JitterMsiMaxSitePercContribution);
 
-            jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER);
+            ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(mConfig.Sequencing);
+            jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER, consensusMarker);
         }
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);

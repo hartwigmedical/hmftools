@@ -56,16 +56,20 @@ public class JitterCountsTable
         }
 
         String getRepeatUnit() { return RepeatUnit; }
+
+        ConsensusType getConsensusType() { return ConsensusType; }
     }
 
     public final String RepeatUnit;
+    public final ConsensusType ConsensusType;
 
     // ref num unit to rows
     private final List<Row> mRows = new ArrayList<>();
 
-    JitterCountsTable(final String repeatUnit, final double maxSingleAltSiteContributionPerc)
+    JitterCountsTable(final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc)
     {
         RepeatUnit = repeatUnit;
+        ConsensusType = consensusType;
     }
 
     public int repeatUnitLength()
@@ -77,7 +81,7 @@ public class JitterCountsTable
 
     // summarise the data from
     static JitterCountsTable summariseFrom(
-            final String repeatUnit, final double maxSingleAltSiteContributionPerc,
+            final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc,
             final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
     {
         // In order to filter out outliers, we perform the stats summation in a loop
@@ -89,7 +93,7 @@ public class JitterCountsTable
 
         while(true)
         {
-            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, maxSingleAltSiteContributionPerc);
+            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, consensusType, maxSingleAltSiteContributionPerc);
 
             for(MicrosatelliteSiteAnalyser microsatelliteSiteAnalyser : microsatelliteSiteAnalysers)
             {
@@ -109,7 +113,7 @@ public class JitterCountsTable
                 // get all the read counts into a row object
                 Row row = newTable.new Row(microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat);
 
-                for(MicrosatelliteRead microsatelliteRead : microsatelliteSiteAnalyser.getPassingReadRepeatMatches())
+                for(MicrosatelliteRead microsatelliteRead : microsatelliteSiteAnalyser.getPassingReadRepeatMatches(consensusType))
                 {
                     int numRepeatUnits = microsatelliteRead.numRepeatUnits();
                     int jitter = numRepeatUnits - row.refNumUnits;

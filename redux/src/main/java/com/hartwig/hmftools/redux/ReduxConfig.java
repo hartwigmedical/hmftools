@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -53,6 +55,7 @@ import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
@@ -72,6 +75,7 @@ public class ReduxConfig
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
+    public final SequencingType Sequencing;
 
     public final int PartitionSize;
     public final int BufferSize;
@@ -160,6 +164,8 @@ public class ReduxConfig
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
+
+        Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         OutputBam = configBuilder.getValue(OUTPUT_BAM);
 
@@ -293,6 +299,7 @@ public class ReduxConfig
         configBuilder.addPaths(INPUT_BAM, false, "BAM file path, separated by ',' if multiple");
         configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
+        SequencingType.registerConfig(configBuilder);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
         configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
@@ -349,6 +356,7 @@ public class ReduxConfig
         OutputId = "";
         RefGenVersion = V37;
         RefGenome = refGenome;
+        Sequencing = ILLUMINA;
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
