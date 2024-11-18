@@ -68,7 +68,7 @@ java -jar cobalt.jar \
     -tumor SAMPLE_ID \
     -tumor_bam /sample_data/SAMPLE_ID.bam \ 
     -output_dir /sample_data/cobalt \ 
-    -gc_profile /ref_Data/GC_profile.1000bp.37.cnp \
+    -gc_profile /ref_data/GC_profile.1000bp.37.cnp \
     -tumor_only_diploid_bed DiploidRegions.37.bed.gz \
     -threads 10 \ 
 ```
@@ -85,12 +85,34 @@ java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 SAGE
 ```
-<TO DO>
+java -jar sage.jar \
+    -tumor SAMPLE_ID \ 
+    -tumor_bam /sample_data/SAMPLE_ID.bam \
+    -ref_genome_version 37 \
+    -ref_genome /ref_data/refGenome.fasta \
+    -hotspots /ref_data/KnownHotspots.37.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
+    -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -ensembl_data_dir /ref_data/ensembl_cache/ \
+    -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
+    -threads 16 \
 ```
+
 ISOFOX (panels with targeted RNA only)
 ```
-<TO DO>
+java -jar isofox.jar \
+    -sample SAMPLE_ID \
+    -functions TRANSCRIPT_COUNTS \
+    -bam_file /sample_data/SAMPLE_ID.RNA.bam \ 
+    -ref_genome /ref_data/ref-genome.fasta \
+    -ensembl_data_dir /ref_data/ensembl_cache/ \ 
+    -exp_counts_file /ref_data/read_151_exp_counts.csv \ 
+    -exp_gc_ratios_file /ref_data/read_100_exp_gc_ratios.csv \ 
+    -output_dir /sample_data/ \
+    -threads 16 \
 ```
+
+Note: Isofox requires the expected counts file to have been generated for the correct RNA read length. See Isofox read-me for details.
 
 ### STEP 2: Run training normalisation scripts
 
@@ -120,18 +142,19 @@ output_file | Output normalisation TSV file
 ##### Command
 ```
 java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder 
-  -sample_id_file sample_ids.csv
-  -cobalt_dir /training_sample_data/
-  -amber_dir /training_sample_data/ 
-  -ref_genome_version V37 
-  -gc_profile /ref_data/GC_profile.1000bp.37.cnp 
-  -target_regions_bed /ref_data/target_regions_definition.37.bed 
-  -output_file /training_files/target_regions.cobalt_normalisation.37.tsv 
-  -log_debug
+  -sample_id_file sample_ids.csv \
+  -cobalt_dir /training_sample_data/ \
+  -amber_dir /training_sample_data/ \
+  -ref_genome_version V37 \
+  -gc_profile /ref_data/GC_profile.1000bp.37.cnp \
+  -target_regions_bed /ref_data/target_regions_definition.37.bed \
+  -output_file /ref_data/target_regions.cobalt_normalisation.37.tsv \
+  -log_debug \
 ```
 
 #### Panel Artefact PON
-In addition to the WGS PON, Pave utilises a panel-specific PON to capture panel specific artefacts.  Any non-hotspot variant found 3 or more times with a qual of > 100 is added to the panel PON.
+In addition to the WGS PON, Pave utilises a panel-specific PON to capture panel specific artefacts. 
+Any non-hotspot variant found 3 or more times with a qual (TQP) of > 40 and modified map-qual factor of > -10 is added to the panel PON.
 
 To generate this file all the Pave PonBuilder to make the additional PON file:
 
@@ -140,9 +163,7 @@ java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
   -sample_id_file training_sample_ids.csv \
   -vcf_path "/training_sample_data/*.sage.vcf.gz" \
   -ref_genome_version V38 \
-  -min_samples 3 \
-  -qual_cutoff 100 \
-  -output_dir /training_files/ \
+  -output_dir /ref_data/ \
   -log_debug \
 ```
 
@@ -150,9 +171,17 @@ java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
 
 The TPM normalisation is only required for panels with RNA coverage (eg. TSO500) in order to normalise the TPM so that it is equivalent to WTS.  This can be generated using the Isofox Normalisation Builder
 
-<TO DO - link to this code>
+```
+java -cp isofox.jar com.hartwig.hmftools.isofox.cohort.CohortAnalyser \
+  -root_data_dir /sample_data/ \
+  -sample_data_file /sample_data/training_sample_ids.csv \
+  -analyses PANEL_TPM_NORMALISATION \
+  -gene_distribution_file /ref_data/isofox.wgs_gene_distribution.37.csv \
+  -gene_id_file /ref_data/targeted_pane_gene_ids.csv \
+  -output_dir /ref_data/ \
+```
 
-The median adjusted TPM for each gene across the panel samples.  If the median is zero, a replacement value of 0.01 is used instead. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
+The median adjusted TPM for each gene across the panel samples. If the median is zero, a replacement value of 0.01 is used instead. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
 
 Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
 

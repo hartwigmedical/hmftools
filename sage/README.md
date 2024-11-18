@@ -118,31 +118,33 @@ log_evidence_reads | False   | For each variant, print a line with each read's m
 Minimum set of arguments (running in tumor only mode):
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
-    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+java -Xmx32G -jar sage.jar \
+    -tumor COLO829v003T \
+    -tumor_bam /sample_data/COLO829v003T.bam \
     -ref_genome_version 37 \
-    -ref_genome /path/to/refGenome.fasta \
-    -hotspots /path/to/KnownHotspots.37.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
-    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -ref_genome /ref_data/refGenome.fasta \
+    -hotspots /ref_data/KnownHotspots.37.vcf.gz \
+    -panel_bed /ref_data/ActionableCodingPanel.37.bed.gz \
+    -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -output_vcf /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
+    -threads 16 \ 
 ```
 
 Typical arguments running in paired tumor-normal mode:
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
-    -threads 16 
-    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
-    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+java -Xmx32G -jar sage.jar \
+    -reference COLO829v003R -reference_bam /sample_data/COLO829v003R.bam \
+    -tumor COLO829v003T -tumor_bam /sample_data/COLO829v003T.bam \
     -ref_genome_version 37 \
-    -ref_genome /path/to/refGenome.fasta \
-    -hotspots /path/to/KnownHotspots.37.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
-    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -ref_genome /ref_data/refGenome.fasta \
+    -hotspots /ref_data/KnownHotspots.37.vcf.gz \
+    -panel_bed /ref_data/ActionableCodingPanel.37.bed.gz \
+    -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -output_vcf /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
+    -threads 16 \
 ```
 
 # SAGE append mode usage
@@ -176,11 +178,12 @@ The optional [base quality recalibration](#optional-base-quality-recalibration-a
 Minimum set of arguments:
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendApplication \
-    -reference COLO829v003RNA -reference_bam /path/to/COLO829v003RNA.bam \
-    -ref_genome /path/to/refGenome.fasta \
-    -input_vcf /path/to/COLO829v003.sage.vcf.gz
-    -out /path/to/COLO829v003.sage.rna.vcf.gz
+java -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendApplication \
+    -reference COLO829v003RNA \
+    -reference_bam /sample_data/COLO829v003RNA.bam \
+    -ref_genome /ref_data/refGenome.fasta \
+    -input_vcf /sample_data/COLO829v003.sage.vcf.gz
+    -output_vcf /sample_data/COLO829v003.sage.rna.vcf.gz
 ```
 
 
