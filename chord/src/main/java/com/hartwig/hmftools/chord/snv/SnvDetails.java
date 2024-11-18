@@ -43,7 +43,7 @@ public class SnvDetails
 
     public static SnvDetails from(String sampleId, SmallVariant snv, RefGenomeSource refGenome)
     {
-        String triNucSequence = new String(refGenome.getBases(snv.Chromosome.toString(), snv.Position-1,  snv.Position+1));
+        String triNucSequence = new String(refGenome.getBases(snv.Chromosome, snv.Position-1,  snv.Position+1));
         String triNucContext = SnvSigUtils.variantContext(snv.RefBases, snv.AltBases, triNucSequence);
 
         return new SnvDetails(
