@@ -52,7 +52,10 @@ These files are then used by the pipeline in panel mode to produce well-calibrat
 
 ## Training procedure to build panel-specific resource files
 
-An initial set of input samples, recommended to number at least 20, are use to 'train' the pipeline. In particular this identifies variance in read depth and variant calling compared with whole genome and transcriptome.   Note that the assumption of this training is that the _median_ relative copy number for any given gene should not deviate too systematically from the ploidy across the cohort.  In general this is a realtively safe assumption for a pan-cancer dataset, but in cancer specific training sets, there may be certain recurrentlye copy number altered genes that violate this assumption.   
+An initial set of input samples, recommended to number at least 20, are use to 'train' the pipeline. 
+In particular this identifies variance in read depth and variant calling compared with whole genome and transcriptome. 
+Note that the assumption of this training is that the _median_ relative copy number for any given gene should not deviate too systematically from the ploidy across the cohort. 
+In general this is a relatively safe assumption for a pan-cancer dataset, but in cancer specific training sets, there may be certain recurrently copy-number-altered genes that violate this assumption.   
 
 There are 2 steps in the training procedure:
 
