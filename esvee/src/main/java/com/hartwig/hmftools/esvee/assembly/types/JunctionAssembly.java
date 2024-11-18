@@ -71,6 +71,7 @@ public class JunctionAssembly
     private final String mInitialReadId;
     private int mMergedAssemblies;
     private int mMismatchReadCount;
+    private String mExtBaseBuildInfo;
 
     private final AssemblyStats mStats;
 
@@ -132,6 +133,7 @@ public class JunctionAssembly
         mOutcome = UNSET;
         mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
+        mExtBaseBuildInfo = null;
 
         mStats = new AssemblyStats();
         assemblySupport.forEach(x -> mStats.addRead(x, mJunction, x.cachedRead()));
@@ -631,6 +633,9 @@ public class JunctionAssembly
 
     public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
     public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
+
+    public void setExtBaseBuildInfo(final String info) { mExtBaseBuildInfo = info; }
+    public String extBaseBuildInfo() { return mExtBaseBuildInfo != null ? mExtBaseBuildInfo : ""; }
 
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,

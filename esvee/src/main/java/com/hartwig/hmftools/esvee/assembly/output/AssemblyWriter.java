@@ -86,6 +86,7 @@ public class AssemblyWriter
             sj.add("RefSideSoftClips");
             sj.add("MergedAssemblies");
             AssemblyStats.addReadStatsHeader(sj);
+            sj.add("ExtBaseBuildInfo");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -162,6 +163,7 @@ public class AssemblyWriter
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
             assembly.stats().addReadStats(sj);
+            sj.add(assembly.extBaseBuildInfo());
 
             mWriter.write(sj.toString());
             mWriter.newLine();
