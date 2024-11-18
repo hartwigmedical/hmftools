@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -286,7 +287,7 @@ public class SomaticVariants
         }
     }
 
-    public SomaticPurityResult processSample(final String sampleId, final PurityContext purityContext)
+    public SomaticPurityResult processSample(final String sampleId)
     {
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
@@ -314,10 +315,20 @@ public class SomaticVariants
         if(!filteredVariants.isEmpty())
         {
             // check for CHIP variants and remove them from variants used for purity estimates
-            final double sampleAlleleTotal = sampleTotalAD;
+            double sampleAlleleTotal = sampleTotalAD;
 
-            List<SomaticVariant> chipVariants = filteredVariants.stream()
-                    .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
+            List<SomaticVariant> chipVariants = Lists.newArrayList();
+
+            for(SomaticVariant variant : filteredVariants)
+            {
+                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+
+                if(isLikelyChipVariant(sampleFragData, sampleAlleleTotal))
+                {
+                    sampleFragData.markLikeChip();
+                    chipVariants.add(variant);
+                }
+            }
 
             for(SomaticVariant variant : chipVariants)
             {
@@ -325,7 +336,6 @@ public class SomaticVariants
                         sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
 
                 filteredVariants.remove(variant);
-                variant.addFilterReason(CHIP);
             }
 
             purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
@@ -399,8 +409,7 @@ public class SomaticVariants
         return filters;
     }
 
-    private static boolean isLikelyChipVariant(
-            final SomaticVariant variant, final GenotypeFragments sampleFragData, final double sampleAlleleTotal)
+    private static boolean isLikelyChipVariant(final GenotypeFragments sampleFragData, final double sampleAlleleTotal)
     {
         return sampleFragData.AlleleCount > CHIP_MIN_ALLELE_FRAGS
             && sampleFragData.AlleleCount / sampleAlleleTotal > CHIP_MIN_SAMPLE_PERC;
@@ -456,13 +465,16 @@ public class SomaticVariants
             sj.add(variant.Chromosome).add(valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
             sj.add(valueOf(variant.isProbeVariant()));
 
-            String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+            List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
 
-            if(filtersStr.isEmpty() && sampleFragData.isLowQual())
-                filtersStr = LOW_QUAL_PER_AD.toString();
+            if(sampleFragData.likelyChip())
+                filterReasons.add(CHIP);
 
-            if(filtersStr.isEmpty())
-                filtersStr = PASS;
+            if(filterReasons.isEmpty() && sampleFragData.isLowQual())
+                filterReasons.add(LOW_QUAL_PER_AD);
+
+            String filtersStr = !filterReasons.isEmpty() ?
+                    filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)) : PASS;
 
             sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(variant.TriNucContext);
             sj.add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc)).add(valueOf(variant.RepeatCount));

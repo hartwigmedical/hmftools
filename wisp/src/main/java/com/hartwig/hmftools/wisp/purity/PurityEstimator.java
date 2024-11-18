@@ -213,7 +213,7 @@ public class PurityEstimator
                         copyNumberProfile.processSample(sampleId, purityContext) : CnPurityResult.INVALID_RESULT;
 
                 SomaticPurityResult somaticPurityResult = somaticVariants != null ?
-                        somaticVariants.processSample(sampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
+                        somaticVariants.processSample(sampleId) : SomaticPurityResult.INVALID_RESULT;
 
                 AmberLohResult lohResult = amberLohCalcs != null ? amberLohCalcs.processSample(sampleId) : AmberLohResult.INVALID_RESULT;
 

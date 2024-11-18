@@ -16,6 +16,8 @@ public class GenotypeFragments
 
     private double mBqrErrorRate; // only used for output data
 
+    private boolean mLikelyChip;
+
     public GenotypeFragments(final String sampleName, final int alleleCount, final int depth, final double qualTotal,
             final UmiTypeCounts umiCounts)
     {
@@ -26,6 +28,7 @@ public class GenotypeFragments
         UmiCounts = umiCounts;
 
         mBqrErrorRate = 0;
+        mLikelyChip = false;
     }
 
     public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / (double)AlleleCount : 0; }
@@ -36,6 +39,9 @@ public class GenotypeFragments
 
     public void setBqrErrorRate(double errorRate) { mBqrErrorRate = errorRate; }
     public double bqrErrorRate() { return mBqrErrorRate; }
+
+    public void markLikeChip() { mLikelyChip = true; }
+    public boolean likelyChip() { return mLikelyChip; }
 
     public String toString()
     {
