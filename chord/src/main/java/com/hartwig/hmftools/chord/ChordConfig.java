@@ -48,8 +48,6 @@ public class ChordConfig
     public final boolean IncludeNonPass;
     public final boolean WriteDetailedFiles;
 
-    public final String ChordToolDir;
-
     private static final String SNV_INDEL_VCF_FILE = "snv_indel_vcf_file";
     private static final String SNV_INDEL_VCF_FILE_DESC = "Path to the VCF containing SNVs and indels";
 
@@ -61,9 +59,6 @@ public class ChordConfig
 
     private static final String WRITE_DETAILED_FILES = "write_detailed_files";
     private static final String WRITE_DETAILED_FILES_DESC = "Write mutation context attributes per variant";
-
-    private static final String CHORD_TOOL_DIR = "chord_tool_dir";
-    private static final String CHORD_TOOL_DIR_DESC = "Dir containing the CHORD and mutSigExtractor R packages";
 
     private static final String SAMPLE_IDS_DELIM = ",";
 
@@ -85,8 +80,6 @@ public class ChordConfig
 
         IncludeNonPass = configBuilder.hasFlag(INCLUDE_NON_PASS);
         WriteDetailedFiles = configBuilder.hasFlag(WRITE_DETAILED_FILES);
-
-        ChordToolDir = configBuilder.getValue(CHORD_TOOL_DIR);
     }
 
     private List<String> getSampleIds(ConfigBuilder configBuilder)
@@ -155,15 +148,13 @@ public class ChordConfig
         configBuilder.addFlag(INCLUDE_NON_PASS, INCLUDE_NON_PASS_DESC);
         configBuilder.addFlag(WRITE_DETAILED_FILES, WRITE_DETAILED_FILES_DESC);
 
-        configBuilder.addPath(CHORD_TOOL_DIR, false, CHORD_TOOL_DIR_DESC);
-
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
     @VisibleForTesting
     public ChordConfig(
             List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile, String refGenomeFile,
-            String outputDir, String outputId, int threads, boolean includeNonPass, boolean writeDetailedFiles, String chordToolDir
+            String outputDir, String outputId, int threads, boolean includeNonPass, boolean writeDetailedFiles
     )
     {
         SampleIds = sampleIds;
@@ -176,7 +167,6 @@ public class ChordConfig
         Threads = threads;
         IncludeNonPass = includeNonPass;
         WriteDetailedFiles = writeDetailedFiles;
-        ChordToolDir = chordToolDir;
     }
 
     @VisibleForTesting
@@ -192,7 +182,6 @@ public class ChordConfig
         private int Threads = 1;
         private boolean IncludeNonPass = false;
         private boolean WriteDetailedFiles = false;
-        private String ChordToolDir = "";
 
         public Builder sampleIds(List<String> sampleIds)
         {
@@ -254,17 +243,11 @@ public class ChordConfig
             return this;
         }
 
-        public Builder chordToolDir(String chordToolDir)
-        {
-            ChordToolDir = chordToolDir;
-            return this;
-        }
-
         public ChordConfig build()
         {
             return new ChordConfig(
                     SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile, RefGenomeFile,
-                    OutputDir, OutputId, Threads, IncludeNonPass, WriteDetailedFiles, ChordToolDir
+                    OutputDir, OutputId, Threads, IncludeNonPass, WriteDetailedFiles
             );
         }
     }

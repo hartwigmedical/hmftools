@@ -16,7 +16,7 @@ Arguments:
 |------------|--------------------------------------------------------------------------------------------|
 | sample     | Name of the reference sample                                                               |
 | output_dir | Path to the output directory. This directory will be created if it does not already exist. |
-| purple     | Path to PURPLE output. This should correspond to the output_dir used in PURPLE             |
+| purple_dir | Path to PURPLE output. This should correspond to the output_dir used in PURPLE             |
 | model      | Path to the TorchScript model.                                                             |
 
 Example Usage:
@@ -24,7 +24,7 @@ Example Usage:
 ```
 java -Xmx1G -jar v-chord.jar \
    -sample COLO829T \
-   -purple /path/to/COLO829/purple \
+   -purple_dir /path/to/COLO829/purple \
    -model /path/to/model_scripted.pt \
    -output_dir /path/to/COLO829/vchord \
    -log_debug

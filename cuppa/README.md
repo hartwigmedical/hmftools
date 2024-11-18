@@ -19,11 +19,11 @@ CUPPA is intended to provide:
     * [Classifier (Python component)](#classifier-python-component)
 * [Classifier output](#classifier-output)
 * [Features](#features)
-    * [GEN_POS](#gen_pos)
-    * [SNV96](#snv_96)
+    * [GEN_POS](#genpos)
+    * [SNV96](#snv96)
     * [EVENT](#event)
-    * [GENE_EXP](#gene_exp)
-    * [ALT_SJ](#alt_sj)
+    * [GENE_EXP](#geneexp)
+    * [ALT_SJ](#altsj)
 * [Classifier structure](#classifier-structure)
     * [CuppaClassifier](#cuppaclassifier)
     * [LogisticRegression](#logisticregression)
@@ -41,6 +41,11 @@ CUPPA is intended to provide:
       * [FusionProbOverrider](#fusionproboverrider)
       * [SexProbFilter](#sexprobfilter)
 * [Training set](#training-set)
+    * [Sample selection](#sample-selection)
+    * [Cancer subtype definitions](#cancer-subtype-definitions)
+    * [Cancer subtype groups](#cancer-subtype-groups)
+    * [Training procedure](#training-procedure)
+    * [Performance](#performance)
 <!-- TOC -->
 
 # Usage
@@ -825,6 +830,7 @@ number of samples correctly predicted per cancer type).
 
 <img src="src/main/python/pycuppa/doc/diagrams/training_and_cross_validation.jpg" width="600"/>
 
-### Performance (as determined by cross-validation)
-Confusion matrices showing the performance of the COMBINED, DNA_COMBINED, and RNA_COMBINED (GRCh37) classifiers can be found at: 
-[pycuppa/doc/performance/](src/main/python/pycuppa/doc/performance/).
+### Performance
+Performance stats and confusion matrices as determined by cross-validation can be found at the below links:
+- [GRCh37 CUPPA model](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa/37/performance)
+- [GRCh38 CUPPA model](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa/38/performance)

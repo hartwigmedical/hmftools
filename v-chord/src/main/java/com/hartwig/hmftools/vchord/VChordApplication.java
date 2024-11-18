@@ -42,7 +42,17 @@ public class VChordApplication
     public void run() throws MalformedModelException, IOException
     {
         Path circosPngPath = Path.of(String.format("%s/plot/%s.circos.png", mConfig.getPurpleDir(), mConfig.getSampleId()));
-        Image circosPng = ImageFactory.getInstance().fromFile(circosPngPath);
+        Image circosPng;
+
+        try
+        {
+            circosPng = ImageFactory.getInstance().fromFile(circosPngPath);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("unable to load circos png({}), exception({})", circosPngPath, e.toString());
+            throw e;
+        }
 
         // purity
         final double purity = PurityContextFile.read(mConfig.getPurpleDir(), mConfig.getSampleId()).bestFit().purity();
@@ -112,8 +122,7 @@ public class VChordApplication
         configBuilder.checkAndParseCommandLine(args);
 
         VersionInfo versionInfo = new VersionInfo("vchord.version");
-        LOGGER.info("build timestamp: {}",
-                versionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
+        LOGGER.info("build timestamp: {}", versionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
 
         new VChordApplication(configBuilder).run();
     }

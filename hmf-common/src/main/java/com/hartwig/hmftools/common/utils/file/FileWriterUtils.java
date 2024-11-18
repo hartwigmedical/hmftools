@@ -151,4 +151,18 @@ FileWriterUtils
             throw new IllegalStateException("Could not close buffered writer: " + writer + ": " + e.getMessage());
         }
     }
+
+    public static void closeBufferedReader(final BufferedReader reader)
+    {
+        if(reader == null)
+            return;
+        try
+        {
+            reader.close();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException("Could not close buffered reader: " + reader + ": " + e.getMessage());
+        }
+    }
 }
