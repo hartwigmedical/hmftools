@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
@@ -24,17 +23,16 @@ public class StructuralVariant
 
     public final String Id;
 
-    public final HumanChromosome RefChromosome;
+    public final String RefChromosome;
     public final int RefPosition;
     public final Orientation RefOrientation;
 
-    public HumanChromosome AltChromosome;
+    public String AltChromosome;
     public int AltPosition;
     public Orientation AltOrientation;
 
     public StructuralVariantType Type;
     @Nullable public Integer Length;
-
 
     private StructuralVariant(VariantContext context, String id, String refChromosome, int refPosition, String refSequence, String altString)
     {
@@ -43,12 +41,12 @@ public class StructuralVariant
 
         ParsedAltString = VariantAltInsertCoords.fromRefAlt(altString, refSequence);
 
-        RefChromosome = HumanChromosome.fromString(refChromosome);
+        RefChromosome = refChromosome;
         RefPosition = refPosition;
         RefOrientation = ParsedAltString.Orient;
 
         AltChromosome = (!ParsedAltString.OtherChromsome.isEmpty()) ?
-                HumanChromosome.fromString(ParsedAltString.OtherChromsome) :
+                ParsedAltString.OtherChromsome :
                 null;
         AltPosition = ParsedAltString.OtherPosition;
         AltOrientation = ParsedAltString.OtherOrient;
@@ -80,7 +78,7 @@ public class StructuralVariant
         if(AltChromosome == null)
             return SGL;
 
-        if(RefChromosome != AltChromosome)
+        if(!RefChromosome.equals(AltChromosome))
             return BND;
 
         int posDiff = Math.abs(AltPosition - RefPosition);
