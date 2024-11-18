@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -21,21 +24,42 @@ public class MicrosatelliteSiteAnalyser
     public static final Logger sLogger = LogManager.getLogger(MicrosatelliteSiteAnalyser.class);
 
     private final RefGenomeMicrosatellite mRefGenomeMicrosatellite;
+    private final ConsensusMarker mConsensusMarker;
     private final List<MicrosatelliteRead> mMicrosatelliteReads;
+    private final Set<String> mSeenConsensusTypes;
 
-    public MicrosatelliteSiteAnalyser(final RefGenomeMicrosatellite refGenomeMicrosatellite)
+    public MicrosatelliteSiteAnalyser(final RefGenomeMicrosatellite refGenomeMicrosatellite,
+            @Nullable final ConsensusMarker consensusMarker)
     {
         mRefGenomeMicrosatellite = refGenomeMicrosatellite;
+        mConsensusMarker = consensusMarker;
         mMicrosatelliteReads = new ArrayList<>();
+        mSeenConsensusTypes = Sets.newHashSet();
     }
 
-    public RefGenomeMicrosatellite refGenomeMicrosatellite() { return mRefGenomeMicrosatellite; }
+    public RefGenomeMicrosatellite refGenomeMicrosatellite()
+    {
+        return mRefGenomeMicrosatellite;
+    }
 
-    public List<MicrosatelliteRead> getReadRepeatMatches() { return mMicrosatelliteReads; }
+    public List<MicrosatelliteRead> getReadRepeatMatches()
+    {
+        return mMicrosatelliteReads;
+    }
+
+    public List<MicrosatelliteRead> getReadRepeatMatches(final ConsensusType consensusType)
+    {
+        return mMicrosatelliteReads.stream().filter(o -> o.consensusType() == consensusType).collect(Collectors.toList());
+    }
 
     public List<MicrosatelliteRead> getPassingReadRepeatMatches()
     {
         return mMicrosatelliteReads.stream().filter(o -> !o.shouldDropRead).collect(Collectors.toList());
+    }
+
+    public List<MicrosatelliteRead> getPassingReadRepeatMatches(final ConsensusType consensusType)
+    {
+        return mMicrosatelliteReads.stream().filter(o -> !o.shouldDropRead && o.consensusType() == consensusType).collect(Collectors.toList());
     }
 
     public int numReadRejected()
@@ -43,18 +67,36 @@ public class MicrosatelliteSiteAnalyser
         return (int) mMicrosatelliteReads.stream().filter(o -> o.shouldDropRead).count();
     }
 
+    public int numReadRejected(final ConsensusType consensusType)
+    {
+        return (int) mMicrosatelliteReads.stream().filter(o -> o.shouldDropRead && o.consensusType() == consensusType).count();
+    }
+
+    public Set<String> seenConsensusTypes() { return mSeenConsensusTypes; }
 
     public synchronized void addReadToStats(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag() || read.getDuplicateReadFlag())
+        {
             return;
+        }
 
-        mMicrosatelliteReads.add(MicrosatelliteRead.from(mRefGenomeMicrosatellite, read));
+        MicrosatelliteRead msRead = MicrosatelliteRead.from(mRefGenomeMicrosatellite, read, mConsensusMarker);
+        if(msRead == null)
+        {
+            return;
+        }
+
+        mMicrosatelliteReads.add(msRead);
+        if(!msRead.shouldDropRead)
+        {
+            mSeenConsensusTypes.add(msRead.consensusType().name());
+        }
     }
 
-    public int getCountWithRepeatUnits(int numRepeatUnits)
+    public int getCountWithRepeatUnits(int numRepeatUnits, ConsensusType consensusType)
     {
-        return (int)getPassingReadRepeatMatches().stream().filter(o -> o.numRepeatUnits() == numRepeatUnits).count();
+        return (int) getPassingReadRepeatMatches().stream().filter(o -> o.numRepeatUnits() == numRepeatUnits && o.consensusType() == consensusType).count();
     }
 
     public boolean shouldKeepSite(final double altCountFractionInit,
@@ -73,13 +115,12 @@ public class MicrosatelliteSiteAnalyser
     {
         Validate.isTrue(altCountFractionCutoffStep <= 0.0);
 
-
         if(getPassingReadRepeatMatches().size() < minPassingSiteReads)
         {
             return true;
         }
 
-        double fractionRejected = 1.0 - getPassingReadRepeatMatches().size() / (double)getReadRepeatMatches().size();
+        double fractionRejected = 1.0 - getPassingReadRepeatMatches().size() / (double) getReadRepeatMatches().size();
 
         if(Doubles.greaterOrEqual(fractionRejected, rejectedReadFractionCutoff))
         {

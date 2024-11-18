@@ -55,7 +55,7 @@ public class GenerateMsiJitterParams
             System.exit(1);
         }
 
-        JitterAnalyser jitterAnalyser = new JitterAnalyser(mConfig, RD_LOGGER);
+        JitterAnalyser jitterAnalyser = new JitterAnalyser(mConfig, RD_LOGGER, null);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mThreads, namedThreadFactory);

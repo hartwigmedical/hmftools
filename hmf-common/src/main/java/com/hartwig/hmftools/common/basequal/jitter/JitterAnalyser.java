@@ -10,13 +10,17 @@ import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstant
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
-import com.hartwig.hmftools.common.utils.r.RExecutor;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -27,7 +31,9 @@ public class JitterAnalyser
     private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
-    public JitterAnalyser(final JitterAnalyserConfig config, final Logger logger)
+    private List<ConsensusType> mConsensusTypes;
+
+    public JitterAnalyser(final JitterAnalyserConfig config, final Logger logger, @Nullable final ConsensusMarker consensusMarker)
     {
         mConfig = config;
         mLogger = logger;
@@ -35,7 +41,9 @@ public class JitterAnalyser
         mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
 
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        mSampleReadProcessor = new SampleReadProcessor(refGenomeMicrosatellites);
+        mSampleReadProcessor = new SampleReadProcessor(refGenomeMicrosatellites, consensusMarker);
+
+        mConsensusTypes = null;
     }
 
     public BamSlicerFilter bamSlicerFilter()
@@ -49,19 +57,40 @@ public class JitterAnalyser
         mSampleReadProcessor.processRead(read);
     }
 
+    private List<ConsensusType> consensusTypes()
+    {
+        if(mConsensusTypes != null)
+        {
+            return mConsensusTypes;
+        }
+
+        Set<String> consensusTypeSet = Sets.newHashSet();
+        for(MicrosatelliteSiteAnalyser msAnalyser : mSampleReadProcessor.getMicrosatelliteSiteAnalysers())
+        {
+            consensusTypeSet.addAll(msAnalyser.seenConsensusTypes());
+        }
+
+        List<ConsensusType> consensusTypes = consensusTypeSet.stream().map(ConsensusType::valueOf).collect(Collectors.toList());
+        consensusTypes.sort(Comparator.comparingInt(ConsensusType::ordinal));
+
+        mConsensusTypes = consensusTypes;
+        return mConsensusTypes;
+    }
+
     public void writeAnalysisOutput() throws IOException, InterruptedException
     {
         Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers = mSampleReadProcessor.getMicrosatelliteSiteAnalysers();
 
         // now write out all the repeat stats
-        MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers);
+        MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
 
+        // TODO(mkcmkc): Fix this up by consensus type.
         // draw a chart of the 9 ms profiles
-        if(mConfig.WritePlots)
-            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
+    //        if(mConfig.WritePlots)
+    //            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
         List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers, mConfig.MaxSingleSiteAltContribution);
@@ -81,7 +110,7 @@ public class JitterAnalyser
         return refGenomeMicrosatellites;
     }
 
-    private static void writeMicrosatelliteStatsTable(
+    private void writeMicrosatelliteStatsTable(
             final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final String filename,
             final JitterAnalyserConfig config)
     {
@@ -89,12 +118,15 @@ public class JitterAnalyser
 
         List<JitterCountsTable> msStatsTables = new ArrayList<>();
 
-        for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
+        for(ConsensusType consensusType : consensusTypes())
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
-                    s.unitName(), config.MaxSingleSiteAltContribution,
-                    microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
-            msStatsTables.add(msStatsTable);
+            for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
+            {
+                JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                        s.unitName(), consensusType, config.MaxSingleSiteAltContribution,
+                        microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
+                msStatsTables.add(msStatsTable);
+            }
         }
 
         JitterCountsTableFile.write(filename, msStatsTables);
@@ -119,7 +151,7 @@ public class JitterAnalyser
         return selectors;
     }
 
-    private static List<JitterModelParams> fitJitterModels(
+    private List<JitterModelParams> fitJitterModels(
             final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final double maxSingleSiteAltContribution)
     {
         // create nine summary / pivot table
@@ -133,17 +165,19 @@ public class JitterAnalyser
         selectors.add(MicrosatelliteSelector.fromUnits(DUAL_BASE_4));
         selectors.add(MicrosatelliteSelector.fromUnitLengthRange(3, 5));
 
-        List<JitterModelParams> fittedParams = new ArrayList<>();
-
-        for(MicrosatelliteSelector selector : selectors)
+        List<JitterModelParams> fittedParams = Lists.newArrayList();
+        for(ConsensusType consensusType : consensusTypes())
         {
-            JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
-                    selector.unitName(), maxSingleSiteAltContribution,
-                    microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
+            for(MicrosatelliteSelector selector : selectors)
+            {
+                JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                        selector.unitName(), consensusType, maxSingleSiteAltContribution,
+                        microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
 
-            JitterModelFitter fitter = new JitterModelFitter(msStatsTable);
-            fitter.performFit();
-            fittedParams.add(fitter.getJitterModelParams());
+                JitterModelFitter fitter = new JitterModelFitter(msStatsTable);
+                fitter.performFit();
+                fittedParams.add(fitter.getJitterModelParams());
+            }
         }
 
         return fittedParams;
@@ -164,13 +198,14 @@ public class JitterAnalyser
         // we want to get around 1000 sites for each repeat context
     }
 
-    private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
-            throws IOException, InterruptedException
-    {
-        int result = RExecutor.executeFromClasspath("basequal/msi_jitter_plot.R", outputDir, sampleId, statsTableFile);
-        if(result != 0)
-        {
-            throw new IOException("R execution failed. Unable to complete segmentation.");
-        }
-    }
+    // TODO(mkcmkc): Fix this up by consensus type.
+//    private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
+//            throws IOException, InterruptedException
+//    {
+//        int result = RExecutor.executeFromClasspath("basequal/msi_jitter_plot.R", outputDir, sampleId, statsTableFile);
+//        if(result != 0)
+//        {
+//            throw new IOException("R execution failed. Unable to complete segmentation.");
+//        }
+//    }
 }

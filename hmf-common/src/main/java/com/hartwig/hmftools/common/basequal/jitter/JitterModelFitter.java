@@ -70,9 +70,9 @@ public class JitterModelFitter
         return mJitterModelParams;
     }
 
-    public JitterModelFitter(JitterCountsTable statsTable)
+    public JitterModelFitter(final JitterCountsTable statsTable)
     {
-        this.mStatsTable = statsTable;
+        mStatsTable = statsTable;
     }
 
     public void performFit()
@@ -228,7 +228,7 @@ public class JitterModelFitter
 
         // assign the params
         mJitterModelParams = new JitterModelParams(
-                mStatsTable.RepeatUnit,
+                mStatsTable.RepeatUnit, mStatsTable.ConsensusType,
                 optimalScaleRepeat4, optimalScaleRepeat5, optimalScaleRepeat6,
                 scaleFitGradient, scaleFitIntercept, microsatelliteSkew);
     }
