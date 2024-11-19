@@ -144,7 +144,7 @@ somaticVariantPDF = somatic_ploidy_pdf(somaticBuckets)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.png"), somaticVariantPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
 clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T) %>%
-  mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak), bucketWeight = as.numeric(as.character(bucketWeight))) %>% filter(isValid)
+  mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak), bucketWeight = as.numeric(as.character(bucketWeight))) %>% filter(isValid & !is.na(bucketWeight))
 clonalityModelPlot = clonality_plot(somaticBuckets, clonalityModel)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
