@@ -1,18 +1,29 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
+import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.common.ReadUnmapper;
+import com.hartwig.hmftools.redux.common.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
@@ -28,6 +39,9 @@ public final class TestUtils
     public static final String REF_BASES_C = "CCCCCCCCCC";
     public static final String REF_BASES_G = "GGGGGGGGGG";
     public static final String REF_BASES_T = "TTTTTTTTTT";
+
+    protected static final String CHR_4 = "4";
+    protected static final String CHR_5 = "5";
 
     public static final String REF_BASES_RANDOM = generateRandomBases(10);
 
@@ -93,5 +107,32 @@ public final class TestUtils
     public static ConsensusReadInfo createConsensusRead(final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
         return consensusReads.createConsensusRead(reads, null, null, umiId);
+    }
+
+    // unmapping test state
+    protected static final Map<String, List<HighDepthRegion>> CHR_LOCATION_MAP;
+    protected static final ReadUnmapper READ_UNMAPPER;
+
+    static
+    {
+        CHR_LOCATION_MAP = Maps.newHashMap();
+        CHR_LOCATION_MAP.put(CHR_1, Lists.newArrayList(new HighDepthRegion(500, 700, 0)));
+        CHR_LOCATION_MAP.put(CHR_2, Lists.newArrayList());
+        CHR_LOCATION_MAP.put(CHR_3, Lists.newArrayList(new HighDepthRegion(500, 700, UNMAP_MIN_HIGH_DEPTH)));
+
+        CHR_LOCATION_MAP.put(CHR_4, Lists.newArrayList(
+                new HighDepthRegion(1000, 2000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(3000, 4000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(5000, 6000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(7000, 8000, UNMAP_MIN_HIGH_DEPTH)));
+        READ_UNMAPPER = new ReadUnmapper(CHR_LOCATION_MAP);
+    }
+
+    public static boolean checkTransformRead(final SAMRecord read, final String chromosome)
+    {
+        UnmapRegionState regionState = new UnmapRegionState(new ChrBaseRegion(
+                chromosome, 1, 1000000), CHR_LOCATION_MAP.get(chromosome));
+
+        return READ_UNMAPPER.checkTransformRead(read, regionState);
     }
 }

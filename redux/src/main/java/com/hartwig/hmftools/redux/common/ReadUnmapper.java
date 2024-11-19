@@ -573,67 +573,6 @@ public class ReadUnmapper
         return matchType;
     }
 
-    private static int getReadEndFromCigarStr(final int readStart, final String cigarStr)
-    {
-        int currentPosition = readStart;
-        int elementLength = 0;
-
-        for(int i = 0; i < cigarStr.length(); ++i)
-        {
-            final char c = cigarStr.charAt(i);
-            final boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
-
-            if(isAddItem)
-            {
-                currentPosition += elementLength;
-                elementLength = 0;
-                continue;
-            }
-
-            final int digit = c - '0';
-            if(digit >= 0 && digit <= 9)
-            {
-                elementLength = elementLength * 10 + digit;
-            }
-            else
-            {
-                elementLength = 0;
-            }
-        }
-
-        // always pointing to the start of the next element, so need to move back a base
-        return currentPosition - 1;
-    }
-
-    @VisibleForTesting
-    public static int getClipLengthFromCigarStr(final String cigarStr)
-    {
-        int softClipCount = 0;
-        int elementLength = 0;
-        for(int i = 0; i < cigarStr.length(); ++i)
-        {
-            final char c = cigarStr.charAt(i);
-            if(c == 'S' || c == 'H')
-            {
-                softClipCount += elementLength;
-                elementLength = 0;
-                continue;
-            }
-
-            int digit = c - '0';
-            if(digit >= 0 && digit <= 9)
-            {
-                elementLength = elementLength * 10 + digit;
-            }
-            else
-            {
-                elementLength = 0;
-            }
-        }
-
-        return softClipCount;
-    }
-
     private static boolean isChimericRead(final SAMRecord record, boolean checkForMate)
     {
         boolean readUnmapped = record.getReadUnmappedFlag();
@@ -726,8 +665,7 @@ public class ReadUnmapper
             read.setReferenceName(read.getMateReferenceName());
         }
 
-        // If mate is unmapped, have to clear its reference name and alignment start here, since no unmapping logic will be run for the
-        // mate.
+        // If mate is unmapped, clear its reference name and alignment start here, since no unmapping logic will be run for the mate
         if(mateUnmapped)
         {
             read.setMateAlignmentStart(0);
@@ -812,6 +750,67 @@ public class ReadUnmapper
     private static Map<String,List<HighDepthRegion>> loadUnmapRegions(final String filename)
     {
         return UnmappedRegions.loadUnmapRegions(filename);
+    }
+
+    @VisibleForTesting
+    public static int getClipLengthFromCigarStr(final String cigarStr)
+    {
+        int softClipCount = 0;
+        int elementLength = 0;
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            final char c = cigarStr.charAt(i);
+            if(c == 'S' || c == 'H')
+            {
+                softClipCount += elementLength;
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if(digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        return softClipCount;
+    }
+
+    private static int getReadEndFromCigarStr(final int readStart, final String cigarStr)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            final char c = cigarStr.charAt(i);
+            final boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
+
+            if(isAddItem)
+            {
+                currentPosition += elementLength;
+                elementLength = 0;
+                continue;
+            }
+
+            final int digit = c - '0';
+            if(digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
     }
 
     @VisibleForTesting
