@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_Q
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -378,6 +379,9 @@ public class BqrRegionReader implements CigarHandler
             if(alt == N || !isValid(trinucleotideContext))
                 continue;
 
+            if(nearbyZeroQualBases(record, readIndex, 2))
+                continue;
+
             BqrReadType readType = extractReadType(record, mSequencingType, record.getBaseQualities()[readIndex]);
             BqrReadStrand readStrand = record.getReadNegativeStrandFlag() ? BqrReadStrand.REVERSE : BqrReadStrand.FORWARD;
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, readType, readStrand);
@@ -386,6 +390,15 @@ public class BqrRegionReader implements CigarHandler
             if(mWriteReadData && ref != alt)
                 mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, readType, readStrand);
         }
+    }
+
+    private boolean nearbyZeroQualBases(final SAMRecord record, final int readIndex, final int buffer)
+    {
+        byte[] nearbyQuals = Arrays.copyOfRange(record.getBaseQualities(), Math.max(readIndex - buffer, 0), Math.min(readIndex + buffer + 1, record.getReadLength()));
+        for(byte nearbyQual : nearbyQuals)
+            if(nearbyQual == (byte) 0)
+                return true;
+        return false;
     }
 
     private void purgeBaseDataList(int currentReadStartPos)
