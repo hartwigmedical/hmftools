@@ -17,21 +17,16 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.ReadUnmapper;
@@ -176,6 +171,36 @@ public class UnmapReadsTest
         assertEquals(NO_POSITION, read.getMateAlignmentStart());
         assertEquals(NO_CHROMOSOME_NAME, read.getMateReferenceName());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapMateSoftClippedReadBecomesUnmapped()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 550, READ_BASES, TEST_READ_CIGAR, CHR_1, 600, false,
+                false, null, true, SOFT_CLIPPED_READ_CIGAR);
+
+        SAMRecord mate = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 600, READ_BASES, SOFT_CLIPPED_READ_CIGAR, CHR_1, 550, true,
+                false, null, false, TEST_READ_CIGAR);
+
+        assertTrue(checkTransformRead(read, CHR_1));
+        assertTrue(read.getReadUnmappedFlag());
+        assertTrue(read.getMateUnmappedFlag());
+
+        assertEquals(NO_POSITION, read.getAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, read.getReferenceName());
+        assertEquals(NO_POSITION, read.getMateAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, read.getMateReferenceName());
+
+        assertTrue(checkTransformRead(mate, CHR_1));
+        assertTrue(mate.getReadUnmappedFlag());
+        assertTrue(mate.getMateUnmappedFlag());
+
+        assertEquals(NO_POSITION, mate.getAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, mate.getReferenceName());
+        assertEquals(NO_POSITION, mate.getMateAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, mate.getMateReferenceName());
     }
 
     @Test
@@ -329,7 +354,6 @@ public class UnmapReadsTest
         SAMRecord read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_1, 100, READ_BASES, TEST_READ_CIGAR, CHR_3, 200, false,
                 false, null, true, TEST_READ_CIGAR);
-
 
         SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 60);
         SupplementaryReadData suppData2 = new SupplementaryReadData(CHR_2, 6000, SUPP_POS_STRAND, TEST_READ_CIGAR, 60);
