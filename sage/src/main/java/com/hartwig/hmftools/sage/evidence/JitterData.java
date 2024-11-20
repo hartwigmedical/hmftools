@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.JITTER_QUAL_BOOST_MAX_PERC
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_HARD_FILTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_TRINUC_ERROR_RATE;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_NON_TRINUC_ERROR_RATE;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -82,7 +83,7 @@ public class JitterData
         if(readContextCounter.readContext().MaxRepeat == null)
             return;
 
-        int fullSupport = readContextCounter.readSupportCounts().Full;
+        int fullSupport = readContextCounter.readSupportCounts().FullDuplex;
 
         boolean isPanelVariant = readContextCounter.tier() == VariantTier.PANEL || readContextCounter.tier() == VariantTier.HOTSPOT;
 
@@ -205,7 +206,7 @@ public class JitterData
         // checks whether the jitter count can be explained as noise vs the full count
 
         // test a p-value of jitter vs the full support counts
-        double errorRateToUse = trinucRepeat ? Math.max(MSI_JITTER_MIN_TRINUC_ERROR_RATE, errorRate) : errorRate;
+        double errorRateToUse = trinucRepeat ? Math.max(MSI_JITTER_MIN_TRINUC_ERROR_RATE, errorRate) : Math.max(MSI_JITTER_MIN_NON_TRINUC_ERROR_RATE, errorRate);
         BinomialDistribution distribution = new BinomialDistribution(fullSupport + jitterCount, errorRateToUse);
 
         double prob = 1 - distribution.cumulativeProbability(min(fullSupport, jitterCount) - 1);

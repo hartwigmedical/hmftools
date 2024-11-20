@@ -19,6 +19,7 @@ public class ReadSupportCounts
     public int Ref;
     public int Total;
     public int StrongSimplexSupport;
+    public int FullDuplex;
 
     public ReadSupportCounts()
     {
@@ -29,6 +30,7 @@ public class ReadSupportCounts
         Ref = 0;
         Total = 0;
         StrongSimplexSupport = 0;
+        FullDuplex = 0;
     }
 
     public void addSupport(SAMRecord record, int readIndex, @Nullable final VariantReadSupport support, final int count)
@@ -37,6 +39,8 @@ public class ReadSupportCounts
         if(support == VariantReadSupport.FULL || support == VariantReadSupport.PARTIAL_CORE || support == VariantReadSupport.REALIGNED)
         {
             BqrReadType readType = extractReadType(record, SequencingType.SBX, record.getBaseQualities()[readIndex]);
+            if(support == VariantReadSupport.FULL && readType == BqrReadType.DUAL)
+                FullDuplex += count;
             if(readType != BqrReadType.DUAL)
                 StrongSimplexSupport += count;
         }

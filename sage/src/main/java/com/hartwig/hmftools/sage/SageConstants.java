@@ -65,6 +65,7 @@ public class SageConstants
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
     public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
     public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
+    public static final double MSI_JITTER_MIN_NON_TRINUC_ERROR_RATE = 0.02;
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
     public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
