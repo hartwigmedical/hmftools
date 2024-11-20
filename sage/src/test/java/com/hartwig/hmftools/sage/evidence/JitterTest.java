@@ -398,7 +398,7 @@ public class JitterTest
 
         // lengthened is noise
         jitterData.setValues(10, 10);
-        readContextCounter.readSupportCounts().Full = 50;
+        readContextCounter.readSupportCounts().FullDuplex = 50;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -407,7 +407,7 @@ public class JitterTest
 
         // shortened is noise
         jitterData.setValues(5, 35);
-        readContextCounter.readSupportCounts().Full = 50;
+        readContextCounter.readSupportCounts().FullDuplex = 50;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -416,7 +416,7 @@ public class JitterTest
 
         // both noise
         jitterData.setValues(5, 2);
-        readContextCounter.readSupportCounts().Full = 50;
+        readContextCounter.readSupportCounts().FullDuplex = 50;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -425,7 +425,7 @@ public class JitterTest
 
         // shortened too high
         jitterData.setValues(21, 1);
-        readContextCounter.readSupportCounts().Full = 10;
+        readContextCounter.readSupportCounts().FullDuplex = 10;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -434,7 +434,7 @@ public class JitterTest
 
         // again for lengthened
         jitterData.setValues(1, 60);
-        readContextCounter.readSupportCounts().Full = 2;
+        readContextCounter.readSupportCounts().FullDuplex = 2;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -443,7 +443,7 @@ public class JitterTest
 
         // combined
         jitterData.setValues(126, 126);
-        readContextCounter.readSupportCounts().Full = 35;
+        readContextCounter.readSupportCounts().FullDuplex = 35;
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
