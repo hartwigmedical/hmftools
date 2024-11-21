@@ -3,7 +3,7 @@ FROM mambaorg/micromamba:0.24.0
 ARG VERSION
 ARG TOOL_NAME=amber
 ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
-ARG ENTRY_POINT_SCRIPT=/usr/local/bin/${TOOL_NAME}
+ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 
 USER root
 
