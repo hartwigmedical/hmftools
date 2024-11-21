@@ -108,7 +108,7 @@ public class ReadContextMatcher
             altIndexUpper = max(altIndexUpper, maxRepeatIndex);
         }
 
-        if(!mIsReference && coreContainsInsert(readContext))
+        if(!mIsReference && !readContext.variant().isIndel() && coreContainsInsert(readContext))
         {
             altIndexLower = min(altIndexLower, readContext.CoreIndexStart);
             altIndexUpper = max(altIndexUpper, readContext.CoreIndexEnd);
