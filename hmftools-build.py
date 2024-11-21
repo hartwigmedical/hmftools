@@ -26,7 +26,7 @@ from xml.etree import ElementTree
 from argparse import ArgumentParser
 
 SEMVER_REGEX = re.compile(
-    r'^([a-z-]+)-v([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
+    r'^([a-z-]+)-v([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta|rc)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
 
 
 class Maven:
