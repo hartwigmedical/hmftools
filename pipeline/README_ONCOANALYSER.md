@@ -1,6 +1,7 @@
-# Running the Hartwig pipeline with Oncoanalyser
+Running the Hartwig pipeline with Oncoanalyser
+==============================================
 
-## Table of contents
+# Table of contents
 
 - [Overview](#overview)
 - [Supported workflows](#supported-workflows)
@@ -9,50 +10,113 @@
 - [Future improvements](#future-improvements)
 - [Acknowledgements](#acknowledgements)
 
-## Overview
+# Introduction
+Oncoanalyser ([GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a [Nextflow](https://www.nextflow.io/) 
+implementation of the Hartwig Medical Foundation comprehensive cancer DNA/RNA analysis pipeline. In addition to calling simple/structural 
+variants and quantifying RNA transcripts, the pipeline also performs downstream analyses such as detecting driver mutations and gene fusions, 
+HLA typing, determining tissue of origin, and more. Details on each tool used in the pipeline can be found at [github.com/hartwigmedical/hmftools](https://github.com/hartwigmedical/hmftools).
 
-[Oncoanalyser](https://github.com/nf-core/oncoanalyser) is a [Nextflow](https://www.nextflow.io/) implementation of the Hartwig pipeline, 
-and is the recommended way to run components from [WiGiTS](https://github.com/hartwigmedical/hmftools/). To get started with Oncoanalyser,
-please jump section [Usage](#usage).
+The pipeline starts from BAM or FASTQ files, and supports data from below modes:
 
-Some key features of Oncoanalyser that simplify running the Hartwig pipeline are:
-- Pre-defined (but flexible) configuration for individual tools
-- Automated on-demand staging of reference genomes and resource files
-- Pre-built Docker images retrieved at runtime for each process
-- Resume capability for each process
-- Supports a range of compute environments including AWS, Azure, GCP, and HPC
-- Integration with [Seqera Platform](https://seqera.io/platform/), a user-friendly monitoring and management service for Nextflow pipelines
+| Data type | Sequencing method                                                                | Paired tumor/normal | tumor-only         |
+|-----------|----------------------------------------------------------------------------------|---------------------|--------------------|
+| DNA       | Whole genome sequencing (WGS)                                                    | :white_check_mark:  | :white_check_mark: |
+| DNA       | Targeted sequencing:<br/> - Whole exome sequencing (WES)<br/> - Panel sequencing | :white_check_mark:  | :white_check_mark: |
+| RNA       | Whole transcriptome sequencing (WTS)                                             | -                   | :white_check_mark: |
 
-Further information on Nextflow can be found [here](https://www.nextflow.io/) and generic configuration options are well
-described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/index.html).
+# Quick start
 
-## Supported workflows
+## 1. Install Nextflow
+See: https://www.nextflow.io/docs/latest/install.html
 
-Oncoanalyser supports the below analysis workflows:
-- Whole genome and/or transcriptome sequencing (WGTS)
-- Targeted sequencing
+## 2. Install Docker
+See: https://docs.docker.com/engine/install/
 
-Each workflow can run in the below sample modes:
-- Paired tumor/normal
-- Tumor-only
+## 3. Set up resource files
 
-The targeted sequencing workflow has built-in support for the 
-[TSO500](https://sapac.illumina.com/products/by-type/clinical-research-products/trusight-oncology-500.html) panel, but can be run on any 
-custom panel after creating [panel-specific normalisation data](README_TARGETED.md#training-process-to-build-panel-specific-resource-files).
+Links:
 
-Below is a detailed schematic of how each WiGiTS component is involved in each workflow
+| Description                                                       | GRCh37                                                                                                                                                                                       | GRCh38                                                                                                                                                                                                       |
+|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [hmftools](https://github.com/hartwigmedical/hmftools/) resources | [hmf_pipeline_resources.37_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz)                       | [hmf_pipeline_resources.38_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/38/hmf_pipeline_resources.38_v6.0--2.tar.gz)                                       |
+| Reference genome                                                  | [Homo_sapiens.GRCh37.GATK.illumina.fasta](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/Homo_sapiens.GRCh37.GATK.illumina.fasta)                               | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna)                               |
+| Reference genome index                                            | [Homo_sapiens.GRCh37.GATK.illumina.fasta.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai)   | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai)   |
+| Reference genome sequence dictionary                              | [Homo_sapiens.GRCh37.GATK.illumina.fasta.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict) | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict) |
+| [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) index            | [bwa-mem2_index/2.13.2](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                             | [bwa-mem2_index/2.13.2](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                                             |
+| [GRIDSS](https://github.com/PapenfussLab/gridss) index            | [gridss_index/2.2.1](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                 | [gridss_index/2.2.1](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                                 |
+| STAR index (**only required for RNA data**)                       | [star_index/gencode_19/2.7.3a](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/star_index/gencode_19/2.7.3a.tar.gz)                                              | [star_index/gencode_19/2.7.3a](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/star_index/gencode_38/2.7.3a.tar.gz)                                                              |
 
-<img src="wigits_pipeline.png" width="600"/>
+### 3a. Download and extract files
+The below commands will set up the resources for human reference genome GRCh37. Adjust the paths and URLs accordingly for GRCh38.
+
+Create a directory structure for the resources:
+```shell
+mkdir -p $HOME/oncoanalyser/GRCh37/{genome,hmftools}
+```
+
+Get genome:
+```shell
+cd $HOME/oncoanalyser/GRCh37/genome/
+
+wget https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/Homo_sapiens.GRCh37.GATK.illumina.fasta
+wget https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai
+wget https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict
+
+wget -O bwa-mem2_index.tar.gz https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz
+tar xvzf bwa-mem2_index.tar.gz --one-top-level
+
+wget -O gridss_index.tar.gz https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/gridss_index/2.13.2.tar.gz
+tar xvzf gridss_index.tar.gz --one-top-level
+```
+
+Get hmftools resources:
+```shell
+cd $HOME/oncoanalyser/GRCh37/hmftools/
+wget https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz
+tar xvzf hmf_pipeline_resources.37_v6.0--2.tar.gz --strip-components=1
+```
+
+### 3b. Set up config
+
+Create a file called `oncoanalyser_resources.GRCh37.config` which points to the resource paths: 
+```
+params {
+	genomes {
+		'GRCh37_hmf' {
+			fasta         = "$HOME/oncoanalyser/GRCh37/genome/Homo_sapiens.GRCh37.GATK.illumina.fasta"
+			fai           = "$HOME/oncoanalyser/GRCh37/genome/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai"
+			dict          = "$HOME/oncoanalyser/GRCh37/genome/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict"
+			bwamem2_index = "$HOME/oncoanalyser/GRCh37/genome/bwa-mem2_index/2.13.2/"
+			gridss_index  = "$HOME/oncoanalyser/GRCh37/genome/gridss_index/2.2.1/"
+		}
+	}
+	
+	ref_data_hmf_data_path = "$HOME/oncoanalyser/GRCh37/hmftools/"
+}
+```
+
+## 4. Set up sample sheet
+Create a file called `samplesheet.csv` which points to the sample inputs:
+```
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
+COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+```
+
+BAMs, FASTQs, as well as intermediate outputs can be provided to the sample sheet. Details in [Usage](#usage).
+
+## 6. Run Oncoanalyser with Nextflow
+```shell
+nextflow run nf-core/oncoanalyser \
+-profile docker \
+-config oncoanalyser_resources.GRCh37.config \
+--mode wgts \
+--genome GRCh37_hmf \
+--input samplesheet.csv \
+--outdir output/
+```
 
 ## Usage
-
-### Software requirements
-
-- Nextflow >=22.10.5 ([instructions](https://www.nextflow.io/index.html#GetStarted))
-- Docker ([instructions](https://docs.docker.com/engine/install/#server))
-
-> [!NOTE]
-> Docker on Windows and macOS can perform poorly. Running oncoanalyser on Linux is recommended.
 
 ### Input data
 
