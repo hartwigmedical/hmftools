@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
+import htsjdk.samtools.CigarOperator;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -107,6 +108,12 @@ public class ReadContextMatcher
             altIndexUpper = max(altIndexUpper, maxRepeatIndex);
         }
 
+        if(!mIsReference && coreContainsInsert(readContext))
+        {
+            altIndexLower = min(altIndexLower, readContext.CoreIndexStart);
+            altIndexUpper = max(altIndexUpper, readContext.CoreIndexEnd);
+        }
+
         mAltIndexLower = altIndexLower;
         mAltIndexUpper = altIndexUpper;
 
@@ -156,6 +163,12 @@ public class ReadContextMatcher
 
     public void setRealignmentIndexOffset(int offset) { mLowQualExclusionRead.setIndexOffset(offset); }
     public void clearRealignmentIndexOffset() { mLowQualExclusionRead.setIndexOffset(0); }
+
+    private static boolean coreContainsInsert(final VariantReadContext readContext)
+    {
+        List<CigarElement> cigarElements = readContext.coreCigarElements();
+        return cigarElements.stream().anyMatch(x -> x.getOperator().equals(CigarOperator.I));
+    }
 
     private static int determineAltIndexUpper(final SimpleVariant variant, final int readVarIndex, final Microhomology homology)
     {

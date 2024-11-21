@@ -479,7 +479,7 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+        return primaryTumor.strongAltSupport() - primaryTumor.strongSimplexSupport() < strongSupportThreshold;
     }
 
     private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)

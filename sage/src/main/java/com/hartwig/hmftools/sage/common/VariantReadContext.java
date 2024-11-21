@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -13,6 +15,8 @@ import com.hartwig.hmftools.sage.quality.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.TextCigarCodec;
+import org.apache.commons.compress.utils.Lists;
 
 public class VariantReadContext
 {
@@ -164,5 +168,43 @@ public class VariantReadContext
         return VarIndex == other.VarIndex && AlignmentStart == other.AlignmentStart && AlignmentEnd == other.AlignmentEnd
                 && refBases().equals(other.refBases()) && readBases().equals(other.readBases()) && readCigar().equals(other.readCigar())
                 && CorePositionStart == other.CorePositionStart && CorePositionEnd == other.CorePositionEnd;
+    }
+
+    public List<CigarElement> coreCigarElements()
+    {
+        List<CigarElement> coreCigar = Lists.newArrayList();
+        List<CigarElement> cigar = TextCigarCodec.decode(mReadCigarStr).getCigarElements();
+        int readIndex = 0;
+        for(CigarElement el : cigar)
+        {
+            if(readIndex > CoreIndexEnd)
+            {
+                break;
+            }
+
+            if(!el.getOperator().consumesReadBases())
+            {
+                if(readIndex > CoreIndexStart)
+                {
+                    coreCigar.add(el);
+                }
+                continue;
+            }
+
+            int readIndexEnd = readIndex + el.getLength() - 1;
+            if(readIndexEnd < CoreIndexStart)
+            {
+                readIndex += el.getLength();
+                continue;
+            }
+
+            int readIndexStart = max(readIndex, CoreIndexStart);
+            readIndexEnd = min(readIndexEnd, CoreIndexEnd);
+            coreCigar.add(new CigarElement(readIndexEnd - readIndexStart + 1, el.getOperator()));
+
+            readIndex += el.getLength();
+        }
+
+        return coreCigar;
     }
 }
