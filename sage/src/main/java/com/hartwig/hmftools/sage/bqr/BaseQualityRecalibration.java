@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.BQR_SAMPLE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_RECALIBRATED_BASE_QUAL;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -265,7 +266,7 @@ public class BaseQualityRecalibration
                     syntheticAltKeys.add(altKey);
 
                     double recalQualMin = calcRecalibratedQual(altKey, 1, refCountMap, triNucMap);
-                    double syntheticQual = max(recalQualMin + 10 * log10(2), key.Quality);
+                    double syntheticQual = max(recalQualMin + 10 * log10(2), min(key.Quality, MAX_RECALIBRATED_BASE_QUAL));
 
                     result.add(new BqrRecord(altKey, 0, syntheticQual));
                 }
