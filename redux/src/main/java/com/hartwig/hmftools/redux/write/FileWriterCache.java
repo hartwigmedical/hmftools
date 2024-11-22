@@ -262,7 +262,7 @@ public class FileWriterCache
 
         // use internal BAM merge routine
         BamMerger bamMerger = new BamMerger(
-                finalBamFilename, sortedThreadBams, mConfig.RefGenomeFile, bamToolPath(), mConfig.Threads, false);
+                finalBamFilename, sortedThreadBams, mConfig.RefGenomeFile, bamToolPath(), mConfig.Threads, mConfig.KeepInterimBams);
         return bamMerger.merge();
     }
 
