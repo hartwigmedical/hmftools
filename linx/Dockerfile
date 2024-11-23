@@ -13,7 +13,7 @@ RUN chmod +x ${RUN_SCRIPT}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
-    openjdk>=8 \
+    openjdk">=8,<=21" \
     xorg-libxtst \
     r-tidyr \
     r-dplyr \

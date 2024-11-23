@@ -105,15 +105,40 @@ public class ReadUnmapper
         boolean isSupplementary = read.getSupplementaryAlignmentFlag();
 
         boolean unmapRead = false;
+        boolean unmapMate = false;
+
+        RegionMatchType readRegionType = !readUnmapped ? findMaxDepthRegionOverlap(
+                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.PartitionRegions, regionState, true) : null;
+
+        UnmapReason unmapReason = null;
 
         if(!readUnmapped)
         {
-            UnmapReason unmapReason = checkUnmapRead(read, regionState);
+            unmapReason = checkUnmapRead(read, readRegionType);
+            unmapRead = unmapReason != UnmapReason.NONE;
+        }
 
+        RegionMatchType mateRegionType = !mateUnmapped ? mateMaxDepthRegionOverlap(read, regionState) : null;
+
+        if(!mateUnmapped)
+            unmapMate =  checkUnmapMate(read, mateRegionType);
+
+        // handle scenario where read wouldn't be unmapped unless mate becomes unmapped
+        if(!readUnmapped && unmapReason == UnmapReason.NONE && readRegionType != RegionMatchType.NONE && unmapMate)
+        {
+            unmapReason = UnmapReason.CHIMERIC;
+            unmapRead = true;
+        }
+
+        if(!mateUnmapped && !unmapMate && mateRegionType != RegionMatchType.NONE && unmapRead)
+        {
+            unmapMate = true;
+        }
+
+        if(!readUnmapped)
+        {
             if(unmapReason != UnmapReason.NONE)
             {
-                unmapRead = true;
-
                 switch(unmapReason)
                 {
                     case HIGH_DEPTH:
@@ -132,22 +157,20 @@ public class ReadUnmapper
                         break;
                 }
             }
-            else if(isSupplementary)
+            else if(isSupplementary && !unmapRead)
             {
                 // supplementaries are unmapped if their primary, or an associated supplementary, will be unmapped
                 unmapRead = checkUnmapSupplementaryRead(read);
             }
-        }
 
-        if(unmapRead && isSupplementary)
-        {
-            // these will be dropped from the BAM
-            setUnmappedAttributes(read);
-            mStats.SupplementaryCount.incrementAndGet();
-            return true;
+            if(unmapRead && isSupplementary)
+            {
+                // these will be dropped from the BAM
+                setUnmappedAttributes(read);
+                mStats.SupplementaryCount.incrementAndGet();
+                return true;
+            }
         }
-
-        boolean unmapMate = !mateUnmapped && checkUnmapMate(read, regionState);
 
         if(unmapRead)
             unmapReadAlignment(read, mateUnmapped, unmapMate);
@@ -291,25 +314,31 @@ public class ReadUnmapper
         RegionMatchType matchType = findMaxDepthRegionOverlap(
                 read.getAlignmentStart(), read.getAlignmentEnd(), regionState.PartitionRegions, regionState, true);
 
+        return checkUnmapRead(read, matchType);
+    }
+
+    private UnmapReason checkUnmapRead(final SAMRecord read, final RegionMatchType matchType)
+    {
         if(matchType == RegionMatchType.NONE)
             return UnmapReason.NONE;
 
         if(matchType == RegionMatchType.HIGH_DEPTH)
             return UnmapReason.HIGH_DEPTH;
 
-        if(getClipLengthFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
+        if(exceedsSoftClipLength(read.getCigarString()))
             return UnmapReason.SOFT_CLIP;
 
-        if(read.getReadPairedFlag() && isChimericRead(read, false))
-            return UnmapReason.CHIMERIC;
+        if(read.getReadPairedFlag())
+        {
+            if(isChimericRead(read, false))
+                return UnmapReason.CHIMERIC;
+        }
 
         return UnmapReason.NONE;
     }
 
-    private boolean checkUnmapMate(final SAMRecord read, final UnmapRegionState regionState)
+    private boolean checkUnmapMate(final SAMRecord read, final RegionMatchType matchType)
     {
-        RegionMatchType matchType = mateMaxDepthRegionOverlap(read, regionState);
-
         if(matchType == RegionMatchType.NONE)
             return false;
 
@@ -319,13 +348,8 @@ public class ReadUnmapper
         if(isChimericRead(read, true))
             return true;
 
-        if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-        {
-            final String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-
-            if(getClipLengthFromCigarStr(mateCigar) > UNMAP_MIN_SOFT_CLIP)
-                return true;
-        }
+        if(exceedsSoftClipLength(read.getStringAttribute(MATE_CIGAR_ATTRIBUTE)))
+            return true;
 
         return false;
     }
@@ -348,7 +372,7 @@ public class ReadUnmapper
             if(matchType == RegionMatchType.HIGH_DEPTH)
                 return true;
 
-            if(getClipLengthFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+            if(exceedsSoftClipLength(suppData.Cigar))
                 return true;
 
             if(isSupplementaryChimericRead(read, suppData))
@@ -388,7 +412,7 @@ public class ReadUnmapper
         if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
 
-        if(getClipLengthFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+        if(exceedsSoftClipLength(suppData.Cigar))
             return true;
 
         return false;
@@ -573,77 +597,10 @@ public class ReadUnmapper
         return matchType;
     }
 
-    private static int getReadEndFromCigarStr(final int readStart, final String cigarStr)
-    {
-        int currentPosition = readStart;
-        int elementLength = 0;
-
-        for(int i = 0; i < cigarStr.length(); ++i)
-        {
-            final char c = cigarStr.charAt(i);
-            final boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
-
-            if(isAddItem)
-            {
-                currentPosition += elementLength;
-                elementLength = 0;
-                continue;
-            }
-
-            final int digit = c - '0';
-            if(digit >= 0 && digit <= 9)
-            {
-                elementLength = elementLength * 10 + digit;
-            }
-            else
-            {
-                elementLength = 0;
-            }
-        }
-
-        // always pointing to the start of the next element, so need to move back a base
-        return currentPosition - 1;
-    }
-
-    @VisibleForTesting
-    public static int getClipLengthFromCigarStr(final String cigarStr)
-    {
-        int softClipCount = 0;
-        int elementLength = 0;
-        for(int i = 0; i < cigarStr.length(); ++i)
-        {
-            final char c = cigarStr.charAt(i);
-            if(c == 'S' || c == 'H')
-            {
-                softClipCount += elementLength;
-                elementLength = 0;
-                continue;
-            }
-
-            int digit = c - '0';
-            if(digit >= 0 && digit <= 9)
-            {
-                elementLength = elementLength * 10 + digit;
-            }
-            else
-            {
-                elementLength = 0;
-            }
-        }
-
-        return softClipCount;
-    }
-
     private static boolean isChimericRead(final SAMRecord record, boolean checkForMate)
     {
         boolean readUnmapped = record.getReadUnmappedFlag();
         boolean mateUnmapped = record.getMateUnmappedFlag();
-
-        if(!checkForMate && readUnmapped)
-            return false;
-
-        if(checkForMate && mateUnmapped)
-            return false;
 
         // or a fragment length outside the expected maximum
         if(abs(record.getInferredInsertSize()) > UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX)
@@ -668,6 +625,11 @@ public class ReadUnmapper
         }
 
         return false;
+    }
+
+    private static boolean exceedsSoftClipLength(final String cigar)
+    {
+        return getClipLengthFromCigarStr(cigar) >= UNMAP_MIN_SOFT_CLIP;
     }
 
     private static boolean isSupplementaryChimericRead(final SAMRecord record, SupplementaryReadData suppReadData)
@@ -726,8 +688,7 @@ public class ReadUnmapper
             read.setReferenceName(read.getMateReferenceName());
         }
 
-        // If mate is unmapped, have to clear its reference name and alignment start here, since no unmapping logic will be run for the
-        // mate.
+        // If mate is unmapped, clear its reference name and alignment start here, since no unmapping logic will be run for the mate
         if(mateUnmapped)
         {
             read.setMateAlignmentStart(0);
@@ -812,6 +773,70 @@ public class ReadUnmapper
     private static Map<String,List<HighDepthRegion>> loadUnmapRegions(final String filename)
     {
         return UnmappedRegions.loadUnmapRegions(filename);
+    }
+
+    @VisibleForTesting
+    public static int getClipLengthFromCigarStr(final String cigarStr)
+    {
+        if(cigarStr == null || cigarStr.isEmpty())
+            return 0;
+
+        int softClipCount = 0;
+        int elementLength = 0;
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            final char c = cigarStr.charAt(i);
+            if(c == 'S' || c == 'H')
+            {
+                softClipCount += elementLength;
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if(digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        return softClipCount;
+    }
+
+    private static int getReadEndFromCigarStr(final int readStart, final String cigarStr)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            final char c = cigarStr.charAt(i);
+            final boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
+
+            if(isAddItem)
+            {
+                currentPosition += elementLength;
+                elementLength = 0;
+                continue;
+            }
+
+            final int digit = c - '0';
+            if(digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
     }
 
     @VisibleForTesting
