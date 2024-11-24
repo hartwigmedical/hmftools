@@ -564,7 +564,7 @@ For each point mutation we determined the clonality and biallelic status by comp
 
 The biallelic probability at a given variant position is calculated as the total probability between a loss of heterozygosity at the position, P(LOH), and the probability of the variant being present on all remaining alleles conditional on the LOH status, P(BA|LOH). That is, P(BA) = P(LOH) × P(BA│LOH) + P(not LOH) × P(BA│not LOH)
 
-PURPLE models P(LOH) using 1 - 1 / (1 + e^(-40 * (MACN-0.5)) ). It calculates P(BA│LOH) in three stages: first, a threshold above which the variant is more likely to be biallelic is determined at min⁡((CN-0.5, max(1.4,CN-0.8)). Second, it uses this threshold to derive the implied variant read count. Third, P(BA│LOH) equals one minus a Poisson distribution with the mean parameter equalling the variant read count and the support parameter equalling the threshold. For P(BA│not LOH), PURPLE models it with the heuristic form max⁡(P(LOH),0.02) / ((1-P(BA|LOH))+max⁡(P(LOH),0.02)).
+PURPLE models P(LOH) using 1 - 1 / (1 + exp(-40 * (MACN-0.5)) ). It calculates P(BA│LOH) in three stages: first, a threshold above which the variant is more likely to be biallelic is determined at min⁡((CN-0.5, max(1.4,CN-0.8)). Second, it uses this threshold to derive the implied variant read count. Third, P(BA│LOH) equals one minus a Poisson distribution with the mean parameter equalling the variant read count and the support parameter equalling the threshold. For P(BA│not LOH), PURPLE models it with the heuristic form max⁡(P(LOH),0.02) / ((1-P(BA|LOH))+max⁡(P(LOH),0.02)).
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
