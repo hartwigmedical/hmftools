@@ -8,7 +8,7 @@ Esvee runs is run in 4 steps
 - ESVEE Prep
 - Assembly & Alignment
 - Reference Depth Annotation
-- Variant Calling * Filtering 
+- Variant Calling & Filtering 
 
 The full algorithm for each step is described in the algorithm section below.
 
