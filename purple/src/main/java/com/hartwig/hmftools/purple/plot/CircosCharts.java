@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.plot;
 
+import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
+import com.hartwig.hmftools.common.region.BaseRegion;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +48,8 @@ public class CircosCharts
     private String mCurrentReferenceId;
     private String mBaseCircosTumorSample;
     private String mBaseCircosReferenceSample;
+
+    List<AmberBAF> bafsForVis = Lists.newArrayList();
 
     public CircosCharts(final PurpleConfig configSupplier, final ExecutorService executorService, boolean isHg38)
     {
@@ -136,7 +141,15 @@ public class CircosCharts
 
     private void writeBafs(final List<AmberBAF> bafs) throws IOException
     {
-        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafs, x -> x.TumorBAF);
+        for(AmberBAF baf : bafs)
+        {
+            if(!(EXCLUDED_IMMUNE_REGIONS.stream().anyMatch(x -> x.containsPosition(baf.Chromosome, baf.position()))))
+            {
+                bafsForVis.add(baf);
+            }
+        }
+        
+        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafsForVis, x -> x.TumorBAF);
     }
 
     private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException

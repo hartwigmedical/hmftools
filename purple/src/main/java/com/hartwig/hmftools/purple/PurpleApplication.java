@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
@@ -213,6 +214,7 @@ public class PurpleApplication
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         List<ObservedRegion> fittedRegions = Lists.newArrayList();
+        List<ObservedRegion> regionsForVis = Lists.newArrayList();
 
         BestFit bestFit = null;
         PurityAdjuster purityAdjuster = null;
@@ -318,12 +320,20 @@ public class PurpleApplication
             try
             {
                 Charts charts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
-
+                
+                for(ObservedRegion region : fittedRegions)
+                {
+                    if(region.germlineStatus() != GermlineStatus.EXCLUDED)
+                    {
+                        regionsForVis.add(region);
+                    }
+                }
+                
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
-                        fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
-
+                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+                
                 // clean up any temporary files
                 // RChartData.cleanupFiles(mConfig, tumorId);
             }

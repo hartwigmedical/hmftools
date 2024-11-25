@@ -65,6 +65,8 @@ public class PurpleConstants
 
     public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
     public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
+    
+    public static final double AMBIGUOUS_BAF_THRESHOLD = 0.52;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -77,6 +79,7 @@ public class PurpleConstants
     public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
     public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1.5;
     public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
+    public static final double HOTSPOT_GNOMAD_FREQ_THRESHOLD = 0.01;
 
     // tumor-only somatic fitting
     public static final double SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN = 0.92;
