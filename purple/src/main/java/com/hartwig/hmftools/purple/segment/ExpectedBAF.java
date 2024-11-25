@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static com.hartwig.hmftools.purple.PurpleConstants.AMBIGUOUS_BAF_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.BAF_PNT_5;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -10,7 +11,7 @@ public final class ExpectedBAF
 
     public static double expectedBAF(int averageDepth)
     {
-        return expectedBAF(averageDepth, DEFAULT_PERCENT);
+        return Math.max(expectedBAF(averageDepth, DEFAULT_PERCENT), AMBIGUOUS_BAF_THRESHOLD);
     }
 
     public static double expectedBAF(int averageDepth, double percent)

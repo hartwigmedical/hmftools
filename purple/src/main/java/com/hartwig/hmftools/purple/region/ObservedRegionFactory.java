@@ -55,7 +55,7 @@ public class ObservedRegionFactory
     private final CobaltChromosomes mCobaltChromosomes;
     private final GermlineStatusCalcs mStatusFactory;
 
-    private static List<ChrBaseRegion> EXCLUDED_IMMUNE_REGIONS = Lists.newArrayList();
+    public static List<ChrBaseRegion> EXCLUDED_IMMUNE_REGIONS = Lists.newArrayList();
     private static List<ChrBaseRegion> CENTROMETRIC_REGIONS = Lists.newArrayList();
 
     private static List<ChrBaseRegion> GERMLINE_AMP_DEL_EXCLUSIONS = Lists.newArrayList();
@@ -73,6 +73,7 @@ public class ObservedRegionFactory
     {
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
+        EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getHlaRegions(refGenomeVersion));
 
         int halfWidth = CENTROMERIC_WIDTH / 2;
 
