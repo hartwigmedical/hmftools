@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,23 @@ public final class TestUtils
     public static ReduxConfig createTestConfig()
     {
         return new ReduxConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false, false, false);
+    }
+
+    public List<Fragment> createBasicFragments(final String readId)
+    {
+        Fragment read = createFragment(readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+                false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        read.setStatus(NONE);
+
+        Fragment mateRead = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                true, false, null);
+
+
+        Fragment supp = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                false, true, new SupplementaryReadData(CHR_1, 2000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        return Lists.newArrayList(read, mateRead, supp);
     }
 
     public static Fragment createFragment(final String readId, final String chrStr, int readStart)

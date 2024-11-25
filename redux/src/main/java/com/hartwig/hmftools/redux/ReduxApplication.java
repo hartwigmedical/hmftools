@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -11,7 +9,6 @@ import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.redux.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapMateAlignment;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapReadAlignment;
 
@@ -31,12 +28,10 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
-import com.hartwig.hmftools.redux.common.PartitionData;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
-import com.hartwig.hmftools.redux.write.SuppBamReprocessor;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -73,8 +68,6 @@ public class ReduxApplication
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
 
-        PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
-
         // partition all chromosomes
         Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
 
@@ -104,7 +97,7 @@ public class ReduxApplication
 
         for(int i = 0; i < min(partitionCount, mConfig.Threads); ++i)
         {
-            PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache, partitionDataStore);
+            PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache);
             partitionTasks.add(partitionThread);
             workers.add(partitionThread);
         }
@@ -116,23 +109,11 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
-        if(mConfig.PerfDebug)
-            partitionDataStore.logTotalCacheSize();
-
         // write any orphaned or remaining fragments (can be supplementaries)
         BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
 
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
-
-        if(mConfig.UseSupplementaryBam)
-        {
-            SuppBamReprocessor.reprocessSupplementaries(
-                    mConfig, recordWriter, partitionDataStore, fileWriterCache.getSupplementaryBamReadWriters(), consensusReads);
-        }
-
-        if(mConfig.PerfDebug)
-            partitionDataStore.logTotalCacheSize();
 
         long unmappedReads = writeUnmappedReads(fileWriterCache);
 
@@ -140,13 +121,6 @@ public class ReduxApplication
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 1000 : 0;
         int totalUnwrittenFragments = 0;
-
-        for(PartitionData partitionData : partitionDataStore.partitions())
-        {
-            int cachedReadCount = partitionData.writeRemainingReads(recordWriter, consensusReads, maxLogFragments > 0);
-            totalUnwrittenFragments += cachedReadCount;
-            maxLogFragments = max(0, maxLogFragments - cachedReadCount);
-        }
 
         if(totalUnwrittenFragments > 0)
         {
@@ -157,7 +131,6 @@ public class ReduxApplication
 
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
-        partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
         combinedStats.ConsensusStats.merge(consensusReads.consensusStats());
 
         // free up any processing state
@@ -232,7 +205,7 @@ public class ReduxApplication
             }
         }
 
-        logPerformanceStats(combinedPerfCounters, partitionDataStore);
+        logPerformanceStats(combinedPerfCounters);
 
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -336,7 +309,7 @@ public class ReduxApplication
         return combinedPerfCounters;
     }
 
-    private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters, final PartitionDataStore partitionDataStore)
+    private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters)
     {
         if(mConfig.PerfDebug)
         {
@@ -349,34 +322,11 @@ public class ReduxApplication
                 else
                     perfCounter.logStats();
             }
-
-            // check partition store locking times
-            double totalLockTimeMs = 0;
-
-            for(PartitionData partitionData : partitionDataStore.partitions())
-            {
-                double lockTime = partitionData.totalLockTimeMs();
-
-                totalLockTimeMs += lockTime;
-
-                if(lockTime > LOCK_ACQUIRE_LONG_TIME_MS)
-                {
-                    RD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
-                            partitionData.partitionStr(), format("%.1f", lockTime));
-                }
-            }
-
-            if(totalLockTimeMs > LOCK_ACQUIRE_LONG_TIME_MS)
-            {
-                RD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
-                        format("%.3f", totalLockTimeMs / 1000));
-            }
         }
         else
         {
             combinedPerfCounters.forEach(x -> x.logStats());
         }
-
     }
 
     public static void main(final String[] args)

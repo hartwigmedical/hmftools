@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.redux.common.PartitionData;
 
 import org.junit.Test;
 
@@ -49,7 +47,7 @@ public class DuplicateGroupsTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReader = new PartitionReader(umiConfig, null, mWriter, new PartitionDataStore(umiConfig));
+        mPartitionReader = new PartitionReader(umiConfig, null, mWriter);
     }
 
     @Test
@@ -84,9 +82,8 @@ public class DuplicateGroupsTest
         mPartitionReader.processRead(read2);
         mPartitionReader.flushReadPositions();
 
-        PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_0");
-
-        assertEquals(2, partitionData.duplicateGroupMap().size());
+        // PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_0");
+        //assertEquals(2, partitionData.duplicateGroupMap().size());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -135,12 +132,13 @@ public class DuplicateGroupsTest
 
         assertEquals(7, mWriter.nonConsensusWriteCount());
         assertEquals(3, mWriter.consensusWriteCount());
-        assertTrue(partitionData.duplicateGroupMap().isEmpty());
-        assertEquals(1, partitionData.incompleteFragmentMap().size());
 
-        partitionData.writeRemainingReads(mWriter, mPartitionReader.consensusReads(), false);
+        //assertTrue(partitionData.duplicateGroupMap().isEmpty());
+        //assertEquals(1, partitionData.incompleteFragmentMap().size());
+
+        //partitionData.writeRemainingReads(mWriter, mPartitionReader.consensusReads(), false);
         assertEquals(8, mWriter.nonConsensusWriteCount());
-        assertTrue(partitionData.incompleteFragmentMap().isEmpty());
+        //assertTrue(partitionData.incompleteFragmentMap().isEmpty());
     }
 
     @Test
@@ -233,12 +231,5 @@ public class DuplicateGroupsTest
 
         assertEquals(8, mWriter.nonConsensusWriteCount());
         assertEquals(4, mWriter.consensusWriteCount());
-
-        for(PartitionData partitionData : mPartitionReader.partitionDataStore().partitions())
-        {
-            assertTrue(partitionData.duplicateGroupMap().isEmpty());
-            assertTrue(partitionData.incompleteFragmentMap().isEmpty());
-        }
     }
-
 }

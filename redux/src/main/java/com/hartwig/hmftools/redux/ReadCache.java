@@ -18,6 +18,7 @@ public class ReadCache
 {
     private final int mGroupSize;
     private int mCurrentReadMinPosition;
+    private String mCurrentChromosome;
     private final List<ReadPositionGroup> mPositionGroups;
 
     public static final int DEFAULT_GROUP_SIZE = 200; // larger than the maximum soft-clip length for 151-base reads
@@ -27,6 +28,7 @@ public class ReadCache
         mGroupSize = groupSize;
         mPositionGroups = Lists.newArrayList();
         mCurrentReadMinPosition = 0;
+        mCurrentChromosome = "";
     }
 
     public void processRead(final SAMRecord read)
@@ -38,6 +40,7 @@ public class ReadCache
         group.addRead(fragmentCoords, read);
 
         mCurrentReadMinPosition = read.getAlignmentStart();
+        mCurrentChromosome = read.getReferenceName();
     }
 
     public List<List<SAMRecord>> popProcessedReads()
@@ -54,8 +57,32 @@ public class ReadCache
         {
             ReadPositionGroup group = mPositionGroups.get(0);
 
+            // TODO: test chromosome change: mCurrentChromosome
+
             if(mCurrentReadMinPosition <= group.PositionEnd + mGroupSize)
                 break;
+
+            for(List<SAMRecord> reads : group.FragCoordsMap.values())
+            {
+                fragCoordReadsList.add(reads);
+            }
+
+            mPositionGroups.remove(0);
+        }
+
+        return fragCoordReadsList;
+    }
+
+    public List<List<SAMRecord>> processRemaining()
+    {
+        if(mPositionGroups.isEmpty())
+            return null;
+
+        List<List<SAMRecord>> fragCoordReadsList = Lists.newArrayList();
+
+        while(!mPositionGroups.isEmpty())
+        {
+            ReadPositionGroup group = mPositionGroups.get(0);
 
             for(List<SAMRecord> reads : group.FragCoordsMap.values())
             {
@@ -137,7 +164,7 @@ public class ReadCache
         int fragCount = mPositionGroups.stream().mapToInt(x -> x.FragCoordsMap.size()).sum();
         int readCount = mPositionGroups.stream().mapToInt(x -> x.readCount()).sum();
 
-        return format("minPos(%d) groups(%d) frags(%d) reads(%d)",
-                mCurrentReadMinPosition, mPositionGroups.size(), fragCount, readCount);
+        return format("minPos(%s:d) groups(%d) frags(%d) reads(%d)",
+                mCurrentChromosome, mCurrentReadMinPosition, mPositionGroups.size(), fragCount, readCount);
     }
 }

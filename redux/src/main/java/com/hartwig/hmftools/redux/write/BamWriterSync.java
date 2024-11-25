@@ -17,9 +17,9 @@ public class BamWriterSync extends BamWriter
 
     public BamWriterSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, @Nullable final SuppBamWriter suppBamReadWriter)
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, suppBamReadWriter);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
         mWriteCount = 0;
     }
 

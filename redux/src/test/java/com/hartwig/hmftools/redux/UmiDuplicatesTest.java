@@ -3,12 +3,8 @@ package com.hartwig.hmftools.redux;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
-import static com.hartwig.hmftools.common.bam.SupplementaryReadData.alignmentsToSamTag;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
@@ -19,14 +15,10 @@ import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DEL
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.redux.common.PartitionData;
 import com.hartwig.hmftools.redux.umi.PositionFragmentCounts;
 
 import org.junit.Test;
@@ -53,10 +45,10 @@ public class UmiDuplicatesTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter, new PartitionDataStore(umiConfig));
+        mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter);
 
         ReduxConfig duplexUmiConfig = new ReduxConfig(1000, 1000, mRefGenome, true, true, false);
-        mPartitionReaderDuplexUMIs = new PartitionReader(duplexUmiConfig, null, mWriter, new PartitionDataStore(duplexUmiConfig));
+        mPartitionReaderDuplexUMIs = new PartitionReader(duplexUmiConfig, null, mWriter);
     }
 
     @Test
@@ -82,9 +74,8 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.processRead(read2);
         mPartitionReaderUMIs.flushReadPositions();
 
-        PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-
-        assertEquals(2, partitionData.duplicateGroupMap().size());
+        // PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // assertEquals(2, partitionData.duplicateGroupMap().size());
         assertEquals(2, mWriter.nonConsensusWriteCount());
         assertEquals(1, mWriter.consensusWriteCount());
 
@@ -125,7 +116,7 @@ public class UmiDuplicatesTest
 
         assertEquals(6, mWriter.nonConsensusWriteCount());
         assertEquals(3, mWriter.consensusWriteCount());
-        assertTrue(partitionData.duplicateGroupMap().isEmpty());
+        // assertTrue(partitionData.duplicateGroupMap().isEmpty());
     }
 
     @Test
@@ -198,10 +189,11 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.processRead(read9);
         mPartitionReaderUMIs.postProcessRegion();
 
+        /*
         PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-
         assertEquals(3, partitionData.umiGroups().size());
         assertEquals(2, partitionData.resolvedFragmentStateMap().size());
+        */
         assertEquals(9, mWriter.nonConsensusWriteCount());
         assertEquals(3, mWriter.consensusWriteCount());
 
@@ -303,9 +295,8 @@ public class UmiDuplicatesTest
         mPartitionReaderDuplexUMIs.processRead(read5);
         mPartitionReaderDuplexUMIs.postProcessRegion();
 
-        PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-
-        assertEquals(5, partitionData.duplicateGroupMap().size());
+        // PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // assertEquals(5, partitionData.duplicateGroupMap().size());
         assertEquals(5, mWriter.nonConsensusWriteCount());
         assertEquals(2, mWriter.consensusWriteCount());
 
@@ -370,9 +361,9 @@ public class UmiDuplicatesTest
         mPartitionReaderDuplexUMIs.flushReadPositions();
         mPartitionReaderDuplexUMIs.postProcessRegion();
 
-        PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // assertEquals(4, partitionData.duplicateGroupMap().size());
 
-        assertEquals(4, partitionData.duplicateGroupMap().size());
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, suppData2);
@@ -404,8 +395,8 @@ public class UmiDuplicatesTest
         mPartitionReaderDuplexUMIs.flushReadPositions();
         mPartitionReaderDuplexUMIs.postProcessRegion();
 
-        partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-        assertEquals(4, partitionData.duplicateGroupMap().size());
+        // partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // assertEquals(4, partitionData.duplicateGroupMap().size());
 
         // finally the expected supplementaries
 
@@ -445,8 +436,8 @@ public class UmiDuplicatesTest
         mPartitionReaderDuplexUMIs.processRead(mateSupp2);
         mPartitionReaderDuplexUMIs.postProcessRegion();
 
-        partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-        assertTrue(partitionData.duplicateGroupMap().isEmpty());
+        // partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+        // assertTrue(partitionData.duplicateGroupMap().isEmpty());
 
         assertEquals(13, mWriter.nonConsensusWriteCount());
         assertEquals(4, mWriter.consensusWriteCount());

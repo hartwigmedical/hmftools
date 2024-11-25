@@ -4,36 +4,27 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.redux.common.CandidateDuplicates;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.Fragment;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
-import com.hartwig.hmftools.redux.common.PartitionData;
-import com.hartwig.hmftools.redux.common.PartitionResults;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
@@ -41,22 +32,18 @@ import com.hartwig.hmftools.redux.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
 
-public class PartitionReader implements Consumer<List<Fragment>>
+public class PartitionReader // implements Consumer<List<Fragment>>
 {
     private final ReduxConfig mConfig;
 
     private final BamReader mBamReader;
-    private final PartitionDataStore mPartitionDataStore;
     private final BamWriter mBamWriter;
-    private final ReadPositionsCache mReadPositions;
     private final ReadCache mReadCache;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
     private ChrBaseRegion mCurrentRegion;
 
-    private String mCurrentStrPartition;
-    private PartitionData mCurrentPartitionData;
     private UnmapRegionState mUnmapRegionState;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
@@ -65,21 +52,16 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private int mPartitionRecordCount;
     private final Statistics mStats;
     private final PerformanceCounter mPcTotal;
-    private final PerformanceCounter mPcAcceptPositions;
-    private final PerformanceCounter mPcPendingIncompletes;
+    private final PerformanceCounter mPcProcessDuplicates;
 
-    public PartitionReader(
-            final ReduxConfig config, final BamReader bamReader,
-            final BamWriter bamWriter, final PartitionDataStore partitionDataStore)
+    public PartitionReader(final ReduxConfig config, final BamReader bamReader, final BamWriter bamWriter)
     {
         mConfig = config;
-        mPartitionDataStore = partitionDataStore;
         mBamWriter = bamWriter;
         mBamReader = bamReader;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE);
 
-        mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
         mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
@@ -94,13 +76,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
-        mPcAcceptPositions = new PerformanceCounter("AcceptPositions");
-        mPcPendingIncompletes = new PerformanceCounter("PendingIncompletes");
+        mPcProcessDuplicates = new PerformanceCounter("ProcessDuplicates");
     }
 
     public List<PerformanceCounter> perfCounters()
     {
-        return List.of(mPcTotal, mPcAcceptPositions, mPcPendingIncompletes);
+        return List.of(mPcTotal, mPcProcessDuplicates);
     }
 
     public Statistics statistics() { return mStats; }
@@ -113,11 +94,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         perfCountersStart();
 
         setUnmappedRegions();
-
-        mCurrentStrPartition = formChromosomePartition(region.Chromosome, mCurrentRegion.start(), mConfig.PartitionSize);
-        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-
-        mReadPositions.setCurrentChromosome(region.Chromosome);
 
         mBamWriter.initialiseRegion(region.Chromosome, region.start());
     }
@@ -136,28 +112,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void postProcessRegion()
     {
         // post-slice clean-up
-        List<SAMRecord> pendingUnmapped = mReadPositions.getPendingUnmapped();
-
-        for(SAMRecord read : pendingUnmapped)
-        {
-            processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
-        }
-
-        mReadPositions.evictAll();
-
-        processPendingIncompletes();
+        // mReadPositions.evictAll();
 
         mBamWriter.onRegionComplete();
 
         perfCountersStop();
 
         RD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
-
-        if(mConfig.PerfDebug)
-        {
-            mCurrentPartitionData.logCacheCounts();
-            mPartitionDataStore.logTotalCacheSize();
-        }
 
         mPartitionRecordCount = 0;
     }
@@ -228,23 +189,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
 
-            if(mConfig.NoMateCigar)
-            {
-                if(!mReadPositions.processRead(read))
-                {
-                    processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
-                }
-            }
-            else
-            {
-                mReadCache.processRead(read);
+            mReadCache.processRead(read);
 
-                List<List<SAMRecord>> fragCoordReadsList = mReadCache.popProcessedReads();
+            List<List<SAMRecord>> fragCoordReadsList = mReadCache.popProcessedReads();
 
-                if(fragCoordReadsList != null)
-                {
-                    RD_LOGGER.debug("processing {} frag-coord read groups", fragCoordReadsList.size());
-                }
+            if(fragCoordReadsList != null)
+            {
+                RD_LOGGER.debug("processing {} frag-coord read groups", fragCoordReadsList.size());
             }
         }
         catch(Exception e)
@@ -253,19 +204,17 @@ public class PartitionReader implements Consumer<List<Fragment>>
             e.printStackTrace();
             System.exit(1);
         }
-
-        if(!mConfig.NoMateCigar && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.getSupplementaryAlignmentFlag()
-        && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-        {
-            ++mStats.MissingMateCigar;
-
-            if(mStats.MissingMateCigar < 3 && mConfig.PerfDebug)
-            {
-                RD_LOGGER.debug("read without mate cigar: {}", readToString(read));
-            }
-        }
     }
 
+
+    private void processDuplicateGroup(final DuplicateGroup duplicateGroup)
+    {
+        // form consensus reads for any complete read leg groups and write reads
+        List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(mConsensusReads, false);
+        mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
+    }
+
+    /*
     private void processIncompleteRead(final SAMRecord read, final String basePartition)
     {
         if(basePartition == null)
@@ -362,13 +311,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mPcPendingIncompletes.pause();
     }
 
-    private void processDuplicateGroup(final DuplicateGroup duplicateGroup)
-    {
-        // form consensus reads for any complete read leg groups and write reads
-        List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(mConsensusReads, false);
-        mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
-    }
-
     private static final double LOG_PERF_TIME_SEC = 1;
     private static final int LOG_PERF_FRAG_COUNT = 3000;
 
@@ -377,7 +319,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(positionFragments.isEmpty())
             return;
 
-        mPcAcceptPositions.resume();
+        mPcProcessDuplicates.resume();
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
         List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
@@ -437,8 +379,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
             mBamWriter.setBoundaryPosition(position, true);
 
-        mPcAcceptPositions.pause();
+        mPcProcessDuplicates.pause();
     }
+    */
 
     private void setUnmappedRegions()
     {
@@ -464,28 +407,24 @@ public class PartitionReader implements Consumer<List<Fragment>>
         else
             mPcTotal.start();
 
-        mPcAcceptPositions.startPaused();
-        mPcPendingIncompletes.startPaused();
+        mPcProcessDuplicates.startPaused();
     }
 
     private void perfCountersStop()
     {
         mPcTotal.stop();
-        mPcAcceptPositions.stop();
-        mPcPendingIncompletes.stop();
+        mPcProcessDuplicates.stop();
     }
 
     @VisibleForTesting
     public void processRead(final SAMRecord read) { processSamRecord(read); }
 
     @VisibleForTesting
-    public void flushReadPositions() { mReadPositions.evictAll(); }
-
-    @VisibleForTesting
-    public void flushPendingIncompletes() { processPendingIncompletes(); }
-
-    @VisibleForTesting
-    public PartitionDataStore partitionDataStore() { return mPartitionDataStore; }
+    public void flushReadPositions()
+    {
+        mReadCache.processRemaining();
+        // mReadPositions.evictAll();
+    }
 
     @VisibleForTesting
     public ConsensusReads consensusReads() { return mConsensusReads; }

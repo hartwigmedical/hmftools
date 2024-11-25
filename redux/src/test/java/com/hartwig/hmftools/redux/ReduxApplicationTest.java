@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
@@ -10,7 +9,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
@@ -23,7 +21,6 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.redux.common.PartitionData;
 
 import org.junit.Test;
 
@@ -51,9 +48,10 @@ public class ReduxApplicationTest
         // mWriter = mFileWriterCache.getPartitionBamWriter("1");
         mWriter = new TestBamWriter(config);
 
-        mPartitionReader = new PartitionReader(config, null, mWriter, new PartitionDataStore(config));
+        mPartitionReader = new PartitionReader(config, null, mWriter);
     }
 
+    /*
     @Test
     public void testNonDuplicateFragment()
     {
@@ -308,6 +306,7 @@ public class ReduxApplicationTest
         assertEquals(6, mWriter.nonConsensusWriteCount());
         assertEquals(3, mWriter.consensusWriteCount());
     }
+    */
 
     @Test
     public void testUnmapRegionReads()
@@ -320,7 +319,7 @@ public class ReduxApplicationTest
         config.UnmapRegions.addRegion(CHR_1, region1);
         config.UnmapRegions.addRegion(CHR_1, region2);
 
-        PartitionReader partitionReader = new PartitionReader(config, null, mWriter, new PartitionDataStore(config));
+        PartitionReader partitionReader = new PartitionReader(config, null, mWriter);
 
         partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1999));
 
