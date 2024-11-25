@@ -28,7 +28,6 @@ public class Statistics
     public long LocalComplete; // fragments where all reads are in the same partition
     public long Incomplete; // read in same partition as base partition but not resolved immediately (eg an earlier supplementary)
     public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
-    public long MissingMateCigar;
     public long Unmapped; // fully, ie primary and mate
     public long PairedAltChromosome; // paired with a non-human chromosome
 
@@ -46,7 +45,6 @@ public class Statistics
         InterPartition = 0;
         LocalComplete = 0;
         Incomplete = 0;
-        MissingMateCigar = 0;
         Unmapped = 0;
         PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
@@ -62,7 +60,6 @@ public class Statistics
         LocalComplete += other.LocalComplete;
         Incomplete += other.Incomplete;
         InterPartition += other.InterPartition;
-        MissingMateCigar += other.MissingMateCigar;
         Unmapped += other.Unmapped;
         PairedAltChromosome += other.PairedAltChromosome;
 
@@ -133,11 +130,6 @@ public class Statistics
                     .collect(Collectors.joining(", "));
 
             RD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
-        }
-
-        if(MissingMateCigar > 0)
-        {
-            RD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
         }
     }
 

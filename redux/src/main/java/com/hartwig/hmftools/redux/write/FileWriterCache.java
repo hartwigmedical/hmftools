@@ -93,7 +93,6 @@ public class FileWriterCache
     {
         SAMFileWriter samFileWriter = null;
         String filename = null;
-        SuppBamWriter suppBamReadWriter = null;
 
         if(mConfig.WriteBam)
         {
@@ -111,12 +110,6 @@ public class FileWriterCache
 
             // no option to use library-based sorting
             samFileWriter = initialiseSamFileWriter(filename, isSorted);
-
-            if(mConfig.UseSupplementaryBam && multiId != null)
-            {
-                String suppBamFilename = SuppBamWriter.formBamFilename(mConfig, multiId);
-                suppBamReadWriter = new SuppBamWriter(suppBamFilename, mConfig);
-            }
         }
 
         // initiate the applicable type of BAM writer - synchronised or not
@@ -124,13 +117,12 @@ public class FileWriterCache
 
         if(isSynchronous)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, suppBamReadWriter);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
         }
         else
         {
             bamWriter = new BamWriterNoSync(
-                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted,
-                    mSharedUnsortedWriter, suppBamReadWriter);
+                    filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
         }
 
         mBamWriters.add(bamWriter);
@@ -171,11 +163,6 @@ public class FileWriterCache
 
         boolean presorted = isSorted;
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
-    }
-
-    public List<SuppBamWriter> getSupplementaryBamReadWriters()
-    {
-        return mBamWriters.stream().filter(x -> x.suppBamReadWriter() != null).map(x -> x.suppBamReadWriter()).collect(Collectors.toList());
     }
 
     public boolean runSortMergeIndex() { return mConfig.BamToolPath != null; }

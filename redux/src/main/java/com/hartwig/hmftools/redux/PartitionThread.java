@@ -21,8 +21,7 @@ public class PartitionThread extends Thread
     private final PartitionReader mPartitionReader;
 
     public PartitionThread(
-            final int threadId, final ReduxConfig config, final Queue<ChrBaseRegion> partitions, final FileWriterCache fileWriterCache,
-            final PartitionDataStore partitionDataStore)
+            final int threadId, final ReduxConfig config, final Queue<ChrBaseRegion> partitions, final FileWriterCache fileWriterCache)
     {
         mConfig = config;
 
@@ -33,7 +32,7 @@ public class PartitionThread extends Thread
 
         mBamReader = new BamReader(config);
 
-        mPartitionReader = new PartitionReader(config, mBamReader, mBamWriter, partitionDataStore);
+        mPartitionReader = new PartitionReader(config, mBamReader, mBamWriter);
 
         start();
     }
