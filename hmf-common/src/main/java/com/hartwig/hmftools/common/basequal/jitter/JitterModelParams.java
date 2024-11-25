@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.basequal.jitter;
 public class JitterModelParams
 {
     public final String RepeatUnit;
+    public final ConsensusType ConsensusType;
     public final double OptimalScaleRepeat4;
     public final double OptimalScaleRepeat5;
     public final double OptimalScaleRepeat6;
@@ -17,11 +18,12 @@ public class JitterModelParams
     public static final String REPEAT_UNIT_3_PLUS_LABEL = "3-5bp repeat";
 
     public JitterModelParams(
-            final String repeatUnit,
+            final String repeatUnit, final ConsensusType consensusType,
             final double optimalScaleRepeat4, final double optimalScaleRepeat5, final double optimalScaleRepeat6,
             final double scaleFitGradient, final double scaleFitIntercept, final double microsatelliteSkew)
     {
         RepeatUnit = repeatUnit;
+        ConsensusType = consensusType;
         OptimalScaleRepeat4 = optimalScaleRepeat4;
         OptimalScaleRepeat5 = optimalScaleRepeat5;
         OptimalScaleRepeat6 = optimalScaleRepeat6;

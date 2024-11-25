@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
+import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.IGNORE;
+import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.NONE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -19,22 +22,26 @@ class MicrosatelliteRead
 {
     public static final Logger sLogger = LogManager.getLogger(MicrosatelliteRead.class);
 
-    final RefGenomeMicrosatellite refGenomeMicrosatellite;
-    boolean shouldDropRead = false;
-    int numAligned = 0;
-    int numInserted = 0;
-    int numDeleted = 0;
+    private final RefGenomeMicrosatellite refGenomeMicrosatellite;
+    private final ConsensusType mConsensusType;
 
-    int numMatchedBefore = 0;
-    int numMatchedAfter = 0;
+    public boolean shouldDropRead = false;
 
-    private MicrosatelliteRead(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+    private int numAligned = 0;
+    private int numInserted = 0;
+    private int numDeleted = 0;
+
+    private int numMatchedBefore = 0;
+    private int numMatchedAfter = 0;
+
+    private MicrosatelliteRead(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record,
+            @Nullable final ConsensusMarker consensusMarker)
     {
         this.refGenomeMicrosatellite = refGenomeMicrosatellite;
 
         // this read needs to wholly contain the homopolymer to be counted
         if(record.getAlignmentStart() > refGenomeMicrosatellite.referenceStart() ||
-        record.getAlignmentEnd() < refGenomeMicrosatellite.referenceEnd())
+                record.getAlignmentEnd() < refGenomeMicrosatellite.referenceEnd())
         {
             shouldDropRead = true;
         }
@@ -51,6 +58,22 @@ class MicrosatelliteRead
                     record, numMatchedBefore, numMatchedAfter);
         }
 
+        if(!shouldDropRead)
+        {
+            if(consensusMarker == null)
+            {
+                mConsensusType = NONE;
+            }
+            else
+            {
+                mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
+            }
+        }
+        else
+        {
+            mConsensusType = NONE;
+        }
+
         // do some validation and logging
         if(!shouldDropRead)
         {
@@ -58,10 +81,15 @@ class MicrosatelliteRead
             if(readRepeatLength != refGenomeMicrosatellite.baseLength() - numDeleted + numInserted)
             {
                 sLogger.error("read({}) {}, incorrect read repeat length({}) numAligned({}) numInserted({}) numDeleted({}) " +
-                        "homopolymer({})",
+                                "homopolymer({})",
                         record, record.getCigarString(), readRepeatLength, numAligned, numInserted, numDeleted, refGenomeMicrosatellite.genomeRegion);
             }
         }
+    }
+
+    public ConsensusType consensusType()
+    {
+        return mConsensusType;
     }
 
     public int readRepeatLength()
@@ -81,17 +109,25 @@ class MicrosatelliteRead
         return readRepeatLength() / refGenomeMicrosatellite.unit.length;
     }
 
-    public static MicrosatelliteRead from(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+    @Nullable
+    public static MicrosatelliteRead from(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record,
+            @Nullable final ConsensusMarker consensusMarker)
     {
-        return new MicrosatelliteRead(refGenomeMicrosatellite, record);
+        MicrosatelliteRead msRead = new MicrosatelliteRead(refGenomeMicrosatellite, record, consensusMarker);
+        if(msRead.mConsensusType == IGNORE)
+        {
+            return null;
+        }
+
+        return msRead;
     }
 
-    public void handleAlignment(final SAMRecord record, final CigarElement e, final int startReadIndex, final int startRefPos)
+    private void handleAlignment(final CigarElement e, final int startRefPos)
     {
         // check if this alignment spans the repeat
         // TODO: check for substitution??
         int numAlignedToMs = Math.min(startRefPos + e.getLength(), refGenomeMicrosatellite.referenceEnd() + 1) -
-                             Math.max(startRefPos, refGenomeMicrosatellite.referenceStart());
+                Math.max(startRefPos, refGenomeMicrosatellite.referenceStart());
 
         if(numAlignedToMs > 0)
         {
@@ -100,15 +136,16 @@ class MicrosatelliteRead
         }
 
         int numAlignedToFlankingStart = Math.min(startRefPos + e.getLength(), refGenomeMicrosatellite.referenceStart()) -
-                                        Math.max(startRefPos, refGenomeMicrosatellite.referenceStart() - MIN_FLANKING_BASE_MATCHES);
+                Math.max(startRefPos, refGenomeMicrosatellite.referenceStart() - MIN_FLANKING_BASE_MATCHES);
 
         if(numAlignedToFlankingStart > 0)
         {
             numMatchedBefore += numAlignedToFlankingStart;
         }
 
-        int numAlignedToFlankingEnd = Math.min(startRefPos + e.getLength(), refGenomeMicrosatellite.referenceEnd() + 1 + MIN_FLANKING_BASE_MATCHES) -
-                Math.max(startRefPos, refGenomeMicrosatellite.referenceEnd() + 1);
+        int numAlignedToFlankingEnd =
+                Math.min(startRefPos + e.getLength(), refGenomeMicrosatellite.referenceEnd() + 1 + MIN_FLANKING_BASE_MATCHES) -
+                        Math.max(startRefPos, refGenomeMicrosatellite.referenceEnd() + 1);
 
         if(numAlignedToFlankingEnd > 0)
         {
@@ -116,7 +153,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
+    private void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
         if(refPos >= refGenomeMicrosatellite.referenceStart() && refPos <= refGenomeMicrosatellite.referenceEnd() + 1)
         {
@@ -126,7 +163,7 @@ class MicrosatelliteRead
             for(int i = 0; i < e.getLength(); ++i)
             {
                 // the inserted bases must be a multiple of the repeat unit
-                if(record.getReadBases()[readIndex + i] != refGenomeMicrosatellite.unit[ i % refGenomeMicrosatellite.unit.length ])
+                if(record.getReadBases()[readIndex + i] != refGenomeMicrosatellite.unit[i % refGenomeMicrosatellite.unit.length])
                 {
                     shouldDropRead = true;
                     // should drop this base
@@ -147,7 +184,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int startRefPos)
+    private void handleDelete(final CigarElement e, final int startRefPos)
     {
         int endRefPos = startRefPos + e.getLength() - 1;
         if(startRefPos >= refGenomeMicrosatellite.referenceStart() && endRefPos <= refGenomeMicrosatellite.referenceEnd())
@@ -164,7 +201,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
+    private void handleLeftSoftClip(final SAMRecord record)
     {
         // drop this read completely if the soft clip is near the repeat
         if(record.getAlignmentStart() >= refGenomeMicrosatellite.referenceStart())
@@ -173,7 +210,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int startReadIndex, int startRefPosition)
+    private void handleRightSoftClip(int startRefPosition)
     {
         // drop this read completely if the soft clip is inside the repeat
         if(startRefPosition <= refGenomeMicrosatellite.referenceEnd())
@@ -182,7 +219,7 @@ class MicrosatelliteRead
         }
     }
 
-    void traverseCigar(final SAMRecord record)
+    private void traverseCigar(final SAMRecord record)
     {
         final Cigar cigar = record.getCigar();
 
@@ -201,11 +238,11 @@ class MicrosatelliteRead
                 case S:
                     if(i == 0)
                     {
-                        handleLeftSoftClip(record, e);
+                        handleLeftSoftClip(record);
                     }
                     else if(i == cigar.numCigarElements() - 1)
                     {
-                        handleRightSoftClip(record, e, readIndex, refBase);
+                        handleRightSoftClip(refBase);
                     }
                     readIndex += e.getLength();
                     break; // soft clip read bases
@@ -214,7 +251,7 @@ class MicrosatelliteRead
                     refBase += e.getLength();
                     break;  // reference skip
                 case D:
-                    handleDelete(record, e, readIndex, refBase);
+                    handleDelete(e, refBase);
                     refBase += e.getLength();
                     break;
                 case I:
@@ -224,7 +261,7 @@ class MicrosatelliteRead
                 case M:
                 case EQ:
                 case X:
-                    handleAlignment(record, e, readIndex, refBase);
+                    handleAlignment(e, refBase);
                     readIndex += e.getLength();
                     refBase += e.getLength();
                     break;

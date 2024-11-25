@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class JitterCountsTableFile
 {
     private static String UNIT = "unit";
+    private static String CONSENSUS_TYPE = "consensusType";
 	private static String NUM_UNITS = "numUnits";
 
 	private static String READ_COUNT = "readCount";
@@ -50,13 +51,14 @@ public class JitterCountsTableFile
 
 	public static void write(final String filename, @NotNull final Collection<JitterCountsTable> msStatsTables)
 	{
-		List<String> columns = List.of(UNIT, NUM_UNITS, READ_COUNT,
+		List<String> columns = List.of(UNIT, CONSENSUS_TYPE, NUM_UNITS, READ_COUNT,
 				COUNT_m10, COUNT_m9, COUNT_m8, COUNT_m7, COUNT_m6, COUNT_m5, COUNT_m4, COUNT_m3, COUNT_m2, COUNT_m1,
 				COUNT_p0, COUNT_p1, COUNT_p2, COUNT_p3, COUNT_p4, COUNT_p5, COUNT_p6, COUNT_p7, COUNT_p8, COUNT_p9, COUNT_p10);
 
 		try(DelimFileWriter<JitterCountsTable.Row> writer = new DelimFileWriter<>(filename, columns, (msStatsTableRow, row) ->
 			{
 				row.set(UNIT,  msStatsTableRow.getRepeatUnit());
+                row.set(CONSENSUS_TYPE, msStatsTableRow.getConsensusType().name());
 				row.set(NUM_UNITS,  msStatsTableRow.refNumUnits);
 				row.set(READ_COUNT,  msStatsTableRow.totalReadCount);
 				row.set(COUNT_p0, msStatsTableRow.getJitterReadCount(0));
@@ -106,21 +108,22 @@ public class JitterCountsTableFile
 		for(DelimFileReader.Row row : reader)
 		{
 			String unit = row.get(JitterModelParamsFile.Column.unit);
-			JitterCountsTable unitData = null;
-			for(JitterCountsTable perUnitData : jitterCountData)
+            ConsensusType consensusType = ConsensusType.valueOf(row.get(JitterModelParamsFile.Column.consensusType));
+			JitterCountsTable unitConsensusData = null;
+			for(JitterCountsTable perUnitConsensusData : jitterCountData)
 			{
-				if(perUnitData.RepeatUnit.equals(unit))
+				if(perUnitConsensusData.RepeatUnit.equals(unit) && perUnitConsensusData.ConsensusType == consensusType)
 				{
-					unitData = perUnitData;
+					unitConsensusData = perUnitConsensusData;
 					break;
 				}
 			}
-			boolean newUnit = unitData == null;
-			if(newUnit)
+			boolean newUnitConsensusData = unitConsensusData == null;
+			if(newUnitConsensusData)
 			{
-				unitData = new JitterCountsTable(row.get(JitterModelParamsFile.Column.unit), 1.0);
+				unitConsensusData = new JitterCountsTable(unit, consensusType, 1.0);
 			}
-			JitterCountsTable.Row countRow = unitData.getOrCreateRow(row.getInt(NUM_UNITS));
+			JitterCountsTable.Row countRow = unitConsensusData.getOrCreateRow(row.getInt(NUM_UNITS));
 			countRow.totalReadCount = row.getInt(READ_COUNT);
 			countRow.setJitterReadCount(0, row.getInt(COUNT_p0));
 
@@ -146,7 +149,7 @@ public class JitterCountsTableFile
 			countRow.setJitterReadCount(-2, row.getInt(COUNT_m2));
 			countRow.setJitterReadCount(-1, row.getInt(COUNT_m1));
 
-			if(newUnit) { jitterCountData.add(unitData); }
+			if(newUnitConsensusData) { jitterCountData.add(unitConsensusData); }
 		}
 
 		return jitterCountData;

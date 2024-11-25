@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.purple.PurpleConstants.HOTSPOT_GNOMAD_FREQ_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -51,6 +52,8 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import com.google.common.collect.Lists;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.Nullable;
 
@@ -106,6 +109,13 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : variants)
         {
+//            if(variant.gene().equals("JAK2"))
+//            {
+//                System.out.print(variant.gene());
+//                System.out.print(":  ");
+//                System.out.println(variant.alleleFrequency());
+//            }
+            
             if(variant.type() != VariantType.SNP)
             {
                 ++filterCounts[FilterReason.NON_SNV.ordinal()];
@@ -154,6 +164,13 @@ public class SomaticPurityFitter
             return false;
 
         VariantTier variantTier = variant.decorator().tier();
+        
+        double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
+
+        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
+        {
+            return true;
+        }
 
         if(variantTier != VariantTier.HOTSPOT)
         {
@@ -336,7 +353,14 @@ public class SomaticPurityFitter
         }
         else if(variantVafs.size() == 3)
         {
-            vaf75thPercentile = variantVafs.get(1);
+            if(Collections.max(variantVafs) < SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
+            {
+                vaf75thPercentile = variantVafs.get(2);
+            }
+            else
+            {
+                vaf75thPercentile = variantVafs.get(1);
+            }
         }
         else if(variantVafs.size() == 2)
         {
