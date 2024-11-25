@@ -49,6 +49,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private final PartitionDataStore mPartitionDataStore;
     private final BamWriter mBamWriter;
     private final ReadPositionsCache mReadPositions;
+    private final ReadCache mReadCache;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
@@ -75,6 +76,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mPartitionDataStore = partitionDataStore;
         mBamWriter = bamWriter;
         mBamReader = bamReader;
+
+        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE);
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
@@ -225,9 +228,23 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
 
-            if(!mReadPositions.processRead(read))
+            if(mConfig.NoMateCigar)
             {
-                processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
+                if(!mReadPositions.processRead(read))
+                {
+                    processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
+                }
+            }
+            else
+            {
+                mReadCache.processRead(read);
+
+                List<List<SAMRecord>> fragCoordReadsList = mReadCache.popProcessedReads();
+
+                if(fragCoordReadsList != null)
+                {
+                    RD_LOGGER.debug("processing {} frag-coord read groups", fragCoordReadsList.size());
+                }
             }
         }
         catch(Exception e)
