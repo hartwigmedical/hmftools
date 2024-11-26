@@ -74,7 +74,7 @@ public class CigarFrequency implements Comparable<CigarFrequency>
         return selectTemplateRead(frequencies.get(0));
     }
 
-    public static SAMRecord selectTemplateRead(final CigarFrequency cigarFrequency)
+    private static SAMRecord selectTemplateRead(final CigarFrequency cigarFrequency)
     {
         // select read by most common mate cigar
         Map<String,CigarFrequency> mateCigarFrequencies = buildCigarFrequencies(cigarFrequency.Reads, true);
