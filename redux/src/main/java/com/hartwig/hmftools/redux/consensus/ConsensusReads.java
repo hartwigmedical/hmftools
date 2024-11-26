@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
@@ -73,9 +72,11 @@ public class ConsensusReads
             final List<SAMRecord> reads, @Nullable final TemplateReadData previousTemplateRead,
             @Nullable final String groupReadId, @Nullable final String umiId)
     {
-        String consensusReadId;
-        SAMRecord templateRead;
+        String consensusReadId  = "";
 
+        SAMRecord templateRead = TemplateReadData.selectTemplateRead(reads);
+
+        /*
         if(previousTemplateRead == null)
         {
             templateRead = selectTemplateRead(reads);
@@ -83,10 +84,11 @@ public class ConsensusReads
         }
         else
         {
-            // match the mate or supplmentary template read to that of the primary
+            // match the mate or supplementary template read to that of the primary
             templateRead = reads.stream().filter(x -> x.getReadName().equals(previousTemplateRead.ReadId)).findFirst().orElse(null);
             consensusReadId = groupReadId;
         }
+        */
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag() || templateRead == null)
         {
@@ -200,10 +202,7 @@ public class ConsensusReads
 
         consensusRead.setProperPairFlag(false);
 
-        /* no need to alter these
-        consensusRead.setFirstOfPairFlag(false);
-        consensusRead.setSecondOfPairFlag(false);
-        */
+        // no need to set first or second in pair flags
         consensusRead.setMateUnmappedFlag(true);
         consensusRead.setMateNegativeStrandFlag(false);
         consensusRead.setMateAlignmentStart(NO_POSITION);
