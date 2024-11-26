@@ -12,11 +12,10 @@ import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
@@ -32,7 +31,7 @@ import com.hartwig.hmftools.redux.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
 
-public class PartitionReader // implements Consumer<List<Fragment>>
+public class PartitionReader implements Callable
 {
     private final ReduxConfig mConfig;
 
@@ -42,11 +41,10 @@ public class PartitionReader // implements Consumer<List<Fragment>>
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
+    private final List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
 
     private UnmapRegionState mUnmapRegionState;
-
-    private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
     private final boolean mLogReadIds;
     private int mPartitionRecordCount;
@@ -54,11 +52,13 @@ public class PartitionReader // implements Consumer<List<Fragment>>
     private final PerformanceCounter mPcTotal;
     private final PerformanceCounter mPcProcessDuplicates;
 
-    public PartitionReader(final ReduxConfig config, final BamReader bamReader, final BamWriter bamWriter)
+    public PartitionReader(
+            final ReduxConfig config, final List<ChrBaseRegion> regions, final BamWriter bamWriter)
     {
         mConfig = config;
         mBamWriter = bamWriter;
-        mBamReader = bamReader;
+        mBamReader = new BamReader(config);;
+        mSliceRegions = regions;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE);
 
@@ -69,8 +69,6 @@ public class PartitionReader // implements Consumer<List<Fragment>>
 
         mCurrentRegion = null;
         mUnmapRegionState = null;
-
-        mPendingIncompleteReads = Maps.newHashMap();
 
         mPartitionRecordCount = 0;
 
@@ -86,6 +84,21 @@ public class PartitionReader // implements Consumer<List<Fragment>>
 
     public Statistics statistics() { return mStats; }
 
+    @Override
+    public Long call()
+    {
+        // RD_LOGGER.debug("processing {} regions", mSliceRegions.size());
+
+        for(ChrBaseRegion region : mSliceRegions)
+        {
+            setupRegion(region);
+            processRegion();
+        }
+
+        return (long)0;
+    }
+
+    @VisibleForTesting
     public void setupRegion(final ChrBaseRegion region)
     {
         mCurrentRegion = region;
