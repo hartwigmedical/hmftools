@@ -20,7 +20,6 @@
         <module>esvee</module>
         <module>fastq-tools</module>
         <module>gene-utils</module>
-        <module>gripss</module>
         <module>health-checker</module>
         <module>hmf-common</module>
         <module>hmf-id-generator</module>
@@ -73,7 +72,6 @@
         <esvee.version>1.1</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.2</gene-utils.version>
-        <gripss.version>2.4</gripss.version>
         <health-checker.version>3.6</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7.1</isofox.version>
