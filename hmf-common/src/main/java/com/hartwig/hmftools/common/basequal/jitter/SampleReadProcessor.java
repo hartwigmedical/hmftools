@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -21,10 +22,10 @@ public class SampleReadProcessor
     private final List<MicrosatelliteSiteAnalyser> mMicrosatelliteSiteAnalysers;
     private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteAnalyser>> mMicrosatelliteSiteAnalysersByChromosome;
 
-    public SampleReadProcessor(final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites)
+    public SampleReadProcessor(final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites, @Nullable ConsensusMarker consensusMarker)
     {
         mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
-                .map(x -> new MicrosatelliteSiteAnalyser(x))
+                .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker))
                 .collect(Collectors.toList());
 
         mMicrosatelliteSiteAnalysersByChromosome = Maps.newHashMap();

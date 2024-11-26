@@ -8,7 +8,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public enum SequencingType
 {
     ILLUMINA,
-    ULTIMA;
+    ULTIMA,
+    SBX;
 
     public static final String SEQUENCING_TYPE_CFG = "sequencing_type";
 

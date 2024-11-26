@@ -12,7 +12,7 @@ ADD target/entrypoint.sh ${RUN_SCRIPT}
 RUN chmod +x ${RUN_SCRIPT}
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
-    "openjdk>=8" \
+    "openjdk>=8,<=21" \
     procps-ng \
     unzip \
     python=3.11 \

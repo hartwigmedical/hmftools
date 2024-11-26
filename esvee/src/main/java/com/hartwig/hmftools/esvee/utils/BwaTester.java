@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.utils;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
@@ -26,7 +27,6 @@ import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_REF
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_SCORE;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_RAW_SEQ_COORDS;
 import static com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter.FLD_XA_TAG;
-import static com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner.loadAlignerLibrary;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

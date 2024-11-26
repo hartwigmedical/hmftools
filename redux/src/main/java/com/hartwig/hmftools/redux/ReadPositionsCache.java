@@ -103,41 +103,45 @@ public class ReadPositionsCache
         // check for an existing mate if on the same chromosome
         // store in a group of fragments with a matching first fragment coordinate
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
+        boolean isPaired = read.getReadPairedFlag();
         boolean mateUnmapped = SamRecordUtils.mateUnmapped(read);
         boolean readUnmapped = read.getReadUnmappedFlag();
 
-        if(readUnmapped && mateUnmapped) // shouldn't occur since is handled prior
+        if(readUnmapped && (!isPaired || mateUnmapped)) // shouldn't occur since is handled prior
             return false;
 
-        boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
-
-        // unmapped reads have the same alignment position as their mate but no chromosome or cigar info
-
-        // skip if mate is on a lower chromosome
-        if(!mateUnmapped && !sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
-            return false;
-
-        Fragment fragment = mFragments.get(read.getReadName());
-
-        if(fragment != null) // add to fragment if in a current group
+        if(isPaired)
         {
-            fragment.addRead(read);
-            return true;
-        }
+            boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
 
-        // these could be stored on the expectation that the mate is about to arrive, to avoid sending to the partition data cache
-        // but if any weren't picked up it would require them being flushed on eviction
-        if(readUnmapped)
-        {
-            if(read.hasAttribute(UNMAP_ATTRIBUTE)) // could be distant from the mate
+            // unmapped reads have the same alignment position as their mate but no chromosome or cigar info
+
+            // skip if mate is on a lower chromosome
+            if(!mateUnmapped && !sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
                 return false;
 
-            mPendingUnmapped.put(read.getReadName(), read);
-            return true;
-        }
+            Fragment fragment = mFragments.get(read.getReadName());
 
-        if(sameChromosome && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
-            return false;
+            if(fragment != null) // add to fragment if in a current group
+            {
+                fragment.addRead(read);
+                return true;
+            }
+
+            // these could be stored on the expectation that the mate is about to arrive, to avoid sending to the partition data cache
+            // but if any weren't picked up it would require them being flushed on eviction
+            if(readUnmapped)
+            {
+                if(read.hasAttribute(UNMAP_ATTRIBUTE)) // could be distant from the mate
+                    return false;
+
+                mPendingUnmapped.put(read.getReadName(), read);
+                return true;
+            }
+
+            if(sameChromosome && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
+                return false;
+        }
 
         storeInitialRead(read);
         return true;

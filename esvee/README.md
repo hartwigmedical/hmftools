@@ -8,7 +8,7 @@ Esvee runs is run in 4 steps
 - ESVEE Prep
 - Assembly & Alignment
 - Reference Depth Annotation
-- Variant Calling * Filtering 
+- Variant Calling & Filtering 
 
 The full algorithm for each step is described in the algorithm section below.
 
@@ -21,8 +21,8 @@ that junction.
 
 ```
 java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication 
-  -sample 'REF_SAMPLE_ID,TUMOR_SAMPLE_ID'
-  -bam_file '/sample_data/REF_SAMPLE_ID.bam,/sample_data/TUMOR_SAMPLE_ID.bam'
+  -sample 'TUMOR_SAMPLE_ID,REF_SAMPLE_ID'
+  -bam_file '/sample_data/TUMOR_SAMPLE_ID.bam,/sample_data/REF_SAMPLE_ID.bam'
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38 
   -known_fusion_bed /ref_data/known_fusions.38.bedpe
@@ -96,8 +96,8 @@ This feeds into the VAF calculations in the caller routine below.
 
 ```
 java -cp esvee.jar com.hartwig.hmftools.esvee.depth.DepthAnnotator \
-  -sample 'REF_SAMPLE_ID,TUMOR_SAMPLE_ID'
-  -bam_file '/sample_data/REF_SAMPLE_ID.bam,/sample_data/TUMOR_SAMPLE_ID.bam'
+  -sample 'TUMOR_SAMPLE_ID,REF_SAMPLE_ID'
+  -bam_file '/sample_data/TUMOR_SAMPLE_ID.bam,/sample_data/REF_SAMPLE_ID.bam'
   -input_vcf TUMOR_SAMPLE_ID.esee.raw.vcf.gz
   -output_vcf TUMOR_SAMPLE_ID.esee.ref_depth.vcf.gz
   -ref_genome /path_to_ref_genome_fasta/
