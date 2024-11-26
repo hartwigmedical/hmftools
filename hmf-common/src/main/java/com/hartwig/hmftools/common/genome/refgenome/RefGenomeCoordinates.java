@@ -26,6 +26,11 @@ public enum RefGenomeCoordinates
     public static final double GENOME_LENGTH_V37 = 3.088e10;
     public static final double GENOME_LENGTH_V38 = 3.096e10;
 
+    public static RefGenomeCoordinates refGenomeCoordinates(final RefGenomeVersion refGenomeVersion)
+    {
+        return refGenomeVersion.is37() ? COORDS_37 : COORDS_38;
+    }
+
     RefGenomeCoordinates(@NotNull final Map<Chromosome,Integer> lengths, @NotNull final Map<Chromosome,Integer> centromeres)
     {
         Lengths = lengths;
