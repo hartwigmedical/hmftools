@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_RETEST_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
@@ -315,30 +316,9 @@ public class SomaticVariants
         if(!filteredVariants.isEmpty())
         {
             // check for CHIP variants and remove them from variants used for purity estimates
-            double sampleAlleleTotal = sampleTotalAD;
+            int chipVariantCount = filterChipVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            List<SomaticVariant> chipVariants = Lists.newArrayList();
-
-            for(SomaticVariant variant : filteredVariants)
-            {
-                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-
-                if(isLikelyChipVariant(sampleFragData, sampleAlleleTotal))
-                {
-                    sampleFragData.markLikeChip();
-                    chipVariants.add(variant);
-                }
-            }
-
-            for(SomaticVariant variant : chipVariants)
-            {
-                CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
-
-                filteredVariants.remove(variant);
-            }
-
-            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariants.size());
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariantCount);
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
@@ -409,10 +389,60 @@ public class SomaticVariants
         return filters;
     }
 
-    private static boolean isLikelyChipVariant(final GenotypeFragments sampleFragData, final double sampleAlleleTotal)
+    private int filterChipVariants(final String sampleId, final List<SomaticVariant> filteredVariants, int initialSampleTotalAD)
     {
-        return sampleFragData.AlleleCount > CHIP_MIN_ALLELE_FRAGS
-            && sampleFragData.AlleleCount / sampleAlleleTotal > CHIP_MIN_SAMPLE_PERC;
+        // check for CHIP variants and remove them from variants used for purity estimates
+        // recompute the total sample AD if any CHIP variant are found and repeat
+        int sampleTotalAD = initialSampleTotalAD;
+
+        int chipVariantCount = 0;
+
+        List<SomaticVariant> chipVariants = Lists.newArrayList();
+        double minSamplePerc = CHIP_MIN_SAMPLE_PERC;
+
+        while(true)
+        {
+            for(SomaticVariant variant : filteredVariants)
+            {
+                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+
+                if(sampleFragData.AlleleCount <= CHIP_MIN_ALLELE_FRAGS)
+                    continue;
+
+                if(sampleFragData.AlleleCount / (double) sampleTotalAD > minSamplePerc)
+                {
+                    sampleFragData.markLikeChip();
+                    chipVariants.add(variant);
+                }
+            }
+
+            if(chipVariants.isEmpty())
+                break;
+
+            chipVariantCount += chipVariants.size();
+
+            for(SomaticVariant variant : chipVariants)
+            {
+                CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
+                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+
+                filteredVariants.remove(variant);
+            }
+
+            chipVariants.clear();
+
+            // increase threshold and recompute sample allele total less the identified CHIP variants
+            minSamplePerc = CHIP_MIN_SAMPLE_RETEST_PERC;
+
+            sampleTotalAD = 0;
+            for(SomaticVariant variant : filteredVariants)
+            {
+                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+                sampleTotalAD += sampleFragData.AlleleCount;
+            }
+        }
+
+        return chipVariantCount;
     }
 
     public static BufferedWriter initialiseVariantWriter(final PurityConfig config)

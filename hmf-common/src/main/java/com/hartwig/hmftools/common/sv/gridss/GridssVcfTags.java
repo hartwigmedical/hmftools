@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.sv.gridss;
 
+// Gridss support remains temporarily for use in comparison routines in Compar and Esvee, and will removed prior to pipeline v6.1
 public class GridssVcfTags
 {
     // Gridss-only tags

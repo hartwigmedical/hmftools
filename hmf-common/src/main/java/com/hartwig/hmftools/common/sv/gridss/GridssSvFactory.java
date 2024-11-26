@@ -64,6 +64,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
+// Gridss support remains temporarily for use in comparison routines in Compar and Esvee, and will removed prior to pipeline v6.1
 public class GridssSvFactory implements SvFactoryInterface
 {
     // Must match the small deldup threshold in Gripss
