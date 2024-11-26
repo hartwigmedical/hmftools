@@ -27,9 +27,6 @@ public class Constants
 
     public static final int SUPP_ALIGNMENT_SCORE_MIN = 30;
 
-    // performance
-    public static final double LOCK_ACQUIRE_LONG_TIME_MS = 100;
-
     // consensus building
     public static int CONSENSUS_MAX_DEPTH = 100;
 }

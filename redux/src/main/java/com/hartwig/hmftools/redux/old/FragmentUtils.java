@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.old;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
-import static com.hartwig.hmftools.redux.common.FragmentCoordinates.formCoordinate;
-import static com.hartwig.hmftools.redux.common.FragmentCoordinates.formKey;
+import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.formCoordinate;
+import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.formKey;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.CANDIDATE;
@@ -16,13 +15,15 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.old.FragmentOld;
+import com.hartwig.hmftools.redux.old.FragmentCoordsOld;
 
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentUtils
 {
-    public static FragmentCoordinates getFragmentCoordinates(final List<SAMRecord> reads, final boolean useMateCigar)
+    public static FragmentCoordsOld getFragmentCoordinates(final List<SAMRecord> reads, final boolean useMateCigar)
     {
         SAMRecord firstRead = null;
         SAMRecord mateRead = null;
@@ -61,7 +62,7 @@ public class FragmentUtils
         if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
         {
             // include the fragment length
-            return new FragmentCoordinates(formKey(readCoordStr, firstRead.getInferredInsertSize()), readStrandPosition, true);
+            return new FragmentCoordsOld(formKey(readCoordStr, firstRead.getInferredInsertSize()), readStrandPosition, true);
         }
 
         if(mateRead == null)
@@ -69,7 +70,7 @@ public class FragmentUtils
             if(!useMateCigar || !firstRead.hasAttribute(MATE_CIGAR_ATTRIBUTE))
             {
                 // the fragment orientation will  be accurately set once both reads are collated
-                return new FragmentCoordinates(readCoordStr, readStrandPosition, firstRead.getFirstOfPairFlag(), true);
+                return new FragmentCoordsOld(readCoordStr, readStrandPosition, firstRead.getFirstOfPairFlag(), true);
             }
         }
 
@@ -106,11 +107,11 @@ public class FragmentUtils
         boolean lowerReadFirst = readLowerPos ? firstRead.getFirstOfPairFlag() : !firstRead.getFirstOfPairFlag();
 
         return readLowerPos ?
-                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr), readStrandPosition, lowerReadFirst)
-                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr), mateStrandPosition, lowerReadFirst);
+                new FragmentCoordsOld(formKey(readCoordStr, mateCoordStr), readStrandPosition, lowerReadFirst)
+                : new FragmentCoordsOld(formKey(mateCoordStr, readCoordStr), mateStrandPosition, lowerReadFirst);
     }
 
-    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second, boolean requireOrientationMatch)
+    public static FragmentStatus calcFragmentStatus(final FragmentOld first, final FragmentOld second, boolean requireOrientationMatch)
     {
         if(first.unpaired() != second.unpaired())
             return NONE;

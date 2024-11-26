@@ -1,15 +1,16 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.old;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.common.FragmentCoordinates.formCoordinate;
+import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.formCoordinate;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.calcFragmentStatus;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.calcFragmentStatus;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.redux.common.FragmentStatus;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -17,11 +18,11 @@ public class CandidateDuplicates
 {
     // incomplete fragments (ie missing a mate read) with a matching fragment coordinate, and so candidates for being duplicates
     private final String mKey;
-    private final List<Fragment> mFragments;
+    private final List<FragmentOld> mFragments;
 
     private boolean mFinalised;
 
-    public CandidateDuplicates(final String key, final Fragment fragment)
+    public CandidateDuplicates(final String key, final FragmentOld fragment)
     {
         mKey = key;
         mFragments = Lists.newArrayList();
@@ -29,7 +30,7 @@ public class CandidateDuplicates
         mFinalised = false;
     }
 
-    public static CandidateDuplicates from(final Fragment fragment)
+    public static CandidateDuplicates from(final FragmentOld fragment)
     {
         final SAMRecord read = fragment.reads().get(0);
         boolean mateForwardStrand = !read.getMateNegativeStrandFlag();
@@ -42,10 +43,10 @@ public class CandidateDuplicates
 
     public String key() { return mKey; }
 
-    public List<Fragment> fragments() { return mFragments; }
+    public List<FragmentOld> fragments() { return mFragments; }
     public int fragmentCount() { return mFragments.size(); }
 
-    public void addFragment(final Fragment fragment)
+    public void addFragment(final FragmentOld fragment)
     {
         mFragments.add(fragment);
         fragment.setCandidateDupKey(mKey);
@@ -54,7 +55,7 @@ public class CandidateDuplicates
     public boolean allFragmentsReady() { return mFragments.stream().allMatch(x -> x.primaryReadsPresent()); }
     public boolean finalised() { return mFinalised; }
 
-    public List<List<Fragment>> finaliseFragmentStatus(boolean requireOrientationMatch)
+    public List<List<FragmentOld>> finaliseFragmentStatus(boolean requireOrientationMatch)
     {
         if(mFinalised || !allFragmentsReady())
             return null;
@@ -63,16 +64,16 @@ public class CandidateDuplicates
 
         if(mFragments.size() == 1)
         {
-            Fragment fragment = mFragments.get(0);
+            FragmentOld fragment = mFragments.get(0);
             fragment.setStatus(NONE);
             return null;
         }
 
-        List<List<Fragment>> duplicateGroups = null;
+        List<List<FragmentOld>> duplicateGroups = null;
 
         for(int i = 0; i < mFragments.size(); ++i)
         {
-            Fragment fragment1 = mFragments.get(i);
+            FragmentOld fragment1 = mFragments.get(i);
 
             if(fragment1.status().isDuplicate()) // already a part of a group
                 continue;
@@ -83,11 +84,11 @@ public class CandidateDuplicates
                 break;
             }
 
-            List<Fragment> duplicateFragments = null;
+            List<FragmentOld> duplicateFragments = null;
 
             for(int j = i + 1; j < mFragments.size(); ++j)
             {
-                Fragment fragment2 = mFragments.get(j);
+                FragmentOld fragment2 = mFragments.get(j);
 
                 if(fragment2.status().isDuplicate()) // already a part of a group
                     continue;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.old;
 
 import static java.lang.Math.abs;
 
@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
-import static com.hartwig.hmftools.redux.common.FragmentCoordinates.NO_COORDS;
+import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.NO_COORDS;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.UNSET;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.formChromosomePartition;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.getFragmentCoordinates;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.formChromosomePartition;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.getFragmentCoordinates;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.parseUnmappedCoords;
 
 import java.util.List;
@@ -18,10 +18,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.redux.common.FragmentStatus;
 
 import htsjdk.samtools.SAMRecord;
 
-public class Fragment
+public class FragmentOld
 {
     private FragmentStatus mStatus;
     private final boolean mUnpaired;
@@ -29,7 +30,7 @@ public class Fragment
     private boolean mAllReadsPresent;
     private boolean mAllPrimaryReadsPresent;
     private final List<SAMRecord> mReads; // consider making an array of 4 (or less for BNDs)
-    private FragmentCoordinates mCoordinates;
+    private FragmentCoordsOld mCoordinates;
 
     private boolean mReadsWritten;
 
@@ -38,7 +39,7 @@ public class Fragment
     private String mCandidateDupKey;
     private String mUmi;
 
-    public Fragment(final SAMRecord read)
+    public FragmentOld(final SAMRecord read)
     {
         mUnpaired = !read.getReadPairedFlag();
 
@@ -111,8 +112,8 @@ public class Fragment
     public boolean primaryReadsPresent() { return mAllPrimaryReadsPresent; }
     public boolean hasLocalMate() { return mHasLocalMate; }
 
-    public FragmentCoordinates coordinates() { return mCoordinates; }
-    public void setCoordinates(final FragmentCoordinates coordinates) { mCoordinates = coordinates; }
+    public FragmentCoordsOld coordinates() { return mCoordinates; }
+    public void setCoordinates(final FragmentCoordsOld coordinates) { mCoordinates = coordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }
 
     public void intialiseCoordinates(boolean useMateCigar) { mCoordinates = getFragmentCoordinates(mReads, useMateCigar); }

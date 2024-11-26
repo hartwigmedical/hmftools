@@ -12,9 +12,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.readToString;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.parseUnmappedCoords;
-import static com.hartwig.hmftools.redux.consensus.CigarFrequency.selectTemplateRead;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
@@ -69,8 +68,7 @@ public class ConsensusReads
     public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
     public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, @Nullable final TemplateReadData previousTemplateRead,
-            @Nullable final String groupReadId, @Nullable final String umiId)
+            final List<SAMRecord> reads, @Nullable final String groupReadId, @Nullable final String umiId)
     {
         String consensusReadId  = "";
 
@@ -90,12 +88,9 @@ public class ConsensusReads
         }
         */
 
-        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag() || templateRead == null)
+        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(
-                    templateRead != null ? templateRead : reads.get(0),
-                    consensusReadId,
-                    templateRead == null ? previousTemplateRead : null);
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, null);
 
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }

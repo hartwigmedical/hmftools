@@ -1,25 +1,25 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.old;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-public class FragmentCoordinates
+public class FragmentCoordsOld
 {
     public final String Key;
     public final int InitialPosition; // negative/reverse strand positions are negated
     public final boolean IsForward; // forward = F1R2, reverse is F2R1 - relates to collapsing and dual-strand classification
     public final boolean Incomplete;
 
-    public static final FragmentCoordinates NO_COORDS = new FragmentCoordinates("", 0, true, true);
+    public static final FragmentCoordsOld NO_COORDS = new FragmentCoordsOld("", 0, true, true);
 
     public static final char FRAGMENT_REVERSED_ID = 'N';
 
-    public FragmentCoordinates(final String key, final int initialPosition, boolean isForward)
+    public FragmentCoordsOld(final String key, final int initialPosition, boolean isForward)
     {
         this(key, initialPosition, isForward, false);
     }
 
-    public FragmentCoordinates(final String key, int initialPosition, boolean isForward, boolean incomplete)
+    public FragmentCoordsOld(final String key, int initialPosition, boolean isForward, boolean incomplete)
     {
         Key = key;
         InitialPosition = initialPosition;
@@ -34,7 +34,7 @@ public class FragmentCoordinates
         return Incomplete ? format("%s incomplete", keyOriented()) : keyOriented();
     }
 
-    public boolean matches(final FragmentCoordinates other, boolean requireOrientation)
+    public boolean matches(final FragmentCoordsOld other, boolean requireOrientation)
     {
         return Key.equals(other.Key) && (!requireOrientation || IsForward == other.IsForward);
     }
