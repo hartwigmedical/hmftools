@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.old;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.old.FragmentOld;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -28,9 +28,9 @@ public class ReadPositionsCache
     private String mChromosome;
     private final FragmentGroup[] mForwardPositions;
     private final Map<Integer,FragmentGroup> mReversePositions;
-    private final Map<String,Fragment> mFragments;
+    private final Map<String, FragmentOld> mFragments;
     private final Map<String,SAMRecord> mPendingUnmapped;
-    private final Consumer<List<Fragment>> mReadGroupHandler;
+    private final Consumer<List<FragmentOld>> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
     private final int mCapacity;
@@ -47,15 +47,15 @@ public class ReadPositionsCache
     private class FragmentGroup
     {
         // fragments with a matching start position
-        public final List<Fragment> Fragments;
+        public final List<FragmentOld> Fragments;
 
-        public FragmentGroup(final Fragment fragment)
+        public FragmentGroup(final FragmentOld fragment)
         {
             Fragments = Lists.newArrayList(fragment);
         }
     }
 
-    public ReadPositionsCache(int capacity, boolean useMateCigar, final Consumer<List<Fragment>> evictionHandler)
+    public ReadPositionsCache(int capacity, boolean useMateCigar, final Consumer<List<FragmentOld>> evictionHandler)
     {
         mReadGroupHandler = evictionHandler;
         mCapacity = capacity;
@@ -89,7 +89,7 @@ public class ReadPositionsCache
         // supplementaries just check for a fragment match otherwise no further processing
         if(read.getSupplementaryAlignmentFlag())
         {
-            Fragment fragment = mFragments.get(read.getReadName());
+            FragmentOld fragment = mFragments.get(read.getReadName());
 
             if(fragment != null) // add to fragment if in a current group
             {
@@ -120,7 +120,7 @@ public class ReadPositionsCache
             if(!mateUnmapped && !sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
                 return false;
 
-            Fragment fragment = mFragments.get(read.getReadName());
+            FragmentOld fragment = mFragments.get(read.getReadName());
 
             if(fragment != null) // add to fragment if in a current group
             {
@@ -158,7 +158,7 @@ public class ReadPositionsCache
     {
         ++mLastLogReadCount;
 
-        Fragment fragment = new Fragment(read);
+        FragmentOld fragment = new FragmentOld(read);
         fragment.intialiseCoordinates(mUseMateCigar);
 
         int fragmentPosition = fragment.initialPosition();
@@ -316,9 +316,9 @@ public class ReadPositionsCache
         checkFragmentLog();
     }
 
-    private void removeMappedFragments(final List<Fragment> fragments)
+    private void removeMappedFragments(final List<FragmentOld> fragments)
     {
-        for(Fragment fragment : fragments)
+        for(FragmentOld fragment : fragments)
         {
             if(fragment.hasLocalMate())
             {

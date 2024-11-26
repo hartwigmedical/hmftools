@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.floor;
+import static java.lang.Math.sin;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -10,7 +11,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -43,7 +47,7 @@ public class ReadCache
         mCurrentChromosome = read.getReferenceName();
     }
 
-    public List<List<SAMRecord>> popProcessedReads()
+    public FragmentCoordReads popReadsByFragmentCoordinates()
     {
         if(mPositionGroups.size() < 3)
             return null;
@@ -51,7 +55,8 @@ public class ReadCache
         if(mCurrentReadMinPosition <= mPositionGroups.get(1).PositionEnd)
             return null;
 
-        List<List<SAMRecord>> fragCoordReadsList = Lists.newArrayList();
+        List<DuplicateGroup> duplicateGroups = null;
+        List<ReadInfo> singleReads = null;
 
         while(!mPositionGroups.isEmpty())
         {
@@ -62,15 +67,30 @@ public class ReadCache
             if(mCurrentReadMinPosition <= group.PositionEnd + mGroupSize)
                 break;
 
-            for(List<SAMRecord> reads : group.FragCoordsMap.values())
+            for(Map.Entry<FragmentCoords,List<SAMRecord>> entry : group.FragCoordsMap.entrySet())
             {
-                fragCoordReadsList.add(reads);
+                List<SAMRecord> reads = entry.getValue();
+
+                if(reads.size() > 1)
+                {
+                    if(duplicateGroups == null)
+                        duplicateGroups = Lists.newArrayList();
+
+                    duplicateGroups.add(new DuplicateGroup(reads, entry.getKey()));
+                }
+                else
+                {
+                    if(singleReads == null)
+                        singleReads = Lists.newArrayList();
+
+                    singleReads.add(new ReadInfo(reads.get(0), entry.getKey()));
+                }
             }
 
             mPositionGroups.remove(0);
         }
 
-        return fragCoordReadsList;
+        return new FragmentCoordReads(duplicateGroups, singleReads);
     }
 
     public List<List<SAMRecord>> processRemaining()
@@ -129,7 +149,7 @@ public class ReadCache
         public final int PositionStart;
         public final int PositionEnd;
 
-        public final Map<String,List<SAMRecord>> FragCoordsMap;
+        public final Map<FragmentCoords,List<SAMRecord>> FragCoordsMap;
 
         public ReadPositionGroup(final int positionStart, final int positionEnd)
         {
@@ -138,14 +158,14 @@ public class ReadCache
             FragCoordsMap = Maps.newHashMap();
         }
 
-        public void addRead(final FragmentCoords fragmentCoords, final SAMRecord read)
+        public void addRead(final FragmentCoords fragCoords, final SAMRecord read)
         {
-            List<SAMRecord> reads = FragCoordsMap.get(fragmentCoords.Key);
+            List<SAMRecord> reads = FragCoordsMap.get(fragCoords.Key);
 
             if(reads == null)
             {
                 reads = Lists.newArrayList();
-                FragCoordsMap.put(fragmentCoords.Key, reads);
+                FragCoordsMap.put(fragCoords, reads);
             }
 
             reads.add(read);

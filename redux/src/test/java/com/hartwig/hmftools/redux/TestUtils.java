@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.old.FragmentOld;
 import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
@@ -61,40 +61,40 @@ public final class TestUtils
         return new ReduxConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false, false, false);
     }
 
-    public List<Fragment> createBasicFragments(final String readId)
+    public List<FragmentOld> createBasicFragments(final String readId)
     {
-        Fragment read = createFragment(readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+        FragmentOld read = createFragment(readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
         read.setStatus(NONE);
 
-        Fragment mateRead = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+        FragmentOld mateRead = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 true, false, null);
 
 
-        Fragment supp = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+        FragmentOld supp = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 false, true, new SupplementaryReadData(CHR_1, 2000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
         return Lists.newArrayList(read, mateRead, supp);
     }
 
-    public static Fragment createFragment(final String readId, final String chrStr, int readStart)
+    public static FragmentOld createFragment(final String readId, final String chrStr, int readStart)
     {
         SAMRecord read = createSamRecord(readId, chrStr, readStart, TEST_READ_BASES, TEST_READ_CIGAR, chrStr, 200,
                 false, false, null);
-        return new Fragment(read);
+        return new FragmentOld(read);
     }
 
-    public static Fragment createFragment(
+    public static FragmentOld createFragment(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
     {
         SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
                 isReversed, isSupplementary, suppAlignment);
-        return new Fragment(read);
+        return new FragmentOld(read);
     }
 
-    public static Fragment createFragment(
+    public static FragmentOld createFragment(
             final String readId, final String chrStr, int readStart, final String cigar, boolean isReversed,
             final String mateChr, int mateStart, boolean mateReversed, final String mateCigar)
     {
@@ -103,10 +103,10 @@ public final class TestUtils
 
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
         read.setMateNegativeStrandFlag(mateReversed);
-        return new Fragment(read);
+        return new FragmentOld(read);
     }
 
-    public static void setBaseQualities(final Fragment fragment, int value)
+    public static void setBaseQualities(final FragmentOld fragment, int value)
     {
         fragment.reads().forEach(x -> setBaseQualities(x, value));
     }
@@ -125,7 +125,7 @@ public final class TestUtils
 
     public static ConsensusReadInfo createConsensusRead(final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
-        return consensusReads.createConsensusRead(reads, null, null, umiId);
+        return consensusReads.createConsensusRead(reads, null, umiId);
     }
 
     // unmapping test state

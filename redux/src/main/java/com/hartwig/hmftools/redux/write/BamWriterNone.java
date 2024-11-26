@@ -9,7 +9,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class BamWriterNone extends BamWriter
 {
-    public BamWriterNone(final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
+    public BamWriterNone(
+            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
             @Nullable final JitterAnalyser jitterAnalyser)
     {
         super(filename, config, readDataWriter, null, jitterAnalyser);

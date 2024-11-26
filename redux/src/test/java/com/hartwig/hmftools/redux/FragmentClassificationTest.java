@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findDuplicateFragments;
+import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.findDuplicateFragments;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.CANDIDATE;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.calcFragmentStatus;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.calcFragmentStatus;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createFragment;
@@ -20,8 +20,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.redux.common.CandidateDuplicates;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.old.CandidateDuplicates;
+import com.hartwig.hmftools.redux.old.FragmentOld;
 
 import org.junit.Test;
 
@@ -34,16 +34,16 @@ public class FragmentClassificationTest
         mReadIdGen = new ReadIdGenerator();
     }
 
-    private void initialiseFragmentCoordinates(final Fragment fragment) { fragment.intialiseCoordinates(true); }
+    private void initialiseFragmentCoordinates(final FragmentOld fragment) { fragment.intialiseCoordinates(true); }
 
     @Test
     public void testFragmentPairStatus()
     {
-        Fragment frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+        FragmentOld frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, null);
         initialiseFragmentCoordinates(frag1);
 
-        Fragment frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
+        FragmentOld frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 false, false, null);
         initialiseFragmentCoordinates(frag2);
 
@@ -130,21 +130,21 @@ public class FragmentClassificationTest
     {
         // test 1: single group of candidates with one NONE
 
-        Fragment frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+        FragmentOld frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, null);
 
-        Fragment frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
+        FragmentOld frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 false, false, null);
 
         // different chromosome
-        Fragment frag3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 201,
+        FragmentOld frag3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 201,
                 false, false, null);
 
-        List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3);
+        List<FragmentOld> fragments = Lists.newArrayList(frag1, frag2, frag3);
 
-        List<Fragment> resolvedFragments = Lists.newArrayList();
+        List<FragmentOld> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
-        List<List<Fragment>> duplicateGroups = Lists.newArrayList();
+        List<List<FragmentOld>> duplicateGroups = Lists.newArrayList();
 
         findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
@@ -187,10 +187,10 @@ public class FragmentClassificationTest
         frag3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 310,
                 false, false, null);
 
-        Fragment frag4 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 400,
+        FragmentOld frag4 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 400,
                 false, false, null);
 
-        Fragment frag5 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 400,
+        FragmentOld frag5 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 400,
                 false, false, null);
 
         fragments = Lists.newArrayList(frag4, frag1, frag2, frag5, frag3);
@@ -231,10 +231,10 @@ public class FragmentClassificationTest
         frag5 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 310,
                 false, false, null);
 
-        Fragment frag6 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 400,
+        FragmentOld frag6 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 400,
                 false, false, null);
 
-        Fragment frag7 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 400,
+        FragmentOld frag7 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 400,
                 false, false, null);
 
         fragments = Lists.newArrayList(frag1, frag2, frag6, frag7, frag3, frag4, frag5);
@@ -276,10 +276,10 @@ public class FragmentClassificationTest
         frag7 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 7262,
                 false, false, null);
 
-        Fragment frag8 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 7261,
+        FragmentOld frag8 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 7261,
                 false, false, null);
 
-        Fragment frag9 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 4295,
+        FragmentOld frag9 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 4295,
                 false, false, null);
 
         fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6, frag7, frag8, frag9);

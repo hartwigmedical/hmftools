@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 
 import org.jetbrains.annotations.Nullable;
@@ -64,12 +64,12 @@ public abstract class BamWriter
 
     // the public write methods are all thread-safe, using atomic counters and then the key SAM-write methods are handled
     // in the derived sync and non-sync implementations
-    public void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
+    public void writeReads(final List<ReadInfo> readInfos, boolean excludeUmis)
     {
-        fragments.forEach(x -> doWriteFragment(x, excludeUmis));
+        readInfos.forEach(x -> doWriteRead(x, excludeUmis));
     }
 
-    public void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
+    public void writeRead(final ReadInfo readInfo) { doWriteRead(readInfo, true); }
 
     public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
     {
@@ -94,7 +94,8 @@ public abstract class BamWriter
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), group.umiId());
+            FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            writeRead(read, fragmentStatus, group.coordinatesKey(), group.umiId());
         }
     }
 
@@ -116,27 +117,27 @@ public abstract class BamWriter
 
     public abstract void close();
 
-    private void doWriteFragment(final Fragment fragment, boolean excludeDuplicates)
+    private void doWriteRead(final ReadInfo readInfo, boolean excludeDuplicates)
     {
-        if(excludeDuplicates && fragment.umi() != null) // reads in duplicate groups are only written as a complete group
+        if(excludeDuplicates && readInfo.umi() != null) // reads in duplicate groups are only written as a complete group
             return;
 
-        if(fragment.readsWritten())
+        if(readInfo.readsWritten())
         {
-            RD_LOGGER.error("fragment({}) reads already written", fragment);
+            RD_LOGGER.error("fragment({}) reads already written", readInfo);
             return;
         }
 
-        fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRead(x, fragment.status(), fragment));
+        readInfo.setReadWritten();
+        writeRead(readInfo.read(), readInfo.status(), readInfo);
     }
 
-    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final Fragment fragment)
+    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final ReadInfo readInfo)
     {
         writeRead(
                 read, fragmentStatus,
-                fragment != null ? fragment.coordinates().Key : "",
-                fragment != null ? fragment.umi() : "");
+                readInfo != null ? readInfo.coordinates().Key : "",
+                readInfo != null ? readInfo.umi() : "");
     }
 
     private void writeRead(

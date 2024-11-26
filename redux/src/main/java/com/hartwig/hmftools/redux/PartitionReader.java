@@ -4,11 +4,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.readToString;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +23,10 @@ import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
+import com.hartwig.hmftools.redux.old.FragmentOld;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
@@ -184,7 +188,7 @@ public class PartitionReader implements Callable
 
                 if(SamRecordUtils.mateUnmapped(read))
                 {
-                    mBamWriter.writeFragment(new Fragment(read));
+                    mBamWriter.writeRead(new ReadInfo(read, null));
                     ++mStats.Unmapped;
                     return;
                 }
@@ -204,12 +208,7 @@ public class PartitionReader implements Callable
 
             mReadCache.processRead(read);
 
-            List<List<SAMRecord>> fragCoordReadsList = mReadCache.popProcessedReads();
-
-            if(fragCoordReadsList != null)
-            {
-                RD_LOGGER.debug("processing {} frag-coord read groups", fragCoordReadsList.size());
-            }
+            processReadGroups();
         }
         catch(Exception e)
         {
@@ -219,15 +218,114 @@ public class PartitionReader implements Callable
         }
     }
 
+    private static final double LOG_PERF_TIME_SEC = 1;
+    private static final int LOG_PERF_FRAG_COUNT = 3000;
 
-    private void processDuplicateGroup(final DuplicateGroup duplicateGroup)
+    private void processReadGroups()
+    {
+        mPcProcessDuplicates.resume();
+
+        FragmentCoordReads fragmentCoordReads = mReadCache.popReadsByFragmentCoordinates();
+
+        if(fragmentCoordReads == null)
+            return;
+
+        int readCount = fragmentCoordReads.totalReadCount();
+
+        if(readCount > LOG_PERF_FRAG_COUNT)
+        {
+            RD_LOGGER.debug("processing {} frag-coord read groups with {} reads", fragmentCoordReads.coordinateCount(), readCount);
+        }
+
+        boolean logDetails = mConfig.PerfDebug && readCount > LOG_PERF_FRAG_COUNT;
+        long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
+
+        // TODO: check use of 'boolean requireOrientationMatch' when forming duplicate groups
+
+        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
+                fragmentCoordReads.DuplicateGroups, fragmentCoordReads.SingleReads, true);
+
+        if(logDetails)
+        {
+            double timeTakenSec = secondsSinceNow(startTimeMs);
+
+            /* TODO
+            RD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
+                    mCurrentRegion.Chromosome, position, posFragmentCount, nonDuplicateFragments.size(),
+                    duplicateGroups != null ? duplicateGroups.size() : 0,
+                    candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
+                    format("%.1fs", timeTakenSec));
+            */
+        }
+
+
+        /*
+        int posFragmentCount = positionFragments.size();
+        int position = positionFragments.get(0).initialPosition();
+
+        findDuplicateFragments(positionFragments, nonDuplicateFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
+
+        List<Fragment> singleFragments = mConfig.UMIs.Enabled ?
+                nonDuplicateFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
+
+        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
+                positionDuplicateGroups, true, singleFragments);
+
+        if(logDetails)
+        {
+            double timeTakenSec = secondsSinceNow(startTimeMs);
+
+            RD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
+                    mCurrentRegion.Chromosome, position, posFragmentCount, nonDuplicateFragments.size(),
+                    duplicateGroups != null ? duplicateGroups.size() : 0,
+                    candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
+                    format("%.1fs", timeTakenSec));
+        }
+
+        if(logDetails)
+        {
+            double timeTakenSec = secondsSinceNow(startTimeMs);
+
+            if(timeTakenSec >= LOG_PERF_TIME_SEC)
+            {
+                RD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
+                        mCurrentRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
+            }
+        }
+
+        if(duplicateGroups != null)
+            duplicateGroups.forEach(x -> processDuplicateGroup(x));
+
+        if(!nonDuplicateFragments.isEmpty())
+        {
+            mBamWriter.writeReads(nonDuplicateFragments, true);
+
+            mStats.LocalComplete += nonDuplicateFragments.stream().mapToInt(x -> x.readCount()).sum();
+
+            int nonDuplicateFragments = (int)nonDuplicateFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+            mStats.addNonDuplicateCounts(nonDuplicateFragments);
+        }
+        */
+
+        // TODO: what position should be set here to move the boundary for the sorted BAM writer?
+        //  is it even required since this is now called directly from process read?
+        int position = 0;
+
+        if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
+            mBamWriter.setBoundaryPosition(position, true);
+
+        mPcProcessDuplicates.pause();
+    }
+
+    /*
+
+    private void processDuplicateGroup(final DuplicateGroupOld duplicateGroup)
     {
         // form consensus reads for any complete read leg groups and write reads
         List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(mConsensusReads, false);
         mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
     }
 
-    /*
     private void processIncompleteRead(final SAMRecord read, final String basePartition)
     {
         if(basePartition == null)
@@ -323,9 +421,6 @@ public class PartitionReader implements Callable
 
         mPcPendingIncompletes.pause();
     }
-
-    private static final double LOG_PERF_TIME_SEC = 1;
-    private static final int LOG_PERF_FRAG_COUNT = 3000;
 
     public void accept(final List<Fragment> positionFragments)
     {

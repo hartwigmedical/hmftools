@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import htsjdk.samtools.SAMRecord;
 
-public class FragmentCoords
+public class FragmentCoords implements Comparable<FragmentCoords>
 {
     public final String ChromsomeLower;
     public final String ChromsomeUpper;
@@ -23,12 +23,13 @@ public class FragmentCoords
     public final boolean ReadIsLower; // the read which created these coordinates
     public final boolean SupplementarySourced;
     public final boolean UnmappedSourced;
+    public final boolean IsForward; // forward = F1R2, reverse is F2R1 - relates to collapsing and dual-strand classification
     public final String Key;
 
     public FragmentCoords(
             final String chromsomeLower, final String chromsomeUpper, final int positionLower, final int positionUpper,
             final Orientation orientLower, final Orientation orientUpper,
-            boolean readIsLower, final boolean supplementarySourced, final boolean unmappedSourced)
+            boolean readIsLower, boolean isForwardOrientation, boolean supplementarySourced, final boolean unmappedSourced)
     {
         ChromsomeLower = chromsomeLower;
         ChromsomeUpper = chromsomeUpper;
@@ -37,6 +38,7 @@ public class FragmentCoords
         OrientLower = orientLower;
         OrientUpper = orientUpper;
         ReadIsLower = readIsLower;
+        IsForward = isForwardOrientation;
         SupplementarySourced = supplementarySourced;
         UnmappedSourced = unmappedSourced;
 
@@ -62,6 +64,15 @@ public class FragmentCoords
     {
         return isForward ? format("%s_%d", chromosome, position) : format("%s_%d_R", chromosome, position);
     }
+
+    @Override
+    public int compareTo(final FragmentCoords other)
+    {
+        return Key.compareTo(other.Key);
+    }
+
+    @Override
+    public int hashCode() { return Key.hashCode(); }
 
     public String toString() { return Key; }
 
@@ -117,7 +128,7 @@ public class FragmentCoords
         {
             return new FragmentCoords(
                     readChromosome, NO_CHROMOSOME_NAME, readPosition, NO_POSITION, readOrient, readOrient,
-                     true, isSupplementary, isUnmapped);
+                     true, true, isSupplementary, isUnmapped);
         }
 
         boolean readIsLower;
@@ -130,17 +141,19 @@ public class FragmentCoords
             readIsLower = read.getReferenceIndex() < read.getMateReferenceIndex();
         }
 
+        boolean isForwardOrientation = readIsLower == read.getFirstOfPairFlag();
+
         if(readIsLower)
         {
             return new FragmentCoords(
                     readChromosome, mateChromosome, readPosition, matePosition, readOrient, mateOrient,
-                    readIsLower, isSupplementary, isUnmapped);
+                    readIsLower, isForwardOrientation, isSupplementary, isUnmapped);
         }
         else
         {
             return new FragmentCoords(
                     mateChromosome, readChromosome, matePosition, readPosition, mateOrient, readOrient,
-                    readIsLower, isSupplementary, isUnmapped);
+                    readIsLower, isForwardOrientation, isSupplementary, isUnmapped);
         }
     }
 }

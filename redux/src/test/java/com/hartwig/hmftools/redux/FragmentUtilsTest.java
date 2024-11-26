@@ -3,10 +3,10 @@ package com.hartwig.hmftools.redux;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findPrimaryFragment;
-import static com.hartwig.hmftools.redux.common.FragmentCoordinates.NO_COORDS;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.formChromosomePartition;
+import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.calcBaseQualAverage;
+import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.findPrimaryFragment;
+import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.NO_COORDS;
+import static com.hartwig.hmftools.redux.old.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
@@ -15,10 +15,10 @@ import static com.hartwig.hmftools.redux.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.Fragment;
-import com.hartwig.hmftools.redux.common.FragmentCoordinates;
-import com.hartwig.hmftools.redux.common.FragmentUtils;
+import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
+import com.hartwig.hmftools.redux.old.FragmentOld;
+import com.hartwig.hmftools.redux.old.FragmentCoordsOld;
+import com.hartwig.hmftools.redux.old.FragmentUtils;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
@@ -67,7 +67,7 @@ public class FragmentUtilsTest
         read.setReadUnmappedFlag(true);
         read.setInferredInsertSize(100);
 
-        Fragment fragment = new Fragment(read);
+        FragmentOld fragment = new FragmentOld(read);
 
         assertEquals(NO_COORDS, fragment.coordinates());
 
@@ -83,7 +83,7 @@ public class FragmentUtilsTest
         assertFalse(fragment.coordinates().Incomplete);
     }
 
-    private static FragmentCoordinates getFragmentCoordinates(final SAMRecord read)
+    private static FragmentCoordsOld getFragmentCoordinates(final SAMRecord read)
     {
         return FragmentUtils.getFragmentCoordinates(Lists.newArrayList(read), true);
     }
@@ -117,7 +117,7 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        FragmentCoordinates fragmentCoords = getFragmentCoordinates(read);
+        FragmentCoordsOld fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
 
@@ -173,20 +173,20 @@ public class FragmentUtilsTest
     @Test
     public void testPrimaryDuplicateIdentification()
     {
-        Fragment fragment = createFragment(TEST_READ_ID, CHR_1, 100);
+        FragmentOld fragment = createFragment(TEST_READ_ID, CHR_1, 100);
         double baseAvg = calcBaseQualAverage(fragment);
         assertEquals(DEFAULT_QUAL, baseAvg, 0.1);
 
-        Fragment fragment2 = createFragment(TEST_READ_ID, CHR_1, 100);
+        FragmentOld fragment2 = createFragment(TEST_READ_ID, CHR_1, 100);
 
         SAMRecord read2 = fragment2.reads().get(0);
         setBaseQualities(read2, DEFAULT_QUAL - 1);
 
         assertEquals(DEFAULT_QUAL - 1, calcBaseQualAverage(fragment2), 0.1);
 
-        List<Fragment> fragments = Lists.newArrayList(fragment2, fragment);
+        List<FragmentOld> fragments = Lists.newArrayList(fragment2, fragment);
 
-        Fragment primary = findPrimaryFragment(fragments, false);
+        FragmentOld primary = findPrimaryFragment(fragments, false);
         assertEquals(primary, fragment);
     }
 
@@ -211,7 +211,7 @@ public class FragmentUtilsTest
         mate1.setSecondOfPairFlag(true);
         mate1.setFirstOfPairFlag(false);
 
-        Fragment frag1 = new Fragment(read1);
+        FragmentOld frag1 = new FragmentOld(read1);
         frag1.addRead(mate1);
         assertTrue(frag1.isPreciseInversion());
 
@@ -224,11 +224,11 @@ public class FragmentUtilsTest
         mate2.setSecondOfPairFlag(true);
         mate2.setFirstOfPairFlag(false);
 
-        Fragment frag2 = new Fragment(read2);
+        FragmentOld frag2 = new FragmentOld(read2);
         frag2.addRead(mate2);
         assertTrue(frag2.isPreciseInversion());
 
-        DuplicateGroup duplicateGroup = new DuplicateGroup(null, frag1);
+        DuplicateGroupOld duplicateGroup = new DuplicateGroupOld(null, frag1);
         duplicateGroup.addFragment(frag2);
 
         duplicateGroup.categoriseReads();

@@ -752,7 +752,7 @@ public class ConsensusReadsTest
         // read1.setMateAlignmentStart(2);
 
         ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2), null, null, "");
+                List.of(read1, read2), null, "");
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
         assertEquals("50M", readConsensusInfo.ConsensusRead.getCigarString());
@@ -762,8 +762,7 @@ public class ConsensusReadsTest
 
         // now send through only the non template read, for the scenario where the primary's mate is unmapped
         ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(mate2), TemplateReadData.fromRead(readConsensusInfo.TemplateRead),
-                readConsensusInfo.ConsensusRead.getReadName(), "");
+                List.of(mate2), readConsensusInfo.ConsensusRead.getReadName(), ""); // TemplateReadData.fromRead(readConsensusInfo.TemplateRead)
 
         assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
