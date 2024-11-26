@@ -7,9 +7,7 @@ public final class PipelineToolDirectories
     public static final String CIDER_DIR = "cider";
     public static final String COBALT_DIR = "cobalt";
     public static final String CUPPA_DIR = "cuppa";
-    public static final String GRIPSS_SOMATIC_DIR = "gripss_somatic";
     public static final String ESVEE_DIR = "esvee";
-    public static final String GRIPSS_GERMLINE_DIR = "gripss_germline";
     public static final String ISOFOX_DIR = "isofox";
     public static final String LILAC_DIR = "lilac";
     public static final String LINX_SOMATIC_DIR = "linx";

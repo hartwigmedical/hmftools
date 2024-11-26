@@ -99,15 +99,6 @@ public class SomaticSvCache
         PPL_LOGGER.info("loaded {} somatic SVs from {}", variants().size(), inputVcf);
     }
 
-    public void addVariant(final VariantContext variantContext)
-    {
-        // called for recovered SVs only
-        if(enabled())
-        {
-            mVariantCollection.add(variantContext);
-        }
-    }
-
     public void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
     {
         if(enabled())

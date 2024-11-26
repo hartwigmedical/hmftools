@@ -3,8 +3,6 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.AMBER_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.COBALT_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.ESVEE_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_GERMLINE_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PAVE_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PAVE_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -78,9 +76,8 @@ public class SampleDataFiles
         }
         else
         {
-            PPL_LOGGER.debug("loading deprecated Gridss/Gripss SV files");
-            SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.filtered.somatic.vcf.gz");;
-            GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, GRIPSS_GERMLINE_DIR, sampleId, ".gripss.filtered.germline.vcf.gz");
+            SomaticSvVcfFile = "";
+            GermlineSvVcfFile = "";
         }
 
         SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");
