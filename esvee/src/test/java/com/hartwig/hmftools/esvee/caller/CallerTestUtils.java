@@ -6,9 +6,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.PAR_ID;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 
 import java.util.Collections;
@@ -96,8 +93,8 @@ public class CallerTestUtils
 
         Map<String,Object> commonAttributes = commonOverrides != null ? commonOverrides : makeCommonAttributes(vcfId, 50, 50, 50);
 
-        if(mateId != null && !commonAttributes.isEmpty())
-            commonAttributes.put(PAR_ID, mateId);
+        //if(mateId != null && !commonAttributes.isEmpty())
+        //    commonAttributes.put(PAR_ID, mateId);
 
         Map<String,Object> refAttributes = refOverrides != null ? refOverrides : makeGenotypeAttributes(0, 0, 30);
         Map<String,Object> tumorAttributes = tumorOverrides != null ? tumorOverrides : makeGenotypeAttributes(30, 20, 100);

@@ -17,7 +17,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
@@ -76,7 +75,6 @@ public final class SvFileLoader
     private static List<StructuralVariantData> loadGermlineVariantsFromVcf(final String vcfFile, final String sampleId)
     {
         StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
-        // GridssSvFactory svFactory = GridssSvFactory.build(new GermlineFilter());
 
         VcfFileReader vcfReader = new VcfFileReader(vcfFile);
 
