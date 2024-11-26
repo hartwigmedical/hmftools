@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.redux.TestUtils.CHR_5;
 import static com.hartwig.hmftools.redux.TestUtils.CHR_LOCATION_MAP;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 
 import static org.junit.Assert.assertEquals;

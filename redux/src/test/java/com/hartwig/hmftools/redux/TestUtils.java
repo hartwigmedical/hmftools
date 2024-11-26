@@ -31,9 +31,6 @@ import htsjdk.samtools.SAMRecord;
 
 public final class TestUtils
 {
-    public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
-    public static final String TEST_READ_ID = "READ_01";
-    public static final String TEST_READ_CIGAR = "100M";
 
     public static final String REF_BASES_A = "AAAAAAAAAA";
     public static final String REF_BASES_C = "CCCCCCCCCC";
@@ -61,7 +58,7 @@ public final class TestUtils
 
     public static Fragment createFragment(final String readId, final String chrStr, int readStart)
     {
-        SAMRecord read = createSamRecord(readId, chrStr, readStart, TEST_READ_BASES, TEST_READ_CIGAR, chrStr, 200,
+        SAMRecord read = createSamRecord(readId, chrStr, readStart, SamRecordTestUtils.TEST_READ_BASES, SamRecordTestUtils.TEST_READ_CIGAR, chrStr, 200,
                 false, false, null);
         return new Fragment(read);
     }
@@ -80,7 +77,7 @@ public final class TestUtils
             final String mateChr, int mateStart, boolean mateReversed, final String mateCigar)
     {
         SAMRecord read = createSamRecord(
-                readId, chrStr, readStart, TEST_READ_BASES, cigar, mateChr, mateStart, isReversed, false, null);
+                readId, chrStr, readStart, SamRecordTestUtils.TEST_READ_BASES, cigar, mateChr, mateStart, isReversed, false, null);
 
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
         read.setMateNegativeStrandFlag(mateReversed);

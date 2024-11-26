@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.findPrimar
 import static com.hartwig.hmftools.redux.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.redux.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;

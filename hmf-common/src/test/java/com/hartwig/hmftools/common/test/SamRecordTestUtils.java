@@ -24,6 +24,9 @@ public final class SamRecordTestUtils
 {
     public static final int DEFAULT_BASE_QUAL = 37;
     public static final int DEFAULT_MAP_QUAL = 60;
+    public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
+    public static final String TEST_READ_ID = "READ_01";
+    public static final String TEST_READ_CIGAR = "100M";
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;
 

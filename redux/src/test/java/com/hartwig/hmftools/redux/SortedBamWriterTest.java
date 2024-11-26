@@ -2,8 +2,8 @@ package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

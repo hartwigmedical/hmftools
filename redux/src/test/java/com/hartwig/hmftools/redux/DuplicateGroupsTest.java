@@ -8,10 +8,9 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 
 import static org.junit.Assert.assertEquals;
