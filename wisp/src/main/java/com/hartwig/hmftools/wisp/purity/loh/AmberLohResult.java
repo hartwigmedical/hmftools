@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.TRUE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
@@ -26,7 +25,7 @@ public class AmberLohResult
     public final double AvgAF;
     public final double RawEstimatedPurity;
     public final double EstimatedPurity;
-    public final double PValue;
+    public final double Probability;
     public final int TotalFragments;
     public final double LOD;
 
@@ -47,7 +46,7 @@ public class AmberLohResult
         AvgCopyNumber = avgCopyNumber;
         MedianAF = medianAF;
         AvgAF = avgAF;
-        PValue = pValue;
+        Probability = pValue;
         TotalFragments = totalFragments;
     }
 
@@ -56,7 +55,7 @@ public class AmberLohResult
         if(ResultsWriter.formatDetectionResult(EstimatedPurity, LOD) == NA)
             return NA;
 
-        if(PValue < LOW_PROBABILITY || EstimatedPurity >= LOD)
+        if(EstimatedPurity > RawEstimatedPurity || Probability < LOW_PROBABILITY)
             return TRUE;
         else
             return FALSE;
@@ -93,7 +92,7 @@ public class AmberLohResult
         sj.add(format("%.2f", AvgCopyNumber));
         sj.add(format("%.6f", MedianAF));
         sj.add(format("%.6f", AvgAF));
-        sj.add(formatProbabilityValue(PValue));
+        sj.add(formatProbabilityValue(Probability));
         sj.add(String.valueOf(TotalFragments));
 
         return sj.toString();

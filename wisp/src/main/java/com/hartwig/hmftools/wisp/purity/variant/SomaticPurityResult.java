@@ -59,10 +59,7 @@ public class SomaticPurityResult
         if(ResultsWriter.formatDetectionResult(PurityCalcs.PurityEstimate, PurityCalcs.LodPurityEstimate) == NA)
             return NA;
 
-        if(PurityCalcs.Probability < LOW_PROBABILITY || PurityCalcs.PurityEstimate >= PurityCalcs.LodPurityEstimate)
-            return TRUE;
-        else
-            return FALSE;
+        return PurityCalcs.Probability < LOW_PROBABILITY ? TRUE : FALSE;
     }
 
     public boolean valid() { return mValid; }
