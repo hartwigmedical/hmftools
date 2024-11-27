@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -20,8 +21,16 @@ import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
-public class NucleotideGeneEnrichmentTest
+public class NucleotideTest
 {
+    @Test
+    public void testCreateNucleotidesFromAminoAcid()
+    {
+        assertEquals(Lists.newArrayList("T", "A", "A"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("X"));
+        assertEquals(Lists.newArrayList(".", ".", "."), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("."));
+        assertEquals(Lists.newArrayList("A", "G", "CTAA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"));
+    }
+
     @Test
     public void testGeneEnrichment()
     {
