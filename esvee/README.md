@@ -453,9 +453,9 @@ VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 Know sources of errors
-- Poor extension from a single mispleaced read => can lead to either a FP or prevent further assembly extension
-- Assembly merging requirements are quite strict.  Someimtes we can miss read support.  If we miss in the germline this may cause germline leakage
-- Mis-intepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
+- Poor extension from a single mispleced read => can lead to either a FP or prevent further assembly extension
+- Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
+- Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
 - MSI Jitter of germline INDELS just under 32 bases in length may be intepreted as a somatic SV of 32+ bases
 - Long dinucleotide MS expansions can fail minAnchorfilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
@@ -465,8 +465,8 @@ Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
 
-ESVEE has some implicit assumptions on reads, qualities and alignments:
-- **AS field** - is currently required
+ESVEE has some implicit and explicit assumptions on reads, qualities and alignments:
+- **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
 - **Fragment lengts** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
