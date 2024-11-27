@@ -3,12 +3,20 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.TRUE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
+import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.wisp.purity.DetectionResult;
+import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
 public class SomaticPurityResult
 {
@@ -44,6 +52,17 @@ public class SomaticPurityResult
         PurityCalcs = new PurityCalcData();
         FragTotals = new FragmentTotals();
         UmiCounts = UmiTypeCounts.NO_UMI_COUNTS;
+    }
+
+    private DetectionResult formatDetectionResult()
+    {
+        if(ResultsWriter.formatDetectionResult(PurityCalcs.PurityEstimate, PurityCalcs.LodPurityEstimate) == NA)
+            return NA;
+
+        if(PurityCalcs.Probability < LOW_PROBABILITY || PurityCalcs.PurityEstimate >= PurityCalcs.LodPurityEstimate)
+            return TRUE;
+        else
+            return FALSE;
     }
 
     public boolean valid() { return mValid; }
@@ -88,7 +107,7 @@ public class SomaticPurityResult
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(formatDetectionResult(PurityCalcs.PurityEstimate, PurityCalcs.LodPurityEstimate));
+        sj.add(formatDetectionResult().toString());
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
         sj.add(format("%d", ChipVariants));

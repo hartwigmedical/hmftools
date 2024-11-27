@@ -61,6 +61,7 @@ public class SimpleVariant
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String header = lines.get(0);
+            lines.remove(0);
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
@@ -68,8 +69,6 @@ public class SimpleVariant
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
             int refIndex = fieldsIndexMap.get(FLD_REF);
             int altIndex = fieldsIndexMap.get(FLD_ALT);
-
-            lines.remove(0);
 
             for(String line : lines)
             {

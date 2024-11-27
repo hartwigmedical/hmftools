@@ -3,11 +3,18 @@ package com.hartwig.hmftools.wisp.purity.loh;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.TRUE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.wisp.purity.DetectionResult;
+import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
 public class AmberLohResult
 {
@@ -44,6 +51,17 @@ public class AmberLohResult
         TotalFragments = totalFragments;
     }
 
+    private DetectionResult formatDetectionResult()
+    {
+        if(ResultsWriter.formatDetectionResult(EstimatedPurity, LOD) == NA)
+            return NA;
+
+        if(PValue < LOW_PROBABILITY || EstimatedPurity >= LOD)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -65,7 +83,7 @@ public class AmberLohResult
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(formatDetectionResult(EstimatedPurity, LOD));
+        sj.add(formatDetectionResult().toString());
         sj.add(formatPurityValue(EstimatedPurity));
         sj.add(formatPurityValue(RawEstimatedPurity));
         sj.add(String.valueOf(RegionCount));

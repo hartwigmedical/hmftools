@@ -192,9 +192,14 @@ public class PurityConfig
         Threads = parseThreads(configBuilder);
 
         if(configBuilder.hasValue(EXCLUDED_SOMATICS_FILE))
+        {
             ExcludedSomatics = loadSimpleVariants(configBuilder.getValue(EXCLUDED_SOMATICS_FILE));
+            CT_LOGGER.info("excluding {} somatic variants", ExcludedSomatics.size());
+        }
         else
+        {
             ExcludedSomatics = Collections.emptyList();
+        }
     }
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
