@@ -109,13 +109,6 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : variants)
         {
-//            if(variant.gene().equals("JAK2"))
-//            {
-//                System.out.print(variant.gene());
-//                System.out.print(":  ");
-//                System.out.println(variant.alleleFrequency());
-//            }
-            
             if(variant.type() != VariantType.SNP)
             {
                 ++filterCounts[FilterReason.NON_SNV.ordinal()];
@@ -168,9 +161,7 @@ public class SomaticPurityFitter
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
         if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
-        {
             return true;
-        }
 
         if(variantTier != VariantTier.HOTSPOT)
         {

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -214,7 +215,6 @@ public class PurpleApplication
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         List<ObservedRegion> fittedRegions = Lists.newArrayList();
-        List<ObservedRegion> regionsForVis = Lists.newArrayList();
 
         BestFit bestFit = null;
         PurityAdjuster purityAdjuster = null;
@@ -320,15 +320,10 @@ public class PurpleApplication
             try
             {
                 Charts charts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
-                
-                for(ObservedRegion region : fittedRegions)
-                {
-                    if(region.germlineStatus() != GermlineStatus.EXCLUDED)
-                    {
-                        regionsForVis.add(region);
-                    }
-                }
-                
+
+                List<ObservedRegion> regionsForVis = fittedRegions.stream()
+                        .filter(x -> x.germlineStatus() != GermlineStatus.EXCLUDED).collect(Collectors.toList());
+
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
