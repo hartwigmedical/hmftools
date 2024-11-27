@@ -56,22 +56,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
@@ -89,7 +84,7 @@ public class SomaticVariants
 
     private final SampleData mSample;
     private final List<SomaticVariant> mVariants;
-    private final List<ProbeVariant> mProbeVariants;
+    private final List<SimpleVariant> mProbeVariants;
     private final SomaticPurityEstimator mEstimator;
     private final BufferedWriter mSomaticWriter;
     private final SampleFragmentLengths mFragmentLengths;
@@ -215,6 +210,10 @@ public class SomaticVariants
     private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
+
+        // check if the variant has been excluded in config
+        if(mConfig.ExcludedSomatics.stream().anyMatch(x -> x.matches(variant)))
+            return;
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
         boolean hasSyntheticTumor = mConfig.hasSyntheticTumor();
