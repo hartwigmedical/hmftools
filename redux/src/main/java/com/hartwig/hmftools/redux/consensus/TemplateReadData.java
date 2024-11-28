@@ -48,7 +48,7 @@ public class TemplateReadData
     public static SAMRecord selectTemplateRead(final List<SAMRecord> reads)
     {
         // establish if the read, its mate or the supplementary data should be used to establish the template data
-        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0));
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
 
         int primaryCount = reads.stream().mapToInt(x -> x.getSupplementaryAlignmentFlag() ? 0 : 1).sum();
         boolean arePrimaries;

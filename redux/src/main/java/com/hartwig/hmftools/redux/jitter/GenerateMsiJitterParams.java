@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
-import static com.hartwig.hmftools.redux.ReduxConfig.PARTITION_SIZE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.IOException;
@@ -29,6 +28,7 @@ public class GenerateMsiJitterParams
     private final int mPartitionSize;
 
     private static final String BAM_FILE = "bam";
+    private static final String PARTITION_SIZE = "partition_size";
 
     public static final int DEFAULT_PARTITION_SIZE = 1_000_000;
 
