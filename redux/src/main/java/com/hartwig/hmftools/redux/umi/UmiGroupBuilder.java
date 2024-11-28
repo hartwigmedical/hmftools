@@ -98,15 +98,23 @@ public class UmiGroupBuilder
             if(umiGroup.readCount() == 1)
             {
                 // drop any single fragments
-                /*
-                SAMRecord fragment = umiGroup.fragments().get(0);
-                fragment.setStatus(NONE);
-                fragment.setUmi(null);
-                */
+                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates()));
                 continue;
             }
 
             finalUmiGroups.add(umiGroup);
+        }
+
+        // remove singles which were collapsed into a UMI group
+        int index = 0;
+        while(index < singleFragments.size())
+        {
+            SAMRecord read = singleFragments.get(index).read();
+
+            if(finalUmiGroups.stream().anyMatch(x -> x.reads().contains(read)))
+                singleFragments.remove(index);
+            else
+                ++index;
         }
 
         if(captureStats)
@@ -362,12 +370,12 @@ public class UmiGroupBuilder
 
         public void addGroup(final DuplicateGroup group)
         {
-            addFragmentGroup(group, group.fragmentCoordinates().IsForward);
+            addFragmentGroup(group, group.fragmentCoordinates().forwardFragment());
         }
 
         public void addSingleRead(final ReadInfo readInfo)
         {
-            addFragmentGroup(readInfo, readInfo.coordinates().IsForward);
+            addFragmentGroup(readInfo, readInfo.coordinates().forwardFragment());
         }
     }
 

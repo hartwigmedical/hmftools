@@ -74,20 +74,6 @@ public class ConsensusReads
         SAMRecord templateRead = TemplateReadData.selectTemplateRead(reads);
         consensusReadId = formConsensusReadId(templateRead, umiId);
 
-        /*
-        if(previousTemplateRead == null)
-        {
-            templateRead = selectTemplateRead(reads);
-            consensusReadId = formConsensusReadId(templateRead, umiId);
-        }
-        else
-        {
-            // match the mate or supplementary template read to that of the primary
-            templateRead = reads.stream().filter(x -> x.getReadName().equals(previousTemplateRead.ReadId)).findFirst().orElse(null);
-            consensusReadId = groupReadId;
-        }
-        */
-
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
             SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, null);

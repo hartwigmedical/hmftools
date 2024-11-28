@@ -58,13 +58,13 @@ public class FragmentUtilsTest
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
 
         flipFirstInPair(read);
 
         fragmentCoords = FragmentCoords.fromRead(read);
-        assertFalse(fragmentCoords.IsForward);
+        assertFalse(fragmentCoords.forwardFragment());
 
         // a mate upper read
         read = createSamRecord(
@@ -79,7 +79,7 @@ public class FragmentUtilsTest
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertFalse(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
 
         // reverse orientation fragment with soft-clips at both ends
@@ -93,7 +93,7 @@ public class FragmentUtilsTest
         assertEquals(REVERSE, fragmentCoords.OrientLower);
         assertEquals(FORWARD, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_199_R_1_390", fragmentCoords.Key);
 
         // using supplementary data to get primary coords
@@ -111,7 +111,7 @@ public class FragmentUtilsTest
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
 
         // test again with an unmapped mate
@@ -125,7 +125,7 @@ public class FragmentUtilsTest
         assertEquals(NO_POSITION, fragmentCoords.PositionUpper);
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertTrue(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_100", fragmentCoords.Key);
 
         read.setReadNegativeStrandFlag(true);
@@ -144,70 +144,8 @@ public class FragmentUtilsTest
         assertEquals(100, fragmentCoords.PositionLower);
         assertEquals(NO_POSITION, fragmentCoords.PositionUpper);
         assertEquals(FORWARD, fragmentCoords.OrientLower);
-        assertTrue(fragmentCoords.ReadIsLower);
-        assertTrue(fragmentCoords.IsForward);
+        assertFalse(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1_100_U", fragmentCoords.Key);
-    }
-
-    @Test
-    public void testPrimaryDuplicateIdentification()
-    {
-        FragmentOld fragment = createFragment(TEST_READ_ID, CHR_1, 100);
-        double baseAvg = calcBaseQualAverage(fragment);
-        assertEquals(DEFAULT_QUAL, baseAvg, 0.1);
-
-        FragmentOld fragment2 = createFragment(TEST_READ_ID, CHR_1, 100);
-
-        SAMRecord read2 = fragment2.reads().get(0);
-        setBaseQualities(read2, DEFAULT_QUAL - 1);
-
-        assertEquals(DEFAULT_QUAL - 1, calcBaseQualAverage(fragment2), 0.1);
-
-        List<FragmentOld> fragments = Lists.newArrayList(fragment2, fragment);
-
-        FragmentOld primary = findPrimaryFragment(fragments, false);
-        assertEquals(primary, fragment);
-    }
-
-    @Test
-    public void testDuplicateGroupReadAllocation()
-    {
-        int posStart = 1;
-        SAMRecord read1 = createSamRecord("READ_01", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
-                false, false, null);
-        read1.setFirstOfPairFlag(true);
-
-        SAMRecord mate1 = createSamRecord("READ_01", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
-                false, false, null);
-        mate1.setSecondOfPairFlag(true);
-        mate1.setFirstOfPairFlag(false);
-
-        FragmentOld frag1 = new FragmentOld(read1);
-        frag1.addRead(mate1);
-        assertTrue(frag1.isPreciseInversion());
-
-        SAMRecord read2 = createSamRecord("READ_02", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
-                false, false, null);
-        read2.setFirstOfPairFlag(true);
-
-        SAMRecord mate2 = createSamRecord("READ_02", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
-                false, false, null);
-        mate2.setSecondOfPairFlag(true);
-        mate2.setFirstOfPairFlag(false);
-
-        FragmentOld frag2 = new FragmentOld(read2);
-        frag2.addRead(mate2);
-        assertTrue(frag2.isPreciseInversion());
-
-        DuplicateGroupOld duplicateGroup = new DuplicateGroupOld(null, frag1);
-        duplicateGroup.addFragment(frag2);
-
-        duplicateGroup.categoriseReads();
-
-        MockRefGenome refGenome = new MockRefGenome();
-        refGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        ConsensusReads consensusReads = new ConsensusReads(refGenome);
-        List<SAMRecord> reads = duplicateGroup.popCompletedReads(consensusReads, false);
-        assertEquals(6, reads.size());
     }
 }

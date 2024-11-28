@@ -76,21 +76,20 @@ public abstract class BamWriter
         writeRead(read, fragmentStatus, null);
     }
 
-    public void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
+    public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        for(SAMRecord read : completeReads)
+        if(group.consensusRead() != null)
         {
-            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-            {
-                processRecord(read);
-                mConsensusReadCount.incrementAndGet();
+            SAMRecord read = group.consensusRead();
+            processRecord(read);
+            mConsensusReadCount.incrementAndGet();
 
-                if(mReadDataWriter.enabled())
-                    mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+            if(mReadDataWriter.enabled())
+                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+        }
 
-                continue;
-            }
-
+        for(SAMRecord read : group.reads())
+        {
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
@@ -136,7 +135,7 @@ public abstract class BamWriter
     {
         writeRead(
                 read, fragmentStatus,
-                readInfo != null ? readInfo.coordinates().Key : "",
+                readInfo != null && readInfo.coordinates() != null ? readInfo.coordinates().Key : "",
                 readInfo != null ? readInfo.umi() : "");
     }
 

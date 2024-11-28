@@ -443,14 +443,14 @@ public class UnmapReadsTest
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 "READ_01", CHR_1, 1, READ_BASES, TEST_READ_CIGAR,
-                mtChr, 200, false, false, null);
+                mtChr, 200, false, false, null, true, TEST_READ_CIGAR);
 
         READ_UNMAPPER.checkTransformRead(read1, regionState);
         assertTrue(read1.getMateUnmappedFlag());
 
         SAMRecord read2 = SamRecordTestUtils.createSamRecord(
                 "READ_02", CHR_1, 1, READ_BASES, TEST_READ_CIGAR,
-                mtChr, 200, false, false, null);
+                mtChr, 200, false, false, null, true, TEST_READ_CIGAR);
 
         READ_UNMAPPER.checkTransformRead(read2, regionState);
         assertTrue(read2.getMateUnmappedFlag());
