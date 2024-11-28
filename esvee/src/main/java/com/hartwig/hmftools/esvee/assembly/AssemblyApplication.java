@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -195,11 +197,13 @@ public class AssemblyApplication
 
     private void loadFragmentLengthBounds()
     {
-        if(mConfig.JunctionFiles.isEmpty())
-            return;
+        if(!Files.exists(Paths.get(mConfig.FragmentLengthFile)))
+        {
+            SV_LOGGER.error("missing fragment length file: {}", mConfig.FragmentLengthFile);
+            System.exit(1);
+        }
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.sampleId());
-        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(mConfig.FragmentLengthFile);
 
         if(fragmentLengthBounds.isValid())
         {

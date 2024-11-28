@@ -29,6 +29,13 @@ public final class FileCommon
     public static final String RAW_VCF_SUFFIX = "raw" + VCF_ZIP_EXTENSION;
     public static final String DEPTH_VCF_SUFFIX = "ref_depth" + VCF_ZIP_EXTENSION;
 
+    // common config
+    public static final String JUNCTION_FILE = "junction_file";
+    public static final String JUNCTION_FILE_DESC = "Esvee Prep junction file, default is to match by sample name";
+
+    public static final String FRAG_LENGTHS_FILE = "frag_length_file";
+    public static final String FRAG_LENGTHS_FILE_DESC = "Esvee Prep fragment length distribution file, default is to match by sample name";
+
     public static final String FILE_NAME_DELIM = ".";
 
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";

@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRE
 import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
@@ -66,7 +67,9 @@ public class CallerApplication
         mHotspotCache = new HotspotCache(configBuilder);
 
         String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
-        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
+
+        String fragLengthFilename = configBuilder.getValue(
+                FRAG_LENGTHS_FILE, formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId()));
 
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
