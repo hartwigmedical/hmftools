@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.calcBaseQualAverage;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;

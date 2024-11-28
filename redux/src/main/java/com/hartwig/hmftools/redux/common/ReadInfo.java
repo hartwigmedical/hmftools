@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.redux.common.FragmentStatus.UNSET;
 
 import htsjdk.samtools.SAMRecord;
@@ -43,4 +45,12 @@ public class ReadInfo
         return String.format("reads(%s:%d %s) status(%s) coords(%s)",
                 mRead.getReferenceName(), mRead.getAlignmentStart(), id(), mStatus, mCoordinates);
     }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+    }
+
 }
