@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class DuplicateGroupsTest
+public class PartitionReaderTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
@@ -36,14 +36,14 @@ public class DuplicateGroupsTest
 
     private final PartitionReader mPartitionReader;
 
-    public DuplicateGroupsTest()
+    public PartitionReaderTest()
     {
         mReadIdGen = new ReadIdGenerator();
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES_REPEAT_40);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
 
-        ReduxConfig umiConfig = new ReduxConfig(1000, 1000, mRefGenome, true, false, false);
+        ReduxConfig umiConfig = new ReduxConfig(mRefGenome, true, false, false);
 
         mWriter = new TestBamWriter(umiConfig);
 

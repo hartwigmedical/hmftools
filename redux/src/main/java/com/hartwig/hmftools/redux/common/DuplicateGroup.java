@@ -24,7 +24,6 @@ public class DuplicateGroup
     private final FragmentCoords mFragmentCoords;
     private final List<SAMRecord> mReads;
 
-    private String mGroupReadId;
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
@@ -47,7 +46,6 @@ public class DuplicateGroup
 
         mConsensusRead = null;
         mPrimaryRead = null;
-        mGroupReadId = null;
         mDualStrand = false;
     }
 
@@ -75,7 +73,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mGroupReadId, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mUmiId);
 
             /*
             if(i == ReadType.INITIAL_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())

@@ -67,12 +67,12 @@ public class ConsensusReads
     }
     public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
-    public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, @Nullable final String groupReadId, @Nullable final String umiId)
+    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, @Nullable final String umiId)
     {
         String consensusReadId  = "";
 
         SAMRecord templateRead = TemplateReadData.selectTemplateRead(reads);
+        consensusReadId = formConsensusReadId(templateRead, umiId);
 
         /*
         if(previousTemplateRead == null)

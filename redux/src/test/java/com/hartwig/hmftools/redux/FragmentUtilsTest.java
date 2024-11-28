@@ -1,20 +1,26 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.findPrimaryFragment;
-import static com.hartwig.hmftools.redux.old.FragmentCoordsOld.NO_COORDS;
-import static com.hartwig.hmftools.redux.old.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
 import com.hartwig.hmftools.redux.old.FragmentOld;
 import com.hartwig.hmftools.redux.old.FragmentCoordsOld;
@@ -41,133 +47,106 @@ public class FragmentUtilsTest
     @Test
     public void testFragmentCoords()
     {
-        SAMRecord read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
-                false, false, null);
+        SAMRecord read = createSamRecord(
+                TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR,
+                CHR_1, 200, false, false, null, true, TEST_READ_CIGAR);
 
-        int ucPos = getFivePrimeUnclippedPosition(read);
-        assertEquals(100, ucPos);
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(read);
 
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "5S95M", CHR_1, 200,
-                false, false, null);
-
-        ucPos = getFivePrimeUnclippedPosition(read);
-        assertEquals(95, ucPos);
-
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "5S80M15S", CHR_1, 200,
-                true, false, null);
-
-        ucPos = getFivePrimeUnclippedPosition(read);
-        assertEquals(194, ucPos);
-
-        // test a read pair with one read unmapped
-
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "*", CHR_1, 100,
-                false, false, null);
-
-        read.setReadUnmappedFlag(true);
-        read.setInferredInsertSize(100);
-
-        FragmentOld fragment = new FragmentOld(read);
-
-        assertEquals(NO_COORDS, fragment.coordinates());
-
-        SAMRecord mateRead = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
-                false, false, null);
-
-        mateRead.setMateUnmappedFlag(true);
-        mateRead.setInferredInsertSize(-100);
-
-        fragment.addRead(mateRead);
-
-        assertEquals("1_100_100", fragment.coordinates().Key);
-        assertFalse(fragment.coordinates().Incomplete);
-    }
-
-    private static FragmentCoordsOld getFragmentCoordinates(final SAMRecord read)
-    {
-        return FragmentUtils.getFragmentCoordinates(Lists.newArrayList(read), true);
-    }
-
-    @Test
-    public void testFragmentCoordsFromCigars()
-    {
-        // test coordinates from CIGAR strings
-        String cigarStr = "5S100M5S";
-        int ucPos = getFivePrimeUnclippedPosition(100, cigarStr, true);
-        assertEquals(95, ucPos);
-
-        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false);
-        assertEquals(204, ucPos);
-
-        cigarStr = "5S10M5D10I15D20M5S"; // +10 + 5, ignore 10, +15, +20, +5 = 40
-        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false);
-        assertEquals(154, ucPos);
-
-        // RNA
-        cigarStr = "5S60M2000N40M10S";
-        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, true); // -5
-        assertEquals(95, ucPos);
-
-        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
-        assertEquals(2209, ucPos);
-
-        // test coordinates from reads
-        SAMRecord read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
-                false, false, null);
-        read.setMateNegativeStrandFlag(true);
-        read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
-
-        FragmentCoordsOld fragmentCoords = getFragmentCoordinates(read);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(299, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertEquals(REVERSE, fragmentCoords.OrientUpper);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
-        assertEquals(100, fragmentCoords.InitialPosition);
 
-        // mate on earlier chromosome
-        read = createSamRecord(TEST_READ_ID, CHR_2, 100, TEST_READ_BASES, "100M", CHR_1, 200,
-                false, false, null);
-        read.setMateNegativeStrandFlag(false);
-        read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
+        flipFirstInPair(read);
 
-        fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_200_2_100_N", fragmentCoords.keyOriented());
-        assertEquals(200, fragmentCoords.InitialPosition);
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertFalse(fragmentCoords.IsForward);
 
-        // mate in earlier position, and fragment reversed
-        read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
-                false, false, null);
-        read.setMateNegativeStrandFlag(true);
-        read.setSecondOfPairFlag(true);
-        read.setFirstOfPairFlag(false);
-        read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
+        // a mate upper read
+        read = createSamRecord(
+                TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR,
+                CHR_1, 100, true, false, null, false, TEST_READ_CIGAR);
 
-        fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_199_R_1_200", fragmentCoords.Key);
-        assertEquals(-199, fragmentCoords.InitialPosition);
+        flipFirstInPair(read);
 
-        // unmapped mate
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
-                false, false, null);
-        read.setInferredInsertSize(400);
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(299, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertEquals(REVERSE, fragmentCoords.OrientUpper);
+        assertFalse(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
+        assertEquals("1_100_1_299_R", fragmentCoords.Key);
 
-        fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_100_400", fragmentCoords.Key);
-        assertEquals(100, fragmentCoords.InitialPosition);
+        // reverse orientation fragment with soft-clips at both ends
+        read = createSamRecord(
+                TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "80M20S",
+                CHR_1, 400, true, false, null, false, "10S80M");
 
-        // fragment reversed
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
-                true, false, null);
-        read.setInferredInsertSize(400);
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertEquals(199, fragmentCoords.PositionLower);
+        assertEquals(390, fragmentCoords.PositionUpper);
+        assertEquals(REVERSE, fragmentCoords.OrientLower);
+        assertEquals(FORWARD, fragmentCoords.OrientUpper);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
+        assertEquals("1_199_R_1_390", fragmentCoords.Key);
 
-        fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_199_R_400", fragmentCoords.Key);
-        assertEquals(-199, fragmentCoords.InitialPosition);
+        // using supplementary data to get primary coords
+        SupplementaryReadData suppAlignment = new SupplementaryReadData(
+                CHR_1, 100, SupplementaryReadData.SUPP_POS_STRAND, TEST_READ_CIGAR, 60);
 
-        // missing mate CIGAR attribute
-        read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
-                false, false, null);
+        read = createSamRecord(
+                TEST_READ_ID, CHR_2, 1000, TEST_READ_BASES, TEST_READ_CIGAR,
+                CHR_1, 200, false, true, suppAlignment, true, TEST_READ_CIGAR);
 
-        fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_200", fragmentCoords.Key);
-        assertTrue(fragmentCoords.Incomplete);
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertTrue(fragmentCoords.SupplementarySourced);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(299, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertEquals(REVERSE, fragmentCoords.OrientUpper);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
+        assertEquals("1_100_1_299_R", fragmentCoords.Key);
+
+        // test again with an unmapped mate
+        read = createSamRecord(
+                TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR,
+                NO_CHROMOSOME_NAME, 100, false, false, null);
+
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertFalse(fragmentCoords.UnmappedSourced);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(NO_POSITION, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
+        assertEquals("1_100", fragmentCoords.Key);
+
+        read.setReadNegativeStrandFlag(true);
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertEquals(REVERSE, fragmentCoords.OrientLower);
+        assertEquals("1_199_R", fragmentCoords.Key);
+
+        // the unmapped read
+        read = createSamRecord(
+                TEST_READ_ID, NO_CHROMOSOME_NAME, 100, TEST_READ_BASES, NO_CIGAR,
+                CHR_1, 100, false, false, null, false, TEST_READ_CIGAR);
+        read.setReadUnmappedFlag(true);
+
+        fragmentCoords = FragmentCoords.fromRead(read);
+        assertTrue(fragmentCoords.UnmappedSourced);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(NO_POSITION, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertTrue(fragmentCoords.IsForward);
+        assertEquals("1_100_U", fragmentCoords.Key);
     }
 
     @Test
@@ -188,14 +167,6 @@ public class FragmentUtilsTest
 
         FragmentOld primary = findPrimaryFragment(fragments, false);
         assertEquals(primary, fragment);
-    }
-
-    @Test
-    public void testReadChromosomePartition()
-    {
-        assertEquals("1_0", formChromosomePartition(CHR_1, 1, 1000));
-        assertEquals("1_0", formChromosomePartition(CHR_1, 999, 1000));
-        assertEquals("1_1", formChromosomePartition(CHR_1, 1000, 1000));
     }
 
     @Test
@@ -238,6 +209,5 @@ public class FragmentUtilsTest
         ConsensusReads consensusReads = new ConsensusReads(refGenome);
         List<SAMRecord> reads = duplicateGroup.popCompletedReads(consensusReads, false);
         assertEquals(6, reads.size());
-
     }
 }
