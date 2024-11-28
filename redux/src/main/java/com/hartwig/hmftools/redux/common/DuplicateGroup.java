@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAtt
 import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
 import static com.hartwig.hmftools.common.bam.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.old.FragmentUtils.readToString;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.List;
 

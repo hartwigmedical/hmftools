@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
-import static com.hartwig.hmftools.redux.old.FragmentUtils.readToString;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.Collections;
 import java.util.List;
@@ -259,76 +259,6 @@ public class PartitionReader implements Callable
 
         mPcProcessDuplicates.pause();
     }
-
-    /*
-    public void accept(final List<Fragment> positionFragments)
-    {
-        if(positionFragments.isEmpty())
-            return;
-
-        mPcProcessDuplicates.resume();
-        List<Fragment> resolvedFragments = Lists.newArrayList();
-        List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
-        List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
-
-        int posFragmentCount = positionFragments.size();
-        int position = positionFragments.get(0).initialPosition();
-        boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
-        long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
-
-        findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
-
-        List<Fragment> singleFragments = mConfig.UMIs.Enabled ?
-                resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
-
-        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                positionDuplicateGroups, true, singleFragments);
-
-        if(logDetails)
-        {
-            double timeTakenSec = secondsSinceNow(startTimeMs);
-
-            RD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
-                    mCurrentRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
-                    duplicateGroups != null ? duplicateGroups.size() : 0,
-                    candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
-                    format("%.1fs", timeTakenSec));
-        }
-
-        startTimeMs = logDetails ? System.currentTimeMillis() : 0;
-
-        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, duplicateGroups);
-
-        if(logDetails)
-        {
-            double timeTakenSec = secondsSinceNow(startTimeMs);
-
-            if(timeTakenSec >= LOG_PERF_TIME_SEC)
-            {
-                RD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
-                        mCurrentRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
-            }
-        }
-
-        if(duplicateGroups != null)
-            duplicateGroups.forEach(x -> processDuplicateGroup(x));
-
-        if(!resolvedFragments.isEmpty())
-        {
-            mBamWriter.writeFragments(resolvedFragments, true);
-
-            mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
-
-            int nonDuplicateFragments = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
-            mStats.addNonDuplicateCounts(nonDuplicateFragments);
-        }
-
-        if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
-            mBamWriter.setBoundaryPosition(position, true);
-
-        mPcProcessDuplicates.pause();
-    }
-    */
 
     private void setUnmappedRegions()
     {

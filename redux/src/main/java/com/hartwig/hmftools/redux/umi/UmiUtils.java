@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_MAX_UMI_BASE_D
 import java.util.Comparator;
 
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
 
 public final class UmiUtils
 {

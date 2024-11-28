@@ -3,40 +3,23 @@ package com.hartwig.hmftools.redux;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
-import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.calcBaseQualAverage;
-import static com.hartwig.hmftools.redux.old.DuplicateGroupBuilderOld.findPrimaryFragment;
-import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
-import static com.hartwig.hmftools.redux.TestUtils.createFragment;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
-import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
-import com.hartwig.hmftools.redux.old.FragmentOld;
-import com.hartwig.hmftools.redux.old.FragmentCoordsOld;
-import com.hartwig.hmftools.redux.old.FragmentUtils;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
-import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
 
 import org.junit.Test;
 

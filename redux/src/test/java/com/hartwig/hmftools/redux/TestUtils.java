@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.old.FragmentOld;
 import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
@@ -59,56 +58,6 @@ public final class TestUtils
     public static ReduxConfig createTestConfig()
     {
         return new ReduxConfig(new MockRefGenome(), false, false, false);
-    }
-
-    public List<FragmentOld> createBasicFragments(final String readId)
-    {
-        FragmentOld read = createFragment(readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
-                false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read.setStatus(NONE);
-
-        FragmentOld mateRead = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
-                true, false, null);
-
-
-        FragmentOld supp = createFragment(read.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
-                false, true, new SupplementaryReadData(CHR_1, 2000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        return Lists.newArrayList(read, mateRead, supp);
-    }
-
-    public static FragmentOld createFragment(final String readId, final String chrStr, int readStart)
-    {
-        SAMRecord read = createSamRecord(readId, chrStr, readStart, TEST_READ_BASES, TEST_READ_CIGAR, chrStr, 200,
-                false, false, null);
-        return new FragmentOld(read);
-    }
-
-    public static FragmentOld createFragment(
-            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
-            int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
-    {
-        SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
-                isReversed, isSupplementary, suppAlignment);
-        return new FragmentOld(read);
-    }
-
-    public static FragmentOld createFragment(
-            final String readId, final String chrStr, int readStart, final String cigar, boolean isReversed,
-            final String mateChr, int mateStart, boolean mateReversed, final String mateCigar)
-    {
-        SAMRecord read = createSamRecord(
-                readId, chrStr, readStart, TEST_READ_BASES, cigar, mateChr, mateStart, isReversed, false, null);
-
-        read.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
-        read.setMateNegativeStrandFlag(mateReversed);
-        return new FragmentOld(read);
-    }
-
-    public static void setBaseQualities(final FragmentOld fragment, int value)
-    {
-        fragment.reads().forEach(x -> setBaseQualities(x, value));
     }
 
     public static void setBaseQualities(final SAMRecord read, int value)

@@ -1,24 +1,15 @@
 package com.hartwig.hmftools.redux;
 
-import static com.hartwig.hmftools.redux.TestUtils.createFragment;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.extractUmiIdFromReadId;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.redux.old.UmiGroupBuilderOld.buildUmiGroups;
-import static com.hartwig.hmftools.redux.old.UmiGroupBuilderOld.hasDuplexUmiMatch;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.hasDuplexUmiMatch;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.redux.old.FragmentOld;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
-import com.hartwig.hmftools.redux.old.DuplicateGroupOld;
 
 import org.junit.Test;
 
@@ -71,6 +62,7 @@ public class UmiGroupsTest
         assertFalse(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
     }
 
+    /*
     @Test
     public void testUmiGroupAssignment()
     {
@@ -185,6 +177,8 @@ public class UmiGroupsTest
         List<DuplicateGroupOld> groups = buildUmiGroups(fragments, umiConfig);
         assertEquals(3, groups.size());
     }
+
+     */
 
     /*
     @Test

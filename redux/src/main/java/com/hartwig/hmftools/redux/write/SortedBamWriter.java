@@ -6,7 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.old.FragmentUtils.readToString;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.SortedSet;
 
