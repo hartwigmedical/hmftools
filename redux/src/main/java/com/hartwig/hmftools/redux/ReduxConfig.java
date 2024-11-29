@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
@@ -97,7 +99,7 @@ public class ReduxConfig
     public final List<String> LogReadIds;
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
-    public final boolean PerfDebug;
+    public final double PerfDebugTime;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
     public final boolean LogFinalCache;
@@ -237,7 +239,7 @@ public class ReduxConfig
         LogReadIds = parseLogReadIds(configBuilder);
 
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
-        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+        PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
@@ -252,11 +254,12 @@ public class ReduxConfig
     public boolean isValid() { return mIsValid; }
 
     public int readLength() { return mReadLength; }
-
     public void setReadLength(int readLength)
     {
         mReadLength = readLength;
     }
+
+    public boolean perfDebug() { return PerfDebugTime > 0; }
 
     public String formFilename(final String fileType)
     {
@@ -310,7 +313,7 @@ public class ReduxConfig
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
@@ -355,7 +358,7 @@ public class ReduxConfig
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
-        PerfDebug = false;
+        PerfDebugTime = 0;
         RunChecks = true;
         WriteStats = false;
         LogFinalCache = true;

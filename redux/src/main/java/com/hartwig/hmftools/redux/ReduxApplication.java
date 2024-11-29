@@ -402,7 +402,7 @@ public class ReduxApplication
 
     private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters)
     {
-        if(mConfig.PerfDebug)
+        if(mConfig.perfDebug())
         {
             for(int j = 0; j < combinedPerfCounters.size(); ++j)
             {

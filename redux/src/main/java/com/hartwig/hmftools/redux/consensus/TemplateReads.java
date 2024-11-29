@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,7 +87,7 @@ public final class TemplateReads
 
         for(String cigarStr : maxFrequencyCigars)
         {
-            int alignedLength = calcCigarAlignedLength(cigarStr);
+            int alignedLength = cigarStr.equals(NO_CIGAR) ? 1 : calcCigarAlignedLength(cigarStr);
 
             if(alignedLength > maxAligedBases)
             {

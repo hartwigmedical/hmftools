@@ -18,6 +18,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class FragmentCoords implements Comparable<FragmentCoords>
 {
+    // represents all the fragment property of a read or pair of reads
+    // primary purpose is to find duplicates, by a match in their Key, which is defined as:
+    // A_B_C_D where
+    // A: LowerCoordinate, where coordinate is chrmosome:unclipped_position and :R if reverse orientation
+    // B: UpperCoordinate
+    // C: whether the read which builds the coordinates matched the lower or upper position if a paired read
+    // D: if the read is unmapped or supplementary
+
     public final String ChromsomeLower;
     public final String ChromsomeUpper;
     public final int PositionLower;
@@ -55,15 +63,23 @@ public class FragmentCoords implements Comparable<FragmentCoords>
 
         if(positionUpper == NO_POSITION)
         {
-            Key = isUnmapped ? format("%s_U", coordinateLower) : format("%s", coordinateLower);
+            if(isUnmapped)
+                Key = format("%s_U", coordinateLower);
+            else if(suppReadInfo != null)
+                Key = format("%s_S", coordinateLower);
+            else
+                Key = coordinateLower;
             KeyOriented = Key;
         }
         else
         {
-            char lowerUpperChar = ReadIsLower ? 'L' : 'U';
             String coordinateUpper = formCoordinate(ChromsomeUpper, positionUpper, orientUpper.isForward());
 
-            Key = format("%c_%s_%s", lowerUpperChar, coordinateLower, coordinateUpper);
+            String readInfo = ReadIsLower ? "L" : "U";
+            if(SuppReadInfo != null)
+                readInfo += "_S";
+
+            Key = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
             KeyOriented = (keyByFragmentOrientation && FragmentOrient.isReverse()) ? format("%s_N", Key) : Key;
         }
     }
@@ -87,9 +103,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
     }
 
-    public static String formCoordinate(final String chromosome, final int position, final boolean isForward)
+    private static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
-        return isForward ? format("%s_%d", chromosome, position) : format("%s_%d_R", chromosome, position);
+        return isForward ? format("%s:%d", chromosome, position) : format("%s:%d:R", chromosome, position);
     }
 
     public static FragmentCoords fromRead(final SAMRecord read) { return fromRead(read, false); }
