@@ -105,11 +105,13 @@ public class Statistics
 
     public void logStats()
     {
-        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({}) pairedAltChr({}) {}",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, PairedAltChromosome, ConsensusStats);
+        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({}) pairedAltChr({})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, PairedAltChromosome);
 
         if(RD_LOGGER.isDebugEnabled())
         {
+            RD_LOGGER.info("consensus stats: {}", ConsensusStats);
+
             RD_LOGGER.debug("stats: reads(unmapped={} pairedAltChr={}))",
                     Unmapped, PairedAltChromosome);
 

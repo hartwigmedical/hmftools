@@ -75,27 +75,6 @@ public class DuplicateGroup
         {
             ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mUmiId);
 
-            /*
-            if(i == ReadType.INITIAL_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
-            {
-                // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
-                consensusReadInfo = consensusReads.createConsensusRead(
-                        findConsistentSupplementaries(readGroup), mPrimaryTemplateRead, mGroupReadId, mUmiId);
-            }
-            else
-            {
-                consensusReadInfo = consensusReads.createConsensusRead(readGroup, mPrimaryTemplateRead, mGroupReadId, mUmiId);
-
-                // cache to ensure subsequent consensus reads use the same properties
-                if(mPrimaryTemplateRead == null)
-                {
-                    mPrimaryTemplateRead = TemplateReadData.fromRead(consensusReadInfo.TemplateRead);
-                    mGroupReadId = consensusReadInfo.ConsensusRead.getReadName();
-
-                }
-            }
-            */
-
             // set consensus read attributes
             int firstInPairCount = (int)mReads.stream().filter(x -> x.getFirstOfPairFlag()).count();
             int readCount = mReads.size();

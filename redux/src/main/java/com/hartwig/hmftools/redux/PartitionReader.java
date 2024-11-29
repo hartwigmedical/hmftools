@@ -45,6 +45,7 @@ public class PartitionReader implements Callable
 
     private final List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
+    private int mLastReadMinPosition;
 
     private UnmapRegionState mUnmapRegionState;
 
@@ -61,7 +62,7 @@ public class PartitionReader implements Callable
         mBamReader = new BamReader(config);;
         mSliceRegions = regions;
 
-        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, mConfig.UMIs.Enabled);
+        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled);
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
@@ -70,6 +71,7 @@ public class PartitionReader implements Callable
 
         mCurrentRegion = null;
         mUnmapRegionState = null;
+        mLastReadMinPosition = 0;
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
@@ -102,6 +104,7 @@ public class PartitionReader implements Callable
     {
         mCurrentRegion = region;
         mConsensusReads.setChromosomeLength(mConfig.RefGenome.getChromosomeLength(region.Chromosome));
+        mLastReadMinPosition = 0;
 
         perfCountersStart();
 
@@ -169,7 +172,7 @@ public class PartitionReader implements Callable
 
         if(mConfig.UnmapRegions.enabled())
         {
-            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+            boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
             if(read.getReadUnmappedFlag())
             {
@@ -182,6 +185,12 @@ public class PartitionReader implements Callable
                     ++mStats.Unmapped;
                     return;
                 }
+            }
+
+            if(readUnmapped)
+            {
+                // TODO: handle otherwise - write to unsorted BAM either
+                return;
             }
         }
 
@@ -219,13 +228,21 @@ public class PartitionReader implements Callable
         mPcProcessDuplicates.resume();
 
         int readCount = fragmentCoordReads.totalReadCount();
-        int minProcessedReadsPosition = fragmentCoordReads.minReadPositionStart();
+        int minPoppedReadsPosition = fragmentCoordReads.minReadPositionStart();
         int currentPosition = mReadCache.currentReadMinPosition();
+
+        if(mLastReadMinPosition > 0 && minPoppedReadsPosition < mLastReadMinPosition)
+        {
+            RD_LOGGER.warn("position({}:{})) processing earlier popped read min start({}) vs last({})",
+                    mCurrentRegion.Chromosome, currentPosition, minPoppedReadsPosition, mLastReadMinPosition);
+        }
+
+        mLastReadMinPosition = minPoppedReadsPosition;
 
         if(readCount > LOG_PERF_FRAG_COUNT)
         {
             RD_LOGGER.debug("position({}:{}-{}) processing {} frag-coord read groups with {} reads",
-                    mCurrentRegion.Chromosome, minProcessedReadsPosition, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
+                    mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
         }
 
         boolean logDetails = mConfig.PerfDebug && readCount > LOG_PERF_FRAG_COUNT;
@@ -239,7 +256,7 @@ public class PartitionReader implements Callable
             double timeTakenSec = secondsSinceNow(startTimeMs);
 
             RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
-                    mCurrentRegion.Chromosome, minProcessedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
+                    mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
                     fragmentCoordReads.DuplicateGroups.size(),  fragmentCoordReads.duplicateGroupReadCount(),
                     format("%.1fs", timeTakenSec));
         }
@@ -255,7 +272,7 @@ public class PartitionReader implements Callable
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
 
-        mBamWriter.setBoundaryPosition(minProcessedReadsPosition, true);
+        mBamWriter.setBoundaryPosition(minPoppedReadsPosition, true);
 
         mPcProcessDuplicates.pause();
     }

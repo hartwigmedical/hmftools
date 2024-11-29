@@ -30,8 +30,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_PARTITION_SIZE;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;

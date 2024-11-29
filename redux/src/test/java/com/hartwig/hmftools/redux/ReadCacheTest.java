@@ -19,7 +19,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadCacheTest
 {
-    private static final ReadCache mReadCache = new ReadCache(100, false);
+    private static final ReadCache mReadCache = new ReadCache(100, 100,false);
 
     @Test
     public void testBasics()

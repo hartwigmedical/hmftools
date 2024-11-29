@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
-import static com.hartwig.hmftools.redux.consensus.TemplateReadData.selectTemplateRead;
+import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import static org.junit.Assert.assertEquals;

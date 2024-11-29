@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class FragmentUtilsTest
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
-        assertEquals("1_100_1_299_R", fragmentCoords.Key);
+        assertEquals("L_1_100_1_299_R", fragmentCoords.Key);
 
         flipFirstInPair(read);
 
@@ -63,7 +64,7 @@ public class FragmentUtilsTest
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertFalse(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
-        assertEquals("1_100_1_299_R", fragmentCoords.Key);
+        assertEquals("U_1_100_1_299_R", fragmentCoords.Key);
 
         // reverse orientation fragment with soft-clips at both ends
         read = createSamRecord(
@@ -77,7 +78,7 @@ public class FragmentUtilsTest
         assertEquals(FORWARD, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
-        assertEquals("1_199_R_1_390", fragmentCoords.Key);
+        assertEquals("L_1_199_R_1_390", fragmentCoords.Key);
 
         // using supplementary data to get primary coords
         SupplementaryReadData suppAlignment = new SupplementaryReadData(
@@ -88,14 +89,16 @@ public class FragmentUtilsTest
                 CHR_1, 200, false, true, suppAlignment, true, TEST_READ_CIGAR);
 
         fragmentCoords = FragmentCoords.fromRead(read);
-        assertTrue(fragmentCoords.SupplementarySourced);
+        assertNotNull(fragmentCoords.SuppReadInfo);
+        assertEquals(1000, fragmentCoords.SuppReadInfo.UnclippedPosition);
+        assertEquals(FORWARD, fragmentCoords.SuppReadInfo.Orient);
         assertEquals(100, fragmentCoords.PositionLower);
         assertEquals(299, fragmentCoords.PositionUpper);
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertEquals(REVERSE, fragmentCoords.OrientUpper);
         assertTrue(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
-        assertEquals("1_100_1_299_R", fragmentCoords.Key);
+        assertEquals("L_1_100_1_299_R", fragmentCoords.Key);
 
         // test again with an unmapped mate
         read = createSamRecord(

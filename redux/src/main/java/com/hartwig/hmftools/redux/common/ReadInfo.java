@@ -42,7 +42,7 @@ public class ReadInfo
 
     public String toString()
     {
-        return String.format("reads(%s:%d %s) status(%s) coords(%s)",
+        return String.format("read(%s:%d %s) status(%s) coords(%s)",
                 mRead.getReferenceName(), mRead.getAlignmentStart(), id(), mStatus, mCoordinates);
     }
 

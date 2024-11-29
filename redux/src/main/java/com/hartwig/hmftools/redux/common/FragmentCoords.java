@@ -14,8 +14,6 @@ import javax.annotation.Nullable;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
-import org.checkerframework.checker.units.qual.K;
-
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentCoords implements Comparable<FragmentCoords>
@@ -26,17 +24,20 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     public final int PositionUpper;
     public final Orientation OrientLower;
     public final Orientation OrientUpper;
-    public final boolean ReadIsLower; // the read which created these coordinates
-    public final boolean SupplementarySourced;
-    public final boolean UnmappedSourced;
     public final Orientation FragmentOrient; // forward = F1R2, reverse is F2R1 - relates to collapsing and dual-strand classification
+
+    // info about the read used to create these coordinates
+    public final boolean ReadIsLower; // read set the power fragment position
+    public final SupplementaryReadInfo SuppReadInfo; // set if sourced from a supplementary read
+    public final boolean UnmappedSourced;
+
     public final String Key;
     public final String KeyOriented; // includes fragment orientation
 
     public FragmentCoords(
             final String chromsomeLower, final String chromsomeUpper, final int positionLower, final int positionUpper,
             final Orientation orientLower, final Orientation orientUpper, final Orientation fragmentOrientation,
-            boolean readIsLower, boolean isSupplementary, boolean isUnmapped, boolean keyByFragmentOrientation)
+            boolean readIsLower, final SupplementaryReadInfo suppReadInfo, boolean isUnmapped, boolean keyByFragmentOrientation)
     {
         ChromsomeLower = chromsomeLower;
         ChromsomeUpper = chromsomeUpper;
@@ -45,32 +46,46 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         OrientLower = orientLower;
         OrientUpper = orientUpper;
         FragmentOrient = fragmentOrientation;
+
         ReadIsLower = readIsLower;
-        SupplementarySourced = isSupplementary;
+        SuppReadInfo = suppReadInfo;
         UnmappedSourced = isUnmapped;
 
         String coordinateLower = formCoordinate(ChromsomeLower, positionLower, orientLower.isForward());
 
         if(positionUpper == NO_POSITION)
         {
-            if(isUnmapped)
-                Key = format("%s_U", coordinateLower);
-            else
-                Key = format("%s", coordinateLower);
-
+            Key = isUnmapped ? format("%s_U", coordinateLower) : format("%s", coordinateLower);
             KeyOriented = Key;
         }
         else
         {
+            char lowerUpperChar = ReadIsLower ? 'L' : 'U';
             String coordinateUpper = formCoordinate(ChromsomeUpper, positionUpper, orientUpper.isForward());
 
-            Key = format("%s_%s", coordinateLower, coordinateUpper);
+            Key = format("%c_%s_%s", lowerUpperChar, coordinateLower, coordinateUpper);
             KeyOriented = (keyByFragmentOrientation && FragmentOrient.isReverse()) ? format("%s_N", Key) : Key;
         }
     }
 
     public boolean isSingleRead() { return PositionUpper == NO_POSITION; }
     public boolean forwardFragment() { return FragmentOrient.isForward(); }
+
+    public int readPosition()
+    {
+        if(SuppReadInfo != null)
+            return SuppReadInfo.UnclippedPosition;
+        else
+            return ReadIsLower || UnmappedSourced ? PositionLower : PositionUpper;
+    }
+
+    public Orientation readOrientation()
+    {
+        if(SuppReadInfo != null)
+            return SuppReadInfo.Orient;
+        else
+            return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
+    }
 
     public static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
@@ -103,14 +118,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             matePosition = getFivePrimeUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateOrient.isForward());
         }
 
-        if(isSupplementary)
-        {
-            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
-            readChromosome = suppData.Chromosome;
-            readOrient = Orientation.fromChar(suppData.Strand);
-            readPosition = getFivePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
-        }
-        else if(!isPaired || !isUnmapped)
+        SupplementaryReadInfo suppReadInfo = null;
+
+        if(!isPaired || !isUnmapped)
         {
             readChromosome = read.getReferenceName();
             readOrient = read.getReadNegativeStrandFlag() ? REVERSE : FORWARD;
@@ -118,6 +128,18 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             readPosition = read.getCigar() != null ?
                     getFivePrimeUnclippedPosition(read) :
                     getFivePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
+
+            if(isSupplementary)
+            {
+                // use the primaries coordinates for the fragment but retain the read's info for use in the read cache
+                suppReadInfo = new SupplementaryReadInfo(readPosition, readOrient);
+
+                SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+
+                readChromosome = suppData.Chromosome;
+                readOrient = Orientation.fromChar(suppData.Strand);
+                readPosition = getFivePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
+            }
         }
         else
         {
@@ -135,7 +157,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
 
             return new FragmentCoords(
                     readChromosome, NO_CHROMOSOME_NAME, readPosition, NO_POSITION, readOrient, readOrient, FORWARD,
-                    readIsLower, isSupplementary, isUnmapped, false);
+                    readIsLower, suppReadInfo, isUnmapped, false);
         }
 
         if(readChromosome.equals(mateChromosome))
@@ -153,13 +175,13 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         {
             return new FragmentCoords(
                     readChromosome, mateChromosome, readPosition, matePosition, readOrient, mateOrient, fragmentOrientation,
-                    readIsLower, isSupplementary, isUnmapped, useFragmentOrientation);
+                    readIsLower, suppReadInfo, isUnmapped, useFragmentOrientation);
         }
         else
         {
             return new FragmentCoords(
                     mateChromosome, readChromosome, matePosition, readPosition, mateOrient, readOrient, fragmentOrientation,
-                    readIsLower, isSupplementary, isUnmapped, useFragmentOrientation);
+                    readIsLower, suppReadInfo, isUnmapped, useFragmentOrientation);
         }
     }
 
