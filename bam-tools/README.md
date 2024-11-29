@@ -127,6 +127,27 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.tofastq.BamToFastq \
 | log_level        | No        | WARN, INFO, DEBUG or TRACE                                                     |
 | threads          | No        | Multi-thread count, default 1                                                  |
 
+## AltContigRemapper
+
+Remaps HLA alt contig records using a supplied reference genome. 
+
+### Usage
+
+```
+java -cp bam-tools.jar com.hartwig.hmftools.bamtools.remapper.AltContigRemapper \
+   -orig_bam_file sample_with_hla_alt_contigs.bam \
+   -ref_genome ref_genome.fasta \
+   -output_file remapped.bam
+```
+
+### Configuration
+
+| Filter           | Required? | Description                                                       |
+|------------------|-----------|-------------------------------------------------------------------|
+| orig_bam_file    | Yes       | input BAM / CRAM file                                             |
+| ref_genome       | Yes       | Reference genome file, used to remap alt contigs.                 |
+| output_file      | Yes       | File into which the records (remapped and unaltered) are written. |
+
 
 ## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.0)
