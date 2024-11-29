@@ -29,7 +29,7 @@ public class BamWriterNoSync extends BamWriter
         {
             mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
 
-            if(config.PerfDebug)
+            if(config.perfDebug())
                 mSortedBamWriter.togglePerfDebug();
 
             mSharedUnsortedWriter = sharedUnsortedWriter;

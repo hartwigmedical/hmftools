@@ -28,6 +28,7 @@ public class ReadCache
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
+
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
     private final List<ReadPositionGroup> mPositionGroups;
@@ -55,7 +56,7 @@ public class ReadCache
         mCurrentReadMinPosition = 0;
         mCurrentChromosome = "";
         mLastPopPositionCheck = 0;
-
+        mLastCacheReadCount = 0;
         mCheckSizeReadCount = 0;
     }
 
@@ -327,6 +328,16 @@ public class ReadCache
     public int cachedReadCount() { return mPositionGroups.stream().mapToInt(x -> x.readCount()).sum(); }
     public int cachedFragCoordGroups() { return mPositionGroups.stream().mapToInt(x -> x.FragCoordsMap.size()).sum(); }
     public int cachedReadGroups() { return mPositionGroups.size(); }
+
+    public void clear()
+    {
+        mPositionGroups.clear();
+        mCurrentChromosome = "";
+        mCurrentReadMinPosition = 0;
+        mLastPopPositionCheck = 0;
+        mLastCacheReadCount = 0;
+        mCheckSizeReadCount = 0;
+    }
 
     /*
     private int mLastPopReadMinPosition = 0;

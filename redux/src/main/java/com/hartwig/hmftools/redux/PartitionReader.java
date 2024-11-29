@@ -46,13 +46,15 @@ public class PartitionReader implements Callable
     private final List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
     private int mLastWriteLowerPosition;
-
     private UnmapRegionState mUnmapRegionState;
-
-    private final boolean mLogReadIds;
     private final Statistics mStats;
+
+    // debug
+    private final boolean mLogReadIds;
     private final PerformanceCounter mPcTotal;
     private final PerformanceCounter mPcProcessDuplicates;
+    private int mNextLogReadCount;
+    private int mProcessedReads;
 
     public PartitionReader(
             final ReduxConfig config, final List<ChrBaseRegion> regions, final BamWriter bamWriter)
@@ -73,6 +75,8 @@ public class PartitionReader implements Callable
         mUnmapRegionState = null;
         mLastWriteLowerPosition = 0;
 
+        mProcessedReads = 0;
+        mNextLogReadCount = LOG_READ_COUNT;
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
         mPcProcessDuplicates = new PerformanceCounter("ProcessDuplicates");
@@ -131,13 +135,28 @@ public class PartitionReader implements Callable
 
         mBamWriter.onRegionComplete();
 
+        RD_LOGGER.debug("region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
+
         perfCountersStop();
     }
+
+    private static final int LOG_READ_COUNT = 1000000;
 
     private void processSamRecord(final SAMRecord read)
     {
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
+
+        ++mProcessedReads;
+
+        if(mProcessedReads >= mNextLogReadCount)
+        {
+            RD_LOGGER.debug("region({}) position({}) processed {} reads, cache(coords={} reads={})",
+                    mCurrentRegion, read.getAlignmentStart(), mProcessedReads,
+                    mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
+
+            mNextLogReadCount += LOG_READ_COUNT;
+        }
 
         if(mConfig.JitterMsiOnly)
         {
@@ -252,7 +271,7 @@ public class PartitionReader implements Callable
                     mCurrentRegion.Chromosome, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
         }
 
-        boolean logDetails = mConfig.PerfDebug && readCount > LOG_PERF_FRAG_COUNT;
+        boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
@@ -262,10 +281,13 @@ public class PartitionReader implements Callable
         {
             double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
-                    mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
-                    fragmentCoordReads.DuplicateGroups.size(),  fragmentCoordReads.duplicateGroupReadCount(),
-                    format("%.1fs", timeTakenSec));
+            if(timeTakenSec > mConfig.PerfDebugTime)
+            {
+                RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
+                        mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
+                        fragmentCoordReads.DuplicateGroups.size(), fragmentCoordReads.duplicateGroupReadCount(),
+                        format("%.1fs", timeTakenSec));
+            }
         }
 
         // write single fragments and duplicate groups
@@ -304,7 +326,7 @@ public class PartitionReader implements Callable
 
     private void perfCountersStart()
     {
-        if(mConfig.PerfDebug)
+        if(mConfig.perfDebug())
             mPcTotal.start(format("%s", mCurrentRegion));
         else
             mPcTotal.start();
