@@ -45,7 +45,7 @@ public class PartitionReader implements Callable
 
     private final List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
-    private int mLastReadMinPosition;
+    private int mLastWriteLowerPosition;
 
     private UnmapRegionState mUnmapRegionState;
 
@@ -71,7 +71,7 @@ public class PartitionReader implements Callable
 
         mCurrentRegion = null;
         mUnmapRegionState = null;
-        mLastReadMinPosition = 0;
+        mLastWriteLowerPosition = 0;
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
@@ -104,7 +104,7 @@ public class PartitionReader implements Callable
     {
         mCurrentRegion = region;
         mConsensusReads.setChromosomeLength(mConfig.RefGenome.getChromosomeLength(region.Chromosome));
-        mLastReadMinPosition = 0;
+        mLastWriteLowerPosition = 0;
 
         perfCountersStart();
 
@@ -228,21 +228,28 @@ public class PartitionReader implements Callable
         mPcProcessDuplicates.resume();
 
         int readCount = fragmentCoordReads.totalReadCount();
-        int minPoppedReadsPosition = fragmentCoordReads.minReadPositionStart();
-        int currentPosition = mReadCache.currentReadMinPosition();
 
-        if(mLastReadMinPosition > 0 && minPoppedReadsPosition < mLastReadMinPosition)
+        int minCachedReadPosition = mReadCache.minCachedReadStart();
+        int currentPosition = mReadCache.currentReadMinPosition();
+        int minPoppedReadsPosition = fragmentCoordReads.minReadPositionStart();
+        int readFlushPosition = minCachedReadPosition > 0 ? minCachedReadPosition - 1 : minPoppedReadsPosition - 1;
+
+        if(mLastWriteLowerPosition > 0 && minPoppedReadsPosition < mLastWriteLowerPosition) // mConfig.RunChecks
         {
-            RD_LOGGER.warn("position({}:{})) processing earlier popped read min start({}) vs last({})",
-                    mCurrentRegion.Chromosome, currentPosition, minPoppedReadsPosition, mLastReadMinPosition);
+            RD_LOGGER.warn("position({}:{})) processing earlier popped read min start({}) vs last({}) minCachedPos({})",
+                    mCurrentRegion.Chromosome, currentPosition, minPoppedReadsPosition, mLastWriteLowerPosition,
+                    minCachedReadPosition);
+
+            // find read and report details about why it may not have been popped previously
+            // mReadCache.logNonPoppedReads(fragmentCoordReads, mLastWriteLowerPosition);
         }
 
-        mLastReadMinPosition = minPoppedReadsPosition;
+        mLastWriteLowerPosition = readFlushPosition;
 
         if(readCount > LOG_PERF_FRAG_COUNT)
         {
-            RD_LOGGER.debug("position({}:{}-{}) processing {} frag-coord read groups with {} reads",
-                    mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
+            RD_LOGGER.debug("position({}:{}) processing {} frag-coord read groups with {} reads",
+                    mCurrentRegion.Chromosome, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
         }
 
         boolean logDetails = mConfig.PerfDebug && readCount > LOG_PERF_FRAG_COUNT;
@@ -272,7 +279,8 @@ public class PartitionReader implements Callable
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
 
-        mBamWriter.setBoundaryPosition(minPoppedReadsPosition, true);
+        // mark the lowest read position for reads able to be sorted and written
+        mBamWriter.setBoundaryPosition(readFlushPosition, true);
 
         mPcProcessDuplicates.pause();
     }

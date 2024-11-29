@@ -195,6 +195,11 @@ public class ReadCache
         return new FragmentCoordReads(duplicateGroups, singleReads);
     }
 
+    public int minCachedReadStart()
+    {
+        return mPositionGroups.stream().mapToInt(x -> x.minReadPosition()).min().orElse(-1);
+    }
+
     private ReadPositionGroup getOrCreateGroup(final String chromosome, final FragmentCoords fragmentCoords)
     {
         // find an existing group by the applicable fragment coordination position, otherwise make a new one
@@ -270,6 +275,20 @@ public class ReadCache
 
         public int readCount() { return FragCoordsMap.values().stream().mapToInt(x -> x.size()).sum(); }
 
+        public int minReadPosition()
+        {
+            int minReadPosition = -1;
+
+            for(List<SAMRecord> reads : FragCoordsMap.values())
+            {
+                int minReadPos = reads.stream().mapToInt(x -> x.getAlignmentStart()).min().orElse(-1);
+                if(minReadPosition < 0 || minReadPos < minReadPosition)
+                    minReadPosition = minReadPos;
+            }
+
+            return minReadPosition;
+        }
+
         public String toString()
         {
             return format("range(%s:%d-%d) frags(%d) reads(%d)",
@@ -308,4 +327,49 @@ public class ReadCache
     public int cachedReadCount() { return mPositionGroups.stream().mapToInt(x -> x.readCount()).sum(); }
     public int cachedFragCoordGroups() { return mPositionGroups.stream().mapToInt(x -> x.FragCoordsMap.size()).sum(); }
     public int cachedReadGroups() { return mPositionGroups.size(); }
+
+    /*
+    private int mLastPopReadMinPosition = 0;
+
+    public void updateLastPopMinReadPosition() { mLastPopReadMinPosition = mCurrentReadMinPosition; }
+
+    public void logNonPoppedReads(final FragmentCoordReads fragmentCoordReads, final int lastReadMinPosition)
+    {
+        int lastPopFragCoordLowerPosition = mLastPopReadMinPosition - mMaxSoftClipLength;
+        int lastPopFragCoordUpperPosition = mLastPopReadMinPosition - 1;
+
+        if(fragmentCoordReads.DuplicateGroups != null)
+        {
+            for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
+            {
+                for(SAMRecord read : duplicateGroup.reads())
+                {
+                    checkReadVsPoppingConditions(
+                            read, duplicateGroup.fragmentCoordinates(),
+                            lastReadMinPosition, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition);
+                }
+            }
+        }
+
+        for(ReadInfo readInfo : fragmentCoordReads.SingleReads)
+        {
+            checkReadVsPoppingConditions(
+                    readInfo.read(), readInfo.coordinates(),
+                    lastReadMinPosition, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition);
+        }
+    }
+
+    private void checkReadVsPoppingConditions(
+            final SAMRecord read, final FragmentCoords fragCoords, int lastReadMinPosition,
+            int lastPopFragCoordLowerPosition, int lastPopFragCoordUpperPosition)
+    {
+        if(read.getAlignmentStart() >= lastReadMinPosition)
+            return;
+
+        RD_LOGGER.warn("read({} {}:{}) before lastReadMinPosition({}) fragCoords({}) vs lastPop(lower={} upper={}) fragRead({} {}:{})",
+                read.getReadName(), read.getReferenceName(), read.getAlignmentStart(),
+                lastReadMinPosition, fragCoords, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition,
+                fragCoords.ReadIsLower ? "lower" : "upper", fragCoords.readPosition(), fragCoords.readOrientation().asByte());
+    }
+    */
 }

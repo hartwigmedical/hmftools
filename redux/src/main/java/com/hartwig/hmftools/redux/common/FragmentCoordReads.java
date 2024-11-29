@@ -45,7 +45,6 @@ public class FragmentCoordReads
 
     public String toString()
     {
-        return format("duplicateGroups(%d) singles(%d) totalReads(%d)",
-                DuplicateGroups.size(), SingleReads.size(), totalReadCount());
+        return format("duplicateGroups(%d) singles(%d) totalReads(%d)",     DuplicateGroups.size(), SingleReads.size(), totalReadCount());
     }
 }
