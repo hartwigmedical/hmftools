@@ -453,7 +453,7 @@ VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 Know sources of errors
-- Poor extension from a single mispleced read => can lead to either a FP or prevent further assembly extension
+- Poor extension from a single misplaced read => can lead to either a FP or prevent further assembly extension
 - Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
 - Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
 - MSI Jitter of germline INDELS just under 32 bases in length may be intepreted as a somatic SV of 32+ bases
