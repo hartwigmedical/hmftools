@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
@@ -7,6 +9,7 @@ import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOp
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -46,6 +49,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -364,5 +369,81 @@ public class ReduxConfig
         LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+    }
+
+    public static List<List<ChrBaseRegion>> splitRegionsByThreads(
+            final SpecificRegions specificRegions, final int threadCount, final RefGenomeVersion refGenomeVersion)
+    {
+        List<List<ChrBaseRegion>> partitionRegions = Lists.newArrayList();
+
+        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
+
+        if(!specificRegions.Regions.isEmpty())
+        {
+            inputRegions.addAll(specificRegions.Regions);
+        }
+        else
+        {
+            RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(refGenomeVersion);
+
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
+
+                if(specificRegions.excludeChromosome(chromosomeStr))
+                    continue;
+
+                inputRegions.add(new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome)));
+            }
+        }
+
+        long totalLength = inputRegions.stream().mapToLong(x -> x.baseLength()).sum();
+        long intervalLength = (int)ceil(totalLength / (double)threadCount);
+
+        int chrEndBuffer = (int)round(intervalLength * 0.05);
+        long currentLength = 0;
+        int nextRegionStart = 1;
+        List<ChrBaseRegion> currentRegions = Lists.newArrayList();
+        partitionRegions.add(currentRegions);
+
+        for(ChrBaseRegion inputRegion : inputRegions)
+        {
+            nextRegionStart = 1;
+            int chromosomeLength = inputRegion.baseLength();
+            int remainingChromosomeLength = chromosomeLength;
+
+            while(currentLength + remainingChromosomeLength >= intervalLength)
+            {
+                int remainingIntervalLength = (int)(intervalLength - currentLength);
+                int regionEnd = nextRegionStart + remainingIntervalLength - 1;
+
+                if(chromosomeLength - regionEnd < chrEndBuffer)
+                {
+                    regionEnd = chromosomeLength;
+                    remainingChromosomeLength = 0;
+                }
+
+                currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, regionEnd));
+
+                currentRegions = Lists.newArrayList();
+                partitionRegions.add(currentRegions);
+                currentLength = 0;
+
+                if(remainingChromosomeLength == 0)
+                    break;
+
+                nextRegionStart = regionEnd + 1;
+                remainingChromosomeLength = chromosomeLength - nextRegionStart + 1;
+            }
+
+            if(remainingChromosomeLength <= 0)
+                continue;
+
+            currentLength += remainingChromosomeLength;
+
+            currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, chromosomeLength));
+        }
+
+        return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
     }
 }

@@ -13,6 +13,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class BamWriterNoSync extends BamWriter
 {
+    // writes reads in coordinate order using intelligent caching and without synchronised write calls
     private final SortedBamWriter mSortedBamWriter;
     private final BamWriter mSharedUnsortedWriter;
     private final boolean mWriteSorted;

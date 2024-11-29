@@ -46,10 +46,10 @@ public class UmiDuplicatesTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter);
+        mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter, mWriter);
 
         ReduxConfig duplexUmiConfig = new ReduxConfig(mRefGenome, true, true, false);
-        mPartitionReaderDuplexUMIs = new PartitionReader(duplexUmiConfig, null, mWriter);
+        mPartitionReaderDuplexUMIs = new PartitionReader(duplexUmiConfig, null, mWriter, mWriter);
     }
 
     @Test

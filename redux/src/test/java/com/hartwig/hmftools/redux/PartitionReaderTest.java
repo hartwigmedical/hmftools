@@ -47,7 +47,7 @@ public class PartitionReaderTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReader = new PartitionReader(umiConfig, null, mWriter);
+        mPartitionReader = new PartitionReader(umiConfig, null, mWriter, mWriter);
     }
 
     @Test

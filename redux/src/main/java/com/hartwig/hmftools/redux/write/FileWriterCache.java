@@ -70,13 +70,7 @@ public class FileWriterCache
         return createBamWriter(fileId, false, true);
     }
 
-    public BamWriter getUnsortedBamWriter()
-    {
-        if(!mConfig.MultiBam)
-            return mSharedUnsortedWriter;
-
-        return mBamWriters.get(0);
-    }
+    public BamWriter getUnsortedBamWriter() { return mSharedUnsortedWriter; }
 
     public long totalWrittenReads()
     {
@@ -100,12 +94,12 @@ public class FileWriterCache
 
             if(multiId == null)
             {
-                RD_LOGGER.debug("writing BAM file: {}", filenamePart(filename));
+                RD_LOGGER.trace("writing BAM file: {}", filenamePart(filename));
 
             }
             else
             {
-                RD_LOGGER.debug("writing temp BAM file: {}", filenamePart(filename));
+                RD_LOGGER.trace("writing temp BAM file: {}", filenamePart(filename));
             }
 
             // no option to use library-based sorting
