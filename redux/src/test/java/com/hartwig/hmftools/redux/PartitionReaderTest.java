@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 
 import static org.junit.Assert.assertEquals;
@@ -47,7 +48,7 @@ public class PartitionReaderTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReader = new PartitionReader(umiConfig, null, mWriter, mWriter);
+        mPartitionReader = createPartitionRead(umiConfig, mWriter);
     }
 
     @Test

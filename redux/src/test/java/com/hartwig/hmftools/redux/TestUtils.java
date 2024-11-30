@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -51,6 +53,11 @@ public final class TestUtils
     public static ReduxConfig createTestConfig()
     {
         return new ReduxConfig(new MockRefGenome(), false, false, false);
+    }
+
+    public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
+    {
+        return new PartitionReader(config, null, Collections.emptyList(), writer, writer);
     }
 
     public static void setBaseQualities(final SAMRecord read, int value)

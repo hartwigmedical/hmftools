@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 
@@ -46,10 +47,10 @@ public class UmiDuplicatesTest
 
         mWriter = new TestBamWriter(umiConfig);
 
-        mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter, mWriter);
+        mPartitionReaderUMIs = createPartitionRead(umiConfig, mWriter);
 
         ReduxConfig duplexUmiConfig = new ReduxConfig(mRefGenome, true, true, false);
-        mPartitionReaderDuplexUMIs = new PartitionReader(duplexUmiConfig, null, mWriter, mWriter);
+        mPartitionReaderDuplexUMIs = createPartitionRead(duplexUmiConfig, mWriter);
     }
 
     @Test

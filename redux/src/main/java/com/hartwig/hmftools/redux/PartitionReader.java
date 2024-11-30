@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
-import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.common.UnmapRegionState;
@@ -50,6 +49,8 @@ public class PartitionReader implements Callable
     private UnmapRegionState mUnmapRegionState;
     private final Statistics mStats;
 
+    private boolean mDisableUnmapping;
+
     // debug
     private final boolean mLogReadIds;
     private final PerformanceCounter mPcTotal;
@@ -58,12 +59,13 @@ public class PartitionReader implements Callable
     private int mProcessedReads;
 
     public PartitionReader(
-            final ReduxConfig config, final List<ChrBaseRegion> regions, final BamWriter bamWriter, final BamWriter unsortedBamWriter)
+            final ReduxConfig config, final List<ChrBaseRegion> regions, final List<String> inputBams, final BamWriter bamWriter,
+            final BamWriter unsortedBamWriter)
     {
         mConfig = config;
         mBamWriter = bamWriter;
         mUnsortedBamWriter = unsortedBamWriter;
-        mBamReader = new BamReader(config);
+        mBamReader = new BamReader(inputBams, config.RefGenomeFile);
         mSliceRegions = regions;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled);
@@ -76,6 +78,7 @@ public class PartitionReader implements Callable
         mCurrentRegion = null;
         mUnmapRegionState = null;
         mLastWriteLowerPosition = 0;
+        mDisableUnmapping = false;
 
         mProcessedReads = 0;
         mNextLogReadCount = LOG_READ_COUNT;
@@ -90,6 +93,7 @@ public class PartitionReader implements Callable
     }
 
     public Statistics statistics() { return mStats; }
+    public void disableUnmapping() { mDisableUnmapping = true; }
 
     @Override
     public Long call()
@@ -191,25 +195,22 @@ public class PartitionReader implements Callable
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(mConfig.UnmapRegions.enabled())
+        if(!mDisableUnmapping && mConfig.UnmapRegions.enabled())
         {
             boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-            if(read.getReadUnmappedFlag())
+            if(readUnmapped)
             {
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return; // drop unmapped supplementaries and secondaries
 
                 if(SamRecordUtils.mateUnmapped(read))
                 {
-                    mBamWriter.writeRead(new ReadInfo(read, null));
+                    mUnsortedBamWriter.writeRead(read, FragmentStatus.UNSET);
                     ++mStats.Unmapped;
                     return;
                 }
-            }
 
-            if(readUnmapped)
-            {
                 mUnsortedBamWriter.writeRead(read, FragmentStatus.UNSET);
                 return;
             }

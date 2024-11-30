@@ -371,6 +371,25 @@ public class ReduxConfig
         WriteReadBaseLength = 0;
     }
 
+    public static List<ChrBaseRegion> humanChromosomeRegions(final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)
+    {
+        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
+
+        RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(refGenomeVersion);
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
+
+            if(specificRegions.excludeChromosome(chromosomeStr))
+                continue;
+
+            inputRegions.add(new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome)));
+        }
+
+        return inputRegions;
+    }
+
     public static List<List<ChrBaseRegion>> splitRegionsByThreads(
             final SpecificRegions specificRegions, final int threadCount, final RefGenomeVersion refGenomeVersion)
     {
@@ -384,17 +403,7 @@ public class ReduxConfig
         }
         else
         {
-            RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(refGenomeVersion);
-
-            for(HumanChromosome chromosome : HumanChromosome.values())
-            {
-                String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
-
-                if(specificRegions.excludeChromosome(chromosomeStr))
-                    continue;
-
-                inputRegions.add(new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome)));
-            }
+            inputRegions.addAll(humanChromosomeRegions(specificRegions, refGenomeVersion));
         }
 
         long totalLength = inputRegions.stream().mapToLong(x -> x.baseLength()).sum();

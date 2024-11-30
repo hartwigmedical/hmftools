@@ -35,7 +35,7 @@ public abstract class BamWriter
     protected final AtomicLong mConsensusReadCount;
 
     public BamWriter(
-            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,final SAMFileWriter samFileWriter,
+            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
             @Nullable final JitterAnalyser jitterAnalyser)
     {
         mFilename = filename;
@@ -69,8 +69,6 @@ public abstract class BamWriter
         readInfos.forEach(x -> doWriteRead(x, excludeUmis));
     }
 
-    public void writeRead(final ReadInfo readInfo) { doWriteRead(readInfo, true); }
-
     public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
     {
         writeRead(read, fragmentStatus, null);
@@ -84,7 +82,7 @@ public abstract class BamWriter
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
 
-            if(mReadDataWriter.enabled())
+            if(mReadDataWriter != null && mReadDataWriter.enabled())
                 mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
         }
 
