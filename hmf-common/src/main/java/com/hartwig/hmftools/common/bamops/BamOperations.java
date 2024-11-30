@@ -77,7 +77,6 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("merge complete");
         return true;
     }
 

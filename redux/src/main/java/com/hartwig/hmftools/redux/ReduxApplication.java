@@ -6,13 +6,10 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapMateAlignment;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapReadAlignment;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -20,18 +17,14 @@ import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
-
-import htsjdk.samtools.SAMRecord;
+import com.hartwig.hmftools.redux.write.FinalBamProcessor;
 
 public class ReduxApplication
 {
@@ -78,28 +71,36 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
-        consensusReads.setDebugOptions(mConfig.RunChecks);
-
-        long unmappedReads = writeUnmappedReads(fileWriterCache);
-
-        int totalUnwrittenFragments = 0;
-
-        if(totalUnwrittenFragments > 0)
-        {
-            RD_LOGGER.info("wrote {} remaining cached fragments", totalUnwrittenFragments);
-        }
-
-        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
+        // TODO: consider leaving the read TSV writer open so it can write unmapped read info
+        fileWriterCache.close();
 
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
-        combinedStats.ConsensusStats.merge(consensusReads.consensusStats());
+
+        if(mConfig.BamToolPath != null)
+        {
+            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+            // the core routines are complete, it is helpful to do so now
+            System.gc();
+
+            // log interim time
+            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
+
+            FinalBamProcessor finalBamProcessor = new FinalBamProcessor(mConfig, fileWriterCache);
+            if(!finalBamProcessor.run())
+                System.exit(1);
+
+            combinedStats.ConsensusStats.merge(finalBamProcessor.statistics().ConsensusStats);
+        }
+
+        long unmappedReads = 0; // writeUnmappedReads(fileWriterCache);
+
+        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
+
 
         // free up any processing state
         partitionReaders.clear();
 
-        fileWriterCache.close();
 
         if(jitterAnalyser != null)
         {
@@ -111,22 +112,6 @@ public class ReduxApplication
             catch(Exception e)
             {
                 RD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
-                System.exit(1);
-            }
-        }
-
-        if(fileWriterCache.runSortMergeIndex())
-        {
-            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
-            // the core routines are complete, it is helpful to do so now
-            System.gc();
-
-            // log interim time
-            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
-
-            if(!fileWriterCache.sortAndIndexBams())
-            {
-                RD_LOGGER.error("sort-merge-index failed");
                 System.exit(1);
             }
         }
@@ -143,6 +128,7 @@ public class ReduxApplication
                 RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
             }
 
+            /*
             if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
             {
                 long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
@@ -150,6 +136,7 @@ public class ReduxApplication
                 RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
                         combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
             }
+            */
 
             if(mConfig.WriteStats)
             {
@@ -193,67 +180,14 @@ public class ReduxApplication
             RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}}", regions.size(), regionsLength, regionsStr);
 
             BamWriter bamWriter = fileWriterCache.getPartitionBamWriter(String.valueOf(threadIndex++));
-            PartitionReader partitionReader = new PartitionReader(mConfig, regions, bamWriter, fileWriterCache.getUnsortedBamWriter());
+
+            PartitionReader partitionReader = new PartitionReader(
+                    mConfig, regions, mConfig.BamFiles, bamWriter, fileWriterCache.getUnsortedBamWriter());
+
             partitionReaders.add(partitionReader);
         }
 
         return partitionReaders;
-    }
-
-    private long writeUnmappedReads(final FileWriterCache fileWriterCache)
-    {
-        if(mConfig.SpecificChrRegions.hasFilters() || !mConfig.WriteBam)
-            return 0;
-
-        BamWriter bamWriter = fileWriterCache.getUnsortedBamWriter();
-
-        BamReader bamReader = new BamReader(mConfig);
-
-        AtomicLong unmappedCount = new AtomicLong();
-        AtomicLong nonHumanContigCount = new AtomicLong();
-
-        bamReader.queryUnmappedReads((final SAMRecord record) ->
-        {
-            bamWriter.writeRead(record, FragmentStatus.UNSET);
-            unmappedCount.incrementAndGet();
-        });
-
-        // do the same for non-human contigs
-        bamReader.queryNonHumanContigs((final SAMRecord record) ->
-        {
-            processNonHumanContigReads(record, bamWriter);
-            nonHumanContigCount.incrementAndGet();
-        });
-
-        if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
-        {
-            RD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
-        }
-
-        return unmappedCount.get() + nonHumanContigCount.get();
-    }
-
-    private void processNonHumanContigReads(final SAMRecord record, final BamWriter bamWriter)
-    {
-        // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
-        if(record.getReadPairedFlag() && !record.getMateUnmappedFlag() && HumanChromosome.contains(record.getMateReferenceName()))
-        {
-            if(record.getSupplementaryAlignmentFlag())
-                return; // drop as per standard logic
-
-            boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(record);
-
-            // if the human-chromosome mate was unmapped (ie in an unmap region), then this read should also now be unmapped
-            // otherwise it should be unmapped but leave its mate attributes as-is
-            unmapReadAlignment(record, mateUnmapped, mateUnmapped);
-
-            if(mateUnmapped)
-            {
-                unmapMateAlignment(record, false, true);
-            }
-        }
-
-        bamWriter.writeRead(record, FragmentStatus.UNSET);
     }
 
     private void setReadLength()

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
@@ -56,7 +57,7 @@ public class ReduxApplicationTest
         // mWriter = mFileWriterCache.getPartitionBamWriter("1");
         mWriter = new TestBamWriter(config);
 
-        mPartitionReader = new PartitionReader(config, null, mWriter, mWriter);
+        mPartitionReader = createPartitionRead(config, mWriter);
     }
 
     @Test
@@ -148,7 +149,7 @@ public class ReduxApplicationTest
         config.UnmapRegions.addRegion(CHR_1, region1);
         config.UnmapRegions.addRegion(CHR_1, region2);
 
-        PartitionReader partitionReader = new PartitionReader(config, null, mWriter, mWriter);
+        PartitionReader partitionReader = createPartitionRead(config, mWriter);
 
         partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1999));
 

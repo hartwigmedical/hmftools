@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 
@@ -29,10 +30,10 @@ public class BamReader
     private final List<BamFileReader> mActiveBamReaders;
     private final List<BamFileReader> mFinishedBamReaders;
 
-    public BamReader(final ReduxConfig config)
+    public BamReader(final List<String> inputBams, final String refGenomeFile)
     {
-        mInputBams = config.BamFiles;
-        mRefGenomeFile = config.RefGenomeFile;
+        mInputBams = inputBams;
+        mRefGenomeFile = refGenomeFile;
 
         mBamReaders = Lists.newArrayListWithCapacity(mInputBams.size());
         mActiveBamReaders = Lists.newArrayListWithCapacity(mInputBams.size());

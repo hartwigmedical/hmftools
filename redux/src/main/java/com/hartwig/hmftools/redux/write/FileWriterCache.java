@@ -36,6 +36,8 @@ public class FileWriterCache
     private final List<BamWriter> mBamWriters;
     private final BamWriter mSharedUnsortedWriter;
 
+    private String mSortedBamFilename;
+
     private final JitterAnalyser mJitterAnalyser;
 
     private static final String SORTED_ID = "sorted";
@@ -49,6 +51,7 @@ public class FileWriterCache
         mReadDataWriter = new ReadDataWriter(mConfig);
 
         mBamWriters = Lists.newArrayList();
+        mSortedBamFilename = "";
 
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
@@ -71,6 +74,8 @@ public class FileWriterCache
     }
 
     public BamWriter getUnsortedBamWriter() { return mSharedUnsortedWriter; }
+    public ReadDataWriter readDataWriter() { return mReadDataWriter; }
+    public List<BamWriter> bamWriters() { return mBamWriters; }
 
     public long totalWrittenReads()
     {
@@ -144,7 +149,7 @@ public class FileWriterCache
         return filename;
     }
 
-    private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
+    public SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
         SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
@@ -235,6 +240,19 @@ public class FileWriterCache
 
         return true;
     }
+
+    public boolean sortUnsortedBam()
+    {
+        String unsortedBamFilename = mBamWriters.get(0).filename();
+        mSortedBamFilename = unsortedBamFilename.replaceAll(UNSORTED_ID, SORTED_ID);
+
+        if(!BamOperations.sortBam(bamToolName(), bamToolPath(), unsortedBamFilename, mSortedBamFilename, mConfig.Threads))
+            return false;
+
+        return BamOperations.indexBam(bamToolName(), bamToolPath(), mSortedBamFilename, mConfig.Threads);
+    }
+
+    public String sortedBamFilename() { return mSortedBamFilename; }
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
