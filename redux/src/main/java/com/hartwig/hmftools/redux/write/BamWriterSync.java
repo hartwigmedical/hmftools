@@ -33,6 +33,9 @@ public class BamWriterSync extends BamWriter
     @Override
     protected void writeRecord(final SAMRecord read) { writeRecordSync(read); }
 
+    @Override
+    public long unsortedWriteCount() { return mWriteCount; }
+
     public synchronized void writeRecordSync(final SAMRecord read)
     {
         mSamFileWriter.addAlignment(read);

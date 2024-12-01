@@ -26,5 +26,8 @@ public class BamWriterNone extends BamWriter
     protected void writeRecord(final SAMRecord read) {}
 
     @Override
+    public long unsortedWriteCount() { return 0; }
+
+    @Override
     public void close() {}
 }

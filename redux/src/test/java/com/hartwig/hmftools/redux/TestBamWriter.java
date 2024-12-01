@@ -26,7 +26,11 @@ public class TestBamWriter extends BamWriter
         CurrentChromosome = "";
     }
 
+    @Override
     public boolean isSorted() { return false; }
+
+    @Override
+    public long unsortedWriteCount() { return 0; }
 
     public void initialiseRegion(final String chromosome, int startPosition)
     {

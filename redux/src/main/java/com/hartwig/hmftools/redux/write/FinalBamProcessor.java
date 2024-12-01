@@ -39,6 +39,8 @@ public class FinalBamProcessor
     private String mMiscBamFilename;
     private String mCombinedSortedBamFilename;
     private Statistics mStats;
+    private long mUnmappedReadCount;
+    private long mAltContigReadCount;
 
     public FinalBamProcessor(final ReduxConfig config, final FileWriterCache fileWriterCache)
     {
@@ -48,9 +50,13 @@ public class FinalBamProcessor
 
         mMiscBamFilename = "";
         mCombinedSortedBamFilename = "";
+        mUnmappedReadCount = 0;
+        mAltContigReadCount = 0;
     }
 
     public Statistics statistics() { return mStats; }
+    public long unmappedReadCount() { return mUnmappedReadCount; }
+    public long altContigReadCount() { return mAltContigReadCount; }
 
     public boolean run()
     {
@@ -77,12 +83,12 @@ public class FinalBamProcessor
             return false;
 
         String sortedUnmappedBamFilename = mFileWriterCache.sortedBamFilename();
-        mMiscBamFilename = formInterimBamFilename("misc_sorted");
+            mMiscBamFilename = formInterimBamFilename("unmapped_alt_sorted");
 
         SAMFileWriter samFileWriter = mFileWriterCache.initialiseSamFileWriter(mMiscBamFilename, true);
 
         BamWriter bamWriter = new BamWriterNoSync(
-                mMiscBamFilename, mConfig, mFileWriterCache.readDataWriter(), samFileWriter, null, true, null);
+                mMiscBamFilename, mConfig, mFileWriterCache.readDataWriter(), samFileWriter, null, null);
 
         SpecificRegions specificRegions = new SpecificRegions(); // or use the configured ones? mConfig.SpecificChrRegions
         List<ChrBaseRegion> allRegions = humanChromosomeRegions(specificRegions, mConfig.RefGenVersion);
@@ -141,9 +147,12 @@ public class FinalBamProcessor
             unmappedCount.incrementAndGet();
         });
 
+        mUnmappedReadCount = unmappedCount.get();
+        mAltContigReadCount = nonHumanContigCount.get();
+
         if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
         {
-            RD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
+            RD_LOGGER.debug("wrote unmapped({}) altContig({}) reads", unmappedCount, nonHumanContigCount);
         }
     }
 
