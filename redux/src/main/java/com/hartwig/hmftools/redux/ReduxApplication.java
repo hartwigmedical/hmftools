@@ -71,37 +71,6 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
-        // TODO: consider leaving the read TSV writer open so it can write unmapped read info
-        fileWriterCache.close();
-
-        Statistics combinedStats = new Statistics();
-        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
-
-        if(mConfig.BamToolPath != null)
-        {
-            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
-            // the core routines are complete, it is helpful to do so now
-            System.gc();
-
-            // log interim time
-            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
-
-            FinalBamProcessor finalBamProcessor = new FinalBamProcessor(mConfig, fileWriterCache);
-            if(!finalBamProcessor.run())
-                System.exit(1);
-
-            combinedStats.ConsensusStats.merge(finalBamProcessor.statistics().ConsensusStats);
-        }
-
-        long unmappedReads = 0; // writeUnmappedReads(fileWriterCache);
-
-        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
-
-
-        // free up any processing state
-        partitionReaders.clear();
-
-
         if(jitterAnalyser != null)
         {
             try
@@ -116,41 +85,85 @@ public class ReduxApplication
             }
         }
 
-        if(!mConfig.JitterMsiOnly)
+        if(mConfig.JitterMsiOnly)
         {
-            combinedStats.logStats();
+            RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
+            return;
+        }
 
-            long totalWrittenReads = fileWriterCache.totalWrittenReads();
-            long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
+        fileWriterCache.closeBams();
 
-            if(mConfig.UnmapRegions.enabled())
+        Statistics combinedStats = new Statistics();
+        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
+
+        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
+
+        // free up any processing state
+        partitionReaders.clear();
+
+        long sortedBamUnsortedWriteCount = fileWriterCache.sortedBamUnsortedWriteCount();
+
+        if(sortedBamUnsortedWriteCount > 0)
+        {
+            RD_LOGGER.warn("unsorted BAM write count({}) via sorted BAM writers", sortedBamUnsortedWriteCount);
+        }
+
+        long mappedReadsProcessed = combinedStats.TotalReads;
+        long unmappedPlusAltContig = 0;
+
+        if(mConfig.BamToolPath != null)
+        {
+            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+            // the core routines are complete, it is helpful to do so now
+            System.gc();
+
+            // log interim time
+            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
+
+            FinalBamProcessor finalBamProcessor = new FinalBamProcessor(mConfig, fileWriterCache);
+            if(!finalBamProcessor.run())
+                System.exit(1);
+
+            unmappedPlusAltContig = finalBamProcessor.unmappedReadCount() + finalBamProcessor.altContigReadCount();
+            combinedStats.ConsensusStats.merge(finalBamProcessor.statistics().ConsensusStats);
+        }
+
+        fileWriterCache.close();
+
+        combinedStats.logStats();
+
+        if(mConfig.UnmapRegions.enabled())
+        {
+            RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+        }
+
+        // check total reads read, processed, dropped and written
+        long unmappedDropped = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
+        long expectedWritten = mappedReadsProcessed + unmappedPlusAltContig - unmappedDropped;
+
+        long mappedWritten = fileWriterCache.totalWrittenReads();
+        long totalWritten = mappedWritten + unmappedPlusAltContig;
+
+        if(expectedWritten != totalWritten)
+        {
+            long difference = expectedWritten - totalWritten;
+
+            RD_LOGGER.warn("reads processed(standard={} unmappedAlts={} dropped={}) vs written(mapped={} unmappedAlts={}) mismatch({})",
+                    mappedReadsProcessed, unmappedPlusAltContig, unmappedDropped, mappedWritten, unmappedPlusAltContig, difference);
+        }
+
+        if(mConfig.WriteStats)
+        {
+            combinedStats.writeDuplicateStats(mConfig);
+
+            if(mConfig.UMIs.Enabled)
             {
-                RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
-            }
+                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
 
-            /*
-            if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
-            {
-                long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
-
-                RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
-                        combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
-            }
-            */
-
-            if(mConfig.WriteStats)
-            {
-                combinedStats.writeDuplicateStats(mConfig);
-
-                if(mConfig.UMIs.Enabled)
+                if(mConfig.UMIs.BaseStats)
                 {
-                    combinedStats.UmiStats.writePositionFragmentsData(mConfig);
-
-                    if(mConfig.UMIs.BaseStats)
-                    {
-                        combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
-                        combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
-                    }
+                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
         }

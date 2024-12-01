@@ -26,7 +26,7 @@ public class Statistics
 
     // technical metrics
     public long Unmapped; // fully, ie primary and mate
-    public long PairedAltChromosome; // paired with a non-human chromosome
+    public long UnmappedDropped; // secondaries and supplementaries dropped after unmapped
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -40,7 +40,6 @@ public class Statistics
         DuplicateReads = 0;
         DuplicateGroups = 0;
         Unmapped = 0;
-        PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
@@ -52,7 +51,6 @@ public class Statistics
         DuplicateReads += other.DuplicateReads;
         DuplicateGroups += other.DuplicateGroups;
         Unmapped += other.Unmapped;
-        PairedAltChromosome += other.PairedAltChromosome;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -105,15 +103,12 @@ public class Statistics
 
     public void logStats()
     {
-        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({}) pairedAltChr({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, PairedAltChromosome);
+        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({} supp2ndDropped={})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, UnmappedDropped);
 
         if(RD_LOGGER.isDebugEnabled())
         {
             RD_LOGGER.info("consensus stats: {}", ConsensusStats);
-
-            RD_LOGGER.debug("stats: reads(unmapped={} pairedAltChr={}))",
-                    Unmapped, PairedAltChromosome);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);

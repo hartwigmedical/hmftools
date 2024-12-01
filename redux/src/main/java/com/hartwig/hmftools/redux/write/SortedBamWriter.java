@@ -138,9 +138,6 @@ public class SortedBamWriter
 
     public boolean canWriteRecord(final SAMRecord read)
     {
-        if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
-            return false;
-
         if(!mCurrentChromosome.equals(read.getReferenceName()))
             return false;
 
@@ -150,20 +147,10 @@ public class SortedBamWriter
         return true;
     }
 
-    private static final int LOG_COUNT = 1000000;
-
     public void addRecord(final SAMRecord read)
     {
         mRecords.add(new ReadOrAlignmentStart(mReadCount++, read));
         mMaxCached = max(mMaxCached, mRecords.size());
-
-        /*
-        if(mPerfDebug && (mReadCount % LOG_COUNT) == 0)
-        {
-            RD_LOGGER.debug("sorted read cache chr({}:{}) records({}) avgWrite({})",
-                    mCurrentChromosome, mLastWrittenPosition, mRecords.size(), avgWriteCount());
-        }
-        */
 
         if(mMinCachedPosition == 0)
             mMinCachedPosition = read.getAlignmentStart();

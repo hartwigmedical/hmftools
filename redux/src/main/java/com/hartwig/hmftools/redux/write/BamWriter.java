@@ -97,6 +97,7 @@ public abstract class BamWriter
     }
 
     protected abstract void writeRecord(final SAMRecord read);
+    public abstract long unsortedWriteCount();
 
     protected final void processRecord(final SAMRecord read)
     {
