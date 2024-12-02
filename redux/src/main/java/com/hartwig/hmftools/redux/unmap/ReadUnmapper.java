@@ -574,6 +574,9 @@ public class ReadUnmapper
             if(region.start() > readEnd)
                 break;
 
+            if(!overlapsRegion(region, readStart, readEnd))
+                continue;
+
             if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
                 continue;
 
@@ -596,6 +599,21 @@ public class ReadUnmapper
         }
 
         return matchType;
+    }
+
+    public static boolean overlapsRegion(final HighDepthRegion region, int readStart, int readEnd)
+    {
+        if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
+            return false;
+
+        if(positionsWithin(readStart, readEnd, region.start(), region.end()))
+            return true;
+
+        int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+        int readLength = readEnd - readStart + 1;
+        int nonOverlappingBases = readLength - overlapBases;
+
+        return nonOverlappingBases < UNMAP_MAX_NON_OVERLAPPING_BASES;
     }
 
     private static boolean isChimericRead(final SAMRecord record, boolean checkForMate)
