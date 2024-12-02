@@ -210,7 +210,7 @@ public class SpecificRegions
                 throw new ParseException(String.format("invalid specific region: %s", regionStr));
             }
 
-            if(region == null || !region.isValid())
+            if(region == null || !region.isValid(false))
                 throw new ParseException(String.format("invalid specific region: %s", region));
 
             regions.add(region);
