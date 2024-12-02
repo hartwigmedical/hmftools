@@ -462,7 +462,7 @@ hard_min_tumor_qual | 50            | `totalQuality`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
-filtered_max_normal_alt_support | 3             | Normal `AD[1]`
+filtered_max_germline_alt_support | 3             | Normal `AD[1]`
 
 Note that hotspots are never hard-filtered.
 
