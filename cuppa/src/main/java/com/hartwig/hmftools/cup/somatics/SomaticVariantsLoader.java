@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
@@ -33,8 +32,6 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public class SomaticVariantsLoader
 {
-    public static final String SOMATIC_VARIANTS_DIR = "somatic_variants_dir";
-
     public static List<SomaticVariant> loadFromConfig(
             final PrepConfig config, final String sampleId, @Nullable final List<VariantType> variantTypes) throws NoSuchFileException
     {
@@ -45,22 +42,19 @@ public class SomaticVariantsLoader
         if(genericVariantsFile.isFile())
         {
             if(vcfFile.isFile())
-            {
-                CUP_LOGGER.error("VCF and generic variants files both exist for sample({})", sampleId);
-            }
+                CUP_LOGGER.warn("Both VCF and generic variants files exist for sample({}). Using generic variants file: {}", sampleId, genericVariantsFile);
 
             variants = loadFromGenericFile(genericVariantsFile.getAbsolutePath(), variantTypes);
-        }
-        else if(vcfFile.isFile())
-        {
-            variants = loadFromVcf(vcfFile.getAbsolutePath(), variantTypes);
-        }
-        else
-        {
-            throw new NoSuchFileException(String.format("%s or %s not provided", PURPLE_DIR_CFG, SOMATIC_VARIANTS_DIR));
+            return variants;
         }
 
-        return variants;
+        if(vcfFile.isFile())
+        {
+            variants = loadFromVcf(vcfFile.getAbsolutePath(), variantTypes);
+            return variants;
+        }
+
+        throw new NoSuchFileException(String.format("Invalid VCF file ('%s') or generic variants file ('%s')", vcfFile, genericVariantsFile));
     }
 
     private static List<SomaticVariant> loadFromVcf(final String vcfFile, @Nullable final List<VariantType> variantTypes)
@@ -96,9 +90,6 @@ public class SomaticVariantsLoader
     {
         List<SomaticVariant> variants = new ArrayList<>();
 
-        if(filename == null || filename.isEmpty())
-            System.exit(1);
-
         try
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
@@ -131,7 +122,8 @@ public class SomaticVariantsLoader
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read somatic variant flat file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to load generic variants file({}): {}", filename, e.toString());
+            e.printStackTrace();
             System.exit(1);
         }
 
