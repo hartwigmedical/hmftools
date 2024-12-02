@@ -481,5 +481,8 @@ Other planned improvements
 - Investigate region specific filtering for IG,TCR & HLA regions
 - Switch minSupport from MAX to SUM of samples & lower minSupport to 3.  Depends on duplicate collapsing improvements in REDUX to allow supplementary and primary read are reverse
 
+### GRIDSS and GRIPSS SV filtering
+- [Old Gripss information](https://github.com/hartwigmedical/hmftools/esvee/README_GRIPSS.md)
+
 ### Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/esvee-v1.0)
