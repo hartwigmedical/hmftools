@@ -2,52 +2,12 @@
   <img src="nf-core-oncoanalyser_logo_light.png">
 </h1>
 
-## Contents
-
-<!-- TOC -->
-  * [Contents](#contents)
-  * [Overview](#overview)
-    * [Inputs](#inputs)
-    * [Components](#components)
-  * [Quick start](#quick-start)
-    * [1. Install Nextflow](#1-install-nextflow)
-    * [2. Install Docker](#2-install-docker)
-    * [3. Set up resource files](#3-set-up-resource-files)
-      * [3a. Download and extract files](#3a-download-and-extract-files)
-      * [3b. Set up config](#3b-set-up-config)
-    * [4. Set up sample sheet](#4-set-up-sample-sheet)
-    * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
-  * [Resource files](#resource-files)
-    * [GRCh37](#grch37)
-    * [GRCh38](#grch38)
-  * [Sample sheet](#sample-sheet)
-    * [Sample sheet basic usage](#sample-sheet-basic-usage)
-      * [BAM inputs](#bam-inputs)
-      * [FASTQ inputs](#fastq-inputs)
-      * [Sample modes](#sample-modes)
-    * [Sample sheet advanced usage](#sample-sheet-advanced-usage)
-      * [Multiple sample groups](#multiple-sample-groups)
-      * [Running from REDUX bam](#running-from-redux-bam)
-      * [Running specific tools](#running-specific-tools)
-  * [Configuration](#configuration)
-    * [Arguments](#arguments)
-    * [Setting up panel data](#setting-up-panel-data)
-    * [Using custom docker images](#using-custom-docker-images)
-    * [Using multiple config files](#using-multiple-config-files)
-  * [Outputs](#outputs)
-    * [Sample reports](#sample-reports)
-    * [Pipeline reports](#pipeline-reports)
-  * [Future Improvements](#future-improvements)
-  * [Acknowledgements](#acknowledgements)
-<!-- TOC -->
-
 ## Overview
 Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a 
 [Nextflow](https://www.nextflow.io/) a comprehensive cancer DNA/RNA analysis pipeline which runs the tools from the Hartwig Medical 
 Foundation ([HMFtools](https://github.com/hartwigmedical/hmftools)).
 
-
-Please jump to section **[Quick start](#quick-start)** to get started.
+> Please jump to section **[Quick start](#quick-start)** to get started.
 
 ### Inputs
 Oncoanalyser starts from BAM or FASTQ files, and supports the following modes:
@@ -80,6 +40,45 @@ supports (tools are listed in (roughly) the order they are run:
 | [Virusbreakend](https://github.com/PapenfussLab/gridss) &<br/>[Virusinterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter) | Viral integration detection	                                    |
 | [Isofox](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                    | Quantify RNA transcripts                                        |
 | [Orange](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                    | PDF summary report of all WGS output                            |
+
+## Contents
+
+<!-- TOC -->
+  * [Overview](#overview)
+    * [Inputs](#inputs)
+    * [Components](#components)
+  * [Contents](#contents)
+  * [Quick start](#quick-start)
+    * [1. Install Nextflow](#1-install-nextflow)
+    * [2. Install Docker](#2-install-docker)
+    * [3. Set up resource files](#3-set-up-resource-files)
+      * [3a. Download and extract files](#3a-download-and-extract-files)
+      * [3b. Set up config](#3b-set-up-config)
+    * [4. Set up sample sheet](#4-set-up-sample-sheet)
+    * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
+  * [Resource files](#resource-files)
+    * [GRCh37](#grch37)
+    * [GRCh38](#grch38)
+  * [Sample sheet](#sample-sheet)
+    * [Sample sheet basic usage](#sample-sheet-basic-usage)
+      * [BAM inputs](#bam-inputs)
+      * [FASTQ inputs](#fastq-inputs)
+      * [Sample modes](#sample-modes)
+    * [Sample sheet advanced usage](#sample-sheet-advanced-usage)
+      * [Multiple sample groups](#multiple-sample-groups)
+      * [Running from REDUX bam](#running-from-redux-bam)
+      * [Running specific tools](#running-specific-tools)
+  * [Configuration](#configuration)
+    * [Arguments](#arguments)
+    * [Setting up panel data](#setting-up-panel-data)
+    * [Using custom docker images](#using-custom-docker-images)
+    * [Using multiple config files](#using-multiple-config-files)
+  * [Outputs](#outputs)
+    * [Sample reports](#sample-reports)
+    * [Pipeline reports](#pipeline-reports)
+  * [Future Improvements](#future-improvements)
+  * [Acknowledgements](#acknowledgements)
+<!-- TOC -->
 
 ## Quick start
 
