@@ -2,12 +2,11 @@
   <img src="nf-core-oncoanalyser_logo_light.png">
 </h1>
 
-## Overview
 Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a 
 [Nextflow](https://www.nextflow.io/) a comprehensive cancer DNA/RNA analysis pipeline which runs the tools from the Hartwig Medical 
 Foundation ([HMFtools](https://github.com/hartwigmedical/hmftools)).
 
-> Please jump to section **[Quick start](#quick-start)** to get started.
+Please jump to section **[Quick start](#quick-start)** to get started.
 
 ### Inputs
 Oncoanalyser starts from BAM or FASTQ files, and supports the following modes:
@@ -44,7 +43,6 @@ supports (tools are listed in (roughly) the order they are run:
 ## Contents
 
 <!-- TOC -->
-  * [Overview](#overview)
     * [Inputs](#inputs)
     * [Components](#components)
   * [Contents](#contents)
