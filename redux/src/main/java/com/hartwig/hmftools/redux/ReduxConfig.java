@@ -20,8 +20,6 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -61,7 +59,7 @@ import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
-import com.hartwig.hmftools.redux.common.ReadUnmapper;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.write.ReadOutput;
 

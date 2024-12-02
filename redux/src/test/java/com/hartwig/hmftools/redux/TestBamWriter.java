@@ -5,11 +5,12 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.redux.write.BamWriter;
+import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.ReadDataWriter;
 
 import htsjdk.samtools.SAMRecord;
 
-public class TestBamWriter extends BamWriter
+public class TestBamWriter extends BamWriterSync
 {
     public final List<SAMRecord> WrittenRecords;
     public String CurrentChromosome;

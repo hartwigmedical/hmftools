@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.unmap;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -61,6 +61,7 @@ public class ReadUnmapper
     {
         return mChrLocationsMap.get(chromosome);
     }
+    public Map<String,List<HighDepthRegion>> getAllRegions() { return mChrLocationsMap; }
 
     public boolean enabled() { return mEnabled; }
 

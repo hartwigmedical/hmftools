@@ -17,11 +17,12 @@ import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.ReadUnmapper;
-import com.hartwig.hmftools.redux.common.UnmapRegionState;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
+import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
+import com.hartwig.hmftools.redux.write.BamWriterSync;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -57,7 +58,7 @@ public final class TestUtils
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
     {
-        return new PartitionReader(config, null, Collections.emptyList(), writer, writer);
+        return new PartitionReader(config, null, Collections.emptyList(), writer, (BamWriterSync)writer);
     }
 
     public static void setBaseQualities(final SAMRecord read, int value)

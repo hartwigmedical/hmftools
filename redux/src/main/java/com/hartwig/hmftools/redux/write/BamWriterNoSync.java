@@ -15,13 +15,12 @@ public class BamWriterNoSync extends BamWriter
 {
     // writes reads in coordinate order using intelligent caching and without synchronised write calls
     private final SortedBamWriter mSortedBamWriter;
-    private final BamWriter mSharedUnsortedWriter;
 
     private int mUnsortedWriteCount;
 
     public BamWriterNoSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, final BamWriter sharedUnsortedWriter)
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
 
@@ -29,8 +28,6 @@ public class BamWriterNoSync extends BamWriter
 
         if(config.perfDebug())
             mSortedBamWriter.togglePerfDebug();
-
-        mSharedUnsortedWriter = sharedUnsortedWriter;
 
         mUnsortedWriteCount = 0;
     }
@@ -68,17 +65,18 @@ public class BamWriterNoSync extends BamWriter
     {
         if(mSamFileWriter != null)
         {
-            if(mSortedBamWriter.canWriteRecord(read) || mSharedUnsortedWriter == null)
+            if(mSortedBamWriter.canWriteRecord(read))
             {
                 mSortedBamWriter.addRecord(read);
             }
             else
             {
-                mSharedUnsortedWriter.writeRecord(read);
                 ++mUnsortedWriteCount;
             }
         }
     }
+
+    public void writeReadUnchecked(final SAMRecord read) { mSortedBamWriter.writeReadUnchecked(read); }
 
     @Override
     public void close()

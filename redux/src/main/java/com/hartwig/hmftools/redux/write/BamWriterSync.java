@@ -38,7 +38,9 @@ public class BamWriterSync extends BamWriter
 
     public synchronized void writeRecordSync(final SAMRecord read)
     {
-        mSamFileWriter.addAlignment(read);
+        if(mSamFileWriter != null)
+            mSamFileWriter.addAlignment(read);
+
         ++mWriteCount;
     }
 

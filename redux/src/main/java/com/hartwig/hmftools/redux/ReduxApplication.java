@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +23,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
+import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamProcessor;
@@ -58,6 +61,22 @@ public class ReduxApplication
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
 
+        if(mConfig.UnmapRegions.enabled())
+        {
+            List<Thread> unmappingThreadTasks = Lists.newArrayList();
+            List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
+
+            if(!runThreadTasks(unmappingThreadTasks))
+                System.exit(1);
+
+            RD_LOGGER.debug("initial unmapping complete");
+
+            if(!fileWriterCache.prepareSortedUnmappingBam())
+                System.exit(1);
+
+            // add to list of BAMs to be evaluated
+        }
+
         // partition the genome into sequential regions to be processed by each thread
         List<PartitionReader> partitionReaders = allocateGenomeRegions(fileWriterCache);
 
@@ -89,8 +108,6 @@ public class ReduxApplication
             return;
         }
 
-        fileWriterCache.closeBams();
-
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
 
@@ -98,6 +115,12 @@ public class ReduxApplication
 
         // free up any processing state
         partitionReaders.clear();
+
+        // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+        // the core routines are complete, it is helpful to do so now
+        System.gc();
+
+        fileWriterCache.finaliseBams();
 
         long sortedBamUnsortedWriteCount = fileWriterCache.sortedBamUnsortedWriteCount();
 
@@ -107,13 +130,12 @@ public class ReduxApplication
         }
 
         long mappedReadsProcessed = combinedStats.TotalReads;
+        long unmappedDropped = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
         long unmappedPlusAltContig = 0;
 
+        /*
         if(mConfig.BamToolPath != null)
         {
-            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
-            // the core routines are complete, it is helpful to do so now
-            System.gc();
 
             // log interim time
             RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
@@ -123,10 +145,11 @@ public class ReduxApplication
                 System.exit(1);
 
             unmappedPlusAltContig = finalBamProcessor.unmappedReadCount() + finalBamProcessor.altContigReadCount();
+            unmappedDropped += finalBamProcessor.statistics().UnmappedDropped;
+
             combinedStats.ConsensusStats.merge(finalBamProcessor.statistics().ConsensusStats);
         }
-
-        fileWriterCache.close();
+        */
 
         combinedStats.logStats();
 
@@ -136,7 +159,6 @@ public class ReduxApplication
         }
 
         // check total reads read, processed, dropped and written
-        long unmappedDropped = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
         long expectedWritten = mappedReadsProcessed + unmappedPlusAltContig - unmappedDropped;
 
         long mappedWritten = fileWriterCache.totalWrittenReads();
@@ -178,6 +200,11 @@ public class ReduxApplication
         if(partitionRegions.isEmpty())
             return Collections.emptyList();
 
+        List<String> inputBamFiles = Lists.newArrayList(mConfig.BamFiles);
+
+        if(mConfig.UnmapRegions.enabled())
+            inputBamFiles.add(fileWriterCache.unmappedSortedBamFilename());
+
         List<PartitionReader> partitionReaders = Lists.newArrayListWithCapacity(mConfig.Threads);
         int threadIndex = 0;
 
@@ -193,7 +220,7 @@ public class ReduxApplication
             BamWriter bamWriter = fileWriterCache.getPartitionBamWriter(String.valueOf(threadIndex++));
 
             PartitionReader partitionReader = new PartitionReader(
-                    mConfig, regions, mConfig.BamFiles, bamWriter, fileWriterCache.getUnsortedBamWriter());
+                    mConfig, regions, inputBamFiles, bamWriter, fileWriterCache.getFullUnmappedBamWriter());
 
             partitionReaders.add(partitionReader);
         }

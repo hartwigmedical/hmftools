@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.parseUnmappedCoords;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.parseUnmappedCoords;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
