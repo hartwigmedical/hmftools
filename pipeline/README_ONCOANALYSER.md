@@ -43,8 +43,6 @@ supports (tools are listed in (roughly) the order they are run:
 ## Contents
 
 <!-- TOC -->
-    * [Inputs](#inputs)
-    * [Components](#components)
   * [Contents](#contents)
   * [Quick start](#quick-start)
     * [1. Install Nextflow](#1-install-nextflow)
