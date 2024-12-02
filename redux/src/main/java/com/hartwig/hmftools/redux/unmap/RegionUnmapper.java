@@ -5,8 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
-import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapMateAlignment;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapReadAlignment;
 
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.write.BamWriterNoSync;
 import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 
@@ -42,9 +40,10 @@ public class RegionUnmapper extends Thread
     private final BamWriterSync mFullyUnmappedBamWriter;
 
     private UnmapRegion mCurrentRegion;
+    private HighDepthRegion mHighDepthRegion;
     private UnmapRegionState mUnmapRegionState;
-    private int mProcessedReads;
-    private int mNextLogReadCount;
+    private long mProcessedReads;
+    private long mNextLogReadCount;
 
     public RegionUnmapper(
             final ReduxConfig config, final TaskQueue regions, final BamWriterSync unmappingBamWriter, final BamWriterSync fullUnmappedBamWriter)
@@ -57,6 +56,7 @@ public class RegionUnmapper extends Thread
         mBamReader = new BamReader(config.BamFiles, config.RefGenomeFile);
         mUnmapRegionState = null;
         mCurrentRegion = null;
+        mHighDepthRegion = null;
         mProcessedReads = 0;
         mNextLogReadCount = LOG_READ_COUNT;
     }
@@ -151,8 +151,6 @@ public class RegionUnmapper extends Thread
                 UnmapRegion unmapRegion = (UnmapRegion)mRegions.removeItem();
 
                 processRegion(unmapRegion);
-
-                // stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {
@@ -167,11 +165,15 @@ public class RegionUnmapper extends Thread
         }
     }
 
+    public long processedReads() { return mProcessedReads; }
+
     private void processRegion(final UnmapRegion region)
     {
         mCurrentRegion = region;
+        mHighDepthRegion = new HighDepthRegion(region.start(), region.end(), region.MaxDepth);
 
-        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, List.of(new HighDepthRegion(region.start(), region.end(), region.MaxDepth)));
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, List.of(mHighDepthRegion));
+        mUnmapRegionState.LastMatchedRegionIndex = 0;
 
         if(mBamReader != null)
         {
@@ -183,8 +185,15 @@ public class RegionUnmapper extends Thread
 
     private void processSamRecord(final SAMRecord read)
     {
-        if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
+        if(shouldFilterRead(read))
             return;
+
+        // must overlap by minimum to be a candidate for unmapping
+        if(mCurrentRegion.IsStandardChromosome)
+        {
+            if(!overlapsRegion(mHighDepthRegion, read.getAlignmentStart(), read.getAlignmentEnd()))
+                return;
+        }
 
         ++mProcessedReads;
 
@@ -196,16 +205,7 @@ public class RegionUnmapper extends Thread
             mNextLogReadCount += LOG_READ_COUNT;
         }
 
-        if(shouldFilterRead(read))
-            return;
-
         read.setDuplicateReadFlag(false);
-
-        if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
-                read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
-        {
-            return;
-        }
 
         /*
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only

@@ -72,6 +72,9 @@ public class ReduxApplication
 
             RD_LOGGER.debug("initial unmapping complete");
 
+            long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
+            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats().toString());
+
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
 

@@ -158,8 +158,11 @@ public final class CigarUtils
     }
 
     public static int getReadBoundaryPosition(
-            final int readStart, @NotNull final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
+            final int readStart, final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
     {
+        if(getReadStart && !includeSoftClipped) // avoid a parse for the basic case
+            return readStart;
+
         // gets either the read start position or read end position, either with or without soft-clipped bases
         int currentPosition = readStart;
         int elementLength = 0;
