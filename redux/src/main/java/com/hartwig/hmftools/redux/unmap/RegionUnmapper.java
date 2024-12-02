@@ -58,7 +58,7 @@ public class RegionUnmapper extends Thread
         mUnmapRegionState = null;
         mCurrentRegion = null;
         mProcessedReads = 0;
-        mNextLogReadCount = 0;
+        mNextLogReadCount = LOG_READ_COUNT;
     }
 
     public static List<RegionUnmapper> createThreadTasks(
@@ -218,7 +218,7 @@ public class RegionUnmapper extends Thread
         {
             boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-            if(readUnmapped)
+            if(readUnmapped && read.getReadUnmappedFlag())
             {
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return;

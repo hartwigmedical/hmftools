@@ -39,8 +39,10 @@ public class FileWriterCache
     // private final BamWriter mSharedUnsortedWriter;
 
     private final BamWriterSync mUnmappingWriter;
-    private final BamWriterSync mFullUnmappedWriter;
     private String mUnmappingSortedBamFilename;
+
+    private final BamWriterSync mFullUnmappedWriter;
+    private String mFullUnmappedSortedBamFilename;
 
     private final JitterAnalyser mJitterAnalyser;
 
@@ -50,6 +52,7 @@ public class FileWriterCache
     private static final String UNMAPPING = "unmapping";
     private static final String UNMAPPING_SORTED = "unmapping_sorted";
     private static final String FULL_UNMAPPED = "full_unmapped";
+    private static final String FULL_UNMAPPED_SORTED = "full_unmapped_sorted";
 
     public FileWriterCache(final ReduxConfig config, @Nullable final JitterAnalyser jitterAnalyser)
     {
@@ -69,6 +72,7 @@ public class FileWriterCache
             mUnmappingWriter = null;
             mFullUnmappedWriter = null;
             mUnmappingSortedBamFilename = "";
+            mFullUnmappedSortedBamFilename = "";
             return;
         }
 
@@ -76,17 +80,18 @@ public class FileWriterCache
         {
             String unmappingFilename = formBamFilename(null, UNMAPPING);
             mUnmappingWriter = (BamWriterSync)createBamWriter(unmappingFilename, true);
-
             mUnmappingSortedBamFilename = formBamFilename(null, UNMAPPING_SORTED);
 
             String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
             mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
+            mFullUnmappedSortedBamFilename = formBamFilename(null, FULL_UNMAPPED_SORTED);
         }
         else
         {
             mUnmappingWriter = null;
             mFullUnmappedWriter = null;
             mUnmappingSortedBamFilename = "";
+            mFullUnmappedSortedBamFilename = "";
         }
     }
 
@@ -153,7 +158,7 @@ public class FileWriterCache
         return true;
     }
 
-    private void writeFullyUnmappedReads()
+    private boolean writeFullyUnmappedReads()
     {
         BamReader bamReader = new BamReader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
@@ -173,6 +178,12 @@ public class FileWriterCache
         }
 
         mFullUnmappedWriter.close();
+
+        // sort and index - seems required
+        if(!BamOperations.sortBam(bamToolName(), bamToolPath(), mFullUnmappedWriter.filename(), mFullUnmappedSortedBamFilename, mConfig.Threads))
+            return false;
+
+        return BamOperations.indexBam(bamToolName(), bamToolPath(), mFullUnmappedSortedBamFilename, mConfig.Threads);
     }
 
     private boolean concatenateBams()
@@ -204,6 +215,7 @@ public class FileWriterCache
 
         bamWriters().forEach(x -> interimBams.add(x.mFilename));
         interimBams.add(mUnmappingSortedBamFilename);
+        interimBams.add(mFullUnmappedSortedBamFilename);
 
         try
         {

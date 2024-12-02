@@ -26,7 +26,6 @@ import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
-import com.hartwig.hmftools.redux.write.FinalBamProcessor;
 
 public class ReduxApplication
 {
