@@ -206,15 +206,20 @@ public class PartitionReader implements Callable
 
             if(readUnmapped)
             {
-                if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+                boolean fullyUnmapped = read.getReadUnmappedFlag() && read.getMateUnmappedFlag();
+
+                if(fullyUnmapped)
                 {
-                    // drop (ie don't write to BAM) unmapped supplementaries and secondaries
-                    ++mStats.UnmappedDropped;
-                }
-                else
-                {
-                    mFullyUnmappedBamWriter.writeRecordSync(read);
-                    ++mStats.Unmapped;
+                    if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+                    {
+                        // drop (ie don't write to BAM) unmapped supplementaries and secondaries
+                        ++mStats.UnmappedDropped;
+                    }
+                    else
+                    {
+                        mFullyUnmappedBamWriter.writeRecordSync(read);
+                        ++mStats.Unmapped;
+                    }
                 }
 
                 return;
