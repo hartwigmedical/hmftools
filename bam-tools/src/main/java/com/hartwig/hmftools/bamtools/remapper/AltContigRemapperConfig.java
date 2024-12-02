@@ -24,15 +24,14 @@ public class AltContigRemapperConfig
     public final RefGenomeVersion RefGenVersion;
     public final String BamToolPath;
 
-
     private static final String OUTPUT_FILE = "output_file";
     private static final String ORIG_BAM_FILE = "orig_bam_file";
 
     public AltContigRemapperConfig(final ConfigBuilder configBuilder)
     {
-        OutputFile =  configBuilder.getValue(OUTPUT_FILE);
-        OrigBamFile =  configBuilder.getValue(ORIG_BAM_FILE);
-        RefGenomeFile =  configBuilder.getValue(REF_GENOME);
+        OutputFile = configBuilder.getValue(OUTPUT_FILE);
+        OrigBamFile = configBuilder.getValue(ORIG_BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         if(OrigBamFile == null || OutputFile == null)
@@ -53,6 +52,7 @@ public class AltContigRemapperConfig
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addPath(ORIG_BAM_FILE, true, "Original BAM file");
         configBuilder.addPath(LIBBWA_PATH, false, "Path to BWA library");
+        configBuilder.addPath(BAMTOOL_PATH, true, "Path to BWA library");
 
         addRefGenomeFile(configBuilder, true);
         addLoggingOptions(configBuilder);
