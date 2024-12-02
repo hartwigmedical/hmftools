@@ -4,6 +4,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
 import org.junit.Test;
@@ -90,7 +91,7 @@ public class AltContigRemapperTest {
     @Test
     public void runTest() {
         // Create a remapper that will remap the tiny bam test data file
-        // using the HlaAligner test aligner (rather than one that uses the entire genome).
+        // using the HlaAligner (see below) test aligner (rather than one that uses the entire genome).
         File tempDir = new File("/Users/timlavers/work/junk");
         File outputFile = new File(tempDir, "test.bam");
         File inpuFile = getTestFile("tiny.bam");
@@ -106,13 +107,166 @@ public class AltContigRemapperTest {
         List<SAMRecord> results = new ArrayList<>();
         samReader.iterator().forEachRemaining(results::add);
 
-//        Assert.assertEquals(records.size(), results.size());
+        // Two of the alignment sequences returned have 2 elements,
+        // so there are two more lines in the output than in the input.
+        Assert.assertEquals(records.size() + 2, results.size());
 
-        // The first four records in our test data file should not get altered.
-        Assert.assertEquals(records.get(0), results.get(0));
-        Assert.assertEquals(records.get(1), results.get(1));
-        Assert.assertEquals(records.get(2), results.get(2));
-        Assert.assertEquals(records.get(3), results.get(3));
+        // The first four records in our test data file should not get altered and are already in order.
+        check(records.get(0), results.get(0));
+        check(records.get(1), results.get(1));
+        check(records.get(2), results.get(2));
+        check(records.get(3), results.get(3));
+
+        // Expected[4] is input[7] with main alignment remapped.
+        // Main alignment: HLA-A*01:03, 3188 -> chr1, 194358862 (see See A00624:8:HHKYHDSXX:2:1516:12156:4225)
+        // Mate alignment unchanged.
+        SAMRecord expected4 = records.get(7).deepCopy();
+        expected4.setReferenceIndex(0);
+        expected4.setAlignmentStart(194358862);
+        expected4.setMappingQuality(60);
+        expected4.setCigarString("35S116M");
+        check(expected4, results.get(4));
+
+        // Expected[5] is input[4] with mate remapped
+        // Main alignment: unchanged
+        // Mate alignment: HLA-A*01:03, 3188 -> chr1, 194358862 (see A00624:8:HHKYHDSXX:2:1516:12156:4225)
+        SAMRecord expected5 = records.get(4).deepCopy();
+        expected5.setMateReferenceIndex(0);
+        expected5.setMateAlignmentStart(194358862);
+        check(expected5, results.get(5));
+
+        // Expected[6] is input[8] remapped
+        // Main alignment: HLA-B*27:05:18, 3006 -> chr2, 32916241 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        // Mate alignment: HLA-B*40:06:01:01, 2533 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        SAMRecord expected6 = records.get(8).deepCopy();
+        expected6.setReferenceIndex(1);
+        expected6.setAlignmentStart(32916241);
+        expected6.setMappingQuality(16);
+        expected6.setCigarString("42S32M77S");
+        expected6.setMateReferenceIndex(5);
+        expected6.setMateAlignmentStart(31354760);
+        check(expected6, results.get(6));
+
+        // Expected[7] is input[5] remapped
+        // Main alignment: unchanged
+        // Mate alignment: HLA-B*40:06:01:01, 2533 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        SAMRecord expected7 = records.get(5).deepCopy();
+        expected7.setMateReferenceIndex(5);
+        expected7.setMateAlignmentStart(31354760);
+        check(expected7, results.get(7));
+
+        // Expected[8] is input[13] remapped
+        // Both the main alignment and the mate refer to HLA-B*08:19N
+        // which gets remapped to chr2 for the main alignment and to
+        // chr6 for the mate.
+        // See the mappings for A00624:8:HHKYHDSXX:4:1304:7075:14998 below.
+        SAMRecord expected8 = records.get(13).deepCopy();
+        expected8.setReferenceIndex(1);
+        expected8.setAlignmentStart(32916297);
+        expected8.setMappingQuality(0);
+        expected8.setCigarString("67S36M48S");
+        expected8.setMateReferenceIndex(5);
+        expected8.setMateAlignmentStart(31354513);
+        check(expected8, results.get(8));
+
+        // Expected[9] is a second remapping of input[8]
+        // Main alignment: HLA-B*27:05:18 -> chr6, 31354347 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        // Mate alignment: HLA-B*40:06:01:01 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        SAMRecord expected9 = records.get(8).deepCopy();
+        expected9.setReferenceIndex(5);
+        expected9.setAlignmentStart(31354347);
+        expected9.setMappingQuality(60);
+        expected9.setCigarString("72M79S");
+        expected9.setMateReferenceIndex(5);
+        expected9.setMateAlignmentStart(31354760);
+        check(expected9, results.get(9));
+
+        // Expected[10] is a second remapping of input[13]
+        // Main alignment: HLA-B*08:19N -> chr6, 31354375 (see A00624:8:HHKYHDSXX:4:1304:7075:14998)
+        // Mate alignment: HLA-B*08:19N -> chr6, 31354513 (see A00624:8:HHKYHDSXX:4:1304:7075:14998)
+        SAMRecord expected10 = records.get(13).deepCopy();
+        expected10.setReferenceIndex(5);
+        expected10.setAlignmentStart(31354375);
+        expected10.setMappingQuality(60);
+        expected10.setCigarString("44M107S");
+        expected10.setMateReferenceIndex(5);
+        expected10.setMateAlignmentStart(31354513);
+        check(expected10, results.get(10));
+
+        // Element 12 is the result of remapping record 13.
+        // Main alignment: HLA-B*08:19N -> chr6, 31354513 (see A00624:8:HHKYHDSXX:4:1304:7075:14998)
+        // Mate alignment: HLA-B*08:19N -> chr6, 31354513 (see A00624:8:HHKYHDSXX:4:1304:7075:14998)
+        SAMRecord expected11 = records.get(12).deepCopy();
+        expected11.setReferenceIndex(5);
+        expected11.setAlignmentStart(31354513);
+        expected11.setMappingQuality(60);
+        expected11.setCigarString("151M");
+        expected11.setMateReferenceIndex(5);
+        expected11.setMateAlignmentStart(31354375);
+        check(expected11, results.get(11));
+
+        // Element 13 is the result of remapping record 10.
+        // Main alignment: HLA-B*40:06:01:01 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        // Mate alignment: HLA-B*27:05:18 -> chr6, 31354347 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        SAMRecord expected12 = records.get(9).deepCopy();
+        expected12.setReferenceIndex(5);
+        expected12.setAlignmentStart(31354760);
+        expected12.setMappingQuality(60);
+        expected12.setCigarString("151M");
+        expected12.setMateReferenceIndex(5);
+        expected12.setMateAlignmentStart(31354347);
+        check(expected12, results.get(12));
+
+        // Element 14 is the result of remapping record 11.
+        // Main alignment: HLA-B*07:05:01 -> chr6, 31355729 (see A00624:8:HHKYHDSXX:1:1446:18213:29684)
+        // Mate alignment: HLA-B*07:05:01 -> chr6, 31356297 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
+        SAMRecord expected13 = records.get(11).deepCopy();
+        expected13.setReferenceIndex(5);
+        expected13.setAlignmentStart(31355729);
+        expected13.setMappingQuality(60);
+        expected13.setCigarString("151M");
+        expected13.setMateReferenceIndex(5);
+        expected13.setMateAlignmentStart(31356297);
+        check(expected13, results.get(13));
+
+        // Element 15 is the result of remapping record 10.
+        // Main alignment: HLA-B*07:05:01, 711 -> chr6, 31356297  (see A00624:8:HHKYHDSXX:1:1446:18213:29684)
+        // Mate alignment: HLA-B*07:05:01, 1279 -> chr6, 31355729  (see A00624:8:HHKYHDSXX:1:1446:18213:29684)
+        SAMRecord expected14 = records.get(10).deepCopy();
+        expected14.setReferenceIndex(5);
+        expected14.setAlignmentStart(31356297);
+        expected14.setMappingQuality(60);
+        expected14.setCigarString("151M");
+        expected14.setMateReferenceIndex(5);
+        expected14.setMateAlignmentStart(31355729);
+        check(expected14, results.get(14));
+
+        // Element 16 is the result of remapping record 6.
+        // Main alignment: chr6_GL000250v2_alt is unchanged
+        // Mate alignment: HLA-A*01:03, 3188 -> chr1, 194358862  (see A00624:8:HHKYHDSXX:2:1516:12156:4225)
+        SAMRecord expected15 = records.get(6).deepCopy();
+        expected15.setMateReferenceIndex(0);
+        expected15.setMateAlignmentStart(194358862);
+        check(expected15, results.get(15));
+    }
+
+    private void check(SAMRecord expected, SAMRecord actual) {
+        // We do the same checks as would be done by using SAMRecord.equals()
+        // except that we do not check attributes.
+        Assert.assertEquals(expected.getAlignmentStart(), actual.getAlignmentStart());
+        Assert.assertEquals(expected.getFlags(), actual.getFlags());
+        Assert.assertEquals(expected.getInferredInsertSize(), actual.getInferredInsertSize());
+        Assert.assertEquals(expected.getMappingQuality(), actual.getMappingQuality());
+        Assert.assertEquals(expected.getMateAlignmentStart(), actual.getMateAlignmentStart());
+        Assert.assertEquals(expected.getMateReferenceIndex(), actual.getMateReferenceIndex());
+        Assert.assertEquals(expected.getReferenceIndex(), actual.getReferenceIndex());
+        Assert.assertEquals(expected.getReadName(), actual.getReadName());
+//        Assert.assertEquals(expected.getAttributes(), actual.getAttributes());
+        Assert.assertArrayEquals(expected.getBaseQualities(), actual.getBaseQualities());
+        Assert.assertEquals(expected.getCigar(), actual.getCigar());
+        Assert.assertEquals(expected.getMateReferenceName(), actual.getMateReferenceName());
+        Assert.assertArrayEquals(expected.getReadBases(), actual.getReadBases());
+        Assert.assertEquals(expected.getReferenceName(), actual.getReferenceName());
     }
 
     private LinkedList<SAMRecord> readTestFile() {
@@ -133,7 +287,7 @@ class DummyConfig extends AltContigRemapperConfig {
     private Aligner aligner;
 
     DummyConfig(Aligner aligner, String inputBam, String outputBam) {
-        super(inputBam, outputBam, "/Users/timlavers/work/apps/bamtools/bin/bamtools");
+        super(inputBam, outputBam, "/Users/timlavers/work/apps/samtools-1.21/samtools");
         this.aligner = aligner;
     }
 
