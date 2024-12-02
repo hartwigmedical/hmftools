@@ -17,7 +17,6 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -26,9 +25,10 @@ import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
-import com.hartwig.hmftools.redux.common.UnmapRegionState;
+import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
+import com.hartwig.hmftools.redux.write.BamWriterSync;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -38,7 +38,7 @@ public class PartitionReader implements Callable
 
     private final BamReader mBamReader;
     private final BamWriter mBamWriter;
-    private final BamWriter mUnsortedBamWriter;
+    private final BamWriterSync mFullyUnmappedBamWriter;
     private final ReadCache mReadCache;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -49,8 +49,6 @@ public class PartitionReader implements Callable
     private UnmapRegionState mUnmapRegionState;
     private final Statistics mStats;
 
-    private boolean mDisableUnmapping;
-
     // debug
     private final boolean mLogReadIds;
     private final PerformanceCounter mPcTotal;
@@ -60,11 +58,11 @@ public class PartitionReader implements Callable
 
     public PartitionReader(
             final ReduxConfig config, final List<ChrBaseRegion> regions, final List<String> inputBams, final BamWriter bamWriter,
-            final BamWriter unsortedBamWriter)
+            final BamWriterSync fullyUnmappedBamWriter)
     {
         mConfig = config;
         mBamWriter = bamWriter;
-        mUnsortedBamWriter = unsortedBamWriter;
+        mFullyUnmappedBamWriter = fullyUnmappedBamWriter;
         mBamReader = new BamReader(inputBams, config.RefGenomeFile);
         mSliceRegions = regions;
 
@@ -78,7 +76,6 @@ public class PartitionReader implements Callable
         mCurrentRegion = null;
         mUnmapRegionState = null;
         mLastWriteLowerPosition = 0;
-        mDisableUnmapping = false;
 
         mProcessedReads = 0;
         mNextLogReadCount = LOG_READ_COUNT;
@@ -93,7 +90,6 @@ public class PartitionReader implements Callable
     }
 
     public Statistics statistics() { return mStats; }
-    public void disableUnmapping() { mDisableUnmapping = true; }
 
     @Override
     public Long call()
@@ -146,6 +142,21 @@ public class PartitionReader implements Callable
         perfCountersStop();
     }
 
+    public static boolean shouldFilterRead(final SAMRecord read)
+    {
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+            return true;
+
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(alignmentScore != null && alignmentScore < SUPP_ALIGNMENT_SCORE_MIN)
+                return true;
+        }
+
+        return false;
+    }
+
     private static final int LOG_READ_COUNT = 1000000;
 
     private void processSamRecord(final SAMRecord read)
@@ -170,15 +181,8 @@ public class PartitionReader implements Callable
             return;
         }
 
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+        if(shouldFilterRead(read))
             return;
-
-        if(read.getSupplementaryAlignmentFlag())
-        {
-            Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-            if(alignmentScore != null && alignmentScore < SUPP_ALIGNMENT_SCORE_MIN)
-                return;
-        }
 
         read.setDuplicateReadFlag(false);
 
@@ -195,8 +199,9 @@ public class PartitionReader implements Callable
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(!mDisableUnmapping && mConfig.UnmapRegions.enabled())
+        if(mConfig.UnmapRegions.enabled())
         {
+            // TODO: not interested in checking if the read itself should be unmapped - this has already been done by the RegionUnmapper
             boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
             if(readUnmapped)
@@ -208,7 +213,7 @@ public class PartitionReader implements Callable
                 }
                 else
                 {
-                    mUnsortedBamWriter.writeRead(read, FragmentStatus.UNSET);
+                    mFullyUnmappedBamWriter.writeRecordSync(read);
                     ++mStats.Unmapped;
                 }
 

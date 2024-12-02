@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EX
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.humanChromosomeRegions;
 import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapMateAlignment;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapReadAlignment;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapMateAlignment;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapReadAlignment;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.PartitionReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
 
 import htsjdk.samtools.SAMFileWriter;
@@ -61,8 +60,8 @@ public class FinalBamProcessor
     public boolean run()
     {
         // first sort the unsorted BAM with the reads which have been unmapped
-        if(!processUnmappedReads())
-            return false;
+        //if(!processUnmappedReads())
+       //     return false;
 
         if(!concatenateSortedBams())
             return false;
@@ -75,6 +74,7 @@ public class FinalBamProcessor
         return true;
     }
 
+    /*
     private boolean processUnmappedReads()
     {
         RD_LOGGER.debug("sorting unmapped reads BAM");
@@ -101,7 +101,7 @@ public class FinalBamProcessor
 
         mStats = partitionReader.statistics();
 
-        RD_LOGGER.debug("reprocessing unmapped reads");
+        RD_LOGGER.debug("writing alt-config and unmapped reads");
         writeUnmappedReads(bamWriter);
 
         bamWriter.close();
@@ -109,6 +109,7 @@ public class FinalBamProcessor
         // index this misc unmapped and alt contig BAM
         return BamOperations.indexBam(mBamToolName, mConfig.BamToolPath, mMiscBamFilename, mConfig.Threads);
     }
+    */
 
     private String formInterimBamFilename(final String interimBamId)
     {
@@ -134,16 +135,26 @@ public class FinalBamProcessor
         AtomicLong unmappedCount = new AtomicLong();
         AtomicLong nonHumanContigCount = new AtomicLong();
 
+        RD_LOGGER.debug("writing alt-contig reads");
+
+        BamWriterNoSync noSyncWriter = (BamWriterNoSync)bamWriter;
+
         // do the same for non-human contigs
+        List<SAMRecord> fullyUnmappedReads = Lists.newArrayList();
+
         bamReader.queryNonHumanContigs((final SAMRecord record) ->
         {
-            processNonHumanContigReads(record, bamWriter);
+            processNonHumanContigReads(record, noSyncWriter, fullyUnmappedReads);
             nonHumanContigCount.incrementAndGet();
         });
 
+        fullyUnmappedReads.forEach(x -> noSyncWriter.writeReadUnchecked(x));
+
+        RD_LOGGER.debug("writing unmapped reads");
+
         bamReader.queryUnmappedReads((final SAMRecord record) ->
         {
-            bamWriter.writeRead(record, FragmentStatus.UNSET);
+            noSyncWriter.writeReadUnchecked(record);
             unmappedCount.incrementAndGet();
         });
 
@@ -156,13 +167,16 @@ public class FinalBamProcessor
         }
     }
 
-    private void processNonHumanContigReads(final SAMRecord record, final BamWriter bamWriter)
+    private void processNonHumanContigReads(final SAMRecord record, final BamWriterNoSync bamWriter, final List<SAMRecord> fullyUnmappedReads)
     {
         // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
         if(record.getReadPairedFlag() && !record.getMateUnmappedFlag() && HumanChromosome.contains(record.getMateReferenceName()))
         {
-            if(record.getSupplementaryAlignmentFlag())
+            if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
+            {
+                ++mStats.UnmappedDropped;
                 return; // drop as per standard logic
+            }
 
             boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(record);
 
@@ -173,10 +187,12 @@ public class FinalBamProcessor
             if(mateUnmapped)
             {
                 unmapMateAlignment(record, false, true);
+                fullyUnmappedReads.add(record);
+                return;
             }
         }
 
-        bamWriter.writeRead(record, FragmentStatus.UNSET);
+        bamWriter.writeReadUnchecked(record);
     }
 
     private boolean concatenateSortedBams()
@@ -218,7 +234,7 @@ public class FinalBamProcessor
 
         List<String> interimBams = Lists.newArrayList();
 
-        interimBams.add(mFileWriterCache.sortedBamFilename());
+        // interimBams.add(mFileWriterCache.sortedBamFilename());
         interimBams.add(mMiscBamFilename);
         interimBams.add(mCombinedSortedBamFilename);
 
