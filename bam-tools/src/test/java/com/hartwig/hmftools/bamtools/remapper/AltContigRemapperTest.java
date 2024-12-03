@@ -4,9 +4,8 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,62 +15,16 @@ import java.util.*;
 
 import static java.lang.Integer.parseInt;
 
-public class AltContigRemapperTest
+import static com.hartwig.hmftools.bamtools.remapper.RemapperTestBase.bwa;
+
+public class AltContigRemapperTest extends RemapperTestBase
 {
-
-    private final List<SAMRecord> records = readTestFile();
-
-    @Test
-    public void isHlaAltReferenceTest()
-    {
-        Assert.assertTrue(AltContigRemapper.isHlaAltReference("HLA-A*01:03"));
-        Assert.assertTrue(AltContigRemapper.isHlaAltReference("hla-whatever"));
-        Assert.assertFalse(AltContigRemapper.isHlaAltReference("hla whatever"));
-        Assert.assertFalse(AltContigRemapper.isHlaAltReference("chrUn_KI270590v1"));
-    }
-
-    @Test
-    public void hasAltReference()
-    {
-        Assert.assertEquals(14, records.size()); // Sanity check
-
-        Assert.assertFalse(AltContigRemapper.hasAltReference(records.get(0)));
-        Assert.assertFalse(AltContigRemapper.hasAltReference(records.get(1)));
-        Assert.assertTrue(AltContigRemapper.hasAltReference(records.get(7)));
-        Assert.assertTrue(AltContigRemapper.hasAltReference(records.get(8)));
-        Assert.assertTrue(AltContigRemapper.hasAltReference(records.get(11)));
-    }
-
-    @Test
-    public void mateHasAltReference()
-    {
-        Assert.assertFalse(AltContigRemapper.mateHasAltReference(records.get(0)));
-        Assert.assertTrue(AltContigRemapper.mateHasAltReference(records.get(4)));
-        Assert.assertTrue(AltContigRemapper.mateHasAltReference(records.get(5)));
-        Assert.assertFalse(AltContigRemapper.mateHasAltReference(records.get(7)));
-        Assert.assertTrue(AltContigRemapper.mateHasAltReference(records.get(8)));
-        Assert.assertTrue(AltContigRemapper.mateHasAltReference(records.get(10)));
-    }
-
-    @Test
-    public void createRemappedRecordTest()
-    {
-        SAMRecord record = records.get(12);
-        BwaMemAlignment alignment =
-                new BwaMemAlignment(16, 5, 31354375, 31354419, 0, 44, 60, 1, 39, 20, "44M107S", "22C1", null, -1, -1, 0);
-        SAMRecord remappedRecord = AltContigRemapper.createRemappedRecord(record, alignment);
-
-        Assert.assertEquals(record.getReadName(), remappedRecord.getReadName());
-        Assert.assertArrayEquals(record.getReadBases(), remappedRecord.getReadBases());
-        Assert.assertArrayEquals(record.getBaseQualities(), remappedRecord.getBaseQualities());
-        Assert.assertEquals("chr6", remappedRecord.getReferenceName());
-        Assert.assertEquals(alignment.getRefStart(), remappedRecord.getAlignmentStart());
-        Assert.assertEquals(alignment.getMapQual(), remappedRecord.getMappingQuality());
-    }
 
     @Test
     public void runTest()
     {
+        Assert.assertEquals(14, records.size()); // Sanity check
+
         // Create a remapper that will remap the tiny bam test data file
         // using the HlaAligner (see below) test aligner (rather than one that uses the entire genome).
         File tempDir = new File("/Users/timlavers/work/junk"); // TODO is there a preferred way of handling temp files?
@@ -235,62 +188,6 @@ public class AltContigRemapperTest
         expected15.setMateAlignmentStart(194358862);
         check(expected15, results.get(15));
     }
-
-    private void check(SAMRecord expected, SAMRecord actual)
-    {
-        // We do the same checks as would be done by using SAMRecord.equals()
-        // except that we do not check attributes.
-        Assert.assertEquals(expected.getAlignmentStart(), actual.getAlignmentStart());
-        Assert.assertEquals(expected.getFlags(), actual.getFlags());
-        Assert.assertEquals(expected.getInferredInsertSize(), actual.getInferredInsertSize());
-        Assert.assertEquals(expected.getMappingQuality(), actual.getMappingQuality());
-        Assert.assertEquals(expected.getMateAlignmentStart(), actual.getMateAlignmentStart());
-        Assert.assertEquals(expected.getMateReferenceIndex(), actual.getMateReferenceIndex());
-        Assert.assertEquals(expected.getReferenceIndex(), actual.getReferenceIndex());
-        Assert.assertEquals(expected.getReadName(), actual.getReadName());
-        Assert.assertArrayEquals(expected.getBaseQualities(), actual.getBaseQualities());
-        Assert.assertEquals(expected.getCigar(), actual.getCigar());
-        Assert.assertEquals(expected.getMateReferenceName(), actual.getMateReferenceName());
-        Assert.assertArrayEquals(expected.getReadBases(), actual.getReadBases());
-        Assert.assertEquals(expected.getReferenceName(), actual.getReferenceName());
-    }
-
-    private List<SAMRecord> readTestFile()
-    {
-        return readSamFile(getTestFile("tiny.sam"));
-    }
-
-    private List<SAMRecord> readSamFile(File samFile)
-    {
-        List<SAMRecord> records = new LinkedList<>();
-        try(SamReader samReader = SamReaderFactory.makeDefault().open(samFile))
-        {
-            samReader.forEach(records::add);
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        return records;
-    }
-
-    private List<SAMSequenceRecord> readDictionarySequences(File samFile)
-    {
-        try(SamReader samReader = SamReaderFactory.makeDefault().open(samFile))
-        {
-            return new LinkedList<>(samReader.getFileHeader().getSequenceDictionary().getSequences());
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private File getTestFile(String name)
-    {
-        ClassLoader classLoader = getClass().getClassLoader();
-        return new File(Objects.requireNonNull(classLoader.getResource(name)).getFile());
-    }
 }
 
 class DummyConfig extends AltContigRemapperConfig
@@ -374,26 +271,9 @@ class HlaAligner implements Aligner
         throw new IllegalArgumentException("No alignment found for " + Arrays.toString(bases));
     }
 
-    private BwaMemAlignment bwa(String data)
+    @Override
+    public ImmutablePair<List<BwaMemAlignment>,List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2)
     {
-        String[] parts = data.split(",");
-        return new BwaMemAlignment(
-                parseInt(parts[0]),
-                parseInt(parts[1]),
-                parseInt(parts[2]),
-                parseInt(parts[3]),
-                parseInt(parts[4]),
-                parseInt(parts[5]),
-                parseInt(parts[6]),
-                parseInt(parts[7]),
-                parseInt(parts[8]),
-                parseInt(parts[9]),
-                parts[10],
-                parts[11],
-                parts[12],
-                parseInt(parts[13]),
-                parseInt(parts[14]),
-                parseInt(parts[15])
-        );
+        return new ImmutablePair<>(List.of(), List.of());
     }
 }
