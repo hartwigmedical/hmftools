@@ -11,40 +11,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
-import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
-public class TemplateReadData
+public final class TemplateReads
 {
-    public final String ReadId;
-    public final String Chromosome;
-    public final int AlignmentStart;
-    public final String Cigar;
-    public final int Flags;
-
-    @Deprecated
-    public TemplateReadData(final String readId, final String chromosome, final int alignmentStart, final String cigar, final int flags)
-    {
-        ReadId = readId;
-        Chromosome = chromosome;
-        AlignmentStart = alignmentStart;
-        Cigar = cigar;
-        Flags = flags;
-    }
-
-    public boolean firstInPair() { return isFlagSet(SAMFlag.FIRST_OF_PAIR); }
-    public boolean readNegativeStrandFlag() { return isFlagSet(SAMFlag.READ_REVERSE_STRAND); }
-    public boolean mateNegativeStrandFlag() { return isFlagSet(SAMFlag.MATE_REVERSE_STRAND); }
-
-    private boolean isFlagSet(final SAMFlag flag) { return (Flags & flag.intValue()) != 0; }
-
-    @Deprecated
-    public static TemplateReadData fromRead(final SAMRecord read)
-    {
-        return new TemplateReadData(
-                read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), read.getCigarString(), read.getFlags());
-    }
-
     public static SAMRecord selectTemplateRead(final List<SAMRecord> reads)
     {
         // establish if the read, its mate or the supplementary data should be used to establish the template data

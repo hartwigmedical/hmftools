@@ -3,9 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
@@ -71,12 +69,12 @@ public class ConsensusReads
     {
         String consensusReadId  = "";
 
-        SAMRecord templateRead = TemplateReadData.selectTemplateRead(reads);
+        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads);
         consensusReadId = formConsensusReadId(templateRead, umiId);
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, null);
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId);
 
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }
@@ -119,7 +117,7 @@ public class ConsensusReads
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
-                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId, null);
+                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId);
 
                 return new ConsensusReadInfo(consensusRead, templateRead, consensusState.outcome());
             }
@@ -250,7 +248,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, @Nullable final TemplateReadData primaryTemplateRead)
+    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
@@ -262,36 +260,12 @@ public class ConsensusReads
 
         read.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
 
-        if(read.getReadUnmappedFlag() && primaryTemplateRead != null)
-        {
-            // rather than use this duplicate's unmapped fields, infer from the mapped primary used for the consensus for consistency
-            record.setReadUnmappedFlag(true);
-            record.setMateReferenceName(primaryTemplateRead.Chromosome);
-            record.setMateAlignmentStart(primaryTemplateRead.AlignmentStart);
-
-            record.setAlignmentStart(primaryTemplateRead.AlignmentStart);
-            record.setCigarString(NO_CIGAR);
-
-            record.setAttribute(MATE_CIGAR_ATTRIBUTE, primaryTemplateRead.Cigar);
-            record.setReadPairedFlag(true);
-
-            if(primaryTemplateRead.firstInPair())
-                record.setSecondOfPairFlag(true);
-            else
-                record.setFirstOfPairFlag(true);
-
-            record.setMateNegativeStrandFlag(primaryTemplateRead.readNegativeStrandFlag());
-            record.setReadNegativeStrandFlag(primaryTemplateRead.mateNegativeStrandFlag());
-        }
-        else
-        {
-            record.setAlignmentStart(read.getAlignmentStart());
-            record.setCigar(read.getCigar());
-            record.setMateReferenceName(read.getMateReferenceName());
-            record.setMateAlignmentStart(read.getMateAlignmentStart());
-            record.setMateReferenceIndex(read.getMateReferenceIndex());
-            record.setFlags(read.getFlags());
-        }
+        record.setAlignmentStart(read.getAlignmentStart());
+        record.setCigar(read.getCigar());
+        record.setMateReferenceName(read.getMateReferenceName());
+        record.setMateAlignmentStart(read.getMateAlignmentStart());
+        record.setMateReferenceIndex(read.getMateReferenceIndex());
+        record.setFlags(read.getFlags());
 
         record.setDuplicateReadFlag(false);
 
