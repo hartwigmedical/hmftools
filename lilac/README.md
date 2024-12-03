@@ -212,7 +212,9 @@ If 2 complexes are precisely equally scored, then the solution with the lowest a
 
 The matching unique, apportioned shared, and wildcard (in rare cases where the full allele is not present in the IMGT/HLA database) support for each allele is recorded in both tumor and normal.
 
-As a further performance optimisation, if there are predicted to be more than 1 million complexes, then the evidence phase is first performed individually for complexes of 2 alleles per gene to find the top candidates for each of HLA-A, HLA-B & HLA-C.   LILAC retains only the top 5 pairs including each individual allele candidate and then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained.  The evidence phase is then subsequently run using this reduced set of candidate alleles
+2 further performance improvements are made at this step:
+- the number of fragments is downsampled to a maximum of 10k for the evaluation.
+- if there are predicted to be more than 1 million complexes, then the evidence phase is first performed individually for complexes of 2 alleles per gene to find the top candidates for each of HLA-A, HLA-B & HLA-C.   LILAC retains only the top 5 pairs including each individual allele candidate and then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained.  The evidence phase is then subsequently run using this reduced set of candidate alleles. 
 
 ### Tumor and RNA status of alleles
 #### Tumor allele specific copy number
