@@ -13,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 
 public class BwaHlaRecordAlignerTest extends RemapperTestBase
 {
@@ -93,6 +92,5 @@ public class BwaHlaRecordAlignerTest extends RemapperTestBase
         Mockito.verify(aligner, Mockito.times(1)).alignSequences(captor1.capture(), captor2.capture());
         Assert.assertArrayEquals(record13.getReadBases(), captor1.getValue()); // Note that the pair is (record13, record12).
         Assert.assertArrayEquals(record12.getReadBases(), captor2.getValue());
-
     }
 }

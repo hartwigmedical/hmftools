@@ -16,7 +16,7 @@ public interface HlaRecordAligner
         remappedRecord.setAlignmentStart(alignment.getRefStart());
         remappedRecord.setCigarString(alignment.getCigar());
         remappedRecord.setMappingQuality(alignment.getMapQual());
-        // TODO set flag
+//        remappedRecord.setFlags(alignment.getSamFlag());
         return remappedRecord;
     }
 
