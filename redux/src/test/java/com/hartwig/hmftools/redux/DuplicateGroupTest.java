@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 
@@ -65,5 +64,4 @@ public class DuplicateGroupTest
 
         assertTrue(duplicateGroup.isPrimaryRead(read1));
     }
-
 }
