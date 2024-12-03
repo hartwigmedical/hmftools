@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -20,6 +22,7 @@ public class TemplateReadData
     public final String Cigar;
     public final int Flags;
 
+    @Deprecated
     public TemplateReadData(final String readId, final String chromosome, final int alignmentStart, final String cigar, final int flags)
     {
         ReadId = readId;
@@ -35,6 +38,7 @@ public class TemplateReadData
 
     private boolean isFlagSet(final SAMFlag flag) { return (Flags & flag.intValue()) != 0; }
 
+    @Deprecated
     public static TemplateReadData fromRead(final SAMRecord read)
     {
         return new TemplateReadData(
@@ -69,9 +73,9 @@ public class TemplateReadData
 
         List<ReadCigarInfo> filteredCigarInfos = readCigarInfos.stream().filter(x -> x.LowerCigar.equals(topReadCigar)).collect(Collectors.toList());
 
-        String topMateCigar = findTopFrequencyCigar(readCigarInfos, true);
+        String topMateCigar = findTopFrequencyCigar(filteredCigarInfos, true);
 
-        filteredCigarInfos = readCigarInfos.stream().filter(x -> x.MateCigar.equals(topMateCigar)).collect(Collectors.toList());
+        filteredCigarInfos = filteredCigarInfos.stream().filter(x -> x.MateCigar.equals(topMateCigar)).collect(Collectors.toList());
 
         if(filteredCigarInfos.size() > 1)
         {
@@ -93,12 +97,34 @@ public class TemplateReadData
             cigarFrequencies.put(cigarStr, frequency != null ? frequency + 1 : 1);
         }
 
+        if(cigarFrequencies.size() == 1)
+            return useMateCigar ? readCigarInfos.get(0).MateCigar : readCigarInfos.get(0).LowerCigar;
+
         int maxFrequency = cigarFrequencies.values().stream().mapToInt(x -> x.intValue()).max().orElse(0);
 
         List<String> maxFrequencyCigars = cigarFrequencies.entrySet().stream()
                 .filter(x -> x.getValue() == maxFrequency).map(x -> x.getKey()).collect(Collectors.toList());
 
+        if(maxFrequencyCigars.size() == 1)
+            return maxFrequencyCigars.get(0);
+
         Collections.sort(maxFrequencyCigars);
-        return maxFrequencyCigars.get(0);
+
+        // take the cigar with the most aligned bases
+        String maxAlignerCigar = "";
+        int maxAligedBases = 0;
+
+        for(String cigarStr : maxFrequencyCigars)
+        {
+            int alignedLength = calcCigarAlignedLength(cigarStr);
+
+            if(alignedLength > maxAligedBases)
+            {
+                maxAlignerCigar = cigarStr;
+                maxAligedBases = alignedLength;
+            }
+        }
+
+        return maxAlignerCigar;
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -38,4 +40,6 @@ public class ReadCigarInfo
             MateCigar = readCigar;
         }
     }
+
+    public String toString() { return format("cigar(%s) mateCigar(%s) readId(%s)", LowerCigar, MateCigar, Read.getReadName()); }
 }

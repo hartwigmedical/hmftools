@@ -124,15 +124,18 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             readPosition = matePosition;
         }
 
+        boolean readIsLower;
+
         if(!isPaired || isUnmapped || read.getMateUnmappedFlag())
         {
+            readIsLower = isUnmapped;
+
             return new FragmentCoords(
                     readChromosome, NO_CHROMOSOME_NAME, readPosition, NO_POSITION, readOrient, readOrient,
-                     true, true, isSupplementary, isUnmapped);
+                    readIsLower, true, isSupplementary, isUnmapped);
         }
 
-        boolean readIsLower;
-        if(read.getReferenceIndex() == read.getMateReferenceIndex())
+        if(readChromosome.equals(mateChromosome))
         {
             readIsLower = readPosition <= matePosition;
         }

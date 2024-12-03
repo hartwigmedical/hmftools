@@ -77,8 +77,6 @@ public class ReduxConfig
     public final RefGenomeInterface RefGenome;
     public final SequencingType Sequencing;
 
-    public final int PartitionSize;
-    public final int BufferSize;
     public final ValidationStringency BamStringency;
 
     // UMI group config
@@ -124,8 +122,6 @@ public class ReduxConfig
     private static final String INPUT_BAM = "input_bam";
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_BAM = "output_bam";
-    public static final String PARTITION_SIZE = "partition_size";
-    private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
@@ -198,8 +194,6 @@ public class ReduxConfig
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         RD_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        BufferSize = configBuilder.getInteger(BUFFER_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
@@ -294,8 +288,6 @@ public class ReduxConfig
         configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
         SequencingType.registerConfig(configBuilder);
-        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
-        configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
         configBuilder.addConfigItem(
@@ -336,8 +328,7 @@ public class ReduxConfig
     }
 
     public ReduxConfig(
-            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi,
-            boolean formConsensus)
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus)
     {
         mIsValid = true;
         SampleId = "";
@@ -350,8 +341,6 @@ public class ReduxConfig
         RefGenome = refGenome;
         Sequencing = ILLUMINA;
 
-        PartitionSize = partitionSize;
-        BufferSize = bufferSize;
         BamStringency = ValidationStringency.STRICT;
         mReadLength = DEFAULT_READ_LENGTH;
 

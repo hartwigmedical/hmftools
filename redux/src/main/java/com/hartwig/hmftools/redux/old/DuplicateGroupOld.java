@@ -355,11 +355,11 @@ public class DuplicateGroupOld
                 {
                     // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
                     consensusReadInfo = consensusReads.createConsensusRead(
-                            findConsistentSupplementaries(readGroup), mGroupReadId, mUmiId);
+                            findConsistentSupplementaries(readGroup), mUmiId); // mGroupReadId
                 }
                 else
                 {
-                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mGroupReadId, mUmiId);
+                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mUmiId); // mGroupReadId
 
                     // cache to ensure subsequent consensus reads use the same properties
                     if(mPrimaryTemplateRead == null)

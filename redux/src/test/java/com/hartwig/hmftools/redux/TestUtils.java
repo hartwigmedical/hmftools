@@ -54,11 +54,11 @@ public final class TestUtils
 
     public static final int DEFAULT_QUAL = SamRecordTestUtils.DEFAULT_BASE_QUAL;
 
-    public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
+    public static final ReadIdGenerator READ_ID_GEN = new ReadIdGenerator();
 
     public static ReduxConfig createTestConfig()
     {
-        return new ReduxConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false, false, false);
+        return new ReduxConfig(new MockRefGenome(), false, false, false);
     }
 
     public List<FragmentOld> createBasicFragments(final String readId)
@@ -125,7 +125,7 @@ public final class TestUtils
 
     public static ConsensusReadInfo createConsensusRead(final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
-        return consensusReads.createConsensusRead(reads, null, umiId);
+        return consensusReads.createConsensusRead(reads, umiId);
     }
 
     // unmapping test state

@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
 import org.junit.Test;
 
@@ -42,7 +43,7 @@ public class ReduxApplicationTest
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES_REPEAT_40);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
 
-        ReduxConfig config = new ReduxConfig(1000, 1000, mRefGenome, false, false, false);
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, false);
 
         // mFileWriterCache = new FileWriterCache(config);
         // mWriter = mFileWriterCache.getPartitionBamWriter("1");
@@ -311,8 +312,7 @@ public class ReduxApplicationTest
     @Test
     public void testUnmapRegionReads()
     {
-        ReduxConfig config = new ReduxConfig(
-                2000, 1000, mRefGenome, false, false, false);
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, false);
 
         HighDepthRegion region1 = new HighDepthRegion(550, 650, UNMAP_MIN_HIGH_DEPTH + 1);
         HighDepthRegion region2 = new HighDepthRegion(900, 1300, UNMAP_MIN_HIGH_DEPTH + 1);
@@ -327,7 +327,7 @@ public class ReduxApplicationTest
 
         // a read not overlapping enough with a region to be unmapped
         // but supp is unmapped
-        SAMRecord read1 = createSamRecord(
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1,
                 550 - UNMAP_MAX_NON_OVERLAPPING_BASES - 2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3,
                 800, false, false,
@@ -340,7 +340,7 @@ public class ReduxApplicationTest
         assertFalse(read1.getReadUnmappedFlag());
 
         // Read overlaps so that the non overlapping bases of the aligned part does not exceed `ReadUnmapper.MAX_NON_OVERLAPPING_BASES`.
-        SAMRecord read2 = createSamRecord(
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1,
                 551 + UNMAP_MAX_NON_OVERLAPPING_BASES - 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3,
                 800, false, false,
@@ -351,7 +351,7 @@ public class ReduxApplicationTest
         assertTrue(read2.getReadUnmappedFlag());
 
         // mate is unmapped
-        SAMRecord read3 = createSamRecord(
+        SAMRecord read3 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
                 550 - UNMAP_MAX_NON_OVERLAPPING_BASES + 1, false, false,
                 null, false, TEST_READ_CIGAR);
@@ -362,7 +362,7 @@ public class ReduxApplicationTest
         assertTrue(read3.getMateUnmappedFlag());
 
         // unmapped read then has mate unmapped
-        SAMRecord read4 = createSamRecord(
+        SAMRecord read4 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 1000, TEST_READ_BASES, NO_CIGAR, CHR_1,
                 1000, false, false,
                 null, false, TEST_READ_CIGAR);
