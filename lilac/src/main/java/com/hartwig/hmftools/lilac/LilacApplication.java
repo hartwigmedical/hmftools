@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
@@ -68,6 +70,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -219,7 +222,7 @@ public class LilacApplication
 
         double minEvidence = mConfig.calcMinEvidence(totalFragmentCount);
 
-        LL_LOGGER.info(String.format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
+        LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
                 totalFragmentCount, minEvidence, mConfig.calcMinHighQualEvidence(totalFragmentCount)));
 
         // apply special filtering and splice checks on fragments, just for use in phasing
@@ -377,9 +380,27 @@ public class LilacApplication
         List<HlaComplex> complexes = complexBuilder.buildComplexes(mRefFragAlleles, confirmedRecoveredAlleles);
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
-        LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})", complexes.size(), mRefFragAlleles.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
-        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, complexes);
+
+        // down-sample if ref depth is higher than configured cap
+        List<FragmentAlleles> calcFragmentAlleles;
+
+        if(mConfig.MaxRefFragments > 0 && mRefFragAlleles.size() > mConfig.MaxRefFragments)
+        {
+            calcFragmentAlleles = mRefFragAlleles.stream().sorted(Comparator.comparing(x -> x.getFragment().id()))
+                    .limit(mConfig.MaxRefFragments)
+                    .collect(Collectors.toList());
+        }
+        else
+        {
+            calcFragmentAlleles = mRefFragAlleles;
+        }
+
+        LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})",
+                complexes.size(), mRefFragAlleles.size() > calcFragmentAlleles.size() ?
+                        format("%d capped=%d)", mRefFragAlleles.size(), calcFragmentAlleles.size()) : mRefFragAlleles.size());
+
+        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcFragmentAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
         mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
@@ -393,6 +414,13 @@ public class LilacApplication
         logStageMemory("post-coverage-calcs");
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
+
+        if(calcFragmentAlleles.size() < mRefFragAlleles.size())
+        {
+            // recompute from all evidence
+            winningRefCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, winningRefCoverage.getAlleles());
+            mRankedComplexes.set(0, winningRefCoverage);
+        }
 
         if(!mConfig.ActualAlleles.isEmpty())
         {
@@ -441,7 +469,7 @@ public class LilacApplication
 
         // log key results for fast post-run analysis
         StringJoiner totalCoverages = new StringJoiner(",");
-        winningRefCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(String.format("%.0f",x.TotalCoverage)));
+        winningRefCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(format("%.0f",x.TotalCoverage)));
 
         double scoreMargin = 0;
         StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
@@ -455,7 +483,7 @@ public class LilacApplication
 
         LL_LOGGER.info("WINNERS_REF: {}, {}, {}, {}, {}, {}",
                 mConfig.Sample, mRankedComplexes.size(),
-                HlaAllele.toString(winningRefCoverage.getAlleles()), String.format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
+                HlaAllele.toString(winningRefCoverage.getAlleles()), format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
 
         // write fragment assignment data
         for(FragmentAlleles fragAllele : mRefFragAlleles)
