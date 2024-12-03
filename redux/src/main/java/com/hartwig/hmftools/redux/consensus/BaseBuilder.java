@@ -333,6 +333,9 @@ public class BaseBuilder
 
     public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)
     {
+        if(!reads.get(0).getReadPairedFlag())
+            return false;
+
         boolean isDualStrand = false;
 
         for(int i = 0; i < reads.size(); ++i)

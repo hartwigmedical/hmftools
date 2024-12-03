@@ -14,9 +14,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
@@ -73,9 +75,16 @@ public final class TestUtils
         read.setSecondOfPairFlag(true);
     }
 
-    public static ConsensusReadInfo createConsensusRead(final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
+    public static FragmentCoords createFragmentCoords(final SAMRecord read)
     {
-        return consensusReads.createConsensusRead(reads, umiId);
+        return FragmentCoords.fromRead(read, false, SequencingType.ILLUMINA);
+    }
+
+    public static ConsensusReadInfo createConsensusRead(
+            final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
+    {
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false, SequencingType.ILLUMINA);
+        return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
     }
 
     // unmapping test state

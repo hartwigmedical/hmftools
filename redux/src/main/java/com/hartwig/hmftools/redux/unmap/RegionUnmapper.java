@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.unmap;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
@@ -223,7 +224,7 @@ public class RegionUnmapper extends Thread
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return;
 
-                if(read.getMateUnmappedFlag())
+                if(fullyUnmapped(read))
                     mFullyUnmappedBamWriter.writeRecordSync(read);
                 else
                     mUnmappingBamWriter.writeRecordSync(read);

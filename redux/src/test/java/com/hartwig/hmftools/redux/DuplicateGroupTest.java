@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 
 import static org.junit.Assert.assertTrue;
@@ -43,7 +44,7 @@ public class DuplicateGroupTest
 
         setBaseQualities(read1, 25);
 
-        FragmentCoords fragmentCoords = FragmentCoords.fromRead(read1);
+        FragmentCoords fragmentCoords = createFragmentCoords(read1);
 
         SAMRecord read2 = createSamRecord(
                 READ_ID_GEN.nextId(), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR,

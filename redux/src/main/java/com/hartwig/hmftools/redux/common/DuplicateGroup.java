@@ -73,7 +73,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
 
             // set consensus read attributes
             int firstInPairCount = (int)mReads.stream().filter(x -> x.getFirstOfPairFlag()).count();

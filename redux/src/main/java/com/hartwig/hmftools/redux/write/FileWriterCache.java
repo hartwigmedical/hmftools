@@ -67,8 +67,8 @@ public class FileWriterCache
             BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, jitterAnalyser);
             mBamWriters.add(bamWriter);
 
-            mUnmappingWriter = null;
-            mFullUnmappedWriter = null;
+            mUnmappingWriter = (BamWriterSync)bamWriter;
+            mFullUnmappedWriter = (BamWriterSync)bamWriter;
             mUnmappingSortedBamFilename = "";
             return;
         }

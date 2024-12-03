@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
-public class BamWriterNone extends BamWriter
+public class BamWriterNone extends BamWriterSync
 {
     public BamWriterNone(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,

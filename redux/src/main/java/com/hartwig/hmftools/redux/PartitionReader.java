@@ -66,7 +66,7 @@ public class PartitionReader implements Callable
         mBamReader = new BamReader(inputBams, config.RefGenomeFile);
         mSliceRegions = regions;
 
-        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled);
+        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
@@ -142,6 +142,11 @@ public class PartitionReader implements Callable
         perfCountersStop();
     }
 
+    public static boolean fullyUnmapped(final SAMRecord read)
+    {
+        return read.getReadUnmappedFlag() && (!read.getReadPairedFlag() || read.getMateUnmappedFlag());
+    }
+
     public static boolean shouldFilterRead(final SAMRecord read)
     {
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
@@ -206,9 +211,7 @@ public class PartitionReader implements Callable
 
             if(readUnmapped)
             {
-                boolean fullyUnmapped = read.getReadUnmappedFlag() && read.getMateUnmappedFlag();
-
-                if(fullyUnmapped)
+                if(fullyUnmapped(read))
                 {
                     if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     {

@@ -206,7 +206,7 @@ public class ReduxApplication
 
         List<String> inputBamFiles = Lists.newArrayList(mConfig.BamFiles);
 
-        if(mConfig.UnmapRegions.enabled())
+        if(mConfig.UnmapRegions.enabled() && mConfig.WriteBam)
             inputBamFiles.add(fileWriterCache.unmappedSortedBamFilename());
 
         List<PartitionReader> partitionReaders = Lists.newArrayListWithCapacity(mConfig.Threads);

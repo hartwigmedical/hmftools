@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM_STR;
 
@@ -22,6 +23,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.ReadParseState;
 
@@ -65,7 +67,9 @@ public class ConsensusReadUtilsTest
         SAMRecord read2 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
         SAMRecord read3 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
 
-        SAMRecord templateRead = selectTemplateRead(List.of(read3, read2, read1));
+        FragmentCoords fragmentCoords = createFragmentCoords(read1);
+
+        SAMRecord templateRead = selectTemplateRead(List.of(read3, read2, read1), fragmentCoords);
         assertEquals(read1, templateRead);
 
         // select on lower cigar
@@ -73,7 +77,8 @@ public class ConsensusReadUtilsTest
         read2 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
         read3 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
 
-        templateRead = selectTemplateRead(List.of(read3, read2, read1));
+        fragmentCoords = createFragmentCoords(read3);
+        templateRead = selectTemplateRead(List.of(read3, read2, read1), fragmentCoords);
         assertEquals(read2, templateRead);
 
         // select on mate cigar
@@ -82,7 +87,8 @@ public class ConsensusReadUtilsTest
         read3 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
         SAMRecord read4 = createSamRecord(READ_ID_GEN.nextId(), posStart, consensusBases, TEST_READ_CIGAR, TEST_READ_CIGAR);
 
-        templateRead = selectTemplateRead(List.of(read4, read3, read2, read1));
+        fragmentCoords = createFragmentCoords(read4);
+        templateRead = selectTemplateRead(List.of(read4, read3, read2, read1), fragmentCoords);
         assertEquals(read3, templateRead);
     }
 

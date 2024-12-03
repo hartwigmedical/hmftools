@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -63,13 +64,13 @@ public class ConsensusReads
     {
         mValidateConsensusReads = validateConsensusReads;
     }
-    public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
-    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, @Nullable final String umiId)
+    public ConsensusReadInfo createConsensusRead(
+            final List<SAMRecord> reads, final FragmentCoords fragmentCoords, @Nullable final String umiId)
     {
         String consensusReadId  = "";
 
-        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads);
+        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, fragmentCoords);
         consensusReadId = formConsensusReadId(templateRead, umiId);
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())

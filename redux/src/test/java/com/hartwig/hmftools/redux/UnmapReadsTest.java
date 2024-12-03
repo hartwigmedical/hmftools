@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -460,7 +461,7 @@ public class UnmapReadsTest
         ConsensusReads consensusReads = new ConsensusReads(refGenome);
 
         ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(
-                List.of(read1, read2), null);
+                List.of(read1, read2),  createFragmentCoords(read1), null);
 
         assertFalse(consensusReadInfo.ConsensusRead.getProperPairFlag());
         assertTrue(consensusReadInfo.ConsensusRead.getMateUnmappedFlag());

@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
@@ -619,7 +620,7 @@ public class ConsensusReadsTest
         read2.setMateAlignmentStart(2);
 
         ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2), "");
+                List.of(read1, read2), createFragmentCoords(read1), "");
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
         assertEquals(readCigar1, readConsensusInfo.ConsensusRead.getCigarString());
@@ -639,7 +640,8 @@ public class ConsensusReadsTest
         mate2.setReadUnmappedFlag(true);
         mate2.setAlignmentStart(2);
 
-        ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(List.of(mate1, mate2), "");
+        ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
+                List.of(mate1, mate2), createFragmentCoords(mate1), "");
 
         assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
