@@ -130,6 +130,8 @@ LILAC algorithm begins with collecting all fragments which are not duplicates an
 - all alignments within 1000 bases of a HLA coding region; and
 - a mapping quality of at least 1
 
+Note that all reads are trimmed of any bases that overlap the aligned 5' end of it's mate (to remove adapter).
+
 The algorithm then has 2 main phases to determine the germline alleles: an ‘elimination’ phase which aims to remove allele candidates that are clearly not present and an ‘evidence’ phase where LILAC considers all possible sets of 6 alleles amongst the remaining candidates and chooses the solution that best explains the fragments observed. 
 
 After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele.   Note that if more than 300 bases of the HLA-A,HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not try to fit the sample. 
