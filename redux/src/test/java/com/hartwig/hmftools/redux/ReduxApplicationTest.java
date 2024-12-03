@@ -3,9 +3,12 @@ package com.hartwig.hmftools.redux;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
@@ -17,9 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -50,7 +56,7 @@ public class ReduxApplicationTest
         // mWriter = mFileWriterCache.getPartitionBamWriter("1");
         mWriter = new TestBamWriter(config);
 
-        mPartitionReader = new PartitionReader(config, null, mWriter);
+        mPartitionReader = new PartitionReader(config, null, mWriter, mWriter);
     }
 
     @Test
@@ -142,7 +148,7 @@ public class ReduxApplicationTest
         config.UnmapRegions.addRegion(CHR_1, region1);
         config.UnmapRegions.addRegion(CHR_1, region2);
 
-        PartitionReader partitionReader = new PartitionReader(config, null, mWriter);
+        PartitionReader partitionReader = new PartitionReader(config, null, mWriter, mWriter);
 
         partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1999));
 
@@ -196,5 +202,47 @@ public class ReduxApplicationTest
 
         assertTrue(read4.getReadUnmappedFlag());
         assertTrue(read4.getMateUnmappedFlag());
+    }
+
+    @Test
+    public void testRegionPartitionSplits()
+    {
+        SpecificRegions specificRegions = new SpecificRegions();
+
+        specificRegions.addRegion(new ChrBaseRegion(CHR_1, 1, 1000000));
+
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsByThreads(specificRegions, 4, V37);
+        assertEquals(4, partitionRegions.size());
+
+        ChrBaseRegion region = partitionRegions.get(0).get(0);
+        assertEquals(1, region.start());
+        assertEquals(250000, region.end());
+
+        region = partitionRegions.get(1).get(0);
+        assertEquals(250001, region.start());
+        assertEquals(500000, region.end());
+
+        region = partitionRegions.get(2).get(0);
+        assertEquals(500001, region.start());
+        assertEquals(750000, region.end());
+
+        region = partitionRegions.get(3).get(0);
+        assertEquals(750001, region.start());
+        assertEquals(1000000, region.end());
+
+        specificRegions = new SpecificRegions();
+        specificRegions.addRegion(new ChrBaseRegion(CHR_1, 1, 10000));
+        specificRegions.addRegion(new ChrBaseRegion(CHR_2, 1, 10000));
+        specificRegions.addRegion(new ChrBaseRegion(CHR_3, 1, 10000));
+
+        partitionRegions = splitRegionsByThreads(specificRegions, 1, V37);
+        assertEquals(1, partitionRegions.size());
+
+        region = partitionRegions.get(0).get(0);
+        assertEquals(specificRegions.Regions.get(0), partitionRegions.get(0).get(0));
+        assertEquals(specificRegions.Regions.get(1), partitionRegions.get(0).get(1));
+        assertEquals(specificRegions.Regions.get(2), partitionRegions.get(0).get(2));
+
+        // TODO: test splits across chromosome and region boundaries, and that lengths are roughly equal
     }
 }

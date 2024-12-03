@@ -39,6 +39,7 @@ public class PartitionReader implements Callable
 
     private final BamReader mBamReader;
     private final BamWriter mBamWriter;
+    private final BamWriter mUnsortedBamWriter;
     private final ReadCache mReadCache;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -57,11 +58,12 @@ public class PartitionReader implements Callable
     private int mProcessedReads;
 
     public PartitionReader(
-            final ReduxConfig config, final List<ChrBaseRegion> regions, final BamWriter bamWriter)
+            final ReduxConfig config, final List<ChrBaseRegion> regions, final BamWriter bamWriter, final BamWriter unsortedBamWriter)
     {
         mConfig = config;
         mBamWriter = bamWriter;
-        mBamReader = new BamReader(config);;
+        mUnsortedBamWriter = unsortedBamWriter;
+        mBamReader = new BamReader(config);
         mSliceRegions = regions;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled);
@@ -208,7 +210,7 @@ public class PartitionReader implements Callable
 
             if(readUnmapped)
             {
-                // TODO: handle otherwise - write to unsorted BAM either
+                mUnsortedBamWriter.writeRead(read, FragmentStatus.UNSET);
                 return;
             }
         }

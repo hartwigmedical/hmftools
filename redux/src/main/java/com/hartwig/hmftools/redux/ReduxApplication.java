@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.round;
-
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
+import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapMateAlignment;
 import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapReadAlignment;
@@ -24,7 +21,6 @@ import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -81,11 +77,6 @@ public class ReduxApplication
             System.exit(1);
 
         RD_LOGGER.info("all partition tasks complete");
-
-        /*
-        // write any orphaned or remaining fragments (can be supplementaries)
-        BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
-        */
 
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
@@ -184,92 +175,7 @@ public class ReduxApplication
 
     private List<PartitionReader> allocateGenomeRegions(final FileWriterCache fileWriterCache)
     {
-        List<List<ChrBaseRegion>> partitionRegions = Lists.newArrayList();
-
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-        {
-            // could split long regions but for now just split by raw count across threads
-            int regionCount = mConfig.SpecificChrRegions.Regions.size();
-            int regionsPerThread = (int)round(regionCount / mConfig.Threads);
-
-            List<ChrBaseRegion> currentRegions = null;
-            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
-            {
-                if(currentRegions == null || currentRegions.size() >= regionsPerThread)
-                {
-                    currentRegions = Lists.newArrayList();
-                    partitionRegions.add(currentRegions);
-                }
-
-                currentRegions.add(region);
-            }
-        }
-        else
-        {
-            // divide the genome into equal lengths
-            RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(mConfig.RefGenVersion);
-            long totalLength = 0;
-
-            for(HumanChromosome chromosome : HumanChromosome.values())
-            {
-                String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
-
-                if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                    continue;
-
-                totalLength += refGenomeCoordinates.Lengths.get(chromosome);
-            }
-
-            long intervalLength = (int)ceil(totalLength / (double)mConfig.Threads);
-            int chrEndBuffer = (int)round(intervalLength * 0.05);
-            long currentLength = 0;
-            int nextRegionStart = 1;
-            List<ChrBaseRegion> currentRegions = Lists.newArrayList();
-            partitionRegions.add(currentRegions);
-
-            for(HumanChromosome chromosome : HumanChromosome.values())
-            {
-                String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
-
-                if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                    continue;
-
-                nextRegionStart = 1;
-                int chromosomeLength = refGenomeCoordinates.Lengths.get(chromosome);
-                int remainingChromosomeLength = chromosomeLength;
-
-                while(currentLength + remainingChromosomeLength >= intervalLength)
-                {
-                    int remainingIntervalLength = (int)(intervalLength - currentLength);
-                    int regionEnd = nextRegionStart + remainingIntervalLength - 1;
-
-                    if(chromosomeLength - regionEnd < chrEndBuffer)
-                    {
-                        regionEnd = chromosomeLength;
-                        remainingChromosomeLength = 0;
-                    }
-
-                    currentRegions.add(new ChrBaseRegion(chromosomeStr, nextRegionStart, regionEnd));
-
-                    currentRegions = Lists.newArrayList();
-                    partitionRegions.add(currentRegions);
-                    currentLength = 0;
-
-                    if(remainingChromosomeLength == 0)
-                        break;
-
-                    nextRegionStart = regionEnd + 1;
-                    remainingChromosomeLength = chromosomeLength - nextRegionStart + 1;
-                }
-
-                if(remainingChromosomeLength <= 0)
-                    continue;
-
-                currentLength += remainingChromosomeLength;
-
-                currentRegions.add(new ChrBaseRegion(chromosomeStr, nextRegionStart, chromosomeLength));
-            }
-        }
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsByThreads(mConfig.SpecificChrRegions, mConfig.Threads, mConfig.RefGenVersion);
 
         if(partitionRegions.isEmpty())
             return Collections.emptyList();
@@ -287,7 +193,7 @@ public class ReduxApplication
             RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}}", regions.size(), regionsLength, regionsStr);
 
             BamWriter bamWriter = fileWriterCache.getPartitionBamWriter(String.valueOf(threadIndex++));
-            PartitionReader partitionReader = new PartitionReader(mConfig, regions, bamWriter);
+            PartitionReader partitionReader = new PartitionReader(mConfig, regions, bamWriter, fileWriterCache.getUnsortedBamWriter());
             partitionReaders.add(partitionReader);
         }
 

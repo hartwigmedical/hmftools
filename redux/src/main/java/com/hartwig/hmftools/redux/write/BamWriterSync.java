@@ -13,6 +13,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class BamWriterSync extends BamWriter
 {
+    // a simple unsorted BAM writer, expected to be shared across threads so uses a synchronised write call
     private long mWriteCount;
 
     public BamWriterSync(
