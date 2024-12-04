@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -50,20 +51,34 @@ public class AltContigRemapper
 
             // The initial output is unsorted.
             String interimOutputFileName = mConfig.OutputFile + ".unsorted";
-            SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(newHeader, false, new File(interimOutputFileName));
+            File interimOutputFile = new File(interimOutputFileName);
+            SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(newHeader, false, interimOutputFile);
 
             HlaTransformer transformer = new HlaTransformer(new BwaHlaRecordAligner(mConfig.aligner()));
             samReader.forEach(record ->
                     transformer.process(record).forEach(bamWriter::addAlignment));
 
             // Deal with any unmatched reads.
-            transformer.processedUnmatchedRecords().forEach(bamWriter::addAlignment);
+            // Don't map these - log an error and write them out as they are
+            List<SAMRecord> unmatched = transformer.unmatchedRecords();
+            if (!unmatched.isEmpty()) {
+                BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
+                unmatched.forEach(bamWriter::addAlignment);
+            }
 
             // Write the records to file.
             bamWriter.close();
 
-            // Sort the interim output.
-            FileCommon.writeSortedBam(interimOutputFileName, mConfig.OutputFile, mConfig.BamToolPath, 1);
+            // If the samtools path has been provided, sort the output. Else simply rename the unsorted file.
+            if (mConfig.BamToolPath != null) {
+                FileCommon.writeSortedBam(interimOutputFileName, mConfig.OutputFile, mConfig.BamToolPath, 1);
+            } else {
+                File outputFile = new File(mConfig.OutputFile);
+                boolean renamed = interimOutputFile.renameTo(outputFile);
+                if (!renamed) {
+                    BT_LOGGER.warn("Could not rename " + interimOutputFile + " to " + outputFile);
+                }
+            }
         }
         catch(IOException e)
         {

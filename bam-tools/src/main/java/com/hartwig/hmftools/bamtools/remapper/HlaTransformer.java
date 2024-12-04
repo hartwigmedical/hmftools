@@ -49,7 +49,7 @@ public class HlaTransformer
             return List.of(record);
         }
 
-        // Ignore supplementaries.
+        // Ignore supplementary records.
         if (record.isSecondaryOrSupplementary())
         {
             return List.of();
@@ -65,11 +65,9 @@ public class HlaTransformer
         }
     }
 
-    public @NotNull List<SAMRecord> processedUnmatchedRecords()
+    public @NotNull List<SAMRecord> unmatchedRecords()
     {
-        List<SAMRecord> result = new ArrayList<>();
-        recordsByName.values().forEach(record -> result.addAll(aligner.alignRecord(record)));
-        return result;
+        return new ArrayList<>(recordsByName.values());
     }
 
     private RecordPair pair(final SAMRecord s, final SAMRecord r)

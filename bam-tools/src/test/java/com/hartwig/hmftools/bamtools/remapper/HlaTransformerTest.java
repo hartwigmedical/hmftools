@@ -5,7 +5,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import htsjdk.samtools.SAMRecord;
@@ -115,16 +114,11 @@ public class HlaTransformerTest extends RemapperTestBase
         transformer.process(records.get(11));
 
         Mockito.when(aligner.alignRecord(Mockito.any())).thenReturn(List.of(records.get(0)));
-        List<SAMRecord> returned = transformer.processedUnmatchedRecords();
+        List<SAMRecord> returned = transformer.unmatchedRecords();
         Assert.assertEquals(2, returned.size());
-        Assert.assertEquals(records.get(0), returned.get(0));
-        Assert.assertEquals(records.get(0), returned.get(1));
-        ArgumentCaptor<SAMRecord> captor = ArgumentCaptor.forClass(SAMRecord.class);
-        Mockito.verify(aligner,Mockito.times(2)).alignRecord(captor.capture());
-        List<SAMRecord> valuesPassedForAlignment = captor.getAllValues();
-        Assert.assertEquals(2, valuesPassedForAlignment.size());
-        Assert.assertTrue(valuesPassedForAlignment.contains(records.get(8)));
-        Assert.assertTrue(valuesPassedForAlignment.contains(records.get(11)));
+        // We don't know the order in which the unmatched records are returned.
+        Assert.assertTrue(returned.contains(records.get(8)));
+        Assert.assertTrue(returned.contains(records.get(11)));
     }
 
     private RecordPair pair(int leftIndex, int rightIndex)
@@ -140,6 +134,6 @@ public class HlaTransformerTest extends RemapperTestBase
 
     private void checkThatNoRecordsRemainUnprocessed()
     {
-        Assert.assertEquals(0, transformer.processedUnmatchedRecords().size());
+        Assert.assertEquals(0, transformer.unmatchedRecords().size());
     }
 }
