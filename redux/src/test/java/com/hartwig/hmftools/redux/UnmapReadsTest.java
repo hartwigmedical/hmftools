@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -28,6 +29,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
@@ -458,7 +460,7 @@ public class UnmapReadsTest
 
         MockRefGenome refGenome = new MockRefGenome();
         refGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        ConsensusReads consensusReads = new ConsensusReads(refGenome);
+        ConsensusReads consensusReads = new ConsensusReads(refGenome, ILLUMINA);
 
         ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(
                 List.of(read1, read2),  createFragmentCoords(read1), null);

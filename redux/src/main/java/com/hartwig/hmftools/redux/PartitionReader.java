@@ -71,7 +71,7 @@ public class PartitionReader implements Callable
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
+        mConsensusReads = new ConsensusReads(config.RefGenome, config.Sequencing, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;

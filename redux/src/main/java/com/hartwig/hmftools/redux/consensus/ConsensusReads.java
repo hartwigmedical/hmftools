@@ -11,13 +11,13 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.parseUnmappedCoords;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.alignedOrClipped;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.parseUnmappedCoords;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
@@ -45,19 +46,19 @@ public class ConsensusReads
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
-    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
-        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
+        mBaseBuilder = new BaseBuilder(mRefGenome, sequencingType, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mValidateConsensusReads = false;
     }
 
     @VisibleForTesting
-    public ConsensusReads(final RefGenomeInterface refGenome)
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType)
     {
-        this(refGenome, new ConsensusStatistics());
+        this(refGenome, sequencingType, new ConsensusStatistics());
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
@@ -138,7 +139,7 @@ public class ConsensusReads
         consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
 
-        if(consensusRead.getMateUnmappedFlag())
+        if(consensusRead.getReadPairedFlag() && consensusRead.getMateUnmappedFlag())
         {
             checkNonHumanMates(consensusRead, readsView);
         }
@@ -208,6 +209,11 @@ public class ConsensusReads
 
         templateRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
         record.setFlags(templateRead.getFlags());
+        record.setDuplicateReadFlag(false); // being the new primary
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
+
+        if(!record.getReadPairedFlag())
+            return record;
 
         if(templateRead.getMateReferenceIndex() >= 0)
         {
@@ -221,10 +227,7 @@ public class ConsensusReads
             record.setMateAlignmentStart(templateRead.getMateAlignmentStart());
         }
 
-        record.setDuplicateReadFlag(false); // being the new primary
-
         record.setInferredInsertSize(templateRead.getInferredInsertSize());
-        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
         return record;
     }
 
@@ -263,12 +266,14 @@ public class ConsensusReads
 
         record.setAlignmentStart(read.getAlignmentStart());
         record.setCigar(read.getCigar());
+        record.setFlags(read.getFlags());
+        record.setDuplicateReadFlag(false);
+        if(!record.getReadPairedFlag())
+            return record;
+
         record.setMateReferenceName(read.getMateReferenceName());
         record.setMateAlignmentStart(read.getMateAlignmentStart());
         record.setMateReferenceIndex(read.getMateReferenceIndex());
-        record.setFlags(read.getFlags());
-
-        record.setDuplicateReadFlag(false);
 
         record.setInferredInsertSize(read.getInferredInsertSize());
 

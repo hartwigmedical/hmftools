@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.ConsensusReadsTest.UMI_ID_1;
 import static com.hartwig.hmftools.redux.ConsensusReadsTest.nextUmiReadId;
@@ -34,7 +35,7 @@ public class IndelConsensusReadsTest
     {
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        mConsensusReads = new ConsensusReads(mRefGenome);
+        mConsensusReads = new ConsensusReads(mRefGenome, ILLUMINA);
         mReadIdGen = new ReadIdGenerator();
     }
 
