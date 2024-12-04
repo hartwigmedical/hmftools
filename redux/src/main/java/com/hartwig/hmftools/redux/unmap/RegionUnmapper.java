@@ -3,9 +3,11 @@ package com.hartwig.hmftools.redux.unmap;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapMateAlignment;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapReadAlignment;
@@ -43,8 +45,10 @@ public class RegionUnmapper extends Thread
     private UnmapRegion mCurrentRegion;
     private HighDepthRegion mHighDepthRegion;
     private UnmapRegionState mUnmapRegionState;
+
     private long mProcessedReads;
     private long mNextLogReadCount;
+    private final boolean mLogReadIds;
 
     public RegionUnmapper(
             final ReduxConfig config, final TaskQueue regions, final BamWriterSync unmappingBamWriter, final BamWriterSync fullUnmappedBamWriter)
@@ -58,8 +62,10 @@ public class RegionUnmapper extends Thread
         mUnmapRegionState = null;
         mCurrentRegion = null;
         mHighDepthRegion = null;
+
         mProcessedReads = 0;
         mNextLogReadCount = LOG_READ_COUNT;
+        mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
     public static List<RegionUnmapper> createThreadTasks(
@@ -208,18 +214,19 @@ public class RegionUnmapper extends Thread
 
         read.setDuplicateReadFlag(false);
 
-        /*
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
-        */
 
         if(mCurrentRegion.IsStandardChromosome)
         {
-            boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+            boolean alreadyUnmapped = read.getReadUnmappedFlag();
+            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+            boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
 
-            if(readUnmapped && read.getReadUnmappedFlag())
+            // relocate any read which satisfies unmapping criteria - either to its mate's location or the fully-unmapped BAM
+            if(internallyUnmapped)
             {
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return;

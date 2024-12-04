@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bamops.BamToolName;
@@ -331,8 +332,9 @@ public class ReduxConfig
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
 
+    @VisibleForTesting
     public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus)
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
     {
         mIsValid = true;
         SampleId = "";
@@ -356,7 +358,7 @@ public class ReduxConfig
 
         BamToolPath = null;
 
-        UnmapRegions = new ReadUnmapper(Maps.newHashMap());
+        UnmapRegions = readUnmapper;
 
         JitterMsiFile = null;
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;

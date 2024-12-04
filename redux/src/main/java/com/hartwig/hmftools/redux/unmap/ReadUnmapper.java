@@ -50,7 +50,7 @@ public class ReadUnmapper
         }
     }
 
-    public ReadUnmapper(final Map<String, List<HighDepthRegion>> chrLocationsMap)
+    public ReadUnmapper(final Map<String,List<HighDepthRegion>> chrLocationsMap)
     {
         mChrLocationsMap = chrLocationsMap;
         mEnabled = mChrLocationsMap != null && !mChrLocationsMap.isEmpty();

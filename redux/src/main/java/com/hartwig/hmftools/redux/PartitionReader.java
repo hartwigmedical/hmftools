@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
@@ -206,26 +207,26 @@ public class PartitionReader implements Callable
 
         if(mConfig.UnmapRegions.enabled())
         {
-            // TODO: not interested in checking if the read itself should be unmapped - this has already been done by the RegionUnmapper
-            boolean readUnmapped = mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+            // any read in an unmapping region has already been tested by the RegionUnmapper - scenarios:
+            // 1. If the read was unmapped, it will have been relocated to its mate's coordinates and marked as internally unmapped
+            // 2. That same read will also be encountered again at its original location - it will again satisfy the criteria to be unmapped
+            // and then should be discarded from any further processing since it now a duplicate instance of the read in scenario 1
+            // 3. A read with its mate already unmapped (ie prior to running Redux) - with the read also now unmapped - both of these should
+            // be dropped without further processing
 
-            if(readUnmapped)
+            // Further more, any read which was unmapped by the RegionUnmapper and has now appeared here can skip being checked
+            boolean isUnmapped = read.getReadUnmappedFlag();
+            boolean internallyUnmapped = isUnmapped && read.hasAttribute(UNMAP_ATTRIBUTE);
+
+            if(!internallyUnmapped)
             {
-                if(fullyUnmapped(read))
-                {
-                    if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
-                    {
-                        // drop (ie don't write to BAM) unmapped supplementaries and secondaries
-                        ++mStats.UnmappedDropped;
-                    }
-                    else
-                    {
-                        mFullyUnmappedBamWriter.writeRecordSync(read);
-                        ++mStats.Unmapped;
-                    }
-                }
+                mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-                return;
+                if(!isUnmapped && read.getReadUnmappedFlag()) // scenario 2 as described above
+                    return;
+
+                if(fullyUnmapped(read)) // scenario 3 as described above
+                    return;
             }
         }
 

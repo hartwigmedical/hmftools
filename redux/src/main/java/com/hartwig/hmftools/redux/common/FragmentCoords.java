@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
-import org.checkerframework.checker.units.qual.K;
-
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentCoords implements Comparable<FragmentCoords>

@@ -53,9 +53,11 @@ public final class TestUtils
 
     public static final ReadIdGenerator READ_ID_GEN = new ReadIdGenerator();
 
+    public static final ReadUnmapper READ_UNMAPPER_DISABLED = new ReadUnmapper(Collections.emptyMap());
+
     public static ReduxConfig createTestConfig()
     {
-        return new ReduxConfig(new MockRefGenome(), false, false, false);
+        return new ReduxConfig(new MockRefGenome(), false, false, false, READ_UNMAPPER_DISABLED);
     }
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
@@ -88,7 +90,7 @@ public final class TestUtils
     }
 
     // unmapping test state
-    protected static final Map<String, List<HighDepthRegion>> CHR_LOCATION_MAP;
+    protected static final Map<String,List<HighDepthRegion>> CHR_LOCATION_MAP;
     protected static final ReadUnmapper READ_UNMAPPER;
 
     static

@@ -9,10 +9,13 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
+import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER;
+import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER_DISABLED;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
+import static com.hartwig.hmftools.redux.TestUtils.createTestConfig;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
@@ -22,7 +25,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
@@ -30,6 +36,7 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 
 import org.junit.Test;
 
@@ -51,7 +58,7 @@ public class ReduxApplicationTest
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES_REPEAT_40);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
 
-        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, false);
+        ReduxConfig config = createTestConfig();
 
         // mFileWriterCache = new FileWriterCache(config);
         // mWriter = mFileWriterCache.getPartitionBamWriter("1");
@@ -142,12 +149,13 @@ public class ReduxApplicationTest
     @Test
     public void testUnmapRegionReads()
     {
-        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, false);
-
+        Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
         HighDepthRegion region1 = new HighDepthRegion(550, 650, UNMAP_MIN_HIGH_DEPTH + 1);
         HighDepthRegion region2 = new HighDepthRegion(900, 1300, UNMAP_MIN_HIGH_DEPTH + 1);
-        config.UnmapRegions.addRegion(CHR_1, region1);
-        config.UnmapRegions.addRegion(CHR_1, region2);
+        chrLocationsMap.put(CHR_1, Lists.newArrayList(region1, region2));
+
+        ReadUnmapper readUnmapper = new ReadUnmapper(chrLocationsMap);
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, false, readUnmapper);
 
         PartitionReader partitionReader = createPartitionRead(config, mWriter);
 
@@ -155,8 +163,7 @@ public class ReduxApplicationTest
 
         // first fragments have supps on chr 1, primaries in the excluded regions and mates on chr 3
 
-        // a read not overlapping enough with a region to be unmapped
-        // but supp is unmapped
+        // a read not overlapping enough with a region to be unmapped but supp is unmapped
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1,
                 550 - UNMAP_MAX_NON_OVERLAPPING_BASES - 2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3,

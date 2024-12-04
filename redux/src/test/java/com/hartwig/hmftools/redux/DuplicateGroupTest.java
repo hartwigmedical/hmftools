@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
+import static com.hartwig.hmftools.redux.TestUtils.createTestConfig;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 
 import static org.junit.Assert.assertTrue;
@@ -28,7 +29,7 @@ public class DuplicateGroupTest
     @Test
     public void testNonConsensusPrimaryRead()
     {
-        ReduxConfig config = new ReduxConfig(new MockRefGenome(), false, false, false);
+        ReduxConfig config = createTestConfig();
 
         DuplicateGroupBuilder duplicateGroupBuilder = new DuplicateGroupBuilder(config);
 
