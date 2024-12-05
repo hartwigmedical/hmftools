@@ -1,24 +1,20 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.floor;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
-import static com.hartwig.hmftools.lilac.evidence.Candidates.addPhasedCandidates;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
@@ -30,6 +26,7 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
@@ -42,11 +39,9 @@ import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
@@ -75,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
@@ -161,13 +157,9 @@ public class LilacApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        LL_LOGGER.info("key parameters:");
         mConfig.logParams();
 
         HlaContextFactory hlaContextFactory = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
-        HlaContext hlaAContext = hlaContextFactory.hlaA();
-        HlaContext hlaBContext = hlaContextFactory.hlaB();
-        HlaContext hlaCContext = hlaContextFactory.hlaC();
 
         if(!mRefData.load())
         {
@@ -225,45 +217,24 @@ public class LilacApplication
         LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
                 totalFragmentCount, minEvidence, mConfig.calcMinHighQualEvidence(totalFragmentCount)));
 
-        // apply special filtering and splice checks on fragments, just for use in phasing
-        List<Fragment> aCandidateFrags = mAminoAcidPipeline.referencePhasingFragments(hlaAContext);
-        List<Fragment> bCandidateFrags = mAminoAcidPipeline.referencePhasingFragments(hlaBContext);
-        List<Fragment> cCandidateFrags = mAminoAcidPipeline.referencePhasingFragments(hlaCContext);
-
-        // determine un-phased Candidates
         Candidates candidateFactory = new Candidates(minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
-        List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFrags, mRefData.CommonAlleles);
-        List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFrags, mRefData.CommonAlleles);
-        List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFrags, mRefData.CommonAlleles);
 
-        // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig, minEvidence);
-        List<PhasedEvidence> aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFrags);
-        List<PhasedEvidence> bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFrags);
-        List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFrags);
+        List<GeneTask> geneTasks = Lists.newArrayList();
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, hlaContextFactory.hlaA()));
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, hlaContextFactory.hlaB()));
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, hlaContextFactory.hlaC()));
 
-        // validate phasing against expected sequences
-        if(!mConfig.ActualAlleles.isEmpty() && LL_LOGGER.isDebugEnabled())
-        {
-            List<HlaSequenceLoci> actualSequences = mRefData.AminoAcidSequences.stream()
-                    .filter(x -> mConfig.ActualAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
+        List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
 
-            PhasedEvidence.logInconsistentEvidence(GENE_A, aPhasedEvidence, actualSequences);
-            PhasedEvidence.logInconsistentEvidence(GENE_B, bPhasedEvidence, actualSequences);
-            PhasedEvidence.logInconsistentEvidence(GENE_C, cPhasedEvidence, actualSequences);
-        }
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
-        // gather all phased candidates
         List<HlaAllele> candidateAlleles = Lists.newArrayList();
-        List<HlaAllele> aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence);
-        List<HlaAllele> bCandidates = candidateFactory.phasedCandidates(hlaBContext, bUnphasedCandidates, bPhasedEvidence);
-        List<HlaAllele> cCandidates = candidateFactory.phasedCandidates(hlaCContext, cUnphasedCandidates, cPhasedEvidence);
 
-        addPhasedCandidates(candidateAlleles, aCandidates, mConfig, mRefData);
-        addPhasedCandidates(candidateAlleles, bCandidates, mConfig, mRefData);
-        addPhasedCandidates(candidateAlleles, cCandidates, mConfig, mRefData);
+        geneTasks.forEach(x -> x.addPhasedCandidates(candidateAlleles));
 
-        logStageMemory("post-candidates");
+        List<PhasedEvidence> combinedPhasedEvidence = Lists.newArrayList();
+        geneTasks.forEach(x -> combinedPhasedEvidence.addAll(x.phasedEvidence()));
 
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 
@@ -373,34 +344,25 @@ public class LilacApplication
                 .filter(x -> confirmedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         mRefFragAlleles.clear();
+
+        LL_LOGGER.debug("creating fragment alleles from amnioAcidfrags({}) candidateSequences({}) nucleotideSequences({})",
+                refAminoAcidFrags.size(), candidateSequences.size(), candidateNucSequences.size());
+
         mRefFragAlleles.addAll(mFragAlleleMapper.createFragmentAlleles(refAminoAcidFrags, candidateSequences, candidateNucSequences));
 
-        logStageMemory("frag-alleles");
+        // down-sample if ref depth is higher than configured cap
+        List<FragmentAlleles> calcRefFragAlleles = checkDownsampleRefFragmentAlleles();
 
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(mRefFragAlleles, confirmedRecoveredAlleles);
+        List<HlaComplex> complexes = complexBuilder.buildComplexes(calcRefFragAlleles, confirmedRecoveredAlleles);
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
 
-        // down-sample if ref depth is higher than configured cap
-        List<FragmentAlleles> calcFragmentAlleles;
-
-        if(mConfig.MaxRefFragments > 0 && mRefFragAlleles.size() > mConfig.MaxRefFragments)
-        {
-            calcFragmentAlleles = mRefFragAlleles.stream().sorted(Comparator.comparing(x -> x.getFragment().id()))
-                    .limit(mConfig.MaxRefFragments)
-                    .collect(Collectors.toList());
-        }
-        else
-        {
-            calcFragmentAlleles = mRefFragAlleles;
-        }
-
         LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})",
-                complexes.size(), mRefFragAlleles.size() > calcFragmentAlleles.size() ?
-                        format("%d capped=%d)", mRefFragAlleles.size(), calcFragmentAlleles.size()) : mRefFragAlleles.size());
+                complexes.size(), mRefFragAlleles.size() > calcRefFragAlleles.size() ?
+                        format("%d capped=%d)", mRefFragAlleles.size(), calcRefFragAlleles.size()) : mRefFragAlleles.size());
 
-        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcFragmentAlleles, complexes);
+        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
         mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
@@ -411,14 +373,15 @@ public class LilacApplication
             System.exit(1);
         }
 
-        logStageMemory("post-coverage-calcs");
-
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
 
-        if(calcFragmentAlleles.size() < mRefFragAlleles.size())
+        if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
-            // recompute from all evidence
+            // recompute from all evidence but keep the scoring values unch
             winningRefCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, winningRefCoverage.getAlleles());
+            winningRefCoverage.setScore(mRankedComplexes.get(0).getScore());
+            winningRefCoverage.setCohortFrequencyTotal(mRankedComplexes.get(0).cohortFrequencyTotal());
+
             mRankedComplexes.set(0, winningRefCoverage);
         }
 
@@ -513,11 +476,6 @@ public class LilacApplication
         // create various QC and other metrics
         SomaticVariantQC somaticVariantQC = SomaticVariantQC.create(mSomaticVariants.size(), mSomaticCodingCounts);
 
-        List<PhasedEvidence> combinedPhasedEvidence = Lists.newArrayList();
-        combinedPhasedEvidence.addAll(aPhasedEvidence);
-        combinedPhasedEvidence.addAll(bPhasedEvidence);
-        combinedPhasedEvidence.addAll(cPhasedEvidence);
-
         List<Fragment> unmatchedFrags = refAminoAcidFrags.stream().filter(x -> x.scope().isUnmatched()).collect(Collectors.toList());
 
         HaplotypeQC haplotypeQC = HaplotypeQC.create(
@@ -544,6 +502,40 @@ public class LilacApplication
         mResultsWriter.close();
 
         LL_LOGGER.info("Lilac complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private List<FragmentAlleles> checkDownsampleRefFragmentAlleles()
+    {
+        if(mConfig.MaxRefFragments == 0 || mRefFragAlleles.size() <= mConfig.MaxRefFragments)
+            return mRefFragAlleles;
+
+        if(mRefFragAlleles.size() <= mConfig.MaxRefFragments * 2)
+        {
+            return mRefFragAlleles.stream().sorted(Comparator.comparing(x -> x.getFragment().id()))
+                    .limit(mConfig.MaxRefFragments)
+                    .collect(Collectors.toList());
+        }
+
+        List<FragmentAlleles> calcRefFragAlleles = Lists.newArrayList();
+        int nthElement = (int)floor(mRefFragAlleles.size() / (double)mConfig.MaxRefFragments);
+
+        int counter = 0;
+        for(FragmentAlleles fragmentAllele : mRefFragAlleles)
+        {
+            ++counter;
+
+            if(counter == nthElement)
+            {
+                calcRefFragAlleles.add(fragmentAllele);
+
+                if(calcRefFragAlleles.size() >= mConfig.MaxRefFragments)
+                    break;
+
+                counter = 0;
+            }
+        }
+
+        return calcRefFragAlleles;
     }
 
     public void extractTumorResults(
@@ -722,12 +714,6 @@ public class LilacApplication
         }
 
         return true;
-    }
-
-    private void logStageMemory(final String stage)
-    {
-        if(mConfig.LogPerfCalcs)
-            LL_LOGGER.debug("{} memory({}mb)", stage, calcMemoryUsage());
     }
 
     public static void main(@NotNull final String[] args)

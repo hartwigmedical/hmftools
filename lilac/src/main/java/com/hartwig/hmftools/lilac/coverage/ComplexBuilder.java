@@ -164,7 +164,7 @@ public class ComplexBuilder
         List<HlaComplex> complexes;
         long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
 
-        if (simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
+        if(simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
         {
             // common alleles which satisfy the filtering by unique groups will be kept regardless of any ranking
             List<HlaAllele> commonAlleles = mRefData.CommonAlleles.stream()
