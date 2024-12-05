@@ -2,33 +2,26 @@
   <img src="nf-core-oncoanalyser_logo_light.png">
 </h1>
 
-Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a comprehensive 
-cancer DNA/RNA analysis pipeline implemented in [Nextflow](https://www.nextflow.io/) which runs the tools from the Hartwig Medical 
-Foundation ([HMFtools](https://github.com/hartwigmedical/hmftools)). To start using Oncoanalyser, please jump to section **[Quick start](#quick-start)**.
+Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a 
+[Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline. 
+Please jump to section **[Quick start](#quick-start)** to start using Oncoanalyser.
 
-At its core the pipeline performs simple and structural variant calling, but also performs downstream analyses such as detecting driver 
-mutations, HLA typing, determining tissue of origin, and more. The table below summarizes the HMFtools Oncoanalyser currently
-supports (tools are listed in (roughly) the order they are run):
+Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master):
+- Read alignment: [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2), [STAR](https://github.com/alexdobin/STAR)
+- Read deduplication and unmapping: [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux)
+- SNV, MNV and INDEL calling: [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage), [PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave)
+- CNV calling: [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt), [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber), [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)
+- SV calling: [ESVEE](https://github.com/hartwigmedical/hmftools/tree/master/esvee)
+- SV and driver event interpretation: [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx)
+- Oncoviral detection: [VIRUSbreakend](https://github.com/PapenfussLab/gridss), [VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter)
+- HLA typing: [LILAC](https://github.com/hartwigmedical/hmftools/tree/master/lilac)
+- HRD prediction: [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord)
+- Tissue of origin prediction: [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)
+- Mutational signature fitting: [Sigs](https://github.com/hartwigmedical/hmftools/tree/master/sigs)
+- RNA transcript quantification: [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)
+- Summary report PDF: [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)
 
-| Tool                                                                                                                                                       | Description                                                     |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|
-| [Redux](https://github.com/hartwigmedical/hmftools/tree/master/redux)                                                                                      | Mark duplicate reads                                            |
-| [Sage](https://github.com/hartwigmedical/hmftools/tree/master/sage)                                                                                        | SNV/indel calling                                               |
-| [Pave](https://github.com/hartwigmedical/hmftools/tree/master/pave)                                                                                        | SNV/indel interpretation                                        |
-| [Esvee](https://github.com/hartwigmedical/hmftools/tree/master/esvee)                                                                                      | Structural variant calling                                      |
-| [Cobalt](https://github.com/hartwigmedical/hmftools/tree/master/cobalt)                                                                                    | Calculate read depth ratios                                     |
-| [Amber](https://github.com/hartwigmedical/hmftools/tree/master/amber)                                                                                      | Calculate B-allele frequencies                                  |
-| [Purple](https://github.com/hartwigmedical/hmftools/tree/master/purple)                                                                                    | Estimate copy number, purity and ploidy. Identify driver events |
-| [Linx](https://github.com/hartwigmedical/hmftools/tree/master/linx)                                                                                        | Structural variant, fusion, and driver event interpretation     |
-| [Sigs](https://github.com/hartwigmedical/hmftools/tree/master/sigs)                                                                                        | Quantify mutational signature presence                          |
-| [Chord](https://github.com/hartwigmedical/hmftools/tree/master/chord)                                                                                      | Homologous recombination deficiency prediction                  |
-| [Cuppa](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)                                                                                      | Tissue of origin prediction                                     |
-| [Lilac](https://github.com/hartwigmedical/hmftools/tree/master/lilac)                                                                                      | HLA typing                                                      |
-| [Virusbreakend](https://github.com/PapenfussLab/gridss) &<br/>[Virusinterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter) | Viral integration detection	                                    |
-| [Isofox](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                    | Quantify RNA transcripts                                        |
-| [Orange](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                    | PDF summary report of all WGS output                            |
-
-Oncoanalyser starts from BAM or FASTQ files, and supports the following modes:
+Oncoanalyser supports the following sequencing and sample setups:
 
 | Data type | Sequencing method                                                                | Paired tumor/normal | Tumor-only         |
 |-----------|----------------------------------------------------------------------------------|---------------------|--------------------|
