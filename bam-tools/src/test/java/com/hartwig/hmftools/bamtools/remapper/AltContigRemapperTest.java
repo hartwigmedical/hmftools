@@ -2,8 +2,11 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -11,7 +14,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.bamtools.remapper.RemapperTestBase.bwa;
 
@@ -70,6 +76,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expected4.setCigarString("35S116M");
         expected4.setMateAlignmentStart(29945439);
         expected4.setMateReferenceIndex(5);
+        expected4.setFlags(65); // Was 81 but read reversed strand gets reset.
         checkOutputContains(expected4, results);
 
         // input[5] and input[6] produce no output.
@@ -93,6 +100,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor8.setReferenceIndex(1);
         expectedFor8.setAlignmentStart(32916241);
         expectedFor8.setMappingQuality(16);
+        expectedFor8.setFlags(2177); // Gains supplementary flag but loses read reversed
         expectedFor8.setCigarString("42S32M77S");
         expectedFor8.setMateReferenceIndex(5);
         expectedFor8.setMateAlignmentStart(31354760);
@@ -120,6 +128,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor9.setCigarString("151M");
         expectedFor9.setMateReferenceIndex(5);
         expectedFor9.setMateAlignmentStart(31354347);
+        expectedFor9.setFlags(113); // New alignment gains read reversed flag
         checkOutputContains(expectedFor9, results);
 
         // input[10]
@@ -132,6 +141,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor10.setCigarString("151M");
         expectedFor10.setMateReferenceIndex(5);
         expectedFor10.setMateAlignmentStart(31355729);
+        expectedFor10.setFlags(179); // Gains read reversed strand flag
         checkOutputContains(expectedFor10, results);
 
         // input[11]
@@ -156,6 +166,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor12.setCigarString("151M");
         expectedFor12.setMateReferenceIndex(5);
         expectedFor12.setMateAlignmentStart(31354375);
+        expectedFor12.setFlags(179); // Gains read reversed strand flag
         checkOutputContains(expectedFor12, results);
 
         // input[13]
@@ -170,6 +181,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor13.setCigarString("67S36M48S");
         expectedFor13.setMateReferenceIndex(5);
         expectedFor13.setMateAlignmentStart(31354513);
+        expectedFor13.setFlags(2115); // Gains read reversed strand and supplementary alignment flags
         checkOutputContains(expectedFor13, results);
 
         // second remapping of input[13]
@@ -208,7 +220,6 @@ class DummyConfig extends AltContigRemapperConfig
 
     DummyConfig(Aligner aligner, String inputBam, String outputBam)
     {
-//        super(inputBam, outputBam, "/Users/timlavers/work/apps/samtools-1.21/samtools");
         super(inputBam, outputBam, null);
         this.aligner = aligner;
     }
