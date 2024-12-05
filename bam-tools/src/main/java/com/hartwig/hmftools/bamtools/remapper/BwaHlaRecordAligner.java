@@ -30,9 +30,6 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
         ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignments =
                 aligner.alignSequences(pair.left.getReadBases(), pair.right.getReadBases());
 
-        if (pair.left.getReadName().equals("A00624:8:HHKYHDSXX:2:1516:12156:4225")) {
-            System.out.println("--------");
-        }
         List<SAMRecord> result = new ArrayList<>();
         final List<SAMRecord> realignedRecordsLeft = produceRealignments(pair.left, alignments.getLeft());
         final List<SAMRecord> realignedRecordsRight = produceRealignments(pair.right, alignments.getRight());
