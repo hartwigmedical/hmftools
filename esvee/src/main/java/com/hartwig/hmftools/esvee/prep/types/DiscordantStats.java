@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.esvee.prep.types;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -16,6 +18,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -28,38 +31,86 @@ public class DiscordantStats
     public final long TotalReads;
 
     // note these counts are in fragment terms hence see doubling in rate calc
-    public long ShortInversion;
-    public long Translocation;
-    public long Other;
+    public final long[] TypeCounts;
 
     public static final int SHORT_INV_LENGTH = 5000;
+    public static final int MEDIUM_LENGTH = 10000;
+    public static final int LONG_LENGTH = 100000;
 
-    public DiscordantStats(final long totalReads, final long shortInversion, final long translocation, final long other)
+    private enum DiscordantType
+    {
+        Translocation,
+        ShortInv,
+        DelDup10K,
+        DelDup100K,
+        DelDupLong,
+        Inv100K,
+        InvLong;
+    }
+
+    public DiscordantStats(final long totalReads, final long[] typeCounts)
     {
         TotalReads = totalReads;
-        ShortInversion = shortInversion;
-        Translocation = translocation;
-        Other = other;
+        TypeCounts = typeCounts;
     }
 
     public DiscordantStats()
     {
         TotalReads = 0;
-        ShortInversion = 0;
-        Translocation = 0;
-        Other = 0;
+        TypeCounts = new long[DiscordantType.values().length];
+    }
+
+    public void addRead(final PrepRead read)
+    {
+        if(!read.Chromosome.equals(read.MateChromosome))
+        {
+            ++TypeCounts[DiscordantType.Translocation.ordinal()];
+            return;
+        }
+
+        int distance = abs(read.record().getInferredInsertSize());
+
+        if(read.orientation() == read.mateOrientation())
+        {
+            if(distance < SHORT_INV_LENGTH)
+                TypeCounts[DiscordantType.ShortInv.ordinal()] += 2; // assumes mate is in the same read group so not also registered
+            else if(distance < LONG_LENGTH)
+                ++TypeCounts[DiscordantType.Inv100K.ordinal()];
+            else
+                ++TypeCounts[DiscordantType.InvLong.ordinal()];
+        }
+        else
+        {
+            if(distance < MEDIUM_LENGTH)
+                ++TypeCounts[DiscordantType.DelDup10K.ordinal()];
+            else if(distance < LONG_LENGTH)
+                ++TypeCounts[DiscordantType.DelDup100K.ordinal()];
+            else
+                ++TypeCounts[DiscordantType.DelDupLong.ordinal()];
+        }
     }
 
     public void add(final DiscordantStats stats)
     {
-        ShortInversion += stats.ShortInversion;
-        Translocation += stats.Translocation;
-        Other += stats.Other;
+        for(int i = 0; i < TypeCounts.length; ++i)
+        {
+            TypeCounts[i] += stats.TypeCounts[i];
+        }
     }
 
-    public double shortInversionRate() { return TotalReads > 0 ? 2.0 * ShortInversion / TotalReads : 0; }
+    public double shortInversionRate() { return TotalReads > 0 ? TypeCounts[DiscordantType.ShortInv.ordinal()] / (double)TotalReads : 0; }
 
-    public String toString() { return format("totalReads(%d) shortInv(%d) bnd(%d) other(%d)", TotalReads, ShortInversion, Translocation, Other); }
+    public String toString()
+    {
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        for(DiscordantType type : DiscordantType.values())
+        {
+            sj.add(format("%s=%d", type, TypeCounts[type.ordinal()]));
+        }
+
+        return format("totalReads=%d %s", TotalReads, sj);
+    }
 
     public static void writeDiscordantStats(final PrepConfig config, final long totalReads, final DiscordantStats discordantStats)
     {
@@ -69,10 +120,26 @@ public class DiscordantStats
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("TotalReads\tShortInversions\tTranslocations\tOther");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("TotalReads");
+
+            for(DiscordantType type : DiscordantType.values())
+            {
+                sj.add(type.toString());
+            }
+
+            writer.write(sj.toString());
             writer.newLine();
-            writer.write(String.format("%d\t%d\t%d\t%d",
-                    totalReads, discordantStats.ShortInversion, discordantStats.Translocation, discordantStats.Other));
+
+            sj = new StringJoiner(TSV_DELIM);
+            sj.add(String.valueOf(totalReads));
+
+            for(DiscordantType type : DiscordantType.values())
+            {
+                sj.add(String.valueOf(discordantStats.TypeCounts[type.ordinal()]));
+            }
+
+            writer.write(sj.toString());
             writer.newLine();
 
             writer.close();
@@ -95,8 +162,26 @@ public class DiscordantStats
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String[] values = lines.get(1).split(TSV_DELIM);
 
-            return new DiscordantStats(
-                    Long.parseLong(values[0]), Long.parseLong(values[1]), Long.parseLong(values[2]), Long.parseLong(values[3]));
+            long totalReads = Long.parseLong(values[0]);
+
+            long[] typeCounts = new long[DiscordantType.values().length];
+
+            // backwards compatibility
+            if(values.length == 4)
+            {
+                typeCounts[DiscordantType.ShortInv.ordinal()] = Long.parseLong(values[1]);
+                typeCounts[DiscordantType.Translocation.ordinal()] = Long.parseLong(values[2]);
+                typeCounts[DiscordantType.DelDupLong.ordinal()] = Long.parseLong(values[3]);
+            }
+            else
+            {
+                for(int i = 0; i < typeCounts.length; ++i)
+                {
+                    typeCounts[i] = Long.parseLong(values[i + 1]);
+                }
+            }
+
+            return new DiscordantStats(totalReads, typeCounts);
         }
         catch(Exception e)
         {

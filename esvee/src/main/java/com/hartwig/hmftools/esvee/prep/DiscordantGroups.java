@@ -247,7 +247,7 @@ public class DiscordantGroups
         // create junctions from remote regions which satisfy the required fragment count
         for(DiscordantRemoteRegion remoteRegion : remoteRegions)
         {
-            if(mTrackRemotes)
+            if(mTrackRemotes || remoteRegion == mainRemoteRegion)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(remoteRegion.Chromosome, remoteRegion.start(), Orientation.FORWARD);
                 remoteJunction.Fragments = remoteRegion.readCount();
@@ -319,20 +319,7 @@ public class DiscordantGroups
     public static void addDiscordantStats(final ReadGroup readGroup, final DiscordantStats stats)
     {
         PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
-
-        if(!firstRead.Chromosome.equals(firstRead.MateChromosome))
-        {
-            ++stats.Translocation;
-            return;
-        }
-
-        if(firstRead.orientation() == firstRead.mateOrientation() && abs(firstRead.record().getInferredInsertSize()) <= SHORT_INV_LENGTH)
-        {
-            ++stats.ShortInversion;
-            return;
-        }
-
-        ++stats.Other;
+        stats.addRead(firstRead);
     }
 
     public boolean isRelevantDiscordantGroup(final ReadGroup readGroup)
