@@ -137,16 +137,18 @@ Remaps HLA alt contig records using a supplied reference genome.
 java -cp bam-tools.jar com.hartwig.hmftools.bamtools.remapper.AltContigRemapper \
    -orig_bam_file sample_with_hla_alt_contigs.bam \
    -ref_genome ref_genome.fasta \
-   -output_file remapped.bam
+   -output_file remapped.bam \
+   -bamtool
 ```
 
 ### Configuration
 
-| Filter           | Required? | Description                                                       |
-|------------------|-----------|-------------------------------------------------------------------|
-| orig_bam_file    | Yes       | input BAM / CRAM file                                             |
-| ref_genome       | Yes       | Reference genome file, used to remap alt contigs.                 |
-| output_file      | Yes       | File into which the records (remapped and unaltered) are written. |
+| Filter        | Required? | Description                                                          |
+|---------------|-----------|----------------------------------------------------------------------|
+| orig_bam_file | Yes       | input BAM / CRAM file                                                |
+| ref_genome    | Yes       | Reference genome file, used to remap alt contigs.                    |
+| output_file   | Yes       | File into which the records (remapped and unaltered) are written.    |
+| bamtool       | No        | Path to samtools executable. If supplied, the output will be sorted. |
 
 
 ## Version History and Download Links
