@@ -206,7 +206,7 @@ public class ReduxConfig
 
         UMIs = UmiConfig.from(configBuilder);
 
-        FormConsensus = !UMIs.Enabled && configBuilder.hasFlag(FORM_CONSENSUS);
+        FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
@@ -351,7 +351,7 @@ public class ReduxConfig
         mReadLength = DEFAULT_READ_LENGTH;
 
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
-        FormConsensus = formConsensus;
+        FormConsensus = umiEnabled || formConsensus;
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;

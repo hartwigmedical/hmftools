@@ -76,7 +76,7 @@ public class DuplicateGroup
             ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
 
             // set consensus read attributes
-            int firstInPairCount = (int)mReads.stream().filter(x -> x.getFirstOfPairFlag()).count();
+            int firstInPairCount = (int)mReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
             int readCount = mReads.size();
             boolean isPrimaryGroup = firstInPairCount >= readCount / 2;
 
@@ -85,7 +85,7 @@ public class DuplicateGroup
 
             UmiReadType umiReadType = mDualStrand ? DUAL : SINGLE;
 
-            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
+            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount, umiReadType);
 
             mConsensusRead = consensusReadInfo.ConsensusRead;
         }

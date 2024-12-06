@@ -310,7 +310,9 @@ public class PartitionReader implements Callable
         // write single fragments and duplicate groups
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
-            duplicateGroup.formConsensusRead(mConsensusReads);
+            if(mConfig.FormConsensus)
+                duplicateGroup.formConsensusRead(mConsensusReads);
+
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
