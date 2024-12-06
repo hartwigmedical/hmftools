@@ -8,9 +8,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.redux.ReduxConfig.splitRegionsByThreads;
-import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER;
-import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER_DISABLED;
+import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
@@ -46,7 +44,6 @@ public class ReduxApplicationTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
-    // private final FileWriterCache mFileWriterCache;
     private final TestBamWriter mWriter;
 
     private final PartitionReader mPartitionReader;
@@ -60,8 +57,6 @@ public class ReduxApplicationTest
 
         ReduxConfig config = createTestConfig();
 
-        // mFileWriterCache = new FileWriterCache(config);
-        // mWriter = mFileWriterCache.getPartitionBamWriter("1");
         mWriter = new TestBamWriter(config);
 
         mPartitionReader = createPartitionRead(config, mWriter);
@@ -219,7 +214,7 @@ public class ReduxApplicationTest
 
         specificRegions.addRegion(new ChrBaseRegion(CHR_1, 1, 1000000));
 
-        List<List<ChrBaseRegion>> partitionRegions = splitRegionsByThreads(specificRegions, 4, V37);
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(specificRegions, 4, V37);
         assertEquals(4, partitionRegions.size());
 
         ChrBaseRegion region = partitionRegions.get(0).get(0);
@@ -243,7 +238,7 @@ public class ReduxApplicationTest
         specificRegions.addRegion(new ChrBaseRegion(CHR_2, 1, 10000));
         specificRegions.addRegion(new ChrBaseRegion(CHR_3, 1, 10000));
 
-        partitionRegions = splitRegionsByThreads(specificRegions, 1, V37);
+        partitionRegions = splitRegionsIntoPartitions(specificRegions, 1, V37);
         assertEquals(1, partitionRegions.size());
 
         region = partitionRegions.get(0).get(0);

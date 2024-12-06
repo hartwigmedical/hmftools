@@ -98,6 +98,7 @@ public class ReduxConfig
     public final boolean WriteStats;
 
     public final int Threads;
+    public final int PartitionThreadRatio;
 
     public final String BamToolPath;
 
@@ -133,6 +134,7 @@ public class ReduxConfig
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
+    private static final String PARTIION_THREAD_RATIO = "partition_ratio";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
@@ -235,6 +237,7 @@ public class ReduxConfig
                 FilterReadsType.NONE;
 
         Threads = parseThreads(configBuilder);
+        PartitionThreadRatio = configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
@@ -294,6 +297,8 @@ public class ReduxConfig
         addRefGenomeConfig(configBuilder, true);
         SequencingType.registerConfig(configBuilder);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
+
+        configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
 
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
@@ -371,96 +376,12 @@ public class ReduxConfig
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
+        PartitionThreadRatio = 1;
         PerfDebugTime = 0;
         RunChecks = true;
         WriteStats = false;
         LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
-    }
-
-    public static List<ChrBaseRegion> humanChromosomeRegions(final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)
-    {
-        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
-
-        RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(refGenomeVersion);
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
-
-            if(specificRegions.excludeChromosome(chromosomeStr))
-                continue;
-
-            inputRegions.add(new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome)));
-        }
-
-        return inputRegions;
-    }
-
-    public static List<List<ChrBaseRegion>> splitRegionsByThreads(
-            final SpecificRegions specificRegions, final int threadCount, final RefGenomeVersion refGenomeVersion)
-    {
-        List<List<ChrBaseRegion>> partitionRegions = Lists.newArrayList();
-
-        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
-
-        if(!specificRegions.Regions.isEmpty())
-        {
-            inputRegions.addAll(specificRegions.Regions);
-        }
-        else
-        {
-            inputRegions.addAll(humanChromosomeRegions(specificRegions, refGenomeVersion));
-        }
-
-        long totalLength = inputRegions.stream().mapToLong(x -> x.baseLength()).sum();
-        long intervalLength = (int)ceil(totalLength / (double)threadCount);
-
-        int chrEndBuffer = (int)round(intervalLength * 0.05);
-        long currentLength = 0;
-        int nextRegionStart = 1;
-        List<ChrBaseRegion> currentRegions = Lists.newArrayList();
-        partitionRegions.add(currentRegions);
-
-        for(ChrBaseRegion inputRegion : inputRegions)
-        {
-            nextRegionStart = 1;
-            int chromosomeLength = inputRegion.baseLength();
-            int remainingChromosomeLength = chromosomeLength;
-
-            while(currentLength + remainingChromosomeLength >= intervalLength)
-            {
-                int remainingIntervalLength = (int)(intervalLength - currentLength);
-                int regionEnd = nextRegionStart + remainingIntervalLength - 1;
-
-                if(chromosomeLength - regionEnd < chrEndBuffer)
-                {
-                    regionEnd = chromosomeLength;
-                    remainingChromosomeLength = 0;
-                }
-
-                currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, regionEnd));
-
-                currentRegions = Lists.newArrayList();
-                partitionRegions.add(currentRegions);
-                currentLength = 0;
-
-                if(remainingChromosomeLength == 0)
-                    break;
-
-                nextRegionStart = regionEnd + 1;
-                remainingChromosomeLength = chromosomeLength - nextRegionStart + 1;
-            }
-
-            if(remainingChromosomeLength <= 0)
-                continue;
-
-            currentLength += remainingChromosomeLength;
-
-            currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, chromosomeLength));
-        }
-
-        return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
     }
 }

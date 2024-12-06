@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -29,22 +28,22 @@ import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
-import com.hartwig.hmftools.redux.write.BamWriterSync;
+import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import htsjdk.samtools.SAMRecord;
 
-public class PartitionReader implements Callable
+public class PartitionReader
 {
     private final ReduxConfig mConfig;
 
     private final BamReader mBamReader;
-    private final BamWriter mBamWriter;
-    private final BamWriterSync mFullyUnmappedBamWriter;
     private final ReadCache mReadCache;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
-    private final List<ChrBaseRegion> mSliceRegions;
+    // state for current partition
+    private BamWriter mBamWriter;
+    private List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
     private int mLastWriteLowerPosition;
     private UnmapRegionState mUnmapRegionState;
@@ -57,15 +56,10 @@ public class PartitionReader implements Callable
     private int mNextLogReadCount;
     private int mProcessedReads;
 
-    public PartitionReader(
-            final ReduxConfig config, final List<ChrBaseRegion> regions, final List<String> inputBams, final BamWriter bamWriter,
-            final BamWriterSync fullyUnmappedBamWriter)
+    public PartitionReader(final ReduxConfig config, final BamReader bamReader)
     {
         mConfig = config;
-        mBamWriter = bamWriter;
-        mFullyUnmappedBamWriter = fullyUnmappedBamWriter;
-        mBamReader = new BamReader(inputBams, config.RefGenomeFile);
-        mSliceRegions = regions;
+        mBamReader = bamReader;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
 
@@ -92,18 +86,16 @@ public class PartitionReader implements Callable
 
     public Statistics statistics() { return mStats; }
 
-    @Override
-    public Long call()
+    public void processPartition(final PartitionInfo partition)
     {
-        // RD_LOGGER.debug("processing {} regions", mSliceRegions.size());
+        mBamWriter = partition.bamWriter();
+        mSliceRegions = partition.regions();
 
         for(ChrBaseRegion region : mSliceRegions)
         {
             setupRegion(region);
             processRegion();
         }
-
-        return (long)0;
     }
 
     @VisibleForTesting
@@ -356,6 +348,9 @@ public class PartitionReader implements Callable
         mPcTotal.stop();
         mPcProcessDuplicates.stop();
     }
+
+    @VisibleForTesting
+    public void setBamWriter(final BamWriter writer) { mBamWriter = writer; }
 
     @VisibleForTesting
     public void processRead(final SAMRecord read) { processSamRecord(read); }

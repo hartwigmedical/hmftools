@@ -49,6 +49,7 @@ public abstract class BamWriter
     }
 
     public String filename() { return mFilename; }
+    public SAMFileWriter samFileWriter() { return mSamFileWriter; }
 
     public long nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
     public long consensusWriteCount() { return mConsensusReadCount.get(); }

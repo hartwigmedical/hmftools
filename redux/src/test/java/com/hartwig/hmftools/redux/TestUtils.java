@@ -62,7 +62,9 @@ public final class TestUtils
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
     {
-        return new PartitionReader(config, null, Collections.emptyList(), writer, (BamWriterSync)writer);
+        PartitionReader partitionReader = new PartitionReader(config, null);
+        partitionReader.setBamWriter(writer);
+        return partitionReader;
     }
 
     public static void setBaseQualities(final SAMRecord read, int value)
