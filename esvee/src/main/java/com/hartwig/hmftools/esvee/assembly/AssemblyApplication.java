@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.floor;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -7,17 +8,24 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_DISC_ONLY_INCREMENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_JUNC_INCREMENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DECOY;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -57,6 +65,7 @@ import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 public class AssemblyApplication
 {
@@ -174,9 +183,29 @@ public class AssemblyApplication
             return true;
         }
 
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.OutputDir, mConfig.sampleId());
+        DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
+
+        int minJunctionFrags = MIN_JUNCTION_SUPPORT;
+        int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
+        int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
+
+        double discordantRate = discordantStats.discordantRate();
+
+        if(discordantRate >= mConfig.DiscordantRateIncrement)
+        {
+            minJunctionFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
+            minHotspotFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
+            minDiscordantFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_DISC_ONLY_INCREMENT;
+
+            SV_LOGGER.info("raised min fragments(hotspot={} junction={} disc-only={}) for discordantRate({})",
+                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
+        }
+
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
+                    junctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags);
 
             if(newJunctionsMap == null)
                 return false;

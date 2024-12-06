@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
@@ -74,6 +75,8 @@ public class ResultsWriter
         mBamWriter.close();
     }
 
+    public long writtenCount() { return mBamWriter != null ? mBamWriter.writtenCount() : 0; }
+
     public synchronized void writeReadGroup(final List<ReadGroup> readGroups)
     {
         for(ReadGroup readGroup : readGroups)
@@ -120,7 +123,7 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
             sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
-            sj.add("MaxQual").add("ExtraInfo");
+            sj.add("MaxQual").add(FLD_EXTRA_INFO);
             sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("InitialReadId");
 
             if(mConfig.TrackRemotes)

@@ -24,7 +24,7 @@ public class BamWriter
 {
     private final PrepConfig mConfig;
 
-    private int mRecordWriteCount;
+    private long mRecordWriteCount;
 
     private final Map<String,SAMFileWriter> mWriters;
     private final List<String> mUnsortedBamFiles;
@@ -61,6 +61,8 @@ public class BamWriter
             mWriters.put(sampleId, new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(unsortedBamFile)));
         }
     }
+
+    public long writtenCount() { return mRecordWriteCount; }
 
     public void writeRecord(final SAMRecord record)
     {

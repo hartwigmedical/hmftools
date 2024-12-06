@@ -38,6 +38,11 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
 
+    public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
+    public static final int DISC_RATE_JUNC_INCREMENT = 1;
+    public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
+
+
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;

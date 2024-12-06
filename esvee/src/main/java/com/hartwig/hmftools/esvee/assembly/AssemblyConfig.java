@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
 import static com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE;
@@ -107,6 +108,7 @@ public class AssemblyConfig
     public final int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
     public final boolean DiscordantOnlyDisabled;
+    public final double DiscordantRateIncrement;
 
     public final int Threads;
 
@@ -128,6 +130,7 @@ public class AssemblyConfig
     private static final String PERF_LOG_TIME = "perf_log_time";
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
+    private static final String DISC_RATE_INCREMENT = "disc_rate_increment";
     private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
@@ -243,6 +246,8 @@ public class AssemblyConfig
 
         DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
 
+        DiscordantRateIncrement = configBuilder.getDecimal(DISC_RATE_INCREMENT);
+
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
@@ -345,6 +350,8 @@ public class AssemblyConfig
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
         configBuilder.addFlag(RUN_REMOTE_REF_LINKING, "Use unmapped & remote read extension instead of remote ref linking");
 
+        configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
+
         TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
@@ -398,6 +405,7 @@ public class AssemblyConfig
         Threads = 0;
         TruthsetFile = null;
         AlignmentFile = null;
+        DiscordantRateIncrement = DEFAULT_DISC_RATE_INCREMENT;
 
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;

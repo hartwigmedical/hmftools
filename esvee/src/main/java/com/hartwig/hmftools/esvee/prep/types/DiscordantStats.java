@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DI
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -28,12 +29,14 @@ import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
 public class DiscordantStats
 {
-    public final long TotalReads;
+    public final long ProcessedReads;
+    public final long WrittenReads;
 
     // note these counts are in fragment terms hence see doubling in rate calc
     public final long[] TypeCounts;
 
     public static final int SHORT_INV_LENGTH = 5000;
+    public static final int SHORT_LENGTH = 1000;
     public static final int MEDIUM_LENGTH = 10000;
     public static final int LONG_LENGTH = 100000;
 
@@ -48,15 +51,17 @@ public class DiscordantStats
         InvLong;
     }
 
-    public DiscordantStats(final long totalReads, final long[] typeCounts)
+    public DiscordantStats(final long processedReads, final long writtenReads, final long[] typeCounts)
     {
-        TotalReads = totalReads;
+        ProcessedReads = processedReads;
+        WrittenReads = writtenReads;
         TypeCounts = typeCounts;
     }
 
     public DiscordantStats()
     {
-        TotalReads = 0;
+        ProcessedReads = 0;
+        WrittenReads = 0;
         TypeCounts = new long[DiscordantType.values().length];
     }
 
@@ -98,7 +103,13 @@ public class DiscordantStats
         }
     }
 
-    public double shortInversionRate() { return TotalReads > 0 ? TypeCounts[DiscordantType.ShortInv.ordinal()] / (double)TotalReads : 0; }
+    public double shortInversionRate() { return ProcessedReads > 0 ? TypeCounts[DiscordantType.ShortInv.ordinal()] / (double)ProcessedReads : 0; }
+
+    public double discordantRate()
+    {
+        double totalDiscordant = Arrays.stream(TypeCounts).sum();
+        return ProcessedReads > 0 ? totalDiscordant / (double)ProcessedReads : 0;
+    }
 
     public String toString()
     {
@@ -109,10 +120,14 @@ public class DiscordantStats
             sj.add(format("%s=%d", type, TypeCounts[type.ordinal()]));
         }
 
-        return format("totalReads=%d %s", TotalReads, sj);
+        return format("totalReads=%d writtenReads=%d %s", ProcessedReads, WrittenReads, sj);
     }
 
-    public static void writeDiscordantStats(final PrepConfig config, final long totalReads, final DiscordantStats discordantStats)
+    private static final String FLD_TOTAL_READS = "TotalReads";
+    private static final String FLD_WRITTEN_READS = "WrittenReads";
+
+    public static void writeDiscordantStats(
+            final PrepConfig config, final long processedReads, final long writtenReads, final DiscordantStats discordantStats)
     {
         try
         {
@@ -121,7 +136,8 @@ public class DiscordantStats
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add("TotalReads");
+            sj.add(FLD_TOTAL_READS);
+            sj.add(FLD_WRITTEN_READS);
 
             for(DiscordantType type : DiscordantType.values())
             {
@@ -132,7 +148,8 @@ public class DiscordantStats
             writer.newLine();
 
             sj = new StringJoiner(TSV_DELIM);
-            sj.add(String.valueOf(totalReads));
+            sj.add(String.valueOf(processedReads));
+            sj.add(String.valueOf(writtenReads));
 
             for(DiscordantType type : DiscordantType.values())
             {
@@ -162,7 +179,8 @@ public class DiscordantStats
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String[] values = lines.get(1).split(TSV_DELIM);
 
-            long totalReads = Long.parseLong(values[0]);
+            long processedReads = Long.parseLong(values[0]);
+            long writtenReads = 0;
 
             long[] typeCounts = new long[DiscordantType.values().length];
 
@@ -175,13 +193,15 @@ public class DiscordantStats
             }
             else
             {
+                writtenReads = Long.parseLong(values[1]);
+
                 for(int i = 0; i < typeCounts.length; ++i)
                 {
-                    typeCounts[i] = Long.parseLong(values[i + 1]);
+                    typeCounts[i] = Long.parseLong(values[i + 2]);
                 }
             }
 
-            return new DiscordantStats(totalReads, typeCounts);
+            return new DiscordantStats(processedReads, writtenReads, typeCounts);
         }
         catch(Exception e)
         {

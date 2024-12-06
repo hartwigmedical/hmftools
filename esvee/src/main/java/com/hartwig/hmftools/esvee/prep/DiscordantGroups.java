@@ -50,7 +50,7 @@ public class DiscordantGroups
     {
         mRegion = region;
         mMaxConcordantFragmentLength = observedMaxFragmentLength;
-        mMinDiscordantFragmentLength = maxConcordantFragmentLength(observedMaxFragmentLength);
+        mMinDiscordantFragmentLength = maxConcordantFragmentLength(observedMaxFragmentLength) * 2;
         mKnownHotspots = knownHotspots;
         mTrackRemotes = trackRemotes;
     }
@@ -297,7 +297,7 @@ public class DiscordantGroups
             int minDistance = remoteRegion.start() > discordantGroup.Region.end() ?
                     remoteRegion.start() - discordantGroup.Region.end() : discordantGroup.Region.start() - remoteRegion.end();
 
-            isShortLocal = minDistance <= mMinDiscordantFragmentLength * 2;
+            isShortLocal = minDistance <= mMinDiscordantFragmentLength;
         }
 
         if(isShortLocal)

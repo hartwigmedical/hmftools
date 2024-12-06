@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
@@ -127,7 +129,8 @@ public class Junction implements Comparable<Junction>
         return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
     }
 
-    public static Map<String,List<Junction>> loadJunctions(final String filename, final SpecificRegions specificRegions)
+    public static Map<String,List<Junction>> loadJunctions(
+            final String filename, final SpecificRegions specificRegions, int minJunctionFrags, int minHotspotFrags, int minDiscordantFrags)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -146,17 +149,22 @@ public class Junction implements Comparable<Junction>
             int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
 
             Integer juncFragsIndex = fieldsIndexMap.get(FLD_JUNCTION_FRAGS);
+            Integer otherJuncFragsIndex = fieldsIndexMap.get(FLD_EXACT_SUPPORT_FRAGS);
 
             Integer otherSupportFragsIndex = fieldsIndexMap.containsKey(FLD_OTHER_SUPPORT_FRAGS) ?
                     fieldsIndexMap.get(FLD_OTHER_SUPPORT_FRAGS) : fieldsIndexMap.get("DiscordantFrags"); // old name
 
             Integer indelIndex = fieldsIndexMap.get(FLD_INDEL_JUNCTION);
             Integer hotspotIndex = fieldsIndexMap.get(FLD_HOTSPOT_JUNCTION);
+            Integer extraInfoIndex = fieldsIndexMap.get(FLD_EXTRA_INFO);
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
 
             int junctionCount = 0;
+            int discordantCount = 0;
+            int indelCount = 0;
+            int hotspotCount = 0;
 
             while((line = fileReader.readLine()) != null)
             {
@@ -172,6 +180,39 @@ public class Junction implements Comparable<Junction>
                 if(!specificRegions.includePosition(chromosome, position))
                     continue;
 
+                int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
+                int otherJunctionFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherJuncFragsIndex]) : 0;
+                int otherSupportFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherSupportFragsIndex]) : 0;
+
+                boolean discordantOnly = junctionFrags == 0 && otherSupportFrags > 0;
+                boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
+                boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
+
+                if(hotspot)
+                {
+                    if(junctionFrags < minHotspotFrags)
+                        continue;
+
+                    ++hotspotCount;
+                }
+                else if(discordantOnly)
+                {
+                    int maxRemoteFrags = extraInfoIndex != null ? Integer.parseInt(values[extraInfoIndex]) : otherSupportFrags;
+
+                    if(maxRemoteFrags < minDiscordantFrags)
+                        continue;
+
+                    ++discordantCount;
+                }
+                else
+                {
+                    if(junctionFrags + otherJunctionFrags < minJunctionFrags)
+                        continue;
+
+                    if(indel)
+                        ++indelCount;
+                }
+
                 if(!currentChromosome.equals(chromosome))
                 {
                     currentChromosome = chromosome;
@@ -179,18 +220,13 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
-                int otherSupportFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherSupportFragsIndex]) : 0;
-
-                boolean discordantOnly = junctionFrags == 0 && otherSupportFrags > 0;
-                boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
-                boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
-
                 junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot));
                 ++junctionCount;
             }
 
-            SV_LOGGER.info("loaded {} junctions from file: {}", junctionCount, filename);
+            int splitCount = junctionCount - discordantCount;
+            SV_LOGGER.info("loaded {} junctions, types(split={} discordant={} indel={} hotspot={}) from file: {}",
+                    junctionCount, splitCount, discordantCount, indelCount, hotspotCount, filename);
 
             chrJunctionsMap.values().forEach(x -> Collections.sort(x));
 
