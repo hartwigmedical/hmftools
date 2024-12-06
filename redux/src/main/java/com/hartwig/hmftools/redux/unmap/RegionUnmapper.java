@@ -78,10 +78,17 @@ public class RegionUnmapper extends Thread
         for(Map.Entry<String,List<HighDepthRegion>> entry : allUnmappingRegions.entrySet())
         {
             String chromosome = entry.getKey();
+
+            if(config.SpecificChrRegions.excludeChromosome(chromosome))
+                continue;
+
             List<HighDepthRegion> regions = entry.getValue();
 
             for(HighDepthRegion region : regions)
             {
+                if(config.SpecificChrRegions.excludeRegion(region.start(), region.end()))
+                    continue;
+
                 unmappingRegions.add(new UnmapRegion(chromosome, region.start(), region.end(), region.maxDepth()));
             }
         }
@@ -119,6 +126,9 @@ public class RegionUnmapper extends Thread
     private static List<UnmapRegion> extractAltConfigRegions(final ReduxConfig config)
     {
         List<UnmapRegion> regions = Lists.newArrayList();
+
+        if(config.SpecificChrRegions.hasFilters())
+            return regions;
 
         for(String inputBam : config.BamFiles)
         {
@@ -198,7 +208,9 @@ public class RegionUnmapper extends Thread
         // must overlap by minimum to be a candidate for unmapping
         if(mCurrentRegion.IsStandardChromosome)
         {
-            if(!overlapsRegion(mHighDepthRegion, read.getAlignmentStart(), read.getAlignmentEnd()))
+            int readPosEnd = read.getReadUnmappedFlag() ? read.getAlignmentStart() : read.getAlignmentEnd();
+
+            if(!overlapsRegion(mHighDepthRegion, read.getAlignmentStart(), readPosEnd))
                 return;
         }
 
@@ -223,15 +235,17 @@ public class RegionUnmapper extends Thread
         {
             boolean alreadyUnmapped = read.getReadUnmappedFlag();
             mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+
             boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
+            boolean fullyUnmapped = fullyUnmapped(read);
 
             // relocate any read which satisfies unmapping criteria - either to its mate's location or the fully-unmapped BAM
-            if(internallyUnmapped)
+            if(internallyUnmapped || fullyUnmapped)
             {
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return;
 
-                if(fullyUnmapped(read))
+                if(fullyUnmapped)
                     mFullyUnmappedBamWriter.writeRecordSync(read);
                 else
                     mUnmappingBamWriter.writeRecordSync(read);
