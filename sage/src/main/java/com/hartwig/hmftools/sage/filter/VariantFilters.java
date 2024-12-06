@@ -274,7 +274,10 @@ public class VariantFilters
         int strongSupport = primaryTumor.strongAltSupport();
 
         if(strongSupport == 0)
+        {
+            primaryTumor.setTumorQualProbability(1.0);
             return true;
+        }
 
         int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
 
