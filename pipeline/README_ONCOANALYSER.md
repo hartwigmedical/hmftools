@@ -6,8 +6,8 @@ Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core
 [Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline. 
 Please jump to section **[Quick start](#quick-start)** to start using Oncoanalyser.
 
-Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master):
-- Read alignment: [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2), [STAR](https://github.com/alexdobin/STAR)
+Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/):
+- Read mapping: [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) (DNA), [STAR](https://github.com/alexdobin/STAR) (RNA)
 - Read deduplication and unmapping: [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux)
 - SNV, MNV and INDEL calling: [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage), [PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave)
 - CNV calling: [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt), [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber), [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)
@@ -43,14 +43,12 @@ Oncoanalyser supports the following sequencing and sample setups:
     * [GRCh37](#grch37)
     * [GRCh38](#grch38)
   * [Sample sheet](#sample-sheet)
-    * [Sample sheet basic usage](#sample-sheet-basic-usage)
-      * [BAM inputs](#bam-inputs)
-      * [FASTQ inputs](#fastq-inputs)
-      * [Sample modes](#sample-modes)
-    * [Sample sheet advanced usage](#sample-sheet-advanced-usage)
-      * [Multiple sample groups](#multiple-sample-groups)
-      * [Running from REDUX bam](#running-from-redux-bam)
-      * [Running specific tools](#running-specific-tools)
+    * [BAM inputs](#bam-inputs)
+    * [FASTQ inputs](#fastq-inputs)
+    * [Sample modes](#sample-modes)
+    * [Multiple sample groups](#multiple-sample-groups)
+    * [Running from REDUX BAM](#running-from-redux-bam)
+    * [Running specific tools](#running-specific-tools)
   * [Configuration](#configuration)
     * [Arguments](#arguments)
     * [Setting up panel data](#setting-up-panel-data)
@@ -76,6 +74,7 @@ See: https://docs.docker.com/engine/install/
 Download and extract the reference genome and HMFTools resources under section **[Resource files](#resource-files)**.
 
 Create a config file which points to the resource paths:
+
 ```
 params {
    genomes {
@@ -95,7 +94,8 @@ params {
 
 ### 4. Set up sample sheet
 Create a file called `samplesheet.csv` which points to the sample inputs:
-```
+
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
@@ -150,86 +150,78 @@ See section **[Configuration](#configuration)** for details on arguments that ca
 
 ## Sample sheet
 
-The sample sheet is a comma separated table where each row represents an input file along with its associated metadata.
+The sample sheet is a comma separated table with the following columns:
+- `group_id`: grouping of subject_id and sample_id
+- `subject_id`
+- `sample_id`
+- `sample_type`: `tumor` or `normal`
+- `sequence_type`: `dna` or `rna`
+- `filetype`: `bam`, `bai`, `fastq`, or see **[Running specific tools](#running-specific-tools)** for other valid values
+- `info`: sequencing library and lane info for **[FASTQ inputs](#fastq-inputs)**
+- `filepath`: Absolute filepath to input file. Can be local filepath, URL, or S3 URI
 
-| Column        | Description                                                                                                     |
-|---------------|-----------------------------------------------------------------------------------------------------------------|
-| group_id      | Group ID for a set of samples and inputs                                                                        |
-| subject_id    | Subject/patient ID                                                                                              |
-| sample_id     | Sample ID                                                                                                       |
-| sample_type   | Sample type: `tumor`, `normal`                                                                                  |
-| sequence_type | Sequence type: `dna`, `rna`                                                                                     |
-| filetype      | File type: `bam`, `fastq`, etc. See **[Running specific tools](#running-specific-tools)** for all valid values. |
-| info          | For `fastq` file types, specify library_id and lane, e.g. `library_id:COLO829_library;lane:001`                 |
-| filepath      | Absolute filepath to input file. Can be local filepath, URL, or S3 URI                                          |
+### BAM inputs
+Below is an example sample sheet with BAM files for a tumor/normal WGS run:
 
-### Sample sheet basic usage
-
-#### BAM inputs
-Below is an example sample sheet with BAM inputs for the whole genome and transcriptome (WGTS) workflow:
-
-```
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 ```
 
-> [!NOTE]
-> BAM indexes (.bai files) are expected to exist alongside the respective input BAM unless provided as a separate sample sheet entry by using the `bai` filetype
+BAM indexes (.bai files) are expected to be in the same directory as the BAM files. Alternatively, provide the BAM index path by 
+providing `bai` under column `filetype`:
 
-
-#### FASTQ inputs
-Below is an example sample sheet with FASTQ inputs for the WGTS workflow:
-
+```csv
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
+COLO829,COLO829,COLO829T,tumor,dna,bai,/path/to/COLO829T.dna.bam.bai
 ```
+
+### FASTQ inputs
+Below is an example sample sheet with FASTQ files for a tumor/normal WGS run:
+
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:001,/path/to/COLO829T.dna.001_R1.fastq.gz;/path/to/COLO829T.dna.001_R2.fastq.gz
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:002,/path/to/COLO829T.dna.002_R1.fastq.gz;/path/to/COLO829T.dna.002_R2.fastq.gz
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:003,/path/to/COLO829T.dna.003_R1.fastq.gz;/path/to/COLO829T.dna.003_R2.fastq.gz
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:004,/path/to/COLO829T.dna.004_R1.fastq.gz;/path/to/COLO829T.dna.004_R2.fastq.gz
-COLO829,COLO829,COLO829R,normal,dna,fastq,library_id:COLO829R_library;lane:001,/path/to/COLO829R.dna.001_R1.fastq.gz;/path/to/COLO829R.dna.001_R2.fastq.gz
-COLO829,COLO829,COLO829T_RNA,tumor,rna,fastq,library_id:COLO829T_RNA_library;lane:001,/path/to/COLO829T.rna.001_R1.fastq.gz;/path/to/COLO829T.rna.001_R2.fastq.gz
+COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:S1;lane:001,/path/to/COLO829T_S1_L001_R1_001.fastq.gz;/path/to/COLO829T_S1_L001_R2_001.fastq.gz
+COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:S1;lane:002,/path/to/COLO829T_S1_L002_R1_001.fastq.gz;/path/to/COLO829T_S1_L002_R2_001.fastq.gz
+COLO829,COLO829,COLO829R,normal,dna,fastq,library_id:S2;lane:001,/path/to/COLO829R_S2_L001_R1_001.fastq.gz;/path/to/COLO829R_S2_L001_R2_001.fastq.gz
+COLO829,COLO829,COLO829R,normal,dna,fastq,library_id:S2;lane:002,/path/to/COLO829R_S2_L002_R1_002.fastq.gz;/path/to/COLO829R_S2_L002_R2_001.fastq.gz
 ```
 
-The additional `info` column provides the required lane and library info for FASTQ entries with each field delimited by a semicolon.
+Comments:
+- Under `info`, provide the sequencing library and lane info separated by `;`
+- Under `filepath`, provide the forward ('R1') and reverse ('R2') FASTQ files separated by `;`
+- Only gzip compressed, non-interleaved pair-end FASTQ files are currently supported
 
-The forward and reverse FASTQ files are set in the `filepath` column and are also separated by a semicolon, and are _strictly_ ordered 
-with forward reads in position one and reverse in position two.
+### Sample modes
 
-When starting from FASTQ files, reads will be aligned against the selected reference genome using bwa-mem2 (DNA reads) or STAR (RNA reads).
+Providing `sample_type` and `sequence_type` in different combinations allows Oncoanalyser to run in different sample modes. The below sample
+sheets use BAM files, but different sample modes can also be specified for FASTQ files.
 
-> [!NOTE]
-> Only gzipped compressed, non-interleaved pair-end FASTQs are currently supported
+**Tumor-only DNA**
 
-#### Sample modes
-
-The above examples have provided inputs for the WGTS workflow using paired tumor/normal samples. However, the below example sample sheets 
-show how different workflow and/or sample modes can be from BAM files (but also applies to other `sample_type`s e.g. FASTQ files).
-
-Tumor-only DNA:
-
-```
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 ```
 
-Tumor-only DNA and RNA:
+**Tumor-only RNA**
+```csv
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 ```
+
+**Tumor/normal DNA, tumor-only RNA**
+
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
+COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+COLO829,COLO829,COLO829_RNA,tumor,dna,bam,/path/to/COLO829R.rna.bam
 ```
 
-RNA only:
-```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-```
-
-### Sample sheet advanced usage
-
-#### Multiple sample groups
+### Multiple sample groups
 
 Multiple sample groups can also be provided in a single sample sheet. All rows with the same `group_id` value will be grouped together for
 processing.
@@ -238,34 +230,51 @@ processing.
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-SEQC,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
+PD10010,PD10010,PD10010T,tumor,dna,bam,/path/to/PD10010T.dna.bam
+PD10010,PD10010,PD10010R,normal,dna,bam,/path/to/PD10010R.dna.bam
 ```
 
-Here the `SEQC` sample has been added. Since only a tumor DNA BAM is provided for this additional group, just a tumor-only WGS analysis is
-run for the SEQC sample.
+It is however recommended to use one sample sheet per sample group so that errors can easily be isolated.
 
-> [!NOTE]
-> It is recommended to use one sample sheet per sample group so that errors can easily be isolated.
+### Running from REDUX BAM
+Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) followed by read pre-processing with [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) 
+are the pipeline steps that take the most time and compute resources. Thus, we can re-run Oncoanalyser from a REDUX BAM if it is already 
+exists, e.g. due to updates to downstream [HMFtools](https://github.com/hartwigmedical/hmftools/).
 
-#### Running from REDUX bam
-_TODO_
+Simply provide the REDUX BAM path, specifying `bam_redux` under `filetype`:
 
-#### Running specific tools
-It is possible to run Oncoanalyser from any [supported tool](#components). For example, you may want to run 
-[CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa) and already have the outputs from [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple), 
-[LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx), and [Virusinterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter). 
-In this case, you would provide the outputs from those tools to the sample sheet, specifying entries where `filetype` is `purple_dir`, 
-`linx_anno_dir`, and `virusinterpreter_dir`:
-
+```csv
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829,COLO829,COLO829T,tumor,dna,bam_redux,/path/to/COLO829T.dna.redux.bam
 ```
+
+The `*.jitter_params.tsv` and `*.ms_table.tsv.gz` REDUX output files are expected to be in the same directory as the REDUX BAM. If these 
+files are located elsewhere, their paths can also be explicitly provided by specifying `redux_jitter_tsv` and `redux_ms_tsv` under `filetype`:
+
+```csv
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829,COLO829,COLO829T,tumor,dna,bam_redux,/path/to/COLO829T.dna.redux.bam
+COLO829,COLO829,COLO829T,tumor,dna,redux_jitter_tsv,/path/to/COLO829T.dna.jitter_params.tsv
+COLO829,COLO829,COLO829T,tumor,dna,redux_ms_tsv,/path/to/COLO829T.dna.ms_table.tsv.gz
+```
+
+### Running specific tools
+It is possible to run Oncoanalyser from any tool from [HMFtools](https://github.com/hartwigmedical/hmftools/). For example, you may want to 
+run [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa) and already have the outputs from
+[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple), 
+[LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx), 
+and [VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter). In this case, you would provide the 
+outputs from those tools to the sample sheet, specifying entries where `filetype` is `purple_dir`, `linx_anno_dir`, and 
+`virusinterpreter_dir`:
+
+```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,purple_dir,/path/to/purple/dir/
 COLO829,COLO829,COLO829T,tumor,dna,linx_anno_dir,/path/to/linx/dir/
 COLO829,COLO829,COLO829T,tumor,dna,virusinterpreter_dir,/path/to/virus/dir/
 ```
 
-Please see the respective tool [readmes](#components) for details on which input data is required. 
+Please see the respective tool [READMEs](https://github.com/hartwigmedical/hmftools/) for details on which input data is required. 
 
 Below are all valid values for `filetype`:
 - Raw inputs: `bam`, `bai`, `fastq`
@@ -298,13 +307,13 @@ Below are all valid values for `filetype`:
 | `-revision`    | Nextflow     | Specific oncoanalyser version to run                              |
 | `-config`      | Nextflow     | Configuration file                                                |
 | `-resume`      | Nextflow     | Use cache from existing run to resume                             |
-| `--input`      | oncoanalyser | Samplesheet filepath                                              |
-| `--outdir`     | oncoanalyser | Output directory path                                             |
-| `--mode`       | oncoanalyser | Workflow name: `wgts`, `targeted`                                 |
-| `--panel`      | oncoanalyser | Panel name (only applicable with `--mode targeted`): `tso500`     |
-| `--genome`     | oncoanalyser | Reference genome: `GRCh37_hmf`, `GRCh38_hmf`                      |
-| `--max_cpus`   | oncoanalyser | Enforce an upper limit of CPUs each process can use               |
-| `--max_memory` | oncoanalyser | Enforce an upper limit of memory available to each process        |
+| `--input`      | Oncoanalyser | Samplesheet filepath                                              |
+| `--outdir`     | Oncoanalyser | Output directory path                                             |
+| `--mode`       | Oncoanalyser | Workflow name: `wgts`, `targeted`                                 |
+| `--panel`      | Oncoanalyser | Panel name (only applicable with `--mode targeted`): `tso500`     |
+| `--genome`     | Oncoanalyser | Reference genome: `GRCh37_hmf`, `GRCh38_hmf`                      |
+| `--max_cpus`   | Oncoanalyser | Enforce an upper limit of CPUs each process can use               |
+| `--max_memory` | Oncoanalyser | Enforce an upper limit of memory available to each process        |
 
 ### Setting up panel data
 _TODO_
