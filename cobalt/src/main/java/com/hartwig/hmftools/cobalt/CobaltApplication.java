@@ -173,8 +173,18 @@ public class CobaltApplication
         for(GCProfile gcProfile : gcProfileList)
         {
             Row row = gcProfileTable.appendRow();
+
+            double gcContent = gcProfile.gcContent();
+
+            if(gcContent > 0 && mConfig.GcRatioFileMin > 0 && gcContent < mConfig.GcRatioFileMin)
+                continue;
+
+            if(mConfig.GcRatioFileMax < 1 && gcContent > mConfig.GcRatioFileMax)
+                continue;
+
             long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(gcProfile.chromosome(), gcProfile.start());
-            if (chrPosIndex > 0)
+
+            if(chrPosIndex > 0)
             {
                 row.setLong(CobaltColumns.ENCODED_CHROMOSOME_POS, chrPosIndex);
             }
@@ -182,7 +192,8 @@ public class CobaltApplication
             {
                 throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
             }
-            row.setDouble(CobaltColumns.GC_CONTENT, gcProfile.gcContent());
+
+            row.setDouble(CobaltColumns.GC_CONTENT, gcContent);
             row.setBoolean(CobaltColumns.IS_MAPPABLE, gcProfile.isMappable());
             row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
         }

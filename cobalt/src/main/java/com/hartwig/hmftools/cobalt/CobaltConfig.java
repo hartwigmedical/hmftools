@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt;
 
+import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_FILE_MAX;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_FILE_MIN;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_PCF_GAMMA;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
@@ -45,6 +47,8 @@ public class CobaltConfig
     private static final String TARGET_REGION_NORM_FILE = "target_region";
     private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
+    private static final String GC_RATIO_FILE_MIN = "gc_ratio_file_min";
+    private static final String GC_RATIO_FILE_MAX = "gc_ratio_file_max";
 
     public final String ReferenceId;
     public final String ReferenceBamPath;
@@ -64,6 +68,9 @@ public class CobaltConfig
     public final ValidationStringency BamStringency;
     public final boolean IncludeDuplicates;
 
+    public final double GcRatioFileMin;
+    public final double GcRatioFileMax;
+
     public final String TumorOnlyDiploidBed;
     public final String TargetRegionPath;
 
@@ -82,7 +89,10 @@ public class CobaltConfig
         TumorOnlyDiploidBed = configBuilder.getValue(TUMOR_ONLY_DIPLOID_BED);
         TargetRegionPath = configBuilder.getValue(TARGET_REGION_NORM_FILE);
         RefGenomePath = configBuilder.getValue(REF_GENOME);
-        
+
+        GcRatioFileMin = configBuilder.getDecimal(GC_RATIO_FILE_MIN);
+        GcRatioFileMax = configBuilder.getDecimal(GC_RATIO_FILE_MAX);
+
         MinMappingQuality = configBuilder.getInteger(MIN_MAPPING_QUALITY);
         PcfGamma = configBuilder.getInteger(PCF_GAMMA);
         IncludeDuplicates = configBuilder.hasFlag(INCLUDE_DUPLICATES);
@@ -90,7 +100,6 @@ public class CobaltConfig
         BamStringency = BamUtils.validationStringency(configBuilder);
         OutputDir = parseOutputDir(configBuilder);
         Threads = parseThreads(configBuilder);
-
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -103,6 +112,10 @@ public class CobaltConfig
 
         configBuilder.addPath(GC_PROFILE, true, GC_PROFILE_DESC);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
+
+        configBuilder.addDecimal(GC_RATIO_FILE_MIN, "Restrict GC profile entries to above minimum", DEFAULT_GC_RATIO_FILE_MIN);
+        configBuilder.addDecimal(GC_RATIO_FILE_MAX, "Restrict GC profile entries to below maximum", DEFAULT_GC_RATIO_FILE_MAX);
+
         configBuilder.addPath(TUMOR_ONLY_DIPLOID_BED, false, "Diploid regions for tumor-only mode");
         configBuilder.addPath(TARGET_REGION_NORM_FILE, false, "Targeted regions normalisation file");
 
