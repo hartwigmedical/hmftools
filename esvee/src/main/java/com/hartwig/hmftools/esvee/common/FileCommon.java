@@ -26,15 +26,23 @@ public final class FileCommon
     public static final String ESVEE_FILE_ID = "esvee";
     public static final String PREP_FILE_ID = "esvee.prep";
 
+    public static final String PREP_DIR = "esvee_prep_dir";
+    public static final String PREP_DIR_DESC = "Esvee prep input directory";
+
+    /*
+    public static final String ASSEMBLY_DIR = "esvee_assembly_dir";
+    public static final String ASSEMBLY_DIR_DESC = "Esvee assembly input directory";
+
+    public static final String REF_DEPTH_DIR = "esvee_ref_depth_dir";
+    public static final String REF_DEPTH_DIR_DESC = "Esvee ref depth input directory";
+    */
+
     public static final String RAW_VCF_SUFFIX = "raw" + VCF_ZIP_EXTENSION;
     public static final String DEPTH_VCF_SUFFIX = "ref_depth" + VCF_ZIP_EXTENSION;
 
     // common config
     public static final String JUNCTION_FILE = "junction_file";
     public static final String JUNCTION_FILE_DESC = "Esvee Prep junction file, default is to match by sample name";
-
-    public static final String FRAG_LENGTHS_FILE = "frag_length_file";
-    public static final String FRAG_LENGTHS_FILE_DESC = "Esvee Prep fragment length distribution file, default is to match by sample name";
 
     public static final String FILE_NAME_DELIM = ".";
 

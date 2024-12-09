@@ -15,10 +15,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
-import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE;
-import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
+import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
+import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 
 import java.nio.file.Files;
@@ -36,7 +36,9 @@ public class CallerConfig
     public final String SampleId;
     public final String ReferenceId;
     public final RefGenomeVersion RefGenVersion;
+
     public final String VcfFile;
+    public final String PrepDir;
 
     public final String OutputDir;
     public final String OutputId;
@@ -62,6 +64,8 @@ public class CallerConfig
             String fileSampleId = SampleId != null ? SampleId : ReferenceId;
             VcfFile = formEsveeInputFilename(OutputDir, fileSampleId, DEPTH_VCF_SUFFIX, OutputId);
         }
+
+        PrepDir = configBuilder.hasValue(PREP_DIR) ? configBuilder.getValue(PREP_DIR) : OutputDir;
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
@@ -110,7 +114,7 @@ public class CallerConfig
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
-        configBuilder.addPaths(FRAG_LENGTHS_FILE, false, FRAG_LENGTHS_FILE_DESC);
+        configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
         configBuilder.addInteger(MANUAL_REF_DEPTH, "Manually set ref depth for testing", 0);
 
         addOutputOptions(configBuilder);

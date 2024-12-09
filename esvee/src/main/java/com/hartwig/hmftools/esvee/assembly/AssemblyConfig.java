@@ -33,14 +33,13 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSE
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
 import static com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
-import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE;
-import static com.hartwig.hmftools.esvee.common.FileCommon.FRAG_LENGTHS_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
+import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
+import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
@@ -79,7 +78,7 @@ public class AssemblyConfig
     public final List<String> ReferenceBams;
 
     public final List<String> JunctionFiles;
-    public final String FragmentLengthFile;
+    public final String PrepDir;
 
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeCoordinates RefGenomeCoords;
@@ -172,6 +171,8 @@ public class AssemblyConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
+        PrepDir = configBuilder.hasValue(PREP_DIR) ? configBuilder.getValue(PREP_DIR) : OutputDir;
+
         JunctionFiles = Lists.newArrayList();
 
         if(configBuilder.hasValue(JUNCTION_FILE))
@@ -181,14 +182,11 @@ public class AssemblyConfig
         else
         {
             // since Prep now reads multiple BAMs, only the tumor-labelled junctions file needs to be loaded
-            String junctionFile = formPrepInputFilename(OutputDir, TumorIds.get(0), PREP_JUNCTION_FILE_ID, OutputId);
+            String junctionFile = formPrepInputFilename(PrepDir, TumorIds.get(0), PREP_JUNCTION_FILE_ID, OutputId);
 
             if(Files.exists(Paths.get(junctionFile)))
                 JunctionFiles.add(junctionFile);
         }
-
-        FragmentLengthFile = configBuilder.getValue(
-                FRAG_LENGTHS_FILE, formFragmentLengthDistFilename(OutputDir, TumorIds.get(0)));
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
@@ -311,7 +309,7 @@ public class AssemblyConfig
         configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
 
         configBuilder.addPaths(JUNCTION_FILE, false, JUNCTION_FILE_DESC);
-        configBuilder.addPaths(FRAG_LENGTHS_FILE, false, FRAG_LENGTHS_FILE_DESC);
+        configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
@@ -373,7 +371,7 @@ public class AssemblyConfig
         ReferenceBams = Collections.emptyList();
 
         JunctionFiles = Collections.emptyList();
-        FragmentLengthFile = "";
+        PrepDir = null;
 
         RefGenVersion = V38;
         RefGenomeCoords = null;

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunct
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -226,13 +227,15 @@ public class AssemblyApplication
 
     private void loadFragmentLengthBounds()
     {
-        if(!Files.exists(Paths.get(mConfig.FragmentLengthFile)))
+        String fragmentLengthFile = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.sampleId());
+
+        if(!Files.exists(Paths.get(fragmentLengthFile)))
         {
-            SV_LOGGER.error("missing fragment length file: {}", mConfig.FragmentLengthFile);
+            SV_LOGGER.error("missing fragment length file: {}", fragmentLengthFile);
             System.exit(1);
         }
 
-        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(mConfig.FragmentLengthFile);
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragmentLengthFile);
 
         if(fragmentLengthBounds.isValid())
         {
