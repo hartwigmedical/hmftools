@@ -32,14 +32,12 @@ Oncoanalyser supports the following sequencing and sample setups:
 ## Table of contents
 <!-- TOC -->
   * [Table of contents](#table-of-contents)
+  * [Quick start](#quick-start)
     * [1. Install Nextflow](#1-install-nextflow)
     * [2. Install Docker](#2-install-docker)
     * [3. Set up resource files](#3-set-up-resource-files)
     * [4. Set up sample sheet](#4-set-up-sample-sheet)
     * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
-  * [Resource files](#resource-files)
-    * [GRCh37](#grch37)
-    * [GRCh38](#grch38)
   * [Sample sheet](#sample-sheet)
     * [BAM inputs](#bam-inputs)
     * [FASTQ inputs](#fastq-inputs)
@@ -52,16 +50,23 @@ Oncoanalyser supports the following sequencing and sample setups:
     * [Nextflow arguments](#nextflow-arguments)
     * [Oncoanalyser arguments](#oncoanalyser-arguments)
   * [Configuration files](#configuration-files)
-    * [Tool resources](#tool-resources)
+    * [Basic config example](#basic-config-example)
+    * [Oncoanalyser arguments as config](#oncoanalyser-arguments-as-config)
+    * [Multiple config files](#multiple-config-files)
+  * [Resource files](#resource-files)
+    * [Links](#links)
+    * [Configuring WGTS resource files](#configuring-wgts-resource-files)
+    * [Configuring panel / targeted sequecing resource files](#configuring-panel--targeted-sequecing-resource-files)
+  * [Configuring processes](#configuring-processes)
     * [Compute resources](#compute-resources)
     * [Docker images](#docker-images)
-    * [Setting up panel data](#setting-up-panel-data)
-    * [Multiple config files](#multiple-config-files)
   * [Outputs](#outputs)
     * [Sample reports](#sample-reports)
     * [Pipeline reports](#pipeline-reports)
   * [Acknowledgements](#acknowledgements)
 <!-- TOC -->
+
+## Quick start
 
 ### 1. Install Nextflow
 See: https://www.nextflow.io/docs/latest/install.html
@@ -85,7 +90,6 @@ params {
          img           = "/path/to/Homo_sapiens.GRCh37.GATK.illumina.fasta.img"
          bwamem2_index = "/path/to/bwa-mem2_index/"
          gridss_index  = "/path/to/gridss_index/"
-         star_index    = "/path/to/star_index/"
       }
    }
 
@@ -121,37 +125,6 @@ nextflow run nf-core/oncoanalyser \
 
 See section **[Configuration](#configuration)** for details on arguments that can be provided to Oncoanalyser and Nextflow.
 
-## Resource files
-
-### GRCh37
-
-| Type         | Description          | Name                                                                                                                                                                                                |
-|--------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.37_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz)                              |
-| Genome       | FASTA                | [Homo_sapiens.GRCh37.GATK.illumina.fasta](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/Homo_sapiens.GRCh37.GATK.illumina.fasta)                                      |
-| Genome       | FASTA index          | [Homo_sapiens.GRCh37.GATK.illumina.fasta.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai)          |
-| Genome       | FASTA seq dictionary | [Homo_sapiens.GRCh37.GATK.illumina.fasta.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict)        |
-| Genome       | bwa-mem2 index image | [Homo_sapiens.GRCh37.GATK.illumina.fasta.img](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/bwa_index_image/0.7.17-r1188/Homo_sapiens.GRCh37.GATK.illumina.fasta.img) |
-| Genome       | bwa-mem2 index       | [bwa-mem2_index/2.2.1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                              |
-| Genome       | GRIDSS index         | [gridss_index/2.13.2.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                |
-| Genome (RNA) | STAR index           | [star_index/gencode_19/2.7.3a.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/star_index/gencode_19/2.7.3a.tar.gz)                                              |
-| Panel        | TSO500 data          | [panels/tso500_5.34_37--1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/hmf_reference_data/panels/tso500_5.34_37--1.tar.gz)                                                           |
-
-
-### GRCh38
-
-| Type         | Description          | Name                                                                                                                                                                                                                |
-|--------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.38_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/38/hmf_pipeline_resources.38_v6.0--2.tar.gz)                                              |
-| Genome       | FASTA                | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna)                                      |
-| Genome       | FASTA index          | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai)          |
-| Genome       | FASTA seq dictionary | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict)        |
-| Genome       | bwa-mem2 index image | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.img](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/bwa_index_image/0.7.17-r1188/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.img) |
-| Genome       | bwa-mem2 index       | [bwa-mem2_index/2.2.1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                                              |
-| Genome       | GRIDSS index         | [gridss_index/2.13.2.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                                |
-| Genome (RNA) | STAR index           | [star_index/gencode_38/2.7.3a.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/star_index/gencode_38/2.7.3a.tar.gz)                                                              |
-| Panel        | TSO500 data          | [panels/tso500_5.34_38--1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/hmf_reference_data/panels/tso500_5.34_38--1.tar.gz)                                                                           |
-
 ## Sample sheet
 
 The sample sheet is a comma separated table with the following columns:
@@ -180,6 +153,8 @@ providing `bai` under column `filetype`:
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 COLO829,COLO829,COLO829T,tumor,dna,bai,/path/to/COLO829T.dna.bam.bai
+COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+COLO829,COLO829,COLO829R,normal,dna,bai,/path/to/COLO829R.dna.bam.bai
 ```
 
 ### FASTQ inputs
@@ -322,7 +297,7 @@ nextflow run /path/to/oncoanalyser_repo \
 ```
 
 > [!TIP]
-> Oncoanalyser arguments (i.e. those with two hyphens (`--`)) can also be defined in config file. See section 
+> Oncoanalyser arguments, i.e. those with two hyphens (`--`), can also be defined in config file. See section 
 > [Configuration files](#configuration-files) for more info.
 
 ### Nextflow arguments
@@ -331,7 +306,7 @@ below table list the ones that are mandatory or useful.
 
 | Argument&emsp; | Description                                                                                                                                                                                                                            |
 |:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `-config`      | Path to a configuration file which. Can be specified multiple times. Details in section [Configuration files](#configuration-files)                                                                                                    |
+| `-config`      | Path to a configuration file which. Can be specified [multiple times](#multiple-config-files)                                                                                                                                          |
 | `-profile`     | Compute profile. Only `docker` is currently supported.                                                                                                                                                                                 |
 | `-revision`    | A specific Oncoanalyser branch/tag to run. See the Oncoanalyser [GitHub](https://github.com/nf-core/oncoanalyser) for available branches/tags                                                                                          |
 | `-resume`      | [Resume](https://www.nextflow.io/docs/latest/cache-and-resume.html#work-directory) from cached results (by default the previous run). Useful if you've cancelled a run with `CTRL+C`, or a run has crashed and you've fixed the issue. |
@@ -356,21 +331,134 @@ Notes:
 `orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
 
 ## Configuration files
-User-defined configurations are provided to Oncoanalyser via configuration files with JSON-like [syntax](https://www.nextflow.io/docs/latest/config.html#blocks).
+[Nextflow configuration files](https://www.nextflow.io/docs/latest/config.html) can be used to configure Oncoanalyser. This section 
+summarizes concepts of Nextflow configuration files that are relevant for using Oncoanalyser.
 
-### Tool resources
+For details on specific configurations, please jump to the relevant section:
+- [Configuring resource files](#resources-files)
+- [Configuring processes](#configuring-processes)
+
+### Basic config example
+Config items can be declared using [blocks](#https://www.nextflow.io/docs/latest/config.html#blocks), where curly brackets define the scope 
+of the encapsulated config items. The below example has the `params` and `process` scopes, with `workDir` being 
+[un-scoped](https://www.nextflow.io/docs/latest/reference/config.html#unscoped-options):
+
+```
+workDir = '/path/to/work/'
+
+params {
+   genome = 'GRCh37_hmf'
+   outdir = '/path/to/output/'
+}
+
+process {
+   withName: 'REDUX.*' {
+      cpus = 32
+   }
+}
+```
+
+The above config items can also be compactly re-written with [dot syntax](https://www.nextflow.io/docs/latest/config.html#blocks) like so:
+
+```
+workDir = '/path/to/work/'
+params.genome = 'GRCh37_hmf'
+params.outdir = '/path/to/output/'
+process.withName: 'REDUX.*' { cpus = 32 }
+```
+
+### Oncoanalyser arguments as config
+
+The `params` scope is used to define [Oncoanalyser arguments](#oncoanalyser-arguments). Running Oncoanalyser with the 
+[above example config](#basic-config-example):
+```shell
+nextflow run nf-core/oncoanalyser \
+-config above_example.config \
+# other arguments
+```
+
+...is equivalent to running:
+```shell
+nextflow run nf-core/oncoanalyser \
+--genome GRCh37_hmf \
+--outdir /path/to/output/ \
+# other arguments
+```
+
+The `params` scope is also used to define reference data paths (e.g. reference genome, HMFTools resources) as described in 
+sections [Quick start](#quick-start) and [Resource files](#resources-files).
+
+### Multiple config files
+You may want to keep certain configuration items in separate files. For example:
+
+_oncoanalyser.config_ may contain:
+```
+params {
+   genome = 'GRCh37_hmf'
+   outdir = '/path/to/output/'
+}
+```
+
+...and _processes.config_ may contain:
+```
+process {
+   withName: 'REDUX.*' {
+      cpus = 32
+   }
+}
+```
+
+You can provide both when running Oncoanalyser like so:
+```shell
+nextflow run nf-core/oncoanalyser \
+-config oncoanalyser.config \
+-config processes.config \
+# other arguments
+```
+
+## Resource files
+
+### Links
+
+**GRCh37**
+
+| Type         | Description          | Name                                                                                                                                                                                                |
+|--------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.37_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz)                              |
+| Genome       | FASTA                | [Homo_sapiens.GRCh37.GATK.illumina.fasta](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/Homo_sapiens.GRCh37.GATK.illumina.fasta)                                      |
+| Genome       | FASTA index          | [Homo_sapiens.GRCh37.GATK.illumina.fasta.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai)          |
+| Genome       | FASTA seq dictionary | [Homo_sapiens.GRCh37.GATK.illumina.fasta.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict)        |
+| Genome       | bwa-mem2 index image | [Homo_sapiens.GRCh37.GATK.illumina.fasta.img](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/bwa_index_image/0.7.17-r1188/Homo_sapiens.GRCh37.GATK.illumina.fasta.img) |
+| Genome       | bwa-mem2 index       | [bwa-mem2_index/2.2.1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                              |
+| Genome       | GRIDSS index         | [gridss_index/2.13.2.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                |
+| Genome (RNA) | STAR index           | [star_index/gencode_19/2.7.3a.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/star_index/gencode_19/2.7.3a.tar.gz)                                              |
+| Panel        | TSO500 data          | [panels/tso500_5.34_37--1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/hmf_reference_data/panels/tso500_5.34_37--1.tar.gz)                                                           |
+
+**GRCh38**
+
+| Type         | Description          | Name                                                                                                                                                                                                                |
+|--------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.38_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/38/hmf_pipeline_resources.38_v6.0--2.tar.gz)                                              |
+| Genome       | FASTA                | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna)                                      |
+| Genome       | FASTA index          | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai)          |
+| Genome       | FASTA seq dictionary | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict)        |
+| Genome       | bwa-mem2 index image | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.img](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/bwa_index_image/0.7.17-r1188/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.img) |
+| Genome       | bwa-mem2 index       | [bwa-mem2_index/2.2.1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/bwa-mem2_index/2.2.1.tar.gz)                                                                              |
+| Genome       | GRIDSS index         | [gridss_index/2.13.2.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.1/gridss_index/2.13.2.tar.gz)                                                                                |
+| Genome (RNA) | STAR index           | [star_index/gencode_38/2.7.3a.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/star_index/gencode_38/2.7.3a.tar.gz)                                                              |
+| Panel        | TSO500 data          | [panels/tso500_5.34_38--1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/hmf_reference_data/panels/tso500_5.34_38--1.tar.gz)                                                                           |
+
+### Configuring WGTS resource files
+
+### Configuring panel / targeted sequecing resource files
 _TODO_
+
+## Configuring processes
 
 ### Compute resources
 _TODO_
 
 ### Docker images
-_TODO_
-
-### Setting up panel data
-_TODO_
-
-### Multiple config files
 _TODO_
 
 ## Outputs
