@@ -60,14 +60,7 @@ class MicrosatelliteRead
 
         if(!shouldDropRead)
         {
-            if(consensusMarker == null)
-            {
-                mConsensusType = NONE;
-            }
-            else
-            {
-                mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
-            }
+            mConsensusType = consensusMarker == null ? NONE : consensusMarker.consensusType(refGenomeMicrosatellite, record);
         }
         else
         {
