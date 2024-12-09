@@ -118,7 +118,7 @@ public class BamReadCounter
             samReader.close();
         }
 
-        CB_LOGGER.info("read Depth Complete");
+        CB_LOGGER.info("read depth complete");
     }
 
     private List<Future<?>> createFutures(final String bamFilePath, final ReadDepthAccumulator readDepthCounter, List<SamReader> samReaderList)

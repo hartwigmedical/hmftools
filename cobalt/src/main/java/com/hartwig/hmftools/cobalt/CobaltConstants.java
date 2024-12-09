@@ -6,12 +6,14 @@ public class CobaltConstants
 
     public static final int INVALID_VALUE_INDICATOR = -1;
 
-    public static final double DEFAULT_GC_RATIO_FILE_MIN = 0;
-    public static final double DEFAULT_GC_RATIO_FILE_MAX = 1;
+    public static final double DEFAULT_GC_RATIO_MIN = 0.2;
+    public static final double DEFAULT_GC_RATIO_MAX = 0.6;
+
+    public static double GC_RATIO_MIN = DEFAULT_GC_RATIO_MIN;
+    public static double GC_RATIO_MAX = DEFAULT_GC_RATIO_MAX;
 
     public static final int WINDOW_SIZE = 1000;
     public static final int PARTITION_SIZE = 100_000_000;
-    public static final int OFF_TARGET_WINDOW_SIZE = 1_000_000;
     public static final double MIN_OFF_TARGET_WINDOW_RATIO = 0.5;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 10;

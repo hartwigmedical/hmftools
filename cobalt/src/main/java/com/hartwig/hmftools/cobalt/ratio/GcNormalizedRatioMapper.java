@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_RATIO_MAX;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_RATIO_MIN;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,22 +20,17 @@ import tech.tablesaw.api.*;
 
 public class GcNormalizedRatioMapper implements RatioMapper
 {
-    private static final int MIN_BUCKET = 20;
-    private static final int MAX_BUCKET = 60;
-
     private Table mGCMedianReadDepth;
     private double mSampleMedianReadDepth;
     private double mSampleMeanReadDepth;
 
     // apply gc normalisation, the input ratios must have chromosome, position, ratio, gcBucket, isMappable
-    public GcNormalizedRatioMapper()
-    {
-    }
+    public GcNormalizedRatioMapper() {}
 
     @Override
     public Table mapRatios(final Table inputRatios)
     {
-        CB_LOGGER.info("applying ratio GC normalization");
+        CB_LOGGER.info("applying ratio GC normalisation");
 
         // add a gc bucket column if not already have one
         if (!inputRatios.containsColumn(CobaltColumns.GC_BUCKET))
@@ -42,10 +41,13 @@ public class GcNormalizedRatioMapper implements RatioMapper
 
         // create a gc normalisation df
 
+        int gcRatioBucketMin = (int)round(GC_RATIO_MIN * 100);
+        int gcRatioBucketMax = (int)round(GC_RATIO_MAX * 100);
+
         // skipped masked regions
         Table gcMedianCalcDf = inputRatios.where(
                 inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0) // TODO: change to >= 0.0
-                        .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(MIN_BUCKET, MAX_BUCKET))
+                        .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(gcRatioBucketMin, gcRatioBucketMax))
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 

@@ -24,7 +24,7 @@ public class RatioSupplierTest
     @Test
     public void testTumorOnly() throws IOException
     {
-        var chromosomePosCodec = new ChromosomePositionCodec();
+        ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
 
         // add some counts
         final Table readDepths = Table.create("readDepths",

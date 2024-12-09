@@ -19,24 +19,24 @@ public final class GCMedianReadDepthFile
     private static final int ASSUMED_READ_LENGTH = 151;
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
     @NotNull
-    public static GCMedianReadDepth read(@NotNull final String filename) throws IOException
+    public static GCMedianReadDepth read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final GCMedianReadDepth gcMedianReadDepth) throws IOException
+    public static void write(final String fileName, final GCMedianReadDepth gcMedianReadDepth) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(gcMedianReadDepth));
     }
 
     @NotNull
-    private static GCMedianReadDepth fromLines(@NotNull final List<String> lines)
+    private static GCMedianReadDepth fromLines(final List<String> lines)
     {
         boolean useReadDepth = true;
         double mean = 0;
@@ -92,7 +92,7 @@ public final class GCMedianReadDepthFile
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final GCMedianReadDepth gcMedianReadDepth)
+    private static List<String> toLines(final GCMedianReadDepth gcMedianReadDepth)
     {
         final List<String> lines = new ArrayList<>();
         lines.add("#sampleMean" + TSV_DELIM + "sampleMedian");

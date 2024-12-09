@@ -23,12 +23,22 @@ public class DiploidRegionLoaderTest
         String chr1 = "1";
         String chr2 = "2";
         ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
-        DiploidRegionLoader victim = new DiploidRegionLoader(chromosomePosCodec);
-        victim.accept(locatable("1", 1001, 3000));
-        victim.accept(locatable("1", 5001, 6000));
-        victim.accept(locatable("2", 1001, 3000));
+        DiploidRegionLoader diploidRegionLoader = null;
 
-        Table result = victim.build();
+        try
+        {
+            diploidRegionLoader = new DiploidRegionLoader(chromosomePosCodec, null);
+        }
+        catch(Exception e)
+        {
+
+        }
+
+        diploidRegionLoader.accept(locatable("1", 1001, 3000));
+        diploidRegionLoader.accept(locatable("1", 5001, 6000));
+        diploidRegionLoader.accept(locatable("2", 1001, 3000));
+
+        Table result = diploidRegionLoader.build();
         assertEquals(5, result.rowCount());
         StringColumn chrColumn = result.stringColumn(CobaltColumns.CHROMOSOME);
         assertReadRatio("1", 1001, result.where(chrColumn.isEqualTo(chr1)).row(0));
@@ -38,13 +48,12 @@ public class DiploidRegionLoaderTest
         assertReadRatio("2", 2001, result.where(chrColumn.isEqualTo(chr2)).row(1));
     }
 
-    private void assertReadRatio(@NotNull String contig, long position, @NotNull Row victim)
+    private void assertReadRatio(String contig, long position, Row victim)
     {
         assertEquals(contig, victim.getString(CobaltColumns.CHROMOSOME));
         assertEquals(position, victim.getInt(CobaltColumns.POSITION));
     }
 
-    @NotNull
     private static Locatable locatable(String contig, int start, int end)
     {
         return new Locatable()
