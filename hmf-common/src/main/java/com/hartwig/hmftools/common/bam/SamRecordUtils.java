@@ -131,7 +131,7 @@ public final class SamRecordUtils
 
     public static int getUnclippedPosition(final SAMRecord read, boolean fivePrime)
     {
-        // returns the 5' position of the read, factoring in any soft-clipped bases
+        // returns the 5' or 3' position of the read, factoring in any soft-clipped bases
         int position;
 
         if((orientation(read) == POS_ORIENT) == fivePrime)

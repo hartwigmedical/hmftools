@@ -48,9 +48,15 @@ public class ReadInfo
 
     public static String readToString(final SAMRecord read)
     {
-        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
-                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
-    }
+        if(read.getReadPairedFlag())
+        {
+            return format("id(%s) coords(%s:%d-%d) isPaired(true) cigar(%s) mate(%s:%d) flags(%d)",
+                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                    read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+        }
 
+        return format("id(%s) coords(%s:%d-%d) isPaired(false) cigar(%s) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getFlags());
+    }
 }

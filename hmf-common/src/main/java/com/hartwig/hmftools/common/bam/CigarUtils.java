@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
@@ -135,6 +136,22 @@ public final class CigarUtils
     {
         CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
+    }
+
+    public static int leftHardClipLength(final SAMRecord record) { return leftHardClipLength(record.getCigar()); }
+
+    public static int rightHardClipLength(final SAMRecord record) { return rightHardClipLength(record.getCigar()); }
+
+    public static int leftHardClipLength(final Cigar cigar)
+    {
+        CigarElement firstElement = cigar.getFirstCigarElement();
+        return (firstElement != null && firstElement.getOperator() == H) ? firstElement.getLength() : 0;
+    }
+
+    public static int rightHardClipLength(final Cigar cigar)
+    {
+        CigarElement lastElement = cigar.getLastCigarElement();
+        return (lastElement != null && lastElement.getOperator() == H) ? lastElement.getLength() : 0;
     }
 
     @Nullable

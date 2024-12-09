@@ -61,9 +61,7 @@ public final class TemplateReads
         for(ReadCigarInfo readInfo : readCigarInfos)
         {
             String cigarStr = useMateCigar ? readInfo.MateCigar : readInfo.LowerCigar;
-
-            Integer frequency = cigarFrequencies.get(cigarStr);
-            cigarFrequencies.put(cigarStr, frequency != null ? frequency + 1 : 1);
+            cigarFrequencies.merge(cigarStr, 1, Integer::sum);
         }
 
         if(cigarFrequencies.size() == 1)
