@@ -55,7 +55,6 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
-        <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
@@ -135,14 +134,19 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>${maven.exec.plugin.version}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <!-- this is required for java 23 to work, not sure why -->
+                        <annotationProcessorPaths combine.children="append">
+                            <path>
+                                <groupId>org.immutables</groupId>
+                                <artifactId>value</artifactId>
+                                <version>${immutables.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
