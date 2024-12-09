@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.unmap;
 
 import static java.lang.String.format;
 

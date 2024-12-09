@@ -1,27 +1,23 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
-import static com.hartwig.hmftools.redux.common.FragmentUtils.readToString;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.parseUnmappedCoords;
-import static com.hartwig.hmftools.redux.consensus.CigarFrequency.selectTemplateRead;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.alignedOrClipped;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.parseUnmappedCoords;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -34,6 +30,8 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -48,52 +46,37 @@ public class ConsensusReads
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
-    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
-        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
+        mBaseBuilder = new BaseBuilder(mRefGenome, sequencingType, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mValidateConsensusReads = false;
     }
 
     @VisibleForTesting
-    public ConsensusReads(final RefGenomeInterface refGenome)
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType)
     {
-        this(refGenome, new ConsensusStatistics());
+        this(refGenome, sequencingType, new ConsensusStatistics());
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
     {
         mValidateConsensusReads = validateConsensusReads;
     }
-    public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
     public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, @Nullable final TemplateReadData previousTemplateRead,
-            @Nullable final String groupReadId, @Nullable final String umiId)
+            final List<SAMRecord> reads, final FragmentCoords fragmentCoords, @Nullable final String umiId)
     {
-        String consensusReadId;
-        SAMRecord templateRead;
+        String consensusReadId  = "";
 
-        if(previousTemplateRead == null)
-        {
-            templateRead = selectTemplateRead(reads);
-            consensusReadId = formConsensusReadId(templateRead, umiId);
-        }
-        else
-        {
-            // match the mate or supplmentary template read to that of the primary
-            templateRead = reads.stream().filter(x -> x.getReadName().equals(previousTemplateRead.ReadId)).findFirst().orElse(null);
-            consensusReadId = groupReadId;
-        }
+        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, fragmentCoords);
+        consensusReadId = formConsensusReadId(templateRead, umiId);
 
-        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag() || templateRead == null)
+        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(
-                    templateRead != null ? templateRead : reads.get(0),
-                    consensusReadId,
-                    templateRead == null ? previousTemplateRead : null);
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId);
 
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }
@@ -136,7 +119,7 @@ public class ConsensusReads
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
-                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId, null);
+                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId);
 
                 return new ConsensusReadInfo(consensusRead, templateRead, consensusState.outcome());
             }
@@ -156,7 +139,7 @@ public class ConsensusReads
         consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
 
-        if(consensusRead.getMateUnmappedFlag())
+        if(consensusRead.getReadPairedFlag() && consensusRead.getMateUnmappedFlag())
         {
             checkNonHumanMates(consensusRead, readsView);
         }
@@ -200,10 +183,7 @@ public class ConsensusReads
 
         consensusRead.setProperPairFlag(false);
 
-        /* no need to alter these
-        consensusRead.setFirstOfPairFlag(false);
-        consensusRead.setSecondOfPairFlag(false);
-        */
+        // no need to set first or second in pair flags
         consensusRead.setMateUnmappedFlag(true);
         consensusRead.setMateNegativeStrandFlag(false);
         consensusRead.setMateAlignmentStart(NO_POSITION);
@@ -229,6 +209,11 @@ public class ConsensusReads
 
         templateRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
         record.setFlags(templateRead.getFlags());
+        record.setDuplicateReadFlag(false); // being the new primary
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
+
+        if(!record.getReadPairedFlag())
+            return record;
 
         if(templateRead.getMateReferenceIndex() >= 0)
         {
@@ -242,10 +227,7 @@ public class ConsensusReads
             record.setMateAlignmentStart(templateRead.getMateAlignmentStart());
         }
 
-        record.setDuplicateReadFlag(false); // being the new primary
-
         record.setInferredInsertSize(templateRead.getInferredInsertSize());
-        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
         return record;
     }
 
@@ -270,7 +252,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, @Nullable final TemplateReadData primaryTemplateRead)
+    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
@@ -282,38 +264,16 @@ public class ConsensusReads
 
         read.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
 
-        if(read.getReadUnmappedFlag() && primaryTemplateRead != null)
-        {
-            // rather than use this duplicate's unmapped fields, infer from the mapped primary used for the consensus for consistency
-            record.setReadUnmappedFlag(true);
-            record.setMateReferenceName(primaryTemplateRead.Chromosome);
-            record.setMateAlignmentStart(primaryTemplateRead.AlignmentStart);
-
-            record.setAlignmentStart(primaryTemplateRead.AlignmentStart);
-            record.setCigarString(NO_CIGAR);
-
-            record.setAttribute(MATE_CIGAR_ATTRIBUTE, primaryTemplateRead.Cigar);
-            record.setReadPairedFlag(true);
-
-            if(primaryTemplateRead.firstInPair())
-                record.setSecondOfPairFlag(true);
-            else
-                record.setFirstOfPairFlag(true);
-
-            record.setMateNegativeStrandFlag(primaryTemplateRead.readNegativeStrandFlag());
-            record.setReadNegativeStrandFlag(primaryTemplateRead.mateNegativeStrandFlag());
-        }
-        else
-        {
-            record.setAlignmentStart(read.getAlignmentStart());
-            record.setCigar(read.getCigar());
-            record.setMateReferenceName(read.getMateReferenceName());
-            record.setMateAlignmentStart(read.getMateAlignmentStart());
-            record.setMateReferenceIndex(read.getMateReferenceIndex());
-            record.setFlags(read.getFlags());
-        }
-
+        record.setAlignmentStart(read.getAlignmentStart());
+        record.setCigar(read.getCigar());
+        record.setFlags(read.getFlags());
         record.setDuplicateReadFlag(false);
+        if(!record.getReadPairedFlag())
+            return record;
+
+        record.setMateReferenceName(read.getMateReferenceName());
+        record.setMateAlignmentStart(read.getMateAlignmentStart());
+        record.setMateReferenceIndex(read.getMateReferenceIndex());
 
         record.setInferredInsertSize(read.getInferredInsertSize());
 

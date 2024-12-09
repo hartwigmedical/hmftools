@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.Queue;
 
 import com.google.common.collect.Queues;

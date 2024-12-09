@@ -54,9 +54,9 @@ public final class UmiUtils
     {
         public int compare(final DuplicateGroup first, final DuplicateGroup second)
         {
-            if(first.fragments().size() < second.fragments().size())
+            if(first.readCount() < second.readCount())
                 return 1;
-            else if(first.fragments().size() > second.fragments().size())
+            else if(first.readCount() > second.readCount())
                 return -1;
             else
                 return 0;

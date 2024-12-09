@@ -7,12 +7,13 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
-public class BamWriterNone extends BamWriter
+public class BamWriterNone extends BamWriterSync
 {
-    public BamWriterNone(final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
+    public BamWriterNone(
+            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
             @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, null, jitterAnalyser, null);
+        super(filename, config, readDataWriter, null, jitterAnalyser);
     }
 
     public boolean isSorted() { return false; }
@@ -23,6 +24,9 @@ public class BamWriterNone extends BamWriter
 
     @Override
     protected void writeRecord(final SAMRecord read) {}
+
+    @Override
+    public long unsortedWriteCount() { return 0; }
 
     @Override
     public void close() {}

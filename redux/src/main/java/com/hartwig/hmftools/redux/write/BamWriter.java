@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.Fragment;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 
 import org.jetbrains.annotations.Nullable;
@@ -30,27 +30,26 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
     private final JitterAnalyser mJitterAnalyser;
-    private final SuppBamWriter mSuppBamReadWriter;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
 
     public BamWriter(
-            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, @Nullable final SuppBamWriter suppBamReadWriter)
+            final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         mFilename = filename;
         mConfig = config;
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mSuppBamReadWriter = suppBamReadWriter;
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
     }
 
     public String filename() { return mFilename; }
+    public SAMFileWriter samFileWriter() { return mSamFileWriter; }
 
     public long nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
     public long consensusWriteCount() { return mConsensusReadCount.get(); }
@@ -66,41 +65,40 @@ public abstract class BamWriter
 
     // the public write methods are all thread-safe, using atomic counters and then the key SAM-write methods are handled
     // in the derived sync and non-sync implementations
-    public void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
+    public void writeReads(final List<ReadInfo> readInfos, boolean excludeUmis)
     {
-        fragments.forEach(x -> doWriteFragment(x, excludeUmis));
+        readInfos.forEach(x -> doWriteRead(x, excludeUmis));
     }
-
-    public void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
 
     public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
     {
         writeRead(read, fragmentStatus, null);
     }
 
-    public void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
+    public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        for(SAMRecord read : completeReads)
+        if(group.consensusRead() != null)
         {
-            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-            {
-                processRecord(read);
-                mConsensusReadCount.incrementAndGet();
+            SAMRecord read = group.consensusRead();
+            processRecord(read);
+            mConsensusReadCount.incrementAndGet();
 
-                if(mReadDataWriter.enabled())
-                    mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+            if(mReadDataWriter != null && mReadDataWriter.enabled())
+                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+        }
 
-                continue;
-            }
-
+        for(SAMRecord read : group.reads())
+        {
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), group.umiId());
+            FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            writeRead(read, fragmentStatus, group.coordinatesKey(), group.umiId());
         }
     }
 
     protected abstract void writeRecord(final SAMRecord read);
+    public abstract long unsortedWriteCount();
 
     protected final void processRecord(final SAMRecord read)
     {
@@ -116,37 +114,29 @@ public abstract class BamWriter
         }
     }
 
-    public void writeSupplementary(final SAMRecord read)
-    {
-        if(mSuppBamReadWriter != null)
-            mSuppBamReadWriter.writeRecord(read);
-    }
-
-    public SuppBamWriter suppBamReadWriter() { return mSuppBamReadWriter; }
-
     public abstract void close();
 
-    private void doWriteFragment(final Fragment fragment, boolean excludeDuplicates)
+    private void doWriteRead(final ReadInfo readInfo, boolean excludeDuplicates)
     {
-        if(excludeDuplicates && fragment.umi() != null) // reads in duplicate groups are only written as a complete group
+        if(excludeDuplicates && readInfo.umi() != null) // reads in duplicate groups are only written as a complete group
             return;
 
-        if(fragment.readsWritten())
+        if(readInfo.readsWritten())
         {
-            RD_LOGGER.error("fragment({}) reads already written", fragment);
+            RD_LOGGER.error("fragment({}) reads already written", readInfo);
             return;
         }
 
-        fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRead(x, fragment.status(), fragment));
+        readInfo.setReadWritten();
+        writeRead(readInfo.read(), readInfo.status(), readInfo);
     }
 
-    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final Fragment fragment)
+    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final ReadInfo readInfo)
     {
         writeRead(
                 read, fragmentStatus,
-                fragment != null ? fragment.coordinates().Key : "",
-                fragment != null ? fragment.umi() : "");
+                readInfo != null && readInfo.coordinates() != null ? readInfo.coordinates().Key : "",
+                readInfo != null ? readInfo.umi() : "");
     }
 
     private void writeRead(

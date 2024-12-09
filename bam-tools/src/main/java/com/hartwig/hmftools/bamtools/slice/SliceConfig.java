@@ -55,6 +55,7 @@ public class SliceConfig
     public final boolean WriteReadBases;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
+    public final int MaxUnmappedReads;
     public final int Threads;
     public final String BamToolPath;
 
@@ -73,6 +74,10 @@ public class SliceConfig
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String MAX_REMOTE_READS = "max_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
+    private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
+
+    public static final int UNMAPPED_READS_DISABLED = -1;
+    public static final int UNMAPPED_READS_ALL = 0;
 
     public SliceConfig(final ConfigBuilder configBuilder)
     {
@@ -104,6 +109,7 @@ public class SliceConfig
         OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
+        MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -174,6 +180,7 @@ public class SliceConfig
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
         configBuilder.addInteger(MAX_REMOTE_READS, "Max remote reads (perf-only)", 0);
+        configBuilder.addInteger(MAX_UNMAPPED_READS, "Max unmapped reads: 0 means all, -1 to disable (default)", -1);
         configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
         configBuilder.addFlag(UNSORTED_BAM, "Write BAM unsorted");
         configBuilder.addFlag(WRITE_READS, "Write reads file for sliced region");
@@ -205,6 +212,7 @@ public class SliceConfig
         OnlySupplementaries = false;
         MaxRemoteReads = 0;
         MaxPartitionReads = 0;
+        MaxUnmappedReads = UNMAPPED_READS_DISABLED;
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         SliceRegions = new SpecificRegions();
         Threads = 0;
