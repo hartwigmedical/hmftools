@@ -288,6 +288,8 @@
     "allSomaticGeneCopyNumbers": [
       {
         "gene": "gene",
+        "transcript": "trans",
+        "isCanonical": true,
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
@@ -322,6 +324,8 @@
     "suspectGeneCopyNumbersWithLOH": [
       {
         "gene": "gene",
+        "transcript": "trans",
+        "isCanonical": true,
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,

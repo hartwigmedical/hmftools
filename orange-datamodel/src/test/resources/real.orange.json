@@ -666,6 +666,8 @@
     "allSomaticGeneCopyNumbers": [
       {
         "gene": "DDX11L1",
+        "transcript": "ENST00000456328",
+        "isCanonical": true,
         "chromosome": "1",
         "chromosomeBand": "p36.33",
         "minCopyNumber": 2.8143,

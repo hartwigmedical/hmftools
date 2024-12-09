@@ -18,6 +18,8 @@ public final class TestPurpleGeneCopyNumberFactory
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .isCanonical(true)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
                 .minMinorAlleleCopyNumber(0);

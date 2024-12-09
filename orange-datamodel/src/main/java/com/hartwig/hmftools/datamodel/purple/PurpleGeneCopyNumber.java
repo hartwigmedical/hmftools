@@ -14,6 +14,11 @@ public interface PurpleGeneCopyNumber
     String gene();
 
     @NotNull
+    String transcript();
+
+    boolean isCanonical();
+
+    @NotNull
     String chromosome();
 
     @NotNull
