@@ -70,6 +70,8 @@ public class FileWriterCache
         mPartitions = Lists.newArrayList();
         mBamWriters = Lists.newArrayList();
 
+        mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
+
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
         {
@@ -80,14 +82,10 @@ public class FileWriterCache
             mFullUnmappedWriter = (BamWriterSync)bamWriter;
             mUnmappingSortedBamFilename = "";
             mFinalBamFilename = "";
-
-            mCompletedPartitionsQueue = null;
             return;
         }
 
         mFinalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
-
-        mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
 
         if(mConfig.UnmapRegions.enabled())
         {
@@ -283,7 +281,7 @@ public class FileWriterCache
 
     private void deleteInterimBams()
     {
-        if(mConfig.KeepInterimBams)
+        if(mConfig.KeepInterimBams || !mConfig.WriteBam)
             return;
 
         List<String> interimBams = Lists.newArrayList();

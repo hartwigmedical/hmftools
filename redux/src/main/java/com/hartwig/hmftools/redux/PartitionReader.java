@@ -61,7 +61,8 @@ public class PartitionReader
     private int mProcessedReads;
 
     // for SBX preprocessing
-    private final static int SBX_REF_GENOME_BUFFER_LENGTH = 2_000;
+    private final static int SBX_REF_BASE_BUFFER_START = 2_000;
+    private final static int SBX_REF_BASE_BUFFER_END = 10_000;
     private byte[] mRefBases;
     private int mRefBasesStart;
 
@@ -131,10 +132,23 @@ public class PartitionReader
 
         if(mConfig.Sequencing == SBX)
         {
-            mRefBasesStart = max(region.start() - SBX_REF_GENOME_BUFFER_LENGTH, 1);
-            int refEnd = min(region.end() + SBX_REF_GENOME_BUFFER_LENGTH, chromosomeLength);
-            mRefBases = mConfig.RefGenome.getBases(region.Chromosome, mRefBasesStart, refEnd);
+            mRefBases = null;
+            checkRefBases(region.start());
         }
+    }
+
+    private void checkRefBases(int refPositionStart)
+    {
+        if(mConfig.Sequencing != SBX)
+            return;
+
+        if(mRefBases != null && refPositionStart < mRefBasesStart + SBX_REF_BASE_BUFFER_END)
+            return;
+
+        int chromosomeLength = mConfig.RefGenome.getChromosomeLength(mCurrentRegion.Chromosome);
+        mRefBasesStart = max(refPositionStart - SBX_REF_BASE_BUFFER_START, 1);
+        int refBaseEnd = min(mRefBasesStart + SBX_REF_BASE_BUFFER_END, chromosomeLength);
+        mRefBases = mConfig.RefGenome.getBases(mCurrentRegion.Chromosome, mRefBasesStart, refBaseEnd);
     }
 
     public void processRegion()
@@ -254,6 +268,8 @@ public class PartitionReader
                     return;
             }
         }
+
+        checkRefBases(read.getAlignmentStart());
 
         preprocessSamRecord(read);
 

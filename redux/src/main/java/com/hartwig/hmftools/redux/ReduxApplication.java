@@ -89,8 +89,12 @@ public class ReduxApplication
         List<PartitionThread> partitionThreads = createPartitionThreads(fileWriterCache);
         List<Thread> allThreads = Lists.newArrayList(partitionThreads);
 
-        FinalBamWriter finalBamWriter = new FinalBamWriter(mConfig, fileWriterCache);
-        allThreads.add(finalBamWriter);
+        FinalBamWriter finalBamWriter = null;
+        if(mConfig.WriteBam)
+        {
+            finalBamWriter = new FinalBamWriter(mConfig, fileWriterCache);
+            allThreads.add(finalBamWriter);
+        }
 
         if(!runThreadTasks(allThreads))
             System.exit(1);
@@ -199,7 +203,8 @@ public class ReduxApplication
             }
         }
 
-        finalBamWriter.logTimes();
+        if(finalBamWriter != null)
+            finalBamWriter.logTimes();
 
         logPerformanceStats(combinedPerfCounters);
 
