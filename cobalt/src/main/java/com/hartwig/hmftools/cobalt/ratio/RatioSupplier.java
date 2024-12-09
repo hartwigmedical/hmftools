@@ -98,7 +98,7 @@ public class RatioSupplier
             if(targetRegionEnrichment != null)
             {
                 CB_LOGGER.info("using targeted ratio");
-                readRatios = new TargetedRatioMapper(targetRegionEnrichment, chromosomePosCodec).mapRatios(readRatios);
+                readRatios = new TargetedRatioMapper(targetRegionEnrichment).mapRatios(readRatios);
             }
 
             gcNormalizedRatioMapper = new GcNormalizedRatioMapper();

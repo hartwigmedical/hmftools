@@ -18,13 +18,11 @@ public final class GCMedianReadDepthFile
     private static final String EXTENSION = ".cobalt.gc.median.tsv";
     private static final int ASSUMED_READ_LENGTH = 151;
 
-    @NotNull
     public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
     public static GCMedianReadDepth read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
@@ -35,7 +33,6 @@ public final class GCMedianReadDepthFile
         Files.write(new File(fileName).toPath(), toLines(gcMedianReadDepth));
     }
 
-    @NotNull
     private static GCMedianReadDepth fromLines(final List<String> lines)
     {
         boolean useReadDepth = true;
@@ -91,7 +88,6 @@ public final class GCMedianReadDepthFile
         return new GCMedianReadDepth(mean, median, medianPerBucket);
     }
 
-    @NotNull
     private static List<String> toLines(final GCMedianReadDepth gcMedianReadDepth)
     {
         final List<String> lines = new ArrayList<>();

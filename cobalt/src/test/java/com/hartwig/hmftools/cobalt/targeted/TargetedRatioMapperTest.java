@@ -64,9 +64,9 @@ public class TargetedRatioMapperTest
 
         chromosomePositionCodec.addEncodedChrPosColumn(targetEnrichmentRatios, true);
 
-        TargetedRatioMapper ratioMapper = new TargetedRatioMapper(targetEnrichmentRatios, chromosomePositionCodec);
+        TargetedRatioMapper ratioMapper = new TargetedRatioMapper(targetEnrichmentRatios);
 
-        Table onTargetRatios = ratioMapper.onTargetRatios(ratios);
+        Table onTargetRatios = ratioMapper.mapRatios(ratios);
 
         assertEquals(2, onTargetRatios.rowCount());
 
