@@ -3,8 +3,7 @@
 </h1>
 
 Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a 
-[Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline. 
-Please jump to section **[Quick start](#quick-start)** to start using Oncoanalyser.
+[Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline.
 
 Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/):
 - Read mapping: [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) (DNA), [STAR](https://github.com/alexdobin/STAR) (RNA)
@@ -29,56 +28,19 @@ Oncoanalyser supports the following sequencing and sample setups:
 | DNA       | Targeted sequencing:<br/> - Whole exome sequencing (WES)<br/> - Panel sequencing | :white_check_mark:  | :white_check_mark: |
 | RNA       | Whole transcriptome sequencing (WTS)                                             | -                   | :white_check_mark: |
 
-## Table of contents
-<!-- TOC -->
-  * [Table of contents](#table-of-contents)
-  * [Quick start](#quick-start)
-    * [1. Install Nextflow](#1-install-nextflow)
-    * [2. Install Docker](#2-install-docker)
-    * [3. Set up resource files](#3-set-up-resource-files)
-    * [4. Set up sample sheet](#4-set-up-sample-sheet)
-    * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
-  * [Sample sheet](#sample-sheet)
-    * [BAM inputs](#bam-inputs)
-    * [FASTQ inputs](#fastq-inputs)
-    * [Sample modes](#sample-modes)
-    * [Multiple sample groups](#multiple-sample-groups)
-    * [Running from REDUX BAM](#running-from-redux-bam)
-    * [Running specific tools](#running-specific-tools)
-  * [Command line interface (CLI)](#command-line-interface--cli-)
-    * [Running Oncoanalyser](#running-oncoanalyser)
-    * [Nextflow arguments](#nextflow-arguments)
-    * [Oncoanalyser arguments](#oncoanalyser-arguments)
-  * [Configuration files](#configuration-files)
-    * [Basic config example](#basic-config-example)
-    * [Oncoanalyser arguments as config](#oncoanalyser-arguments-as-config)
-    * [Multiple config files](#multiple-config-files)
-  * [Resource files](#resource-files)
-    * [Links](#links)
-    * [Configuring WGTS resource files](#configuring-wgts-resource-files)
-    * [Configuring panel / targeted sequecing resource files](#configuring-panel--targeted-sequecing-resource-files)
-  * [Configuring processes](#configuring-processes)
-    * [Compute resources](#compute-resources)
-    * [Docker images](#docker-images)
-  * [Outputs](#outputs)
-    * [Sample reports](#sample-reports)
-    * [Pipeline reports](#pipeline-reports)
-  * [Acknowledgements](#acknowledgements)
-<!-- TOC -->
-
-## Quick start
+## Getting started
 
 ### 1. Install Nextflow
-See: https://www.nextflow.io/docs/latest/install.html
+See: **https://www.nextflow.io/docs/latest/install.html**
 
 ### 2. Install Docker
-See: https://docs.docker.com/engine/install/
+See: **https://docs.docker.com/engine/install/**
 
 ### 3. Set up resource files
 
-Download and extract the reference genome and HMFTools resources under section **[Resource files](#resource-files)**.
+Download and extract the reference genome and HMFTools resources using these **[links](#links)**.
 
-Create a config file which points to the resource paths:
+Create a file called `oncoanalyser.config` which points to the resource file paths:
 
 ```
 params {
@@ -97,8 +59,10 @@ params {
 }
 ```
 
+For details, see section **[Configuration files](#configuration-files)**.
+
 ### 4. Set up sample sheet
-Create a file called `samplesheet.csv` which points to the sample inputs:
+Create a file called `sample_sheet.csv` which points to the sample inputs:
 
 ```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
@@ -107,23 +71,124 @@ COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 ```
 
 > [!NOTE]
-> BAM and BAI files for the above COLO829 test sample can be downloaded from [here](test_data/).
+> BAM and BAI files for the COLO829 test sample can be downloaded from [here](test_data/).
 
-See section **[Sample sheet](#sample-sheet)** for details.
+For details, see section **[Sample sheet](#sample-sheet)**.
 
 ### 5. Run Oncoanalyser with Nextflow
+
 ```shell
 nextflow run nf-core/oncoanalyser \
 -profile docker \
 -revision pipeline_v6.0 \
+-config oncoanalyser.config \
+--mode wgts \
+--genome GRCh37_hmf \
+--input sample_sheet.csv \
+--outdir output/
+```
+
+For details, see section **[Command line interface](#command-line-interface--cli-)**.
+
+## Table of contents
+<!-- TOC -->
+  * [Getting started](#getting-started)
+    * [1. Install Nextflow](#1-install-nextflow)
+    * [2. Install Docker](#2-install-docker)
+    * [3. Set up resource files](#3-set-up-resource-files)
+    * [4. Set up sample sheet](#4-set-up-sample-sheet)
+    * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
+  * [Table of contents](#table-of-contents)
+  * [Command line interface (CLI)](#command-line-interface--cli-)
+    * [Running Oncoanalyser](#running-oncoanalyser)
+    * [Nextflow arguments](#nextflow-arguments)
+    * [Oncoanalyser arguments](#oncoanalyser-arguments)
+  * [Sample sheet](#sample-sheet)
+    * [BAM inputs](#bam-inputs)
+    * [FASTQ inputs](#fastq-inputs)
+    * [Sample modes](#sample-modes)
+    * [Multiple sample groups](#multiple-sample-groups)
+    * [Running from REDUX BAM](#running-from-redux-bam)
+    * [Running specific tools](#running-specific-tools)
+  * [Configuration files](#configuration-files)
+    * [Basic config example](#basic-config-example)
+    * [Oncoanalyser arguments as config](#oncoanalyser-arguments-as-config)
+    * [Multiple config files](#multiple-config-files)
+  * [Resource files](#resource-files)
+    * [Links](#links)
+    * [Configuring WGTS resource files](#configuring-wgts-resource-files)
+    * [Configuring panel / targeted sequecing resource files](#configuring-panel--targeted-sequecing-resource-files)
+  * [Configuring processes](#configuring-processes)
+    * [Compute resources](#compute-resources)
+    * [Docker images](#docker-images)
+  * [Outputs](#outputs)
+    * [Sample reports](#sample-reports)
+    * [Pipeline reports](#pipeline-reports)
+  * [Acknowledgements](#acknowledgements)
+<!-- TOC -->
+
+## Command line interface (CLI)
+
+### Running Oncoanalyser
+We use the `nextflow run` command to run the Oncoanalyser. Below is an example that covers some of the useful arguments.
+[Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) have a single hyphen (`-`) while Oncoanalyser-specific
+arguments have two hyphens (`--`).
+
+```shell
+nextflow run nf-core/oncoanalyser \
+-profile docker \
+-revision dev \
 -config hmf_pipeline_resources.config \
 --mode wgts \
 --genome GRCh37_hmf \
 --input samplesheet.csv \
---outdir output/
+--outdir output/ \
+--max_cpus 32 \
+--max_memory 128.GB \
+-resume
 ```
 
-See section **[Configuration](#configuration)** for details on arguments that can be provided to Oncoanalyser and Nextflow.
+The above command will automatically pull the Oncoanalyser [git repo](https://github.com/nf-core/oncoanalyser). However, we can point
+`nextflow run` to a local Oncoanalyser repo (e.g. one we've manually pulled), which can be useful for debugging.
+This will run repo with the currently checked out commit and is incompatible with the `-revision` argument.
+```shell
+nextflow run /path/to/oncoanalyser_repo \
+# other arguments
+```
+
+### Nextflow arguments
+All arguments for `nextflow run` are documented in the [CLI reference](https://www.nextflow.io/docs/latest/reference/cli.html#run). The
+below table list the ones that are mandatory or useful.
+
+| Argument&emsp; | Description                                                                                                                                                                                                                            |
+|:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-config`      | Path to a configuration file which. Can be specified [multiple times](#multiple-config-files)                                                                                                                                          |
+| `-profile`     | Compute profile. Only `docker` is currently supported.                                                                                                                                                                                 |
+| `-revision`    | A specific Oncoanalyser branch/tag to run. See the Oncoanalyser [GitHub](https://github.com/nf-core/oncoanalyser) for available branches/tags                                                                                          |
+| `-resume`      | [Resume](https://www.nextflow.io/docs/latest/cache-and-resume.html#work-directory) from cached results (by default the previous run). Useful if you've cancelled a run with `CTRL+C`, or a run has crashed and you've fixed the issue. |
+| `-stub`        | Dry run. Under the hood, Oncoanalyser runs `touch <outputfile>` rather than actually running the tools. Useful for testing if the arguments and configuration files provided are correct.                                              |
+| `-work-dir`    | Path to a directory where Nextflow will put temporary files for each step in the pipeline. If this is not specified, Nextflow will create the `work/` directory in the current directory                                               |
+| `-help`        | Show all Nextflow command line arguments and their descriptions                                                                                                                                                                        |
+
+### Oncoanalyser arguments
+
+| Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                         |
+|:---------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--input`                                          | Path to a [sample sheet](#sample-sheet)                                                                                                                                                                                                             |
+| `--outdir`                                         | Path to the output directory. While a process/tool is running, files are temporarily stored in the work directory (see: `-work-dir` [argument](#nextflow-arguments)). Only when the process completes are the files copied to the output directory. |
+| `--genome`                                         | Reference genome version. Can be `GRCh37_hmf` or `GRCh38_hmf`                                                                                                                                                                                       |
+| `--mode`                                           | Can be:<br/>- `wgts`: Whole genome sequencing and/or whole transcriptome sequencing analysis<br/>- `targeted`: Targeted sequencing analysis (e.g. for panel or whole exome sequencing)                                                              |
+| `--max_cpus`                                       | Enforce an upper limit of CPUs each process can use, e.g. `16`                                                                                                                                                                                      |
+| `--max_memory`                                     | Enforce an upper limit of memory available to each process, e.g. `32.GB`                                                                                                                                                                            |
+| `--processes_exclude`<sup>1</sup>                  | A comma separated list specifying which processes to skip (e.g. `--processes_exclude lilac,virusinterpreter`). Note: Downstream processes depending on the output of an upstream tool will also be skipped.                                         |
+
+Notes:
+1. Valid process names are: `alignment`, `amber`, `bamtools`, `chord`, `cobalt`, `cuppa`, `esvee`, `isofox`, `lilac`, `linx`, `neo`,
+   `orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
+
+> [!TIP]
+> Oncoanalyser arguments, i.e. those with two hyphens (`--`), can also be defined in config file. See section
+> [Configuration files](#oncoanalyser-arguments-as-config) for more info.
 
 ## Sample sheet
 
@@ -267,69 +332,6 @@ Below are all valid values for `filetype`:
 | Other tool outputs | `amber_dir`, `bamtools`, `bamtools_dir`, `cobalt_dir`, `esvee_vcf`, `esvee_vcf_tbi`, `isofox_dir`, `lilac_dir`, `linx_anno_dir`, `pave_vcf`, `purple_dir`, `sage_vcf`, `sage_vcf_tbi`, `sage_append_vcf`, `virusinterpreter_dir` |
 | ORANGE inputs      | `chord_dir`, `sigs_dir`, `cuppa_dir`, `linx_plot_dir`, `sage_dir`                                                                                                                                                                |
 
-## Command line interface (CLI)
-
-### Running Oncoanalyser
-We use the `nextflow run` command to run the Oncoanalyser. Below is an example that covers some of the useful arguments. 
-[Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) have a single hyphen (`-`) while Oncoanalyser-specific
-arguments have two hyphens (`--`).
-
-```shell
-nextflow run nf-core/oncoanalyser \
--profile docker \
--revision dev \
--config hmf_pipeline_resources.config \
---mode wgts \
---genome GRCh37_hmf \
---input samplesheet.csv \
---outdir output/ \
---max_cpus 32 \
---max_memory 128.GB \
--resume
-```
-
-The above command will automatically pull the Oncoanalyser [git repo](https://github.com/nf-core/oncoanalyser). However, we can point 
-`nextflow run` to a local Oncoanalyser repo (e.g. one we've manually pulled), which can be useful for debugging. 
-This will run repo with the currently checked out commit and is incompatible with the `-revision` argument.
-```shell
-nextflow run /path/to/oncoanalyser_repo \
-# other arguments
-```
-
-> [!TIP]
-> Oncoanalyser arguments, i.e. those with two hyphens (`--`), can also be defined in config file. See section 
-> [Configuration files](#configuration-files) for more info.
-
-### Nextflow arguments
-All arguments for `nextflow run` are documented in the [CLI reference](https://www.nextflow.io/docs/latest/reference/cli.html#run). The 
-below table list the ones that are mandatory or useful.
-
-| Argument&emsp; | Description                                                                                                                                                                                                                            |
-|:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `-config`      | Path to a configuration file which. Can be specified [multiple times](#multiple-config-files)                                                                                                                                          |
-| `-profile`     | Compute profile. Only `docker` is currently supported.                                                                                                                                                                                 |
-| `-revision`    | A specific Oncoanalyser branch/tag to run. See the Oncoanalyser [GitHub](https://github.com/nf-core/oncoanalyser) for available branches/tags                                                                                          |
-| `-resume`      | [Resume](https://www.nextflow.io/docs/latest/cache-and-resume.html#work-directory) from cached results (by default the previous run). Useful if you've cancelled a run with `CTRL+C`, or a run has crashed and you've fixed the issue. |
-| `-stub`        | Dry run. Under the hood, Oncoanalyser runs `touch <outputfile>` rather than actually running the tools. Useful for testing if the arguments and configuration files provided are correct.                                              |
-| `-work-dir`    | Path to a directory where Nextflow will put temporary files for each step in the pipeline. If this is not specified, Nextflow will create the `work/` directory in the current directory                                               |
-| `-help`        | Show all Nextflow command line arguments and their descriptions                                                                                                                                                                        |
-
-### Oncoanalyser arguments
-
-| Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                         |
-|:---------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--input`                                          | Path to a [sample sheet](#sample-sheet)                                                                                                                                                                                                             |
-| `--outdir`                                         | Path to the output directory. While a process/tool is running, files are temporarily stored in the work directory (see: `-work-dir` [argument](#nextflow-arguments)). Only when the process completes are the files copied to the output directory. |
-| `--genome`                                         | Reference genome version. Can be `GRCh37_hmf` or `GRCh38_hmf`                                                                                                                                                                                       |
-| `--mode`                                           | Can be:<br/>- `wgts`: Whole genome sequencing and/or whole transcriptome sequencing analysis<br/>- `targeted`: Targeted sequencing analysis (e.g. for panel or whole exome sequencing)                                                              |
-| `--max_cpus`                                       | Enforce an upper limit of CPUs each process can use, e.g. `16`                                                                                                                                                                                      |
-| `--max_memory`                                     | Enforce an upper limit of memory available to each process, e.g. `32.GB`                                                                                                                                                                            |
-| `--processes_exclude`<sup>1</sup>                  | A comma separated list specifying which processes to skip (e.g. `--processes_exclude lilac,virusinterpreter`). Note: Downstream processes depending on the output of an upstream tool will also be skipped.                                         |
-
-Notes:
-1. Valid process names are: `alignment`, `amber`, `bamtools`, `chord`, `cobalt`, `cuppa`, `esvee`, `isofox`, `lilac`, `linx`, `neo`, 
-`orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
-
 ## Configuration files
 [Nextflow configuration files](https://www.nextflow.io/docs/latest/config.html) can be used to configure Oncoanalyser. This section 
 summarizes concepts of Nextflow configuration files that are relevant for using Oncoanalyser.
@@ -386,7 +388,7 @@ nextflow run nf-core/oncoanalyser \
 ```
 
 The `params` scope is also used to define reference data paths (e.g. reference genome, HMFTools resources) as described in 
-sections [Quick start](#quick-start) and [Resource files](#resources-files).
+[Resource files](#resources-files).
 
 ### Multiple config files
 You may want to keep certain configuration items in separate files. For example:
