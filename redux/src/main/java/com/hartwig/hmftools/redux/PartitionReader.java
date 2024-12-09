@@ -91,11 +91,16 @@ public class PartitionReader
         mBamWriter = partition.bamWriter();
         mSliceRegions = partition.regions();
 
+        int startReadCount = mProcessedReads;
+
         for(ChrBaseRegion region : mSliceRegions)
         {
             setupRegion(region);
             processRegion();
         }
+
+        int processedReads = mProcessedReads - startReadCount;
+        RD_LOGGER.debug("partition({}) reader complete, total reads({})", partition, processedReads);
     }
 
     @VisibleForTesting

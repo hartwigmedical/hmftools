@@ -170,7 +170,7 @@ public class FileWriterCache
         return BamOperations.indexBam(bamToolName(), bamToolPath(), mUnmappingSortedBamFilename, mConfig.Threads);
     }
 
-    private BamToolName bamToolName() { return BamToolName.fromPath(mConfig.BamToolPath); }
+    public BamToolName bamToolName() { return BamToolName.fromPath(mConfig.BamToolPath); }
     private String bamToolPath() { return mConfig.BamToolPath; }
 
     public boolean finaliseBams()
@@ -196,6 +196,7 @@ public class FileWriterCache
 
     private boolean writeFullyUnmappedReads()
     {
+        /*
         SAMFileWriter finalBamWriter = null;
 
         // close all but the final BAM writer
@@ -216,7 +217,7 @@ public class FileWriterCache
         for(String bamFilename : inputBams)
         {
             SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mFullUnmappedWriter.mFilename));
+                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
 
             SAMRecordIterator iterator = samReader.iterator();
 
@@ -227,13 +228,33 @@ public class FileWriterCache
                 ++totalUnmappedReads;
             }
         }
+        */
+
+        long totalUnmappedReads = 0;
+
+        for(String bamFilename : mConfig.BamFiles)
+        {
+            SamReader samReader = SamReaderFactory.makeDefault()
+                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
+
+            SAMRecordIterator iterator = samReader.iterator();
+
+            while(iterator.hasNext())
+            {
+                SAMRecord record = iterator.next();
+                mFullUnmappedWriter.writeRecordSync(record);
+                ++totalUnmappedReads;
+            }
+        }
+
+        mFullUnmappedWriter.close();
 
         if(totalUnmappedReads > 0)
         {
             RD_LOGGER.debug("wrote {} fully-unmapped reads to final BAM", totalUnmappedReads);
         }
 
-        finalBamWriter.close();
+        // TODO: now concatenate to the final BAM
 
         return true;
     }
@@ -345,6 +366,8 @@ public class FileWriterCache
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
         boolean presorted = isSorted;
+
+        // makeSAMWriter
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
     }
 }
