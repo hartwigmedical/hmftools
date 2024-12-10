@@ -2,6 +2,7 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.encodeMMTag;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MODC_BASE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -143,30 +145,13 @@ public class BiomodalCollapse
     public synchronized static void writeResolvedFastqRecord(final BufferedWriter writer, final FastqRecord resolvedFastq)
     {
         StringBuilder readStr = new StringBuilder(resolvedFastq.getReadString());
-        StringBuilder MMTagSkipsStr = new StringBuilder();
-        int skip = 0;
-        for(int i = 0; i < readStr.length(); i++)
-        {
-            char base = readStr.charAt(i);
-            if(base == 'C')
-            {
-                skip++;
-            }
-            else if(base == (char) BiomodalConstants.MODC_BASE)
-            {
-                readStr.setCharAt(i, 'C');
-                MMTagSkipsStr.append(',');
-                MMTagSkipsStr.append(skip);
-                skip = 0;
-            }
-        }
-
+        String mmTag = encodeMMTag(readStr, MODC_BASE);
         try
         {
             writer.write('@');
             writer.write(resolvedFastq.getReadName());
             writer.write('\t');
-            writer.write(format("MM:Z:C+C.%s;", MMTagSkipsStr));
+            writer.write(mmTag);
             writer.newLine();
             writer.write(readStr.toString());
             writer.newLine();
