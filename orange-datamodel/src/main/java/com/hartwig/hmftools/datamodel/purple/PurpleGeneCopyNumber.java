@@ -14,15 +14,15 @@ public interface PurpleGeneCopyNumber
     String gene();
 
     @NotNull
-    String transcript();
-
-    boolean isCanonical();
-
-    @NotNull
     String chromosome();
 
     @NotNull
     String chromosomeBand();
+
+    @NotNull
+    String transcript();
+
+    boolean isCanonical();
 
     double minCopyNumber();
 

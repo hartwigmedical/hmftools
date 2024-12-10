@@ -288,10 +288,10 @@
     "allSomaticGeneCopyNumbers": [
       {
         "gene": "gene",
-        "transcript": "trans",
-        "isCanonical": true,
         "chromosome": "12",
         "chromosomeBand": "p13",
+        "transcript": "trans",
+        "isCanonical": true,
         "minCopyNumber": 1.2,
         "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
@@ -324,10 +324,10 @@
     "suspectGeneCopyNumbersWithLOH": [
       {
         "gene": "gene",
-        "transcript": "trans",
-        "isCanonical": true,
         "chromosome": "12",
         "chromosomeBand": "p13",
+        "transcript": "trans",
+        "isCanonical": true,
         "minCopyNumber": 1.2,
         "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4

@@ -15,9 +15,9 @@ public final class TestPurpleGeneCopyNumberFactory
     public static ImmutablePurpleGeneCopyNumber.Builder builder()
     {
         return ImmutablePurpleGeneCopyNumber.builder()
+                .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
-                .gene(Strings.EMPTY)
                 .transcript(Strings.EMPTY)
                 .isCanonical(true)
                 .minCopyNumber(0)
