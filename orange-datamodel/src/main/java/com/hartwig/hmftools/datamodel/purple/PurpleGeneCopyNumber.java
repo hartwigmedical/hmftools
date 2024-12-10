@@ -19,6 +19,11 @@ public interface PurpleGeneCopyNumber
     @NotNull
     String chromosomeBand();
 
+    @NotNull
+    String transcript();
+
+    boolean isCanonical();
+
     double minCopyNumber();
 
     double maxCopyNumber();

@@ -69,7 +69,8 @@ public class JitterTest
 
         // low-qual base mismatches are permitted within the core in specific locations (only one) and outside the core
 
-        String readMismatches = "T" + variantReadBases.substring(1, 11) + "A" + variantReadBases.substring(11, 22) + "G" + variantReadBases.substring(23);
+        String readMismatches =
+                "T" + variantReadBases.substring(1, 11) + "A" + variantReadBases.substring(11, 22) + "G" + variantReadBases.substring(23);
         readQuals[0] = 11;
         readQuals[23] = 11;
 
@@ -85,16 +86,17 @@ public class JitterTest
 
         assertFalse(hasJitterMatchType(
                 repeat, readContext, 16, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED,  false, 1));
+                readMismatches.getBytes(), readQuals, LENGTHENED, false, 1));
 
         // and not within the critical range
         readQuals = buildDefaultBaseQuals(variantReadBases.length());
-        readMismatches = variantReadBases.substring(0, 11) + "A" + variantReadBases.substring(11, 15) + "T" + variantReadBases.substring(16);
+        readMismatches =
+                variantReadBases.substring(0, 11) + "A" + variantReadBases.substring(11, 15) + "T" + variantReadBases.substring(16);
         readQuals[16] = 11;
 
         assertFalse(hasJitterMatchType(
                 repeat, readContext, 16, matcher.altIndexLower(), matcher.altIndexUpper(),
-                readMismatches.getBytes(), readQuals, LENGTHENED,  false, 1));
+                readMismatches.getBytes(), readQuals, LENGTHENED, false, 1));
     }
 
     @Test
@@ -144,7 +146,7 @@ public class JitterTest
 
         assertTrue(hasJitterMatchType(
                 repeat, readContext, matcher.altIndexLower(), matcher.altIndexUpper(),
-                varIndex - 2, readBases.getBytes(), readQuals, SHORTENED,  true, 2));
+                varIndex - 2, readBases.getBytes(), readQuals, SHORTENED, true, 2));
     }
 
     @Test
@@ -191,7 +193,6 @@ public class JitterTest
 
         jitterMatch = checkJitter(readContext, matcher, read1, 25);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
-
 
         // now test reads where the jitter is after the variant read index
         // 28 bases then the variant at the index = 29 then an extra 'A'
