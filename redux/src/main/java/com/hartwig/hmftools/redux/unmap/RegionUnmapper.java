@@ -245,10 +245,10 @@ public class RegionUnmapper extends Thread
                 if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                     return;
 
-                if(fullyUnmapped)
-                    mFullyUnmappedBamWriter.writeRecordSync(read);
-                else
-                    mUnmappingBamWriter.writeRecordSync(read);
+//                if(fullyUnmapped)
+//                    mFullyUnmappedBamWriter.writeRecordSync(read);
+//                else
+//                    mUnmappingBamWriter.writeRecordSync(read);
             }
         }
         else
@@ -282,6 +282,6 @@ public class RegionUnmapper extends Thread
             }
         }
 
-        mUnmappingBamWriter.writeRecordSync(read);
+//        mUnmappingBamWriter.writeRecordSync(read);
     }
 }

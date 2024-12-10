@@ -87,21 +87,9 @@ public class FileWriterCache
 
         mFinalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
-        if(mConfig.UnmapRegions.enabled())
-        {
-            String unmappingFilename = formBamFilename(null, UNMAPPING);
-            mUnmappingWriter = (BamWriterSync)createBamWriter(unmappingFilename, true);
-            mUnmappingSortedBamFilename = formBamFilename(null, UNMAPPING_SORTED);
-
-            String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
-            mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
-        }
-        else
-        {
-            mUnmappingWriter = null;
-            mFullUnmappedWriter = null;
-            mUnmappingSortedBamFilename = "";
-        }
+        mUnmappingWriter = null;
+        mFullUnmappedWriter = null;
+        mUnmappingSortedBamFilename = "";
     }
 
     public void addPartition(final List<ChrBaseRegion> regions)
@@ -120,6 +108,7 @@ public class FileWriterCache
             filename = formBamFilename(SORTED_ID, String.valueOf(partitionIndex));
         }
 
+        // TODO: HERE
         BamWriter bamWriter = createBamWriter(filename, false);
         PartitionInfo partitionInfo = new PartitionInfo(partitionIndex, regions, bamWriter);
         mPartitions.add(partitionInfo);
@@ -354,6 +343,7 @@ public class FileWriterCache
 
     public SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
+        boolean writeHeader = filename.equals("/Users/matthewcooper/projects/sbx/GAYA01010053T.sub.redux.1.sorted.bam");
         SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
@@ -366,6 +356,7 @@ public class FileWriterCache
         boolean presorted = isSorted;
 
         // makeSAMWriter
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
+        // TODO: HERE
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename), writeHeader);
     }
 }

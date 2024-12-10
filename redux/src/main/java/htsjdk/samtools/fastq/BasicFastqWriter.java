@@ -1,0 +1,92 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2009 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package htsjdk.samtools.fastq;
+
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.util.IOUtil;
+
+import java.io.File;
+import java.io.Flushable;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
+/**
+ * In general FastqWriterFactory should be used so that AsyncFastqWriter can be enabled, but there are some
+ * cases in which that behavior is explicitly not wanted.
+ */
+public class BasicFastqWriter implements FastqWriter,Flushable {
+    private final String path;
+    private final PrintStream writer;
+
+    public BasicFastqWriter(final File file) {
+        this(file, false);
+    }
+
+    public BasicFastqWriter(final File file, final boolean createMd5) {
+        this(file, new PrintStream(IOUtil.maybeBufferOutputStream(maybeMd5Wrap(file, createMd5))));
+    }
+
+    private BasicFastqWriter(final File file, final PrintStream writer) {
+        this.path = (file != null? file.getAbsolutePath(): "");
+        this.writer = writer;
+    }
+
+    public BasicFastqWriter(final PrintStream writer) {
+        this(null, writer);
+    }
+
+    @Override
+    public void write(final FastqRecord rec) {
+        // encode without creating a String
+        FastqEncoder.write(writer, rec);
+        // and print a new line
+        writer.println();
+    }
+
+    private void checkError() {
+        if (writer.checkError()) {
+            throw new SAMException("Error in writing fastq file " + path);
+        }
+    }
+
+    @Override
+    public void flush() {
+        checkError();
+        writer.flush();
+    }
+
+    @Override
+    public void close() {
+        flush();
+        writer.close();
+    }
+
+    private static OutputStream maybeMd5Wrap(final File file, final boolean createMd5) {
+        if (createMd5) {
+            return IOUtil.openFileForMd5CalculatingWriting(file);
+        } else {
+            return IOUtil.openFileForWriting(file);
+        }
+    }
+}

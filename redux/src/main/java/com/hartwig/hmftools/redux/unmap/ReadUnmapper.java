@@ -36,24 +36,16 @@ import htsjdk.samtools.SAMRecord;
 public class ReadUnmapper
 {
     private final Map<String,List<HighDepthRegion>> mChrLocationsMap; // keyed by chromosome start
-    private boolean mEnabled;
     private final UnmapStats mStats;
 
     public ReadUnmapper(final String filename)
     {
         this(loadUnmapRegions(filename));
-
-        if(mEnabled)
-        {
-            RD_LOGGER.info("loaded {} unmapping regions from {}",
-                    mChrLocationsMap.values().stream().mapToInt(x -> x.size()).sum(), filename);
-        }
     }
 
     public ReadUnmapper(final Map<String,List<HighDepthRegion>> chrLocationsMap)
     {
         mChrLocationsMap = chrLocationsMap;
-        mEnabled = mChrLocationsMap != null && !mChrLocationsMap.isEmpty();
         mStats = new UnmapStats();
     }
 
@@ -63,35 +55,13 @@ public class ReadUnmapper
     }
     public Map<String,List<HighDepthRegion>> getAllRegions() { return mChrLocationsMap; }
 
-    public boolean enabled() { return mEnabled; }
+    public boolean enabled() { return false; }
 
     public UnmapStats stats() { return mStats; }
 
     public boolean checkTransformRead(final SAMRecord read, final UnmapRegionState regionState)
     {
-        if(!mEnabled || regionState == null)
-            return false;
-
-        /* Criteria for unmapping a read:
-            - falls within a region of high depth
-            - discordant - INV, BND, one read unmapped or fragment length > 1000 (only for paired reads)
-            - soft-clip bases > 20
-            - non-human chromosome for now
-
-           Scenarios & logic:
-           - both read and mate are already unmapped, then nothing to do
-           - check the read's coords, its mate's coords and any supplementary alignment coords vs the loaded unmapping regions
-           - for any overlap with a non-high-depth region, additionally check discordant and soft-clip bases as above
-           -
-           - supplementaries - unmap if their primary or another associated supplementary will be, or if they need to be
-         */
-
-        if(read.isSecondaryAlignment())
-            return checkSecondaryRead(read, regionState);
-        else if(read.getReadPairedFlag())
-            return checkTransformPairedRead(read, regionState);
-        else
-            return checkTransformUnpairedRead(read, regionState);
+        return false;
     }
 
     private boolean checkTransformPairedRead(final SAMRecord read, final UnmapRegionState regionState)
@@ -869,7 +839,5 @@ public class ReadUnmapper
         }
 
         regions.add(region);
-
-        mEnabled = true;
     }
 }

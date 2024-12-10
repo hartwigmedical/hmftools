@@ -156,6 +156,12 @@ public class BamReader
 
         public BamFileReader(final String bamFile)
         {
+            if(bamFile.equals(""))
+            {
+                System.out.println("TODO");
+            }
+
+            RD_LOGGER.info("BamFileReader bamFile: {}", bamFile);
             File file = new File(bamFile);
             mFilename = file.getName();
             mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(file);
