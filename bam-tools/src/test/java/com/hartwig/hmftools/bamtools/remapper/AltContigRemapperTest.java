@@ -2,11 +2,8 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
-import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -14,10 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.bamtools.remapper.RemapperTestBase.bwa;
 
@@ -71,10 +65,10 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment  HLA-A*01:03, 3188 -> chr6, 29945439.
         SAMRecord expected4 = records.get(4).deepCopy();
         expected4.setReferenceIndex(0);
-        expected4.setAlignmentStart(194358862);
+        expected4.setAlignmentStart(194358863);
         expected4.setMappingQuality(60);
         expected4.setCigarString("35S116M");
-        expected4.setMateAlignmentStart(29945439);
+        expected4.setMateAlignmentStart(29945440);
         expected4.setMateReferenceIndex(5);
         expected4.setFlags(65); // Was 81 but read reversed strand gets reset.
         checkOutputContains(expected4, results);
@@ -86,11 +80,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-A*01:03, 3188 -> chr1, 194358862  (see A00624:8:HHKYHDSXX:2:1516:12156:4225)
         SAMRecord expectedFor7 = records.get(7).deepCopy();
         expectedFor7.setReferenceIndex(5);
-        expectedFor7.setAlignmentStart(29945439);
+        expectedFor7.setAlignmentStart(29945440);
         expectedFor7.setMappingQuality(60);
         expectedFor7.setCigarString("151M");
         expectedFor7.setMateReferenceIndex(0);
-        expectedFor7.setMateAlignmentStart(194358862);
+        expectedFor7.setMateAlignmentStart(194358863);
         checkOutputContains(expectedFor7, results);
 
         // input[8]
@@ -98,12 +92,12 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*40:06:01:01, 2533 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
         SAMRecord expectedFor8 = records.get(8).deepCopy();
         expectedFor8.setReferenceIndex(1);
-        expectedFor8.setAlignmentStart(32916241);
+        expectedFor8.setAlignmentStart(32916242);
         expectedFor8.setMappingQuality(16);
         expectedFor8.setFlags(2177); // Gains supplementary flag but loses read reversed
         expectedFor8.setCigarString("42S32M77S");
         expectedFor8.setMateReferenceIndex(5);
-        expectedFor8.setMateAlignmentStart(31354760);
+        expectedFor8.setMateAlignmentStart(31354761);
         checkOutputContains(expectedFor8, results);
 
         // second remapping of input[8]
@@ -111,11 +105,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*40:06:01:01 -> chr6, 31354760 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
         SAMRecord expected2For8 = records.get(8).deepCopy();
         expected2For8.setReferenceIndex(5);
-        expected2For8.setAlignmentStart(31354347);
+        expected2For8.setAlignmentStart(31354348);
         expected2For8.setMappingQuality(60);
         expected2For8.setCigarString("72M79S");
         expected2For8.setMateReferenceIndex(5);
-        expected2For8.setMateAlignmentStart(31354760);
+        expected2For8.setMateAlignmentStart(31354761);
         checkOutputContains(expected2For8, results);
 
         // input[9]
@@ -123,11 +117,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*27:05:18 -> chr6, 31354347 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
         SAMRecord expectedFor9 = records.get(9).deepCopy();
         expectedFor9.setReferenceIndex(5);
-        expectedFor9.setAlignmentStart(31354760);
+        expectedFor9.setAlignmentStart(31354761);
         expectedFor9.setMappingQuality(60);
         expectedFor9.setCigarString("151M");
         expectedFor9.setMateReferenceIndex(5);
-        expectedFor9.setMateAlignmentStart(31354347);
+        expectedFor9.setMateAlignmentStart(31354348);
         expectedFor9.setFlags(113); // New alignment gains read reversed flag
         checkOutputContains(expectedFor9, results);
 
@@ -136,11 +130,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*07:05:01, 1279 -> chr6, 31355729  (see A00624:8:HHKYHDSXX:1:1446:18213:29684)
         SAMRecord expectedFor10 = records.get(10).deepCopy();
         expectedFor10.setReferenceIndex(5);
-        expectedFor10.setAlignmentStart(31356297);
+        expectedFor10.setAlignmentStart(31356298);
         expectedFor10.setMappingQuality(60);
         expectedFor10.setCigarString("151M");
         expectedFor10.setMateReferenceIndex(5);
-        expectedFor10.setMateAlignmentStart(31355729);
+        expectedFor10.setMateAlignmentStart(31355730);
         expectedFor10.setFlags(179); // Gains read reversed strand flag
         checkOutputContains(expectedFor10, results);
 
@@ -149,11 +143,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*07:05:01 -> chr6, 31356297 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
         SAMRecord expectedFor11 = records.get(11).deepCopy();
         expectedFor11.setReferenceIndex(5);
-        expectedFor11.setAlignmentStart(31355729);
+        expectedFor11.setAlignmentStart(31355730);
         expectedFor11.setMappingQuality(60);
         expectedFor11.setCigarString("151M");
         expectedFor11.setMateReferenceIndex(5);
-        expectedFor11.setMateAlignmentStart(31356297);
+        expectedFor11.setMateAlignmentStart(31356298);
         checkOutputContains(expectedFor11, results);
 
         // input[12]
@@ -161,11 +155,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*08:19N, 3023-> chr6, 31354375 (see A00624:8:HHKYHDSXX:1:2559:3224:21292)
         SAMRecord expectedFor12 = records.get(12).deepCopy();
         expectedFor12.setReferenceIndex(5);
-        expectedFor12.setAlignmentStart(31354513);
+        expectedFor12.setAlignmentStart(31354514);
         expectedFor12.setMappingQuality(60);
         expectedFor12.setCigarString("151M");
         expectedFor12.setMateReferenceIndex(5);
-        expectedFor12.setMateAlignmentStart(31354375);
+        expectedFor12.setMateAlignmentStart(31354376);
         expectedFor12.setFlags(179); // Gains read reversed strand flag
         checkOutputContains(expectedFor12, results);
 
@@ -176,11 +170,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // See the mappings for A00624:8:HHKYHDSXX:4:1304:7075:14998 below.
         SAMRecord expectedFor13 = records.get(13).deepCopy();
         expectedFor13.setReferenceIndex(1);
-        expectedFor13.setAlignmentStart(32916297);
+        expectedFor13.setAlignmentStart(32916298);
         expectedFor13.setMappingQuality(0);
         expectedFor13.setCigarString("67S36M48S");
         expectedFor13.setMateReferenceIndex(5);
-        expectedFor13.setMateAlignmentStart(31354513);
+        expectedFor13.setMateAlignmentStart(31354514);
         expectedFor13.setFlags(2115); // Gains read reversed strand and supplementary alignment flags
         checkOutputContains(expectedFor13, results);
 
@@ -189,11 +183,11 @@ public class AltContigRemapperTest extends RemapperTestBase
         // Mate alignment: HLA-B*08:19N -> chr6, 31354513 (see A00624:8:HHKYHDSXX:4:1304:7075:14998)
         SAMRecord expected2For13 = records.get(13).deepCopy();
         expected2For13.setReferenceIndex(5);
-        expected2For13.setAlignmentStart(31354375);
+        expected2For13.setAlignmentStart(31354376);
         expected2For13.setMappingQuality(60);
         expected2For13.setCigarString("44M107S");
         expected2For13.setMateReferenceIndex(5);
-        expected2For13.setMateAlignmentStart(31354513);
+        expected2For13.setMateAlignmentStart(31354514);
         checkOutputContains(expected2For13, results);
     }
 

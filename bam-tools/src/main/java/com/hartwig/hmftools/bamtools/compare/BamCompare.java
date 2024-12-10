@@ -116,8 +116,10 @@ public class BamCompare
         try(SamReader samReaderOrig = samReaderFactory.open(new File(mConfig.OrigBamFile));
             SamReader samReaderNew = samReaderFactory.open(new File(mConfig.NewBamFile)))
         {
-            sequenceRecords.addAll(samReaderOrig.getFileHeader().getSequenceDictionary().getSequences());
-            sequenceRecords.addAll(samReaderNew.getFileHeader().getSequenceDictionary().getSequences());
+            final List<SAMSequenceRecord> sequencesOriginal = samReaderOrig.getFileHeader().getSequenceDictionary().getSequences();
+            sequenceRecords.addAll(sequencesOriginal);
+            final List<SAMSequenceRecord> sequencesNew = samReaderNew.getFileHeader().getSequenceDictionary().getSequences();
+            sequenceRecords.addAll(sequencesNew);
         }
         catch(IOException e)
         {

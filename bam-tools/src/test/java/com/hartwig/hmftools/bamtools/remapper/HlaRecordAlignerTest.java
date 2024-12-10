@@ -194,7 +194,7 @@ public class HlaRecordAlignerTest extends RemapperTestBase
         Assert.assertArrayEquals(record.getReadBases(), remappedRecord.getReadBases());
         Assert.assertArrayEquals(record.getBaseQualities(), remappedRecord.getBaseQualities());
         Assert.assertEquals("chr6", remappedRecord.getReferenceName());
-        Assert.assertEquals(alignment.getRefStart(), remappedRecord.getAlignmentStart());
+        Assert.assertEquals(alignment.getRefStart() + 1, remappedRecord.getAlignmentStart());
         Assert.assertEquals(alignment.getMapQual(), remappedRecord.getMappingQuality());
         //        Assert.assertEquals(alignment.getSamFlag(), remappedRecord.getFlags());
     }

@@ -36,6 +36,8 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+                mAligner.alignPairs();
+                mAligner.dontInferPairEndStats();
             }
             else
             {

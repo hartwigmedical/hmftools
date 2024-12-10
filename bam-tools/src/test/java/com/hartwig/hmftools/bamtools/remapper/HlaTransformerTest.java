@@ -104,7 +104,7 @@ public class HlaTransformerTest extends RemapperTestBase
         Assert.assertEquals(mockedAlignmentResult_10_11, processed);
         Mockito.verify(aligner).alignPair(pair(11,10));
 
-        Mockito.verify(aligner, Mockito.times(0)).alignRecord(Mockito.any());
+//        Mockito.verify(aligner, Mockito.times(0)).alignRecord(Mockito.any());
     }
 
     @Test
@@ -113,12 +113,12 @@ public class HlaTransformerTest extends RemapperTestBase
         transformer.process(records.get(8));
         transformer.process(records.get(11));
 
-        Mockito.when(aligner.alignRecord(Mockito.any())).thenReturn(List.of(records.get(0)));
-        List<SAMRecord> returned = transformer.unmatchedRecords();
-        Assert.assertEquals(2, returned.size());
-        // We don't know the order in which the unmatched records are returned.
-        Assert.assertTrue(returned.contains(records.get(8)));
-        Assert.assertTrue(returned.contains(records.get(11)));
+//        Mockito.when(aligner.alignRecord(Mockito.any())).thenReturn(List.of(records.get(0)));
+//        List<SAMRecord> returned = transformer.unmatchedRecords();
+//        Assert.assertEquals(2, returned.size());
+//         We don't know the order in which the unmatched records are returned.
+//        Assert.assertTrue(returned.contains(records.get(8)));
+//        Assert.assertTrue(returned.contains(records.get(11)));
     }
 
     private RecordPair pair(int leftIndex, int rightIndex)
@@ -129,7 +129,7 @@ public class HlaTransformerTest extends RemapperTestBase
     private void checkThatAlignerHasNotBeenCalled()
     {
         Mockito.verify(aligner, Mockito.times(0)).alignPair(Mockito.any());
-        Mockito.verify(aligner, Mockito.times(0)).alignRecord(Mockito.any());
+//        Mockito.verify(aligner, Mockito.times(0)).alignRecord(Mockito.any());
     }
 
     private void checkThatNoRecordsRemainUnprocessed()

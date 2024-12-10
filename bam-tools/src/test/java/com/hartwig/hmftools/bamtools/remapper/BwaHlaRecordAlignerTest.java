@@ -24,26 +24,7 @@ public class BwaHlaRecordAlignerTest extends RemapperTestBase
     public void before()
     {
         aligner = Mockito.mock(Aligner.class);
-        bwaAligner = new BwaHlaRecordAligner(aligner);
-    }
-
-    @Test
-    public void alignRecordTest()
-    {
-        List<BwaMemAlignment> alignments = List.of(
-                bwa("16,5,31354375,31354419,0,44,60,1,39,20,44M107S,22C21,null,-1,-1,0"),
-                bwa("2048,1,32916297,32916333,67,103,0,0,36,36,67S36M48S,36,null,-1,-1,0")
-        );
-        Mockito.when(aligner.alignSequence(Mockito.any())).thenReturn(alignments);
-        SAMRecord record = records.get(13);
-        List<SAMRecord> returned = bwaAligner.alignRecord(record);
-        Assert.assertEquals(2, returned.size());
-        Assert.assertEquals(HlaRecordAligner.createRemappedRecord(record, alignments.get(0)), returned.get(0));
-        Assert.assertEquals(HlaRecordAligner.createRemappedRecord(record, alignments.get(1)), returned.get(1));
-
-        ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
-        Mockito.verify(aligner, Mockito.times(1)).alignSequence(captor.capture());
-        Assert.assertArrayEquals(record.getReadBases(), captor.getValue());
+        bwaAligner = new BwaHlaRecordAligner(aligner, null);
     }
 
     @Test
@@ -70,13 +51,13 @@ public class BwaHlaRecordAlignerTest extends RemapperTestBase
         // and with mate reference information set to match the single element of alignmentsForRecord12.
         final SAMRecord expected0 = HlaRecordAligner.createRemappedRecord(record13, alignmentsForRecord13.get(0));
         expected0.setMateReferenceIndex(5);
-        expected0.setMateAlignmentStart(31354513);
+        expected0.setMateAlignmentStart(31354513 + 1); // Results from aligner are 0-based
         check(expected0, results0);
 
         SAMRecord results1 = returned.get(1);
         final SAMRecord expected1 = HlaRecordAligner.createRemappedRecord(record13, alignmentsForRecord13.get(1));
         expected1.setMateReferenceIndex(5);
-        expected1.setMateAlignmentStart(31354513);
+        expected1.setMateAlignmentStart(31354513 + 1);
         check(expected1, results1);
 
         SAMRecord results2 = returned.get(2);
@@ -84,7 +65,7 @@ public class BwaHlaRecordAlignerTest extends RemapperTestBase
         // and with mate reference information set to match the first element of alignmentsForRecord13.
         final SAMRecord expected2 = HlaRecordAligner.createRemappedRecord(record12, alignmentsForRecord12.get(0));
         expected2.setMateReferenceIndex(5);
-        expected2.setMateAlignmentStart(31354375);
+        expected2.setMateAlignmentStart(31354375 + 1);
         check(expected2, results2);
 
         ArgumentCaptor<byte[]> captor1 = ArgumentCaptor.forClass(byte[].class);

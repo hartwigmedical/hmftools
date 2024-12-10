@@ -54,7 +54,8 @@ public class AltContigRemapper
             File interimOutputFile = new File(interimOutputFileName);
             SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(newHeader, false, interimOutputFile);
 
-            HlaTransformer transformer = new HlaTransformer(new BwaHlaRecordAligner(mConfig.aligner()));
+            final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader);
+            HlaTransformer transformer = new HlaTransformer(aligner);
             samReader.forEach(record ->
                     transformer.process(record).forEach(bamWriter::addAlignment));
 
@@ -64,14 +65,19 @@ public class AltContigRemapper
             if (!unmatched.isEmpty()) {
                 BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
                 unmatched.forEach(bamWriter::addAlignment);
+            } else {
+                BT_LOGGER.info("No HLA contig records were unmatched.");
             }
 
             // Write the records to file.
             bamWriter.close();
+            BT_LOGGER.info("BAM Writer closed.");
 
             // If the samtools path has been provided, sort the output. Else simply rename the unsorted file.
             if (mConfig.BamToolPath != null) {
+                BT_LOGGER.info("Output file is to be sorted...");
                 FileCommon.writeSortedBam(interimOutputFileName, mConfig.OutputFile, mConfig.BamToolPath, 1);
+                BT_LOGGER.info("Sorting complete.");
             } else {
                 File outputFile = new File(mConfig.OutputFile);
                 boolean renamed = interimOutputFile.renameTo(outputFile);

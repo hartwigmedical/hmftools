@@ -30,13 +30,14 @@ public interface HlaRecordAligner
     {
         SAMRecord remappedRecord = record.deepCopy();
         remappedRecord.setReferenceIndex(alignment.getRefId());
-        remappedRecord.setAlignmentStart(alignment.getRefStart());
+        remappedRecord.setAlignmentStart(alignment.getRefStart() + 1); // BwaMemAlignment is 0-based
         remappedRecord.setCigarString(alignment.getCigar());
         remappedRecord.setMappingQuality(alignment.getMapQual());
-        remappedRecord.setFlags(mergeFlags(record.getFlags(), alignment.getSamFlag()));
+//        remappedRecord.setB
+//        remappedRecord.setFlags(mergeFlags(record.getFlags(), alignment.getSamFlag()));
+        remappedRecord.setFlags(alignment.getSamFlag());
         return remappedRecord;
     }
 
     @NotNull List<SAMRecord> alignPair(@NotNull RecordPair pair);
-    @NotNull List<SAMRecord> alignRecord(@NotNull SAMRecord record);
 }
