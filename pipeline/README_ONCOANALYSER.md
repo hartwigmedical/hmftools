@@ -30,6 +30,8 @@ Oncoanalyser supports the following sequencing and sample setups:
 
 ## Getting started
 
+This section will assume that the analysis starts from tumor/normal BAMs mapped to GRCh37.
+
 ### 1. Install Nextflow
 See: **https://www.nextflow.io/docs/latest/install.html**
 
@@ -59,7 +61,8 @@ params {
 }
 ```
 
-For details, see section **[Configuration files](#configuration-files)**.
+> [!TIP]
+> Jump to section: **[Configuration files](#configuration-files)**
 
 ### 4. Set up sample sheet
 Create a file called `sample_sheet.csv` which points to the sample inputs:
@@ -70,10 +73,10 @@ COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
 COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 ```
 
-> [!NOTE]
-> BAM and BAI files for the COLO829 test sample can be downloaded from [here](test_data/).
+BAM and BAI files for the above COLO829 test sample can be downloaded from [here](test_data/).
 
-For details, see section **[Sample sheet](#sample-sheet)**.
+> [!TIP]
+> Jump to section: **[Sample sheet](#sample-sheet)**
 
 ### 5. Run Oncoanalyser with Nextflow
 
@@ -88,7 +91,8 @@ nextflow run nf-core/oncoanalyser \
 --outdir output/
 ```
 
-For details, see section **[Command line interface](#command-line-interface--cli-)**.
+> [!TIP]
+> Jump to section: **[Command line interface](#command-line-interface--cli-)**
 
 ## Table of contents
 <!-- TOC -->
@@ -103,6 +107,7 @@ For details, see section **[Command line interface](#command-line-interface--cli
     * [Running Oncoanalyser](#running-oncoanalyser)
     * [Nextflow arguments](#nextflow-arguments)
     * [Oncoanalyser arguments](#oncoanalyser-arguments)
+    * [Params file](#params-file)
   * [Sample sheet](#sample-sheet)
     * [BAM inputs](#bam-inputs)
     * [FASTQ inputs](#fastq-inputs)
@@ -162,7 +167,8 @@ below table list the ones that are mandatory or useful.
 
 | Argument&emsp; | Description                                                                                                                                                                                                                            |
 |:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `-config`      | Path to a configuration file which. Can be specified [multiple times](#multiple-config-files)                                                                                                                                          |
+| `-config`      | Path to a [configuration file](#configuration-files). Can be specified [multiple times](#multiple-config-files)                                                                                                                        |
+| `-params-file` | Path to a [params file](https://www.nextflow.io/docs/latest/cli.html#pipeline-parameters) containing Oncoanalyser command line arguments                                                                                               |
 | `-profile`     | Compute profile. Only `docker` is currently supported.                                                                                                                                                                                 |
 | `-revision`    | A specific Oncoanalyser branch/tag to run. See the Oncoanalyser [GitHub](https://github.com/nf-core/oncoanalyser) for available branches/tags                                                                                          |
 | `-resume`      | [Resume](https://www.nextflow.io/docs/latest/cache-and-resume.html#work-directory) from cached results (by default the previous run). Useful if you've cancelled a run with `CTRL+C`, or a run has crashed and you've fixed the issue. |
@@ -172,23 +178,34 @@ below table list the ones that are mandatory or useful.
 
 ### Oncoanalyser arguments
 
-| Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                         |
-|:---------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--input`                                          | Path to a [sample sheet](#sample-sheet)                                                                                                                                                                                                             |
-| `--outdir`                                         | Path to the output directory. While a process/tool is running, files are temporarily stored in the work directory (see: `-work-dir` [argument](#nextflow-arguments)). Only when the process completes are the files copied to the output directory. |
-| `--genome`                                         | Reference genome version. Can be `GRCh37_hmf` or `GRCh38_hmf`                                                                                                                                                                                       |
-| `--mode`                                           | Can be:<br/>- `wgts`: Whole genome sequencing and/or whole transcriptome sequencing analysis<br/>- `targeted`: Targeted sequencing analysis (e.g. for panel or whole exome sequencing)                                                              |
-| `--max_cpus`                                       | Enforce an upper limit of CPUs each process can use, e.g. `16`                                                                                                                                                                                      |
-| `--max_memory`                                     | Enforce an upper limit of memory available to each process, e.g. `32.GB`                                                                                                                                                                            |
-| `--processes_exclude`<sup>1</sup>                  | A comma separated list specifying which processes to skip (e.g. `--processes_exclude lilac,virusinterpreter`). Note: Downstream processes depending on the output of an upstream tool will also be skipped.                                         |
+| Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                                             |
+|:---------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--input`                                          | Path to a [sample sheet](#sample-sheet)                                                                                                                                                                                                                                 |
+| `--outdir`                                         | Path to the output directory. While a process/tool is running, files are temporarily stored in the work directory (see: `-work-dir` [argument](#nextflow-arguments)). Only when the process completes are the files copied to the output directory.                     |
+| `--mode`                                           | Can be:<br/>- `wgts`: Whole genome sequencing and/or whole transcriptome sequencing analysis<br/>- `targeted`: Targeted sequencing analysis (e.g. for panel or whole exome sequencing)                                                                                  |
+| `--genome`                                         | Reference genome version. Can be `GRCh37_hmf` or `GRCh38_hmf`                                                                                                                                                                                                           |
+| `--ref_data_hmf_data_path`                         | Path to HMFTools resource files                                                                                                                                                                                                                                         |
+| `--ref_data_panel_data_path`                       | Path to panel resource files                                                                                                                                                                                                                                            |
+| `--ref_data_hla_slice_bed`                         | Path to HLA slice BED file                                                                                                                                                                                                                                              |
+| `--email`                                          | Email address for completion summary                                                                                                                                                                                                                                    |
+| `--create_stub_placeholders`                       | Create placeholders for resource files during stub run.                                                                                                                                                                                                                 |
+| `--max_cpus`                                       | Enforce an upper limit of CPUs each process can use, e.g. `16`                                                                                                                                                                                                          |
+| `--max_memory`                                     | Enforce an upper limit of memory available to each process, e.g. `32.GB`                                                                                                                                                                                                |
+| `--max_fastq_records`                              | When positive, will use [fastp](https://github.com/OpenGene/fastp) to split fastq files so that each resultant fastq file has no more than max_fastq_records records. When nonpositive, fastp is not used and the provided fastq files are passed as-is to the aligner. |
+| `--processes_exclude`<sup>1</sup>                  | A comma separated list specifying which processes to skip (e.g. `--processes_exclude lilac,virusinterpreter`). Note: Downstream processes depending on the output of an upstream tool will also be skipped.                                                             |
+| `--processes_manual`                               | Only run processes provided in `--processes_include`                                                                                                                                                                                                                    |
+| `--processes_include`                              | When also specifying `--processes_manual`, a comma separated list specifying which processes to include (e.g. `--processes_include lilac,virusinterpreter`).                                                                                                            |
+| `--prepare_reference_only`                         | Only stage reference genome and resource files                                                                                                                                                                                                                          |
+| `--isofox_read_length`                             | User defined RNA read length used for ISOFOX                                                                                                                                                                                                                            |
+| `--isofox_gc_ratios`                               | User defined User defined ISOFOX expected GC ratios file                                                                                                                                                                                                                |
+| `--isofox_counts`                                  | User defined ISOFOX expected counts files (read length dependent)                                                                                                                                                                                                       |
+| `--isofox_tpm_norm`                                | User defined ISOFOX TPM normalisation file for panel data                                                                                                                                                                                                               |
+| `--isofox_gene_ids`                                | User defined ISOFOX gene list file for panel data.                                                                                                                                                                                                                      |
+| `--isofox_functions`                               | Semicolon-separated list of ISOFOX functions to run. Default: `TRANSCRIPT_COUNTS;ALT_SPLICE_JUNCTIONS;FUSIONS;RETAINED_INTRONS`                                                                                                                                         |
 
 Notes:
 1. Valid process names are: `alignment`, `amber`, `bamtools`, `chord`, `cobalt`, `cuppa`, `esvee`, `isofox`, `lilac`, `linx`, `neo`,
    `orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
-
-> [!TIP]
-> Oncoanalyser arguments, i.e. those with two hyphens (`--`), can also be defined in config file. See section
-> [Configuration files](#oncoanalyser-arguments-as-config) for more info.
 
 ## Sample sheet
 
