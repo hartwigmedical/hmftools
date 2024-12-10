@@ -24,7 +24,7 @@ public final class BamOperations
     public static boolean mergeBams(
             final BamToolName toolName, final String toolPath, final String outputBam, final List<String> inputBams, final int threads)
     {
-        BOP_LOGGER.debug("merging {} bams", inputBams.size());
+        BOP_LOGGER.trace("merging {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -42,7 +42,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("merge complete");
+        BOP_LOGGER.trace("merge complete");
         return true;
     }
 
@@ -55,7 +55,7 @@ public final class BamOperations
             return false;
         }
 
-        BOP_LOGGER.debug("concatenating {} bams", inputBams.size());
+        BOP_LOGGER.trace("concatenating {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -77,13 +77,12 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("merge complete");
         return true;
     }
 
     public static boolean indexBam(final BamToolName toolName, final String toolPath, final String bamFilename, final int threads)
     {
-        BOP_LOGGER.debug("indexing bam({})", bamFilename);
+        BOP_LOGGER.trace("indexing bam({})", bamFilename);
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -95,7 +94,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, bamFilename))
             return false;
 
-        BOP_LOGGER.debug("index complete");
+        BOP_LOGGER.trace("index complete");
         return true;
     }
 
@@ -129,7 +128,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("sort complete");
+        BOP_LOGGER.trace("sort complete");
         return true;
     }
 

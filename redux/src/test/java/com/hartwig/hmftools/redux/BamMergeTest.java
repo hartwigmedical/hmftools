@@ -19,7 +19,6 @@ public class BamMergeTest
     @Test
     public void testSequenceInfos()
     {
-
         List<SAMSequenceRecord> sequences = Lists.newArrayList();
 
         sequences.add(new SAMSequenceRecord("1", 10000));

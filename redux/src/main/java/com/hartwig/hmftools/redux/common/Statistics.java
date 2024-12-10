@@ -25,12 +25,8 @@ public class Statistics
     public long DuplicateGroups;
 
     // technical metrics
-    public long LocalComplete; // fragments where all reads are in the same partition
-    public long Incomplete; // read in same partition as base partition but not resolved immediately (eg an earlier supplementary)
-    public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
-    public long MissingMateCigar;
     public long Unmapped; // fully, ie primary and mate
-    public long PairedAltChromosome; // paired with a non-human chromosome
+    public long UnmappedDropped; // secondaries and supplementaries dropped after unmapped
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -43,12 +39,7 @@ public class Statistics
         TotalReads = 0;
         DuplicateReads = 0;
         DuplicateGroups = 0;
-        InterPartition = 0;
-        LocalComplete = 0;
-        Incomplete = 0;
-        MissingMateCigar = 0;
         Unmapped = 0;
-        PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
@@ -59,12 +50,7 @@ public class Statistics
         TotalReads += other.TotalReads;
         DuplicateReads += other.DuplicateReads;
         DuplicateGroups += other.DuplicateGroups;
-        LocalComplete += other.LocalComplete;
-        Incomplete += other.Incomplete;
-        InterPartition += other.InterPartition;
-        MissingMateCigar += other.MissingMateCigar;
         Unmapped += other.Unmapped;
-        PairedAltChromosome += other.PairedAltChromosome;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -117,13 +103,12 @@ public class Statistics
 
     public void logStats()
     {
-        RD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
+        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({} supp2ndDropped={})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, UnmappedDropped);
 
         if(RD_LOGGER.isDebugEnabled())
         {
-            RD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pairedAltChr={}))",
-                    LocalComplete, Incomplete, InterPartition, Unmapped, PairedAltChromosome);
+            RD_LOGGER.info("consensus stats: {}", ConsensusStats);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
@@ -133,11 +118,6 @@ public class Statistics
                     .collect(Collectors.joining(", "));
 
             RD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
-        }
-
-        if(MissingMateCigar > 0)
-        {
-            RD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
         }
     }
 

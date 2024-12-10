@@ -45,6 +45,9 @@ public final class CommonConfig
     public static final String PERF_DEBUG = "perf_debug";
     public static final String PERF_DEBUG_DESC = "Detailed performance tracking and logging";
 
+    public static final String PERF_LOG_TIME = "perf_log_time";
+    public static final String PERF_LOG_TIME_DESC = "Log performance data for routine exceeding specified time (0 = disabled)";
+
     public static final String TARGET_REGIONS_BED = "target_regions_bed";
     public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
 

@@ -13,36 +13,29 @@ import htsjdk.samtools.SAMRecord;
 
 public class BamWriterNoSync extends BamWriter
 {
+    // writes reads in coordinate order using intelligent caching and without synchronised write calls
     private final SortedBamWriter mSortedBamWriter;
-    private final BamWriter mSharedUnsortedWriter;
-    private final boolean mWriteSorted;
+
+    private int mUnsortedWriteCount;
 
     public BamWriterNoSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, boolean writeSorted, final BamWriter sharedUnsortedWriter,
-            @Nullable final SuppBamWriter suppBamReadWriter)
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, suppBamReadWriter);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
 
-        mWriteSorted = writeSorted;
+        mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
 
-        if(mWriteSorted)
-        {
-            mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
+        if(config.perfDebug())
+            mSortedBamWriter.togglePerfDebug();
 
-            if(config.PerfDebug)
-                mSortedBamWriter.togglePerfDebug();
-
-            mSharedUnsortedWriter = sharedUnsortedWriter;
-        }
-        else
-        {
-            mSortedBamWriter = null;
-            mSharedUnsortedWriter = null;
-        }
+        mUnsortedWriteCount = 0;
     }
 
-    public boolean isSorted() { return mWriteSorted; }
+    public boolean isSorted() { return true; }
+
+    @Override
+    public long unsortedWriteCount() { return mUnsortedWriteCount; }
 
     public void initialiseRegion(final String chromosome, int startPosition)
     {
@@ -72,23 +65,18 @@ public class BamWriterNoSync extends BamWriter
     {
         if(mSamFileWriter != null)
         {
-            if(mWriteSorted)
+            if(mSortedBamWriter.canWriteRecord(read))
             {
-                if(mSortedBamWriter.canWriteRecord(read))
-                {
-                    mSortedBamWriter.addRecord(read);
-                }
-                else
-                {
-                    mSharedUnsortedWriter.writeRecord(read);
-                }
+                mSortedBamWriter.addRecord(read);
             }
             else
             {
-                mSamFileWriter.addAlignment(read);
+                ++mUnsortedWriteCount;
             }
         }
     }
+
+    public void writeReadUnchecked(final SAMRecord read) { mSortedBamWriter.writeReadUnchecked(read); }
 
     @Override
     public void close()

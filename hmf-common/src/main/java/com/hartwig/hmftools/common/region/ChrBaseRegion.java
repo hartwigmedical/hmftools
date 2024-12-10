@@ -76,7 +76,8 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
     public int baseLength() { return length() + 1; }
     public int length() { return mEnd - mStart; }
 
-    public boolean isValid() { return HumanChromosome.contains(Chromosome) && hasValidPositions(); }
+    public boolean isValid(boolean requireHuman) { return (!requireHuman || HumanChromosome.contains(Chromosome)) && hasValidPositions(); }
+    public boolean isValid() { return isValid(true); }
     public boolean hasValidPositions() { return mStart > 0 & mEnd >= mStart; }
 
     public BaseRegion baseRegion()
