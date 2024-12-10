@@ -17,13 +17,19 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.pipeline.RegionTask.setNearByIndelStatus;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -260,5 +266,24 @@ public class MiscEvidenceTest
         TestCase.assertEquals(2, delRcCounter.readSupportCounts().Full);
         TestCase.assertEquals(7, delRcCounter.readSupportCounts().Total);
         TestCase.assertEquals(7, delRcCounter.depth());
+    }
+
+    @Test
+    public void testNearByIndels()
+    {
+        SageVariant var1 = createSageVariant(90, "A", "C");
+        SageVariant var2 = createSageVariant(100, "A", "C");
+        SageVariant indel1 = createSageVariant(110, "A", "AC");
+        SageVariant var3 = createSageVariant(120, "A", "C");
+        SageVariant var4 = createSageVariant(130, "A", "C");
+
+        List<SageVariant> sageVariants = Lists.newArrayList(var1, var2, indel1, var3, var4);
+
+        setNearByIndelStatus(sageVariants);
+
+        assertFalse(var1.nearIndel());
+        assertTrue(var2.nearIndel());
+        assertTrue(var3.nearIndel());
+        assertFalse(var4.nearIndel());
     }
 }

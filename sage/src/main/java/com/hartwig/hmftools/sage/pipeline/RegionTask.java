@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -156,10 +158,10 @@ public class RegionTask
             {
                 Candidate candidate = finalCandidates.get(candidateIndex);
 
-                final List<ReadContextCounter> refCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
+                List<ReadContextCounter> refCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
                         referenceEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
 
-                final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
+                List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, tumorReadCounters);
                 mSageVariants.add(sageVariant);
@@ -173,6 +175,8 @@ public class RegionTask
 
                 validTumorReadCounters.add(tumorReadCounters.get(0));
             }
+
+            setNearByIndelStatus(mSageVariants);
 
             // phase variants now all evidence has been collected and filters applied
             variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
@@ -188,6 +192,51 @@ public class RegionTask
         }
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
+    }
+
+    @VisibleForTesting
+    public static void setNearByIndelStatus(final List<SageVariant> sageVariants)
+    {
+        // look forward and backwards from this indel and mark other variants which fall within its bounds
+        for(int index = 0; index < sageVariants.size(); ++index)
+        {
+            SageVariant variant = sageVariants.get(index);
+
+            if(!variant.isIndel())
+                continue;
+
+            for(int i = 0; i <= 1; ++i)
+            {
+                boolean searchUp = (i == 0);
+
+                int otherIndex = searchUp ? index + 1 : index - 1;
+
+                while(otherIndex >= 0 && otherIndex < sageVariants.size())
+                {
+                    SageVariant otherVar = sageVariants.get(otherIndex);
+
+                    if(otherVar.nearIndel())
+                        continue;
+
+                    if(positionWithin(otherVar.position(), variant.readContext().AlignmentStart, variant.readContext().AlignmentEnd))
+                    {
+                        otherVar.setNearIndel();
+                    }
+                    else
+                    {
+                        if(searchUp && otherVar.position() > variant.readContext().AlignmentEnd)
+                            break;
+                        else if(!searchUp && otherVar.position() < variant.readContext().AlignmentStart)
+                            break;
+                    }
+
+                    if(searchUp)
+                        ++otherIndex;
+                    else
+                        --otherIndex;
+                }
+            }
+        }
     }
 
     private void finaliseResults()

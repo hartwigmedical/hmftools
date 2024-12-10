@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -310,7 +311,7 @@ public class JitterTest
     public void testMsiJitterCalcs()
     {
         JitterModelParams jitterParams = new JitterModelParams(
-                "A/T",	0.05,0.05, 0.11,	0.0444,
+                "A/T",	ConsensusType.IGNORE, 0.05,0.05, 0.11,	0.0444,
                 -0.1835,	1.0164);
 
         MsiModelParams modelParams = new MsiModelParams(jitterParams);
@@ -328,15 +329,15 @@ public class JitterTest
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
         JitterModelParams jitterParams1 = new JitterModelParams(
-                "A/T",	0.05,0.06, 0.07,	0.0444,
+                "A/T",	ConsensusType.IGNORE, 0.05,0.06, 0.07,	0.0444,
                 -0.1835,	1.0164);
 
         JitterModelParams jitterParams2 = new JitterModelParams(
-                "AT/TA",	0.02,0.03, 0.04,	0.0444,
+                "AT/TA",	ConsensusType.IGNORE, 0.02,0.03, 0.04,	0.0444,
                 -0.1835,	1.0164);
 
         JitterModelParams jitterParams3 = new JitterModelParams(
-                REPEAT_UNIT_3_PLUS_LABEL,	0.1, 0.11, 0.12, 0.0133,
+                REPEAT_UNIT_3_PLUS_LABEL,	ConsensusType.IGNORE, 0.1, 0.11, 0.12, 0.0133,
                 0.1115, 1.6087);
 
         String sampleId = TEST_SAMPLE;
@@ -376,7 +377,7 @@ public class JitterTest
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
         JitterModelParams jitterParams1 = new JitterModelParams(
-                "A/C/G/T",	0.05,0.06, 0.07,	0.05,
+                "A/C/G/T",	ConsensusType.IGNORE, 0.05,0.06, 0.07,	0.05,
                 -0.02,	0.05);
 
         msiJitterCalcs.setSampleParams(TEST_SAMPLE, List.of(jitterParams1));
