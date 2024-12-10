@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.quality;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HD_JITTER_PARAMS;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PARAMS;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
@@ -136,7 +136,8 @@ public class MsiJitterCalcs
             double relevantMsiSkew = relevantMsiParams.params().MicrosatelliteSkew;
 
             JitterModelParams sampleJitterParams = new JitterModelParams(
-                    relevantDefaultParams.params().RepeatUnit, relevantDefaultParams.params().OptimalScaleRepeat4,
+                    relevantDefaultParams.params().RepeatUnit, relevantDefaultParams.params().ConsensusType,
+                    relevantDefaultParams.params().OptimalScaleRepeat4,
                     relevantDefaultParams.params().OptimalScaleRepeat5, relevantDefaultParams.params().OptimalScaleRepeat6,
                     relevantDefaultParams.params().ScaleFitGradient, relevantDefaultParams.params().ScaleFitIntercept, relevantMsiSkew);
 
