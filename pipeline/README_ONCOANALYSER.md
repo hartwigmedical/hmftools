@@ -35,13 +35,15 @@ This section will assume that the analysis:
 - Reads are aligned to the GRCh37 ref genome
 - Docker images are used to run each tool
 
-### 1. Install Nextflow
+**1. Install Nextflow**
+
 See: **https://www.nextflow.io/docs/latest/install.html**
 
-### 2. Install Docker
+**2. Install Docker**
+
 See: **https://docs.docker.com/engine/install/**
 
-### 3. Set up resource files
+**3. Set up resource files**
 
 Download and extract the reference genome and HMFTools resources using these **[links](#links)**.
 
@@ -67,7 +69,8 @@ params {
 > [!TIP]
 > Jump to section: **[Resource files](#resource-files)**
 
-### 4. Set up sample sheet
+**4. Set up sample sheet**
+
 Create a file called `sample_sheet.csv` which points to the sample inputs:
 
 ```csv
@@ -81,7 +84,7 @@ BAM and BAI files for the above COLO829 test sample can be downloaded from [here
 > [!TIP]
 > Jump to section: **[Sample sheet](#sample-sheet)**
 
-### 5. Run Oncoanalyser with Nextflow
+**5. Run Oncoanalyser with Nextflow**
 
 ```shell
 nextflow run nf-core/oncoanalyser \
@@ -100,11 +103,6 @@ nextflow run nf-core/oncoanalyser \
 ## Table of contents
 <!-- TOC -->
   * [Getting started](#getting-started)
-    * [1. Install Nextflow](#1-install-nextflow)
-    * [2. Install Docker](#2-install-docker)
-    * [3. Set up resource files](#3-set-up-resource-files)
-    * [4. Set up sample sheet](#4-set-up-sample-sheet)
-    * [5. Run Oncoanalyser with Nextflow](#5-run-oncoanalyser-with-nextflow)
   * [Table of contents](#table-of-contents)
   * [Command line interface](#command-line-interface)
     * [Running Oncoanalyser](#running-oncoanalyser)
@@ -123,15 +121,12 @@ nextflow run nf-core/oncoanalyser \
     * [Multiple config files](#multiple-config-files)
   * [Resource files](#resource-files)
     * [Links](#links)
-    * [General resource file configuration](#general-resource-file-configuration)
-    * [Panel resource file configuration](#panel-resource-file-configuration)
+    * [Configuring general resource files](#configuring-general-resource-files)
+    * [Configuring panel resource files](#configuring-panel-resource-files)
   * [Configuring compute resources](#configuring-compute-resources)
-    * [By tool](#by-tool)
-    * [By label](#by-label)
   * [Container images](#container-images)
-    * [Docker and singularity](#docker-and-singularity)
     * [Caching Singularity images](#caching-singularity-images)
-    * [Custom container configuration](#custom-container-configuration)
+    * [Configuring container images](#configuring-container-images)
   * [Outputs](#outputs)
     * [Sample reports](#sample-reports)
     * [Pipeline reports](#pipeline-reports)
@@ -371,8 +366,10 @@ Below are all valid values for `filetype`:
 summarizes concepts of Nextflow configuration files that are relevant for using Oncoanalyser.
 
 For details on specific configurations, please jump to the relevant section:
-- [Configuring resource files](#resource-files)
-- [Configuring processes](#configuring-processes)
+- [General resource files](#configuring-general-resource-files)
+- [Panel resource files](#configuring-panel-resource-files)
+- [Compute resources](#configuring-compute-resources)
+- [Container images](#configuring-container-images)
 
 > [!NOTE]
 > Configuration is fully detailed in the [Nextflow](https://www.nextflow.io/docs/latest/config.html) and 
@@ -380,19 +377,13 @@ For details on specific configurations, please jump to the relevant section:
 
 ### Basic config example
 Config items can be declared using [blocks](#https://www.nextflow.io/docs/latest/config.html#blocks), where curly brackets define the scope 
-of the encapsulated config items. The below example has the `params` and `process` scopes, with `workDir` being 
+of the encapsulated config items. The below example has the `params` scope, with `workDir` being 
 [un-scoped](https://www.nextflow.io/docs/latest/reference/config.html#unscoped-options):
 
 ```
 params {
    ref_data_hmf_data_path = '/path/to/hmf_pipeline_resources/'
    redux_umi = true
-}
-
-process {
-   withName: 'REDUX.*' {
-      cpus = 32
-   }
 }
 
 workDir = '/path/to/work/'
@@ -403,8 +394,6 @@ The above config items can also be compactly re-written with [dot syntax](https:
 ```
 params.ref_data_hmf_data_path = '/path/to/hmf_pipeline_resources/'
 params.redux_umi = true
-
-process.withName: 'REDUX.*' { cpus = 32 }
 
 workDir = '/path/to/work/'
 ```
@@ -428,7 +417,7 @@ nextflow run nf-core/oncoanalyser \
 ```
 
 The `params` scope is also used to define reference data paths (e.g. reference genome, HMFTools resources) as detailed in 
-[Resource files](#resources-files).
+[Resource files](#resource-files).
 
 ### Multiple config files
 You may want to keep certain configuration items in separate files. For example:
@@ -489,14 +478,13 @@ nextflow run nf-core/oncoanalyser \
 | Genome (RNA) | STAR index           | [star_index/gencode_38/2.7.3a.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/star_index/gencode_38/2.7.3a.tar.gz)                                                              |
 | Panel        | TSO500 data          | [panels/tso500_5.34_38--1.tar.gz](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/hmf_reference_data/panels/tso500_5.34_38--1.tar.gz)                                                                           |
 
-### General resource file configuration
+### Configuring general resource files
 
 The below example shows the most essential config items when configuring resource files. Not all items are required depending on the 
 experimental setup. Please see the inline comments for details.
 
 > [!TIP]
-> Comments in config files (and Nextflow files in general) use Java syntax. Single line comments start with `//`. Multi-line comments start
-> with `/* `and end with `*/`
+> Single line comments start with `//`. Multi-line comments start with `/* `and end with `*/`
 
 ```
 params {
@@ -532,7 +520,7 @@ params {
 }
 ```
 
-### Panel resource file configuration
+### Configuring panel resource files
 Running in `--mode targeted`, requires some additional resources files to be configured:
 
 ```
@@ -574,23 +562,16 @@ When running Oncoanalyser:
 
 ```shell
 nextflow run nf-core/oncoanalyser \
--profile docker \
--revision 1.0.0 \
 --panel custom_panel \
 --force_panel \
 -config general_resources.config \
 -config panel_resources.config \
 --mode targeted \
---genome GRCh37_hmf \
---input sample_sheet.csv \
---outdir output/ \
---max_cpus 16 \
---max_memory 64.GB
+# other arguments
 ```
 
 ## Configuring compute resources
 
-### By tool
 Each HMFtool is run within a Nextflow **process**. We can use the `process` scope and `withName` to select tools by name and set compute 
 resources options (as well as other [config options](https://www.nextflow.io/docs/latest/reference/process.html)):
 
@@ -626,7 +607,6 @@ process {
 }
 ```
 
-### By label
 Processes are also grouped by compute resource **labels**, with the main ones being (in order of increasing compute load) `process_single`,
 `process_low`, `process_medium` and `process_high`. The labels `process_medium_memory` and `process_high_memory` are only used for creating
 genome indexes. We can use `withLabel` to set options for all tools with an associated label:
@@ -640,8 +620,8 @@ process {
 ```
 
 > [!NOTE]
-> Configuration of tools/processes is fully detailed the [nf-core](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources). All
-> options (a.k.a 'directives') for configuring processes are detailed in the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives).
+> Configuration of processes is fully detailed in the [nf-core](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources). 
+> All options (a.k.a 'directives') for configuring processes are detailed in the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives).
 
 ## Container images
 
@@ -652,12 +632,14 @@ The `-profile` argument is used to tell Oncoanalyser whether to run with Docker 
 ```shell
 nextflow run nf-core/oncoanalyser 
 -profile docker \
-# Other arguments
+# other arguments
 ```
 
-Docker images built by Hartwig's Google Cloud CI/CD infrastructure are also available, though not used by default by Oncoanalyser.
+Docker images built by Hartwig's Google Cloud CI/CD infrastructure are also available (though not used by default by Oncoanalyser).
 
-### Docker and singularity
+> [!NOTE]
+> Configuration of container images is fully detailed in the [nf-core](https://nf-co.re/docs/usage/configuration#docker-registries) and 
+> [Nextflow](https://www.nextflow.io/docs/edge/container.html#containers) documentation
 
 Docker and singularity image URIs/URLs have consistent patterns:
 
@@ -712,7 +694,7 @@ nextflow run nf-core/oncoanalyser
 # ...other arguments
 ```
 
-### Custom container configuration
+### Configuring container images
 
 We can override the default container image used by Oncoanalyser like so:
 
@@ -731,7 +713,7 @@ process {
 This is useful for example when you want to use updated container images that are not yet officially supported (e.g. betas or release candidates). 
 
 In general, the process names for all HMFtools are `{TOOL}` or `{TOOL}_{SUBPROCESS}`. For example, SAGE has the processes: `SAGE_SOMATIC`, 
-`SAGE_GERMLINE`, `SAGE_APPEND`. The regular expression suffix `.*` (e.g. `SAGE.*`) should be used as to capture the subprocesses for each tool.
+`SAGE_GERMLINE`, `SAGE_APPEND`. Therefore, use regex suffix `.*` (e.g. `SAGE.*`) to capture the subprocesses for each tool.
 
 ## Outputs
 
