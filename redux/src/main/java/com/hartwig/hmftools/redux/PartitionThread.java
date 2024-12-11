@@ -6,19 +6,24 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.redux.unmap.TaskQueue;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
+
+import org.jetbrains.annotations.Nullable;
 
 public class PartitionThread extends Thread
 {
@@ -67,7 +72,8 @@ public class PartitionThread extends Thread
     }
 
     public static List<List<ChrBaseRegion>> splitRegionsIntoPartitions(
-            final SpecificRegions specificRegions, final int threadCount, final RefGenomeVersion refGenomeVersion)
+            final SpecificRegions specificRegions, final int threadCount, final RefGenomeVersion refGenomeVersion,
+            @Nullable final RefGenomeInterface refGenome)
     {
         List<List<ChrBaseRegion>> partitionRegions = Lists.newArrayList();
 
@@ -79,7 +85,7 @@ public class PartitionThread extends Thread
         }
         else
         {
-            inputRegions.addAll(humanChromosomeRegions(specificRegions, refGenomeVersion));
+            inputRegions.addAll(getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome));
         }
 
         long totalLength = inputRegions.stream().mapToLong(x -> x.baseLength()).sum();
@@ -130,6 +136,31 @@ public class PartitionThread extends Thread
         }
 
         return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
+    }
+
+    private static List<ChrBaseRegion> getRefGenomeRegions(
+            final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion, @Nullable final RefGenomeInterface refGenome)
+    {
+        if(refGenome == null)
+            return humanChromosomeRegions(specificRegions, refGenomeVersion);
+
+        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
+
+        for(Map.Entry<String,Integer> contigEntry : refGenome.chromosomeLengths().entrySet())
+        {
+            String contig = contigEntry.getKey();
+
+            if(specificRegions.excludeChromosome(contig))
+                continue;
+
+            int contigLength = contigEntry.getValue();
+
+            inputRegions.add(new ChrBaseRegion(contig, 1, contigLength));
+        }
+
+        Collections.sort(inputRegions);
+
+        return inputRegions;
     }
 
     private static List<ChrBaseRegion> humanChromosomeRegions(final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)

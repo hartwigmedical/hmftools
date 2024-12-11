@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux.unmap;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
@@ -9,8 +7,6 @@ import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
-import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapMateAlignment;
-import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapReadAlignment;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
 
 import java.io.File;
@@ -22,7 +18,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.redux.BamReader;
@@ -32,7 +27,6 @@ import com.hartwig.hmftools.redux.write.FileWriterCache;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -97,9 +91,6 @@ public class RegionUnmapper extends Thread
 
         Collections.sort(unmappingRegions);
 
-        // also add in any alt-contigs from this BAM
-        unmappingRegions.addAll(extractAltConfigRegions(config));
-
         // add in an entry to extract fully unmapped reads
         unmappingRegions.add(UNMAPPED_READS);
 
@@ -126,41 +117,6 @@ public class RegionUnmapper extends Thread
         }
 
         return regionUnmapperTasks;
-    }
-
-    private static List<UnmapRegion> extractAltConfigRegions(final ReduxConfig config)
-    {
-        List<UnmapRegion> regions = Lists.newArrayList();
-
-        if(config.SpecificChrRegions.hasFilters())
-            return regions;
-
-        for(String inputBam : config.BamFiles)
-        {
-            SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(inputBam));
-
-            for(SAMSequenceRecord sequence : samReader.getFileHeader().getSequenceDictionary().getSequences())
-            {
-                if(HumanChromosome.contains(sequence.getSequenceName()))
-                    continue;
-
-                UnmapRegion newRegion = new UnmapRegion(sequence.getContig(), 1, sequence.getEnd(), 0);
-
-                UnmapRegion matched = regions.stream().filter(x -> x.overlaps(newRegion)).findFirst().orElse(null);
-
-                if(matched == null)
-                {
-                    regions.add(newRegion);
-                }
-                else
-                {
-                    matched.setStart(min(matched.start(), newRegion.start()));
-                    matched.setEnd(max(matched.end(), newRegion.end()));
-                }
-            }
-        }
-
-        return regions;
     }
 
     @Override
@@ -243,58 +199,23 @@ public class RegionUnmapper extends Thread
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(mCurrentRegion.IsStandardChromosome)
-        {
-            boolean alreadyUnmapped = read.getReadUnmappedFlag();
-            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+        boolean alreadyUnmapped = read.getReadUnmappedFlag();
+        mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
-            boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
-            boolean fullyUnmapped = fullyUnmapped(read);
+        boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
+        boolean fullyUnmapped = fullyUnmapped(read);
 
-            // relocate any read which satisfies unmapping criteria - either to its mate's location or the fully-unmapped BAM
-            if(internallyUnmapped || fullyUnmapped)
-            {
-                if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
-                    return;
-
-                if(fullyUnmapped)
-                    mFullyUnmappedBamWriter.writeRecordSync(read);
-                else
-                    mUnmappingBamWriter.writeRecordSync(read);
-            }
-        }
-        else
-        {
-            processAltContigReads(read);
-        }
-    }
-
-    private void processAltContigReads(final SAMRecord read)
-    {
-        // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
-        if(read.getReadPairedFlag() && !read.getMateUnmappedFlag() && HumanChromosome.contains(read.getMateReferenceName()))
+        // relocate any read which satisfies unmapping criteria - either to its mate's location or the fully-unmapped BAM
+        if(internallyUnmapped || fullyUnmapped)
         {
             if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
-            {
-                // ++mStats.UnmappedDropped;
-                return; // drop as per standard logic
-            }
-
-            boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(read);
-
-            // if the human-chromosome mate was unmapped (ie in an unmap region), then this read should also now be unmapped
-            // otherwise it should be unmapped but leave its mate attributes as-is
-            unmapReadAlignment(read, mateUnmapped, mateUnmapped);
-
-            if(mateUnmapped)
-            {
-                unmapMateAlignment(read, false, true);
-                mFullyUnmappedBamWriter.writeRecordSync(read);
                 return;
-            }
-        }
 
-        mUnmappingBamWriter.writeRecordSync(read);
+            if(fullyUnmapped)
+                mFullyUnmappedBamWriter.writeRecordSync(read);
+            else
+                mUnmappingBamWriter.writeRecordSync(read);
+        }
     }
 
     private boolean processFullyUnmappedReads()

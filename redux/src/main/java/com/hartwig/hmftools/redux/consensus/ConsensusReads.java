@@ -3,10 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
@@ -17,7 +14,6 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTAR
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.alignedOrClipped;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM;
-import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.parseUnmappedCoords;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -28,7 +24,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -139,11 +134,6 @@ public class ConsensusReads
         consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
 
-        if(consensusRead.getReadPairedFlag() && consensusRead.getMateUnmappedFlag())
-        {
-            checkNonHumanMates(consensusRead, readsView);
-        }
-
         if(mValidateConsensusReads)
         {
             ValidationReason validReason = isValidConsensusRead(consensusRead);
@@ -159,35 +149,6 @@ public class ConsensusReads
     public void setChromosomeLength(int chromosomeLength)
     {
         mBaseBuilder.setChromosomLength(chromosomeLength);
-    }
-
-    private static void checkNonHumanMates(final SAMRecord consensusRead, final List<SAMRecord> reads)
-    {
-        // if all mates were unmapped from non-human contigs, then mark this read as unpaired
-        for(SAMRecord read : reads)
-        {
-            if(!read.getReadPairedFlag() || !read.getMateUnmappedFlag())
-                return;
-
-            String mateCoordsStr = read.getStringAttribute(UNMAP_ATTRIBUTE);
-
-            if(mateCoordsStr == null)
-                return;
-
-            String[] mateCoords = parseUnmappedCoords(mateCoordsStr);
-            String mateChr = mateCoords[0];
-
-            if(HumanChromosome.contains(mateChr))
-                return;
-        }
-
-        consensusRead.setProperPairFlag(false);
-
-        // no need to set first or second in pair flags
-        consensusRead.setMateUnmappedFlag(true);
-        consensusRead.setMateNegativeStrandFlag(false);
-        consensusRead.setMateAlignmentStart(NO_POSITION);
-        consensusRead.setMateReferenceName(NO_CHROMOSOME_NAME);
     }
 
     private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)

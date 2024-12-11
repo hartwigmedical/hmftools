@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class UnmapRegion extends ChrBaseRegion
 {
-    public final boolean IsStandardChromosome;
+    public final boolean IsStandardChromosome; // distinction recorded but not currently used for any specific logic
     public final int MaxDepth;
 
     public static final UnmapRegion UNMAPPED_READS = new UnmapRegion(NO_CHROMOSOME_NAME, NO_POSITION, NO_POSITION, 0);

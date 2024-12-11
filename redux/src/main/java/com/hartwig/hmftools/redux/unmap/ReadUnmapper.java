@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
@@ -448,10 +447,6 @@ public class ReadUnmapper
         }
         else
         {
-            // links to a non-human chromosome
-            if(!HumanChromosome.contains(read.getMateReferenceName()))
-                return RegionMatchType.OTHER;
-
             mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
 
             if(mateRegions == null)
@@ -482,10 +477,6 @@ public class ReadUnmapper
 
     private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData)
     {
-        // links to a non-human chromosome
-        if(!HumanChromosome.contains(suppReadData.Chromosome))
-            return RegionMatchType.OTHER;
-
         final List<HighDepthRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
 
         if(suppRegions == null)

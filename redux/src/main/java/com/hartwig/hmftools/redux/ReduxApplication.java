@@ -221,7 +221,8 @@ public class ReduxApplication
 
         List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(partitionThreadCount);
 
-        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(mConfig.SpecificChrRegions, partitionCount, mConfig.RefGenVersion);
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(
+                mConfig.SpecificChrRegions, partitionCount, mConfig.RefGenVersion, mConfig.RefGenome);
 
         if(partitionRegions.isEmpty())
             return Collections.emptyList();

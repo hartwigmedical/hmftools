@@ -214,7 +214,7 @@ public class ReduxApplicationTest
 
         specificRegions.addRegion(new ChrBaseRegion(CHR_1, 1, 1000000));
 
-        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(specificRegions, 4, V37);
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(specificRegions, 4, V37, null);
         assertEquals(4, partitionRegions.size());
 
         ChrBaseRegion region = partitionRegions.get(0).get(0);
@@ -238,7 +238,7 @@ public class ReduxApplicationTest
         specificRegions.addRegion(new ChrBaseRegion(CHR_2, 1, 10000));
         specificRegions.addRegion(new ChrBaseRegion(CHR_3, 1, 10000));
 
-        partitionRegions = splitRegionsIntoPartitions(specificRegions, 1, V37);
+        partitionRegions = splitRegionsIntoPartitions(specificRegions, 1, V37, null);
         assertEquals(1, partitionRegions.size());
 
         region = partitionRegions.get(0).get(0);
