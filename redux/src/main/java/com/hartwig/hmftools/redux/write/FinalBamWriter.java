@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Queue;
@@ -16,10 +15,6 @@ import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class FinalBamWriter extends Thread
 {
@@ -29,7 +24,6 @@ public class FinalBamWriter extends Thread
     private int mProcessedPartitions;
 
     private String mFinalBamFilename;
-    private SAMFileWriter mBamWriter;
 
     // perf tracking
     private long mTotalWaitTimeMs;
@@ -41,7 +35,6 @@ public class FinalBamWriter extends Thread
         mFileWriterCache = fileWriterCache;
         mCompletedPartitionsQueue = fileWriterCache.completedPartitionsQueue();
         mFinalBamFilename = "";
-        mBamWriter = null;
         mProcessedPartitions = 0;
 
         mTotalWaitTimeMs = 0;
@@ -60,59 +53,66 @@ public class FinalBamWriter extends Thread
 
         while(true)
         {
-            PartitionInfo partitionInfo = mCompletedPartitionsQueue.poll();
+            boolean hasNew = false;
 
-            if(partitionInfo == null)
+            while(true)
+            {
+                PartitionInfo partitionInfo = mCompletedPartitionsQueue.poll();
+
+                if(partitionInfo == null)
+                    break;
+
+                addNewPartition(pendingPartitions, partitionInfo);
+                ++completedPartitionReaders;
+                hasNew = true;
+            }
+
+            if(!hasNew)
                 continue;
 
-            ++completedPartitionReaders;
+            RD_LOGGER.debug("completed {} partition readers", completedPartitionReaders);
 
+            /*
             if((completedPartitionReaders % 10) == 0)
             {
                 RD_LOGGER.info("completed {} partition readers", completedPartitionReaders);
             }
+            */
 
-            // add in order to make checking more efficient
-            int index = 0;
-            while(index < pendingPartitions.size())
-            {
-                if(partitionInfo.regionIndex() < pendingPartitions.get(index).regionIndex())
-                    break;
+            List<PartitionInfo> nextPartitions = findNextPartitions(pendingPartitions, mProcessedPartitions);
 
-                ++index;
-            }
+            if(nextPartitions == null)
+                continue;
 
-            pendingPartitions.add(index, partitionInfo);
+            mTotalWaitTimeMs += System.currentTimeMillis() - startWaitTimeMs;
 
-            PartitionInfo nextPartitionInfo = findNextPartition(pendingPartitions, mProcessedPartitions);
-            boolean processedNew = false;
+            processPartitions(nextPartitions);
 
-            while(nextPartitionInfo != null)
-            {
-                if(!processedNew)
-                {
-                    processedNew = true;
-                    mTotalWaitTimeMs += System.currentTimeMillis() - startWaitTimeMs;
-                }
+            mProcessedPartitions += nextPartitions.size();
 
-                processPartition(nextPartitionInfo);
-                ++mProcessedPartitions;
-
-                RD_LOGGER.info("final partition processing completed({}/{}) pending({})",
-                        mProcessedPartitions, mFileWriterCache.partitionCount(), pendingPartitions.size());
-
-                if(mProcessedPartitions == totalPartitions)
-                    break;
-
-                nextPartitionInfo = findNextPartition(pendingPartitions, mProcessedPartitions);
-            }
+            RD_LOGGER.info("final partition processing completed({}/{}) pending({})",
+                    mProcessedPartitions, mFileWriterCache.partitionCount(), pendingPartitions.size());
 
             if(mProcessedPartitions == totalPartitions)
                 break;
 
-            if(processedNew)
-                startWaitTimeMs = System.currentTimeMillis();
+            startWaitTimeMs = System.currentTimeMillis(); // start the wait timer again
         }
+    }
+
+    private static void addNewPartition(final List<PartitionInfo> pendingPartitions, final PartitionInfo newPartition)
+    {
+        // add in order to make checking more efficient
+        int index = 0;
+        while(index < pendingPartitions.size())
+        {
+            if(newPartition.regionIndex() < pendingPartitions.get(index).regionIndex())
+                break;
+
+            ++index;
+        }
+
+        pendingPartitions.add(index, newPartition);
     }
 
     public void logTimes()
@@ -121,89 +121,88 @@ public class FinalBamWriter extends Thread
                 mTotalWriteTimeMs / 60000.0, mTotalWaitTimeMs / 60000.0));
     }
 
-    private PartitionInfo findNextPartition(final List<PartitionInfo> pendingPartitions, int nextRequiredIndex)
+    private List<PartitionInfo> findNextPartitions(final List<PartitionInfo> pendingPartitions, int nextRequiredIndex)
     {
         if(pendingPartitions.isEmpty())
             return null;
 
-        // partitions are cached in order so just check the first
-        PartitionInfo partitionInfo = pendingPartitions.get(0);
+        if(pendingPartitions.get(0).regionIndex() != nextRequiredIndex)
+            return null;
 
-        if(partitionInfo.regionIndex() == nextRequiredIndex)
+        List<PartitionInfo> nextPartitions = Lists.newArrayList();
+
+        while(!pendingPartitions.isEmpty())
         {
-            pendingPartitions.remove(0);
-            return partitionInfo;
+            PartitionInfo partitionInfo = pendingPartitions.get(0);
+
+            if(partitionInfo.regionIndex() == nextRequiredIndex)
+            {
+                nextPartitions.add(partitionInfo);
+                pendingPartitions.remove(0);
+                ++nextRequiredIndex;
+            }
+            else
+            {
+                break;
+            }
         }
 
-        return null;
+        return nextPartitions;
     }
 
-    private void processPartition(final PartitionInfo partitionInfo)
+    private void processPartitions(final List<PartitionInfo> partitions)
     {
         // ensure all other writers are closed before attempting to read their records
-        partitionInfo.bamWriter().close();
+        partitions.forEach(x -> x.bamWriter().close());
 
-        if(partitionInfo.regionIndex() == 0)
+        if(partitions.get(0).regionIndex() == 0)
         {
-            mFinalBamFilename = partitionInfo.bamWriter().filename();
-            return;
+            mFinalBamFilename = partitions.get(0).bamWriter().filename();
         }
 
         long startWriteTimeMs = System.currentTimeMillis();
 
-        RD_LOGGER.info("writing partition({}) to final BAM", partitionInfo);
+        if(partitions.size() == 1)
+        {
+            RD_LOGGER.info("writing partition({}) to final BAM", partitions.get(0));
+        }
+        else
+        {
+            PartitionInfo first = partitions.get(0);
+            PartitionInfo last = partitions.get(partitions.size() - 1);
+
+            RD_LOGGER.info("writing {} partitions({}:{} - {}:{}) to final BAM",
+                    partitions.size(), first.regions().get(0).Chromosome, partitions.size(), first.regions().get(0).start(),
+                    last.regions().get(last.regions().size() - 1).Chromosome, last.regions().get(last.regions().size() - 1).end());
+        }
 
         // move temporarily before concatenating
-        String tmpConcatBam = mConfig.OutputBam + "tmp_concat.bam";
+        String tmpConcatBam = mConfig.OutputDir + "tmp_concat.bam";
 
         try
         {
             Files.move(new File(mFinalBamFilename), new File(tmpConcatBam));
 
-            List<String> inputBams = List.of(tmpConcatBam, partitionInfo.bamWriter().filename());
+            List<String> inputBams = Lists.newArrayList(tmpConcatBam);
+            partitions.stream().filter(x -> x.regionIndex() > 0).forEach(x -> inputBams.add(x.bamWriter().filename()));
 
             if(!BamOperations.concatenateBams(mFileWriterCache.bamToolName(), mConfig.BamToolPath, mFinalBamFilename, inputBams, 1))
                 System.exit(1);
 
-            java.nio.file.Files.deleteIfExists(Paths.get(tmpConcatBam));
+            RD_LOGGER.debug("concatenate of {} BAMs complete", partitions.size());
+
+            if(!mConfig.KeepInterimBams)
+            {
+                for(String inputBam : inputBams)
+                {
+                    java.nio.file.Files.deleteIfExists(Paths.get(inputBam));
+                }
+            }
         }
         catch(Exception e)
         {
             RD_LOGGER.error("failed to move final BAM for concatentation", e.toString());
             System.exit(1);
-        }
-
-        mTotalWriteTimeMs += System.currentTimeMillis() - startWriteTimeMs;
-    }
-
-    private void processPartitionManual(final PartitionInfo partitionInfo)
-    {
-        long startWriteTimeMs = System.currentTimeMillis();
-
-        RD_LOGGER.info("writing partition({}) to final BAM", partitionInfo);
-
-        String bamFilename = partitionInfo.bamWriter().filename();
-
-        if(partitionInfo.regionIndex() == 0)
-        {
-            // writing will be to this first BAM, so no need to write it again
-            mBamWriter = partitionInfo.bamWriter().samFileWriter();
-            return;
-        }
-        else
-        {
-            // ensure all other writers are closed before attempting to read their records
-            partitionInfo.bamWriter().close();
-        }
-
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
-
-        SAMRecordIterator iterator = samReader.iterator();
-
-        while(iterator.hasNext())
-        {
-            SAMRecord record = iterator.next();
-            mBamWriter.addAlignment(record);
         }
 
         mTotalWriteTimeMs += System.currentTimeMillis() - startWriteTimeMs;

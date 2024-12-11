@@ -213,8 +213,9 @@ public class PartitionReader
 
         if(mProcessedReads >= mNextLogReadCount)
         {
-            RD_LOGGER.debug("region({}) position({}) processed {} reads, cache(coords={} reads={})",
-                    mCurrentRegion, read.getAlignmentStart(), mProcessedReads,
+            double processedReads = mProcessedReads / 1000000.0;
+            RD_LOGGER.debug("region({}) position({}) processed {}M reads, cache(coords={} reads={})",
+                    mCurrentRegion, read.getAlignmentStart(), format("%.0f", processedReads),
                     mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
 
             mNextLogReadCount += LOG_READ_COUNT;

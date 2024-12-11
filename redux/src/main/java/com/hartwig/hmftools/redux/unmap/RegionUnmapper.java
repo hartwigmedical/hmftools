@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.unmap;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
@@ -218,8 +219,9 @@ public class RegionUnmapper extends Thread
 
         if(mProcessedReads >= mNextLogReadCount)
         {
-            RD_LOGGER.debug("region({}) position({}) processed {} reads",
-                    mCurrentRegion, read.getAlignmentStart(), mProcessedReads);
+            double processedReads = mProcessedReads / 1000000.0;
+            RD_LOGGER.debug("region({}) position({}) processed {}M reads",
+                    mCurrentRegion, read.getAlignmentStart(), format("%.0f", processedReads));
 
             mNextLogReadCount += LOG_READ_COUNT;
         }

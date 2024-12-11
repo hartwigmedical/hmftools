@@ -358,10 +358,16 @@ public class FileWriterCache
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
         // the BAM will not actually be sorted by the SAMTools library
+
+        // even for the sorted BAM writer, specify unsorted to avoid the presorted last vs next alignment order check in SAMFileWriterImpl
+        fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        /*
         if(isSorted)
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         else
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        */
 
         boolean presorted = isSorted;
 
