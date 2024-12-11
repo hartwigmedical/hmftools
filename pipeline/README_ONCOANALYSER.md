@@ -6,19 +6,23 @@ Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core
 [Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline.
 
 Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/):
-- Read mapping: [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) (DNA), [STAR](https://github.com/alexdobin/STAR) (RNA)
-- Read deduplication and unmapping: [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux)
-- SNV, MNV and INDEL calling: [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage), [PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave)
-- CNV calling: [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt), [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber), [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)
-- SV calling: [ESVEE](https://github.com/hartwigmedical/hmftools/tree/master/esvee)
-- SV and driver event interpretation: [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx)
-- Oncoviral detection: [VIRUSbreakend](https://github.com/PapenfussLab/gridss), [VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter)
-- HLA typing: [LILAC](https://github.com/hartwigmedical/hmftools/tree/master/lilac)
-- HRD prediction: [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord)
-- Tissue of origin prediction: [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)
-- Mutational signature fitting: [Sigs](https://github.com/hartwigmedical/hmftools/tree/master/sigs)
-- RNA transcript quantification: [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)
-- Summary report PDF: [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)
+
+| Task                                         | Tool                                                                                                                                                                                                                                                                                                                    |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Read alignment <a name="read-alignment"></a> | [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) - DNA<br/>[STAR](https://github.com/alexdobin/STAR) - RNA                                                                                                                                                                                                              |
+| Read deduplication and unmapping             | [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux)                                                                                                                                                                                                                                                   |
+| SNV, MNV, INDEL calling                      | [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) - Variant calling<br/>[PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave) - Transcript/coding effect annotation                                                                                                                     |
+| SV calling                                   | [ESVEE](https://github.com/hartwigmedical/hmftools/tree/master/esvee)<br/>                                                                                                                                                                                                                                              |
+| CNV calling                                  | [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) - B-allele frequencies<br/>[COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) - Read depth ratios<br/>[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) - Purity/ploidy estimation, variant annotation |
+| SV and driver event interpretation           | [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx)                                                                                                                                                                                                                                                     |
+| Oncoviral detection                          | [VIRUSbreakend](https://github.com/PapenfussLab/gridss) - Viral content and integration calling<br/>[VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter) - Post-processing                                                                                                      |
+| HLA typing                                   | [LILAC](https://github.com/hartwigmedical/hmftools/tree/master/lilac)                                                                                                                                                                                                                                                   |
+| HRD prediction                               | [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord)                                                                                                                                                                                                                                                   |
+| Tissue of origin prediction                  | [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)                                                                                                                                                                                                                                                   |
+| Mutational signature fitting                 | [Sigs](https://github.com/hartwigmedical/hmftools/tree/master/sigs)                                                                                                                                                                                                                                                     |
+| Neo-epitope prediction                       | [NEO](https://github.com/hartwigmedical/hmftools/tree/master/neo)                                                                                                                                                                                                                                                       |
+| RNA transcript quantification                | [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                                                                                                                                                                                 |
+| Report generation                            | [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                                                                                                                                                                                 |
 
 Oncoanalyser supports the following sequencing and sample setups:
 
@@ -586,7 +590,7 @@ process {
 }
 ```
 
-Values with a unit are provided in quotes with a space or without quotes using a dot, e.g. `'96 GB'` or `96.GB`.
+Values with a units are provided in quotes with a space or without quotes using a dot, e.g. `'96 GB'` or `96.GB`.
 
 Please see the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives) to see all possible
 options. The following links is the documentation for the ones used above:
@@ -594,7 +598,6 @@ options. The following links is the documentation for the ones used above:
 **[memory](https://www.nextflow.io/docs/latest/reference/process.html#memory)**,
 **[time](https://www.nextflow.io/docs/latest/reference/process.html#time)**,
 **[disk](https://www.nextflow.io/docs/latest/reference/process.html#disk)**.
-
 
 We can also use a regular expression to select multiple processes. SAGE for example has the processes `SAGE_SOMATIC`, `SAGE_GERMLINE` and
 `SAGE_APPEND`. We can select all 3 like so:
