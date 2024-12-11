@@ -90,7 +90,8 @@ public class ReduxApplication
         List<Thread> allThreads = Lists.newArrayList(partitionThreads);
 
         FinalBamWriter finalBamWriter = null;
-        if(mConfig.WriteBam)
+
+        if(mConfig.WriteBam && mConfig.ParallelConcatenation)
         {
             finalBamWriter = new FinalBamWriter(mConfig, fileWriterCache);
             allThreads.add(finalBamWriter);
@@ -213,7 +214,7 @@ public class ReduxApplication
 
     private List<PartitionThread> createPartitionThreads(final FileWriterCache fileWriterCache)
     {
-        int partitionThreadCount = mConfig.WriteBam ? max(mConfig.Threads - 1, 1) : mConfig.Threads;
+        int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(mConfig.Threads - 1, 1) : mConfig.Threads;
         int partitionCount = mConfig.PartitionThreadRatio * partitionThreadCount;
 
         RD_LOGGER.debug("splitting {} partition regions across {} threads", partitionCount, partitionThreadCount);

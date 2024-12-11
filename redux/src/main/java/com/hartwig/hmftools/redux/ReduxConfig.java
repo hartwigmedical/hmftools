@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -9,7 +8,6 @@ import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOp
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -50,8 +48,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -101,6 +97,7 @@ public class ReduxConfig
     public final int PartitionThreadRatio;
 
     public final String BamToolPath;
+    public final boolean ParallelConcatenation;
 
     // debug
     public final boolean KeepInterimBams;
@@ -135,6 +132,7 @@ public class ReduxConfig
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
+    private static final String PARALLEL_CONCATENATION = "parallel_concat";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
@@ -205,6 +203,7 @@ public class ReduxConfig
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
 
         UMIs = UmiConfig.from(configBuilder);
 
@@ -298,8 +297,6 @@ public class ReduxConfig
         SequencingType.registerConfig(configBuilder);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
-        configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
-
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
@@ -324,6 +321,9 @@ public class ReduxConfig
                 DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         addThreadOptions(configBuilder);
+        configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
+        configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
@@ -362,6 +362,7 @@ public class ReduxConfig
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         BamToolPath = null;
+        ParallelConcatenation = false;
 
         UnmapRegions = readUnmapper;
 

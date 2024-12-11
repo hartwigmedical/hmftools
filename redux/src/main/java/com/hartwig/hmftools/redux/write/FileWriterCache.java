@@ -14,14 +14,13 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -29,10 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class FileWriterCache
 {
@@ -43,6 +38,7 @@ public class FileWriterCache
 
     private final List<PartitionInfo> mPartitions;
     private final Queue<PartitionInfo> mCompletedPartitionsQueue;
+    private int mCompletedPartitionCount;
 
     private final BamWriterSync mUnmappingWriter;
     private String mUnmappingSortedBamFilename;
@@ -71,6 +67,7 @@ public class FileWriterCache
         mBamWriters = Lists.newArrayList();
 
         mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
+        mCompletedPartitionCount = 0;
 
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
@@ -110,7 +107,7 @@ public class FileWriterCache
 
         String filename;
 
-        if(partitionIndex == 0)
+        if(partitionIndex == 0 && mConfig.ParallelConcatenation)
         {
             // use the final BAM name for the writer which writes the first partition's reads
             filename = mFinalBamFilename;
@@ -131,7 +128,13 @@ public class FileWriterCache
 
     public synchronized void addCompletedPartition(final PartitionInfo partition)
     {
-        mCompletedPartitionsQueue.add(partition);
+        ++mCompletedPartitionCount;
+        RD_LOGGER.debug("completed {} partition readers", mCompletedPartitionCount);
+
+        if(mConfig.ParallelConcatenation)
+            mCompletedPartitionsQueue.add(partition);
+        else
+            partition.bamWriter().close();
     }
 
     public BamWriterSync getUnmappingBamWriter() { return mUnmappingWriter; }
@@ -177,9 +180,8 @@ public class FileWriterCache
 
         // last thing to do is write fully unmapped read to the final BAM
 
-        // write any originally full-unmapped reads to the relevant BAM ahead of concatenation
-
-        writeFullyUnmappedReads();
+        if(!mConfig.ParallelConcatenation)
+            concatenateBams();
 
         if(mConfig.BamToolPath != null)
         {
@@ -192,72 +194,6 @@ public class FileWriterCache
         return true;
     }
 
-    private boolean writeFullyUnmappedReads()
-    {
-        /*
-        SAMFileWriter finalBamWriter = null;
-
-        // close all but the final BAM writer
-        for(BamWriter bamWriter : mBamWriters)
-        {
-            if(bamWriter.filename().equals(mFinalBamFilename))
-                finalBamWriter = bamWriter.samFileWriter();
-            else
-                bamWriter.close();
-        }
-
-        // re-write the fully-unmapped reads and those from the original BAMs to the final BAM
-        List<String> inputBams = Lists.newArrayList(mConfig.BamFiles);
-        inputBams.add(mFullUnmappedWriter.mFilename);
-
-        long totalUnmappedReads = 0;
-
-        for(String bamFilename : inputBams)
-        {
-            SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
-
-            SAMRecordIterator iterator = samReader.iterator();
-
-            while(iterator.hasNext())
-            {
-                SAMRecord record = iterator.next();
-                finalBamWriter.addAlignment(record);
-                ++totalUnmappedReads;
-            }
-        }
-        */
-
-        long totalUnmappedReads = 0;
-
-        for(String bamFilename : mConfig.BamFiles)
-        {
-            SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
-
-            SAMRecordIterator iterator = samReader.iterator();
-
-            while(iterator.hasNext())
-            {
-                SAMRecord record = iterator.next();
-                mFullUnmappedWriter.writeRecordSync(record);
-                ++totalUnmappedReads;
-            }
-        }
-
-        mFullUnmappedWriter.close();
-
-        if(totalUnmappedReads > 0)
-        {
-            RD_LOGGER.debug("wrote {} fully-unmapped reads to final BAM", totalUnmappedReads);
-        }
-
-        // TODO: now concatenate to the final BAM
-
-        return true;
-    }
-
-    /*
     private boolean concatenateBams()
     {
         List<String> orderPartitionBams = mBamWriters.stream()
@@ -269,15 +205,16 @@ public class FileWriterCache
 
         RD_LOGGER.debug("concatenating {} BAMs", orderPartitionBams.size());
 
-        if(!BamOperations.concatenateBams(bamToolName(), mConfig.BamToolPath, finalBamFilename, orderPartitionBams, mConfig.Threads))
+        if(!BamOperations.concatenateBams(bamToolName(), mConfig.BamToolPath, finalBamFilename, orderPartitionBams, 1))
             return false;
 
         if(!BamOperations.indexBam(bamToolName(), mConfig.BamToolPath, finalBamFilename, mConfig.Threads))
             return false;
 
+        RD_LOGGER.debug("final BAM complete: {}", mFinalBamFilename);
+
         return true;
     }
-    */
 
     private void deleteInterimBams()
     {

@@ -14,12 +14,11 @@ import com.google.common.io.Files;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
-import htsjdk.samtools.SAMFileWriter;
-
 public class FinalBamWriter extends Thread
 {
     private final ReduxConfig mConfig;
-    private FileWriterCache mFileWriterCache;
+    private final FileWriterCache mFileWriterCache;
+
     private Queue<PartitionInfo> mCompletedPartitionsQueue;
     private int mProcessedPartitions;
 
@@ -49,7 +48,6 @@ public class FinalBamWriter extends Thread
         List<PartitionInfo> pendingPartitions = Lists.newArrayList();
 
         long startWaitTimeMs = System.currentTimeMillis();
-        int completedPartitionReaders = 0;
 
         while(true)
         {
@@ -63,26 +61,20 @@ public class FinalBamWriter extends Thread
                     break;
 
                 addNewPartition(pendingPartitions, partitionInfo);
-                ++completedPartitionReaders;
                 hasNew = true;
             }
 
             if(!hasNew)
                 continue;
 
-            RD_LOGGER.debug("completed {} partition readers", completedPartitionReaders);
-
-            /*
-            if((completedPartitionReaders % 10) == 0)
-            {
-                RD_LOGGER.info("completed {} partition readers", completedPartitionReaders);
-            }
-            */
-
             List<PartitionInfo> nextPartitions = findNextPartitions(pendingPartitions, mProcessedPartitions);
 
             if(nextPartitions == null)
                 continue;
+
+            RD_LOGGER.debug("BAM concat partitions completed({}/{}) ready({}) pending({})",
+                    mProcessedPartitions + nextPartitions.size(), mFileWriterCache.partitionCount(),
+                    nextPartitions.size(), pendingPartitions.size());
 
             mTotalWaitTimeMs += System.currentTimeMillis() - startWaitTimeMs;
 
@@ -90,8 +82,8 @@ public class FinalBamWriter extends Thread
 
             mProcessedPartitions += nextPartitions.size();
 
-            RD_LOGGER.info("final partition processing completed({}/{}) pending({})",
-                    mProcessedPartitions, mFileWriterCache.partitionCount(), pendingPartitions.size());
+            // RD_LOGGER.info("partition BAM concatenate completed({}/{}) pending({})",
+            //        mProcessedPartitions, mFileWriterCache.partitionCount(), pendingPartitions.size());
 
             if(mProcessedPartitions == totalPartitions)
                 break;
@@ -117,7 +109,7 @@ public class FinalBamWriter extends Thread
 
     public void logTimes()
     {
-        RD_LOGGER.info(format("final BAM writeTime(%.3f) waitTime(%.3f)",
+        RD_LOGGER.info(format("BAM concatenate writeTime(%.3f) waitTime(%.3f)",
                 mTotalWriteTimeMs / 60000.0, mTotalWaitTimeMs / 60000.0));
     }
 
@@ -164,15 +156,15 @@ public class FinalBamWriter extends Thread
 
         if(partitions.size() == 1)
         {
-            RD_LOGGER.info("writing partition({}) to final BAM", partitions.get(0));
+            RD_LOGGER.info("concatenating partition({}) to final BAM", partitions.get(0));
         }
         else
         {
             PartitionInfo first = partitions.get(0);
             PartitionInfo last = partitions.get(partitions.size() - 1);
 
-            RD_LOGGER.info("writing {} partitions({}:{} - {}:{}) to final BAM",
-                    partitions.size(), first.regions().get(0).Chromosome, partitions.size(), first.regions().get(0).start(),
+            RD_LOGGER.info("concatenating {} partitions({}:{} - {}:{}) to final BAM",
+                    partitions.size(), first.regions().get(0).Chromosome, first.regions().get(0).start(),
                     last.regions().get(last.regions().size() - 1).Chromosome, last.regions().get(last.regions().size() - 1).end());
         }
 
@@ -185,6 +177,14 @@ public class FinalBamWriter extends Thread
 
             List<String> inputBams = Lists.newArrayList(tmpConcatBam);
             partitions.stream().filter(x -> x.regionIndex() > 0).forEach(x -> inputBams.add(x.bamWriter().filename()));
+
+            // add on the unmapped reads BAM as the final partition BAM is being processed
+            if(mProcessedPartitions + partitions.size() >= mFileWriterCache.partitionCount())
+            {
+                BamWriter fullyUnmappedBamWriter = mFileWriterCache.getFullUnmappedBamWriter();
+                fullyUnmappedBamWriter.close();
+                inputBams.add(fullyUnmappedBamWriter.filename());
+            }
 
             if(!BamOperations.concatenateBams(mFileWriterCache.bamToolName(), mConfig.BamToolPath, mFinalBamFilename, inputBams, 1))
                 System.exit(1);

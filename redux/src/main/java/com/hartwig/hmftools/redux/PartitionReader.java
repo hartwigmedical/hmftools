@@ -238,8 +238,6 @@ public class PartitionReader
             return;
         }
 
-        ++mStats.TotalReads;
-
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
             RD_LOGGER.debug("specific read: {}", readToString(read));
@@ -269,6 +267,8 @@ public class PartitionReader
                     return;
             }
         }
+
+        ++mStats.TotalReads;
 
         checkRefBases(read.getAlignmentStart());
 

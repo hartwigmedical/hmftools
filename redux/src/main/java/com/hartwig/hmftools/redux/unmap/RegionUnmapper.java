@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -12,6 +11,7 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapMateAlignment;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.unmapReadAlignment;
+import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
 
 import java.io.File;
 import java.util.Collections;
@@ -31,6 +31,7 @@ import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -98,6 +99,9 @@ public class RegionUnmapper extends Thread
 
         // also add in any alt-contigs from this BAM
         unmappingRegions.addAll(extractAltConfigRegions(config));
+
+        // add in an entry to extract fully unmapped reads
+        unmappingRegions.add(UNMAPPED_READS);
 
         List<RegionUnmapper> regionUnmapperTasks = Lists.newArrayList();
 
@@ -187,6 +191,12 @@ public class RegionUnmapper extends Thread
 
     private void processRegion(final UnmapRegion region)
     {
+        if(region == UNMAPPED_READS)
+        {
+            processFullyUnmappedReads();
+            return;
+        }
+
         mCurrentRegion = region;
         mHighDepthRegion = new HighDepthRegion(region.start(), region.end(), region.MaxDepth);
 
@@ -285,5 +295,32 @@ public class RegionUnmapper extends Thread
         }
 
         mUnmappingBamWriter.writeRecordSync(read);
+    }
+
+    private boolean processFullyUnmappedReads()
+    {
+        long totalUnmappedReads = 0;
+
+        for(String bamFilename : mConfig.BamFiles)
+        {
+            SamReader samReader = SamReaderFactory.makeDefault()
+                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
+
+            SAMRecordIterator iterator = samReader.queryUnmapped();
+
+            while(iterator.hasNext())
+            {
+                SAMRecord record = iterator.next();
+                mFullyUnmappedBamWriter.writeRecordSync(record);
+                ++totalUnmappedReads;
+            }
+        }
+
+        if(totalUnmappedReads > 0)
+        {
+            RD_LOGGER.debug("extracted {} fully-unmapped reads", totalUnmappedReads);
+        }
+
+        return true;
     }
 }
