@@ -3,7 +3,14 @@
 </h1>
 
 Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core](https://nf-co.re/oncoanalyser/latest/)) is a 
-[Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline.
+[Nextflow](https://www.nextflow.io/) implementation of the Hartwig Medical Foundation DNA and RNA sequencing analysis pipeline which 
+supports the following sequencing and sample setups:
+
+| Data type | Sequencing method                                                                | Paired tumor/normal | Tumor-only         |
+|-----------|----------------------------------------------------------------------------------|---------------------|--------------------|
+| DNA       | Whole genome sequencing (WGS)                                                    | :white_check_mark:  | :white_check_mark: |
+| DNA       | Targeted sequencing:<br/> - Whole exome sequencing (WES)<br/> - Panel sequencing | :white_check_mark:  | :white_check_mark: |
+| RNA       | Whole transcriptome sequencing (WTS)                                             | -                   | :white_check_mark: |
 
 Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/):
 
@@ -23,14 +30,6 @@ Except for read alignment, the pipeline uses tools from [HMFtools](https://githu
 | Neo-epitope prediction                       | [NEO](https://github.com/hartwigmedical/hmftools/tree/master/neo)                                                                                                                                                                                                                                                       |
 | RNA transcript quantification                | [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                                                                                                                                                                                 |
 | Report generation                            | [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                                                                                                                                                                                 |
-
-Oncoanalyser supports the following sequencing and sample setups:
-
-| Data type | Sequencing method                                                                | Paired tumor/normal | Tumor-only         |
-|-----------|----------------------------------------------------------------------------------|---------------------|--------------------|
-| DNA       | Whole genome sequencing (WGS)                                                    | :white_check_mark:  | :white_check_mark: |
-| DNA       | Targeted sequencing:<br/> - Whole exome sequencing (WES)<br/> - Panel sequencing | :white_check_mark:  | :white_check_mark: |
-| RNA       | Whole transcriptome sequencing (WTS)                                             | -                   | :white_check_mark: |
 
 ## Getting started
 
