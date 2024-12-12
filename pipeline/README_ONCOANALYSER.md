@@ -118,7 +118,7 @@ nextflow run nf-core/oncoanalyser \
     * [BAM inputs](#bam-inputs)
     * [FASTQ inputs](#fastq-inputs)
     * [Sample modes](#sample-modes)
-    * [Multiple sample groups](#multiple-sample-groups)
+    * [Multiple patients and/or samples](#multiple-patients-andor-samples)
     * [Running from REDUX BAM](#running-from-redux-bam)
     * [Running specific tools](#running-specific-tools)
   * [Configuration files](#configuration-files)
@@ -137,8 +137,12 @@ nextflow run nf-core/oncoanalyser \
     * [Caching Singularity images](#caching-singularity-images)
     * [Configuring container images](#configuring-container-images)
   * [Outputs](#outputs)
-    * [Sample reports](#sample-reports)
-    * [Pipeline reports](#pipeline-reports)
+    * [Pipeline information: `pipeline_info/`](#pipeline-information--pipelineinfo)
+    * [Alignments](#alignments)
+    * [AMBER](#amber)
+    * [CHORD](#chord)
+    * [COBALT](#cobalt)
+    * [CUPPA](#cuppa)
   * [Acknowledgements](#acknowledgements)
 <!-- TOC -->
 
@@ -174,11 +178,12 @@ nextflow run /path/to/oncoanalyser_repo \
 > Oncoanalyser-specific arugments start with two hyphens (`--`).
 
 ### Nextflow arguments
+
 All arguments for `nextflow run` are documented in the [CLI reference](https://www.nextflow.io/docs/latest/reference/cli.html#run). The
 below table lists some relevant ones.
 
 <details>
-<summary>Show content</summary>
+<summary><b>Show content</b></summary>
 
 | Argument&emsp;&emsp; | Description                                                                                                                                                                                                                            |
 |:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -195,10 +200,10 @@ below table lists some relevant ones.
 
 ### Oncoanalyser arguments
 
-The below table list all arguments that can be passed to Oncoanalyser
+The below table list all arguments that can be passed to Oncoanalyser.
 
 <details>
-<summary>Show content</summary>
+<summary><b>Show content</b></summary>
 
 | Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                                                     |
 |:---------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -245,44 +250,44 @@ Notes:
 ## Sample sheet
 
 The sample sheet is a comma separated table with the following columns:
-- `group_id`: Groups `subject_id` and `sample_id` into the same experiment 
-- `subject_id`
+- `subject_id`: Top level grouping
+- `group_id`: Groups `sample_id` entries (e.g. group tumor DNA, normal DNA, tumor RNA) into the same analysis 
 - `sample_id`
 - `sample_type`: `tumor` or `normal`
 - `sequence_type`: `dna` or `rna`
 - `filetype`: `bam`, `bai`, `fastq`, or see **[Running specific tools](#running-specific-tools)** for other valid values
-- `info`: Sequencing library and lane info for **[FASTQ inputs](#fastq-inputs)**
 - `filepath`: Absolute filepath to input file. Can be local filepath, URL, or S3 URI
+- `info`: Sequencing library and lane info for **[FASTQ inputs](#fastq-inputs)**
 
 ### BAM inputs
 Below is an example sample sheet with BAM files for a tumor/normal WGS run:
 
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam,/path/to/PATIENT1-T.dna.bam
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,bam,/path/to/PATIENT1-R.dna.bam
 ```
 
 BAM indexes (.bai files) are expected to be in the same directory as the BAM files. Alternatively, provide the BAM index path by 
 providing `bai` under column `filetype`:
 
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829,COLO829,COLO829T,tumor,dna,bai,/path/to/COLO829T.dna.bam.bai
-COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-COLO829,COLO829,COLO829R,normal,dna,bai,/path/to/COLO829R.dna.bam.bai
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam,/path/to/PATIENT1-T.dna.bam
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bai,/path/to/PATIENT1-T.dna.bam.bai
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,bam,/path/to/PATIENT1-R.dna.bam
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,bai,/path/to/PATIENT1-R.dna.bam.bai
 ```
 
 ### FASTQ inputs
 Below is an example sample sheet with FASTQ files for a tumor/normal WGS run:
 
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:S1;lane:001,/path/to/COLO829T_S1_L001_R1_001.fastq.gz;/path/to/COLO829T_S1_L001_R2_001.fastq.gz
-COLO829,COLO829,COLO829T,tumor,dna,fastq,library_id:S1;lane:002,/path/to/COLO829T_S1_L002_R1_001.fastq.gz;/path/to/COLO829T_S1_L002_R2_001.fastq.gz
-COLO829,COLO829,COLO829R,normal,dna,fastq,library_id:S2;lane:001,/path/to/COLO829R_S2_L001_R1_001.fastq.gz;/path/to/COLO829R_S2_L001_R2_001.fastq.gz
-COLO829,COLO829,COLO829R,normal,dna,fastq,library_id:S2;lane:002,/path/to/COLO829R_S2_L002_R1_002.fastq.gz;/path/to/COLO829R_S2_L002_R2_001.fastq.gz
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath,info
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,fastq,/path/to/PATIENT1-T_S1_L001_R1_001.fastq.gz;/path/to/PATIENT1-T_S1_L001_R2_001.fastq.gz,library_id:S1;lane:001
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,fastq,/path/to/PATIENT1-T_S1_L002_R1_001.fastq.gz;/path/to/PATIENT1-T_S1_L002_R2_001.fastq.gz,library_id:S1;lane:002
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,fastq,/path/to/PATIENT1-R_S2_L001_R1_001.fastq.gz;/path/to/PATIENT1-R_S2_L001_R2_001.fastq.gz,library_id:S2;lane:001
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,fastq,/path/to/PATIENT1-R_S2_L002_R1_002.fastq.gz;/path/to/PATIENT1-R_S2_L002_R2_001.fastq.gz,library_id:S2;lane:002
 ```
 
 Comments:
@@ -300,40 +305,45 @@ sheets use BAM files, but different sample modes can also be specified for FASTQ
 **Tumor-only DNA**
 
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam,/path/to/PATIENT1-T.dna.bam
 ```
 
 **Tumor-only RNA**
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T-RNA,tumor,rna,bam,/path/to/PATIENT1-T.rna.bam
 ```
 
 **Tumor/normal DNA, tumor-only RNA**
 
 ```csv
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-COLO829,COLO829,COLO829_RNA,tumor,dna,bam,/path/to/COLO829R.rna.bam
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam,/path/to/PATIENT1-T.dna.bam
+PATIENT1,PATIENT1,PATIENT1-R,normal,dna,bam,/path/to/PATIENT1-R.dna.bam
+PATIENT1,PATIENT1,PATIENT1-T-RNA,tumor,dna,bam,/path/to/PATIENT1-T.rna.bam
 ```
 
-### Multiple sample groups
+### Multiple patients and/or samples
 
-Multiple sample groups can also be provided in a single sample sheet. All rows with the same `group_id` value will be grouped together for
-processing.
+Suppose you have multiple patients, each with one or more biopsies taken from different years.
 
+You could then set:
+- `subject_id` to the patient ID
+- `group_id` to the set of samples for a particular year (e.g. `PATIENT1-YEAR1`)
+- `sample_id` to the actual sample IDs in the sample set for that year
+
+For example:
+
+```csv
+subject_id,group_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1-YEAR1,PATIENT1-YEAR1-T,tumor,dna,bam,/path/to/PATIENT1-YEAR1-T.dna.bam
+PATIENT1,PATIENT1-YEAR1,PATIENT1-YEAR1-R,normal,dna,bam,/path/to/PATIENT1-YEAR1-R.dna.bam
+PATIENT1,PATIENT1-YEAR2,PATIENT1-YEAR2-T,tumor,dna,bam,/path/to/PATIENT1-YEAR2-T.dna.bam
+PATIENT1,PATIENT1-YEAR2,PATIENT1-YEAR2-R,normal,dna,bam,/path/to/PATIENT1-YEAR2-R.dna.bam
+PATIENT2,PATIENT2-YEAR1,PATIENT2-YEAR1-T,tumor,dna,bam,/path/to/PATIENT2-YEAR1-T.dna.bam
+PATIENT2,PATIENT2-YEAR1,PATIENT2-YEAR1-R,normal,dna,bam,/path/to/PATIENT2-YEAR1-R.dna.bam
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-PD10010,PD10010,PD10010T,tumor,dna,bam,/path/to/PD10010T.dna.bam
-PD10010,PD10010,PD10010R,normal,dna,bam,/path/to/PD10010R.dna.bam
-```
-
-> [!NOTE]
-> It is still recommended to use one sample sheet per sample group so that errors can easily be isolated.
 
 ### Running from REDUX BAM
 Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) followed by read pre-processing with [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) 
