@@ -180,11 +180,11 @@ public class FileWriterCache
 
         // last thing to do is write fully unmapped read to the final BAM
 
-        if(!mConfig.ParallelConcatenation)
-            concatenateBams();
-
         if(mConfig.BamToolPath != null)
         {
+            if(!mConfig.ParallelConcatenation)
+                concatenateBams();
+
             if(!BamOperations.indexBam(bamToolName(), mConfig.BamToolPath, mFinalBamFilename, mConfig.Threads))
                 return false;
         }

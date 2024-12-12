@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
@@ -40,7 +41,6 @@ public class RegionUnmapper extends Thread
     private final BamWriterSync mFullyUnmappedBamWriter;
 
     private UnmapRegion mCurrentRegion;
-    private HighDepthRegion mHighDepthRegion;
     private UnmapRegionState mUnmapRegionState;
 
     private long mProcessedReads;
@@ -59,7 +59,6 @@ public class RegionUnmapper extends Thread
         mBamReader = new BamReader(config.BamFiles, config.RefGenomeFile);
         mUnmapRegionState = null;
         mCurrentRegion = null;
-        mHighDepthRegion = null;
 
         mProcessedReads = 0;
         mNextLogReadCount = LOG_READ_COUNT;
@@ -82,12 +81,27 @@ public class RegionUnmapper extends Thread
 
             List<HighDepthRegion> regions = entry.getValue();
 
+            UnmapRegion currentRegion = null;
+
+            // merge regions which are close together after factoring in the addition buffer
             for(HighDepthRegion region : regions)
             {
                 if(config.SpecificChrRegions.excludeRegion(region.start(), region.end()))
                     continue;
 
-                unmappingRegions.add(new UnmapRegion(chromosome, region.start(), region.end(), region.maxDepth()));
+                // build a buffer into the slice regions to account for unmapped mates starting earlier
+                int regionStart = region.start() - (UNMAP_MAX_NON_OVERLAPPING_BASES * 2);
+                int regionEnd = region.end();
+
+                if(currentRegion == null || currentRegion.end() < regionStart - 50)
+                {
+                    currentRegion = new UnmapRegion(chromosome, regionStart, regionEnd, region);
+                    unmappingRegions.add(currentRegion);
+                }
+                else
+                {
+                    currentRegion.setEnd(regionEnd);
+                }
             }
         }
 
@@ -156,9 +170,8 @@ public class RegionUnmapper extends Thread
         }
 
         mCurrentRegion = region;
-        mHighDepthRegion = new HighDepthRegion(region.start(), region.end(), region.MaxDepth);
 
-        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, List.of(mHighDepthRegion));
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, List.of(mCurrentRegion.Region));
         mUnmapRegionState.LastMatchedRegionIndex = 0;
 
         if(mBamReader != null)
@@ -177,11 +190,14 @@ public class RegionUnmapper extends Thread
         // must overlap by minimum to be a candidate for unmapping
         int readStart = read.getAlignmentStart();
 
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
+        {
+            RD_LOGGER.debug("specific read: {}", readToString(read));
+        }
+
         if(mCurrentRegion.IsStandardChromosome)
         {
-            int readPosEnd = read.getReadUnmappedFlag() ? readStart : read.getAlignmentEnd();
-
-            if(!overlapsRegion(mHighDepthRegion, read.getAlignmentStart(), readPosEnd))
+            if(!read.getReadUnmappedFlag() && !overlapsRegion(mCurrentRegion.Region, read.getAlignmentStart(), read.getAlignmentEnd()))
                 return;
         }
 
@@ -197,11 +213,6 @@ public class RegionUnmapper extends Thread
         }
 
         read.setDuplicateReadFlag(false);
-
-        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
-        {
-            RD_LOGGER.debug("specific read: {}", readToString(read));
-        }
 
         boolean alreadyUnmapped = read.getReadUnmappedFlag();
         int readFlags = read.getFlags();

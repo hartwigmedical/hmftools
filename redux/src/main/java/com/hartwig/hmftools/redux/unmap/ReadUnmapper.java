@@ -128,7 +128,7 @@ public class ReadUnmapper
         RegionMatchType mateRegionType = !mateUnmapped ? mateMaxDepthRegionOverlap(read, regionState) : null;
 
         if(!mateUnmapped)
-            unmapMate =  checkUnmapMate(read, mateRegionType);
+            unmapMate = checkUnmapMate(read, mateRegionType);
 
         // handle scenario where read wouldn't be unmapped unless mate becomes unmapped
         if(!readUnmapped && unmapReason == UnmapReason.NONE && readRegionType != RegionMatchType.NONE && unmapMate)
@@ -911,7 +911,7 @@ public class ReadUnmapper
 
         if(readInfo == null)
         {
-            RD_LOGGER.warn("read({}) was unmapped but not cached", readToString(read));
+            RD_LOGGER.warn("read chr({}) flags({}) {} was unmapped but not cached", chromosome, readFlags, readToString(read));
         }
     }
 

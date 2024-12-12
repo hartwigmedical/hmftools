@@ -235,7 +235,7 @@ public class ReduxConfig
                 FilterReadsType.NONE;
 
         Threads = parseThreads(configBuilder);
-        PartitionThreadRatio = configBuilder.getInteger(PARTIION_THREAD_RATIO);
+        PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 

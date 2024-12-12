@@ -79,7 +79,9 @@ public class PartitionThread extends Thread
 
         List<ChrBaseRegion> inputRegions = Lists.newArrayList();
 
-        if(!specificRegions.Regions.isEmpty())
+        boolean isSpecificRegions = !specificRegions.Regions.isEmpty();
+
+        if(isSpecificRegions)
         {
             inputRegions.addAll(specificRegions.Regions);
         }
@@ -99,7 +101,7 @@ public class PartitionThread extends Thread
 
         for(ChrBaseRegion inputRegion : inputRegions)
         {
-            nextRegionStart = 1;
+            nextRegionStart = isSpecificRegions ? inputRegion.start() : 1;
             int chromosomeLength = inputRegion.baseLength();
             int remainingChromosomeLength = chromosomeLength;
 
@@ -108,7 +110,7 @@ public class PartitionThread extends Thread
                 int remainingIntervalLength = (int)(intervalLength - currentLength);
                 int regionEnd = nextRegionStart + remainingIntervalLength - 1;
 
-                if(chromosomeLength - regionEnd < chrEndBuffer)
+                if(!isSpecificRegions && chromosomeLength - regionEnd < chrEndBuffer)
                 {
                     regionEnd = chromosomeLength;
                     remainingChromosomeLength = 0;
