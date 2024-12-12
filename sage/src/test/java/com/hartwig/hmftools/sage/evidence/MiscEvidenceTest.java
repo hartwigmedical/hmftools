@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 import static com.hartwig.hmftools.sage.pipeline.RegionTask.setNearByIndelStatus;
 
 import static org.junit.Assert.assertEquals;
@@ -285,5 +287,29 @@ public class MiscEvidenceTest
         assertTrue(var2.nearIndel());
         assertTrue(var3.nearIndel());
         assertFalse(var4.nearIndel());
+
+        var1 = createSageVariant(100, "A", "C");
+        indel1 = createSageVariant(110, "A", "AC");
+        indel1.filters().add(MIN_TUMOR_VAF);
+        var2 = createSageVariant(120, "A", "C");
+
+        sageVariants = Lists.newArrayList(var1, indel1, var2);
+
+        setNearByIndelStatus(sageVariants);
+
+        assertFalse(var1.nearIndel());
+        assertFalse(var2.nearIndel());
+
+        var1 = createSageVariant(100, "A", "C");
+        indel1 = createSageVariant(110, "A", "AC");
+        indel1.filters().add(MAX_GERMLINE_VAF);
+        var2 = createSageVariant(120, "A", "C");
+
+        sageVariants = Lists.newArrayList(var1, indel1, var2);
+
+        setNearByIndelStatus(sageVariants);
+
+        assertTrue(var1.nearIndel());
+        assertTrue(var2.nearIndel());
     }
 }

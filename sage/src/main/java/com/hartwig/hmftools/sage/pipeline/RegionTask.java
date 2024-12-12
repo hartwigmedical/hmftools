@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.TUMOR_FILTERS;
 
 import java.util.List;
 import java.util.Map;
@@ -203,6 +204,10 @@ public class RegionTask
             SageVariant variant = sageVariants.get(index);
 
             if(!variant.isIndel())
+                continue;
+
+            // ignore if filtered other than by germline-only filters
+            if(!variant.isPassing() && variant.filters().stream().anyMatch(x -> TUMOR_FILTERS.contains(x)))
                 continue;
 
             for(int i = 0; i <= 1; ++i)
