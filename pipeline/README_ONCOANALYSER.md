@@ -15,7 +15,7 @@ Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core
 
 **Pipeline overview**
 
-Except for read alignment, the pipeline uses tools from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/).
+Except for read alignment, the pipeline uses tools from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/).
 
 | Task                                         | Tool                                                                                                                                                                                                                                                                                                                    |
 |:---------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -51,7 +51,7 @@ See: **https://docs.docker.com/engine/install/**
 
 **3. Set up resource files**
 
-Download and extract the reference genome and HMFTools resources using these **[links](#links)**.
+Download and extract the reference genome and hmftools resources using these **[links](#links)**.
 
 Create a file called `oncoanalyser.config` which points to the resource file paths:
 
@@ -129,7 +129,10 @@ nextflow run nf-core/oncoanalyser \
     * [Links](#links)
     * [Configuring general resource files](#configuring-general-resource-files)
     * [Configuring panel resource files](#configuring-panel-resource-files)
-  * [Configuring compute resources](#configuring-compute-resources)
+  * [Configuring processes](#configuring-processes)
+    * [Compute resources](#compute-resources)
+    * [Maximum resources](#maximum-resources)
+    * [Error handling](#error-handling)
   * [Container images](#container-images)
     * [Caching Singularity images](#caching-singularity-images)
     * [Configuring container images](#configuring-container-images)
@@ -142,7 +145,7 @@ nextflow run nf-core/oncoanalyser \
 ## Command line interface
 
 ### Running Oncoanalyser
-We use the `nextflow run` command to run the Oncoanalyser. Below is an example that covers some of the useful arguments.
+We use the `nextflow run` command to run the Oncoanalyser. Below is an example that covers some useful arguments.
 [Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) have a single hyphen (`-`) while Oncoanalyser-specific
 arguments have two hyphens (`--`).
 
@@ -213,7 +216,7 @@ below table list the ones that are mandatory or useful.
 | `--fastp_umi_skip`                                                   | Passed to fastp arg `--umi_skip`. Number of bases to skip following UMI                                                                                                                                                                                                         |
 | `--redux_umi`                                                        | Enable UMI processing by REDUX                                                                                                                                                                                                                                                  |
 | `--redux_umi_duplex_delim`                                           | UMI duplex delimiter as used by REDUX, Default: `_`                                                                                                                                                                                                                             |
-| `--ref_data_hmf_data_path`                                           | Path to HMFTools resource files                                                                                                                                                                                                                                                 |
+| `--ref_data_hmf_data_path`                                           | Path to hmftools resource files                                                                                                                                                                                                                                                 |
 | `--ref_data_panel_data_path`                                         | Path to panel resource files                                                                                                                                                                                                                                                    |
 | `--ref_data_hla_slice_bed`                                           | Path to HLA slice BED file                                                                                                                                                                                                                                                      |
 | `--create_stub_placeholders`                                         | Create placeholders for resource files during stub run                                                                                                                                                                                                                          |
@@ -321,7 +324,7 @@ PD10010,PD10010,PD10010R,normal,dna,bam,/path/to/PD10010R.dna.bam
 ### Running from REDUX BAM
 Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) followed by read pre-processing with [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) 
 are the pipeline steps that take the most time and compute resources. Thus, we can re-run Oncoanalyser from a REDUX BAM if it is already 
-exists, e.g. due to updates to downstream [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/).
+exists, e.g. due to updates to downstream tools from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/).
 
 Simply provide the REDUX BAM path, specifying `bam_redux` under `filetype`:
 
@@ -341,7 +344,7 @@ COLO829,COLO829,COLO829T,tumor,dna,redux_ms_tsv,/path/to/COLO829T.dna.ms_table.t
 ```
 
 ### Running specific tools
-It is possible to run Oncoanalyser from any tool from [HMFtools](https://github.com/hartwigmedical/hmftools/tree/master/). For example, you may want to 
+It is possible to run Oncoanalyser from any tool from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/). For example, you may want to 
 run [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa) and already have the outputs from
 [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple), 
 [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx), 
@@ -374,12 +377,14 @@ summarizes concepts of Nextflow configuration files that are relevant for using 
 For details on specific configurations, please jump to the relevant section:
 - [General resource files](#configuring-general-resource-files)
 - [Panel resource files](#configuring-panel-resource-files)
-- [Compute resources](#configuring-compute-resources)
+- [Compute resources](#compute-resources)
+- [Maximum resources](#maximum-resources)
+- [Error handling](#error-handling)
 - [Container images](#configuring-container-images)
 
 > [!NOTE]
-> Configuration is fully detailed in the [Nextflow](https://www.nextflow.io/docs/latest/config.html) and 
-> [nf-core](https://nf-co.re/docs/usage/getting_started/configuration) documentation
+> Configuration is fully detailed in the **[Nextflow](https://www.nextflow.io/docs/latest/config.html)** and 
+> **[nf-core](https://nf-co.re/docs/usage/getting_started/configuration)** documentation
 
 ### Basic config example
 Config items can be declared using [blocks](#https://www.nextflow.io/docs/latest/config.html#blocks), where curly brackets define the scope 
@@ -422,7 +427,7 @@ nextflow run nf-core/oncoanalyser \
 # other arguments
 ```
 
-The `params` scope is also used to define reference data paths (e.g. reference genome, HMFTools resources) as detailed in 
+The `params` scope is also used to define reference data paths (e.g. reference genome, hmftools resources) as detailed in 
 [Resource files](#resource-files).
 
 ### Multiple config files
@@ -460,7 +465,7 @@ nextflow run nf-core/oncoanalyser \
 
 | Type         | Description          | Name                                                                                                                                                                                                |
 |--------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.37_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz)                              |
+| hmftools     | hmftools resources   | [hmf_pipeline_resources.37_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/37/hmf_pipeline_resources.37_v6.0--2.tar.gz)                              |
 | Genome       | FASTA                | [Homo_sapiens.GRCh37.GATK.illumina.fasta](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/Homo_sapiens.GRCh37.GATK.illumina.fasta)                                      |
 | Genome       | FASTA index          | [Homo_sapiens.GRCh37.GATK.illumina.fasta.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.fai)          |
 | Genome       | FASTA seq dictionary | [Homo_sapiens.GRCh37.GATK.illumina.fasta.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh37_hmf/24.0/samtools_index/1.16/Homo_sapiens.GRCh37.GATK.illumina.fasta.dict)        |
@@ -474,7 +479,7 @@ nextflow run nf-core/oncoanalyser \
 
 | Type         | Description          | Name                                                                                                                                                                                                                |
 |--------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| HMFTools     | HMFTools resources   | [hmf_pipeline_resources.38_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/38/hmf_pipeline_resources.38_v6.0--2.tar.gz)                                              |
+| hmftools     | hmftools resources   | [hmf_pipeline_resources.38_v6.0--2.tar.gz](https://storage.googleapis.com/hmf-public/HMFtools-Resources/oncoanalyser/v6_0/38/hmf_pipeline_resources.38_v6.0--2.tar.gz)                                              |
 | Genome       | FASTA                | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna)                                      |
 | Genome       | FASTA index          | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai)          |
 | Genome       | FASTA seq dictionary | [GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict](https://pub-cf6ba01919994c3cbd354659947f74d8.r2.dev/genomes/GRCh38_hmf/24.0/samtools_index/1.16/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.dict)        |
@@ -576,23 +581,31 @@ nextflow run nf-core/oncoanalyser \
 # other arguments
 ```
 
-## Configuring compute resources
+## Configuring processes
 
-Each HMFtool is run within a Nextflow **process**. We can use the `process` scope and `withName` to select tools by name and set compute 
+There are many options for configuration processes. However, this section will go over some common use cases.
+
+> [!NOTE]
+> Configuration of processes is fully detailed in the [nf-core](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources).
+> All options (a.k.a 'directives') for configuring processes are detailed in the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives).
+
+### Compute resources
+
+Each hmftool is run within a Nextflow **process**. We can use the `process` scope and `withName` to select tools by name and set compute 
 resources options (as well as other [config options](https://www.nextflow.io/docs/latest/reference/process.html)):
 
 ```
 process {
    withName: 'SAGE_SOMATIC' {
       cpus = 32
-      memory = 96.GB
+      memory = 128.GB
       disk = 1024.GB
       time = 48.h
    }
 }
 ```
 
-Values with a units are provided in quotes with a space or without quotes using a dot, e.g. `'96 GB'` or `96.GB`.
+Values with a units are provided in quotes with a space or without quotes using a dot, e.g. `'128 GB'` or `128.GB`.
 
 Please see the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives) to see all possible
 options. The following links is the documentation for the ones used above:
@@ -603,14 +616,6 @@ options. The following links is the documentation for the ones used above:
 
 We can also use a regular expression to select multiple processes. SAGE for example has the processes `SAGE_SOMATIC`, `SAGE_GERMLINE` and
 `SAGE_APPEND`. We can select all 3 like so:
-
-```
-process {
-   withName: 'SAGE.*' {
-      cpus = 32
-   }
-}
-```
 
 Processes are also grouped by compute resource **labels**, with the main ones being (in order of increasing compute load) `process_single`,
 `process_low`, `process_medium` and `process_high`. The labels `process_medium_memory` and `process_high_memory` are only used for creating
@@ -624,14 +629,54 @@ process {
 }
 ```
 
-> [!NOTE]
-> Configuration of processes is fully detailed in the [nf-core](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources). 
-> All options (a.k.a 'directives') for configuring processes are detailed in the [Nextflow process reference docs](https://www.nextflow.io/docs/latest/reference/process.html#directives).
+### Maximum resources
+
+The [maximum resources](https://www.nextflow.io/docs/latest/reference/process.html#resourcelimits) for any process can also be set using 
+`resourceLimits`. If a process requests more resources than allowed (e.g. a process requests 64 cores but the largest node in a cluster has 32), 
+the process would normally fail or cause the pipeline to hang forever as it will never be scheduled. Setting `resourceLimits` will 
+automatically reduce the process resources to comply with the provided limits before the job is submitted.
+```
+process {
+   resourceLimits = [
+      cpus: 32,
+      memory: 128.GB,
+      time: 48.h
+   ]
+}
+```
+
+### Error handling
+
+We can use `errorStrategy` and `maxRetries` to determine how Oncoanalyser proceeds when encountering an error. For example, to retry 3 times 
+on any error for any process, we can provide this config:
+
+```
+process {
+   errorStrategy = 'retry'
+   maxRetries = 3
+}
+```
+
+Valid values for `errorStrategy` are (details in the Nextflow [documentation](https://www.nextflow.io/docs/latest/reference/process.html#errorstrategy)):
+- `retry`: Retry the process
+- `terminate`: Fail the pipeline immediately
+- `finish`: Terminate after submitted and running processes are done
+- `ignore`: Allow the pipeline to continue upon error
+
+Process selectors can also be used to target specific processes for error handling:
+```
+process {
+   withName: 'SAGE_SOMATIC' {
+      errorStrategy = 'retry'
+      maxRetries = 3
+   }
+}
+```
 
 ## Container images
 
 Oncoanalyser by default uses **[Docker](https://www.docker.com/)** and [**Singularity**](https://docs.sylabs.io/guides/3.0/user-guide/quick_start.html#) 
-images built by the [bioconda-recipes](https://github.com/bioconda/bioconda-recipes/tree/master/recipes) Azure CI/CD infrastructure.
+images built by the **[bioconda-recipes](https://github.com/bioconda/bioconda-recipes/tree/master/recipes)** Azure CI/CD infrastructure.
 
 The `-profile` argument is used to tell Oncoanalyser whether to run with Docker or Singularity:
 ```shell
@@ -643,13 +688,13 @@ nextflow run nf-core/oncoanalyser
 Docker images built by Hartwig's Google Cloud CI/CD infrastructure are also available (though not used by default by Oncoanalyser).
 
 > [!NOTE]
-> Configuration of container images is fully detailed in the [nf-core](https://nf-co.re/docs/usage/configuration#docker-registries) and 
-> [Nextflow](https://www.nextflow.io/docs/edge/container.html#containers) documentation
+> Configuration of container images is fully detailed in the **[nf-core](https://nf-co.re/docs/usage/configuration#docker-registries)** and 
+> **[Nextflow](https://www.nextflow.io/docs/edge/container.html#containers)** documentation
 
 Docker and singularity image URIs/URLs have consistent patterns:
 
-| Source   | Platform    | Host                                                           | URI/URL                                                                                                                                                                            |
-|----------|-------------|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Source   | Platform    | Host                                                           | URI or URL                                                                                                                                                                         |
+|:---------|:------------|:---------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Bioconda | Docker      | [quay.io](https://quay.io/organization/biocontainers)          | **Pattern**: `quay.io/biocontainers/hmftools-{TOOL}:{TAG}`<br/> **Example**: `quay.io/biocontainers/hmftools-sage:4.0_beta--hdfd78af_4`                                            |
 | Bioconda | Singularity | [Galaxy Project](https://depot.galaxyproject.org/singularity/) | **Pattern**: `https://depot.galaxyproject.org/singularity/hmftools-{tool}:{tag}` <br/> **Example**: https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_beta--hdfd78af_4 |
 | Hartwig  | Docker      | [Dockerhub](https://hub.docker.com/r/hartwigmedicalfoundation) | **Pattern**: `docker.io/hartwigmedicalfoundation/{TOOL}:{TAG}` <br/> **Example**: `docker.io/hartwigmedicalfoundation/sage:4.0-rc.2`                                               |
@@ -674,30 +719,51 @@ singularity pull https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_b
 ### Caching Singularity images
 
 Some compute environments, especially HPCs (high performance clusters), grant limited network access which prevents Oncoanalyser/Nextflow 
-from automatically pulling images at runtime. To get around this, we can set the `NXF_SINGULARITY_CACHEDIR` environment variable 
-([documentation](https://www.nextflow.io/docs/edge/container.html#singularity-docker-hub)). Oncoanalyser/Nextflow will look for local images 
-stored in that directory at runtime.
+from automatically pulling images at runtime. To get around this, we can manually download the Singularity images to a directory: 
 
 ```shell
-export NXF_SINGULARITY_CACHEDIR="/path/to/cache_dir/"
+cd /path/to/cache_dir/
 
 ## For the image name provided to the `--name` argument, remove 'https://' and replace '/' with '-'
 singularity pull \
---name ${NXF_SINGULARITY_CACHEDIR}/depot.galaxyproject.org-singularity-hmftools-sage:4.0_beta--hdfd78af_4.img \
+--name depot.galaxyproject.org-singularity-hmftools-sage:4.0_beta--hdfd78af_4.img \
 https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_beta--hdfd78af_4
 
-singularity pull \
---name ${NXF_SINGULARITY_CACHEDIR}/depot.galaxyproject.org-singularity-hmftools-redux:1.0_beta--hdfd78af_6.img \
-https://depot.galaxyproject.org/singularity/hmftools-redux:1.0_beta--hdfd78af_6
+## Repeat for all singularity images that Oncoanalyser uses
+## singularity pull ...
+```
 
-## Repeat for all remaining singularity images that Oncoanalyser uses
-## ...
+and set the `NXF_SINGULARITY_CACHEDIR` environment variable ([Nextflow documentation](https://www.nextflow.io/docs/edge/container.html#singularity-docker-hub))
+to tell Oncoanalyser/Nextflow where to look for local images at runtime:
 
-## Run Oncoanalyser
+```shell
+export NXF_SINGULARITY_CACHEDIR='/path/to/cache_dir/'
+
 nextflow run nf-core/oncoanalyser 
 -profile singularity \
 # ...other arguments
 ```
+
+Alternatively, the path to the Singularity cache dir can also be provided to a config file:
+
+```
+singularity {
+    cacheDir = '/path/to/cache_dir/'
+}
+```
+
+to be passed to `nextflow run`:
+```shell
+export NXF_SINGULARITY_CACHEDIR='/path/to/cache_dir/'
+
+nextflow run nf-core/oncoanalyser 
+-profile singularity \
+-config singularity.config \
+# ...other arguments
+```
+
+> [!NOTE]
+> All singularity options are detailed in the **[Singularity Nextflow documentation](https://www.nextflow.io/docs/latest/reference/config.html#config-singularity)**
 
 ### Configuring container images
 
@@ -710,14 +776,14 @@ process {
    }
    
   withName: 'ESVEE.*' {
-      container = docker.io/hartwigmedicalfoundation/esvee:1.0-rc.4
-   }
+     container = docker.io/hartwigmedicalfoundation/esvee:1.0-rc.4
+  }
 }
 ```
 
 This is useful for example when you want to use updated container images that are not yet officially supported (e.g. betas or release candidates). 
 
-In general, the process names for all HMFtools are `{TOOL}` or `{TOOL}_{SUBPROCESS}`. For example, SAGE has the processes: `SAGE_SOMATIC`, 
+In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCESS}`. For example, SAGE has the processes: `SAGE_SOMATIC`, 
 `SAGE_GERMLINE`, `SAGE_APPEND`. Therefore, use regex suffix `.*` (e.g. `SAGE.*`) to capture the subprocesses for each tool.
 
 ## Outputs
