@@ -108,7 +108,6 @@ public class ReduxConfig
     public final double PerfDebugTime;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
-    public final boolean LogFinalCache;
     public final int WriteReadBaseLength;
 
     public final String JitterMsiFile;
@@ -140,7 +139,6 @@ public class ReduxConfig
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String RUN_CHECKS = "run_checks";
-    private static final String LOG_FINAL_CACHE = "log_final_cache";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
 
@@ -212,6 +210,7 @@ public class ReduxConfig
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
             UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
+            UnmapRegions.addMitochondrialRegion(RefGenVersion);
         }
         else
         {
@@ -253,7 +252,6 @@ public class ReduxConfig
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
-        LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
@@ -331,7 +329,6 @@ public class ReduxConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
-        configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
@@ -381,7 +378,6 @@ public class ReduxConfig
         PerfDebugTime = 0;
         RunChecks = true;
         WriteStats = false;
-        LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
     }

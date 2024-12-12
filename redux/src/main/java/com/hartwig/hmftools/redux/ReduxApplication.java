@@ -82,7 +82,7 @@ public class ReduxApplication
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
 
-            // add to list of BAMs to be evaluated
+            mConfig.UnmapRegions.stats().clearAll();
         }
 
         // partition the genome into sequential regions to be processed by each thread
@@ -101,6 +101,11 @@ public class ReduxApplication
             System.exit(1);
 
         RD_LOGGER.info("all partition tasks complete");
+
+        if(mConfig.RunChecks && mConfig.UnmapRegions.enabled())
+        {
+            mConfig.UnmapRegions.logUnmatchedUnmappedReads();
+        }
 
         if(jitterAnalyser != null)
         {
@@ -148,24 +153,6 @@ public class ReduxApplication
         long mappedReadsProcessed = combinedStats.TotalReads;
         long unmappedDropped = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
         long unmappedPlusAltContig = 0;
-
-        /*
-        if(mConfig.BamToolPath != null)
-        {
-
-            // log interim time
-            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
-
-            FinalBamProcessor finalBamProcessor = new FinalBamProcessor(mConfig, fileWriterCache);
-            if(!finalBamProcessor.run())
-                System.exit(1);
-
-            unmappedPlusAltContig = finalBamProcessor.unmappedReadCount() + finalBamProcessor.altContigReadCount();
-            unmappedDropped += finalBamProcessor.statistics().UnmappedDropped;
-
-            combinedStats.ConsensusStats.merge(finalBamProcessor.statistics().ConsensusStats);
-        }
-        */
 
         combinedStats.logStats();
 

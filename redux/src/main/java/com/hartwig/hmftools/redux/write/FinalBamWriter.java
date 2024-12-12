@@ -44,6 +44,7 @@ public class FinalBamWriter extends Thread
     public void run()
     {
         int totalPartitions = mFileWriterCache.partitionCount();
+        int completedPartitions = 0;
 
         List<PartitionInfo> pendingPartitions = Lists.newArrayList();
 
@@ -60,6 +61,7 @@ public class FinalBamWriter extends Thread
                 if(partitionInfo == null)
                     break;
 
+                ++completedPartitions;
                 addNewPartition(pendingPartitions, partitionInfo);
                 hasNew = true;
             }
@@ -72,18 +74,15 @@ public class FinalBamWriter extends Thread
             if(nextPartitions == null)
                 continue;
 
-            RD_LOGGER.debug("BAM concat partitions completed({}/{}) ready({}) pending({})",
-                    mProcessedPartitions + nextPartitions.size(), mFileWriterCache.partitionCount(),
-                    nextPartitions.size(), pendingPartitions.size());
+            RD_LOGGER.debug("BAM concat partitions completed({}/{}) ready({}) pending({}) processed({})",
+                    completedPartitions, mFileWriterCache.partitionCount(),
+                    nextPartitions.size(), pendingPartitions.size(), mProcessedPartitions);
 
             mTotalWaitTimeMs += System.currentTimeMillis() - startWaitTimeMs;
 
             processPartitions(nextPartitions);
 
             mProcessedPartitions += nextPartitions.size();
-
-            // RD_LOGGER.info("partition BAM concatenate completed({}/{}) pending({})",
-            //        mProcessedPartitions, mFileWriterCache.partitionCount(), pendingPartitions.size());
 
             if(mProcessedPartitions == totalPartitions)
                 break;

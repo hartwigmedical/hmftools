@@ -3,7 +3,12 @@ package com.hartwig.hmftools.redux.unmap;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V37;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V38;
 import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
@@ -26,7 +31,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 
@@ -715,11 +722,6 @@ public class ReadUnmapper
 
     private static final String UNMAPP_COORDS_DELIM = ":";
 
-    public static String[] parseUnmappedCoords(final String mateCoordsStr)
-    {
-        return mateCoordsStr.split(UNMAPP_COORDS_DELIM, 2);
-    }
-
     private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)
     {
         // some alt contigs have the delimiter in their name, hence the replace
@@ -733,9 +735,6 @@ public class ReadUnmapper
         // set flag mate unmapped
         read.setMateUnmappedFlag(true);
         read.setProperPairFlag(false);
-
-        // store the mate's original mapping
-        setUnmapCoordsAttribute(read, read.getMateReferenceName(), read.getMateAlignmentStart());
 
         // clear insert size
         read.setInferredInsertSize(0);
@@ -849,6 +848,16 @@ public class ReadUnmapper
         return currentPosition - 1;
     }
 
+    public void addMitochondrialRegion(final RefGenomeVersion refGenomeVersion)
+    {
+        String chromosome = refGenomeVersion.is37() ? MT_CHR_V37 : MT_CHR_V38;
+
+        if(mChrLocationsMap.containsKey(chromosome))
+            return;
+
+        addRegion(chromosome, new HighDepthRegion(1, 20000, UNMAP_MIN_HIGH_DEPTH));
+    }
+
     @VisibleForTesting
     public void addRegion(final String chromosome, final HighDepthRegion region)
     {
@@ -862,5 +871,60 @@ public class ReadUnmapper
         regions.add(region);
 
         mEnabled = true;
+    }
+
+    // state for checking that unmapped reads are then processed correctly
+    private final Map<String,Map<String,String>> mChrUnmappedReadMap = Maps.newHashMap();
+
+    public synchronized void addUnmappedRead(final SAMRecord read, final String chromosome, final int readStart, final int readFlags)
+    {
+        String readInfo = format("%s:%d mate(%s:%d) %s",
+                chromosome, readStart,
+                read.getReadPairedFlag() ? read.getMateReferenceName() : NO_CHROMOSOME_NAME,
+                read.getReadPairedFlag() ? read.getMateAlignmentStart() : NO_POSITION, read.getCigarString());
+
+        Map<String,String> chrEntries = mChrUnmappedReadMap.get(chromosome);
+
+        if(chrEntries == null)
+        {
+            chrEntries = Maps.newHashMap();
+            mChrUnmappedReadMap.put(chromosome, chrEntries);
+        }
+
+        String readId = formReadId(read.getReadName(), readFlags);
+
+        chrEntries.put(readId, readInfo);
+    }
+
+    private static String formReadId(final String readId, final int readFlags) { return format("%s:%d", readId, readFlags); }
+
+    public synchronized void checkUnmappedRead(final SAMRecord read, final String chromosome, final int readFlags)
+    {
+        Map<String,String> chrEntries = mChrUnmappedReadMap.get(chromosome);
+
+        if(chrEntries == null)
+            return;
+
+        String readId = formReadId(read.getReadName(), readFlags);
+
+        String readInfo = chrEntries.remove(readId);
+
+        if(readInfo == null)
+        {
+            RD_LOGGER.warn("read({}) was unmapped but not cached", readToString(read));
+        }
+    }
+
+    public void logUnmatchedUnmappedReads()
+    {
+        for(Map<String,String> chrMap : mChrUnmappedReadMap.values())
+        {
+            for(Map.Entry<String,String> entry : chrMap.entrySet())
+            {
+                RD_LOGGER.warn("read({}) details({}) remains cached", entry.getKey(), entry.getValue());
+            }
+        }
+
+        mChrUnmappedReadMap.clear();
     }
 }

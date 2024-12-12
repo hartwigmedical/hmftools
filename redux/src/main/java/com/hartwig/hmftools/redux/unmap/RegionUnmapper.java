@@ -33,6 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class RegionUnmapper extends Thread
 {
     private final ReduxConfig mConfig;
+    private final ReadUnmapper mReadUnmapper;
     private final TaskQueue mRegions;
     private final BamReader mBamReader;
     private final BamWriterSync mUnmappingBamWriter;
@@ -50,6 +51,7 @@ public class RegionUnmapper extends Thread
             final ReduxConfig config, final TaskQueue regions, final BamWriterSync unmappingBamWriter, final BamWriterSync fullUnmappedBamWriter)
     {
         mConfig = config;
+        mReadUnmapper = mConfig.UnmapRegions;
         mUnmappingBamWriter = unmappingBamWriter;
         mFullyUnmappedBamWriter = fullUnmappedBamWriter;
         mRegions = regions;
@@ -173,9 +175,11 @@ public class RegionUnmapper extends Thread
             return;
 
         // must overlap by minimum to be a candidate for unmapping
+        int readStart = read.getAlignmentStart();
+
         if(mCurrentRegion.IsStandardChromosome)
         {
-            int readPosEnd = read.getReadUnmappedFlag() ? read.getAlignmentStart() : read.getAlignmentEnd();
+            int readPosEnd = read.getReadUnmappedFlag() ? readStart : read.getAlignmentEnd();
 
             if(!overlapsRegion(mHighDepthRegion, read.getAlignmentStart(), readPosEnd))
                 return;
@@ -187,7 +191,7 @@ public class RegionUnmapper extends Thread
         {
             double processedReads = mProcessedReads / 1000000.0;
             RD_LOGGER.debug("region({}) position({}) processed {}M reads",
-                    mCurrentRegion, read.getAlignmentStart(), format("%.0f", processedReads));
+                    mCurrentRegion, readStart, format("%.0f", processedReads));
 
             mNextLogReadCount += LOG_READ_COUNT;
         }
@@ -200,7 +204,8 @@ public class RegionUnmapper extends Thread
         }
 
         boolean alreadyUnmapped = read.getReadUnmappedFlag();
-        mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+        int readFlags = read.getFlags();
+        mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
 
         boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
         boolean fullyUnmapped = fullyUnmapped(read);
@@ -211,6 +216,9 @@ public class RegionUnmapper extends Thread
             if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
                 return;
 
+            if(mConfig.RunChecks)
+                mReadUnmapper.addUnmappedRead(read, mCurrentRegion.Chromosome, readStart, readFlags);
+
             if(fullyUnmapped)
                 mFullyUnmappedBamWriter.writeRecordSync(read);
             else
@@ -220,7 +228,7 @@ public class RegionUnmapper extends Thread
 
     private boolean processFullyUnmappedReads()
     {
-        long totalUnmappedReads = 0;
+        int totalUnmappedReads = 0;
 
         for(String bamFilename : mConfig.BamFiles)
         {
@@ -240,6 +248,7 @@ public class RegionUnmapper extends Thread
         if(totalUnmappedReads > 0)
         {
             RD_LOGGER.debug("extracted {} fully-unmapped reads", totalUnmappedReads);
+            mReadUnmapper.stats().ExistingUnmapped.addAndGet(totalUnmappedReads);
         }
 
         return true;

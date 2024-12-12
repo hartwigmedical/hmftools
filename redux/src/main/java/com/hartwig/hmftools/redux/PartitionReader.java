@@ -29,6 +29,7 @@ import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
@@ -42,6 +43,7 @@ public class PartitionReader
 
     private final BamReader mBamReader;
     private final ReadCache mReadCache;
+    private final ReadUnmapper mReadUnmapper;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
@@ -70,6 +72,7 @@ public class PartitionReader
     {
         mConfig = config;
         mBamReader = bamReader;
+        mReadUnmapper = mConfig.UnmapRegions;
 
         mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
 
@@ -206,7 +209,9 @@ public class PartitionReader
 
     private void processSamRecord(final SAMRecord read)
     {
-        if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
+        int readStart = read.getAlignmentStart();
+
+        if(!mCurrentRegion.containsPosition(readStart)) // to avoid processing reads from the prior region again
             return;
 
         ++mProcessedReads;
@@ -215,7 +220,7 @@ public class PartitionReader
         {
             double processedReads = mProcessedReads / 1000000.0;
             RD_LOGGER.debug("region({}) position({}) processed {}M reads, cache(coords={} reads={})",
-                    mCurrentRegion, read.getAlignmentStart(), format("%.0f", processedReads),
+                    mCurrentRegion, readStart, format("%.0f", processedReads),
                     mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
 
             mNextLogReadCount += LOG_READ_COUNT;
@@ -243,7 +248,7 @@ public class PartitionReader
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(mConfig.UnmapRegions.enabled())
+        if(mReadUnmapper.enabled())
         {
             // any read in an unmapping region has already been tested by the RegionUnmapper - scenarios:
             // 1. If the read was unmapped, it will have been relocated to its mate's coordinates and marked as internally unmapped
@@ -258,7 +263,14 @@ public class PartitionReader
 
             if(!internallyUnmapped)
             {
-                mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
+                int readFlags = read.getFlags();
+                mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
+
+                if(mConfig.RunChecks && !read.isSecondaryOrSupplementary())
+                {
+                    if((!isUnmapped && read.getReadUnmappedFlag()) || fullyUnmapped(read))
+                        mReadUnmapper.checkUnmappedRead(read, mCurrentRegion.Chromosome, readFlags);
+                }
 
                 if(!isUnmapped && read.getReadUnmappedFlag()) // scenario 2 as described above
                     return;
@@ -270,20 +282,20 @@ public class PartitionReader
 
         ++mStats.TotalReads;
 
-        checkRefBases(read.getAlignmentStart());
+        checkRefBases(readStart);
 
         preprocessSamRecord(read);
 
         if(read.isSecondaryAlignment())
         {
-            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.setBoundaryPosition(readStart, false);
             mBamWriter.writeRead(read, FragmentStatus.UNSET);
             return;
         }
 
         try
         {
-            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.setBoundaryPosition(readStart, false);
 
             mReadCache.processRead(read);
 
@@ -372,7 +384,7 @@ public class PartitionReader
 
     private void setUnmappedRegions()
     {
-        List<HighDepthRegion> chrUnmapRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
+        List<HighDepthRegion> chrUnmapRegions = mReadUnmapper.getRegions(mCurrentRegion.Chromosome);
 
         List<HighDepthRegion> partitionRegions;
         if(chrUnmapRegions != null)
