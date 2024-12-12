@@ -212,12 +212,12 @@ class EpochStats:
 # from the input pandas dataframe create the train / test dataloaders requied for
 # pytorch training.
 # return (train_dataloader, test_dataloader)
-def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup):
+def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup, test_fraction):
     # Using Skicit-learn to split data into training and testing sets
     from sklearn.model_selection import train_test_split
 
     # Split the data into training and testing sets
-    train_df, test_df = train_test_split(df, test_size=0.25, random_state=None)
+    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=None)
 
     # write out the train and test set
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
@@ -227,11 +227,11 @@ def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup):
 
     # Create data loaders.
     train_dataset = HrdDataset(train_df, image_size, augment=augment, hrd_sample_dup=hrd_sample_dup)
-    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
     # we do not augment testing data
     test_dataset = HrdDataset(test_df, image_size, augment=False, hrd_sample_dup=hrd_sample_dup)
-    test_dataloader = data_utils.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    test_dataloader = data_utils.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
     # for seq_x, linear_x, y, bq, bqr in test_dataloader:
     #    print(f"Shape of seq x [N, C, H]: {seq_x.shape}")
@@ -455,7 +455,7 @@ def init_model(dropout_rate):
     # 5
     return hrd_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
-def train_main(sample_tsv, purple_root, epochs, batch_size, augment, dropout_rate, hrd_sample_dup, use_nesterov, starting_model):
+def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sample_dup, test_fraction, use_nesterov, starting_model):
     df = pd.read_csv(sample_tsv, sep="\t")
     df["inputPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".input.png"
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".circos.png"
@@ -474,8 +474,8 @@ def train_main(sample_tsv, purple_root, epochs, batch_size, augment, dropout_rat
 
     model = model.to(device)
 
-    train_dataloader, test_dataloader = create_dataloader(df, image_size=IMAGE_SIZE, batch_size=batch_size,
-                                                          augment=augment, hrd_sample_dup=hrd_sample_dup)
+    train_dataloader, test_dataloader = create_dataloader(df, image_size=IMAGE_SIZE, batch_size=batch_size, augment=True,
+                                                        hrd_sample_dup=hrd_sample_dup, test_fraction=test_fraction)
     train_model(model, train_dataloader, test_dataloader, num_epochs=epochs, use_nesterov=use_nesterov)
 
     # save the model, always save in cpu
@@ -496,19 +496,19 @@ def main():
     parser.add_argument('--purple_root', help='path to purple plots', required=True)
     parser.add_argument('--epochs', help='number epochs', type=int, default=200)
     parser.add_argument('--batch_size', help='batch size', type=int, default=25)
-    parser.add_argument('--no_augment', help='disable augment training set by random rotation', action='store_true')
     parser.add_argument('--dropout_rate', help='dropout rate', type=float, default=0.2)
     parser.add_argument('--hrd_sample_duplication', help='number to duplicate HRD samples by', type=int, default=7)
+    parser.add_argument('--test_fraction', help='amount of data used for testing', type=float, default=0.2)
     parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
     args = parser.parse_args()
 
     logger.info(f"using {device} device")
-    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, augment={not args.no_augment}, " +
-          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, use_nesterov={args.use_nesterov}, " +
-          f"starting_model={args.starting_model}")
-    train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, not args.no_augment, args.dropout_rate,
-               args.hrd_sample_duplication, args.use_nesterov, args.starting_model)
+    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size} " +
+          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}" +
+          f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
+    train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
+               args.hrd_sample_duplication, args.test_fraction args.use_nesterov, args.starting_model)
 
 
 if __name__ == "__main__":
