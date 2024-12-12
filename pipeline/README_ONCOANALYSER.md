@@ -812,26 +812,121 @@ In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCE
 
 ## Outputs
 
-The selected results files are written to the output directory and arranged into their corresponding groups by
-directories named with the respective `group_id` value from the input samplesheet. Within each group directory, outputs
-are further organised by tool.
+Oncoanalyser writes output files to the below directory tree structure. Files are grouped by the `group_id` provided in the 
+[sample sheet](#sample-sheet), then by tool:
+
+```tree
+output/
+├── pipeline_info/
+├── group_id_1/
+│   ├── alignments/
+│   ├── amber/
+│   ├── bamtools/
+│   ├── chord/
+│   ├── cobalt/
+│   ├── cuppa/
+│   ├── esvee/
+│   ├── isofox/
+│   ├── lilac/
+│   ├── linx/
+│   ├── orange/
+│   ├── pave/
+│   ├── purple/
+│   ├── sage/
+│   ├── sigs/
+│   ├── virusbreakend/
+│   └── virusinterpreter/
+│   
+├── group_id_2/
+│   └── ...
+│   
+...
+```
 
 All intermediate files used by each process are kept in the Nextflow work directory (default: `work/`). Once an analysis
 has completed this directory can be removed.
 
-### Sample reports
+### Pipeline information
 
-| Report | Path                                             | Description                                           |
-|--------|--------------------------------------------------|-------------------------------------------------------|
-| ORANGE | `<group_id>/orange/<tumor_sample_id>.orange.pdf` | PDF summary report of key finding of the HMF pipeline |
-| LINX   | `<group_id>/linx/MDX210176_linx.html`            | Interactive HMTL report of all SV plots               |
+```shell
+pipeline_info/
+├── execution_report_<date_time>.html   # HTML report of execution metrics and details
+├── execution_timeline_<date_time>.html # Timeline diagram showing process start/duration/finish
+├── execution_trace_<date_time>.txt     # Resource usage
+├── params_<date_time>.json             # Parameters used by the pipeline run
+├── pipeline_dag_<date_time>.html       # Pipeline diagram showing how each process is connected
+└── software_versions.yml               # Tool versions
+```
 
-### Pipeline reports
+### Alignments
 
-| Report    | Path                                      | Description                                                        |
-|-----------|-------------------------------------------|--------------------------------------------------------------------|
-| Execution | `pipeline_info/execution_report_*.html`   | HTML report of execution metrics and details                       |
-| Timeline  | `pipeline_info/execution_timeline_*.html` | Timeline diagram showing process execution (start/duration/finish) |
+```shell
+alignments/
+├── dna
+│   ├── <tumor_dna_id>.jitter_params.tsv         # Microsatellite jitter model parameters
+│   ├── <tumor_dna_id>.ms_table.tsv.gz           # Aggregated repeat units and repeat counts
+│   ├── <tumor_dna_id>.redux.bam                 # Read alignments
+│   ├── <tumor_dna_id>.redux.bam.bai             # Read alignments index
+│   ├── <tumor_dna_id>.redux.duplicate_freq.tsv  # Duplicate read frequencies
+│   ├── <tumor_dna_id>.repeat.tsv.gz             # Repeat units and repeat counts per site
+│   ├── <normal_dna_id>.jitter_params.tsv        # See above
+│   ├── <normal_dna_id>.ms_table.tsv.gz          # See above
+│   ├── <normal_dna_id>.redux.bam                # See above
+│   ├── <normal_dna_id>.redux.bam.bai            # See above
+│   ├── <normal_dna_id>.redux.duplicate_freq.tsv # See above
+│   └── <normal_dna_id>.repeat.tsv.gz            # See above
+└── rna
+    ├── `<tumor_rna_id>.md.bam`     # Read alignments               
+    ├── `<tumor_rna_id>.md.bam.bai` # Read alignments index         
+    └── `<tumor_rna_id>.md.metrics` # Duplicate read marking metrics
+```
+
+### AMBER
+
+```shell
+amber/
+├── <tumor_dna_id>.amber.baf.pcf                  # Piecewise constant fit on B-allele frequencies
+├── <tumor_dna_id>.amber.baf.tsv.gz               # B-allele frequencies
+├── <tumor_dna_id>.amber.contamination.tsv        # Contamination TSV
+├── <tumor_dna_id>.amber.contamination.vcf.gz     # Contamination sites
+├── <tumor_dna_id>.amber.contamination.vcf.gz.tbi # Sample contamination sites index
+├── <tumor_dna_id>.amber.qc                       # QC file
+├── <normal_dna_id>.amber.homozygousregion.tsv    # Regions of homozygosity
+├── <normal_dna_id>.amber.snp.vcf.gz              #
+├── <normal_dna_id>.amber.snp.vcf.gz.tbi          #
+└── amber.version                                 # Tool version
+```
+
+### CHORD
+
+```shell
+chord/
+├── <tumor_dna_id>.chord.mutation_contexts.tsv # Counts of mutation types
+└── <tumor_dna_id>.chord.prediction.tsv        # HRD predictions
+```
+
+### COBALT
+
+```shell
+cobalt/
+├── <tumor_dna_id>.cobalt.gc.median.tsv     # GC median read depths
+├── <tumor_dna_id>.cobalt.ratio.pcf         # Piecewise constant fit
+├── <tumor_dna_id>.cobalt.ratio.tsv.gz      # Read counts and ratios (with reference or supposed diploid)
+├── <normal_dna_id>.cobalt.gc.median.tsv    # GC median read depths
+├── <normal_dna_id>.cobalt.ratio.median.tsv # Chromosome median ratios  
+├── <normal_dna_id>.cobalt.ratio.pcf        # Piecewise constant fit
+└── cobalt.version                          # Tool version
+```
+
+### CUPPA
+
+```shell
+cuppa/
+├── `<tumor_dna_id>.cuppa.pred_summ.tsv` # Prediction summary               
+├── `<tumor_dna_id>.cuppa.vis.png`       # Prediction visualisation         
+├── `<tumor_dna_id>.cuppa.vis_data.tsv`  # Prediction visualisation raw data
+└── `<tumor_dna_id>.cuppa_data.tsv.gz`   # Input features                   
+```
 
 ## Acknowledgements
 
