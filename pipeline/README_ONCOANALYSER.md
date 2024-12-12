@@ -145,9 +145,7 @@ nextflow run nf-core/oncoanalyser \
 ## Command line interface
 
 ### Running Oncoanalyser
-We use the `nextflow run` command to run the Oncoanalyser. Below is an example that covers some useful arguments.
-[Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) have a single hyphen (`-`) while Oncoanalyser-specific
-arguments have two hyphens (`--`).
+We use the `nextflow run` command to run the Oncoanalyser:
 
 ```shell
 nextflow run nf-core/oncoanalyser \
@@ -171,9 +169,16 @@ nextflow run /path/to/oncoanalyser_repo \
 # other arguments
 ```
 
+> [!NOTE]
+> [Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) start with a single hyphen (`-`). 
+> Oncoanalyser-specific arugments start with two hyphens (`--`).
+
 ### Nextflow arguments
 All arguments for `nextflow run` are documented in the [CLI reference](https://www.nextflow.io/docs/latest/reference/cli.html#run). The
-below table list the ones that are mandatory or useful.
+below table lists some relevant ones.
+
+<details>
+<summary>Show content</summary>
 
 | Argument&emsp;&emsp; | Description                                                                                                                                                                                                                            |
 |:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -186,7 +191,14 @@ below table list the ones that are mandatory or useful.
 | `-work-dir`          | Path to a directory where Nextflow will put temporary files for each step in the pipeline. If this is not specified, Nextflow will create the `work/` directory in the current directory                                               |
 | `-help`              | Show all Nextflow command line arguments and their descriptions                                                                                                                                                                        |
 
+</details>
+
 ### Oncoanalyser arguments
+
+The below table list all arguments that can be passed to Oncoanalyser
+
+<details>
+<summary>Show content</summary>
 
 | Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                                                     |
 |:---------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -227,6 +239,8 @@ Notes:
 1. **WARNING**: Cannot be provided to a [config file](#configuration-files)
 2. Valid process names are: `alignment`, `amber`, `bamtools`, `chord`, `cobalt`, `cuppa`, `esvee`, `isofox`, `lilac`, `linx`, `neo`,
    `orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
+
+</details>
 
 ## Sample sheet
 
@@ -494,8 +508,8 @@ nextflow run nf-core/oncoanalyser \
 The below example shows the most essential config items when configuring resource files. Not all items are required depending on the 
 experimental setup. Please see the inline comments for details.
 
-> [!TIP]
-> Single line comments start with `//`. Multi-line comments start with `/* `and end with `*/`
+> [!NOTE]
+> Single line comments start with `//`. Multi-line comments start with `/*` and end with `*/`
 
 ```
 params {
