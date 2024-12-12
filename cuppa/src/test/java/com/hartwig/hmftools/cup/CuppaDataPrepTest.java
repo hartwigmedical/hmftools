@@ -51,10 +51,10 @@ public class CuppaDataPrepTest
         // Check values
         List<DataItem> dataItems = cuppaDataPrep.mDataItems;
 
-        assertEquals(6228,  dataItems.size());
+        assertEquals(6229,  dataItems.size());
 
         assertEquals(new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_TCC", "2"), dataItems.get(45));
-        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"), dataItems.get(dataItems.size()-1));
+        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "20;46474688;46476232", "1"), dataItems.get(dataItems.size()-1));
 
         // Check output file exists
         File outputPath = new File(cuppaDataPrep.getOutputPath(null));

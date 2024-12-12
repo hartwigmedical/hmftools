@@ -158,9 +158,10 @@ public class CategoryPrepTest
         AltSpliceJunctionPrep prep = new AltSpliceJunctionPrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
-        assertEquals(3, dataItems.size());
+        assertEquals(4, dataItems.size());
         assertEquals(dataItems.get(0), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "7;140426316;140439612", "2"));
         assertEquals(dataItems.get(1), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "10;89623836;89623905", "1"));
         assertEquals(dataItems.get(2), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"));
+        assertEquals(dataItems.get(3), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "20;46474688;46476232", "1"));
     }
 }
