@@ -64,7 +64,9 @@ public class IndelConsensusReads
         consensusState.setBaseLength(baseLength);
         consensusState.setBoundaries(templateRead);
 
-        List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
+        List<ReadParseState> readStates = reads.stream()
+                .map(x -> new ReadParseState(x, consensusState.IsForward, mBaseBuilder.baseBuilderConfig().processReadBases(x)))
+                .collect(Collectors.toList());
 
         int baseIndex = consensusState.IsForward ? 0 : baseLength - 1;
 

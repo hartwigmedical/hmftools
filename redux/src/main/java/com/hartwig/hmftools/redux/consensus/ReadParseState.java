@@ -13,6 +13,7 @@ public class ReadParseState
 {
     public final SAMRecord Read;
     private final boolean mIsForward;
+    private final byte[] mReadBases;
     private final int mElementCount;
 
     private int mReadIndex;
@@ -23,10 +24,11 @@ public class ReadParseState
 
     private boolean mExhausted;
 
-    public ReadParseState(final SAMRecord read, boolean isForward)
+    public ReadParseState(final SAMRecord read, boolean isForward, final byte[] readBases)
     {
         Read = read;
         mIsForward = isForward;
+        mReadBases = readBases;
         mElementCount = read.getCigar().getCigarElements().size();
 
         if(mIsForward)
@@ -36,7 +38,7 @@ public class ReadParseState
         }
         else
         {
-            mReadIndex = read.getReadBases().length - 1;
+            mReadIndex = mReadBases.length - 1;
             mCigarIndex = mElementCount - 1;
         }
 
@@ -46,7 +48,7 @@ public class ReadParseState
         mExhausted = false;
     }
 
-    public byte currentBase() { return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex]; }
+    public byte currentBase() { return mExhausted ? NO_BASE : mReadBases[mReadIndex]; }
     public byte currentBaseQual() { return mExhausted ? NO_BASE : Read.getBaseQualities()[mReadIndex]; }
 
     public CigarOperator elementType() { return mElementType; }

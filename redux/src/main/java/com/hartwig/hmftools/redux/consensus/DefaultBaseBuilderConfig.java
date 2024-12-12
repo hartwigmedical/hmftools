@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
@@ -20,6 +21,12 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
         super(refGenome, true, true, consensusStats);
     }
 
+    protected DefaultBaseBuilderConfig(final RefGenome refGenome, boolean pairedReads, boolean useSimpleNoMismatchLogic,
+            final ConsensusStatistics consensusStats)
+    {
+        super(refGenome, pairedReads, useSimpleNoMismatchLogic, consensusStats);
+    }
+
     @Override
     public byte[] determineBaseAndQual(final boolean isDualStrand, final boolean[] isFirstInPair, final byte[] locationBases,
             final byte[] locationQuals, final String chromosome, final int position)
@@ -28,11 +35,11 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
         if(isDualStrand && position != INVALID_POSITION)
         {
             // split the reads into 2 consensus reads and then compare
-            consensusBaseAndQual = determineDualStrandBaseAndQual(isFirstInPair, locationBases, locationQuals, chromosome, position);
+            consensusBaseAndQual = determineDualStrandBaseAndQual(isFirstInPair, locationBases, locationQuals, chromosome, position, BASE_QUAL_MINIMUM);
         }
         else
         {
-            consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, chromosome, position);
+            consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, chromosome, position, BASE_QUAL_MINIMUM);
         }
 
         consensusBaseAndQual[1] = adjustBaseQual(consensusBaseAndQual[1]);
@@ -40,8 +47,9 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
     }
 
     private byte[] determineDualStrandBaseAndQual(
-            final boolean[] isFirstInPair, final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+            final boolean[] isFirstInPair, final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position, byte minBaseQual)
     {
+        // TODO: Review this for same bug.
         int readCount = isFirstInPair.length;
 
         int firstInPairCount = 0;
@@ -84,8 +92,8 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
             }
         }
 
-        byte[] firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position);
-        byte[] secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position);
+        byte[] firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position, minBaseQual);
+        byte[] secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position, minBaseQual);
 
         if(firstBaseAndQual[0] == NO_BASE)
         {
@@ -148,7 +156,7 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
         return new byte[] { refBase, qual };
     }
 
-    private byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+    protected byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position, byte minBaseQual)
     {
         if(locationBases.length == 1)
         {
@@ -193,10 +201,10 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
             return new byte[] { NO_BASE, 0 };
         }
 
+        // chromosome will be null for unmapped reads
+        Byte refBase = chromosome != null && position != INVALID_POSITION ? mRefGenome.getRefBase(chromosome, position) : null;
         byte maxBase = distinctBases.get(0);
-        boolean maxIsRef = false;
         int maxQualTotal = qualTotals.get(0);
-
         for(int i = 1; i < distinctBases.size(); ++i)
         {
             if(qualTotals.get(i) > maxQualTotal)
@@ -204,21 +212,9 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
                 maxQualTotal = qualTotals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position != INVALID_POSITION)
+            else if(qualTotals.get(i) == maxQualTotal && refBase != null && refBase.equals(distinctBases.get(i)))
             {
-                // chromosome will be null for unmapped reads
-                byte refBase = mRefGenome.getRefBase(chromosome, position);
-
-                if(maxBase == refBase)
-                {
-                    maxIsRef = true;
-                }
-                else if(distinctBases.get(i) == refBase)
-                {
-                    maxQualTotal = qualTotals.get(i);
-                    maxBase = distinctBases.get(i);
-                    maxIsRef = true;
-                }
+                maxBase = refBase;
             }
         }
 
@@ -248,8 +244,8 @@ public class DefaultBaseBuilderConfig extends BaseBuilderConfig
             }
         }
 
-        double calcQual = (double) medianBaseQual * max(BASE_QUAL_MINIMUM, maxQualTotal - differingQual) / maxQualTotal;
+        double calcQual = (double) medianBaseQual * max(minBaseQual, maxQualTotal - differingQual) / maxQualTotal;
 
-        return new byte[] { maxBase, (byte) round(calcQual) };
+        return new byte[] { maxBase, (byte) round(ceil(calcQual)) };
     }
 }

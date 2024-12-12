@@ -129,6 +129,8 @@ public class ConsensusReads
             consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
         }
 
+        // TODO: Biomodal encode MM tag
+
         mConsensusStats.registerOutcome(consensusState.outcome());
 
         consensusState.setNumMutations();

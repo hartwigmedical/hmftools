@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import java.util.List;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
+import org.apache.commons.compress.utils.Lists;
+
 import htsjdk.samtools.SAMRecord;
 
 public class BaseBuilder
@@ -50,9 +52,11 @@ public class BaseBuilder
             isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
         }
 
+        List<byte[]> readBases = Lists.newArrayList();
         for(int i = 0; i < readCount; ++i)
         {
-            readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
+            readBases.add(mBaseBuilderConfig.processReadBases(reads.get(i)));
+            readOffsets[i] = readBases.get(i).length - baseLength;
         }
 
         byte[] locationBases = new byte[readCount];
@@ -68,8 +72,6 @@ public class BaseBuilder
             for(int r = 0; r < readCount; ++r)
             {
                 // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
-                SAMRecord read = reads.get(r);
-
                 locationBases[r] = NO_BASE;
 
                 int readIndex;
@@ -77,7 +79,7 @@ public class BaseBuilder
                 {
                     readIndex = baseIndex;
 
-                    if(readOffsets[r] != 0 && baseIndex >= read.getReadBases().length)
+                    if(readOffsets[r] != 0 && baseIndex >= readBases.get(r).length)
                         continue;
                 }
                 else
@@ -88,7 +90,7 @@ public class BaseBuilder
                         continue;
                 }
 
-                locationBases[r] = reads.get(r).getReadBases()[readIndex];
+                locationBases[r] = readBases.get(r)[readIndex];
                 locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
 
                 if(firstBase == NO_BASE)
