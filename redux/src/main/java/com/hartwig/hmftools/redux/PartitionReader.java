@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
@@ -384,9 +384,9 @@ public class PartitionReader
 
     private void setUnmappedRegions()
     {
-        List<HighDepthRegion> chrUnmapRegions = mReadUnmapper.getRegions(mCurrentRegion.Chromosome);
+        List<UnmappingRegion> chrUnmapRegions = mReadUnmapper.getRegions(mCurrentRegion.Chromosome);
 
-        List<HighDepthRegion> partitionRegions;
+        List<UnmappingRegion> partitionRegions;
         if(chrUnmapRegions != null)
         {
             partitionRegions = chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).collect(Collectors.toList());

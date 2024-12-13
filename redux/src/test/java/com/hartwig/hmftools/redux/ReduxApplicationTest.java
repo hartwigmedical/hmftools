@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
@@ -144,9 +144,9 @@ public class ReduxApplicationTest
     @Test
     public void testUnmapRegionReads()
     {
-        Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
-        HighDepthRegion region1 = new HighDepthRegion(550, 650, UNMAP_MIN_HIGH_DEPTH + 1);
-        HighDepthRegion region2 = new HighDepthRegion(900, 1300, UNMAP_MIN_HIGH_DEPTH + 1);
+        Map<String, List<UnmappingRegion>> chrLocationsMap = Maps.newHashMap();
+        UnmappingRegion region1 = new UnmappingRegion(550, 650, UNMAP_MIN_HIGH_DEPTH + 1);
+        UnmappingRegion region2 = new UnmappingRegion(900, 1300, UNMAP_MIN_HIGH_DEPTH + 1);
         chrLocationsMap.put(CHR_1, Lists.newArrayList(region1, region2));
 
         ReadUnmapper readUnmapper = new ReadUnmapper(chrLocationsMap);

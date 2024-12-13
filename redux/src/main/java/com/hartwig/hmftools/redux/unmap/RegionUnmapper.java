@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.unmap;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
@@ -7,7 +8,7 @@ import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsRegion;
+import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
 
 import java.io.File;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.write.BamWriterSync;
@@ -65,42 +66,46 @@ public class RegionUnmapper extends Thread
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
+    private static final int REGION_PROXIMITY_BUFFER = 50;
+
     public static List<RegionUnmapper> createThreadTasks(
             final ReduxConfig config, final FileWriterCache fileWriterCache, final List<Thread> threadTasks)
     {
-        Map<String,List<HighDepthRegion>> allUnmappingRegions = config.UnmapRegions.getAllRegions();
+        Map<String,List<UnmappingRegion>> allUnmappingRegions = config.UnmapRegions.getAllRegions();
 
         List<UnmapRegion> unmappingRegions = Lists.newArrayList();
 
-        for(Map.Entry<String,List<HighDepthRegion>> entry : allUnmappingRegions.entrySet())
+        for(Map.Entry<String,List<UnmappingRegion>> entry : allUnmappingRegions.entrySet())
         {
             String chromosome = entry.getKey();
 
             if(config.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
-            List<HighDepthRegion> regions = entry.getValue();
+            List<UnmappingRegion> regions = entry.getValue();
 
             UnmapRegion currentRegion = null;
 
             // merge regions which are close together after factoring in the addition buffer
-            for(HighDepthRegion region : regions)
+            for(UnmappingRegion region : regions)
             {
                 if(config.SpecificChrRegions.excludeRegion(region.start(), region.end()))
                     continue;
 
                 // build a buffer into the slice regions to account for unmapped mates starting earlier
-                int regionStart = region.start() - (UNMAP_MAX_NON_OVERLAPPING_BASES * 2);
-                int regionEnd = region.end();
+                int regionStart = max(region.start() - (UNMAP_MAX_NON_OVERLAPPING_BASES * 2), 1);
 
-                if(currentRegion == null || currentRegion.end() < regionStart - 50)
+                // unmappingRegions.add(new UnmapRegion(chromosome, regionStart, region.end(), region));
+
+                if(currentRegion == null || currentRegion.end() < regionStart - REGION_PROXIMITY_BUFFER)
                 {
-                    currentRegion = new UnmapRegion(chromosome, regionStart, regionEnd, region);
+                    currentRegion = new UnmapRegion(chromosome, regionStart, region.end(), region);
                     unmappingRegions.add(currentRegion);
                 }
                 else
                 {
-                    currentRegion.setEnd(regionEnd);
+                    currentRegion.setEnd(region.end());
+                    currentRegion.Regions.add(region);
                 }
             }
         }
@@ -171,7 +176,7 @@ public class RegionUnmapper extends Thread
 
         mCurrentRegion = region;
 
-        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, List.of(mCurrentRegion.Region));
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, mCurrentRegion.Regions);
         mUnmapRegionState.LastMatchedRegionIndex = 0;
 
         if(mBamReader != null)
@@ -195,9 +200,9 @@ public class RegionUnmapper extends Thread
             RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(mCurrentRegion.IsStandardChromosome)
+        if(!read.getReadUnmappedFlag()) // early exit for a read which can't be unmapped
         {
-            if(!read.getReadUnmappedFlag() && !overlapsRegion(mCurrentRegion.Region, read.getAlignmentStart(), read.getAlignmentEnd()))
+            if(mCurrentRegion.Regions.stream().noneMatch(x -> overlapsUnmapRegion(x, read.getAlignmentStart(), read.getAlignmentEnd())))
                 return;
         }
 

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -21,7 +21,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class UnmappedRegionDepth
 {
-    private final Map<String,List<HighDepthRegion>> mChrLocationsMap;
+    private final Map<String,List<UnmappingRegion>> mChrLocationsMap;
 
     public UnmappedRegionDepth(final String unmappedRegionsFile)
     {
@@ -123,7 +123,7 @@ public class UnmappedRegionDepth
 
     private boolean inHighDepthUnmappedRegion(final String chromosome, final int position)
     {
-        List<HighDepthRegion> regions = mChrLocationsMap.get(chromosome);
+        List<UnmappingRegion> regions = mChrLocationsMap.get(chromosome);
 
         if(regions == null)
             return false;

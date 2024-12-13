@@ -34,14 +34,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 
 import htsjdk.samtools.SAMRecord;
 
 public class ReadUnmapper
 {
-    private final Map<String,List<HighDepthRegion>> mChrLocationsMap; // keyed by chromosome start
+    private final Map<String,List<UnmappingRegion>> mChrLocationsMap; // keyed by chromosome start
     private boolean mEnabled;
     private final UnmapStats mStats;
 
@@ -56,18 +56,18 @@ public class ReadUnmapper
         }
     }
 
-    public ReadUnmapper(final Map<String,List<HighDepthRegion>> chrLocationsMap)
+    public ReadUnmapper(final Map<String,List<UnmappingRegion>> chrLocationsMap)
     {
         mChrLocationsMap = chrLocationsMap;
         mEnabled = mChrLocationsMap != null && !mChrLocationsMap.isEmpty();
         mStats = new UnmapStats();
     }
 
-    public List<HighDepthRegion> getRegions(final String chromosome)
+    public List<UnmappingRegion> getRegions(final String chromosome)
     {
         return mChrLocationsMap.get(chromosome);
     }
-    public Map<String,List<HighDepthRegion>> getAllRegions() { return mChrLocationsMap; }
+    public Map<String,List<UnmappingRegion>> getAllRegions() { return mChrLocationsMap; }
 
     public boolean enabled() { return mEnabled; }
 
@@ -115,7 +115,7 @@ public class ReadUnmapper
         boolean unmapMate = false;
 
         RegionMatchType readRegionType = !readUnmapped ? findMaxDepthRegionOverlap(
-                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.PartitionRegions, regionState, true) : null;
+                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.Regions, regionState, true) : null;
 
         UnmapReason unmapReason = null;
 
@@ -319,7 +319,7 @@ public class ReadUnmapper
     private UnmapReason checkUnmapRead(final SAMRecord read, final UnmapRegionState regionState)
     {
         RegionMatchType matchType = findMaxDepthRegionOverlap(
-                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.PartitionRegions, regionState, true);
+                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.Regions, regionState, true);
 
         return checkUnmapRead(read, matchType);
     }
@@ -444,12 +444,12 @@ public class ReadUnmapper
         // first check for a local mate vs the partition's unmapped regions
         boolean checkLocalRegions = false;
 
-        List<HighDepthRegion> mateRegions;
+        List<UnmappingRegion> mateRegions;
 
-        if(regionState != null && read.getMateReferenceName().equals(regionState.Partition.chromosome())
-        && regionState.Partition.containsPosition(read.getMateAlignmentStart()))
+        if(regionState != null && read.getMateReferenceName().equals(regionState.SliceRegion.chromosome())
+        && regionState.SliceRegion.containsPosition(read.getMateAlignmentStart()))
         {
-            mateRegions = regionState.PartitionRegions;
+            mateRegions = regionState.Regions;
             checkLocalRegions = true;
         }
         else
@@ -484,7 +484,7 @@ public class ReadUnmapper
 
     private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData)
     {
-        final List<HighDepthRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
+        final List<UnmappingRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
 
         if(suppRegions == null)
             return RegionMatchType.NONE;
@@ -496,12 +496,12 @@ public class ReadUnmapper
         return findMaxDepthRegionOverlap(suppReadData.Position, readEnd, suppRegions, null, false);
     }
 
-    private static boolean isWithinRegionRange(final int readStart, final List<HighDepthRegion> regions)
+    private static boolean isWithinRegionRange(final int readStart, final List<UnmappingRegion> regions)
     {
         int startIndex = binarySearch(readStart, regions);
         for(int i = startIndex; i < regions.size(); ++i)
         {
-            HighDepthRegion region = regions.get(i);
+            UnmappingRegion region = regions.get(i);
 
             if(positionsOverlap(readStart, readStart + READ_END_APPROX_BUFFER, region.start(), region.end()))
                 return true;
@@ -517,20 +517,20 @@ public class ReadUnmapper
 
     private int checkRegionStateMatch(final int readStart, final int readEnd, final UnmapRegionState regionState)
     {
-        if(regionState == null || regionState.LastMatchedRegionIndex == null || regionState.PartitionRegions.isEmpty())
+        if(regionState == null || regionState.LastMatchedRegionIndex == null || regionState.Regions.isEmpty())
             return NO_INDEX_MATCH;
 
-        if(!positionsWithin(readStart, readEnd, regionState.Partition.start(), regionState.Partition.end()))
+        if(!positionsWithin(readStart, readEnd, regionState.SliceRegion.start(), regionState.SliceRegion.end()))
             return NO_INDEX_MATCH;
 
-        HighDepthRegion region = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex);
+        UnmappingRegion region = regionState.Regions.get(regionState.LastMatchedRegionIndex);
 
         if(readStart < region.start())
         {
             if(regionState.LastMatchedRegionIndex == 0)
                 return regionState.LastMatchedRegionIndex; // returning the first region is still valid since the read is within the partition
 
-            HighDepthRegion prevRegion = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex - 1);
+            UnmappingRegion prevRegion = regionState.Regions.get(regionState.LastMatchedRegionIndex - 1);
 
             return readStart >= prevRegion.start() ? regionState.LastMatchedRegionIndex - 1 : NO_INDEX_MATCH;
         }
@@ -538,16 +538,16 @@ public class ReadUnmapper
         if(region.containsPosition(readStart))
             return regionState.LastMatchedRegionIndex;
 
-        if(regionState.LastMatchedRegionIndex >= regionState.PartitionRegions.size() - 1)
+        if(regionState.LastMatchedRegionIndex >= regionState.Regions.size() - 1)
             return NO_INDEX_MATCH;
 
-        HighDepthRegion nextRegion = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex + 1);
+        UnmappingRegion nextRegion = regionState.Regions.get(regionState.LastMatchedRegionIndex + 1);
 
         return readStart < nextRegion.start() ? regionState.LastMatchedRegionIndex : NO_INDEX_MATCH;
     }
 
     private RegionMatchType findMaxDepthRegionOverlap(
-            final int readStart, final int readEnd, final List<HighDepthRegion> regions,
+            final int readStart, final int readEnd, final List<UnmappingRegion> regions,
             @Nullable final UnmapRegionState regionState, boolean updateRegionState)
     {
         if(regions.isEmpty())
@@ -568,11 +568,11 @@ public class ReadUnmapper
         // in effect the binary search finds a current overlap or the previous region, so at most 2 regions will be tested
         for(int i = startIndex; i < regions.size(); ++i)
         {
-            HighDepthRegion region = regions.get(i);
+            UnmappingRegion region = regions.get(i);
             if(region.start() > readEnd)
                 break;
 
-            if(!overlapsRegion(region, readStart, readEnd))
+            if(!overlapsUnmapRegion(region, readStart, readEnd))
                 continue;
 
             if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
@@ -599,7 +599,7 @@ public class ReadUnmapper
         return matchType;
     }
 
-    public static boolean overlapsRegion(final HighDepthRegion region, int readStart, int readEnd)
+    public static boolean overlapsUnmapRegion(final UnmappingRegion region, int readStart, int readEnd)
     {
         if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
             return false;
@@ -779,7 +779,7 @@ public class ReadUnmapper
         }
     }
 
-    private static Map<String,List<HighDepthRegion>> loadUnmapRegions(final String filename)
+    private static Map<String,List<UnmappingRegion>> loadUnmapRegions(final String filename)
     {
         return UnmappedRegions.loadUnmapRegions(filename);
     }
@@ -855,13 +855,13 @@ public class ReadUnmapper
         if(mChrLocationsMap.containsKey(chromosome))
             return;
 
-        addRegion(chromosome, new HighDepthRegion(1, 20000, UNMAP_MIN_HIGH_DEPTH));
+        addRegion(chromosome, new UnmappingRegion(1, 20000, UNMAP_MIN_HIGH_DEPTH));
     }
 
     @VisibleForTesting
-    public void addRegion(final String chromosome, final HighDepthRegion region)
+    public void addRegion(final String chromosome, final UnmappingRegion region)
     {
-        List<HighDepthRegion> regions = mChrLocationsMap.get(chromosome);
+        List<UnmappingRegion> regions = mChrLocationsMap.get(chromosome);
         if(regions == null)
         {
             regions = Lists.newArrayList();

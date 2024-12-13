@@ -13,7 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
@@ -24,7 +24,6 @@ import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
-import com.hartwig.hmftools.redux.write.BamWriterSync;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -92,21 +91,21 @@ public final class TestUtils
     }
 
     // unmapping test state
-    protected static final Map<String,List<HighDepthRegion>> CHR_LOCATION_MAP;
+    protected static final Map<String,List<UnmappingRegion>> CHR_LOCATION_MAP;
     protected static final ReadUnmapper READ_UNMAPPER;
 
     static
     {
         CHR_LOCATION_MAP = Maps.newHashMap();
-        CHR_LOCATION_MAP.put(CHR_1, Lists.newArrayList(new HighDepthRegion(500, 700, 0)));
+        CHR_LOCATION_MAP.put(CHR_1, Lists.newArrayList(new UnmappingRegion(500, 700, 0)));
         CHR_LOCATION_MAP.put(CHR_2, Lists.newArrayList());
-        CHR_LOCATION_MAP.put(CHR_3, Lists.newArrayList(new HighDepthRegion(500, 700, UNMAP_MIN_HIGH_DEPTH)));
+        CHR_LOCATION_MAP.put(CHR_3, Lists.newArrayList(new UnmappingRegion(500, 700, UNMAP_MIN_HIGH_DEPTH)));
 
         CHR_LOCATION_MAP.put(CHR_4, Lists.newArrayList(
-                new HighDepthRegion(1000, 2000, UNMAP_MIN_HIGH_DEPTH),
-                new HighDepthRegion(3000, 4000, UNMAP_MIN_HIGH_DEPTH),
-                new HighDepthRegion(5000, 6000, UNMAP_MIN_HIGH_DEPTH),
-                new HighDepthRegion(7000, 8000, UNMAP_MIN_HIGH_DEPTH)));
+                new UnmappingRegion(1000, 2000, UNMAP_MIN_HIGH_DEPTH),
+                new UnmappingRegion(3000, 4000, UNMAP_MIN_HIGH_DEPTH),
+                new UnmappingRegion(5000, 6000, UNMAP_MIN_HIGH_DEPTH),
+                new UnmappingRegion(7000, 8000, UNMAP_MIN_HIGH_DEPTH)));
         READ_UNMAPPER = new ReadUnmapper(CHR_LOCATION_MAP);
     }
 

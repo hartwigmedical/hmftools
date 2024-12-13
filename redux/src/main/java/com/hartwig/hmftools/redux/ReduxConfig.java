@@ -52,7 +52,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -214,10 +214,10 @@ public class ReduxConfig
         }
         else
         {
-            Map<String, List<HighDepthRegion>> unmappedMap = Maps.newHashMap();
+            Map<String, List<UnmappingRegion>> unmappedMap = Maps.newHashMap();
 
             ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(HighDepthRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
 
             UnmapRegions = new ReadUnmapper(unmappedMap);
         }

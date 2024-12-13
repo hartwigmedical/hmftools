@@ -5,21 +5,21 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 
 public class UnmapRegionState
 {
-    public final ChrBaseRegion Partition;
-    public final List<HighDepthRegion> PartitionRegions;
+    public final ChrBaseRegion SliceRegion;
+    public final List<UnmappingRegion> Regions;
     public Integer LastMatchedRegionIndex;
 
-    public UnmapRegionState(final ChrBaseRegion partition, final List<HighDepthRegion> partitionRegions)
+    public UnmapRegionState(final ChrBaseRegion sliceRegion, final List<UnmappingRegion> regions)
     {
-        Partition = partition;
-        PartitionRegions = partitionRegions;
+        SliceRegion = sliceRegion;
+        Regions = regions;
         LastMatchedRegionIndex = null;
     }
 
     public String toString() { return format("partition(%s) regions(%d) index(%d)",
-            Partition, PartitionRegions.size(), LastMatchedRegionIndex != null ? LastMatchedRegionIndex : -1); }
+            SliceRegion, Regions.size(), LastMatchedRegionIndex != null ? LastMatchedRegionIndex : -1); }
 }
