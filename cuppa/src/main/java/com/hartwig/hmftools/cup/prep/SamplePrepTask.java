@@ -19,6 +19,9 @@ public class SamplePrepTask implements Callable
     @Nullable private List<DataItem> mDataItems;
     @Nullable private ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
+    private static final int FEW_SAMPLES_THRESHOLD = 10;
+    private static final int PROGRESS_INTERVAL = 100;
+
     public SamplePrepTask(
             final int sampleIndex,
             final PrepConfig prepConfig,
@@ -37,19 +40,6 @@ public class SamplePrepTask implements Callable
         }
 
         FeatureBySampleMatrix = featureBySampleMatrix;
-    }
-
-    public void processSample()
-    {
-        int sampleNum = mSampleIndex + 1;
-        int totalSamples = mConfig.SampleIds.size();
-
-        if(mConfig.isMultiSample() & sampleNum % mConfig.ProgressInterval == 0)
-        {
-            CUP_LOGGER.info("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
-        }
-
-        mDataItems = mCategoryPrep.extractSampleData(mSampleName);
     }
 
     public synchronized void addDataItemsToMatrix()
@@ -71,7 +61,14 @@ public class SamplePrepTask implements Callable
 
     public void run()
     {
-        processSample();
+        if(mConfig.isMultiSample() & (mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0))
+        {
+            int sampleNum = mSampleIndex + 1;
+            int totalSamples = mConfig.SampleIds.size();
+            CUP_LOGGER.debug("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
+        }
+
+        mDataItems = mCategoryPrep.extractSampleData(mSampleName);
 
         if(mConfig.isMultiSample())
         {

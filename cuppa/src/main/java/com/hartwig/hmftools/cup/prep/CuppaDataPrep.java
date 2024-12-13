@@ -97,6 +97,8 @@ public class CuppaDataPrep
 
         for(CategoryType categoryType : mConfig.Categories)
         {
+            CUP_LOGGER.info("Extracting category({})", categoryType);
+
             CategoryPrep categoryPrep = createCategoryPrep(categoryType);
             SamplePrepTask sampleTask = new SamplePrepTask(0, mConfig, categoryPrep, null);
             sampleTask.run();
@@ -164,6 +166,8 @@ public class CuppaDataPrep
 
     public void run(boolean keepDataItems)
     {
+        CUP_LOGGER.info("Starting Cuppa feature extraction");
+
         if(mConfig.SampleIds.isEmpty())
         {
             CUP_LOGGER.error("No sample ID(s) loaded");
